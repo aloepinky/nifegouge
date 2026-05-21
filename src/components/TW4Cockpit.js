@@ -272,9 +272,9 @@ function TW4Cockpit() {
     Object.keys(answers).forEach(key => {
       //Find input answer and correct answer and remove , - . ( ) ; and spaces
       let userAnswer = data[key] || '';
-      userAnswer = userAnswer.replace(/[,\-–;()./ ]/g, '');
+      userAnswer = userAnswer.replace(/[,\-–;()./ ​]/g, '');
       let correctAnswer = Array.isArray(answers[key]) ? answers[key].join('') : answers[key];
-      correctAnswer = correctAnswer.replace(/[,\-–;()./ ]/g, '');
+      correctAnswer = correctAnswer.replace(/[,\-–;()./ ​]/g, '');
       const normalizedUser = userAnswer.toString().trim().toLowerCase();
       const normalizedCorrect = correctAnswer.toString().toLowerCase();
 
