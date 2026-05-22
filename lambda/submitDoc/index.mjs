@@ -35,7 +35,7 @@ export const handler = async (event) => {
         
         // Get all documents
         if (path.includes('get-documents') && method === 'GET') {
-            return await handleGetDocuments(headers);
+            return await handleGetDocuments(event, headers);
         }
         
         // Get signed URL for viewing
@@ -50,7 +50,7 @@ export const handler = async (event) => {
         
         // Get links
         if (path.includes('get-links') && method === 'GET') {
-            return await handleGetLinks(headers);
+            return await handleGetLinks(event, headers);
         }
         
         // Vote on document
@@ -98,11 +98,12 @@ async function handleGetUploadUrl(event, headers) {
         }
         
         // Generate unique key
+        const program = body.program || 'nife';
         const timestamp = Date.now();
         const randomId = Math.random().toString(36).substring(2, 15);
         const sanitizedFileName = body.fileName.replace(/[^a-z0-9.-]/gi, '_');
-        const s3Key = `${body.topic}/${timestamp}-${randomId}-${sanitizedFileName}`;
-        
+        const s3Key = `${program}/${body.topic}/${timestamp}-${randomId}-${sanitizedFileName}`;
+
         // Generate presigned URL for upload
         const putCommand = new PutObjectCommand({
             Bucket: BUCKET_NAME,
@@ -111,6 +112,7 @@ async function handleGetUploadUrl(event, headers) {
             Metadata: {
                 originalName: body.fileName,
                 topic: body.topic,
+                program: program,
                 uploadedBy: body.uploadedBy || 'anonymous'
             }
         });
@@ -136,7 +138,8 @@ async function handleGetUploadUrl(event, headers) {
                     fileName: body.fileName,
                     topic: body.topic,
                     fileSize: body.fileSize || 0,
-                    mimeType: body.mimeType || 'application/octet-stream'
+                    mimeType: body.mimeType || 'application/octet-stream',
+                    program: program
                 }
             })
         };
@@ -176,6 +179,7 @@ async function handleConfirmUpload(event, headers) {
             docId: body.docId,
             fileName: body.metadata.fileName,
             topic: body.metadata.topic,
+            program: body.metadata.program || 'nife',
             s3Key: body.s3Key,
             fileSize: body.metadata.fileSize,
             mimeType: body.metadata.mimeType,
@@ -216,12 +220,21 @@ async function handleConfirmUpload(event, headers) {
     }
 }
 
-async function handleGetDocuments(headers) {
+async function handleGetDocuments(event, headers) {
     try {
-        const scanCommand = new ScanCommand({
-            TableName: 'NIFEDocuments'
-        });
-        
+        const program = event.queryStringParameters?.program || 'nife';
+
+        const scanParams = { TableName: 'NIFEDocuments' };
+        if (program === 'nife') {
+            // Backward compat: items without a program attribute are NIFE
+            scanParams.FilterExpression = 'program = :prog OR attribute_not_exists(program)';
+            scanParams.ExpressionAttributeValues = { ':prog': 'nife' };
+        } else {
+            scanParams.FilterExpression = 'program = :prog';
+            scanParams.ExpressionAttributeValues = { ':prog': program };
+        }
+
+        const scanCommand = new ScanCommand(scanParams);
         const result = await dynamodb.send(scanCommand);
         const documents = result.Items || [];
         
@@ -361,6 +374,7 @@ async function handleLinkSubmission(event, headers) {
             url: body.url,
             title: body.title.slice(0, 200),
             topic: body.topic,
+            program: body.program || 'nife',
             submittedAt: new Date().toISOString(),
             submittedBy: body.submittedBy || 'anonymous',
             upvotes: 0,
@@ -399,14 +413,22 @@ async function handleLinkSubmission(event, headers) {
     }
 }
 
-async function handleGetLinks(headers) {
+async function handleGetLinks(event, headers) {
     try {
-        const scanCommand = new ScanCommand({
-            TableName: 'NIFELinks'
-        });
-        
+        const program = event.queryStringParameters?.program || 'nife';
+
+        const scanParams = { TableName: 'NIFELinks' };
+        if (program === 'nife') {
+            scanParams.FilterExpression = 'program = :prog OR attribute_not_exists(program)';
+            scanParams.ExpressionAttributeValues = { ':prog': 'nife' };
+        } else {
+            scanParams.FilterExpression = 'program = :prog';
+            scanParams.ExpressionAttributeValues = { ':prog': program };
+        }
+
+        const scanCommand = new ScanCommand(scanParams);
         const result = await dynamodb.send(scanCommand);
-        const sortedLinks = (result.Items || []).sort((a, b) => 
+        const sortedLinks = (result.Items || []).sort((a, b) =>
             new Date(b.submittedAt) - new Date(a.submittedAt)
         );
         
