@@ -13,6 +13,14 @@ const cellFontSize = (val) => {
   return '0.55em';
 };
 
+const narrowCellFontSize = (val) => {
+  const len = (val || '').length;
+  if (len <= 5) return undefined;
+  if (len <= 8) return '0.85em';
+  if (len <= 11) return '0.76em';
+  return '0.57em';
+};
+
 function TW4JetLog() {
   const [mainRowCount, setMainRowCount] = useState(9);
   const [inputValues, setInputValues] = useState({'r0c4': '1', 'r0c6': '50', 'r0c7': '1050'});
@@ -28,7 +36,7 @@ function TW4JetLog() {
   const [selectedAlt, setSelectedAlt] = useState(1000);
   const [depInput, setDepInput] = useState('');
   const [destInput, setDestInput] = useState('');
-  const [clncFields, setClncFields] = useState({ ttc: '', fuel: '', dist: '', deltaT: '', oat: '', tasClimb: '', lbsPhClimb: '', tasCruise: '', lbsPhCruise: '', ias: '', climbDir: '', climbVel: '', cruiseDir: '', cruiseVel: '', vfrGsCalc: '210', vfrLbsPh: '', vfrAtis: '', vfrWindAtAlt: '', vfrClnc1a: '', vfrClnc1b: 'KNQI APP 119.9  FSS 122.2 (San Angelo)', vfrClnc2a: '', vfrClnc2b: 'TW2 DECON 308.2', vfrClnc3a: '', vfrClnc3b: 'Houston Center 128.12/350.3', vfrClnc4a: '', vfrClnc4b: 'ERAA:' });
+  const [clncFields, setClncFields] = useState({ ttc: '', fuel: '', dist: '', deltaT: '', oat: '', tasClimb: '', lbsPhClimb: '', tasCruise: '', lbsPhCruise: '', ias: '', climbDir: '', climbVel: '', cruiseDir: '', cruiseVel: '', magVar: '3E', vfrGsCalc: '210', vfrLbsPh: '', vfrAtis: '', vfrWindAtAlt: '', vfrClnc1a: '', vfrClnc1b: 'KNQI APP 119.9  FSS 122.2 (San Angelo)', vfrClnc2a: '', vfrClnc2b: 'TW2 DECON 308.2', vfrClnc3a: '', vfrClnc3b: 'Houston Center 128.12/350.3', vfrClnc4a: '', vfrClnc4b: 'ERAA:' });
   const [splitCells, setSplitCells] = useState({});
   const [showParams, setShowParams] = useState(false);
   const [params, setParams] = useState({
@@ -43,6 +51,7 @@ function TW4JetLog() {
     stdReserve: '200',
   });
   const [routeBadges, setRouteBadges] = useState({});
+  const [holdCells, setHoldCells] = useState({});
   const [pdfUrl, setPdfUrl] = useState(null);
   const [vfrMode, setVfrMode] = useState(false);
   const [vfrTng, setVfrTng] = useState({});
@@ -50,8 +59,11 @@ function TW4JetLog() {
   const [sharedPresets, setSharedPresets] = useState([]);
   const [localPresets, setLocalPresets] = useState([]);
   const [showPresets, setShowPresets] = useState(false);
+  const [collapsedFolders, setCollapsedFolders] = useState(new Set());
   const [presetName, setPresetName] = useState('');
   const [jetlogScale, setJetlogScale] = useState(1);
+  const [showIntClimbSelector, setShowIntClimbSelector] = useState(false);
+  const [intClimbs, setIntClimbs] = useState([]); // [{row: pairIdx, elev: '', alt: number}]
   const containerRef = useRef(null);
 
   // Alternate table rows use r200+ namespace so main table can grow freely
@@ -202,7 +214,11 @@ function TW4JetLog() {
   useEffect(() => {
     fetch('/presets.json')
       .then(r => r.json())
-      .then(data => setSharedPresets(Array.isArray(data) ? data : []))
+      .then(data => {
+        const presets = Array.isArray(data) ? data : [];
+        setSharedPresets(presets);
+        setCollapsedFolders(new Set(presets.map(p => p.folder).filter(Boolean)));
+      })
       .catch(() => {});
   }, []);
 
@@ -241,13 +257,24 @@ function TW4JetLog() {
     return nums ? parseInt(nums[nums.length - 1]) : 0;
   };
 
-  const autoFillTTC = (deltaT, alt, depElevText) => {
+  const parseMagVar = (val) => {
+    if (!val || val.trim() === '') return 0;
+    const upper = val.trim().toUpperCase();
+    const match = upper.match(/^(-?\d*\.?\d+)([EW]?)$/);
+    if (!match) return parseFloat(val) || 0;
+    const num = parseFloat(match[1]);
+    const dir = match[2];
+    if (dir === 'E') return -num;
+    if (dir === 'W') return num;
+    return num;
+  };
+
+  const computeTTCValues = (alt, deltaT, depElevText) => {
     const dt = parseFloat(deltaT);
-    if (isNaN(dt) || !alt || ttcData.length === 0) return;
+    if (isNaN(dt) || !alt || ttcData.length === 0) return { ttc: null, fuel: null, dist: null, tasClimb: '', lbsPhClimb: '' };
     const row = ttcData.reduce((best, r) =>
       Math.abs(r.alt - alt) < Math.abs(best.alt - alt) ? r : best
     );
-
     const deltaTOptions = [-20, 0, 10, 20];
     const interpRow = (r) => {
       if (dt <= deltaTOptions[0])
@@ -266,14 +293,12 @@ function TW4JetLog() {
         arr[loI] == null || arr[hiI] == null ? null : arr[loI] + f * (arr[hiI] - arr[loI]);
       return { time: lerp(r.time), fuel: lerp(r.fuel), dist: lerp(r.dist) };
     };
-
     const vals = interpRow(row);
     let ttc  = vals.time;
     let fuel = vals.fuel;
     let dist = vals.dist;
-
     const depElev = parseElevation(depElevText);
-    if (depElev > 4499) {
+    if (depElev > 4999) {
       const roundedElev = Math.round(depElev / 1000) * 1000;
       const elevRow = ttcData.reduce((best, r) =>
         Math.abs(r.alt - roundedElev) < Math.abs(best.alt - roundedElev) ? r : best
@@ -283,20 +308,23 @@ function TW4JetLog() {
       if (fuel != null && depVals.fuel != null) fuel -= depVals.fuel;
       if (dist != null && depVals.dist != null) dist -= depVals.dist;
     }
-
     if (ttc  != null) ttc  = Math.round(ttc);
     if (fuel != null) fuel = Math.round(fuel);
     if (dist != null) dist = Math.round(dist);
-
     const tasClimb   = ttc != null && dist != null && ttc > 0 ? String(Math.round(60 * dist / ttc)) : '';
     const lbsPhClimb = ttc != null && fuel != null && ttc > 0 ? String(Math.round(60 * fuel / ttc)) : '';
+    return { ttc, fuel, dist, tasClimb, lbsPhClimb };
+  };
+
+  const autoFillTTC = (deltaT, alt, depElevText) => {
+    const vals = computeTTCValues(alt, deltaT, depElevText);
     setClncFields(prev => ({
       ...prev,
-      ttc:  ttc  != null ? String(ttc)  : '',
-      fuel: fuel != null ? String(fuel) : '',
-      dist: dist != null ? String(dist) : '',
-      tasClimb,
-      lbsPhClimb,
+      ttc:  vals.ttc  != null ? String(vals.ttc)  : '',
+      fuel: vals.fuel != null ? String(vals.fuel) : '',
+      dist: vals.dist != null ? String(vals.dist) : '',
+      tasClimb:   vals.tasClimb,
+      lbsPhClimb: vals.lbsPhClimb,
     }));
   };
 
@@ -402,8 +430,7 @@ function TW4JetLog() {
   const renderAirportDropdown = (type) => openDropdown === type && (
     <div
       style={{position: 'absolute', zIndex: 200, background: 'white', border: '1px solid #999',
-        maxHeight: '130px', overflowY: 'auto', minWidth: '160px', left: 0, top: '100%',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.2)'}}
+        maxHeight: '130px', overflowY: 'auto', minWidth: '160px', left: 0, top: '100%'}}
       onClick={e => e.stopPropagation()}
     >
       {airports.map(ap => (
@@ -451,7 +478,8 @@ function TW4JetLog() {
 
   const sumCells = (ids) => {
     const total = ids.reduce((acc, id) => {
-      const num = parseFloat((inputValues[id] || '').match(/-?\d+(\.\d+)?/)?.[0]);
+      const raw = (splitCells[id]?.bottom ?? inputValues[id] ?? '');
+      const num = parseFloat((raw).match(/-?\d+(\.\d+)?/)?.[0]);
       return acc + (isNaN(num) ? 0 : num);
     }, 0);
     return total > 0 ? Math.round(total * 10) / 10 : null;
@@ -508,16 +536,30 @@ function TW4JetLog() {
     if (splitCells[cellId]) {
       const { top, bottom } = splitCells[cellId];
       const longest = (top || '').length >= (bottom || '').length ? top : bottom;
-      const splitFontSize = vfrMode ? '0.85em' : cellFontSize(longest);
+      const splitFontSize = vfrMode ? '0.85em' : narrowCellFontSize(longest);
       const splitFontStyle = splitFontSize ? {fontSize: splitFontSize} : undefined;
+      const handleSplitTopChange = (newTop) => {
+        const slashParts = newTop.split('/').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+        if (newTop.includes('/') && slashParts.length > 0) {
+          const newBottom = String(Math.round(slashParts.reduce((a, b) => a + b, 0) * 10) / 10);
+          setSplitCells(prev => ({...prev, [cellId]: {...prev[cellId], top: newTop, bottom: newBottom}}));
+          setInputValues(prev => ({...prev, [cellId]: newBottom}));
+        } else {
+          setSplitCells(prev => ({...prev, [cellId]: {...prev[cellId], top: newTop}}));
+        }
+      };
       return (
-        <td id={cellId} rowSpan={rowSpan || undefined} colSpan={colSpan || undefined} style={{padding: 0, border: '1px solid black', verticalAlign: 'middle', ...splitFontStyle}}>
-          <div style={{borderBottom: '1px solid #000', textAlign: 'center', padding: '1px 3px'}}>{top}</div>
-          <div style={{textAlign: 'center', padding: '1px 3px'}}>{bottom}</div>
+        <td id={cellId} rowSpan={rowSpan || undefined} colSpan={colSpan || undefined} style={{padding: 0, border: '1px solid black', height: '1px', ...splitFontStyle}}>
+          <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
+            <div style={{flex: 1, minHeight: 0, borderBottom: '1px solid #000', display: 'flex', alignItems: 'center', padding: '0 3px'}}>
+              <input value={top} onChange={e => handleSplitTopChange(e.target.value)} style={{textAlign: 'center', width: '100%', boxSizing: 'border-box', ...splitFontStyle}} />
+            </div>
+            <div style={{flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', ...splitFontStyle}}>{bottom}</div>
+          </div>
         </td>
       );
     }
-    const fontSize = vfrMode ? '0.85em' : cellFontSize(val);
+    const fontSize = vfrMode ? '0.85em' : narrowCellFontSize(val);
     const fontStyle = fontSize ? {fontSize} : undefined;
     return (
       <td id={cellId} {...(rowSpan && { rowSpan })} {...(colSpan && { colSpan })}>
@@ -530,7 +572,7 @@ function TW4JetLog() {
     );
   };
 
-  const ROUTE_OPTIONS = ['Route', 'Direct To', '1 Approach', '2 Approaches', '3 Approaches', 'Hold'];
+  const ROUTE_OPTIONS = ['Route', 'Direct To', '1 Approach', '2 Approaches', '3 Approaches', 'Hold', 'Note'];
 
   const handleRouteOption = (cellId, opt) => {
     setOpenDropdown(null);
@@ -538,12 +580,48 @@ function TW4JetLog() {
     const countMatch = opt.match(/^(\d+) Approach/);
     if (countMatch) {
       const count = parseInt(countMatch[1]);
-      const ete = count * (parseFloat(params.approachTime) || 0);
-      const fuel = count * (parseFloat(params.approachFuel) || 0);
-      setInputValues(prev => ({...prev, [`r${topRow}c4`]: String(ete), [`r${topRow}c6`]: String(fuel)}));
+      const aprEte = count * (parseFloat(params.approachTime) || 0);
+      const aprFuel = count * (parseFloat(params.approachFuel) || 0);
+      if (holdCells[cellId]) {
+        const holdMins = parseFloat(params.holdTime) || 0;
+        const lbsPh = parseFloat(clncFields.lbsPhCruise) || 0;
+        const holdFuel = lbsPh > 0 ? Math.ceil(Math.round(holdMins * lbsPh / 60) / 5) * 5 : 0;
+        const totalEte = aprEte + holdMins;
+        const totalFuel = aprFuel + holdFuel;
+        setSplitCells(prev => ({...prev,
+          [`r${topRow}c4`]: { top: `${aprEte}/${holdMins}`, bottom: String(totalEte) },
+          [`r${topRow}c6`]: { top: `${aprFuel}/${holdFuel}`, bottom: String(totalFuel) },
+        }));
+        setInputValues(prev => ({...prev, [`r${topRow}c4`]: String(totalEte), [`r${topRow}c6`]: String(totalFuel)}));
+      } else {
+        setInputValues(prev => ({...prev, [`r${topRow}c4`]: String(aprEte), [`r${topRow}c6`]: String(aprFuel)}));
+      }
       setRouteBadges(prev => ({...prev, [cellId]: count}));
     } else if (opt === 'Hold') {
-      setRouteBadges(prev => ({...prev, [cellId]: 'H'}));
+      const aprCount = routeBadges[cellId];
+      const wasHeld = !!holdCells[cellId];
+      if (typeof aprCount === 'number') {
+        const aprEte = aprCount * (parseFloat(params.approachTime) || 0);
+        const aprFuel = aprCount * (parseFloat(params.approachFuel) || 0);
+        if (!wasHeld) {
+          const holdMins = parseFloat(params.holdTime) || 0;
+          const lbsPh = parseFloat(clncFields.lbsPhCruise) || 0;
+          const holdFuel = lbsPh > 0 ? Math.ceil(Math.round(holdMins * lbsPh / 60) / 5) * 5 : 0;
+          const totalEte = aprEte + holdMins;
+          const totalFuel = aprFuel + holdFuel;
+          setSplitCells(prev => ({...prev,
+            [`r${topRow}c4`]: { top: `${aprEte}/${holdMins}`, bottom: String(totalEte) },
+            [`r${topRow}c6`]: { top: `${aprFuel}/${holdFuel}`, bottom: String(totalFuel) },
+          }));
+          setInputValues(prev => ({...prev, [`r${topRow}c4`]: String(totalEte), [`r${topRow}c6`]: String(totalFuel)}));
+        } else {
+          setSplitCells(prev => { const n = {...prev}; delete n[`r${topRow}c4`]; delete n[`r${topRow}c6`]; return n; });
+          setInputValues(prev => ({...prev, [`r${topRow}c4`]: String(aprEte), [`r${topRow}c6`]: String(aprFuel)}));
+        }
+      }
+      setHoldCells(prev => { const n = {...prev}; if (n[cellId]) { delete n[cellId]; } else { n[cellId] = true; } return n; });
+    } else if (opt === 'Note') {
+      setRouteBadges(prev => ({...prev, [cellId]: 'N'}));
     } else if (opt === 'Direct To') {
       setInputValues(prev => ({...prev, [`${cellId}_a`]: 'D→'}));
       setRouteBadges(prev => { const n = {...prev}; delete n[cellId]; return n; });
@@ -558,19 +636,23 @@ function TW4JetLog() {
     const dropKey = `route_${cellId}`;
     const badge = routeBadges[cellId];
     const isApproach = typeof badge === 'number';
+    const isSingleInput = isApproach || badge === 'N';
     return (
-      <td id={cellId} rowSpan={2} style={{verticalAlign: isApproach ? 'middle' : 'top', padding: '2px', position: 'relative'}}>
-        {badge != null && (
+      <td id={cellId} rowSpan={2} style={{verticalAlign: isSingleInput ? 'middle' : 'top', padding: '2px', position: 'relative'}}>
+        {holdCells[cellId] && (
+          <span style={{position: 'absolute', top: 2, [isApproach ? 'left' : 'right']: 3, fontSize: '0.65em', fontWeight: 'bold', color: '#333', pointerEvents: 'none', lineHeight: 1}}>H</span>
+        )}
+        {isApproach && (
           <span style={{position: 'absolute', top: 2, right: 3, fontSize: '0.65em', fontWeight: 'bold', color: '#333', pointerEvents: 'none', lineHeight: 1}}>
             {badge}
           </span>
         )}
-        {isApproach ? (
+        {isSingleInput ? (
           <div style={{position: 'relative', paddingRight: '14px', display: 'flex', alignItems: 'center'}}>
             <input
               value={inputValues[aId] || ''}
               onChange={e => handleInputChange(aId, e.target.value)}
-              style={{textAlign: 'left', width: '100%', boxSizing: 'border-box', fontSize: '1.1em'}}
+              style={{textAlign: 'left', width: '100%', boxSizing: 'border-box', ...(cellFontSize(inputValues[aId]) ? {fontSize: cellFontSize(inputValues[aId])} : {fontSize: '1.1em'})}}
             />
             <span
               onClick={e => { e.stopPropagation(); setOpenDropdown(openDropdown === dropKey ? null : dropKey); }}
@@ -583,12 +665,12 @@ function TW4JetLog() {
               <input
                 value={inputValues[aId] || ''}
                 onChange={e => handleInputChange(aId, e.target.value)}
-                style={{textAlign: 'left', width: '100%', boxSizing: 'border-box'}}
+                style={{textAlign: 'left', width: '100%', boxSizing: 'border-box', ...(cellFontSize(inputValues[aId]) && {fontSize: cellFontSize(inputValues[aId])})}}
               />
               <input
                 value={inputValues[bId] || ''}
                 onChange={e => handleInputChange(bId, e.target.value)}
-                style={{textAlign: 'left', width: '100%', boxSizing: 'border-box'}}
+                style={{textAlign: 'left', width: '100%', boxSizing: 'border-box', ...(cellFontSize(inputValues[bId]) && {fontSize: cellFontSize(inputValues[bId])})}}
               />
             </div>
             <span
@@ -600,8 +682,7 @@ function TW4JetLog() {
         {openDropdown === dropKey && (
           <div
             style={{position: 'absolute', zIndex: 200, background: 'white', border: '1px solid #999',
-              maxHeight: '150px', overflowY: 'auto', minWidth: '120px', left: 0, top: '100%',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'}}
+              maxHeight: '150px', overflowY: 'auto', minWidth: '120px', left: 0, top: '100%'}}
             onClick={e => e.stopPropagation()}
           >
             {ROUTE_OPTIONS.map(opt => (
@@ -778,17 +859,18 @@ function TW4JetLog() {
     setInputValues(newVals);
   };
 
-  const handleSolve = () => {
+  const handleSolve = (intClimbsOverride = null) => {
     if (vfrMode) { handleVFRSolve(); return; }
     const climbDistTotal = parseFloat(clncFields.dist);
     if (isNaN(climbDistTotal) || climbDistTotal <= 0) return;
 
-    const climbDIR = parseFloat(clncFields.climbDir);
+    const magVar = parseMagVar(clncFields.magVar);
     const climbVEL = parseFloat(clncFields.climbVel);
     const climbTAS = parseFloat(clncFields.tasClimb);
-    const cruiseDIR = parseFloat(clncFields.cruiseDir);
+    const correctedClimbDIR = parseFloat(clncFields.climbDir) + magVar;
     const cruiseVEL = parseFloat(clncFields.cruiseVel);
     const cruiseTAS = parseFloat(clncFields.tasCruise);
+    const correctedCruiseDIR = parseFloat(clncFields.cruiseDir) + magVar;
     const lbsPhClimb = parseFloat(clncFields.lbsPhClimb);
     const lbsPhCruise = parseFloat(clncFields.lbsPhCruise);
 
@@ -800,22 +882,42 @@ function TW4JetLog() {
     const calcFuel = (ete, lbsPh) => (ete != null && !isNaN(lbsPh) ? Math.ceil(Math.round(ete * lbsPh / 60) / 5) * 5 : null);
 
     const mainRows = Array.from({length: mainRowCount}, (_, i) => i * 2);
-    let cumDist = 0;
-    let turnoverRow = null;
-    let turnoverClimb = 0;
-    let turnoverCruise = 0;
 
-    for (const row of mainRows) {
-      const d = parseFloat(inputValues[`r${row}c3`] || '');
-      if (isNaN(d) || d === 0) continue;
-      if (cumDist + d > climbDistTotal) {
-        turnoverRow = row;
-        turnoverClimb = Math.round((climbDistTotal - cumDist) * 10) / 10;
-        turnoverCruise = Math.round((d - turnoverClimb) * 10) / 10;
-        break;
-      }
-      cumDist += d;
+    // Build sections from sorted int climbs
+    const effectiveIntClimbs = (intClimbsOverride ?? intClimbs).slice().sort((a, b) => a.row - b.row);
+    const sectionStarts = [0, ...effectiveIntClimbs.map(c => c.row * 2)];
+
+    // Climb data per section (section 0 = primary, section N = after Nth int climb)
+    const sectionClimbData = [{ dist: climbDistTotal, climbTAS, lbsPhClimb }];
+    for (const c of effectiveIntClimbs) {
+      const vals = computeTTCValues(c.alt, clncFields.deltaT, c.elev);
+      sectionClimbData.push({
+        dist: vals.dist != null ? Math.max(0, vals.dist) : 0,
+        climbTAS: vals.tasClimb ? parseFloat(vals.tasClimb) : cruiseTAS,
+        lbsPhClimb: vals.lbsPhClimb ? parseFloat(vals.lbsPhClimb) : lbsPhCruise,
+      });
     }
+
+    // Find turnover row for each section (-1 means no climb distance → all cruise)
+    const sectionTurnovers = sectionClimbData.map((sec, si) => {
+      if (sec.dist <= 0) return { turnoverRow: -1, turnoverClimb: 0, turnoverCruise: 0 };
+      const secStart = sectionStarts[si];
+      const secEnd = si + 1 < sectionStarts.length ? sectionStarts[si + 1] : Infinity;
+      let cumDist = 0, turnoverRow = null, turnoverClimb = 0, turnoverCruise = 0;
+      for (const row of mainRows) {
+        if (row < secStart || row >= secEnd) continue;
+        const d = parseFloat(inputValues[`r${row}c3`] || '');
+        if (isNaN(d) || d === 0) continue;
+        if (cumDist + d > sec.dist) {
+          turnoverRow = row;
+          turnoverClimb = Math.round((sec.dist - cumDist) * 10) / 10;
+          turnoverCruise = Math.round((d - turnoverClimb) * 10) / 10;
+          break;
+        }
+        cumDist += d;
+      }
+      return { turnoverRow, turnoverClimb, turnoverCruise };
+    });
 
     const newSplit = {};
     const newVals = { ...inputValues };
@@ -829,70 +931,112 @@ function TW4JetLog() {
       newVals[`r${row}c6`] = String(totalFuel);
     };
 
+    const applyTurnover = (row, d, climbGS, cruiseGS, climbDist, cruiseDist, lbsPhC, isHold, holdMins) => {
+      newSplit[`r${row}c3`] = { top: `${climbDist}/${cruiseDist}`, bottom: String(d) };
+      newSplit[`r${row}c8`] = { top: climbGS !== null ? String(climbGS) : '', bottom: cruiseGS !== null ? String(cruiseGS) : '' };
+      const climbETE  = climbGS  !== null ? calcETE(climbDist,  climbGS)  : null;
+      const cruiseETE = cruiseGS !== null ? calcETE(cruiseDist, cruiseGS) : null;
+      const totalETE  = (climbETE ?? 0) + (cruiseETE ?? 0);
+      const climbFuel  = calcFuel(climbETE,  lbsPhC);
+      const cruiseFuel = calcFuel(cruiseETE, lbsPhCruise);
+      const totalFuel  = (climbFuel ?? 0) + (cruiseFuel ?? 0);
+      if (isHold) {
+        const holdFuel = calcFuel(holdMins, lbsPhCruise);
+        const grandETE  = totalETE + holdMins;
+        const grandFuel = totalFuel + (holdFuel ?? 0);
+        newSplit[`r${row}c4`] = { top: `${climbETE ?? ''}/${cruiseETE ?? ''}/${holdMins}`, bottom: String(grandETE) };
+        newSplit[`r${row}c6`] = { top: `${climbFuel ?? ''}/${cruiseFuel ?? ''}/${holdFuel ?? ''}`, bottom: String(grandFuel) };
+        newVals[`r${row}c4`] = String(grandETE);
+        newVals[`r${row}c6`] = String(grandFuel);
+      } else {
+        newSplit[`r${row}c4`] = { top: `${climbETE ?? ''}/${cruiseETE ?? ''}`, bottom: String(totalETE) };
+        newSplit[`r${row}c6`] = { top: `${climbFuel ?? ''}/${cruiseFuel ?? ''}`, bottom: String(totalFuel) };
+        newVals[`r${row}c4`] = String(totalETE);
+        newVals[`r${row}c6`] = String(totalFuel);
+      }
+    };
+
     for (const row of mainRows) {
       const d = parseFloat(inputValues[`r${row}c3`] || '');
       if (isNaN(d) || d === 0) continue;
       const tc = parseFloat((inputValues[`r${row}c2`] || '').replace(/[^\d.-]/g, ''));
-      const isHold = routeBadges[`r${row}c0`] === 'H';
+      const isHold = !!holdCells[`r${row}c0`];
       const holdMins = parseFloat(params.holdTime) || 0;
 
-      if (turnoverRow === null || row < turnoverRow) {
-        const gs = calcGS(climbTAS, climbDIR, climbVEL, tc);
-        if (gs !== null) {
-          newVals[`r${row}c8`] = String(gs);
-          const ete = calcETE(d, gs);
-          if (ete !== null) {
-            const fuel = calcFuel(ete, lbsPhClimb);
-            if (isHold) {
-              applyHold(row, ete, fuel, holdMins);
-            } else {
-              newVals[`r${row}c4`] = String(ete);
-              if (fuel !== null) newVals[`r${row}c6`] = String(fuel);
-            }
-          }
-        }
-      } else if (row === turnoverRow) {
-        const climbGS = calcGS(climbTAS, climbDIR, climbVEL, tc);
-        const cruiseGS = calcGS(cruiseTAS, cruiseDIR, cruiseVEL, tc);
-        newSplit[`r${row}c3`] = { top: `${turnoverClimb}/${turnoverCruise}`, bottom: String(d) };
-        newSplit[`r${row}c8`] = { top: climbGS !== null ? String(climbGS) : '', bottom: cruiseGS !== null ? String(cruiseGS) : '' };
+      // Find which section this row belongs to
+      let si = 0;
+      for (let i = sectionStarts.length - 1; i >= 0; i--) {
+        if (row >= sectionStarts[i]) { si = i; break; }
+      }
+      const sec = sectionClimbData[si];
+      const { turnoverRow, turnoverClimb, turnoverCruise } = sectionTurnovers[si];
 
-        const climbETE = climbGS !== null ? calcETE(turnoverClimb, climbGS) : null;
-        const cruiseETE = cruiseGS !== null ? calcETE(turnoverCruise, cruiseGS) : null;
-        const totalETE = (climbETE ?? 0) + (cruiseETE ?? 0);
-        const climbFuel = calcFuel(climbETE, lbsPhClimb);
-        const cruiseFuel = calcFuel(cruiseETE, lbsPhCruise);
-        const totalFuel = (climbFuel ?? 0) + (cruiseFuel ?? 0);
-
-        if (isHold) {
-          const holdFuel = calcFuel(holdMins, lbsPhCruise);
-          const grandTotalETE = totalETE + holdMins;
-          const grandTotalFuel = totalFuel + (holdFuel ?? 0);
-          newSplit[`r${row}c4`] = { top: `${climbETE ?? ''}/${cruiseETE ?? ''}/${holdMins}`, bottom: String(grandTotalETE) };
-          newSplit[`r${row}c6`] = { top: `${climbFuel ?? ''}/${cruiseFuel ?? ''}/${holdFuel ?? ''}`, bottom: String(grandTotalFuel) };
-          newVals[`r${row}c4`] = String(grandTotalETE);
-          newVals[`r${row}c6`] = String(grandTotalFuel);
-        } else {
-          newSplit[`r${row}c4`] = { top: `${climbETE ?? ''}/${cruiseETE ?? ''}`, bottom: String(totalETE) };
-          newSplit[`r${row}c6`] = { top: `${climbFuel ?? ''}/${cruiseFuel ?? ''}`, bottom: String(totalFuel) };
-          newVals[`r${row}c4`] = String(totalETE);
-          newVals[`r${row}c6`] = String(totalFuel);
-        }
-      } else {
-        const gs = calcGS(cruiseTAS, cruiseDIR, cruiseVEL, tc);
+      if (turnoverRow === -1) {
+        // No climb distance for this section — all cruise
+        const gs = calcGS(cruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
         if (gs !== null) {
           newVals[`r${row}c8`] = String(gs);
           const ete = calcETE(d, gs);
           if (ete !== null) {
             const fuel = calcFuel(ete, lbsPhCruise);
-            if (isHold) {
-              applyHold(row, ete, fuel, holdMins);
-            } else {
-              newVals[`r${row}c4`] = String(ete);
-              if (fuel !== null) newVals[`r${row}c6`] = String(fuel);
-            }
+            if (isHold) { applyHold(row, ete, fuel, holdMins); }
+            else { newVals[`r${row}c4`] = String(ete); if (fuel !== null) newVals[`r${row}c6`] = String(fuel); }
           }
         }
+      } else if (turnoverRow === null || row < turnoverRow) {
+        const gs = calcGS(sec.climbTAS, correctedClimbDIR, climbVEL, tc);
+        if (gs !== null) {
+          newVals[`r${row}c8`] = String(gs);
+          const ete = calcETE(d, gs);
+          if (ete !== null) {
+            const fuel = calcFuel(ete, sec.lbsPhClimb);
+            if (isHold) { applyHold(row, ete, fuel, holdMins); }
+            else { newVals[`r${row}c4`] = String(ete); if (fuel !== null) newVals[`r${row}c6`] = String(fuel); }
+          }
+        }
+      } else if (row === turnoverRow) {
+        if (turnoverClimb <= 0) {
+          // Climb completed in the previous row — treat this row as pure cruise
+          const gs = calcGS(cruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
+          if (gs !== null) {
+            newVals[`r${row}c8`] = String(gs);
+            const ete = calcETE(d, gs);
+            if (ete !== null) {
+              const fuel = calcFuel(ete, lbsPhCruise);
+              if (isHold) { applyHold(row, ete, fuel, holdMins); }
+              else { newVals[`r${row}c4`] = String(ete); if (fuel !== null) newVals[`r${row}c6`] = String(fuel); }
+            }
+          }
+        } else {
+          const cGS = calcGS(sec.climbTAS, correctedClimbDIR, climbVEL, tc);
+          const crGS = calcGS(cruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
+          if (cGS !== null || crGS !== null) {
+            applyTurnover(row, d, cGS, crGS, turnoverClimb, turnoverCruise, sec.lbsPhClimb, isHold, holdMins);
+          }
+        }
+      } else {
+        const gs = calcGS(cruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
+        if (gs !== null) {
+          newVals[`r${row}c8`] = String(gs);
+          const ete = calcETE(d, gs);
+          if (ete !== null) {
+            const fuel = calcFuel(ete, lbsPhCruise);
+            if (isHold) { applyHold(row, ete, fuel, holdMins); }
+            else { newVals[`r${row}c4`] = String(ete); if (fuel !== null) newVals[`r${row}c6`] = String(fuel); }
+          }
+        }
+      }
+    }
+
+    // Approach rows with a hold: recompute from params so Solve reflects current hold time
+    const holdMinsConst = parseFloat(params.holdTime) || 0;
+    for (const row of mainRows) {
+      const cellId = `r${row}c0`;
+      const aprCount = routeBadges[cellId];
+      if (typeof aprCount === 'number' && holdCells[cellId]) {
+        const aprEte  = aprCount * (parseFloat(params.approachTime) || 0);
+        const aprFuel = aprCount * (parseFloat(params.approachFuel) || 0);
+        applyHold(row, aprEte, aprFuel, holdMinsConst);
       }
     }
 
@@ -920,7 +1064,7 @@ function TW4JetLog() {
       const d = parseFloat(inputValues[`r${row}c3`] || '');
       if (isNaN(d) || d === 0) continue;
       const tc = parseFloat((inputValues[`r${row}c2`] || '').replace(/[^\d.-]/g, ''));
-      const gs = calcGS(cruiseTAS, cruiseDIR, cruiseVEL, tc);
+      const gs = calcGS(cruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
       if (gs !== null) {
         newVals[`r${row}c8`] = String(gs);
         const ete = calcETE(d, gs);
@@ -1024,9 +1168,12 @@ function TW4JetLog() {
       return next;
     });
     setRouteBadges({});
+    setHoldCells({});
     setSplitCells({});
     setVfrTng({});
     setVfrApr({});
+    setShowIntClimbSelector(false);
+    setIntClimbs([]);
   };
 
   const capturePreset = (name) => ({
@@ -1039,12 +1186,14 @@ function TW4JetLog() {
     ),
     clncFields: { ...clncFields },
     routeBadges: { ...routeBadges },
+    holdCells: { ...holdCells },
     vfrTng: { ...vfrTng },
     vfrApr: { ...vfrApr },
     selectedAlt,
     depInput,
     destInput,
     infoFields: { ...infoFields },
+    intClimbs: [...intClimbs],
   });
 
   const applyPreset = (preset) => {
@@ -1096,7 +1245,10 @@ function TW4JetLog() {
     setDepInput(preset.depInput || '');
     setDestInput(preset.destInput || '');
     setInfoFields(prev => ({ ...prev, ...(preset.infoFields || {}) }));
+    setIntClimbs(preset.intClimbs ?? []);
+    setShowIntClimbSelector(false);
     setSplitCells({});
+    setHoldCells(preset.holdCells || {});
     setShowPresets(false);
   };
 
@@ -1155,6 +1307,8 @@ function TW4JetLog() {
   const renderMainRowPair = (pairIdx) => {
     const top = pairIdx * 2;
     const bot = top + 1;
+    const showIntCol = !vfrMode && (showIntClimbSelector || intClimbs.length > 0);
+    const ic = intClimbs.find(c => c.row === pairIdx);
     return (
       <React.Fragment key={top}>
         <tr>
@@ -1167,6 +1321,44 @@ function TW4JetLog() {
           {renderCell(`r${top}c6`, 2)}
           {renderCell(`r${top}c7`)}
           {vfrMode ? renderVFRNotesCells(top) : renderCell(`r${top}c8`, 2)}
+          {showIntCol && (
+            <td rowSpan={2} style={{border: '1px solid black', padding: ic ? 0 : '2px', height: ic ? '1px' : undefined, textAlign: 'center', verticalAlign: 'middle'}}>
+              {showIntClimbSelector ? (
+                <input type="checkbox"
+                  checked={!!ic}
+                  onChange={() => {
+                    if (ic) {
+                      setIntClimbs(prev => prev.filter(c => c.row !== pairIdx));
+                    } else {
+                      setIntClimbs(prev => [...prev, { row: pairIdx, elev: '', alt: selectedAlt }]);
+                    }
+                    setShowIntClimbSelector(false);
+                  }}
+                />
+              ) : ic ? (
+                <div style={{display: 'flex', flexDirection: 'column', height: '100%', fontSize: '0.65em'}}>
+                  <div style={{flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', padding: '0 3px'}}>
+                    <input placeholder="Field elev." value={ic.elev}
+                      onChange={e => setIntClimbs(prev => prev.map(c => c.row === pairIdx ? {...c, elev: e.target.value} : c))}
+                      style={{width: '100%', boxSizing: 'border-box', height: '100%'}} />
+                  </div>
+                  <div style={{flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', padding: '0 2px'}}>
+                    <select value={ic.alt}
+                      onChange={e => {
+                        const v = parseInt(e.target.value);
+                        const next = intClimbs.map(c => c.row === pairIdx ? {...c, alt: v} : c);
+                        setIntClimbs(next);
+                        handleSolve(next);
+                      }}
+                      style={{fontSize: 'inherit', width: '100%', boxShadow: 'none', height: '100%', padding: '0'}}>
+                      {Array.from({length: 31}, (_, i) => (i + 1) * 1000).map(a =>
+                        <option key={a} value={a}>{Math.round(a / 1000)}k</option>)}
+                    </select>
+                  </div>
+                </div>
+              ) : null}
+            </td>
+          )}
         </tr>
         <tr>
           {renderCell(`r${bot}c0`)}
@@ -1197,6 +1389,9 @@ function TW4JetLog() {
         </td>
         {renderCell(`r${tTop}c7`)}
         {vfrMode ? <td rowSpan={2} colSpan={2} style={{border: '1px solid black'}} /> : renderCell(`r${tTop}c8`, 2)}
+        {!isAlt && !vfrMode && (showIntClimbSelector || intClimbs.length > 0) && (
+          <td rowSpan={2} style={{border: '1px solid black'}} />
+        )}
       </tr>
       <tr>
         {renderCell(`r${tBot}c0`)}
@@ -1361,6 +1556,8 @@ function TW4JetLog() {
           const botVal = (inputValues[`${cellId}_b`] || '').trim();
           if (botVal && typeof routeBadges[cellId] !== 'number') lastNonAprIdx = pairIdx;
         }
+        // Collect entries first so consecutive same-route legs can be collapsed
+        const ifrEntries = [];
         for (let pairIdx = 0; pairIdx < mainRowCount; pairIdx++) {
           const top = pairIdx * 2;
           const cellId = `r${top}c0`;
@@ -1368,19 +1565,44 @@ function TW4JetLog() {
           const botVal = (inputValues[`${cellId}_b`] || '').trim();
           const badge = routeBadges[cellId];
           const isApproach = typeof badge === 'number';
-          const isHold = badge === 'H';
+          const isHold = !!holdCells[cellId];
           const isDirect = !topVal || topVal === 'D→';
           if (isApproach) {
             const field = topVal && topVal !== 'D→' ? topVal : botVal;
             if (!field) continue;
             const eteMins = Math.round(parseFloat(inputValues[`r${top}c4`] || '') || 0);
-            routeParts.push(`DCT  ${field}/D00+${mm(eteMins)}`);
+            ifrEntries.push({ kind: 'approach', text: `DCT  ${field}/D00+${mm(eteMins)}` });
           } else {
             if (!botVal) continue;
             // Skip last waypoint if it matches the destination
             if (pairIdx === lastNonAprIdx && botVal.toUpperCase() === ifrDest) continue;
             const holdSuffix = isHold ? `/D00+${mm(parseFloat(params.holdTime) || 0)}` : '';
-            routeParts.push(isDirect ? `DCT  ${botVal}${holdSuffix}` : `${topVal}  ${botVal}${holdSuffix}`);
+            ifrEntries.push({ kind: 'route', topVal, botVal, isDirect, isHold, holdSuffix });
+          }
+        }
+        // Emit entries; collapse consecutive named-route legs sharing the same route to only the final destination
+        let ei = 0;
+        while (ei < ifrEntries.length) {
+          const e = ifrEntries[ei];
+          if (e.kind === 'approach') {
+            routeParts.push(e.text);
+            ei++;
+          } else if (!e.isDirect && !e.isHold && e.topVal) {
+            // Named route — scan ahead for consecutive legs on the same route
+            let ej = ei + 1;
+            while (ej < ifrEntries.length &&
+                   ifrEntries[ej].kind === 'route' &&
+                   !ifrEntries[ej].isDirect &&
+                   !ifrEntries[ej].isHold &&
+                   ifrEntries[ej].topVal === e.topVal) {
+              ej++;
+            }
+            const last = ifrEntries[ej - 1];
+            routeParts.push(`${e.topVal}  ${last.botVal}${last.holdSuffix}`);
+            ei = ej;
+          } else {
+            routeParts.push(e.isDirect ? `DCT  ${e.botVal}${e.holdSuffix}` : `${e.topVal}  ${e.botVal}${e.holdSuffix}`);
+            ei++;
           }
         }
       }
@@ -1415,10 +1637,11 @@ function TW4JetLog() {
         const badge = routeBadges[cellId];
         const topVal = (inputValues[`${cellId}_a`] || '').trim();
         const botVal = (inputValues[`${cellId}_b`] || '').trim();
-        if (badge === 'H' && botVal) {
+        if (holdCells[cellId] && botVal) {
           const hMins = Math.round(parseFloat(params.holdTime) || 0);
           dleEntries.push(`DLE/${botVal}${toHHMM(hMins)}`);
-        } else if (typeof badge === 'number' && badge > 0) {
+        }
+        if (typeof badge === 'number' && badge > 0) {
           const field = topVal && topVal !== 'D→' ? topVal : botVal;
           if (field) apEntries.push(`${badge > 1 ? 'MULTIPLE APP' : 'APP'} ${field}`);
         }
@@ -1728,6 +1951,15 @@ function TW4JetLog() {
           }
         }
 
+        // Hold / approach indicators in top-right of the route cell
+        if (!vfrMode) {
+          if (holdCells[`r${topRow}c0`]) drawR(465, rowY - 4, 'H', 7);
+          const aprBadge = routeBadges[`r${topRow}c0`];
+          if (typeof aprBadge === 'number' && aprBadge > 0) {
+            drawR(450, rowY - 4, aprBadge === 1 ? '1 APR' : `${aprBadge} APRS`, 6);
+          }
+        }
+
         // IDENT / TO column: two-line when both present, single-line centered otherwise
         if (identStr || identNum) {
           drawR(C.identX, cellCY + splitOff, identStr);
@@ -1767,6 +1999,13 @@ function TW4JetLog() {
             drawR(C.gsX, cellCY - splitOff, gsSplit.bottom);
           } else {
             drawR(C.gsX, cellCY, iv(`r${topRow}c8`));
+          }
+          const pdIc = intClimbs.find(c => c.row === pairIdx);
+          if (pdIc) {
+            const altStr = '-> ' + (pdIc.alt >= 18000
+              ? 'FL' + String(Math.round(pdIc.alt / 100)).padStart(3, '0')
+              : pdIc.alt.toLocaleString() + "' MSL");
+            drawR(710, cellCY, altStr, 7);
           }
         }
       }
@@ -1949,17 +2188,27 @@ function TW4JetLog() {
           : 'Check that the Jet Log Parameters are set as you like. Input winds, ΔT, altitude, and OAT; MC and Dist for legs; mark approaches and holds as appropriate; and click solve. Input total distance into the DIST cell, the solver will split it into climb and cruise dist.'}
       </div>
       <div className="button-container" style={{justifyContent: 'center'}}>
-        <button onClick={handleSolve}>Solve</button>
+        <button onClick={() => handleSolve()}>Solve</button>
         <button onClick={handleClear}>Clear</button>
         <button onClick={handleAddRow}>Add Row</button>
+        {!vfrMode && (
+          <button onClick={() => setShowIntClimbSelector(prev => !prev)}>
+            {showIntClimbSelector ? 'Done' : intClimbs.length > 0 ? `Int. Climbs (${intClimbs.length})` : 'Add Int. Climb'}
+          </button>
+        )}
         <button onClick={handleRemoveRow}>Remove Row</button>
         <button onClick={() => setShowParams(true)}>Parameters</button>
         <button onClick={() => setShowPresets(s => !s)}>Preset Routes</button>
         <button onClick={generateFlightPlan}>Generate Flight Plan + Jet Log</button>
-        <button
+        <div style={{display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold', cursor: 'pointer'}}
           onClick={() => { setVfrMode(m => { const next = !m; const newAlt = next ? 3000 : 1000; setSelectedAlt(newAlt); if (next) autoFillVFRCruise(clncFields.vfrGsCalc); return next; }); }}
-          style={{fontWeight: 'bold', background: vfrMode ? '#1e40af' : undefined, color: vfrMode ? 'white' : undefined}}
-        >{vfrMode ? 'VFR' : 'IFR'}</button>
+        >
+          <span style={{color: !vfrMode ? '#1e40af' : '#aaa', transition: 'color 0.2s'}}>IFR</span>
+          <div style={{position: 'relative', width: '44px', height: '22px', backgroundColor: vfrMode ? '#1e40af' : '#888', borderRadius: '11px', transition: 'background-color 0.2s', flexShrink: 0}}>
+            <div style={{position: 'absolute', top: '2px', left: vfrMode ? '24px' : '2px', width: '18px', height: '18px', backgroundColor: 'white', borderRadius: '50%', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.4)'}} />
+          </div>
+          <span style={{color: vfrMode ? '#1e40af' : '#aaa', transition: 'color 0.2s'}}>VFR</span>
+        </div>
       </div>
 
       <div className="jetlog-wrapper" style={jetlogScale < 1 ? {zoom: jetlogScale} : undefined}>
@@ -2067,13 +2316,13 @@ function TW4JetLog() {
                     <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>Dist:</span><input type="text" style={{width: '40px'}} value={clncFields.dist} onChange={e => setClncFields(prev => ({...prev, dist: e.target.value}))} /></div>
                   </div>
                   <div style={{flex: 1, alignSelf: 'stretch'}} />
-                  <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1px', paddingBottom: '45px', paddingRight: '60px'}}>
+                  <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1px', paddingBottom: '45px', paddingRight: '28px'}}>
                     <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>IAS:</span><input type="text" style={{width: '36px'}} value={clncFields.ias} onChange={e => setClncFields(prev => ({...prev, ias: e.target.value}))} /></div>
                   </div>
                   <div style={{display: 'flex', flexDirection: 'column', gap: '1px', paddingTop: '10px'}}>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>Climb:</span><input type="text" placeholder="DIR" style={{width: '28px', backgroundColor: !clncFields.climbDir ? '#dbeafe' : ''}} value={clncFields.climbDir} onChange={e => setClncFields(prev => ({...prev, climbDir: e.target.value}))} /><input type="text" placeholder="VEL" style={{width: '28px', backgroundColor: !clncFields.climbVel ? '#dbeafe' : ''}} value={clncFields.climbVel} onChange={e => setClncFields(prev => ({...prev, climbVel: e.target.value}))} /></div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>Cruise:</span><input type="text" placeholder="DIR" style={{width: '28px', backgroundColor: !clncFields.cruiseDir ? '#dbeafe' : ''}} value={clncFields.cruiseDir} onChange={e => setClncFields(prev => ({...prev, cruiseDir: e.target.value}))} /><input type="text" placeholder="VEL" style={{width: '28px', backgroundColor: !clncFields.cruiseVel ? '#dbeafe' : ''}} value={clncFields.cruiseVel} onChange={e => setClncFields(prev => ({...prev, cruiseVel: e.target.value}))} /></div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>ΔT:</span><input type="text" style={{width: '28px', backgroundColor: !clncFields.deltaT ? '#dbeafe' : ''}} value={clncFields.deltaT} onChange={e => { const v = e.target.value; setClncFields(prev => ({...prev, deltaT: v})); if (v) autoFillTTC(v, selectedAlt, infoFields.depElev); }} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap', marginLeft: '4px'}}>OAT:</span><input type="text" style={{width: '28px', backgroundColor: !clncFields.oat ? '#dbeafe' : ''}} value={clncFields.oat} onChange={e => { const v = e.target.value; setClncFields(prev => ({...prev, oat: v})); if (v) autoFillCruise(v, selectedAlt); }} /></div>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><input type="text" placeholder="MAG VAR" className="magvar-input" style={{width: '30px', fontSize: '0.7em', textAlign: 'center'}} value={clncFields.magVar} onChange={e => setClncFields(prev => ({...prev, magVar: e.target.value}))} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>Climb:</span><input type="text" placeholder="DIR" style={{width: '28px', backgroundColor: !clncFields.climbDir ? '#dbeafe' : ''}} value={clncFields.climbDir} onChange={e => setClncFields(prev => ({...prev, climbDir: e.target.value}))} /><input type="text" placeholder="VEL" style={{width: '28px', backgroundColor: !clncFields.climbVel ? '#dbeafe' : ''}} value={clncFields.climbVel} onChange={e => setClncFields(prev => ({...prev, climbVel: e.target.value}))} /></div>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><div style={{width: '30px', flexShrink: 0}} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>Cruise:</span><input type="text" placeholder="DIR" style={{width: '28px', backgroundColor: !clncFields.cruiseDir ? '#dbeafe' : ''}} value={clncFields.cruiseDir} onChange={e => setClncFields(prev => ({...prev, cruiseDir: e.target.value}))} /><input type="text" placeholder="VEL" style={{width: '28px', backgroundColor: !clncFields.cruiseVel ? '#dbeafe' : ''}} value={clncFields.cruiseVel} onChange={e => setClncFields(prev => ({...prev, cruiseVel: e.target.value}))} /></div>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><div style={{width: '30px', flexShrink: 0}} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>ΔT:</span><input type="text" style={{width: '28px', backgroundColor: !clncFields.deltaT ? '#dbeafe' : ''}} value={clncFields.deltaT} onChange={e => { const v = e.target.value; setClncFields(prev => ({...prev, deltaT: v})); if (v) autoFillTTC(v, selectedAlt, infoFields.depElev); }} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap', marginLeft: '4px'}}>OAT:</span><input type="text" style={{width: '28px', backgroundColor: !clncFields.oat ? '#dbeafe' : ''}} value={clncFields.oat} onChange={e => { const v = e.target.value; setClncFields(prev => ({...prev, oat: v})); if (v) autoFillCruise(v, selectedAlt); }} /></div>
                   </div>
                 </div>
               </td>
@@ -2107,6 +2356,9 @@ function TW4JetLog() {
           ) : (
             Array.from({length: 8}, (_, i) => <col key={i} style={{width: '9.625%'}} />)
           )}
+          {!vfrMode && (showIntClimbSelector || intClimbs.length > 0) && (
+            <col style={{width: '60px'}} />
+          )}
         </colgroup>
         <thead>
           <tr>
@@ -2125,6 +2377,9 @@ function TW4JetLog() {
               </th>
             ) : (
               <th rowSpan="2">GS</th>
+            )}
+            {!vfrMode && (showIntClimbSelector || intClimbs.length > 0) && (
+              <th rowSpan="2" style={{fontSize: '0.7em'}}>NOTES</th>
             )}
           </tr>
           <tr>
@@ -2145,6 +2400,9 @@ function TW4JetLog() {
             {renderCell('r0c6', 2)}
             {renderCell('r0c7')}
             {vfrMode ? renderVFRNotesCells(0) : renderCell('r0c8', 2)}
+            {!vfrMode && (showIntClimbSelector || intClimbs.length > 0) && (
+              <td rowSpan={2} style={{border: '1px solid black'}} />
+            )}
           </tr>
           <tr>
             {renderCell('r1c0')}
@@ -2345,18 +2603,57 @@ function TW4JetLog() {
             {sharedPresets.length > 0 && (
               <>
                 <div style={{fontSize: '0.7em', fontWeight: 'bold', color: '#888', marginBottom: '6px', letterSpacing: '0.05em'}}>SHARED</div>
-                {sharedPresets.map(p => (
-                  <div key={p.id}
-                    style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', cursor: 'pointer', padding: '3px 0'}}
-                    onClick={() => applyPreset(p)}
-                  >
-                    <span style={{fontSize: '0.65em', padding: '1px 5px', borderRadius: '3px',
-                      background: p.mode === 'VFR' ? '#1e40af' : '#444', color: 'white', flexShrink: 0}}>
-                      {p.mode}
-                    </span>
-                    <span style={{fontSize: '0.85em'}}>{p.name}</span>
-                  </div>
-                ))}
+                {(() => {
+                  const byFolder = {};
+                  sharedPresets.forEach(p => {
+                    const f = p.folder || '';
+                    if (!byFolder[f]) byFolder[f] = [];
+                    byFolder[f].push(p);
+                  });
+                  const folders = Object.keys(byFolder).filter(f => f !== '').sort();
+                  const ungrouped = byFolder[''] || [];
+                  const toggleFolder = (f) => setCollapsedFolders(prev => {
+                    const next = new Set(prev);
+                    if (next.has(f)) next.delete(f); else next.add(f);
+                    return next;
+                  });
+                  const renderPresetRow = (p, indent) => (
+                    <div key={p.id}
+                      style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px',
+                        cursor: 'pointer', padding: `2px 0 2px ${indent ? '14px' : '0'}`}}
+                      onClick={() => { applyPreset(p); setShowPresets(false); }}
+                    >
+                      <span style={{fontSize: '0.65em', padding: '1px 5px', borderRadius: '3px',
+                        background: p.mode === 'VFR' ? '#1e40af' : '#444', color: 'white', flexShrink: 0}}>
+                        {p.mode}
+                      </span>
+                      <span style={{fontSize: '0.85em'}}>{p.name}</span>
+                    </div>
+                  );
+                  return (
+                    <>
+                      {folders.map(folder => {
+                        const isOpen = !collapsedFolders.has(folder);
+                        return (
+                          <div key={folder} style={{marginBottom: '2px'}}>
+                            <div onClick={() => toggleFolder(folder)}
+                              style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
+                                fontSize: '0.78em', fontWeight: '600', color: '#444', padding: '3px 2px',
+                                userSelect: 'none', borderRadius: '3px'}}
+                              onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'}
+                              onMouseLeave={e => e.currentTarget.style.background = ''}
+                            >
+                              <span style={{fontSize: '0.85em', width: '8px', display: 'inline-block'}}>{isOpen ? '▾' : '▸'}</span>
+                              {folder}
+                            </div>
+                            {isOpen && <div style={{marginTop: '2px'}}>{byFolder[folder].map(p => renderPresetRow(p, true))}</div>}
+                          </div>
+                        );
+                      })}
+                      {ungrouped.map(p => renderPresetRow(p, false))}
+                    </>
+                  );
+                })()}
                 <hr style={{margin: '10px 0', borderColor: '#e5e7eb'}} />
               </>
             )}

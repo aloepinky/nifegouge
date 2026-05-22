@@ -1,6 +1,7 @@
 [{
   "id": "delta-n6101",
   "name": "Delta N6101",
+  "folder": "Delta VNAV",
   "mode": "VFR",
   "mainRowCount": 10,
   "inputValues": {
@@ -107,6 +108,7 @@
 },{
   "id": "delta-n3101",
   "name": "Delta N3101",
+  "folder": "Delta VNAV",
   "mode": "VFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -202,6 +204,7 @@
 },{
   "id": "delta-i6101",
   "name": "Delta I6101",
+  "folder": "Delta I6100",
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -294,6 +297,7 @@
 },{
   "id": "delta-i6102",
   "name": "Delta I6102",
+  "folder": "Delta I6100",
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -363,8 +367,10 @@
   },
   "routeBadges": {
     "r6c0": 1,
-    "r10c0": 1,
-    "r8c0": "H"
+    "r10c0": 1
+  },
+  "holdCells": {
+    "r8c0": true
   },
   "vfrTng": {},
   "vfrApr": {},
@@ -389,6 +395,7 @@
 },{
   "id": "delta-i3101",
   "name": "Delta I3101",
+  "folder": "Delta I3100",
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -487,6 +494,7 @@
 },{
   "id": "delta-i3102",
   "name": "Delta I3102",
+  "folder": "Delta I3100",
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -548,8 +556,10 @@
     "vfrGs": ""
   },
   "routeBadges": {
-    "r4c0": 1,
-    "r6c0": "H"
+    "r4c0": 1
+  },
+  "holdCells": {
+    "r6c0": true
   },
   "vfrTng": {},
   "vfrApr": {},
@@ -574,6 +584,7 @@
 },{
   "id": "delta-i3103",
   "name": "Delta I3103",
+  "folder": "Delta I3100",
   "mode": "IFR",
   "mainRowCount": 7,
   "inputValues": {
@@ -623,8 +634,10 @@
     "vfrGs": ""
   },
   "routeBadges": {
-    "r2c0": 3,
-    "r4c0": "H"
+    "r2c0": 3
+  },
+  "holdCells": {
+    "r4c0": true
   },
   "vfrTng": {},
   "vfrApr": {},
@@ -649,6 +662,7 @@
 },{
   "id": "delta-i3104",
   "name": "Delta I3104",
+  "folder": "Delta I3100",
   "mode": "IFR",
   "mainRowCount": 7,
   "inputValues": {
@@ -739,6 +753,7 @@
 },{
   "id": "delta-i6201",
   "name": "Delta I6201",
+  "folder": "Delta I6200",
   "mode": "IFR",
   "mainRowCount": 7,
   "inputValues": {
@@ -802,8 +817,10 @@
   },
   "routeBadges": {
     "r2c0": 1,
-    "r6c0": 1,
-    "r8c0": "H"
+    "r6c0": 1
+  },
+  "holdCells": {
+    "r8c0": true
   },
   "vfrTng": {},
   "vfrApr": {},
@@ -828,6 +845,7 @@
 },{
   "id": "delta-i6202",
   "name": "Delta I6202",
+  "folder": "Delta I6200",
   "mode": "IFR",
   "mainRowCount": 7,
   "inputValues": {
@@ -908,107 +926,9 @@
     "altGndCont": "257.85 /118.7 (3)"
   }
 },{
-  "id": "nubin-13r-loop",
-  "name": "NUBIN 1/3R Loop",
-  "mode": "IFR",
-  "mainRowCount": 9,
-  "inputValues": {
-    "r2c0_a": "D→",
-    "r2c0_b": "WORRY",
-    "r4c0_a": "V13",
-    "r4c0_b": "BLOKS",
-    "r6c0_a": "D→",
-    "r6c0_b": "VCT",
-    "r8c0_a": "KVCT",
-    "r10c0_a": "D→",
-    "r10c0_b": "BRASY",
-    "r12c0_a": "D→",
-    "r12c0_b": "COPAN",
-    "r200c0_a": "D→",
-    "r200c0_b": "CRP",
-    "r2c2": "001",
-    "r2c3": "25",
-    "r4c2": "030",
-    "r4c3": "21",
-    "r6c2": "356",
-    "r6c3": "31",
-    "r10c2": "167",
-    "r10c3": "42",
-    "r12c2": "252",
-    "r12c3": "24",
-    "altroute": "CRP",
-    "r200c2": "225",
-    "r200c3": "16",
-    "altalt": "30",
-    "r200c1": "CRP",
-    "r201c0": "115.5",
-    "r2c1": "CRP",
-    "r3c0": "115.5",
-    "r4c1": "CRP",
-    "r5c0": "115.5",
-    "r6c1": "VCT",
-    "r7c0": "109.0",
-    "r10c1": "VCT",
-    "r11c0": "109.0",
-    "r12c1": "CRP",
-    "r13c0": "115.5"
-  },
-  "clncFields": {
-    "ttc": "3",
-    "fuel": "30",
-    "dist": "7",
-    "deltaT": "",
-    "oat": "",
-    "tasClimb": "140",
-    "lbsPhClimb": "600",
-    "tasCruise": "241",
-    "lbsPhCruise": "499",
-    "ias": "222",
-    "climbDir": "",
-    "climbVel": "",
-    "cruiseDir": "",
-    "cruiseVel": "",
-    "vfrGsCalc": "210",
-    "vfrLbsPh": "555",
-    "vfrAtis": "290.9/127.9 (1)",
-    "vfrWindAtAlt": "",
-    "vfrClnc1a": "",
-    "vfrClnc1b": "KNQI APP 119.9  FSS 122.2 (San Angelo)",
-    "vfrClnc2a": "",
-    "vfrClnc2b": "TW2 DECON 308.2",
-    "vfrClnc3a": "",
-    "vfrClnc3b": "Houston Center 128.12/350.3",
-    "vfrClnc4a": "",
-    "vfrClnc4b": "ERAA:",
-    "vfrGs": ""
-  },
-  "routeBadges": {
-    "r8c0": 2,
-    "r12c0": "H"
-  },
-  "vfrTng": {},
-  "vfrApr": {},
-  "selectedAlt": 7000,
-  "depInput": "KNGP",
-  "destInput": "KNGP",
-  "infoFields": {
-    "depElev": "KNGP 19'",
-    "clncDel": "314.3 (2)",
-    "gndCont": "257.85 /118.7 (3)",
-    "tower": "340.2/134.85 (4)",
-    "destElev": "KNGP 19'",
-    "destApcCont": "348.725/120.9 (6)",
-    "destTower": "340.2/134.85 (4)",
-    "destGndCont": "257.85 /118.7 (3)",
-    "alternate": "KCRP",
-    "altElev": "46'",
-    "altApcCont": "348.725/120.9 (6)",
-    "altTower": "257.8/119.4 (34)",
-    "altGndCont": "269.15/121.9 (33)"
-  }
-},{
   "id": "delta-i3201",
   "name": "Delta I3201",
+  "folder": "Delta I3200",
   "mode": "IFR",
   "mainRowCount": 7,
   "inputValues": {
@@ -1057,6 +977,7 @@
     "climbVel": "10",
     "cruiseDir": "090",
     "cruiseVel": "20",
+    "magVar": "2E",
     "vfrGsCalc": "210",
     "vfrLbsPh": "555",
     "vfrAtis": "126.85",
@@ -1072,8 +993,10 @@
     "vfrGs": ""
   },
   "routeBadges": {
-    "r8c0": 1,
-    "r10c0": "H"
+    "r8c0": 1
+  },
+  "holdCells": {
+    "r10c0": true
   },
   "vfrTng": {},
   "vfrApr": {},
@@ -1098,6 +1021,7 @@
 },{
   "id": "delta-i3202",
   "name": "Delta I3202",
+  "folder": "Delta I3200",
   "mode": "IFR",
   "mainRowCount": 7,
   "inputValues": {
@@ -1128,17 +1052,18 @@
     "ttc": "5",
     "fuel": "54",
     "dist": "13",
-    "deltaT": "5",
+    "deltaT": "10",
     "oat": "-5",
     "tasClimb": "156",
     "lbsPhClimb": "648",
     "tasCruise": "244",
     "lbsPhCruise": "424",
     "ias": "196",
-    "climbDir": "150",
-    "climbVel": "10",
+    "climbDir": "330",
+    "climbVel": "12",
     "cruiseDir": "090",
     "cruiseVel": "20",
+    "magVar": "3.5E",
     "vfrGsCalc": "210",
     "vfrLbsPh": "555",
     "vfrAtis": "124.4",
@@ -1153,8 +1078,9 @@
     "vfrClnc4b": "ERAA:",
     "vfrGs": ""
   },
-  "routeBadges": {
-    "r2c0": "H"
+  "routeBadges": {},
+  "holdCells": {
+    "r2c0": true
   },
   "vfrTng": {},
   "vfrApr": {},
@@ -1179,6 +1105,7 @@
 },{
   "id": "delta-i3203",
   "name": "Delta I3203",
+  "folder": "Delta I3200",
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -1260,6 +1187,7 @@
 },{
   "id": "delta-i3204",
   "name": "Delta I3204",
+  "folder": "Delta I3200",
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -1312,6 +1240,7 @@
     "climbVel": "20",
     "cruiseDir": "220",
     "cruiseVel": "40",
+    "magVar": "6E",
     "vfrGsCalc": "210",
     "vfrLbsPh": "555",
     "vfrAtis": "306.2/128.45 (91)",
@@ -1327,8 +1256,10 @@
     "vfrGs": ""
   },
   "routeBadges": {
-    "r2c0": 1,
-    "r8c0": "H"
+    "r2c0": 1
+  },
+  "holdCells": {
+    "r8c0": true
   },
   "vfrTng": {},
   "vfrApr": {},
@@ -1350,4 +1281,345 @@
     "altTower": "123.0 (C)",
     "altGndCont": ""
   }
+},{
+  "id": "delta-i3205",
+  "name": "Delta I3205",
+  "folder": "Delta I3200",
+  "mode": "IFR",
+  "mainRowCount": 9,
+  "inputValues": {
+    "r2c0_a": "D→",
+    "r2c0_b": "TANKR",
+    "r4c0_a": "V68",
+    "r4c0_b": "DEWEY",
+    "r6c0_a": "D→",
+    "r6c0_b": "MYRTS",
+    "r8c0_a": "KBPG",
+    "r10c0_a": "D→",
+    "r10c0_b": "BGS",
+    "r12c0_a": "V563",
+    "r12c0_b": "YOTUD",
+    "r14c0_a": "D→",
+    "r14c0_b": "FIPKI",
+    "r16c0_a": "D→",
+    "r16c0_b": "YIBGU",
+    "r12c1": "LBB",
+    "r13c0": "109.2",
+    "r10c1": "BGS",
+    "r11c0": "117.2",
+    "r6c2": "346",
+    "r10c2": "360",
+    "r10c3": "10",
+    "r12c2": "334",
+    "r12c3": "52",
+    "r14c2": "295",
+    "r14c3": "22",
+    "r16c2": "022",
+    "r16c3": "5",
+    "r2c1": "SJT",
+    "r3c0": "115.1",
+    "r4c1": "MAF",
+    "r5c0": "112.6",
+    "r4c2": "284",
+    "r4c3": "47",
+    "r2c2": "295",
+    "r2c3": "10",
+    "r6c1": "BGS",
+    "r7c0": "117.2",
+    "r6c3": "21",
+    "r14c1": "LBB",
+    "r15c0": "109.2",
+    "r16c1": "LBB",
+    "r17c0": "109.2",
+    "altalt": "100",
+    "altroute": "CLINK",
+    "r200c0_a": "D→",
+    "r200c0_b": "CLINK",
+    "r200c2": "285",
+    "r200c3": "85",
+    "r200c1": "CVS",
+    "r201c0": "111.6"
+  },
+  "clncFields": {
+    "ttc": "4",
+    "fuel": "42",
+    "dist": "10",
+    "deltaT": "10",
+    "oat": "7",
+    "tasClimb": "150",
+    "lbsPhClimb": "630",
+    "tasCruise": "243",
+    "lbsPhCruise": "461",
+    "ias": "202",
+    "climbDir": "360",
+    "climbVel": "12",
+    "cruiseDir": "350",
+    "cruiseVel": "15",
+    "magVar": "5.5E",
+    "vfrGsCalc": "210",
+    "vfrLbsPh": "555",
+    "vfrAtis": "319.0/128.45",
+    "vfrWindAtAlt": "",
+    "vfrClnc1a": "",
+    "vfrClnc1b": "KNQI APP 119.9  FSS 122.2 (San Angelo)",
+    "vfrClnc2a": "",
+    "vfrClnc2b": "TW2 DECON 308.2",
+    "vfrClnc3a": "",
+    "vfrClnc3b": "Houston Center 128.12/350.3",
+    "vfrClnc4a": "",
+    "vfrClnc4b": "ERAA:",
+    "vfrGs": ""
+  },
+  "routeBadges": {
+    "r8c0": 1
+  },
+  "holdCells": {
+    "r10c0": true
+  },
+  "vfrTng": {},
+  "vfrApr": {},
+  "selectedAlt": 10000,
+  "depInput": "KSJT",
+  "destInput": "KLBB",
+  "infoFields": {
+    "depElev": "KSJT 1919'",
+    "clncDel": "",
+    "gndCont": "348.6/121.9",
+    "tower": "284.7/118.3",
+    "destElev": "KLBB 3282'",
+    "destApcCont": "351.8/119.2",
+    "destTower": "239.3/120.5",
+    "destGndCont": "348.6/121.9",
+    "alternate": "KCVS",
+    "altElev": "4295'",
+    "altApcCont": "352.1/118.425",
+    "altTower": "270.25/120.4",
+    "altGndCont": "275.8/121.9"
+  },
+  "intClimbs": [
+    {
+      "row": 6,
+      "elev": "2573",
+      "alt": 10000
+    }
+  ]
+},{
+  "id": "delta-i3206",
+  "name": "Delta I3206",
+  "folder": "Delta I3200",
+  "mode": "IFR",
+  "mainRowCount": 9,
+  "inputValues": {
+    "r2c0_a": "D→",
+    "r2c0_b": "WINEY",
+    "r4c0_a": "V563",
+    "r4c0_b": "BGS",
+    "r6c0_a": "V76",
+    "r6c0_b": "SJT",
+    "r8c0_a": "KSJT",
+    "r2c1": "LBB",
+    "r3c0": "109.2",
+    "r4c1": "BGS",
+    "r5c0": "117.2",
+    "r6c1": "SJT",
+    "r7c0": "115.1",
+    "r2c2": "172",
+    "r2c3": "21",
+    "r4c2": "154",
+    "r4c3": "58",
+    "r6c2": "128",
+    "r6c3": "80",
+    "r200c0_a": "V77",
+    "r200c0_b": "SHEPP",
+    "altroute": "V77 SHEPP V94 TQA TOMHI",
+    "r202c0_a": "V94",
+    "r202c0_b": "TQA",
+    "r202c1": "TQA",
+    "r203c0": "114.85",
+    "r200c1": "ABI",
+    "r201c0": "113.7",
+    "r204c0_a": "D→",
+    "r204c0_b": "TOMHI",
+    "r204c1": "I-ABI",
+    "r205c0": "110.3",
+    "r204c2": "052",
+    "r204c3": "8",
+    "r202c2": "074",
+    "r202c3": "10",
+    "r200c3": "56",
+    "r200c2": "014",
+    "altalt": "90"
+  },
+  "clncFields": {
+    "ttc": "3",
+    "fuel": "38",
+    "dist": "9",
+    "deltaT": "10",
+    "oat": "8",
+    "tasClimb": "180",
+    "lbsPhClimb": "760",
+    "tasCruise": "245",
+    "lbsPhCruise": "479",
+    "ias": "207",
+    "climbDir": "360",
+    "climbVel": "12",
+    "cruiseDir": "355",
+    "cruiseVel": "14",
+    "magVar": "5E",
+    "vfrGsCalc": "210",
+    "vfrLbsPh": "555",
+    "vfrAtis": "270.275/125.3",
+    "vfrWindAtAlt": "",
+    "vfrClnc1a": "",
+    "vfrClnc1b": "KNQI APP 119.9  FSS 122.2 (San Angelo)",
+    "vfrClnc2a": "",
+    "vfrClnc2b": "TW2 DECON 308.2",
+    "vfrClnc3a": "",
+    "vfrClnc3b": "Houston Center 128.12/350.3",
+    "vfrClnc4a": "",
+    "vfrClnc4b": "ERAA:"
+  },
+  "routeBadges": {
+    "r8c0": 1
+  },
+  "holdCells": {
+    "r4c0": true
+  },
+  "vfrTng": {},
+  "vfrApr": {},
+  "selectedAlt": 9000,
+  "depInput": "KLBB",
+  "destInput": "KSJT",
+  "infoFields": {
+    "depElev": "KLBB 3282'",
+    "clncDel": "281.55/125.8",
+    "gndCont": "348.6/121.9",
+    "tower": "239.3/120.5",
+    "destElev": "KSJT 1919'",
+    "destApcCont": "354.1/125.35",
+    "destTower": "284.7/118.3",
+    "destGndCont": "348.6/121.9",
+    "alternate": "KABI",
+    "altElev": "1791'",
+    "altApcCont": "282.3/127.2",
+    "altTower": "257.8/120.1",
+    "altGndCont": "348.6/121.7"
+  },
+  "intClimbs": []
+},{
+  "id": "nubin-13r-loop",
+  "name": "NUBIN 1/3R Loop",
+  "folder": "Local Flights",
+  "mode": "IFR",
+  "mainRowCount": 9,
+  "inputValues": {
+    "r2c0_a": "D→",
+    "r2c0_b": "WORRY",
+    "r4c0_a": "V13",
+    "r4c0_b": "BLOKS",
+    "r6c0_a": "D→",
+    "r6c0_b": "VCT",
+    "r8c0_a": "KVCT",
+    "r10c0_a": "D→",
+    "r10c0_b": "BRASY",
+    "r12c0_a": "D→",
+    "r12c0_b": "COPAN",
+    "r200c0_a": "D→",
+    "r200c0_b": "CRP",
+    "r2c2": "001",
+    "r2c3": "25",
+    "r4c2": "030",
+    "r4c3": "21",
+    "r6c2": "356",
+    "r6c3": "31",
+    "r10c2": "167",
+    "r10c3": "42",
+    "r12c2": "252",
+    "r12c3": "24",
+    "altroute": "CRP",
+    "r200c2": "225",
+    "r200c3": "16",
+    "altalt": "30",
+    "r200c1": "CRP",
+    "r201c0": "115.5",
+    "r2c1": "CRP",
+    "r3c0": "115.5",
+    "r4c1": "CRP",
+    "r5c0": "115.5",
+    "r6c1": "VCT",
+    "r7c0": "109.0",
+    "r10c1": "VCT",
+    "r11c0": "109.0",
+    "r12c1": "CRP",
+    "r13c0": "115.5",
+    "r14c0_a": "D→",
+    "r14c0_b": "CRP",
+    "r14c1": "CRP",
+    "r15c0": "115.5",
+    "r14c2": "225",
+    "r14c3": "16"
+  },
+  "clncFields": {
+    "ttc": "3",
+    "fuel": "30",
+    "dist": "7",
+    "deltaT": "",
+    "oat": "",
+    "tasClimb": "140",
+    "lbsPhClimb": "600",
+    "tasCruise": "241",
+    "lbsPhCruise": "499",
+    "ias": "222",
+    "climbDir": "",
+    "climbVel": "",
+    "cruiseDir": "",
+    "cruiseVel": "",
+    "magVar": "3.5E",
+    "vfrGsCalc": "210",
+    "vfrLbsPh": "555",
+    "vfrAtis": "290.9/127.9 (1)",
+    "vfrWindAtAlt": "",
+    "vfrClnc1a": "",
+    "vfrClnc1b": "KNQI APP 119.9  FSS 122.2 (San Angelo)",
+    "vfrClnc2a": "",
+    "vfrClnc2b": "TW2 DECON 308.2",
+    "vfrClnc3a": "",
+    "vfrClnc3b": "Houston Center 128.12/350.3",
+    "vfrClnc4a": "",
+    "vfrClnc4b": "ERAA:",
+    "vfrGs": ""
+  },
+  "routeBadges": {
+    "r8c0": 2
+  },
+  "holdCells": {
+    "r12c0": true
+  },
+  "vfrTng": {},
+  "vfrApr": {},
+  "selectedAlt": 7000,
+  "depInput": "KNGP",
+  "destInput": "KNGP",
+  "infoFields": {
+    "depElev": "KNGP 19'",
+    "clncDel": "314.3 (2)",
+    "gndCont": "257.85 /118.7 (3)",
+    "tower": "340.2/134.85 (4)",
+    "destElev": "KNGP 19'",
+    "destApcCont": "348.725/120.9 (6)",
+    "destTower": "340.2/134.85 (4)",
+    "destGndCont": "257.85 /118.7 (3)",
+    "alternate": "KCRP",
+    "altElev": "46'",
+    "altApcCont": "348.725/120.9 (6)",
+    "altTower": "257.8/119.4 (34)",
+    "altGndCont": "269.15/121.9 (33)"
+  },
+  "intClimbs": [
+    {
+      "row": 5,
+      "elev": "115",
+      "alt": 6000
+    }
+  ]
 }]

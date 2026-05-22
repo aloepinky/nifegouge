@@ -100,11 +100,13 @@ function calcTakeoffDist(oat_c, pa_ft, wt_lbs) {
   } else {
     let i = 0;
     while (i < _TO_PA_KEYS.length - 2 && _TO_PA_KEYS[i + 1] < pa_k) i++;
-    const t = (pa_k - _TO_PA_KEYS[i]) / (_TO_PA_KEYS[i + 1] - _TO_PA_KEYS[i]);
-    base = _toBaseAtIdx(i, x) + t * (_toBaseAtIdx(i + 1, x) - _toBaseAtIdx(i, x));
+    const paT = (pa_k - _TO_PA_KEYS[i]) / (_TO_PA_KEYS[i + 1] - _TO_PA_KEYS[i]);
+    const baseLow  = _toBaseAtIdx(i, x);
+    const baseHigh = _toBaseAtIdx(i + 1, x);
+    base = baseLow + paT * (baseHigh - baseLow);
   }
-  base = (base - 0.2) / 30 * (wt_lbs / 100 - 39) + 0.2;
-  return Math.round(base * 10) * 100;
+  const baseAdjusted = (base - 0.2) / 30 * (wt_lbs / 100 - 39) + 0.2;
+  return Math.round(baseAdjusted * 10) * 100;
 }
 
 function calcAppSpeed(wt_lbs, table) {
@@ -201,6 +203,7 @@ function TW4Told() {
   const [airportTO,  setAirportTO]  = useState(DEFAULT_APT);
   const [airportLDG, setAirportLDG] = useState(DEFAULT_APT);
   const [fields, setFields] = useState(mkInitial);
+  const [toDistMode, setToDistMode] = useState('50ft');
 
   const set = (key, val) => setFields(prev => ({ ...prev, [key]: val }));
 
@@ -357,7 +360,34 @@ function TW4Told() {
 
           {/* TAKEOFF performance */}
           <tr><td colSpan={5} style={S.section}>TAKEOFF</td></tr>
-          {row1('TAKEOFF DISTANCE',          'takeoffDist',   'FT')}
+          <tr>
+            <td style={S.lbl}>TAKEOFF DISTANCE</td>
+            <td style={S.inpCell}>
+              <input
+                style={inpStyle}
+                readOnly={toDistMode === 'noObs' && fields.takeoffDist !== ''}
+                value={(() => {
+                  const raw = parseFloat(fields.takeoffDist);
+                  if (toDistMode === 'noObs' && !isNaN(raw))
+                    return String(Math.round(((89 * raw) / 139 - 3 / 556) / 100) * 100);
+                  return fields.takeoffDist;
+                })()}
+                onChange={e => toDistMode === '50ft' && set('takeoffDist', e.target.value)}
+              />
+            </td>
+            {uc('FT', false, true)}
+            <td style={{border: 'none', paddingLeft: '4px'}}>
+              <select
+                value={toDistMode}
+                onChange={e => setToDistMode(e.target.value)}
+                style={{fontSize: '0.72em', padding: '1px 2px', border: '1px solid #bbb', borderRadius: '2px', boxShadow: 'none'}}
+              >
+                <option value="50ft">50 ft obstacle (PCL)</option>
+                <option value="noObs">No Obstacle (NATOPS)</option>
+              </select>
+            </td>
+            <td style={S.emptyR} />
+          </tr>
           {row1('ROTATION SPEED (VR/VOBS)',  'rotationSpeed', 'KIAS')}
 
           {/* LANDING performance */}
