@@ -5,14 +5,14 @@ import Nav from './components/Nav';
 import Flight from './components/Flight.js';
 import Docs from './components/Docs.js';
 import TW4About from './components/TW4About.js';
-import TW4Cockpit from './components/TW4Cockpit.js';
-import TW4Limits from './components/TW4Limits.js';
+import TW4EPsLimits from './components/TW4EPsLimits.js';
 import TW4Briefs from './components/TW4Briefs.js';
 import NIFEAbout from './components/NIFEAbout.js';
 import LandingPage from './components/LandingPage.js';
 import CourseRules from './components/TW4CourseRules.js';
 import Systems from './components/systems/Systems.js';
 import TW4JetLog from './components/TW4JetLog.js';
+import TW4Docs from './components/TW4Docs.js';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
@@ -99,24 +99,24 @@ function App() {
           {mode === 'TW4 Primary' && (
             <>
             <a
-              href="#cockpit"
+              href="#eps-limits"
               onClick={(e) => {
                 e.preventDefault();
-                setCurrentPage('cockpit');
+                setCurrentPage('eps-limits');
               }}
-              className={currentPage === 'cockpit' ? 'active' : ''}
+              className={currentPage === 'eps-limits' ? 'active' : ''}
             >
-              EPs/Cockpit
+              EPs/Limits
             </a>
             <a
-              href="#limits"
+              href="#tw4docs"
               onClick={(e) => {
                 e.preventDefault();
-                setCurrentPage('limits');
+                setCurrentPage('tw4docs');
               }}
-              className={currentPage === 'limits' ? 'active' : ''}
+              className={currentPage === 'tw4docs' ? 'active' : ''}
             >
-              Limits
+              Docs
             </a>
             <a
               href="#briefs"
@@ -172,8 +172,8 @@ function App() {
         {currentPage === 'docs' && mode === 'NIFE' && <Docs />}
         {currentPage === 'nav' && mode === 'NIFE' && <Nav />}
         {currentPage === 'flight' && mode === 'NIFE' && <Flight />}
-        {currentPage === 'cockpit' && mode === 'TW4 Primary' && <TW4Cockpit />}
-        {currentPage === 'limits' && mode === 'TW4 Primary' && <TW4Limits />}
+        {currentPage === 'tw4docs' && mode === 'TW4 Primary' && <TW4Docs />}
+        {currentPage === 'eps-limits' && mode === 'TW4 Primary' && <TW4EPsLimits />}
         {currentPage === 'briefs' && mode === 'TW4 Primary' && <TW4Briefs />}
         {currentPage === 'courserules' && mode === 'TW4 Primary' && <CourseRules />}
         {currentPage === 'systems' && mode === 'TW4 Primary' && <Systems />}

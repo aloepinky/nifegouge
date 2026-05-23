@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { normalizeAnswer } from '../../utils/answerUtils';
 
 function LimitsEPs() {
   const [showEPs, setShowEPs] = useState(false);
@@ -474,37 +475,36 @@ function LimitsEPs() {
     const data = showEPs ? epsData : limitsData;
 
     Object.keys(answers).forEach(key => {
-      let userAnswer = data[key] || '';
-      userAnswer = userAnswer.replace(/,/g, '');
+      const rawUser = data[key] || '';
       const correctAnswer = answers[key];
-      
+
       if (showEPs && key.endsWith('val')) {
         const baseKey = key.replace('val', '');
         const pairValue = data[baseKey] || '';
-        
+
         if (pairValue.trim() === '') {
           results[key] = '';
           return;
         }
       }
-      
+
       const isRange = /\d\s*(to|-)\s*-?\d/.test(correctAnswer);
-      
+
       if (isRange) {
-        const normalizedUser = userAnswer.toString().replace(/\s+/g, '').replace(/to/i, '-');
-        const normalizedCorrect = correctAnswer.replace(/\s+/g, '').replace(/to/i, '-');
-        
+        const normalizedUser = rawUser.toString().toLowerCase().replace(/[,;()./]/g, '').replace(/\s+/g, '').replace(/to/i, '-');
+        const normalizedCorrect = correctAnswer.toLowerCase().replace(/[,;()./]/g, '').replace(/\s+/g, '').replace(/to/i, '-');
+
         if (normalizedUser === normalizedCorrect) {
           results[key] = 'correct';
-        } else if (userAnswer === '') {
+        } else if (normalizedUser === '') {
           results[key] = '';
         } else {
           results[key] = 'incorrect';
         }
       } else {
-        const normalizedUser = userAnswer.toString().trim().toLowerCase();
-        const normalizedCorrect = correctAnswer.toString().toLowerCase();
-        
+        const normalizedUser = normalizeAnswer(rawUser);
+        const normalizedCorrect = normalizeAnswer(correctAnswer);
+
         if (normalizedUser === normalizedCorrect) {
           results[key] = 'correct';
         } else if (normalizedUser === '') {

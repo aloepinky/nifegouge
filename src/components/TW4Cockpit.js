@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef} from 'react';
 import {getEPDivs, EP_LENGTHS, EP_ANSWERS, EP_NWC, EP_FULL_LENGTHS, EP_FULL_ANSWERS, EP_TITLES, EP_FULL_TITLES} from './EPDivsData';
 import {getQuadDivs, QUAD_LENGTHS, QUAD_ANSWERS, QUAD_ACTIONS, QUAD_TITLES, QUAD_NWC} from './QuadfoldData';
+import { normalizeAnswer } from '../utils/answerUtils';
 
 function TW4Cockpit() {
   // Layout width parameters - adjust these to test different configurations
@@ -270,24 +271,21 @@ function TW4Cockpit() {
     const data = inputData;
 
     Object.keys(answers).forEach(key => {
-      //Find input answer and correct answer and remove , - . ( ) ; and spaces
-      let userAnswer = data[key] || '';
-      userAnswer = userAnswer.replace(/[,\-–;()./ ]/g, '');
-      let correctAnswer = Array.isArray(answers[key]) ? answers[key].join('') : answers[key];
-      correctAnswer = correctAnswer.replace(/[,\-–;()./ ]/g, '');
-      const normalizedUser = userAnswer.toString().trim().toLowerCase();
-      const normalizedCorrect = correctAnswer.toString().toLowerCase();
+      const rawCorrect = Array.isArray(answers[key]) ? answers[key].join('') : answers[key];
+      const normalizedUser = normalizeAnswer(data[key] || '');
+      const normalizedCorrect = normalizeAnswer(rawCorrect);
 
       if (normalizedUser === normalizedCorrect) {
         results[key] = 'correct';
       } else if (normalizedUser === '') {
         results[key] = '';
-      } else if(normalizedCorrect.includes(normalizedUser)){
-        results[key] = 'partial';
-      } else if (normalizedCorrect === ''){
+      } else if (normalizedCorrect === '') {
         results[key] = 'correct';
       } else {
-        results[key] = 'incorrect';
+        const userWords = normalizedUser.split(' ').filter(Boolean);
+        const correctWordSet = new Set(normalizedCorrect.split(' ').filter(Boolean));
+        const isPartial = userWords.length > 0 && userWords.every(w => correctWordSet.has(w));
+        results[key] = isPartial ? 'partial' : 'incorrect';
       }
     });
 

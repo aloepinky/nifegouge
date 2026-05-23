@@ -41,18 +41,22 @@ function TW4About({ onNavigate }) {
         This section is dedicated to TW4 Primary training resources (sorry Whiting)
       </p>
 
-      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => onNavigate('cockpit')}>Interactive Cockpit/EPs</h2>
+      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => onNavigate('eps-limits')}>EPs/Limits</h2>
       <p className="about-text">
-        The Cockpit section features a virtual interactive T-6 cockpit poster that serves as a comprehensive training tool for Emergency Procedures (EPs) and Quadfold checklists.
+        The EPs/Cockpit tab features a virtual interactive T-6 cockpit poster that serves as a comprehensive training tool for Emergency Procedures (EPs) and Quadfold checklists.
         By clicking through actual cockpit controls and following procedural flows, you can gain spatial awareness for where the controls are and start developing flow.
         Integrated Notes Warnings Cautions, expanded checklist items, and non-memory items allow for easy access to supplementary material. Or use Simple Mode to just review EPs and NWCs without the cockpit.
         Please refer to the instructions button on the top left for a more thorough explanation of how to use the virtual cockpit.
       </p>
-
-      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => onNavigate('limits')}>Operating Limits</h2>
       <p className="about-text">
-        The Limits page provides a virtual T-6B Operating Limitations table. You can quickly test yourself or learn the limits by revealing the answers when stuck.
+        The Limits tab provides a virtual T-6B Operating Limitations table. You can quickly test yourself or learn the limits by revealing the answers when stuck.
         See if you can correctly answer all 106 limits in a random order!
+      </p>
+
+      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => onNavigate('tw4docs')}>Docs</h2>
+      <p className="about-text">
+        The Docs page is a community-driven library of primary study materials.
+        Find gouge, study guides, and useful references shared by fellow students.
       </p>
 
       <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => onNavigate('briefs')}>Briefs/TOLD</h2>
