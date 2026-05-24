@@ -55,6 +55,7 @@ jobs:
       - name: Deploy tw4RegisterUser
         run: |
           cd lambda/tw4RegisterUser
+          npm ci
           zip -r function.zip .
           aws lambda update-function-code \
             --function-name tw4RegisterUser \
@@ -63,6 +64,7 @@ jobs:
       - name: Deploy tw4VerifyUser
         run: |
           cd lambda/tw4VerifyUser
+          npm ci
           zip -r function.zip .
           aws lambda update-function-code \
             --function-name tw4VerifyUser \

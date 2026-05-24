@@ -1,0 +1,8 @@
+{
+  "name": "tw4-register-user",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "bcryptjs": "^2.4.3"
+  }
+}
