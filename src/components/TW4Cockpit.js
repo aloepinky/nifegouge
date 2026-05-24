@@ -1402,7 +1402,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   </div>
                 )}
                 </div>
-                <div className="navigation-buttons">
+                {(!isGameActive || process.env.NODE_ENV === 'development') && <div className="navigation-buttons">
                   <button onClick={() => {
                     setCurrentIndex(currentIndex-1);
                     setCheckResults(emptyResults());
@@ -1498,7 +1498,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                     disabled={currentIndex === currentIndexArray.length - 1}>
                     Next
                   </button>
-                </div>
+                </div>}
               </div>
 
               {/* RIGHT CONTROLS */}
@@ -1668,7 +1668,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
             Auto NWC
           </button>
         </div>
-        <div style={{display: 'flex', justifyContent: 'center', marginTop: '10px'}}>
+        {(!isGameActive || process.env.NODE_ENV === 'development') && <div style={{display: 'flex', justifyContent: 'center', marginTop: '10px'}}>
           <div style={{position: 'relative', height: '60px', width: '300px'}}>
             {/* Labels and circles container */}
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', width: '100%'}}>
@@ -1768,7 +1768,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
               </div>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </>
   );
