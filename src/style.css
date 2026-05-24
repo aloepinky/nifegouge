@@ -233,6 +233,10 @@ table,
   font-style: italic;
 }
 
+.magvar-input::placeholder {
+  font-size: 0.38em;
+}
+
 th,
 td,
 .setai-table th,
@@ -1936,6 +1940,15 @@ textarea.incorrect-answer {
   background-color: #003B4F;
 }
 
+/* Leaderboard table row hover */
+.leaderboard-table tbody tr {
+  transition: background-color 0.1s;
+}
+
+.leaderboard-table tbody tr:hover {
+  background-color: #f5f7fa;
+}
+
 /* Leaderboard Tabs */
 .leaderboard-tabs {
   display: flex;
@@ -2739,19 +2752,16 @@ textarea.incorrect-answer {
   background-color: #fff9e6;
   padding: 20px;
   border-radius: 10px;
-  border: 2px solid #ffc107;
   box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
 }
 
 .questions-container.pending-question-mode .qa-box {
   background-color: white;
-  border: 1px solid #ffc107;
 }
 
 .questions-container.pending-question-mode .dropdown-row select,
 .questions-container.pending-question-mode .dropdown-row input {
   background-color: white;
-  border-color: #ffc107;
 }
 /* Disabled state for vote buttons */
 .thumb-btn:disabled {
@@ -2765,7 +2775,6 @@ textarea.incorrect-answer {
 
 /* Pending question mode styling */
 .pending-question-mode .qa-container {
-  border: 2px solid #ffc107;
   border-radius: 8px;
   padding: 10px;
 }
@@ -2848,7 +2857,6 @@ textarea.incorrect-answer {
 }
 
 .page-toggle-container span.active {
-  background-color: #003B4F;
 }
 
 .page-toggle-switch {
@@ -3536,3 +3544,141 @@ textarea.incorrect-answer {
     margin-left: 8px;
     flex-shrink: 0;
   }
+
+/* TW4 Leaderboard / Game Mode */
+.tw4-nav-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.85em;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.tw4-nav-btn.primary {
+  background-color: #4CAF50;
+  color: #fff;
+}
+
+.tw4-nav-btn.primary:hover {
+  background-color: #45a049;
+}
+
+.tw4-nav-btn.secondary {
+  background-color: #1a3a5c;
+  color: #fff;
+}
+
+.tw4-nav-btn.secondary:hover {
+  background-color: #254d7a;
+}
+
+.tw4-nav-btn.danger {
+  background-color: #c62828;
+  color: #fff;
+}
+
+.tw4-nav-btn.danger:hover {
+  background-color: #b71c1c;
+}
+
+/* Sub-navbar action buttons that blend with the tab row */
+.sub-navbar-btn {
+  color: #ffffff;
+  padding: 8px 12px;
+  font-weight: bold;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 1em;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.sub-navbar-btn:hover {
+  background-color: #01202C;
+}
+
+.sub-navbar-btn.danger {
+  color: #ff9090;
+}
+
+.tw4-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.tw4-modal {
+  background: white;
+  color: #1a1a1a;
+  border-radius: 12px;
+  padding: 24px;
+  width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+}
+
+.game-button-danger {
+  padding: 10px 20px;
+  background-color: #c62828;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.game-button-danger:hover {
+  background-color: #b71c1c;
+}
+
+.submit-button {
+  padding: 8px 18px;
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.modal-close-button {
+  padding: 8px 18px;
+  background-color: #1a3a5c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease;
+}
+
+.modal-close-button:hover {
+  background-color: #254d7a;
+}

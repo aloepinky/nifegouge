@@ -3,7 +3,7 @@ import {getEPDivs, EP_LENGTHS, EP_ANSWERS, EP_NWC, EP_FULL_LENGTHS, EP_FULL_ANSW
 import {getQuadDivs, QUAD_LENGTHS, QUAD_ANSWERS, QUAD_ACTIONS, QUAD_TITLES, QUAD_NWC} from './QuadfoldData';
 import { normalizeAnswer } from '../utils/answerUtils';
 
-function TW4Cockpit() {
+function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   // Layout width parameters - adjust these to test different configurations
   const LAYOUT_GAP = '20px';            // Gap between columns
   const CONTAINER_MAX_WIDTH = '1500px';// Max width of container when showing EPs
@@ -213,7 +213,7 @@ function TW4Cockpit() {
     'terminate': ['terminate'],
     'expo': ['external power'],
     'loose': ['loose items'],
-    'stick': ['Attitude', 'Zoom', 'Glide', 'Controls', 'Descent', 'Climb', 'NWS', 'Nosewheel Steering', 'Nose wheel Steering', 'trim', 't\u200Brim', 'gust lock'],
+    'stick': ['Attitude', 'Zoom', 'Glide', 'Controls', 'Descent', 'Climb', 'NWS', 'Nosewheel Steering', 'Nose wheel Steering', 'trim', 't\u200Brim', 'gust lock', 'Intercept', 'Turn'],
     'forcedLanding': ['forced landing', 'eject'],
     'pel': ['pel'],
     'elp': ['elp'],
@@ -290,6 +290,28 @@ function TW4Cockpit() {
     });
 
     setCheckResults(results);
+
+    if (isGameActive) {
+      const currentEPKey = divMap[currentDivKey][0][currentIndexArray[currentIndex]].key;
+      const currentEPFields = Object.keys(answers).filter(k => k.startsWith(currentEPKey));
+      const allCorrect = currentEPFields.length > 0 && currentEPFields.every(
+        key => !answers[key] || results[key] === 'correct'
+      );
+      if (allCorrect) {
+        if (currentIndex < currentIndexArray.length - 1) {
+          setTimeout(() => {
+            setCurrentIndex(ci => ci + 1);
+            setInputData({});
+            setCheckResults({});
+            setActiveHints({});
+            closeChecklistModal();
+            closeNWCModal();
+          }, 600);
+        } else {
+          onGameComplete?.();
+        }
+      }
+    }
   };
 
   const resetAnswers = () => {
@@ -1603,18 +1625,36 @@ function TW4Cockpit() {
             </div>
         </div>
         <div className="button-row" style={{ justifyContent: 'center', marginTop: '0px' }}>
-          {(currentDivKey === 'epDivs' || currentDivKey === 'fullEpDivs') &&<button style={{minWidth: '147px'}} onClick={() => {
-            setisRandom(!isRandom);
-            refreshIndices(divMap[currentDivKey][0], !isRandom);
-            setInputData({});
-            resetAnswers();}}>
-            {isRandom ? "Random " : "Sequential "} Order
-          </button>}
-          {cockpitMode === 'full' && <button onClick={() => giveHint()}>Hint?</button>}
-          <button onClick={nextAnswer}>Next Answer/Skip</button>
-          <button onClick={allAnswers}>All Answers</button>
+          {(!isGameActive || process.env.NODE_ENV === 'development') && <>
+            {(currentDivKey === 'epDivs' || currentDivKey === 'fullEpDivs') && <button style={{minWidth: '147px'}} onClick={() => {
+              setisRandom(!isRandom);
+              refreshIndices(divMap[currentDivKey][0], !isRandom);
+              setInputData({});
+              resetAnswers();}}>
+              {isRandom ? "Random " : "Sequential "} Order
+            </button>}
+            {cockpitMode === 'full' && <button onClick={() => giveHint()}>Hint?</button>}
+            <button onClick={nextAnswer}>Next Answer/Skip</button>
+            <button onClick={allAnswers}>All Answers</button>
+          </>}
           {(currentDivKey === 'epDivs' || currentDivKey === 'fullEpDivs') && <button onClick={checkAnswers}>Check</button>}
-          <button onClick={resetAnswers}>Reset</button>
+          {(!isGameActive || process.env.NODE_ENV === 'development') && <>
+            <button onClick={resetAnswers}>Reset</button>
+            {currentDivKey === 'quadDivs' && (
+              <button
+                onClick={toggleAutoExpanded}
+                style={{
+                  backgroundColor: autoExpanded ? '#4CAF50' : '#f0f0f0',
+                  color: autoExpanded ? 'white' : 'black',
+                  fontWeight: autoExpanded ? 'bold' : 'normal',
+                  border: autoExpanded ? '2px solid #45a049' : '1px solid #ccc',
+                  boxShadow: autoExpanded ? 'inset 0 2px 4px rgba(0,0,0,0.2)' : 'none'
+                }}
+              >
+                Auto Expanded
+              </button>
+            )}
+          </>}
           <button
             onClick={toggleAutoNWC}
             style={{
@@ -1627,20 +1667,6 @@ function TW4Cockpit() {
           >
             Auto NWC
           </button>
-          {currentDivKey === 'quadDivs' && (
-            <button
-              onClick={toggleAutoExpanded}
-              style={{
-                backgroundColor: autoExpanded ? '#4CAF50' : '#f0f0f0',
-                color: autoExpanded ? 'white' : 'black',
-                fontWeight: autoExpanded ? 'bold' : 'normal',
-                border: autoExpanded ? '2px solid #45a049' : '1px solid #ccc',
-                boxShadow: autoExpanded ? 'inset 0 2px 4px rgba(0,0,0,0.2)' : 'none'
-              }}
-            >
-              Auto Expanded
-            </button>
-          )}
         </div>
         <div style={{display: 'flex', justifyContent: 'center', marginTop: '10px'}}>
           <div style={{position: 'relative', height: '60px', width: '300px'}}>

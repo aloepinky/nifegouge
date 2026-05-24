@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { normalizeAnswer } from '../utils/answerUtils';
 
 function TW4Limits({ isGameActive = false, onGameComplete }) {
   // Layout width parameters - adjust these to test different configurations
@@ -10,6 +11,7 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
   const [limitIndices, setLimitIndices] = useState([]);
   const isGameActiveRef = useRef(isGameActive);
   useEffect(() => { isGameActiveRef.current = isGameActive; }, [isGameActive]);
+  const lockedFieldRef = useRef(null);
 
   // Helper function to shuffle array with constraints
   const shuffleIndices = (arr) => {
@@ -231,8 +233,19 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     maxFuelFlow: '799'
   };
 
+  // Collapse "landing gear" into a single token so "gear" abbreviates it correctly
+  const preProcessProhib = (s) => s.replace(/landing\s+gear/gi, 'gear');
+
   // Helper function to check if an answer is correct
   const isCorrectAnswer = (userAnswer, field) => {
+    // Prohibited maneuvers use the generous word-sorted checker from answerUtils
+    if (field.startsWith('prohib')) {
+      if (userAnswer.trim() === '') return '';
+      const correctAnswer = Array.isArray(limitsAnswers[field]) ? limitsAnswers[field].join(' ') : limitsAnswers[field];
+      const norm = (s) => normalizeAnswer(preProcessProhib(s));
+      return norm(userAnswer) === norm(correctAnswer) ? 'correct' : 'incorrect';
+    }
+
     // Normalize user answer
     let normalizedUserAnswer = userAnswer.replace(/[,\-–;()/ ]/g, '');
 
@@ -276,6 +289,9 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
   };
 
   const handleLimitsChange = (field, value) => {
+    // Field is locked — a correct answer was already detected, ignore further keystrokes
+    if (lockedFieldRef.current === field) return;
+
     setLimitsData(prev => ({ ...prev, [field]: value }));
 
     // In random mode, check if answer is correct and auto-advance
@@ -283,9 +299,11 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
       const result = isCorrectAnswer(value, field);
 
       if (result === 'correct') {
+        lockedFieldRef.current = field;
+        setLimitsData(prev => ({ ...prev, [field]: value }));
         setCheckResults(prev => ({ ...prev, [field]: 'correct' }));
-        // Auto-advance after short delay
         setTimeout(() => {
+          lockedFieldRef.current = null;
           advanceToNextLimit();
         }, 300);
         return;

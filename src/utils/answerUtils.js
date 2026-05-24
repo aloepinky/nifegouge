@@ -11,6 +11,7 @@ const ABBREVS = {
   'incr': 'increase',
   'decr': 'decrease',
   'gnd':  'ground',
+  'lbs':  'pounds',
 };
 
 export function normalizeAnswer(str) {

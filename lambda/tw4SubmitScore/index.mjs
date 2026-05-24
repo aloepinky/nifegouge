@@ -10,6 +10,37 @@ const headers = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+async function getUserRecord(testType, username) {
+    const result = await dynamodb.send(new QueryCommand({
+        TableName: 'TW4TimeLeaderboard',
+        KeyConditionExpression: 'testType = :t',
+        FilterExpression: 'username = :u',
+        ExpressionAttributeValues: { ':t': testType, ':u': username },
+    }));
+    return (result.Items || [])[0] || null;
+}
+
+async function upsertTimeRecord(testType, username, newTime) {
+    const existing = await getUserRecord(testType, username);
+    if (existing && existing.elapsedTime <= newTime) return; // existing record is equal or better
+    if (existing) {
+        await dynamodb.send(new DeleteCommand({
+            TableName: 'TW4TimeLeaderboard',
+            Key: { testType: existing.testType, elapsedTime: existing.elapsedTime },
+        }));
+    }
+    await dynamodb.send(new PutCommand({
+        TableName: 'TW4TimeLeaderboard',
+        Item: {
+            testType,
+            elapsedTime: Number(newTime),
+            username,
+            score: 100,
+            timestamp: new Date().toISOString(),
+        },
+    }));
+}
+
 export const handler = async (event) => {
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
@@ -34,34 +65,14 @@ export const handler = async (event) => {
             return { statusCode: 403, headers, body: JSON.stringify({ error: 'Unknown username' }) };
         }
 
-        // Remove any existing time entry for this user + testType
-        const existing = await dynamodb.send(new QueryCommand({
-            TableName: 'TW4TimeLeaderboard',
-            KeyConditionExpression: 'testType = :t',
-            ExpressionAttributeValues: { ':t': testType },
-        }));
+        // Upsert main time record (only keeps personal best)
+        await upsertTimeRecord(testType, upper, elapsedTime);
 
-        for (const item of existing.Items || []) {
-            if (item.username === upper) {
-                await dynamodb.send(new DeleteCommand({
-                    TableName: 'TW4TimeLeaderboard',
-                    Key: { testType: item.testType, elapsedTime: item.elapsedTime },
-                }));
-            }
+        // For combined runs, cross-post splits to solo leaderboards if they're personal bests
+        if (testType === 'TW4_EPs_and_Limits') {
+            if (epsTime) await upsertTimeRecord('TW4_EPs', upper, epsTime);
+            if (limitsTime) await upsertTimeRecord('TW4_Limits', upper, limitsTime);
         }
-
-        // Insert best time record
-        const timeItem = {
-            testType,
-            elapsedTime: Number(elapsedTime),
-            username: upper,
-            score: 100,
-            timestamp: new Date().toISOString(),
-        };
-        if (epsTime) timeItem.epsTime = Number(epsTime);
-        if (limitsTime) timeItem.limitsTime = Number(limitsTime);
-
-        await dynamodb.send(new PutCommand({ TableName: 'TW4TimeLeaderboard', Item: timeItem }));
 
         // Record completion (every submission counts toward completion leaderboard)
         const iso = new Date().toISOString();
