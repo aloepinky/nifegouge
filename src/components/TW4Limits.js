@@ -1,6 +1,6 @@
-import React, { useState} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-function TW4Limits() {
+function TW4Limits({ isGameActive = false, onGameComplete }) {
   // Layout width parameters - adjust these to test different configurations
 
   const [limitsData, setLimitsData] = useState({});
@@ -8,6 +8,8 @@ function TW4Limits() {
   const [isRandomMode, setIsRandomMode] = useState(false);
   const [currentLimitIndex, setCurrentLimitIndex] = useState(0);
   const [limitIndices, setLimitIndices] = useState([]);
+  const isGameActiveRef = useRef(isGameActive);
+  useEffect(() => { isGameActiveRef.current = isGameActive; }, [isGameActive]);
 
   // Helper function to shuffle array with constraints
   const shuffleIndices = (arr) => {
@@ -293,6 +295,14 @@ function TW4Limits() {
     setCheckResults(prev => ({ ...prev, [field]: '' }));
   };
 
+  // Auto-start random mode when game begins
+  useEffect(() => {
+    if (isGameActive) {
+      startRandomMode();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGameActive]);
+
   const startRandomMode = () => {
     // Get all field keys
     const allFields = Object.keys(limitsAnswers);
@@ -331,8 +341,8 @@ function TW4Limits() {
     const nextIndex = currentLimitIndex + 1;
 
     if (nextIndex >= limitIndices.length) {
-      // Reached the end, stop random mode
       stopRandomMode();
+      if (isGameActiveRef.current) onGameComplete?.();
       return;
     }
 
@@ -361,6 +371,11 @@ function TW4Limits() {
     });
 
     setCheckResults(results);
+
+    if (isGameActive) {
+      const allCorrect = Object.keys(limitsAnswers).every(key => results[key] === 'correct');
+      if (allCorrect) onGameComplete?.();
+    }
   };
 
   const resetAnswers = () => {
@@ -965,30 +980,32 @@ function TW4Limits() {
             Random Mode: Limit {currentLimitIndex + 1} of {limitIndices.length}
           </div>
         )}
-        <div className="button-row" style={{ justifyContent: 'center', marginTop: '20px' }}>
-          <button onClick={nextAnswer}>Next Answer</button>
-          <button onClick={allAnswers}>All Answers</button>
-          <button onClick={checkAnswers}>Check Answers</button>
-          <button onClick={resetAnswers}>Reset</button>
-          <button
-            onClick={() => {
-              if (isRandomMode) {
-                stopRandomMode();
-              } else {
-                startRandomMode();
-              }
-            }}
-            style={{
-              backgroundColor: isRandomMode ? '#4CAF50' : '#f0f0f0',
-              color: isRandomMode ? 'white' : 'black',
-              fontWeight: isRandomMode ? 'bold' : 'normal',
-              border: isRandomMode ? '2px solid #45a049' : '1px solid #ccc',
-              boxShadow: isRandomMode ? 'inset 0 2px 4px rgba(0,0,0,0.2)' : 'none'
-            }}
-          >
-            Random Mode
-          </button>
-        </div>
+        {!isGameActive && (
+          <div className="button-row" style={{ justifyContent: 'center', marginTop: '20px' }}>
+            <button onClick={nextAnswer}>Next Answer</button>
+            <button onClick={allAnswers}>All Answers</button>
+            <button onClick={checkAnswers}>Check Answers</button>
+            <button onClick={resetAnswers}>Reset</button>
+            <button
+              onClick={() => {
+                if (isRandomMode) {
+                  stopRandomMode();
+                } else {
+                  startRandomMode();
+                }
+              }}
+              style={{
+                backgroundColor: isRandomMode ? '#4CAF50' : '#f0f0f0',
+                color: isRandomMode ? 'white' : 'black',
+                fontWeight: isRandomMode ? 'bold' : 'normal',
+                border: isRandomMode ? '2px solid #45a049' : '1px solid #ccc',
+                boxShadow: isRandomMode ? 'inset 0 2px 4px rgba(0,0,0,0.2)' : 'none'
+              }}
+            >
+              Random Mode
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
