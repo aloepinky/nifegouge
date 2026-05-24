@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand, BatchGetCommand } from '@aws-sdk/lib-dynamodb';
 
 const client = new DynamoDBClient({ region: 'us-east-2' });
 const dynamodb = DynamoDBDocumentClient.from(client);
@@ -35,10 +35,31 @@ export const handler = async (event) => {
             counts[item.username] = (counts[item.username] || 0) + 1;
         }
 
-        const leaderboard = Object.entries(counts)
+        let leaderboard = Object.entries(counts)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10)
-            .map(([username, completions], i) => ({ rank: i + 1, username, completions }));
+            .map(([username, completions], i) => ({ rank: i + 1, username, completions, branch: '', trainingClass: '' }));
+
+        // Join with user profiles for branch/class
+        if (leaderboard.length > 0) {
+            const batchResult = await dynamodb.send(new BatchGetCommand({
+                RequestItems: {
+                    TW4Users: {
+                        Keys: leaderboard.map(e => ({ username: e.username })),
+                        ProjectionExpression: 'username, branch, trainingClass',
+                    },
+                },
+            }));
+            const profiles = {};
+            for (const user of (batchResult.Responses?.TW4Users || [])) {
+                profiles[user.username] = user;
+            }
+            leaderboard = leaderboard.map(e => ({
+                ...e,
+                branch: profiles[e.username]?.branch || '',
+                trainingClass: profiles[e.username]?.trainingClass || '',
+            }));
+        }
 
         return { statusCode: 200, headers, body: JSON.stringify({ leaderboard }) };
     } catch (error) {

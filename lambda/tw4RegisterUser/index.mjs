@@ -1,5 +1,4 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-
 import { DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import bcrypt from 'bcryptjs';
 
@@ -19,7 +18,7 @@ export const handler = async (event) => {
 
     try {
         let body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body || event;
-        const { username, password } = body;
+        const { username, password, branch, trainingClass } = body;
 
         if (!username || !password) {
             return { statusCode: 400, headers, body: JSON.stringify({ error: 'username and password required' }) };
@@ -30,7 +29,6 @@ export const handler = async (event) => {
             return { statusCode: 400, headers, body: JSON.stringify({ error: 'Username must be exactly 5 letters A-Z' }) };
         }
 
-        // Check if username is taken
         const existing = await dynamodb.send(new GetCommand({
             TableName: 'TW4Users',
             Key: { username: upper },
@@ -42,12 +40,20 @@ export const handler = async (event) => {
 
         const passwordHash = await bcrypt.hash(password, 10);
 
-        await dynamodb.send(new PutCommand({
-            TableName: 'TW4Users',
-            Item: { username: upper, passwordHash },
-        }));
+        const item = {
+            username: upper,
+            passwordHash,
+            branch: branch ? branch.slice(0, 10).toUpperCase() : '',
+            trainingClass: trainingClass ? trainingClass.slice(0, 10).toUpperCase() : 'POOL',
+        };
 
-        return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        await dynamodb.send(new PutCommand({ TableName: 'TW4Users', Item: item }));
+
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ success: true, branch: item.branch, trainingClass: item.trainingClass }),
+        };
     } catch (error) {
         console.error(error);
         return { statusCode: 500, headers, body: JSON.stringify({ error: 'Registration failed' }) };

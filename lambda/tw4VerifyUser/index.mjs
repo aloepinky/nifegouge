@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import bcrypt from 'bcryptjs';
 
 const client = new DynamoDBClient({ region: 'us-east-2' });
@@ -18,7 +18,7 @@ export const handler = async (event) => {
 
     try {
         let body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body || event;
-        const { username, password } = body;
+        const { username, password, branch, trainingClass } = body;
 
         if (!username || !password) {
             return { statusCode: 400, headers, body: JSON.stringify({ error: 'username and password required' }) };
@@ -40,7 +40,30 @@ export const handler = async (event) => {
             return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid username or password' }) };
         }
 
-        return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        let currentBranch = result.Item.branch || '';
+        let currentClass = result.Item.trainingClass || 'POOL';
+
+        // Optionally update branch/trainingClass if provided
+        if (branch !== undefined || trainingClass !== undefined) {
+            const newBranch = branch !== undefined ? (branch.slice(0, 10).toUpperCase()) : currentBranch;
+            const newClass = trainingClass !== undefined ? (trainingClass.slice(0, 10).toUpperCase() || 'POOL') : currentClass;
+
+            await dynamodb.send(new UpdateCommand({
+                TableName: 'TW4Users',
+                Key: { username: upper },
+                UpdateExpression: 'SET branch = :b, trainingClass = :c',
+                ExpressionAttributeValues: { ':b': newBranch, ':c': newClass },
+            }));
+
+            currentBranch = newBranch;
+            currentClass = newClass;
+        }
+
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ success: true, branch: currentBranch, trainingClass: currentClass }),
+        };
     } catch (error) {
         console.error(error);
         return { statusCode: 500, headers, body: JSON.stringify({ error: 'Verification failed' }) };
