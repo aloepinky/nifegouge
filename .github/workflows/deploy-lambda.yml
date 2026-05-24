@@ -51,3 +51,43 @@ jobs:
           aws lambda update-function-code \
             --function-name submitScore \
             --zip-file fileb://function.zip
+
+      - name: Deploy tw4RegisterUser
+        run: |
+          cd lambda/tw4RegisterUser
+          zip -r function.zip .
+          aws lambda update-function-code \
+            --function-name tw4RegisterUser \
+            --zip-file fileb://function.zip
+
+      - name: Deploy tw4VerifyUser
+        run: |
+          cd lambda/tw4VerifyUser
+          zip -r function.zip .
+          aws lambda update-function-code \
+            --function-name tw4VerifyUser \
+            --zip-file fileb://function.zip
+
+      - name: Deploy tw4SubmitScore
+        run: |
+          cd lambda/tw4SubmitScore
+          zip -r function.zip .
+          aws lambda update-function-code \
+            --function-name tw4SubmitScore \
+            --zip-file fileb://function.zip
+
+      - name: Deploy tw4GetTimeLeaderboard
+        run: |
+          cd lambda/tw4GetTimeLeaderboard
+          zip -r function.zip .
+          aws lambda update-function-code \
+            --function-name tw4GetTimeLeaderboard \
+            --zip-file fileb://function.zip
+
+      - name: Deploy tw4GetCompletionLeaderboard
+        run: |
+          cd lambda/tw4GetCompletionLeaderboard
+          zip -r function.zip .
+          aws lambda update-function-code \
+            --function-name tw4GetCompletionLeaderboard \
+            --zip-file fileb://function.zip
