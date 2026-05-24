@@ -141,7 +141,7 @@ function TW4EPsLimits() {
         >
           Limits
         </span>
-        <span style={{ flex: 1 }} />
+        <div style={{ flex: 1 }} />
         {isGameActive ? (
           <>
             <span className="game-timer" style={{ position: 'static' }}>
