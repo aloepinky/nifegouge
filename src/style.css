@@ -3715,14 +3715,14 @@ textarea.incorrect-answer {
 
 .edit-divider-row td {
   height: 16px;
-  background: #003B4F;
+  background: #01202C;
   cursor: pointer;
   padding: 0;
   border: none;
 }
 
 .edit-divider-row td:hover {
-  background: #005a78;
+  background: #003B4F;
 }
 
 .insert-row-btn {
