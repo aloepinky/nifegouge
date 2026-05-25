@@ -2016,13 +2016,13 @@ function TW4JetLog() {
           }
         }
 
-        // Hold / approach indicators in top-right of the route cell
+        // Hold / approach indicators in route cell
         if (!vfrMode) {
-          if (holdCells[`r${topRow}c0`]) drawR(465, rowY - 4, 'H', 7);
+          const isHold = !!holdCells[`r${topRow}c0`];
           const aprBadge = routeBadges[`r${topRow}c0`];
-          if (typeof aprBadge === 'number' && aprBadge > 0) {
-            drawR(450, rowY - 4, aprBadge === 1 ? '1 APR' : `${aprBadge} APRS`, 6);
-          }
+          const isApr = typeof aprBadge === 'number' && aprBadge > 0;
+          if (isHold) drawR(isApr ? 422 : 465, rowY - 4, 'H', 7);
+          if (isApr) drawR(450, rowY - 4, aprBadge === 1 ? '1 APR' : `${aprBadge} APRS`, 6);
         }
 
         // IDENT / TO column: two-line when both present, single-line centered otherwise
