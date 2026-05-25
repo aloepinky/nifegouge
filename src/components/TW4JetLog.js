@@ -23,6 +23,7 @@ const narrowCellFontSize = (val) => {
 
 function TW4JetLog() {
   const [mainRowCount, setMainRowCount] = useState(9);
+  const [editRowsMode, setEditRowsMode] = useState(false);
   const [inputValues, setInputValues] = useState({'r0c4': '1', 'r0c6': '50', 'r0c7': '1050'});
   const [airports, setAirports] = useState([]);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -761,17 +762,67 @@ function TW4JetLog() {
     );
   };
 
-  const handleAddRow = () => {
-    setMainRowCount(prev => Math.min(prev + 1, 20));
+  const shiftKeysForInsert = (obj, insertAfterPairIdx) => {
+    const result = {};
+    for (const [key, val] of Object.entries(obj)) {
+      const m = key.match(/^r(\d+)(c.+)$/);
+      if (!m) { result[key] = val; continue; }
+      const rowNum = parseInt(m[1]);
+      if (rowNum >= 200) { result[key] = val; continue; }
+      const pairIdx = Math.floor(rowNum / 2);
+      if (pairIdx > insertAfterPairIdx) {
+        result[`r${(pairIdx + 1) * 2 + (rowNum % 2)}${m[2]}`] = val;
+      } else {
+        result[key] = val;
+      }
+    }
+    return result;
   };
 
-  const handleRemoveRow = () => {
-    // Never remove below 1 row (STTO only), never remove a row with data
-    if (mainRowCount <= 1) return;
-    const lastPair = mainRowCount - 1;
-    if (!pairHasData(lastPair)) {
-      setMainRowCount(prev => prev - 1);
+  const shiftKeysForDelete = (obj, deletePairIdx) => {
+    const result = {};
+    for (const [key, val] of Object.entries(obj)) {
+      const m = key.match(/^r(\d+)(c.+)$/);
+      if (!m) { result[key] = val; continue; }
+      const rowNum = parseInt(m[1]);
+      if (rowNum >= 200) { result[key] = val; continue; }
+      const pairIdx = Math.floor(rowNum / 2);
+      if (pairIdx === deletePairIdx) continue;
+      if (pairIdx > deletePairIdx) {
+        result[`r${(pairIdx - 1) * 2 + (rowNum % 2)}${m[2]}`] = val;
+      } else {
+        result[key] = val;
+      }
     }
+    return result;
+  };
+
+  const handleInsertAfter = (insertAfterPairIdx) => {
+    if (mainRowCount >= 20) return;
+    setInputValues(prev => shiftKeysForInsert(prev, insertAfterPairIdx));
+    setSplitCells(prev => shiftKeysForInsert(prev, insertAfterPairIdx));
+    setHoldCells(prev => shiftKeysForInsert(prev, insertAfterPairIdx));
+    setRouteBadges(prev => shiftKeysForInsert(prev, insertAfterPairIdx));
+    setVfrTng(prev => shiftKeysForInsert(prev, insertAfterPairIdx));
+    setIntClimbs(prev => prev.map(c =>
+      c.row > insertAfterPairIdx ? { ...c, row: c.row + 1 } : c
+    ));
+    setMainRowCount(prev => prev + 1);
+  };
+
+  const handleDeletePair = (deletePairIdx) => {
+    if (mainRowCount <= 1) return;
+    setInputValues(prev => shiftKeysForDelete(prev, deletePairIdx));
+    setSplitCells(prev => shiftKeysForDelete(prev, deletePairIdx));
+    setHoldCells(prev => shiftKeysForDelete(prev, deletePairIdx));
+    setRouteBadges(prev => shiftKeysForDelete(prev, deletePairIdx));
+    setVfrTng(prev => shiftKeysForDelete(prev, deletePairIdx));
+    setIntClimbs(prev =>
+      prev
+        .filter(c => c.row !== deletePairIdx)
+        .map(c => c.row > deletePairIdx ? { ...c, row: c.row - 1 } : c)
+    );
+    setMainRowCount(prev => prev - 1);
   };
 
   const handleVFRSolve = () => {
@@ -1312,6 +1363,11 @@ function TW4JetLog() {
     return (
       <React.Fragment key={top}>
         <tr>
+          {editRowsMode && (
+            <td rowSpan={2} className="edit-minus-cell">
+              <button className="delete-row-btn" onClick={() => handleDeletePair(pairIdx)}>⊖</button>
+            </td>
+          )}
           {vfrMode ? renderVFRCheckCell(`r${top}c0`, vfrTng, setVfrTng, 'T&G', '20px') : renderRouteToCell(`r${top}c0`)}
           {renderCell(`r${top}c1`)}
           {renderCell(`r${top}c2`, 2)}
@@ -1372,6 +1428,7 @@ function TW4JetLog() {
   const renderTotalRow = (tTop, tBot, distIds, eteIds, fuelIds, isAlt = false) => (
     <React.Fragment>
       <tr>
+        {editRowsMode && <td rowSpan={2} className="edit-minus-cell" />}
         <td rowSpan={2} style={{fontSize: '1.5em', textAlign: 'center', padding: '1px 3px', border: '1px solid black'}}>Total</td>
         {renderCell(`r${tTop}c1`)}
         {renderCell(`r${tTop}c2`, 2)}
@@ -1399,6 +1456,14 @@ function TW4JetLog() {
         {renderCell(`r${tBot}c2`)}
       </tr>
     </React.Fragment>
+  );
+
+  const renderDivider = (insertAfterPairIdx) => (
+    <tr key={`div-${insertAfterPairIdx}`} className="edit-divider-row">
+      <td colSpan={20} className="edit-divider-cell" onClick={() => handleInsertAfter(insertAfterPairIdx)}>
+        <span className="insert-row-btn">⊕</span>
+      </td>
+    </tr>
   );
 
   const mainDataRows = Array.from({length: mainRowCount}, (_, i) => i * 2);
@@ -2190,13 +2255,14 @@ function TW4JetLog() {
       <div className="button-container" style={{justifyContent: 'center'}}>
         <button onClick={() => handleSolve()}>Solve</button>
         <button onClick={handleClear}>Clear</button>
-        <button onClick={handleAddRow}>Add Row</button>
+        <button onClick={() => setEditRowsMode(prev => !prev)}>
+          {editRowsMode ? 'Done' : 'Edit Rows'}
+        </button>
         {!vfrMode && (
           <button onClick={() => setShowIntClimbSelector(prev => !prev)}>
             {showIntClimbSelector ? 'Done' : intClimbs.length > 0 ? `Int. Climbs (${intClimbs.length})` : 'Add Int. Climb'}
           </button>
         )}
-        <button onClick={handleRemoveRow}>Remove Row</button>
         <button onClick={() => setShowParams(true)}>Parameters</button>
         <button onClick={() => setShowPresets(s => !s)}>Preset Routes</button>
         <button onClick={generateFlightPlan}>Generate Flight Plan + Jet Log</button>
@@ -2346,6 +2412,7 @@ function TW4JetLog() {
 
       <table className="jetlog-table">
         <colgroup>
+          {editRowsMode && <col style={{width: '28px'}} />}
           <col style={{width: '23%'}} />
           {vfrMode ? (
             <>
@@ -2362,6 +2429,7 @@ function TW4JetLog() {
         </colgroup>
         <thead>
           <tr>
+            {editRowsMode && <th rowSpan="2" style={{width: '28px', padding: 0}} />}
             <th rowSpan="2">ROUTE<br/>TO</th>
             <th>IDENT</th>
             <th rowSpan="2">CUS</th>
@@ -2391,6 +2459,7 @@ function TW4JetLog() {
         <tbody>
           {/* Pair 0: STTO */}
           <tr>
+            {editRowsMode && <td rowSpan={2} className="edit-minus-cell" />}
             <td rowSpan={2} style={{fontSize: '1.5em', textAlign: 'center', padding: '1px 3px', border: '1px solid black'}}>STTO</td>
             {renderCell('r0c1')}
             {renderCell('r0c2', 2)}
@@ -2411,7 +2480,16 @@ function TW4JetLog() {
           </tr>
 
           {/* Dynamic main route rows (pairs 1+) */}
-          {Array.from({length: mainRowCount - 1}, (_, idx) => renderMainRowPair(idx + 1))}
+          {editRowsMode && renderDivider(0)}
+          {Array.from({length: mainRowCount - 1}, (_, idx) => {
+            const pairIdx = idx + 1;
+            return (
+              <React.Fragment key={`fr-${pairIdx}`}>
+                {renderMainRowPair(pairIdx)}
+                {editRowsMode && renderDivider(pairIdx)}
+              </React.Fragment>
+            );
+          })}
 
           {/* Main table Total row */}
           {renderTotalRow(
