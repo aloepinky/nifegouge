@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Routes, Route, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import './style.css';
 import Questions from './components/Questions';
 import Nav from './components/Nav';
@@ -15,170 +16,83 @@ import TW4JetLog from './components/TW4JetLog.js';
 import TW4Docs from './components/TW4Docs.js';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('landing');
-  const [mode, setMode] = useState('NIFE');
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const handleModeToggle = (newMode) => {
-    setMode(newMode);
-    setCurrentPage('about');
-  };
+  const isTW4 = location.pathname.startsWith('/tw4');
+  const isNIFE = location.pathname.startsWith('/nife');
+  const isLanding = location.pathname === '/';
+
+  const navLinkClass = ({ isActive }) => isActive ? 'active' : '';
 
   return (
     <div>
-      {/* Navigation Bar - hidden on landing page */}
-      {currentPage !== 'landing' && <div className="navbar">
-        {/* Mode Toggle */}
-        <div className="page-toggle-container">
-          <span className={mode === 'NIFE' ? 'active' : ''} onClick={() => handleModeToggle('NIFE')}>
-            NIFE
-          </span>
-          <div className="page-toggle-switch" onClick={() => handleModeToggle(mode === 'NIFE' ? 'TW4 Primary' : 'NIFE')}>
-            <div className={`page-toggle-slider ${mode === 'TW4 Primary' ? 'right' : 'left'}`}></div>
+      {!isLanding && (
+        <div className="navbar">
+          {/* Mode Toggle */}
+          <div className="page-toggle-container">
+            <span className={isNIFE ? 'active' : ''} onClick={() => navigate('/nife/about')}>
+              NIFE
+            </span>
+            <div
+              className="page-toggle-switch"
+              onClick={() => navigate(isTW4 ? '/nife/about' : '/tw4/about')}
+            >
+              <div className={`page-toggle-slider ${isTW4 ? 'right' : 'left'}`}></div>
+            </div>
+            <span className={isTW4 ? 'active' : ''} onClick={() => navigate('/tw4/about')}>
+              TW4 Primary
+            </span>
           </div>
-          <span className={mode === 'TW4 Primary' ? 'active' : ''} onClick={() => handleModeToggle('TW4 Primary')}>
-            TW4 Primary
-          </span>
-        </div>
 
-        {/* Navigation Links */}
-        <div className="nav-links">
-          <a
-            href="#about"
-            onClick={(e) => {
-              e.preventDefault();
-              setCurrentPage('about');
-            }}
-            className={currentPage === 'about' ? 'active' : ''}
-          >
-            About
-          </a>
-          {mode === 'NIFE' && (
-            <>
-              <a
-                href="#questions"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setCurrentPage('questions');
-                }}
-                className={currentPage === 'questions' ? 'active' : ''}
-              >
-                Questions
-              </a>
-              <a
-                href="#docs"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setCurrentPage('docs');
-                }}
-                className={currentPage === 'docs' ? 'active' : ''}
-              >
-                Docs
-              </a>
-              <a
-                href="#nav"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setCurrentPage('nav');
-                }}
-                className={currentPage === 'nav' ? 'active' : ''}
-              >
-                Problem Generator
-              </a>
-              <a
-                href="#flight"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setCurrentPage('flight');
-                }}
-                className={currentPage === 'flight' ? 'active' : ''}
-              >
-                Flight
-              </a>
-            </>
-          )}
-          {mode === 'TW4 Primary' && (
-            <>
-            <a
-              href="#eps-limits"
-              onClick={(e) => {
-                e.preventDefault();
-                setCurrentPage('eps-limits');
-              }}
-              className={currentPage === 'eps-limits' ? 'active' : ''}
-            >
-              EPs/Limits
-            </a>
-            <a
-              href="#tw4docs"
-              onClick={(e) => {
-                e.preventDefault();
-                setCurrentPage('tw4docs');
-              }}
-              className={currentPage === 'tw4docs' ? 'active' : ''}
-            >
-              Docs
-            </a>
-            <a
-              href="#briefs"
-              onClick={(e) => {
-                e.preventDefault();
-                setCurrentPage('briefs');
-              }}
-              className={currentPage === 'briefs' ? 'active' : ''}
-            >
-              Briefs/TOLD
-            </a>
-            <a
-              href="#courserules"
-              onClick={(e) => {
-                e.preventDefault();
-                setCurrentPage('courserules');
-              }}
-              className={currentPage === 'courserules' ? 'active' : ''}
-            >
-              Course Rules
-            </a>
-            <a
-              href="#systems"
-              onClick={(e) => {
-                e.preventDefault();
-                setCurrentPage('systems');
-              }}
-              className={currentPage === 'systems' ? 'active' : ''}
-            >
-              Systems
-            </a>
-            <a
-              href="#jetlog"
-              onClick={(e) => {
-                e.preventDefault();
-                setCurrentPage('jetlog');
-              }}
-              className={currentPage === 'jetlog' ? 'active' : ''}
-            >
-              Jet Log
-            </a>
-</>
-          )}
+          {/* Navigation Links */}
+          <div className="nav-links">
+            <NavLink to={isNIFE ? '/nife/about' : '/tw4/about'} end className={navLinkClass}>
+              About
+            </NavLink>
+            {isNIFE && (
+              <>
+                <NavLink to="/nife/questions" end className={navLinkClass}>Questions</NavLink>
+                <NavLink to="/nife/docs" end className={navLinkClass}>Docs</NavLink>
+                <NavLink to="/nife/nav" className={navLinkClass}>Problem Generator</NavLink>
+                <NavLink to="/nife/flight" className={navLinkClass}>Flight</NavLink>
+              </>
+            )}
+            {isTW4 && (
+              <>
+                <NavLink to="/tw4/eps-limits" className={navLinkClass}>EPs/Limits</NavLink>
+                <NavLink to="/tw4/docs" end className={navLinkClass}>Docs</NavLink>
+                <NavLink to="/tw4/briefs" end className={navLinkClass}>Briefs/TOLD</NavLink>
+                <NavLink to="/tw4/courserules" end className={navLinkClass}>Course Rules</NavLink>
+                <NavLink to="/tw4/systems" className={navLinkClass}>Systems</NavLink>
+                <NavLink to="/tw4/jetlog" end className={navLinkClass}>Jet Log</NavLink>
+              </>
+            )}
+          </div>
         </div>
-      </div>}
+      )}
 
-      {/* Page Content */}
-      <>
-        {currentPage === 'landing' && <LandingPage onSelectMode={handleModeToggle} />}
-        {currentPage === 'about' && mode === 'NIFE' && <NIFEAbout onNavigate={setCurrentPage} />}
-        {currentPage === 'about' && mode === 'TW4 Primary' && <TW4About onNavigate={setCurrentPage} />}
-        {currentPage === 'questions' && mode === 'NIFE' && <Questions />}
-        {currentPage === 'docs' && mode === 'NIFE' && <Docs />}
-        {currentPage === 'nav' && mode === 'NIFE' && <Nav />}
-        {currentPage === 'flight' && mode === 'NIFE' && <Flight />}
-        {currentPage === 'tw4docs' && mode === 'TW4 Primary' && <TW4Docs />}
-        {currentPage === 'eps-limits' && mode === 'TW4 Primary' && <TW4EPsLimits />}
-        {currentPage === 'briefs' && mode === 'TW4 Primary' && <TW4Briefs />}
-        {currentPage === 'courserules' && mode === 'TW4 Primary' && <CourseRules />}
-        {currentPage === 'systems' && mode === 'TW4 Primary' && <Systems />}
-        {currentPage === 'jetlog' && mode === 'TW4 Primary' && <TW4JetLog />}
-      </>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/nife" element={<Navigate to="/nife/about" replace />} />
+        <Route path="/nife/about" element={<NIFEAbout />} />
+        <Route path="/nife/questions" element={<Questions />} />
+        <Route path="/nife/docs" element={<Docs />} />
+        <Route path="/nife/nav" element={<Nav />} />
+        <Route path="/nife/nav/:tab" element={<Nav />} />
+        <Route path="/nife/flight" element={<Flight />} />
+        <Route path="/nife/flight/:tab" element={<Flight />} />
+        <Route path="/tw4" element={<Navigate to="/tw4/about" replace />} />
+        <Route path="/tw4/about" element={<TW4About />} />
+        <Route path="/tw4/eps-limits" element={<TW4EPsLimits />} />
+        <Route path="/tw4/eps-limits/:tab" element={<TW4EPsLimits />} />
+        <Route path="/tw4/docs" element={<TW4Docs />} />
+        <Route path="/tw4/briefs" element={<TW4Briefs />} />
+        <Route path="/tw4/courserules" element={<CourseRules />} />
+        <Route path="/tw4/systems" element={<Systems />} />
+        <Route path="/tw4/systems/:tab" element={<Systems />} />
+        <Route path="/tw4/jetlog" element={<TW4JetLog />} />
+      </Routes>
     </div>
   );
 }

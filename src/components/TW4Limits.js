@@ -303,8 +303,9 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
         setLimitsData(prev => ({ ...prev, [field]: value }));
         setCheckResults(prev => ({ ...prev, [field]: 'correct' }));
         setTimeout(() => {
-          lockedFieldRef.current = null;
-          advanceToNextLimit();
+          advanceToNextLimit(() => {
+            lockedFieldRef.current = null;
+          });
         }, 300);
         return;
       }
@@ -355,12 +356,13 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     setCurrentLimitIndex(0);
   };
 
-  const advanceToNextLimit = () => {
+  const advanceToNextLimit = (onComplete) => {
     const nextIndex = currentLimitIndex + 1;
 
     if (nextIndex >= limitIndices.length) {
       stopRandomMode();
       if (isGameActiveRef.current) onGameComplete?.();
+      onComplete?.();
       return;
     }
 
@@ -377,6 +379,7 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
           element.select(); // Select all text in the input
         }
       }
+      onComplete?.();
     }, 100);
   };
 

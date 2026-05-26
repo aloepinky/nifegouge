@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-function LandingPage({ onSelectMode }) {
+function LandingPage() {
+  const navigate = useNavigate();
   // Preload images to prevent mobile display issues
   useEffect(() => {
     const imagesToPreload = [
@@ -27,7 +29,7 @@ function LandingPage({ onSelectMode }) {
       <div className="landing-buttons">
         <div
           className="landing-button"
-          onClick={() => onSelectMode('NIFE')}
+          onClick={() => navigate('/nife/about')}
         >
           <div className="landing-button-fallback">NIFE</div>
           <img src="/images/c172.jpg" alt="NIFE - Cessna 172" />
@@ -36,7 +38,7 @@ function LandingPage({ onSelectMode }) {
 
         <div
           className="landing-button"
-          onClick={() => onSelectMode('TW4 Primary')}
+          onClick={() => navigate('/tw4/about')}
         >
           <div className="landing-button-fallback">TW4 Primary</div>
           <img src="/images/t6b.jpg" alt="TW4 Primary - T-6B Texan II" />

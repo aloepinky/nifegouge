@@ -1,4 +1,7 @@
-function NIFEAbout({ onNavigate }) {
+import { useNavigate } from 'react-router-dom';
+
+function NIFEAbout() {
+  const navigate = useNavigate();
   const navHeadingStyle = {
     fontSize: '18px',
     marginTop: '20px',
@@ -27,24 +30,24 @@ function NIFEAbout({ onNavigate }) {
         students who have successfully made it through NIFE.
       </p>
 
-      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => onNavigate('questions')}>Questions</h2>
+      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => navigate('/nife/questions')}>Questions</h2>
       <p className="about-text">
         A bank of ~450 community-vetted practice questions covering all major NIFE topics. Work through them in random order, filter by subject, and reveal answers when you need a hint.
       </p>
 
-      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => onNavigate('docs')}>Docs</h2>
+      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => navigate('/nife/docs')}>Docs</h2>
       <p className="about-text">
         Curated gouge documents and links submitted by students who have made it through NIFE. Covers study guides, quick-reference sheets, and other high-yield material.
       </p>
 
-      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => onNavigate('nav')}>Problem Generator</h2>
+      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => navigate('/nife/nav')}>Problem Generator</h2>
       <p className="about-text">
         The navigation problem generator and solver including whiz wheel calculations, wind correction, fuel planning, and more. Work problems end-to-end or check your own work.
         The FR&amp;R generator allow you to test yourself on the VFR cruising altitudes and determing which runway to land on.
         The weather generator creates SETAI practice problems to help you for the test.
       </p>
 
-      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => onNavigate('flight')}>Flight</h2>
+      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => navigate('/nife/flight')}>Flight</h2>
       <p className="about-text">
         EP flows, limits practice, and TOLD card generators for the flight stage of NIFE. Practice your emergency procedures and verify your performance data before stepping to the jet.
       </p>

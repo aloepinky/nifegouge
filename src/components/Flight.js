@@ -1,23 +1,26 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import LimitsEPs from './Flight/LimitsEPs';
 import ToldCard from './Flight/ToldCard';
 
 function Flight() {
-  const [activeTab, setActiveTab] = useState('limits');
+  const { tab } = useParams();
+  const navigate = useNavigate();
+  const activeTab = tab || 'limits';
 
   return (
     <>
       <div className="sub-navbar">
-        <span 
+        <span
           className={activeTab === 'limits' ? 'active' : ''}
-          onClick={() => setActiveTab('limits')}
+          onClick={() => navigate('/nife/flight/limits')}
           style={{ cursor: 'pointer' }}
         >
           Limits/EPs
         </span>
-        <span 
+        <span
           className={activeTab === 'told' ? 'active' : ''}
-          onClick={() => setActiveTab('told')}
+          onClick={() => navigate('/nife/flight/told')}
           style={{ cursor: 'pointer' }}
         >
           TOLD Card

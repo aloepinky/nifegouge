@@ -1,39 +1,42 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import WhizWheel from './Nav/WhizWheel';
 import JetLog from './Nav/JetLog';
 import FRR from './FRR';
 import Weather from './Weather';
 
 function Nav() {
-  const [activeTab, setActiveTab] = useState('nav');
+  const { tab } = useParams();
+  const navigate = useNavigate();
+  const activeTab = tab || 'nav';
 
   return (
     <>
       <div className="sub-navbar">
         <span
           className={activeTab === 'nav' ? 'active' : ''}
-          onClick={() => setActiveTab('nav')}
+          onClick={() => navigate('/nife/nav/nav')}
           style={{ cursor: 'pointer' }}
         >
           Nav
         </span>
         <span
           className={activeTab === 'jetlog' ? 'active' : ''}
-          onClick={() => setActiveTab('jetlog')}
+          onClick={() => navigate('/nife/nav/jetlog')}
           style={{ cursor: 'pointer' }}
         >
           Jet Log
         </span>
         <span
           className={activeTab === 'frr' ? 'active' : ''}
-          onClick={() => setActiveTab('frr')}
+          onClick={() => navigate('/nife/nav/frr')}
           style={{ cursor: 'pointer' }}
         >
           FR&R
         </span>
         <span
           className={activeTab === 'weather' ? 'active' : ''}
-          onClick={() => setActiveTab('weather')}
+          onClick={() => navigate('/nife/nav/weather')}
           style={{ cursor: 'pointer' }}
         >
           Weather

@@ -1772,13 +1772,13 @@ textarea.incorrect-answer {
 .game-timer {
   position: absolute;
   right: 0;
-  padding: 8px 16px;
+  padding: 0px 0 0px 0px;
   background-color: #01202C;
   color: white;
   border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0px;
 }
 
 .timer-label {
@@ -3582,6 +3582,22 @@ textarea.incorrect-answer {
 
 .tw4-nav-btn.danger:hover {
   background-color: #b71c1c;
+}
+
+/* Wrappable sub-navbar: tabs stay on row 1, controls push right and wrap to row 2 on narrow screens */
+.sub-navbar--wrappable {
+  flex-wrap: wrap;
+}
+
+.sub-navbar-tabs {
+  display: flex;
+  align-items: center;
+}
+
+.sub-navbar-controls {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
 }
 
 /* Sub-navbar action buttons that blend with the tab row */

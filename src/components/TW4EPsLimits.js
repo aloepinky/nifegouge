@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import TW4Cockpit from './TW4Cockpit';
 import TW4Limits from './TW4Limits';
 import TW4Leaderboard from './TW4Leaderboard';
@@ -12,7 +13,10 @@ function formatTime(ms) {
 }
 
 function TW4EPsLimits() {
-  const [activeTab, setActiveTab] = useState('cockpit');
+  const { tab } = useParams();
+  const navigate = useNavigate();
+  const activeTab = tab || 'cockpit';
+  const setActiveTab = (t) => navigate(`/tw4/eps-limits/${t}`);
   const [gameMode, setGameMode] = useState('TW4_EPs');
   const [isGameActive, setIsGameActive] = useState(false);
   const [gameStartTime, setGameStartTime] = useState(null);
@@ -126,42 +130,45 @@ function TW4EPsLimits() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      <div className="sub-navbar" style={{ marginBottom: 0, display: 'flex', alignItems: 'center' }}>
-        <span
-          className={activeTab === 'cockpit' ? 'active' : ''}
-          onClick={() => !isGameActive && setActiveTab('cockpit')}
-          style={{ cursor: isGameActive ? 'default' : 'pointer' }}
-        >
-          EPs/Cockpit
-        </span>
-        <span
-          className={activeTab === 'limits' ? 'active' : ''}
-          onClick={() => !isGameActive && setActiveTab('limits')}
-          style={{ cursor: isGameActive ? 'default' : 'pointer' }}
-        >
-          Limits
-        </span>
-        <div style={{ flex: 1 }} />
-        {isGameActive ? (
-          <>
-            <span className="game-timer" style={{ position: 'static' }}>
-              <span className="timer-label">Time: </span>
-              <span className="timer-display">{formatTime(elapsedTime)}</span>
-            </span>
-            <button className="sub-navbar-btn" onClick={pauseGame}>Pause</button>
-            <button className="sub-navbar-btn danger" onClick={stopGame}>Exit</button>
-          </>
-        ) : (
-          <>
-            <button className="sub-navbar-btn" onClick={() => setShowGameModal(true)}>Game Mode</button>
-            <button
-              className="sub-navbar-btn"
-              onClick={() => { setPendingResult(null); setShowLeaderboard(true); }}
-            >
-              Leaderboard
-            </button>
-          </>
-        )}
+      <div className="sub-navbar sub-navbar--wrappable" style={{ marginBottom: 0 }}>
+        <div className="sub-navbar-tabs">
+          <span
+            className={activeTab === 'cockpit' ? 'active' : ''}
+            onClick={() => !isGameActive && setActiveTab('cockpit')}
+            style={{ cursor: isGameActive ? 'default' : 'pointer' }}
+          >
+            EPs/Cockpit
+          </span>
+          <span
+            className={activeTab === 'limits' ? 'active' : ''}
+            onClick={() => !isGameActive && setActiveTab('limits')}
+            style={{ cursor: isGameActive ? 'default' : 'pointer' }}
+          >
+            Limits
+          </span>
+        </div>
+        <div className="sub-navbar-controls">
+          {isGameActive ? (
+            <>
+              <div className="game-timer" style={{ position: 'static' }}>
+                <span className="timer-label">Time: </span>
+                <span className="timer-display">{formatTime(elapsedTime)}</span>
+              </div>
+              <button className="sub-navbar-btn" onClick={pauseGame}>Pause</button>
+              <button className="sub-navbar-btn danger" onClick={stopGame}>Exit</button>
+            </>
+          ) : (
+            <>
+              <button className="sub-navbar-btn" onClick={() => setShowGameModal(true)}>Game Mode</button>
+              <button
+                className="sub-navbar-btn"
+                onClick={() => { setPendingResult(null); setShowLeaderboard(true); }}
+              >
+                Leaderboard
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {activeTab === 'cockpit' && (
