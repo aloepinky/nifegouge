@@ -930,7 +930,7 @@
   "name": "Delta I3201",
   "folder": "Delta I3200",
   "mode": "IFR",
-  "mainRowCount": 7,
+  "mainRowCount": 9,
   "inputValues": {
     "r2c0_a": "D→",
     "r2c0_b": "CLL",
@@ -938,9 +938,6 @@
     "r4c0_b": "BAZBL",
     "r6c0_a": "CLL.RIICE1",
     "r6c0_b": "BRKMN",
-    "r8c0_a": "KDWH",
-    "r10c0_a": "D→",
-    "r10c0_b": "KOHRY",
     "altroute": "ZORLU",
     "altalt": "70",
     "r200c0_a": "D→",
@@ -957,10 +954,8 @@
     "r6c2": "133",
     "r6c3": "20",
     "r2c3": "3",
-    "r10c2": "171",
-    "r10c3": "11",
-    "r200c2": "098",
-    "r200c3": "19"
+    "r200c2": "135",
+    "r200c3": "47"
   },
   "clncFields": {
     "ttc": "3",
@@ -992,12 +987,8 @@
     "vfrClnc4b": "ERAA:",
     "vfrGs": ""
   },
-  "routeBadges": {
-    "r8c0": 1
-  },
-  "holdCells": {
-    "r10c0": true
-  },
+  "routeBadges": {},
+  "holdCells": {},
   "vfrTng": {},
   "vfrApr": {},
   "selectedAlt": 7000,
@@ -1017,7 +1008,8 @@
     "altApcCont": "284.0/134.45",
     "altTower": "253.5/126.05",
     "altGndCont": "275.8/121.6"
-  }
+  },
+  "intClimbs": []
 },{
   "id": "delta-i3202",
   "name": "Delta I3202",
@@ -1028,25 +1020,27 @@
     "r2c0_a": "D→",
     "r2c0_b": "MARCS",
     "r4c0_a": "MARCS.MARCS2",
-    "r4c0_b": "TROOPS",
+    "r4c0_b": "TROOP",
     "r4c3": "30",
     "r4c2": "236",
     "r6c0_a": "D→",
-    "r6c0_b": "TRSMO",
-    "r6c2": "140",
-    "r6c3": "12",
+    "r6c0_b": "CUGRR",
+    "r6c2": "165",
+    "r6c3": "17",
     "r2c2": "206",
     "r2c3": "20",
     "r200c0_a": "D→",
     "r200c0_b": "DISNE",
-    "r200c2": "140",
-    "r200c3": "17",
+    "r200c2": "123",
+    "r200c3": "13",
     "r2c1": "SAT",
     "r3c0": "116.8",
     "r4c1": "SAT",
     "r5c0": "116.8",
     "altroute": "DISNE",
-    "altalt": "30"
+    "altalt": "50",
+    "r6c1": "I-IZR",
+    "r7c0": "110.9"
   },
   "clncFields": {
     "ttc": "5",
@@ -1101,7 +1095,8 @@
     "altApcCont": "318.1/128.05",
     "altTower": "294.7/128.25",
     "altGndCont": "275.8/119.65"
-  }
+  },
+  "intClimbs": []
 },{
   "id": "delta-i3203",
   "name": "Delta I3203",
@@ -1258,9 +1253,6 @@
   "routeBadges": {
     "r2c0": 1
   },
-  "holdCells": {
-    "r8c0": true
-  },
   "vfrTng": {},
   "vfrApr": {},
   "selectedAlt": 15000,
@@ -1308,8 +1300,8 @@
     "r10c1": "BGS",
     "r11c0": "117.2",
     "r6c2": "346",
-    "r10c2": "360",
-    "r10c3": "10",
+    "r10c2": "359",
+    "r10c3": "11",
     "r12c2": "334",
     "r12c3": "52",
     "r14c2": "295",
@@ -1335,8 +1327,8 @@
     "altroute": "CLINK",
     "r200c0_a": "D→",
     "r200c0_b": "CLINK",
-    "r200c2": "285",
-    "r200c3": "85",
+    "r200c2": "297",
+    "r200c3": "78",
     "r200c1": "CVS",
     "r201c0": "111.6"
   },
@@ -1611,6 +1603,7 @@
   "id": "nubin-13r-loop",
   "name": "NUBIN 1/3R Loop",
   "folder": "Local Flights",
+  "params": {"approachFuel": "75"},
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -1727,6 +1720,7 @@
   "id": "tango3",
   "name": "TANGO3",
   "folder": "Local Flights",
+  "params": {"approachFuel": "75"},
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -1806,6 +1800,7 @@
   "id": "tango3-wkrkp",
   "name": "TANGO3 W/KRKP",
   "folder": "Local Flights",
+  "params": {"approachFuel": "75"},
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -1901,6 +1896,7 @@
   "id": "aggie1",
   "name": "AGGIE1",
   "folder": "Local Flights",
+  "params": {"approachFuel": "75"},
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -1999,6 +1995,7 @@
   "id": "aggie1r",
   "name": "AGGIE1R",
   "folder": "Local Flights",
+  "params": {"approachFuel": "75"},
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -2099,6 +2096,7 @@
   "id": "harly1",
   "name": "HARLY1",
   "folder": "Local Flights",
+  "params": {"approachFuel": "75"},
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -2188,6 +2186,7 @@
   "id": "harly11r-loop",
   "name": "HARLY1/1R LOOP",
   "folder": "Local Flights",
+  "params": {"approachFuel": "75"},
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -2296,6 +2295,7 @@
   "id": "mucho5",
   "name": "MUCHO5",
   "folder": "Local Flights",
+  "params": {"approachFuel": "75"},
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {
@@ -2392,6 +2392,7 @@
   "id": "mucho55r-loop",
   "name": "MUCHO5/5R LOOP",
   "folder": "Local Flights",
+  "params": {"approachFuel": "75"},
   "mode": "IFR",
   "mainRowCount": 9,
   "inputValues": {

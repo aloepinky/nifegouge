@@ -1288,7 +1288,7 @@ function TW4JetLog() {
     setVfrMode(nextVfrMode);
     setMainRowCount(preset.mainRowCount || 9);
     setInputValues(nextInputValues);
-    setClncFields(prev => ({ ...prev, ...(preset.clncFields || {}) }));
+    setClncFields(prev => ({ ...prev, magVar: '3E', ...(preset.clncFields || {}) }));
     setRouteBadges(preset.routeBadges || {});
     setVfrTng(nextVfrTng);
     setVfrApr(nextVfrApr);
@@ -1300,6 +1300,7 @@ function TW4JetLog() {
     setShowIntClimbSelector(false);
     setSplitCells({});
     setHoldCells(preset.holdCells || {});
+    if (preset.params) setParams(prev => ({ ...prev, ...preset.params }));
     setShowPresets(false);
   };
 
