@@ -1365,9 +1365,6 @@
   "routeBadges": {
     "r8c0": 1
   },
-  "holdCells": {
-    "r10c0": true
-  },
   "vfrTng": {},
   "vfrApr": {},
   "selectedAlt": 10000,
