@@ -1,4 +1,4 @@
-const STOP_WORDS = new Set(['a','an','the','and','or','of','for','by','with','to','in','on','at','be','is']);
+﻿const STOP_WORDS = new Set(['a','an','the','and','or','of','for','by','with','to','in','on','at','be','is']);
 
 const ABBREVS = {
   'req':  'required',
@@ -16,6 +16,8 @@ const ABBREVS = {
 
 export function normalizeAnswer(str) {
   let s = str.toString().toLowerCase();
+  // Strip zero-width/soft-hyphen invisible Unicode that appears in answer keys
+  s = s.replace(/[​‌‍﻿­]/g, '');
   s = s.replace(/[,\-–;()./]/g, ' ');
   s = s.replace(/\s+/g, ' ').trim();
   if (!s) return '';
