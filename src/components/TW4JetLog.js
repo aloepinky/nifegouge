@@ -1348,7 +1348,17 @@ function TW4JetLog() {
     mode: vfrMode ? 'VFR' : 'IFR',
     mainRowCount,
     inputValues: Object.fromEntries(
-      Object.entries(inputValues).filter(([k]) => !/c[45678]$/.test(k))
+      Object.entries(inputValues).filter(([k]) => {
+        const m = k.match(/^r(\d+)c([45678])$/);
+        if (!m) return true;
+        // Manually entered ETE/fuel (no CUS/DIST to recompute from) must survive the save
+        if (m[2] === '4' || m[2] === '6') {
+          const hasCus = (inputValues[`r${m[1]}c2`] || '').trim();
+          const hasDist = (inputValues[`r${m[1]}c3`] || '').trim();
+          return !hasCus && !hasDist;
+        }
+        return false;
+      })
     ),
     clncFields: { ...clncFields },
     routeBadges: { ...routeBadges },
