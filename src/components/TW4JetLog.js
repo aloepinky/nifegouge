@@ -16,8 +16,8 @@ const cellFontSize = (val) => {
 const narrowCellFontSize = (val) => {
   const len = (val || '').length;
   if (len <= 5) return undefined;
-  if (len <= 8) return '0.85em';
-  if (len <= 11) return '0.76em';
+  if (len <= 8) return '0.78em';
+  if (len <= 11) return '0.68em';
   return '0.57em';
 };
 
@@ -57,6 +57,7 @@ function TW4JetLog() {
   const [vfrMode, setVfrMode] = useState(false);
   const [vfrTng, setVfrTng] = useState({});
   const [vfrApr, setVfrApr] = useState({});
+  const [vfrStart, setVfrStart] = useState(null); // cellId of the 0+00 clock-start row
   const [sharedPresets, setSharedPresets] = useState([]);
   const [localPresets, setLocalPresets] = useState([]);
   const [showPresets, setShowPresets] = useState(false);
@@ -125,16 +126,17 @@ function TW4JetLog() {
 
   useEffect(() => {
     if (!vfrMode) return;
-    const ete = formatVFREte((parseFloat(params.tngTime) || 5) * 60);
-    const fuel = String(parseFloat(params.tngFuel) || 25);
+    const baseTngTime = parseFloat(params.tngTime) || 5;
+    const baseTngFuel = parseFloat(params.tngFuel) || 25;
     setInputValues(prev => {
       const next = { ...prev };
-      for (const cellId of Object.keys(vfrTng)) {
+      for (const [cellId, tngVal] of Object.entries(vfrTng)) {
         const match = cellId.match(/^r(\d+)c/);
         if (!match) continue;
         const row = parseInt(match[1]);
-        next[`r${row}c4`] = ete;
-        next[`r${row}c6`] = fuel;
+        const count = typeof tngVal === 'number' ? tngVal : 1;
+        next[`r${row}c4`] = formatVFREte(count * baseTngTime * 60);
+        next[`r${row}c6`] = String(count * baseTngFuel);
       }
       return next;
     });
@@ -449,8 +451,11 @@ function TW4JetLog() {
 
   const formatEteSum = (mins) => {
     if (mins == null) return '';
-    const h = Math.floor(mins / 60);
-    const m = Math.floor(mins % 60);
+    const totalSecs = Math.round(mins * 60);
+    const h = Math.floor(totalSecs / 3600);
+    const m = Math.floor((totalSecs % 3600) / 60);
+    const s = totalSecs % 60;
+    if (h >= 1) return `${h}+${String(m).padStart(2, '0')}+${String(s).padStart(2, '0')}`;
     return `${h}+${String(m).padStart(2, '0')}`;
   };
 
@@ -560,7 +565,8 @@ function TW4JetLog() {
         </td>
       );
     }
-    const fontSize = vfrMode ? '0.85em' : narrowCellFontSize(val);
+    const vfrHasHour = vfrMode && (val.match(/\+/g) || []).length >= 2;
+    const fontSize = vfrMode ? (vfrHasHour ? '0.65em' : '0.85em') : narrowCellFontSize(val);
     const fontStyle = fontSize ? {fontSize} : undefined;
     return (
       <td id={cellId} {...(rowSpan && { rowSpan })} {...(colSpan && { colSpan })}>
@@ -710,12 +716,30 @@ function TW4JetLog() {
     return '0.50em';
   };
 
-  const renderVFRCheckCell = (cellId, flagState, setFlagState, label, labelWidth) => {
+  const renderVFRCheckCell = (cellId, flagState, setFlagState, label, labelWidth, showCount = false) => {
     const aId = `${cellId}_a`;
     const bId = `${cellId}_b`;
     const isChecked = !!flagState[cellId];
+    const isStart = vfrStart === cellId;
+    const row = parseInt(cellId.match(/\d+/)[0]);
     return (
       <td id={cellId} rowSpan={2} style={{verticalAlign: 'top', padding: '2px', position: 'relative'}}>
+        <input
+          type="checkbox"
+          checked={isStart}
+          title="Set as clock start (0+00)"
+          onChange={e => {
+            if (e.target.checked) {
+              setVfrStart(cellId);
+              setInputValues(prev => ({...prev, [`r${row}c5`]: '0+00'}));
+            } else {
+              setVfrStart(null);
+              setInputValues(prev => ({...prev, [`r${row}c5`]: ''}));
+            }
+          }}
+          style={{position: 'absolute', top: 2, right: 2, width: '8px', height: '8px', margin: 0, cursor: 'pointer', opacity: isStart ? 1 : 0.15}}
+        />
+        {isStart && <span style={{position: 'absolute', top: 1, right: 12, fontSize: '0.55em', fontWeight: 'bold', color: '#1e40af', lineHeight: 1, pointerEvents: 'none'}}>S</span>}
         <div style={{display: 'flex', flexDirection: 'column', gap: '1px'}}>
           <input
             value={inputValues[aId] || ''}
@@ -730,7 +754,22 @@ function TW4JetLog() {
               style={{textAlign: 'left', flex: 1, boxSizing: 'border-box', fontSize: vfrNameFontSize(inputValues[bId]), background: 'transparent', border: 'none', outline: 'none'}}
             />
             <label style={{cursor: 'pointer', fontSize: '0.65em', userSelect: 'none', display: 'flex', alignItems: 'center', gap: '1px', flexShrink: 0}}>
-              <span style={{minWidth: labelWidth, textAlign: 'right', display: 'inline-block'}}>{isChecked ? label : ''}</span>
+              {isChecked && showCount ? (
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="1"
+                  value={typeof flagState[cellId] === 'number' ? flagState[cellId] : ''}
+                  onChange={e => {
+                    const n = parseInt(e.target.value);
+                    setFlagState(prev => ({...prev, [cellId]: isNaN(n) ? true : Math.max(1, n)}));
+                  }}
+                  onClick={e => e.stopPropagation()}
+                  style={{width: '18px', textAlign: 'center', fontSize: 'inherit', padding: 0, margin: 0, border: '1px solid #aaa', borderRadius: '2px'}}
+                />
+              ) : (
+                <span style={{minWidth: labelWidth, textAlign: 'right', display: 'inline-block'}}>{isChecked ? label : ''}</span>
+              )}
               <input
                 type="checkbox"
                 checked={isChecked}
@@ -807,6 +846,13 @@ function TW4JetLog() {
     setIntClimbs(prev => prev.map(c =>
       c.row > insertAfterPairIdx ? { ...c, row: c.row + 1 } : c
     ));
+    setVfrStart(prev => {
+      if (!prev) return prev;
+      const m = prev.match(/^r(\d+)c/);
+      if (!m) return prev;
+      const pairIdx = Math.floor(parseInt(m[1]) / 2);
+      return pairIdx > insertAfterPairIdx ? `r${(pairIdx + 1) * 2}c0` : prev;
+    });
     setMainRowCount(prev => prev + 1);
   };
 
@@ -822,6 +868,14 @@ function TW4JetLog() {
         .filter(c => c.row !== deletePairIdx)
         .map(c => c.row > deletePairIdx ? { ...c, row: c.row - 1 } : c)
     );
+    setVfrStart(prev => {
+      if (!prev) return prev;
+      const m = prev.match(/^r(\d+)c/);
+      if (!m) return prev;
+      const pairIdx = Math.floor(parseInt(m[1]) / 2);
+      if (pairIdx === deletePairIdx) return null;
+      return pairIdx > deletePairIdx ? `r${(pairIdx - 1) * 2}c0` : prev;
+    });
     setMainRowCount(prev => prev - 1);
   };
 
@@ -842,35 +896,56 @@ function TW4JetLog() {
     let etaAccumSecs = 0;
     let firstActualSet = false;
     const mainRows = Array.from({ length: mainRowCount }, (_, i) => i * 2);
+    const startPairIdx = vfrStart ? Math.floor(parseInt(vfrStart.match(/\d+/)[0]) / 2) : null;
 
     for (let pairIdx = 1; pairIdx < mainRowCount; pairIdx++) {
       const row = pairIdx * 2;
       const cellId = `r${row}c0`;
       const isTng = !!vfrTng[cellId];
       const dist = parseFloat(inputValues[`r${row}c3`] || '');
+      const beforeOrAtStart = startPairIdx !== null && pairIdx <= startPairIdx;
 
-      let eteSecs, legFuel;
+      // ETA for rows at or before the start cell is always 0+00
+      if (beforeOrAtStart) newVals[`r${row}c5`] = '0+00';
+
+      let eteSecs, legFuel, preserveEteFuel = false;
       if (isTng) {
-        eteSecs = (parseFloat(params.tngTime) || 5) * 60;
-        legFuel = parseFloat(params.tngFuel) || 25;
+        const tngCount = typeof vfrTng[cellId] === 'number' ? vfrTng[cellId] : 1;
+        eteSecs = tngCount * (parseFloat(params.tngTime) || 5) * 60;
+        legFuel = tngCount * (parseFloat(params.tngFuel) || 25);
       } else if (!isNaN(dist) && !isNaN(gs) && gs > 0) {
         eteSecs = calcVFREte(dist, gs);
         if (eteSecs == null) continue;
         legFuel = calcVFRLegFuel(eteSecs, lbsPh);
       } else {
-        continue;
+        const rawEte = (inputValues[`r${row}c4`] || '').trim();
+        const rawFuel = parseFloat(inputValues[`r${row}c6`] || '');
+        if (!rawEte && isNaN(rawFuel)) continue;
+        const vfrM = rawEte ? rawEte.match(/^(\d+)\+(\d{2})$/) : null;
+        eteSecs = vfrM
+          ? parseInt(vfrM[1]) * 60 + parseInt(vfrM[2])
+          : rawEte ? (parseFloat(rawEte) || 0) * 60 : 0;
+        legFuel = isNaN(rawFuel) ? 0 : rawFuel;
+        preserveEteFuel = true;
       }
 
-      newVals[`r${row}c4`] = formatVFREte(eteSecs);
-      newVals[`r${row}c6`] = String(legFuel);
+      if (!preserveEteFuel) {
+        newVals[`r${row}c4`] = formatVFREte(eteSecs);
+        newVals[`r${row}c6`] = String(legFuel);
+      }
       efr -= legFuel;
       newVals[`r${row}c7`] = String(efr);
 
-      if (!firstActualSet) {
+      if (beforeOrAtStart) {
+        // ETA already set above; nothing more to do
+      } else if (startPairIdx !== null) {
+        etaAccumSecs += eteSecs;
+        newVals[`r${row}c5`] = formatVFREta(etaAccumSecs);
+      } else if (!firstActualSet) {
         newVals[`r${row}c5`] = '0+00';
         firstActualSet = true;
       } else {
-        etaAccumSecs += eteSecs; // ETA = last ETA + this leg's ETE
+        etaAccumSecs += eteSecs;
         newVals[`r${row}c5`] = formatVFREta(etaAccumSecs);
       }
     }
@@ -938,14 +1013,46 @@ function TW4JetLog() {
     const effectiveIntClimbs = (intClimbsOverride ?? intClimbs).slice().sort((a, b) => a.row - b.row);
     const sectionStarts = [0, ...effectiveIntClimbs.map(c => c.row * 2)];
 
+    // Returns cruise TAS and FF interpolated from cruiseData for the given altitude and current OAT
+    const getCruiseForAlt = (alt) => {
+      const oatNum = parseFloat(clncFields.oat);
+      if (isNaN(oatNum) || !alt || cruiseGrouped.altList.length === 0) return { tas: cruiseTAS, ff: lbsPhCruise };
+      const { groups: altGroups, altList } = cruiseGrouped;
+      const interpOat = (rows) => {
+        const sorted = [...rows].sort((a, b) => a.oat - b.oat);
+        if (oatNum <= sorted[0].oat) return sorted[0];
+        if (oatNum >= sorted[sorted.length - 1].oat) return sorted[sorted.length - 1];
+        let lo, hi;
+        for (let i = 0; i < sorted.length - 1; i++) {
+          if (oatNum >= sorted[i].oat && oatNum <= sorted[i + 1].oat) { lo = sorted[i]; hi = sorted[i + 1]; break; }
+        }
+        const f = (oatNum - lo.oat) / (hi.oat - lo.oat);
+        return { tas: lo.tas + f * (hi.tas - lo.tas), ff: lo.ff + f * (hi.ff - lo.ff) };
+      };
+      if (alt <= altList[0]) { const r = interpOat(altGroups[altList[0]]); return { tas: Math.round(r.tas), ff: Math.round(r.ff) }; }
+      if (alt >= altList[altList.length - 1]) { const r = interpOat(altGroups[altList[altList.length - 1]]); return { tas: Math.round(r.tas), ff: Math.round(r.ff) }; }
+      let lowAlt, highAlt;
+      for (let i = 0; i < altList.length - 1; i++) {
+        if (alt >= altList[i] && alt <= altList[i + 1]) { lowAlt = altList[i]; highAlt = altList[i + 1]; break; }
+      }
+      const altFrac = (alt - lowAlt) / (highAlt - lowAlt);
+      const lo = interpOat(altGroups[lowAlt]);
+      const hi = interpOat(altGroups[highAlt]);
+      return { tas: Math.round(lo.tas + altFrac * (hi.tas - lo.tas)), ff: Math.round(lo.ff + altFrac * (hi.ff - lo.ff)) };
+    };
+
     // Climb data per section (section 0 = primary, section N = after Nth int climb)
-    const sectionClimbData = [{ dist: climbDistTotal, climbTAS, lbsPhClimb }];
+    // Each section also carries its own cruise TAS/FF so post-climb legs use the correct altitude.
+    const sectionClimbData = [{ dist: climbDistTotal, climbTAS, lbsPhClimb, sectionCruiseTAS: cruiseTAS, sectionLbsPhCruise: lbsPhCruise }];
     for (const c of effectiveIntClimbs) {
       const vals = computeTTCValues(c.alt, clncFields.deltaT, c.elev);
+      const cr = getCruiseForAlt(c.alt);
       sectionClimbData.push({
         dist: vals.dist != null ? Math.max(0, vals.dist) : 0,
         climbTAS: vals.tasClimb ? parseFloat(vals.tasClimb) : cruiseTAS,
         lbsPhClimb: vals.lbsPhClimb ? parseFloat(vals.lbsPhClimb) : lbsPhCruise,
+        sectionCruiseTAS: cr.tas,
+        sectionLbsPhCruise: cr.ff,
       });
     }
 
@@ -972,8 +1079,8 @@ function TW4JetLog() {
 
     const newSplit = {};
     const newVals = { ...inputValues };
-    const applyHold = (row, ete, fuel, holdMins) => {
-      const holdFuel = calcFuel(holdMins, lbsPhCruise);
+    const applyHold = (row, ete, fuel, holdMins, secLbsPhCruise = lbsPhCruise) => {
+      const holdFuel = calcFuel(holdMins, secLbsPhCruise);
       const totalEte = ete + holdMins;
       const totalFuel = (fuel ?? 0) + (holdFuel ?? 0);
       newSplit[`r${row}c4`] = { top: `${ete}/${holdMins}`, bottom: String(totalEte) };
@@ -982,17 +1089,17 @@ function TW4JetLog() {
       newVals[`r${row}c6`] = String(totalFuel);
     };
 
-    const applyTurnover = (row, d, climbGS, cruiseGS, climbDist, cruiseDist, lbsPhC, isHold, holdMins) => {
+    const applyTurnover = (row, d, climbGS, cruiseGS, climbDist, cruiseDist, lbsPhC, isHold, holdMins, secLbsPhCruise = lbsPhCruise) => {
       newSplit[`r${row}c3`] = { top: `${climbDist}/${cruiseDist}`, bottom: String(d) };
       newSplit[`r${row}c8`] = { top: climbGS !== null ? String(climbGS) : '', bottom: cruiseGS !== null ? String(cruiseGS) : '' };
       const climbETE  = climbGS  !== null ? calcETE(climbDist,  climbGS)  : null;
       const cruiseETE = cruiseGS !== null ? calcETE(cruiseDist, cruiseGS) : null;
       const totalETE  = (climbETE ?? 0) + (cruiseETE ?? 0);
       const climbFuel  = calcFuel(climbETE,  lbsPhC);
-      const cruiseFuel = calcFuel(cruiseETE, lbsPhCruise);
+      const cruiseFuel = calcFuel(cruiseETE, secLbsPhCruise);
       const totalFuel  = (climbFuel ?? 0) + (cruiseFuel ?? 0);
       if (isHold) {
-        const holdFuel = calcFuel(holdMins, lbsPhCruise);
+        const holdFuel = calcFuel(holdMins, secLbsPhCruise);
         const grandETE  = totalETE + holdMins;
         const grandFuel = totalFuel + (holdFuel ?? 0);
         newSplit[`r${row}c4`] = { top: `${climbETE ?? ''}/${cruiseETE ?? ''}/${holdMins}`, bottom: String(grandETE) };
@@ -1022,15 +1129,18 @@ function TW4JetLog() {
       const sec = sectionClimbData[si];
       const { turnoverRow, turnoverClimb, turnoverCruise } = sectionTurnovers[si];
 
+      const secCruiseTAS = sec.sectionCruiseTAS;
+      const secLbsPhCruise = sec.sectionLbsPhCruise;
+
       if (turnoverRow === -1) {
         // No climb distance for this section — all cruise
-        const gs = calcGS(cruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
+        const gs = calcGS(secCruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
         if (gs !== null) {
           newVals[`r${row}c8`] = String(gs);
           const ete = calcETE(d, gs);
           if (ete !== null) {
-            const fuel = calcFuel(ete, lbsPhCruise);
-            if (isHold) { applyHold(row, ete, fuel, holdMins); }
+            const fuel = calcFuel(ete, secLbsPhCruise);
+            if (isHold) { applyHold(row, ete, fuel, holdMins, secLbsPhCruise); }
             else { newVals[`r${row}c4`] = String(ete); if (fuel !== null) newVals[`r${row}c6`] = String(fuel); }
           }
         }
@@ -1041,38 +1151,38 @@ function TW4JetLog() {
           const ete = calcETE(d, gs);
           if (ete !== null) {
             const fuel = calcFuel(ete, sec.lbsPhClimb);
-            if (isHold) { applyHold(row, ete, fuel, holdMins); }
+            if (isHold) { applyHold(row, ete, fuel, holdMins, secLbsPhCruise); }
             else { newVals[`r${row}c4`] = String(ete); if (fuel !== null) newVals[`r${row}c6`] = String(fuel); }
           }
         }
       } else if (row === turnoverRow) {
         if (turnoverClimb <= 0) {
           // Climb completed in the previous row — treat this row as pure cruise
-          const gs = calcGS(cruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
+          const gs = calcGS(secCruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
           if (gs !== null) {
             newVals[`r${row}c8`] = String(gs);
             const ete = calcETE(d, gs);
             if (ete !== null) {
-              const fuel = calcFuel(ete, lbsPhCruise);
-              if (isHold) { applyHold(row, ete, fuel, holdMins); }
+              const fuel = calcFuel(ete, secLbsPhCruise);
+              if (isHold) { applyHold(row, ete, fuel, holdMins, secLbsPhCruise); }
               else { newVals[`r${row}c4`] = String(ete); if (fuel !== null) newVals[`r${row}c6`] = String(fuel); }
             }
           }
         } else {
           const cGS = calcGS(sec.climbTAS, correctedClimbDIR, climbVEL, tc);
-          const crGS = calcGS(cruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
+          const crGS = calcGS(secCruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
           if (cGS !== null || crGS !== null) {
-            applyTurnover(row, d, cGS, crGS, turnoverClimb, turnoverCruise, sec.lbsPhClimb, isHold, holdMins);
+            applyTurnover(row, d, cGS, crGS, turnoverClimb, turnoverCruise, sec.lbsPhClimb, isHold, holdMins, secLbsPhCruise);
           }
         }
       } else {
-        const gs = calcGS(cruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
+        const gs = calcGS(secCruiseTAS, correctedCruiseDIR, cruiseVEL, tc);
         if (gs !== null) {
           newVals[`r${row}c8`] = String(gs);
           const ete = calcETE(d, gs);
           if (ete !== null) {
-            const fuel = calcFuel(ete, lbsPhCruise);
-            if (isHold) { applyHold(row, ete, fuel, holdMins); }
+            const fuel = calcFuel(ete, secLbsPhCruise);
+            if (isHold) { applyHold(row, ete, fuel, holdMins, secLbsPhCruise); }
             else { newVals[`r${row}c4`] = String(ete); if (fuel !== null) newVals[`r${row}c6`] = String(fuel); }
           }
         }
@@ -1087,7 +1197,11 @@ function TW4JetLog() {
       if (typeof aprCount === 'number' && holdCells[cellId]) {
         const aprEte  = aprCount * (parseFloat(params.approachTime) || 0);
         const aprFuel = aprCount * (parseFloat(params.approachFuel) || 0);
-        applyHold(row, aprEte, aprFuel, holdMinsConst);
+        let aprSi = 0;
+        for (let i = sectionStarts.length - 1; i >= 0; i--) {
+          if (row >= sectionStarts[i]) { aprSi = i; break; }
+        }
+        applyHold(row, aprEte, aprFuel, holdMinsConst, sectionClimbData[aprSi].sectionLbsPhCruise);
       }
     }
 
@@ -1223,6 +1337,7 @@ function TW4JetLog() {
     setSplitCells({});
     setVfrTng({});
     setVfrApr({});
+    setVfrStart(null);
     setShowIntClimbSelector(false);
     setIntClimbs([]);
   };
@@ -1240,6 +1355,7 @@ function TW4JetLog() {
     holdCells: { ...holdCells },
     vfrTng: { ...vfrTng },
     vfrApr: { ...vfrApr },
+    vfrStart: vfrStart || null,
     selectedAlt,
     depInput,
     destInput,
@@ -1292,6 +1408,7 @@ function TW4JetLog() {
     setRouteBadges(preset.routeBadges || {});
     setVfrTng(nextVfrTng);
     setVfrApr(nextVfrApr);
+    setVfrStart(preset.vfrStart || null);
     setSelectedAlt(preset.selectedAlt || 1000);
     setDepInput(preset.depInput || '');
     setDestInput(preset.destInput || '');
@@ -1369,7 +1486,7 @@ function TW4JetLog() {
               <button className="delete-row-btn" onClick={() => handleDeletePair(pairIdx)}>⊖</button>
             </td>
           )}
-          {vfrMode ? renderVFRCheckCell(`r${top}c0`, vfrTng, setVfrTng, 'T&G', '20px') : renderRouteToCell(`r${top}c0`)}
+          {vfrMode ? renderVFRCheckCell(`r${top}c0`, vfrTng, setVfrTng, 'T&G', '20px', true) : renderRouteToCell(`r${top}c0`)}
           {renderCell(`r${top}c1`)}
           {renderCell(`r${top}c2`, 2)}
           {renderCell(`r${top}c3`, 2)}
@@ -1437,9 +1554,19 @@ function TW4JetLog() {
           {sumCells(distIds) ?? ''}
         </td>
         <td id={`r${tTop}c4`} rowSpan={2} style={{textAlign: 'center', border: '1px solid black'}}>
-          {vfrMode && !isAlt
-            ? (() => { const secs = sumEteSecs(eteIds); return secs != null ? formatVFREta(secs) : ''; })()
-            : formatEteSum(sumCells(eteIds))}
+          {(() => {
+            if (vfrMode && !isAlt) {
+              const secs = sumEteSecs(eteIds);
+              const text = secs != null ? formatVFREta(secs) : '';
+              const hasHour = (text.match(/\+/g) || []).length >= 2;
+              return hasHour ? <span style={{fontSize: '0.75em'}}>{text}</span> : text;
+            }
+            const text = formatEteSum(sumCells(eteIds));
+            if (!isAlt && text && (text.match(/\+/g) || []).length >= 2) {
+              return <span style={{fontSize: '0.75em'}}>{text}</span>;
+            }
+            return text;
+          })()}
         </td>
         {renderCell(`r${tTop}c5`)}
         <td id={`r${tTop}c6`} rowSpan={2} style={{textAlign: 'center', border: '1px solid black'}}>
@@ -1600,7 +1727,8 @@ function TW4JetLog() {
           if (!isTng && pairIdx === lastNonTngIdx && code.toUpperCase() === vfrDest) continue;
           if (isTng) {
             // Append T&G time suffix to the previous waypoint entry
-            const suffix = `/D00+${mm(parseFloat(params.tngTime) || 5)}`;
+            const tngCount = typeof vfrTng[cellId] === 'number' ? vfrTng[cellId] : 1;
+            const suffix = `/D00+${mm((parseFloat(params.tngTime) || 5) * tngCount)}`;
             if (routeParts.length > 0) {
               routeParts[routeParts.length - 1] += suffix;
             }
@@ -2028,8 +2156,8 @@ function TW4JetLog() {
 
         // IDENT / TO column: two-line when both present, single-line centered otherwise
         if (identStr || identNum) {
-          drawR(C.identX, cellCY + splitOff, identStr);
-          drawR(C.identX-3, cellCY - splitOff, identNum);
+          drawAuto(C.identX - 5, cellCY + splitOff, identStr);
+          drawAuto(C.identX - 5, cellCY - splitOff, identNum);
         }
 
         drawR(C.cusX,  cellCY, iv(`r${topRow}c2`));
@@ -2043,7 +2171,9 @@ function TW4JetLog() {
           drawAuto(C.eteX, cellCY, iv(`r${topRow}c4`));
         }
 
-        drawR(C.etaX, vfrMode ? cellCY + splitOff : cellCY, iv(`r${topRow}c5`));
+        const etaVal = iv(`r${topRow}c5`);
+        const etaHasHour = vfrMode && (etaVal.match(/\+/g) || []).length >= 2;
+        drawR(C.etaX, vfrMode ? cellCY + splitOff : cellCY, etaVal, etaHasHour ? 5.5 : 8);
 
         const fuelSplit = sc(`r${topRow}c6`);
         if (fuelSplit) {
@@ -2092,7 +2222,9 @@ function TW4JetLog() {
       const eteAdjust = vfrMode ? 0:5;
       drawR(C.routeTopX, jlTotCY, 'Total');
       drawR(C.distX,  jlTotCY, jlTotDist > 0 ? String(Math.round(jlTotDist)) : '');
-      drawR(C.eteX-eteAdjust,   jlTotCY, jlTotEte  > 0 ? formatEteSum(jlTotEte)        : '');
+      { const jlTotEteStr = jlTotEte > 0 ? formatEteSum(jlTotEte) : '';
+        const jlTotEteHasHour = (jlTotEteStr.match(/\+/g) || []).length >= 2;
+        drawAuto(C.eteX-eteAdjust, jlTotCY, jlTotEteStr, jlTotEteHasHour ? 7 : 8); }
       drawR(C.fuelX,  jlTotCY, jlTotFuel > 0 ? String(Math.round(jlTotFuel)) : '');
 
       // ── Alternate route table ─────────────────────────────────────────
@@ -2130,14 +2262,16 @@ function TW4JetLog() {
 
         // IDENT / TO column: two-line when both present, single-line centered otherwise
         if (identStr || identNum) {
-          drawR(C.identX, cellCY + splitOff, identStr);
-          drawR(C.identX-3, cellCY - splitOff, identNum);
+          drawAuto(C.identX - 5, cellCY + splitOff, identStr);
+          drawAuto(C.identX - 5, cellCY - splitOff, identNum);
         }
 
         drawR(C.cusX,  cellCY, iv(`r${topRow}c2`));
         drawR(C.distX, cellCY, iv(`r${topRow}c3`));
         drawAuto(C.eteX + eteAdjust,  cellCY, iv(`r${topRow}c4`));
-        drawR(C.etaX,  vfrMode ? cellCY + splitOff : cellCY, iv(`r${topRow}c5`));
+        const altEtaVal = iv(`r${topRow}c5`);
+        const altEtaHasHour = vfrMode && (altEtaVal.match(/\+/g) || []).length >= 2;
+        drawR(C.etaX,  vfrMode ? cellCY + splitOff : cellCY, altEtaVal, altEtaHasHour ? 6 : 8);
         drawAuto(C.fuelX, cellCY, iv(`r${topRow}c6`));
         drawR(C.efrX,  cellCY + splitOff, iv(`r${topRow}c7`));
         if (vfrMode) {
@@ -2162,7 +2296,9 @@ function TW4JetLog() {
       const jlAltTotCY = jlAltTotY - C.altRowPitch / 2;
       drawR(C.routeTopX, jlAltTotCY, 'Total');
       drawR(C.distX,  jlAltTotCY, jlAltTotDist > 0 ? String(Math.round(jlAltTotDist)) : '');
-      drawR(C.eteX - eteAdjust,   jlAltTotCY, jlAltTotEte  > 0 ? formatEteSum(jlAltTotEte)         : '');
+      { const jlAltTotEteStr = jlAltTotEte > 0 ? formatEteSum(jlAltTotEte) : '';
+        const jlAltTotEteHasHour = (jlAltTotEteStr.match(/\+/g) || []).length >= 2;
+        drawAuto(C.eteX - eteAdjust, jlAltTotCY, jlAltTotEteStr, jlAltTotEteHasHour ? 7 : 8); }
       drawR(C.fuelX,  jlAltTotCY, jlAltTotFuel > 0 ? String(Math.round(jlAltTotFuel)) : '');
 
       // ── Alternate header summary (elev/level on row3Y; route/fuel/time on row3Y-21) ──
@@ -2170,7 +2306,7 @@ function TW4JetLog() {
       if (iv('altalt'))   draw(C.altLevelX, C.row3Y, iv('altalt'));
       if (iv('altroute')) draw(C.altRouteX, C.row3Y, iv('altroute'));
       if (fuelDisplay) draw(C.altFuelX, C.row3Y, fuelDisplay);
-      if (jlAltTotEte > 0)  draw(C.altTimeX, C.row3Y, formatEteSum(jlAltTotEte));
+      if (jlAltTotEte > 0) { const altTimeStr = formatEteSum(jlAltTotEte); draw(C.altTimeX, C.row3Y, altTimeStr, altTimeStr.length > 5 ? 6 : 7); }
 
       // ── Fuel plan (9 rows: 5 left, 4 right) ───────────────────────────
       fuelPlan.forEach(([leftVal, rightVal], i) => {
@@ -2268,7 +2404,7 @@ function TW4JetLog() {
         <button onClick={() => setShowPresets(s => !s)}>Preset Routes</button>
         <button onClick={generateFlightPlan}>Generate Flight Plan + Jet Log</button>
         <div style={{display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold', cursor: 'pointer'}}
-          onClick={() => { setVfrMode(m => { const next = !m; const newAlt = next ? 3000 : 1000; setSelectedAlt(newAlt); if (next) autoFillVFRCruise(clncFields.vfrGsCalc); return next; }); }}
+          onClick={() => { setVfrMode(m => { const next = !m; const newAlt = next ? 3000 : 1000; setSelectedAlt(newAlt); if (next) autoFillVFRCruise(clncFields.vfrGsCalc); else setVfrStart(null); return next; }); }}
         >
           <span style={{color: !vfrMode ? '#1e40af' : '#aaa', transition: 'color 0.2s'}}>IFR</span>
           <div style={{position: 'relative', width: '44px', height: '22px', backgroundColor: vfrMode ? '#1e40af' : '#888', borderRadius: '11px', transition: 'background-color 0.2s', flexShrink: 0}}>
@@ -2767,9 +2903,8 @@ function TW4JetLog() {
                 style={{flex: 1, minWidth: '120px', padding: '3px 6px', border: '1px solid #d1d5db', borderRadius: '4px'}}
               />
               <button onClick={() => saveLocalPreset(presetName)} style={{fontSize: '0.8em'}}>Save</button>
-              {process.env.NODE_ENV === 'development' && (
-                <button onClick={() => exportPresetFile(presetName)} style={{fontSize: '0.8em'}} title="Download JSON to add to shared library">Export ↓</button>
-              )}
+              {/* TODO: temporary — re-gate behind process.env.NODE_ENV === 'development' once shared preset collection is done */}
+              <button onClick={() => exportPresetFile(presetName)} style={{fontSize: '0.8em'}} title="Download JSON to add to shared library">Export ↓</button>
             </div>
           </div>
         </div>
