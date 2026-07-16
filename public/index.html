@@ -28,6 +28,18 @@
   </head>
   <body>
     <noscript>High quality, community buiilt gouge for naval aviation training</noscript>
+    <!-- Hidden duplicate of the React feedback form so Netlify's build bot
+         registers the form and its fields. Keep field names in sync with
+         src/components/Footer.js -->
+    <form name="feedback" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="bot-field" />
+      <select name="category"></select>
+      <input type="email" name="email" />
+      <textarea name="description"></textarea>
+      <input type="file" name="photo1" />
+      <input type="file" name="photo2" />
+      <input type="file" name="photo3" />
+    </form>
     <div id="root"></div>
     <!--
       This HTML file is a template.

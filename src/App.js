@@ -14,6 +14,7 @@ import CourseRules from './components/TW4CourseRules.js';
 import Systems from './components/systems/Systems.js';
 import TW4JetLog from './components/TW4JetLog.js';
 import TW4Docs from './components/TW4Docs.js';
+import Footer from './components/Footer.js';
 
 function App() {
   const location = useLocation();
@@ -93,6 +94,8 @@ function App() {
         <Route path="/tw4/systems/:tab" element={<Systems />} />
         <Route path="/tw4/jetlog" element={<TW4JetLog />} />
       </Routes>
+
+      {!isLanding && <Footer />}
     </div>
   );
 }

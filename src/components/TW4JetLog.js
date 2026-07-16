@@ -2388,8 +2388,12 @@ function TW4JetLog() {
             <button onClick={() => setPdfUrl(prev => { URL.revokeObjectURL(prev); return null; })}>← Return to Jet Log</button>
             <a href={pdfUrl} download="DD-1801.pdf" target="_blank" rel="noreferrer" style={{display: 'inline-block', padding: '4px 10px', background: '#e8e8e8', border: '1px solid #999', borderRadius: '3px', color: '#000', textDecoration: 'none', fontSize: '0.9em', cursor: 'pointer'}}>Open / Download PDF</a>
           </div>
-          {jetlogScale >= 1 && (
+          {jetlogScale >= 1 ? (
             <iframe src={pdfUrl} style={{width: '100%', height: 'calc(100vh - 50px)', border: 'none', display: 'block'}} title="DD-1801 Flight Plan" />
+          ) : (
+            <div style={{textAlign: 'center', padding: '24px 16px', color: '#ccc', fontSize: '0.9em', lineHeight: 1.5}}>
+              The PDF editor couldn't load on this screen. Use the <strong>Open / Download PDF</strong> button above to view your completed flight plan and jet log.
+            </div>
           )}
         </>
       ) : (

@@ -3750,3 +3750,187 @@ textarea.incorrect-answer {
   justify-content: center;
   height: 100%;
 }
+/* Site Footer */
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: space-between;
+  align-items: flex-start;
+  background-color: #01202C;
+  color: #ffffff;
+  margin-top: 40px;
+  padding: 25px 30px;
+  border-top: 3px solid #003B4F;
+}
+
+.footer-feedback {
+  flex: 1 1 320px;
+  max-width: 480px;
+}
+
+.footer-feedback-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  font-size: 1em;
+  padding: 8px 12px;
+  background-color: #003B4F;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.footer-feedback-toggle:hover {
+  background-color: #0a5068;
+}
+
+.footer-feedback-toggle.open {
+  border-radius: 4px 4px 0 0;
+}
+
+.footer-feedback-arrow {
+  font-size: 0.8em;
+}
+
+.footer-feedback form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgba(0, 59, 79, 0.35);
+  border-radius: 0 0 4px 4px;
+}
+
+.footer-feedback .footer-feedback-success {
+  margin: 0;
+  padding: 12px;
+  background-color: rgba(0, 59, 79, 0.35);
+  border-radius: 0 0 4px 4px;
+}
+
+.footer-form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.footer-feedback select,
+.footer-feedback input[type="email"],
+.footer-feedback textarea {
+  background-color: #003B4F;
+  color: #ffffff;
+  border: 1px solid #0a5068;
+  border-radius: 4px;
+  padding: 8px;
+  font-family: inherit;
+  font-size: 0.9em;
+}
+
+.footer-feedback input[type="email"] {
+  flex: 1;
+  min-width: 160px;
+}
+
+.footer-feedback textarea {
+  width: 100%;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.footer-feedback ::placeholder {
+  color: #9fb8c2;
+}
+
+.footer-file-label {
+  font-size: 0.85em;
+  color: #9fb8c2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footer-file-label input[type="file"] {
+  font-size: 0.85em;
+  color: #9fb8c2;
+}
+
+.footer-feedback button[type="submit"] {
+  margin-left: auto;
+  background-color: #003B4F;
+  border: 1px solid #0a5068;
+}
+
+.footer-feedback button[type="submit"]:hover {
+  background-color: #0a5068;
+}
+
+.footer-feedback button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.footer-photo-list {
+  margin: 0;
+  font-size: 0.8em;
+  color: #9fb8c2;
+  word-break: break-all;
+}
+
+.footer-feedback-success {
+  color: #7fd47f;
+}
+
+.footer-feedback-again {
+  color: #9fb8c2;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.footer-feedback-error {
+  margin: 0;
+  font-size: 0.85em;
+  color: #f8b4b4;
+}
+
+.footer-hidden-field {
+  display: none;
+}
+
+.footer-support {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.footer-bmc {
+  display: inline-block;
+}
+
+.footer-bmc img {
+  height: 42px;
+  border-radius: 8px;
+  display: block;
+}
+
+@media (max-width: 700px) {
+  .site-footer {
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 20px;
+  }
+  /* In a column, the 320px flex-basis would become a forced height —
+     let the feedback block size to its content instead */
+  .footer-feedback {
+    flex: 0 0 auto;
+    max-width: none;
+    width: 100%;
+  }
+  /* Support button moves above the complaints dropdown */
+  .footer-support {
+    order: -1;
+    text-align: left;
+  }
+}

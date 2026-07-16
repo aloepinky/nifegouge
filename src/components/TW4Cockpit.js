@@ -37,7 +37,11 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   const [showNWCModal, setShowNWCModal] = useState(false);
   const [nwcModalContent, setNwcModalContent] = useState(null);
   const [showEPNavDropdown, setShowEPNavDropdown] = useState(false);
-  const [cockpitMode, setCockpitMode] = useState('full'); // 'full' or 'simplified'
+  // 'full' or 'simplified' — full mode needs ~970px (center content + side
+  // controls), so small/mobile screens start in simple mode
+  const [cockpitMode, setCockpitMode] = useState(() =>
+    window.innerWidth < 750 ? 'simplified' : 'full'
+  );
 
   const modalBaseContentRef = useRef(null);
   const modalStepKeyRef = useRef(null);
