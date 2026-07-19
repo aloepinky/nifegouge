@@ -150,6 +150,22 @@ export default function T6BPropDiagram() {
   const cutoffTimerRef = useRef(null);
   const svgRef = useRef(null);
   const pclDraggingRef = useRef(false);
+  const pclGroupRef = useRef(null);
+
+  // iOS Safari ignores touch-action on inner SVG elements, and React registers
+  // touch listeners as passive, so preventing page scroll while dragging the
+  // PCL needs native non-passive listeners on the lever group.
+  useEffect(() => {
+    const el = pclGroupRef.current;
+    if (!el) return;
+    const prevent = (e) => e.preventDefault();
+    el.addEventListener('touchstart', prevent, { passive: false });
+    el.addEventListener('touchmove', prevent, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', prevent);
+      el.removeEventListener('touchmove', prevent);
+    };
+  }, []);
   const [briefingTab, setBriefingTab] = useState(null);
   const [infoKey, setInfoKey] = useState(null);
 
@@ -1182,6 +1198,7 @@ export default function T6BPropDiagram() {
 
         {/* PCL lever — rendered after cutoff guard so it sits on top */}
         <g
+          ref={pclGroupRef}
           onPointerDown={e => {
             pclDraggingRef.current = true;
             e.currentTarget.setPointerCapture(e.pointerId);
