@@ -149,6 +149,7 @@ export default function T6BPropDiagram() {
   const [uncommandedFeather, setUncommandedFeather] = useState(false);
   const cutoffTimerRef = useRef(null);
   const svgRef = useRef(null);
+  const pclDraggingRef = useRef(false);
   const [briefingTab, setBriefingTab] = useState(null);
   const [infoKey, setInfoKey] = useState(null);
 
