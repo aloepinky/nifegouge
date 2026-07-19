@@ -450,7 +450,7 @@ export default function T6BPropDiagram() {
   ];
 
   return (
-    <div style={{ background: C.bg, width: '100%' }}>
+    <div style={{ background: C.bg, width: '100%', minHeight: '100vh' }}>
     <div style={{
       background: C.bg, padding: '12px 10px', borderRadius: 8,
       maxWidth: 860, margin: '0 auto', fontFamily: FONT, color: C.text,
@@ -1181,10 +1181,24 @@ export default function T6BPropDiagram() {
 
         {/* PCL lever — rendered after cutoff guard so it sits on top */}
         <g
-          onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); handlePclDrag(e); }}
-          onPointerMove={e => { if (e.buttons) handlePclDrag(e); }}
-          style={{ cursor: 'ns-resize' }}
+          onPointerDown={e => {
+            pclDraggingRef.current = true;
+            e.currentTarget.setPointerCapture(e.pointerId);
+            handlePclDrag(e);
+          }}
+          onPointerMove={e => { if (pclDraggingRef.current) handlePclDrag(e); }}
+          onPointerUp={() => { pclDraggingRef.current = false; }}
+          onPointerCancel={() => { pclDraggingRef.current = false; }}
+          style={{ cursor: 'ns-resize', touchAction: 'none' }}
         >
+          {/* Invisible hit area covering the track column — grabbing anywhere
+              along it drags the lever, which the visible 40x20 handle is too
+              small for on phones. Split in two so the lower part stays clear
+              of the cutoff guard (x 10-36, y 285-354) to its left. */}
+          <rect x={pclCX - 26} y={pclTrackTop - 14} width={52}
+            height={285 - (pclTrackTop - 14)} fill="transparent" />
+          <rect x={38} y={285} width={42}
+            height={pclOffY + 26 - 285} fill="transparent" />
           <rect x={pclCX - 20} y={pclLeverY - 10} width={40} height={20} rx={3}
             fill="url(#pp-metal)" stroke={pcl < 0 ? '#cc2222' : C.metalLight} strokeWidth={1.2} />
           {[-6, 0, 6].map(dx => (

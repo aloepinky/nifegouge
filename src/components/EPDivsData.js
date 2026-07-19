@@ -111,11 +111,11 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
   };
 
   // Helper function to render NWC button if data exists for the step
-  const renderNWCButton = (stepKey) => {
+  const renderNWCButton = (stepKey, styleOverride = {}) => {
     if (openNWCModal && EP_NWC[stepKey]) {
       return (
         <button
-          style={{...nwcButtonStyle, marginLeft: 'auto'}}
+          style={{...nwcButtonStyle, marginLeft: 'auto', ...styleOverride}}
           onClick={() => openNWCModal(stepKey)}
           title="View Notes, Warnings, and Cautions"
         >
@@ -126,11 +126,29 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     return null;
   };
 
+  // EP title bar with an optional NWC button. The button sits in-flow (not
+  // absolutely positioned) so long titles wrap around it instead of under it;
+  // colors are inverted (white on red bar) to stand out from step buttons.
+  const renderEPHeader = (title, nwcKey, styleOverride = {}) => (
+    <div style={{...epHeaderStyle, ...styleOverride, display: 'flex', alignItems: 'center', gap: '6px'}}>
+      <span style={{flex: 1, textAlign: 'center'}}>{title}</span>
+      {renderNWCButton(nwcKey, {backgroundColor: 'white', color: '#ef5350', flexShrink: 0})}
+    </div>
+  );
+
+  // Decision-tree subheader with an optional NWC button
+  const renderDecision = (text, nwcKey) => (
+    <div style={{...decisionPointStyle, display: 'flex', alignItems: 'center'}}>
+      {text}
+      {renderNWCButton(nwcKey)}
+    </div>
+  );
+
   return [
     // 0. ABORT START PROCEDURE
     (
       <div key="as" style={epSectionStyle}>
-        <div style={epHeaderStyle}>ABORT START PROCEDURE</div>
+        {renderEPHeader('ABORT START PROCEDURE', 'asT')}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}> 1.</span>
           {renderStepContent('as1')}
@@ -196,7 +214,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     // 3. EMERGENCY GROUND EGRESS
     (
       <div key="ege" style={epSectionStyle}>
-        <div style={epHeaderStyle}>EMERGENCY GROUND EGRESS</div>
+        {renderEPHeader('EMERGENCY GROUND EGRESS', 'egeT')}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('ege1')}
@@ -260,11 +278,10 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     // 5. ENGINE FAILURE IMMEDIATELY AFTER TAKEOFF
     (
       <div key="efiat" style={epSectionStyle}>
-        <div style={epHeaderStyle}>ENGINE FAILURE IMMEDIATELY AFTER TAKEOFF (SUFFICIENT RUNWAY REMAINING STRAIGHT AHEAD)</div>
+        {renderEPHeader('ENGINE FAILURE IMMEDIATELY AFTER TAKEOFF (SUFFICIENT RUNWAY REMAINING STRAIGHT AHEAD)', 'efiatT')}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('efiat1')}
-          {renderNWCButton('efiat1')}
         </div>
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>2.</span>
@@ -286,11 +303,10 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     // 6. ENGINE FAILURE DURING FLIGHT
     (
       <div key="efdf" style={epSectionStyle}>
-        <div style={epHeaderStyle}>ENGINE FAILURE DURING FLIGHT</div>
+        {renderEPHeader('ENGINE FAILURE DURING FLIGHT', 'efdfT')}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('efdf1')}
-          {renderNWCButton('efdf1')}
         </div>
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>2.</span>
@@ -322,7 +338,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     // 7. IMMEDIATE AIRSTART
     (
       <div key="ia" style={epSectionStyle}>
-        <div style={epHeaderStyle}>IMMEDIATE AIRSTART (PMU NORM)</div>
+        {renderEPHeader('IMMEDIATE AIRSTART (PMU NORM)', 'iaT')}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('ia1')}
@@ -422,7 +438,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
           <span style={{minWidth: '20px'}}>5.</span>
           {renderStepContent('upc5')}
         </div>
-        <div style={decisionPointStyle}>IF POWER IS INSUFFICIENT TO COMPLETE PEL:</div>
+        {renderDecision('IF POWER IS INSUFFICIENT TO COMPLETE PEL:', 'upcD')}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>6.</span>
           {renderStepContent('upc6')}
@@ -512,11 +528,10 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     (
       <div key="fif" style={epSectionStyle}>
         <div style={epHeaderStyle}>FIRE IN FLIGHT</div>
-        <div style={decisionPointStyle}>IF FIRE IS CONFIRMED:</div>
+        {renderDecision('IF FIRE IS CONFIRMED:', 'fifD')}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('fif1')}
-          {renderNWCButton('fif1')}
         </div>
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>2.</span>
@@ -544,11 +559,10 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     // 12. SMOKE AND FUME ELIMINATION/ELECTRICAL FIRE
     (
       <div key="sfe" style={epSectionStyle}>
-        <div style={epHeaderStyle}>SMOKE AND FUME ELIMINATION/ELECTRICAL FIRE</div>
+        {renderEPHeader('SMOKE AND FUME ELIMINATION/ELECTRICAL FIRE', 'sfeT')}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('sfe1')}
-          {renderNWCButton('sfe1')}
         </div>
         <div style={subStepStyle}>
           <span style={{minWidth: '20px'}}>a.</span>
@@ -571,7 +585,6 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>3.</span>
               {renderStepContent('sfe3')}
-              {renderNWCButton('sfe3')}
             </div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>4.</span>
@@ -581,7 +594,6 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>5.</span>
               {renderStepContent('sfe5')}
-              {renderNWCButton('sfe5')}
             </div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>6.</span>
@@ -594,18 +606,15 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>8.</span>
               {renderStepContent('sfe8')}
-              {renderNWCButton('sfe8')}
             </div>
             <div style={decisionPointStyle}>IF FIRE CEASES:</div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>9.</span>
               {renderStepContent('sfe9')}
-              {renderNWCButton('sfe9')}
             </div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>10.</span>
               {renderStepContent('sfe10')}
-              {renderNWCButton('sfe10')}
             </div>
           </>
         )}
@@ -631,12 +640,11 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     // 14. OIL SYSTEM MALFUNCTION OR LOW OIL PRESSURE
     (
       <div key="osm" style={epSectionStyle}>
-        <div style={epHeaderStyle}>OIL SYSTEM MALFUNCTION OR LOW OIL PRESSURE</div>
+        {renderEPHeader('OIL SYSTEM MALFUNCTION OR LOW OIL PRESSURE', 'osmT')}
         <div style={decisionPointStyle}>IF ONLY AMBER OIL PX caution ILLUMINATES:</div>
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('osm1')}
-          {renderNWCButton('osm1')}
         </div>
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>2.</span>
@@ -687,7 +695,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     // 17. OBOGS FAILURE/OVERTEMP/PHYSIOLOGICAL SYMPTOMS
     (
       <div key="obogs" style={epSectionStyle}>
-        <div style={{...epHeaderStyle, fontSize: '11px'}}>OBOGS FAILURE/OVERTEMP/PHYSIOLOGICAL SYMPTOMS</div>
+        {renderEPHeader('OBOGS FAILURE/OVERTEMP/PHYSIOLOGICAL SYMPTOMS', 'obogsT', {fontSize: '11px'})}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('obogs1')}
@@ -752,11 +760,10 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     // 19. FORCED LANDING
     (
       <div key="fl" style={epSectionStyle}>
-        <div style={epHeaderStyle}>FORCED LANDING</div>
+        {renderEPHeader('FORCED LANDING', 'flT')}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('fl1', {fontSize: '10px'})}
-          {renderNWCButton('fl1')}
         </div>
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>2.</span>
@@ -804,11 +811,10 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     // 20. PRECAUTIONARY EMERGENCY LANDING (PEL)
     (
       <div key="pel" style={epSectionStyle}>
-        <div style={epHeaderStyle}>PRECAUTIONARY EMERGENCY LANDING (PEL)</div>
+        {renderEPHeader('PRECAUTIONARY EMERGENCY LANDING (PEL)', 'pelT')}
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('pel1')}
-          {renderNWCButton('pel1')}
         </div>
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>2.</span>
@@ -823,7 +829,6 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>4.</span>
               {renderStepContent('pel4')}
-              {renderNWCButton('pel4')}
             </div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>5.</span>
@@ -836,7 +841,6 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>7.</span>
               {renderStepContent('pel7')}
-              {renderNWCButton('pel7')}
             </div>
           </>
         )}
@@ -976,9 +980,15 @@ export const EP_ANSWERS = {
 };
 
 export const EP_NWC = {
+  asT: {
+    notes: [
+      "Note and report to maintenance the degree and duration of any overtemperature."
+    ],
+    warnings: [],
+    cautions: []
+  },
   as1: {
     notes: [
-      "Note and report to maintenance the degree and duration of any overtemperature.",
       "If start is initiated with PCL in the OFF position, abort by reselecting AUTO/RESET on the STARTER switch. If start is initiated with PCL out of the OFF position, but not past the IDLE gate, abort by placing the PCL to OFF or reselecting AUTO/RESET on the STARTER switch. If the PCL is past the IDLE gate, abort by placing the PCL to OFF."
     ],
     warnings: [],
@@ -1004,10 +1014,15 @@ export const EP_NWC = {
       "STARTER switch is not spring-loaded from MANUAL to NORM."
     ]
   },
-  ege1: {
+  egeT: {
     notes: [
       "In a situation requiring immediate ground egress, the ejection system has the capability for 0/0 ejection."
     ],
+    warnings: [],
+    cautions: []
+  },
+  ege1: {
+    notes: [],
     warnings: [
       "Failure to ensure that the ISS mode selector is set to SOLO may result in the inadvertent ejection of one or both seats."
     ],
@@ -1043,7 +1058,7 @@ export const EP_NWC = {
     ],
     cautions: []
   },
-  efiat1: {
+  efiatT: {
     notes: [],
     warnings: [
       "If insufficient runway remains to land straight ahead, consider immediate ejection.",
@@ -1065,7 +1080,7 @@ export const EP_NWC = {
     warnings: [],
     cautions: []
   },
-  efdf1: {
+  efdfT: {
     notes: [
       "If experiencing uncommanded power changes/loss of power/uncommanded propeller feather or compressor stalls, refer to appropriate procedure."
     ],
@@ -1096,10 +1111,16 @@ export const EP_NWC = {
     ],
     cautions: []
   },
+  iaT: {
+    notes: [],
+    warnings: [
+      "Airstart attempts outside of the airstart envelope may be unsuccessful or result in engine overtemperature. Consideration should be given to ensure airstarts are attempted within the airstart envelope (125-200 KIAS for sea level to 15,000 feet, or 135-200 KIAS for 15,001 to 20,000 feet)."
+    ],
+    cautions: []
+  },
   ia1: {
     notes: [],
     warnings: [
-      "Airstart attempts outside of the airstart envelope may be unsuccessful or result in engine overtemperature. Consideration should be given to ensure airstarts are attempted within the airstart envelope (125-200 KIAS for sea level to 15,000 feet, or 135-200 KIAS for 15,001 to 20,000 feet).",
       "Do not delay ejection while attempting airstart at low altitude if below 2000 feet AGL.",
       "PCL must be in OFF to feather the propeller, and ensure proper starter, ignition, boost pump, and PMU operation during airstart."
     ],
@@ -1177,6 +1198,11 @@ export const EP_NWC = {
     warnings: [
       "With the PROP SYS circuit breaker pulled and the PMU switch OFF, the feather dump solenoid will not be powered. The propeller will feather at a slower rate as oil pressure decreases and the feathering spring takes effect. Glide performance will be considerably reduced and it may not be possible to intercept or fly the emergency landing pattern."
     ],
+    cautions: []
+  },
+  upcD: {
+    notes: [],
+    warnings: [],
     cautions: [
       "Consideration should be given to leaving the engine operating with PCL at mid range."
     ]
@@ -1218,7 +1244,7 @@ export const EP_NWC = {
       "Power-on and inverted departures or spins will result in high loads on the engine and torque shaft. If an inverted or power-on departure is encountered, land as soon as conditions permit. The pilot should suspect possible engine damage and may experience unusual engine operation accompanied by low oil pressure or CHIP detector warning. In all cases of inverted or power-on departures, the engine shall be inspected by qualified maintenance personnel after flight."
     ]
   },
-  fif1: {
+  fifD: {
     notes: [],
     warnings: [
       "Illumination of the fire warning light accompanied by one or more of the following indications is confirmation of an engine fire: smoke; flames; engine vibration; unusual sounds; high ITT; and fluctuating oil pressure, oil temperature, or hydraulic pressure."
@@ -1233,49 +1259,19 @@ export const EP_NWC = {
       "If the fire cannot be confirmed, the fire warning system may be at fault and should be tested as conditions permit. If only one fire loop annunciator is illuminated (top or bottom half only), a false fire indication may exist if the other loop tests good."],
     cautions: []
   },
-  sfe1: {
+  sfeT: {
     notes: [
-      "If a faulty component can be identified as the source of smoke and fumes, turn defective unit off or pull respective circuit breaker. Circuit breakers for items on the hot battery bus are not accessible in flight."
-    ],
-    warnings: [
-      "Under varying conditions of fire and/or smoke where aircraft control is jeopardized, the pilot has the option of actuating CFS or ejecting."
-    ],
-    cautions: []
-  },
-  sfe3: {
-    notes: [
+      "If a faulty component can be identified as the source of smoke and fumes, turn defective unit off or pull respective circuit breaker. Circuit breakers for items on the hot battery bus are not accessible in flight.",
       "Selecting RAM/DUMP does not shut off bleed air inflow.",
-      "Defog is turned off when RAM/DUMP is selected."
-    ],
-    warnings: [],
-    cautions: []
-  },
-  sfe5: {
-    notes: [],
-    warnings: [
-      "OBOGS will be inoperative once the main battery is depleted or with battery failure."
-    ],
-    cautions: []
-  },
-  sfe8: {
-    notes: [],
-    warnings: [
-      "To prevent injury, ensure oxygen mask is on and visor is down prior to actuating the CFS system."
-    ],
-    cautions: []
-  },
-  sfe9: {
-    notes: [
-      "Recover aircraft without electrical power if possible. If IMC penetration is required, turn the auxiliary battery on. Backup flight instrument and lighting, fire detection (FIRE 1 only), and VHF radio (tuning through standby VHF control unit) will be powered for approximately 30 minutes. Landing gear must be extended by emergency means. The flap lever is powered through the hot battery bus and should function as long as the main battery has not depleted. With normal flap extension and a loss of power to the battery bus, flaps will retract. Gear and flap indicators, as well as exterior lighting, will not be powered. Unless the faulty component has been isolated, further restoration of electrical power is not recommended."
-    ],
-    warnings: [],
-    cautions: []
-  },
-  sfe10: {
-    notes: [
+      "Defog is turned off when RAM/DUMP is selected.",
+      "Recover aircraft without electrical power if possible. If IMC penetration is required, turn the auxiliary battery on. Backup flight instrument and lighting, fire detection (FIRE 1 only), and VHF radio (tuning through standby VHF control unit) will be powered for approximately 30 minutes. Landing gear must be extended by emergency means. The flap lever is powered through the hot battery bus and should function as long as the main battery has not depleted. With normal flap extension and a loss of power to the battery bus, flaps will retract. Gear and flap indicators, as well as exterior lighting, will not be powered. Unless the faulty component has been isolated, further restoration of electrical power is not recommended.",
       "With the battery and generator off, the landing gear must be extended using the emergency landing gear extension system."
     ],
-    warnings: [],
+    warnings: [
+      "Under varying conditions of fire and/or smoke where aircraft control is jeopardized, the pilot has the option of actuating CFS or ejecting.",
+      "OBOGS will be inoperative once the main battery is depleted or with battery failure.",
+      "To prevent injury, ensure oxygen mask is on and visor is down prior to actuating the CFS system."
+    ],
     cautions: []
   },
   cdw1: {
@@ -1285,9 +1281,9 @@ export const EP_NWC = {
       "Higher power settings may aggravate the existing condition."
     ]
   },
-  osm1:{
+  osmT:{
     notes: ["Use this procedure for any of the following: red OIL PX annunciator illuminated, amber OIL PX annunciator illuminated, oil pressure fluctuations, oil temperature out of limits, or visibly confirmed leaking oil from the aircraft.",
-      "If OIL PX warning illuminates and oil pressure indicates <5 psi, check OIL TRX circuit breaker on the battery bus circuit breaker panel (left front console). If the circuit breaker is open, it may be reset.", 
+      "If OIL PX warning illuminates and oil pressure indicates <5 psi, check OIL TRX circuit breaker on the battery bus circuit breaker panel (left front console). If the circuit breaker is open, it may be reset.",
       "Due to the sensitivity of the signal conditioning unit, a single, momentary illumination of the amber OIL PX caution while maneuvering is possible but may not indicate a malfunction.",
       "Illumination of both red and amber OIL PX message while the oil pressure gage indicates normal pressure indicates an SCU failure."
     ],
@@ -1335,8 +1331,14 @@ export const EP_NWC = {
       "The OBOGS concentrator may malfunction resulting in zeolite dust in the breathing system without an illumination of the OBOGS FAIL light. Indications of this malfunction include respiratory irritation, coughing, or the presence of white dust in the oxygen mask. Inhalation of zeolite dust should be avoided."
     ],
     cautions: [
-      "Illumination of the OBOGS TEMP message indicates a failure of the OBOGS heat exchanger, and is considered a failure of the OBOGS system.",
       "When breathing oxygen under increased pressure, breathe at a rate and depth slightly less than normal to preclude hyperventilation."
+    ]
+  },
+  obogsT: {
+    notes: [],
+    warnings: [],
+    cautions: [
+      "Illumination of the OBOGS TEMP message indicates a failure of the OBOGS heat exchanger, and is considered a failure of the OBOGS system."
     ]
   },
   obogs5: {
@@ -1379,7 +1381,7 @@ export const EP_NWC = {
     ],
     cautions: []
   },
-  fl1: {
+  flT: {
     notes: [],
     warnings: [
       "Aircraft may float while approaching touchdown with the propeller feathered more than observed while conducting practice forced landing at 4-6% torque. Energy management is critical to achieving targeted touchdown position. Landing ground roll distance will increase with the propeller feathered.",
@@ -1417,8 +1419,11 @@ export const EP_NWC = {
     warnings: [],
     cautions: []
   },
-  pel1: {
-    notes: [],
+  pelT: {
+    notes: [
+      "Do not set the boost pump and ignition to ON for engine malfunctions, such as oil system, chip light, fire, or FOD. In these cases, turning the boost pump ON may provide an undesirable immediate relight.",
+      "With uncontrollable high power, the pilot must shut down the engine once landing is assured."
+    ],
     warnings: [
       "If the engine should fail while flying the PEL, refer to the Engine Failure During Flight checklist, and transition to the Forced Landing procedure.",
       "If rate of descent (indicated on the VSI while stabilized at 125 KIAS with gear, flaps, and speed brake retracted and 4 to 6% torque) is greater than 1500 ft/min, increase torque as necessary (up to 131%) to achieve approximately 1350 to 1500 ft/min rate of descent. If engine power is insufficient to produce a rate of descent less than 1500 ft/min, set PCL to OFF.",
@@ -1427,19 +1432,8 @@ export const EP_NWC = {
     ],
     cautions: [
       "Inducing yaw (side slipping) with a known engine/oil malfunction could result in impaired windshield visibility due to oil leakage spraying onto the windshield.",
-      "At higher temperature and pressure altitudes, power response will be delayed. Airspeeds below 110 KIAS on ELP final, in combination with transitioning to a high flare, may lead to a hard landing resulting in landing gear component failure."]
-  },
-  pel4: {
-    notes: ['Do not set the boost pump and ignition to ON for engine malfunctions, such as oil system, chip light, fire, or FOD. In these cases, turning the boost pump ON may provide an undesirable immediate relight.'],
-    warnings: [],
-    cautions: []
-  },
-  pel7: {
-    notes: [
-      "With uncontrollable high power, the pilot must shut down the engine once landing is assured."
-    ],
-    warnings: [],
-    cautions: []
+      "At higher temperature and pressure altitudes, power response will be delayed. Airspeeds below 110 KIAS on ELP final, in combination with transitioning to a high flare, may lead to a hard landing resulting in landing gear component failure."
+    ]
   }
 };
 
