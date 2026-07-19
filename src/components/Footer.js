@@ -1,12 +1,35 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const MAX_PHOTOS = 3;
 
+// UPDATE SUPPORTER COUNT HERE — sets the number under the heart on the button
+const SUPPORTER_COUNT = 3;
+
+// The "(N)" in the text is what makes the button API render N under the heart;
+// the fetch below hides it from the visible label
 const BMC_IMG_URL =
-  'https://img.buymeacoffee.com/button-api/?text=Support PSM&emoji=&slug=pinksheetmafia' +
+  `https://img.buymeacoffee.com/button-api/?text=Support PSM (${SUPPORTER_COUNT})` +
+  '&emoji=&slug=pinksheetmafia' +
   '&button_colour=f8b4b4&font_colour=000000&font_family=Inter&outline_colour=000000&coffee_colour=FFDD00';
 
 function Footer() {
+  const [bmcSrc, setBmcSrc] = useState(BMC_IMG_URL);
+
+  // The button is an SVG: fetch it and wrap the "(N)" in an invisible tspan so
+  // the label reads "Support PSM" while the heart keeps its count. If the
+  // fetch fails, the raw image (with the visible "(N)") is used as-is.
+  useEffect(() => {
+    fetch(BMC_IMG_URL)
+      .then((r) => r.text())
+      .then((svg) => {
+        const cleaned = svg.replace(
+          `(${SUPPORTER_COUNT})`,
+          `<tspan opacity="0">(${SUPPORTER_COUNT})</tspan>`
+        );
+        setBmcSrc('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(cleaned));
+      })
+      .catch(() => {});
+  }, []);
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState('Bug');
   const [description, setDescription] = useState('');
@@ -133,7 +156,7 @@ function Footer() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <img src={BMC_IMG_URL} alt="Support PSM — Buy Me a Coffee" />
+          <img src={bmcSrc} alt="Support PSM — Buy Me a Coffee" />
         </a>
       </div>
     </footer>

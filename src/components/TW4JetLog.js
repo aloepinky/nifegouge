@@ -50,6 +50,7 @@ function TW4JetLog() {
     tngTime: '5',
     tngFuel: '25',
     stdReserve: '200',
+    includeFinalApr: true,
   });
   const [routeBadges, setRouteBadges] = useState({});
   const [holdCells, setHoldCells] = useState({});
@@ -70,6 +71,13 @@ function TW4JetLog() {
 
   // Alternate table rows use r200+ namespace so main table can grow freely
   const ALT_ROWS = [200, 202, 204, 206];
+
+  // The jet log PDFs have a fixed number of row slots before the Total row
+  // (IFR: STTO + 8 legs, VFR: STTO + 13 legs); row pairs at this index or
+  // beyond don't fit on the form
+  const MAX_IFR_PAIRS = 9;
+  const MAX_VFR_PAIRS = 14;
+  const maxJetlogPairs = vfrMode ? MAX_VFR_PAIRS : MAX_IFR_PAIRS;
 
   const handleInputChange = (cellId, value) => {
     setInputValues(prev => ({ ...prev, [cellId]: value }));
@@ -1301,7 +1309,7 @@ function TW4JetLog() {
         .reduce((sum, b) => sum + b, 0);
       item1 = totalTopFuel - sttoFuelParam - (totalApproachCount * approachFuelParam);
       item2 = totalAltFuel;
-      item3 = approachFuelParam * (1 + totalApproachCount);
+      item3 = approachFuelParam * ((params.includeFinalApr ? 1 : 0) + totalApproachCount);
     }
 
     const item4 = item1 + item2 + item3;
@@ -1488,9 +1496,11 @@ function TW4JetLog() {
     const bot = top + 1;
     const showIntCol = !vfrMode && (showIntClimbSelector || intClimbs.length > 0);
     const ic = intClimbs.find(c => c.row === pairIdx);
+    // Pairs past the PDF form's row slots won't copy over
+    const overflow = pairIdx >= maxJetlogPairs;
     return (
       <React.Fragment key={top}>
-        <tr>
+        <tr className={overflow ? 'jetlog-overflow-row' : undefined}>
           {editRowsMode && (
             <td rowSpan={2} className="edit-minus-cell">
               <button className="delete-row-btn" onClick={() => handleDeletePair(pairIdx)}>⊖</button>
@@ -1544,7 +1554,7 @@ function TW4JetLog() {
             </td>
           )}
         </tr>
-        <tr>
+        <tr className={overflow ? 'jetlog-overflow-row' : undefined}>
           {renderCell(`r${bot}c0`)}
           {renderCell(`r${bot}c1`)}
           {renderCell(`r${bot}c2`)}
@@ -2122,7 +2132,8 @@ function TW4JetLog() {
         const size = len > 10 ? baseSize - 3 : len > 8 ? baseSize - 2 : len >= 6 ? baseSize - 1 : baseSize;
         drawR(vx, vy, text, Math.max(4, size));
       };
-      for (let pairIdx = 0; pairIdx < mainRowCount; pairIdx++) {
+      // Rows beyond the form's slots would draw over the totals and fuel plan
+      for (let pairIdx = 0; pairIdx < Math.min(mainRowCount, maxJetlogPairs); pairIdx++) {
         const topRow   = pairIdx * 2;
         const rowY     = C.mainFirstRowY - pairIdx * C.mainRowPitch;
         const cellCY   = rowY - C.mainRowPitch / 2;
@@ -2636,6 +2647,11 @@ function TW4JetLog() {
             const pairIdx = idx + 1;
             return (
               <React.Fragment key={`fr-${pairIdx}`}>
+                {pairIdx === maxJetlogPairs && (
+                  <tr className="jetlog-overflow-banner">
+                    <td colSpan={99}>MAX {vfrMode ? 'VFR' : 'IFR'} Jet log rows. Rows below this won't be copied over</td>
+                  </tr>
+                )}
                 {renderMainRowPair(pairIdx)}
                 {editRowsMode && renderDivider(pairIdx)}
               </React.Fragment>
@@ -2796,15 +2812,25 @@ function TW4JetLog() {
               {label: 'T&G Time (min)',          key: 'tngTime', ifrHide: true},
               {label: 'T&G Fuel (lbs)',          key: 'tngFuel', ifrHide: true},
               {label: 'STD Reserve Fuel (lbs)', key: 'stdReserve'},
-            ].filter(p => (!vfrMode || !p.vfrHide) && (vfrMode || !p.ifrHide)).map(({label, key}) => (
+              {label: 'Auto Final Approach Fuel',  key: 'includeFinalApr', checkbox: true, vfrHide: true},
+            ].filter(p => (!vfrMode || !p.vfrHide) && (vfrMode || !p.ifrHide)).map(({label, key, checkbox}) => (
               <div key={key} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '16px'}}>
                 <label style={{fontSize: '0.85em', whiteSpace: 'nowrap', color: '#333'}}>{label}</label>
-                <input
-                  type="text"
-                  value={params[key]}
-                  onChange={e => setParams(prev => ({...prev, [key]: e.target.value}))}
-                  style={{width: '72px', textAlign: 'right', padding: '3px 5px'}}
-                />
+                {checkbox ? (
+                  <input
+                    type="checkbox"
+                    checked={!!params[key]}
+                    onChange={e => setParams(prev => ({...prev, [key]: e.target.checked}))}
+                    style={{width: '18px', height: '18px', cursor: 'pointer'}}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={params[key]}
+                    onChange={e => setParams(prev => ({...prev, [key]: e.target.value}))}
+                    style={{width: '72px', textAlign: 'right', padding: '3px 5px'}}
+                  />
+                )}
               </div>
             ))}
             <button

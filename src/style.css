@@ -3750,6 +3750,21 @@ textarea.incorrect-answer {
   justify-content: center;
   height: 100%;
 }
+/* Jet log IFR row-overflow warning */
+.jetlog-overflow-banner td {
+  background-color: #c62828;
+  color: #ffffff;
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.7em;
+  line-height: 1.2;
+  padding: 0 3px;
+}
+
+.jetlog-overflow-row td {
+  background-color: #ffd6d6;
+}
+
 /* Site Footer */
 .site-footer {
   display: flex;
