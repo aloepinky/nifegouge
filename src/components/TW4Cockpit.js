@@ -1,7 +1,37 @@
 import React, { useState, useEffect, useRef} from 'react';
-import {getEPDivs, EP_LENGTHS, EP_ANSWERS, EP_NWC, EP_FULL_LENGTHS, EP_FULL_ANSWERS, EP_TITLES, EP_FULL_TITLES} from './EPDivsData';
+import {getEPDivs, EP_LENGTHS, EP_ANSWERS, EP_NWC, EP_NWC_GROUPS, EP_NWC_HINTS, EP_FULL_LENGTHS, EP_FULL_ANSWERS, EP_TITLES, EP_FULL_TITLES} from './EPDivsData';
 import {getQuadDivs, QUAD_LENGTHS, QUAD_ANSWERS, QUAD_ACTIONS, QUAD_TITLES, QUAD_NWC} from './QuadfoldData';
 import { normalizeAnswer } from '../utils/answerUtils';
+
+// stepKey -> ordered list of every NWC key in the same procedure
+const NWC_GROUP_BY_KEY = {};
+EP_NWC_GROUPS.forEach((group) => group.forEach((k) => { NWC_GROUP_BY_KEY[k] = group; }));
+
+// Bubble styles shared by the full NWC bubbles and their collapsed preview
+// chips so the chips visually match the bubble they expand into
+const NWC_BUBBLE_STYLES = {
+  warning: {
+    backgroundColor: '#e6d4d4ff',
+    color: 'black',
+    border: '2px solid #ef5350',
+    boxShadow: '4px 4px 8px rgba(0, 0, 0, 0.3)',
+    borderRadius: '4px'
+  },
+  caution: {
+    backgroundColor: 'white',
+    color: 'black',
+    border: '3px dashed #ef5350',
+    borderRadius: '4px'
+  },
+  note: {
+    backgroundColor: 'white',
+    color: 'black',
+    border: '4px solid #ef5350',
+    borderRadius: '4px'
+  }
+};
+
+const NWC_CATEGORY_LABELS = { warning: 'Warning', caution: 'Caution', note: 'Note' };
 
 function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   // Layout width parameters - adjust these to test different configurations
@@ -36,6 +66,9 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   const [autoNWC, setAutoNWC] = useState(false);
   const [showNWCModal, setShowNWCModal] = useState(false);
   const [nwcModalContent, setNwcModalContent] = useState(null);
+  const [expandedNWC, setExpandedNWC] = useState({});
+  const [revealedHints, setRevealedHints] = useState({});
+  const [showAllHints, setShowAllHints] = useState(false);
   const [showEPNavDropdown, setShowEPNavDropdown] = useState(false);
   // 'full' or 'simplified' — full mode needs ~970px (center content + side
   // controls), so small/mobile screens start in simple mode
@@ -526,9 +559,55 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       stepAnswer = '';
     }
 
-    console.log(rawAnswer)
-    console.log(stepAnswer)
+    // EP keys: show every NWC in the procedure as collapsed previews, with
+    // the clicked key's items highlighted
+    let group = EP_NWC[stepKey] && NWC_GROUP_BY_KEY[stepKey];
+    if (group) {
+      // In memory mode, drop NWCs belonging to non-memory (full-mode-only)
+      // steps; title/decision keys aren't in either answer set and stay
+      if (currentDivKey === 'epDivs') {
+        group = group.filter((key) => !(EP_FULL_ANSWERS.hasOwnProperty(key) && !EP_ANSWERS.hasOwnProperty(key)));
+      }
+      const items = [];
+      let seq = 0;
+      const hintFor = (key, plural, idx) => (EP_NWC_HINTS[key] ? EP_NWC_HINTS[key][plural][idx] : undefined);
+      group.forEach((key) => {
+        const data = EP_NWC[key];
+        if (!data) return;
+        // Same order the old single-step modal used: warnings, cautions, notes
+        data.warnings.forEach((text, idx) => items.push({ seq: ++seq, key, category: 'warning', text, hint: hintFor(key, 'warnings', idx) }));
+        data.cautions.forEach((text, idx) => items.push({ seq: ++seq, key, category: 'caution', text, hint: hintFor(key, 'cautions', idx) }));
+        data.notes.forEach((text, idx) => items.push({ seq: ++seq, key, category: 'note', text, hint: hintFor(key, 'notes', idx) }));
+      });
 
+      const countFor = (keys) => {
+        const counts = { notes: 0, warnings: 0, cautions: 0 };
+        keys.forEach((key) => {
+          const data = EP_NWC[key];
+          if (!data) return;
+          counts.notes += data.notes.length;
+          counts.warnings += data.warnings.length;
+          counts.cautions += data.cautions.length;
+        });
+        return counts;
+      };
+
+      setExpandedNWC({});
+      setRevealedHints({});
+      setShowAllHints(false);
+      setNwcModalContent({
+        mode: 'ep',
+        stepKey,
+        stepAnswer,
+        items,
+        epCounts: countFor(group),
+        stepCounts: countFor([stepKey])
+      });
+      setShowNWCModal(true);
+      return;
+    }
+
+    // Quadfold (and any ungrouped) keys keep the single-step display
     const renderNWCContent = () => {
       const content = [];
 
@@ -536,12 +615,9 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       nwcData.warnings.forEach((warning, idx) => {
         content.push(
           <div key={`warning-${idx}`} style={{
-            backgroundColor: '#e6d4d4ff',
+            ...NWC_BUBBLE_STYLES.warning,
             padding: '10px',
             marginBottom: '10px',
-            borderRadius: '4px',
-            border: '2px solid #ef5350',
-            boxShadow: '4px 4px 8px rgba(0, 0, 0, 0.3)',
             fontSize: '11px'
           }}>
             <strong style={{fontSize: '12px'}}>WARNING:</strong> {warning}
@@ -553,11 +629,9 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       nwcData.cautions.forEach((caution, idx) => {
         content.push(
           <div key={`caution-${idx}`} style={{
-            backgroundColor: 'white',
+            ...NWC_BUBBLE_STYLES.caution,
             padding: '10px',
             marginBottom: '10px',
-            borderRadius: '4px',
-            border: '3px dashed #ef5350',
             fontSize: '11px'
           }}>
             <strong>CAUTION:</strong> {caution}
@@ -569,12 +643,9 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       nwcData.notes.forEach((note, idx) => {
         content.push(
           <div key={`note-${idx}`} style={{
-            backgroundColor: 'white',
-            color: 'black',
+            ...NWC_BUBBLE_STYLES.note,
             padding: '10px',
             marginBottom: '10px',
-            borderRadius: '4px',
-            border: '4px solid #ef5350',
             fontSize: '11px'
           }}>
             <strong>NOTE:</strong> {note}
@@ -585,7 +656,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       return <div>{content}</div>;
     };
 
-    setNwcModalContent({ content: renderNWCContent(), stepAnswer });
+    setNwcModalContent({ mode: 'single', content: renderNWCContent(), stepAnswer });
     setShowNWCModal(true);
   }
 
@@ -756,7 +827,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                 <h3 style={{fontSize: '14px', marginTop: '15px'}}>Buttons & Controls</h3>
                 <ul>
                   <li><strong>Simple/Full Mode</strong> Toggle to remove/add cockpit poster and associated buttons</li>
-                  <li><strong>NWC Buttons:</strong> Small buttons on individual steps that display Notes, Warnings, and Cautions relevant to that step. <span style={{fontSize: '11px'}}>Note: NWCs from a checklist's preamble are included in the first step</span></li>
+                  <li><strong>NWC Buttons:</strong> Small buttons on individual steps that display Notes, Warnings, and Cautions relevant to that step.</li>
                   <li><strong>Hint:</strong> Highlights controls related to the current step</li>
                   <li><strong>Next Answer/Skip:</strong> Reveals and fills the next unanswered/unchecked step</li>
                   <li><strong>All Answers:</strong> Completes all remaining steps</li>
@@ -1398,10 +1469,98 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                       >
                         &times;
                       </button>
-                      <h2 style={{marginTop: 0, marginBottom: '20px', fontSize: '14px', textAlign: 'center', fontWeight: 'bold'}}>
-                        {nwcModalContent.stepAnswer}
-                      </h2>
-                      {nwcModalContent.content}
+                      {nwcModalContent.mode === 'ep' ? (
+                        <>
+                          {/* Notes/Warnings/Cautions counts: N/W/C letters over the
+                              whole-EP digits (black), clicked-step digits (grey) below */}
+                          <div style={{display: 'flex', justifyContent: 'center', marginBottom: '8px'}}>
+                            {[['N', 'notes'], ['W', 'warnings'], ['C', 'cautions']].map(([letter, cat]) => (
+                              <div key={cat} style={{textAlign: 'center'}}>
+                                <div style={{fontSize: '11px', fontWeight: 'bold', color: 'black', lineHeight: 1.2}}>{letter}</div>
+                                <div style={{fontSize: '22px', fontWeight: 'bold', color: 'black', lineHeight: 1.1}}>
+                                  {nwcModalContent.epCounts[cat]}
+                                </div>
+                                <div style={{fontSize: '13px', color: '#aaa'}}>
+                                  {nwcModalContent.stepCounts[cat]}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {/* Clicked step's answer text with the "All Hints" toggle on its
+                              right, bottom-aligned so it sits on the text's last line */}
+                          <div style={{display: 'flex', alignItems: 'flex-end', gap: '10px', marginBottom: '10px'}}>
+                            <h2 style={{flex: 1, margin: 0, fontSize: '14px', textAlign: 'center', fontWeight: 'bold'}}>
+                              {nwcModalContent.stepAnswer}
+                            </h2>
+                            <button
+                              onClick={() => setShowAllHints(!showAllHints)}
+                              style={{backgroundColor: showAllHints ? '#003B4F' : 'white',
+                                color: showAllHints ? 'white' : '#003B4F', border: '1px solid #003B4F',
+                                borderRadius: '4px', padding: '2px 8px', fontSize: '11px',
+                                fontWeight: 'bold', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap'}}
+                            >
+                              All Hints
+                            </button>
+                          </div>
+                          <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                            {nwcModalContent.items.map((item) => {
+                              const highlight = item.key === nwcModalContent.stepKey
+                                ? {boxShadow: `0 0 0 3px #ffc107${item.category === 'warning' ? ', 4px 4px 8px rgba(0, 0, 0, 0.3)' : ''}`}
+                                : {};
+                              const toggle = () => setExpandedNWC((prev) => ({...prev, [item.seq]: !prev[item.seq]}));
+                              const hintShown = showAllHints || revealedHints[item.seq];
+                              return expandedNWC[item.seq] ? (
+                                <div
+                                  key={item.seq}
+                                  onClick={toggle}
+                                  style={{...NWC_BUBBLE_STYLES[item.category], ...highlight,
+                                    padding: '10px', fontSize: '11px', textAlign: 'left', cursor: 'pointer'}}
+                                >
+                                  <strong style={item.category === 'warning' ? {fontSize: '12px'} : undefined}>
+                                    {item.seq}. {NWC_CATEGORY_LABELS[item.category].toUpperCase()}:
+                                  </strong> {item.text}
+                                </div>
+                              ) : (
+                                <button
+                                  key={item.seq}
+                                  onClick={toggle}
+                                  style={{...NWC_BUBBLE_STYLES[item.category], ...highlight,
+                                    padding: '4px 10px', fontSize: '11px', fontWeight: 'bold', textAlign: 'left',
+                                    cursor: 'pointer', display: 'flex', justifyContent: 'space-between',
+                                    alignItems: 'center', gap: '10px'}}
+                                >
+                                  <span>{item.seq}. {NWC_CATEGORY_LABELS[item.category]}</span>
+                                  {item.hint && (
+                                    hintShown ? (
+                                      <span style={{fontWeight: 'normal', fontStyle: 'italic', color: '#555'}}>
+                                        {item.hint}
+                                      </span>
+                                    ) : (
+                                      <span
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setRevealedHints((prev) => ({...prev, [item.seq]: true}));
+                                        }}
+                                        style={{fontWeight: 'normal', fontStyle: 'italic', color: '#888',
+                                          textDecoration: 'underline'}}
+                                      >
+                                        Hint
+                                      </span>
+                                    )
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <h2 style={{marginTop: 0, marginBottom: '20px', fontSize: '14px', textAlign: 'center', fontWeight: 'bold'}}>
+                            {nwcModalContent.stepAnswer}
+                          </h2>
+                          {nwcModalContent.content}
+                        </>
+                      )}
                     </div>
                   </div>
                 )}

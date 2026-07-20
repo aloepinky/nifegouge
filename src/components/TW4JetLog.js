@@ -64,6 +64,7 @@ function TW4JetLog() {
   const [showPresets, setShowPresets] = useState(false);
   const [collapsedFolders, setCollapsedFolders] = useState(new Set());
   const [presetName, setPresetName] = useState('');
+  const [loadedPresetName, setLoadedPresetName] = useState(null); // title of the currently loaded preset route
   const [jetlogScale, setJetlogScale] = useState(1);
   const [showIntClimbSelector, setShowIntClimbSelector] = useState(false);
   const [intClimbs, setIntClimbs] = useState([]); // [{row: pairIdx, elev: '', alt: number}]
@@ -1348,6 +1349,7 @@ function TW4JetLog() {
     setVfrStart(null);
     setShowIntClimbSelector(false);
     setIntClimbs([]);
+    setLoadedPresetName(null);
   };
 
   const capturePreset = (name) => ({
@@ -1436,6 +1438,7 @@ function TW4JetLog() {
     setSplitCells({});
     setHoldCells(preset.holdCells || {});
     if (preset.params) setParams(prev => ({ ...prev, ...preset.params }));
+    setLoadedPresetName(preset.name || null);
     setShowPresets(false);
   };
 
@@ -2409,6 +2412,9 @@ function TW4JetLog() {
         </>
       ) : (
       <>
+      {loadedPresetName && (
+        <h1 style={{fontSize: '1.3em', margin: '0 0 6px'}}>{loadedPresetName}</h1>
+      )}
       <div style={{fontSize: '0.68em', color: '#888', textAlign: 'center', marginBottom: '2px'}}>
         {vfrMode
           ? 'Input GS and Dist for each leg; check T&G/APR boxes as appropriate; and click Solve. Lbs/hr is auto calculated from GS for standard day sea level — if a different condition is desired, enter it manually. The "FP code" box should contain the radial-DME or lat/long definition of points as they will be written on the flight plan.'

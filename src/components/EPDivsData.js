@@ -585,6 +585,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>3.</span>
               {renderStepContent('sfe3')}
+              {renderNWCButton('sfe3')}
             </div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>4.</span>
@@ -594,6 +595,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>5.</span>
               {renderStepContent('sfe5')}
+              {renderNWCButton('sfe5')}
             </div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>6.</span>
@@ -606,15 +608,18 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>8.</span>
               {renderStepContent('sfe8')}
+              {renderNWCButton('sfe8')}
             </div>
             <div style={decisionPointStyle}>IF FIRE CEASES:</div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>9.</span>
               {renderStepContent('sfe9')}
+              {renderNWCButton('sfe9')}
             </div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>10.</span>
               {renderStepContent('sfe10')}
+              {renderNWCButton('sfe10')}
             </div>
           </>
         )}
@@ -829,6 +834,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>4.</span>
               {renderStepContent('pel4')}
+              {renderNWCButton('pel4')}
             </div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>5.</span>
@@ -841,6 +847,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>7.</span>
               {renderStepContent('pel7')}
+              {renderNWCButton('pel7')}
             </div>
           </>
         )}
@@ -1261,17 +1268,47 @@ export const EP_NWC = {
   },
   sfeT: {
     notes: [
-      "If a faulty component can be identified as the source of smoke and fumes, turn defective unit off or pull respective circuit breaker. Circuit breakers for items on the hot battery bus are not accessible in flight.",
-      "Selecting RAM/DUMP does not shut off bleed air inflow.",
-      "Defog is turned off when RAM/DUMP is selected.",
-      "Recover aircraft without electrical power if possible. If IMC penetration is required, turn the auxiliary battery on. Backup flight instrument and lighting, fire detection (FIRE 1 only), and VHF radio (tuning through standby VHF control unit) will be powered for approximately 30 minutes. Landing gear must be extended by emergency means. The flap lever is powered through the hot battery bus and should function as long as the main battery has not depleted. With normal flap extension and a loss of power to the battery bus, flaps will retract. Gear and flap indicators, as well as exterior lighting, will not be powered. Unless the faulty component has been isolated, further restoration of electrical power is not recommended.",
-      "With the battery and generator off, the landing gear must be extended using the emergency landing gear extension system."
+      "If a faulty component can be identified as the source of smoke and fumes, turn defective unit off or pull respective circuit breaker. Circuit breakers for items on the hot battery bus are not accessible in flight."
     ],
     warnings: [
-      "Under varying conditions of fire and/or smoke where aircraft control is jeopardized, the pilot has the option of actuating CFS or ejecting.",
-      "OBOGS will be inoperative once the main battery is depleted or with battery failure.",
+      "Under varying conditions of fire and/or smoke where aircraft control is jeopardized, the pilot has the option of actuating CFS or ejecting."
+    ],
+    cautions: []
+  },
+  sfe3: {
+    notes: [
+      "Selecting RAM/DUMP does not shut off bleed air inflow.",
+      "Defog is turned off when RAM/DUMP is selected."
+    ],
+    warnings: [],
+    cautions: []
+  },
+  sfe5: {
+    notes: [],
+    warnings: [
+      "OBOGS will be inoperative once the main battery is depleted or with battery failure."
+    ],
+    cautions: []
+  },
+  sfe8: {
+    notes: [],
+    warnings: [
       "To prevent injury, ensure oxygen mask is on and visor is down prior to actuating the CFS system."
     ],
+    cautions: []
+  },
+  sfe9: {
+    notes: [
+      "Recover aircraft without electrical power if possible. If IMC penetration is required, turn the auxiliary battery on. Backup flight instrument and lighting, fire detection (FIRE 1 only), and VHF radio (tuning through standby VHF control unit) will be powered for approximately 30 minutes. Landing gear must be extended by emergency means. The flap lever is powered through the hot battery bus and should function as long as the main battery has not depleted. With normal flap extension and a loss of power to the battery bus, flaps will retract. Gear and flap indicators, as well as exterior lighting, will not be powered. Unless the faulty component has been isolated, further restoration of electrical power is not recommended."
+    ],
+    warnings: [],
+    cautions: []
+  },
+  sfe10: {
+    notes: [
+      "With the battery and generator off, the landing gear must be extended using the emergency landing gear extension system."
+    ],
+    warnings: [],
     cautions: []
   },
   cdw1: {
@@ -1420,10 +1457,7 @@ export const EP_NWC = {
     cautions: []
   },
   pelT: {
-    notes: [
-      "Do not set the boost pump and ignition to ON for engine malfunctions, such as oil system, chip light, fire, or FOD. In these cases, turning the boost pump ON may provide an undesirable immediate relight.",
-      "With uncontrollable high power, the pilot must shut down the engine once landing is assured."
-    ],
+    notes: [],
     warnings: [
       "If the engine should fail while flying the PEL, refer to the Engine Failure During Flight checklist, and transition to the Forced Landing procedure.",
       "If rate of descent (indicated on the VSI while stabilized at 125 KIAS with gear, flaps, and speed brake retracted and 4 to 6% torque) is greater than 1500 ft/min, increase torque as necessary (up to 131%) to achieve approximately 1350 to 1500 ft/min rate of descent. If engine power is insufficient to produce a rate of descent less than 1500 ft/min, set PCL to OFF.",
@@ -1434,8 +1468,364 @@ export const EP_NWC = {
       "Inducing yaw (side slipping) with a known engine/oil malfunction could result in impaired windshield visibility due to oil leakage spraying onto the windshield.",
       "At higher temperature and pressure altitudes, power response will be delayed. Airspeeds below 110 KIAS on ELP final, in combination with transitioning to a high flare, may lead to a hard landing resulting in landing gear component failure."
     ]
+  },
+  pel4: {
+    notes: [
+      "Do not set the boost pump and ignition to ON for engine malfunctions, such as oil system, chip light, fire, or FOD. In these cases, turning the boost pump ON may provide an undesirable immediate relight."
+    ],
+    warnings: [],
+    cautions: []
+  },
+  pel7: {
+    notes: [
+      "With uncontrollable high power, the pilot must shut down the engine once landing is assured."
+    ],
+    warnings: [],
+    cautions: []
   }
 };
+
+// One-or-two-word hints for each NWC entry, shown on the collapsed previews
+// in the NWC modal. Mirrors EP_NWC: same keys, and each hint's position in
+// its array matches the position of the note/warning/caution it hints at.
+export const EP_NWC_HINTS = {
+  asT: {
+    notes: ["Report"],
+    warnings: [],
+    cautions: []
+  },
+  as1: {
+    notes: ["PCL or Starter"],
+    warnings: [],
+    cautions: []
+  },
+  as2: {
+    notes: ["PMU aborts", "Motoring run"],
+    warnings: [],
+    cautions: ["No restarts", "Repeated aborts"]
+  },
+  mrp4: {
+    notes: ["Duty cycle"],
+    warnings: [],
+    cautions: ["Not spring-loaded"]
+  },
+  egeT: {
+    notes: ["0/0"],
+    warnings: [],
+    cautions: []
+  },
+  ege1: {
+    notes: [],
+    warnings: ["ISS Solo"],
+    cautions: []
+  },
+  ege2: {
+    notes: [],
+    warnings: ["Seat pins"],
+    cautions: []
+  },
+  ege6: {
+    notes: [],
+    warnings: ["CFS eject", "CFS skin", "CFS independent"],
+    cautions: []
+  },
+  ege7: {
+    notes: ["Pull free"],
+    warnings: [],
+    cautions: []
+  },
+  abort2: {
+    notes: [],
+    warnings: ["Hot brakes"],
+    cautions: []
+  },
+  efiatT: {
+    notes: [],
+    warnings: ["Insufficient", "Aviate"],
+    cautions: []
+  },
+  efiat2: {
+    notes: ["IDLE or OFF"],
+    warnings: [],
+    cautions: []
+  },
+  efiat3: {
+    notes: ["No hyds"],
+    warnings: [],
+    cautions: []
+  },
+  efdfT: {
+    notes: ["Right procedures"],
+    warnings: [],
+    cautions: []
+  },
+  efdf2: {
+    notes: ["Feathering"],
+    warnings: [],
+    cautions: []
+  },
+  efdf3: {
+    notes: [],
+    warnings: ["Intercept ELP", "2000 ft AGL"],
+    cautions: []
+  },
+  efdf4: {
+    notes: ["Crosscheck N1"],
+    warnings: ["Below 2000 ft AGL"],
+    cautions: []
+  },
+  iaT: {
+    notes: [],
+    warnings: ["Airstart envelope"],
+    cautions: []
+  },
+  ia1: {
+    notes: [],
+    warnings: ["2000 ft AGL", "Feather, ignitors..."],
+    cautions: ["Premature fuel"]
+  },
+  ia2: {
+    notes: [],
+    warnings: [],
+    cautions: ["5 seconds"]
+  },
+  ia3: {
+    notes: [],
+    warnings: ["Idle Fuel"],
+    cautions: ["10 seconds"]
+  },
+  ia10: {
+    notes: [],
+    warnings: [],
+    cautions: ["Boost pump limit"]
+  },
+  ia13: {
+    notes: ["Starter NORM"],
+    warnings: [],
+    cautions: []
+  },
+  upc1: {
+    notes: ["Physical position", "Above IDLE", "Overtorque and overtemp"],
+    warnings: [],
+    cautions: []
+  },
+  upc2: {
+    notes: [],
+    warnings: [],
+    cautions: ["ITT 820", "Ground Idle"]
+  },
+  upc3: {
+    notes: ["Stable NP", "NP red X", "15-20 secs"],
+    warnings: [],
+    cautions: []
+  },
+  upc4: {
+    notes: ["Check power"],
+    warnings: ["1500 fpm/131%"],
+    cautions: []
+  },
+  upc6: {
+    notes: [],
+    warnings: ["Slow feathering"],
+    cautions: []
+  },
+  upcD: {
+    notes: [],
+    warnings: [],
+    cautions: ["Leave mid range"]
+  },
+  cs2: {
+    notes: ["High bleed"],
+    warnings: [],
+    cautions: []
+  },
+  cs5: {
+    notes: [],
+    warnings: ["Don't delay"],
+    cautions: []
+  },
+  idcf2: {
+    notes: ["Control cycle"],
+    warnings: ["Aft stick"],
+    cautions: []
+  },
+  idcf3: {
+    notes: [],
+    warnings: ["6000 ft AGL"],
+    cautions: []
+  },
+  idcf4: {
+    notes: [],
+    warnings: [],
+    cautions: ["Power-on inverted"]
+  },
+  fifD: {
+    notes: [],
+    warnings: ["Secondaries"],
+    cautions: []
+  },
+  fif5: {
+    notes: [],
+    warnings: ["Unconfirmed", "Bleed air leak", "Test"],
+    cautions: []
+  },
+  sfeT: {
+    notes: ["Isolate source"],
+    warnings: ["CFS or eject"],
+    cautions: []
+  },
+  sfe3: {
+    notes: ["Bleed continues", "Defog off"],
+    warnings: [],
+    cautions: []
+  },
+  sfe5: {
+    notes: [],
+    warnings: ["OBOGS inop"],
+    cautions: []
+  },
+  sfe8: {
+    notes: [],
+    warnings: ["Mask & visor"],
+    cautions: []
+  },
+  sfe9: {
+    notes: ["Aux battery"],
+    warnings: [],
+    cautions: []
+  },
+  sfe10: {
+    notes: ["Emergency gear"],
+    warnings: [],
+    cautions: []
+  },
+  cdw1: {
+    notes: [],
+    warnings: [],
+    cautions: ["High power"]
+  },
+  osmT: {
+    notes: ["Lights px temp leaks", "Circuit Breaker", "Momentary", "SCU fail"],
+    warnings: [],
+    cautions: []
+  },
+  osm3: {
+    notes: [],
+    warnings: [],
+    cautions: ["High power"]
+  },
+  lfp1: {
+    notes: ["10 hours"],
+    warnings: [],
+    cautions: []
+  },
+  lfp2: {
+    notes: [],
+    warnings: [],
+    cautions: ["Don't reset"]
+  },
+  hff1: {
+    notes: [],
+    warnings: ["Power and ITT"],
+    cautions: []
+  },
+  obogs1: {
+    notes: ["Pure O2", "High px", "Won't stop", "Sharply pull", "40 lbs"],
+    warnings: ["10 mins", "Zeolite dust"],
+    cautions: ["Hyperventilation"]
+  },
+  obogsT: {
+    notes: [],
+    warnings: [],
+    cautions: ["TEMP"]
+  },
+  obogs5: {
+    notes: ["Anti-suffocation"],
+    warnings: [],
+    cautions: []
+  },
+  obogs6: {
+    notes: ["Bleed continues", "Defog off"],
+    warnings: [],
+    cautions: []
+  },
+  obogs8: {
+    notes: [],
+    warnings: ["Mask secure"],
+    cautions: []
+  },
+  obogs9: {
+    notes: [],
+    warnings: ["Stay below 10k"],
+    cautions: []
+  },
+  eject1: {
+    notes: ["Parachute risers"],
+    warnings: ["Postion", "CFS", "MOR"],
+    cautions: []
+  },
+  flT: {
+    notes: [],
+    warnings: ["Floating", "Unprepared", "Bleed air"],
+    cautions: ["Ditching", "Yaw leak"]
+  },
+  fl2: {
+    notes: ["Safe indications"],
+    warnings: ["Gear up"],
+    cautions: []
+  },
+  fl4: {
+    notes: ["Battery and EMER LDG GR", "Won't retraction", "No NWS"],
+    warnings: ["Landing assured"],
+    cautions: []
+  },
+  fl6: {
+    notes: ["High altitude"],
+    warnings: [],
+    cautions: []
+  },
+  pelT: {
+    notes: [],
+    warnings: ["Engine failure", "1500 fpm/131%", "Vibrations", "Bleed Air"],
+    cautions: ["Yaw leak", "High temp/alt"]
+  },
+  pel4: {
+    notes: ["Undesired relight"],
+    warnings: [],
+    cautions: []
+  },
+  pel7: {
+    notes: ["High power"],
+    warnings: [],
+    cautions: []
+  }
+};
+
+// Ordered NWC keys per procedure (render order: title key first, then
+// steps/decision keys top-to-bottom). Used by the NWC modal to show every
+// NWC in a procedure when any of its buttons is clicked.
+export const EP_NWC_GROUPS = [
+  ['asT', 'as1', 'as2'],
+  ['mrp4'],
+  ['egeT', 'ege1', 'ege2', 'ege6', 'ege7'],
+  ['abort2'],
+  ['efiatT', 'efiat2', 'efiat3'],
+  ['efdfT', 'efdf2', 'efdf3', 'efdf4'],
+  ['iaT', 'ia1', 'ia2', 'ia3', 'ia10', 'ia13'],
+  ['upc1', 'upc2', 'upc3', 'upc4', 'upcD', 'upc6'],
+  ['cs2', 'cs5'],
+  ['idcf2', 'idcf3', 'idcf4'],
+  ['fifD', 'fif5'],
+  ['sfeT', 'sfe3', 'sfe5', 'sfe8', 'sfe9', 'sfe10'],
+  ['cdw1'],
+  ['osmT', 'osm3'],
+  ['lfp1', 'lfp2'],
+  ['hff1'],
+  ['obogsT', 'obogs1', 'obogs5', 'obogs6', 'obogs8', 'obogs9'],
+  ['eject1'],
+  ['flT', 'fl2', 'fl4', 'fl6'],
+  ['pelT', 'pel4', 'pel7'],
+];
 
 export const EP_LENGTHS = [1, 3, 9, 2, 4, 6, 9, 9, 7, 4, 5, 4, 2, 4, 2, 1, 3, 1, 4, 3];
 
