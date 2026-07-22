@@ -7,6 +7,8 @@ import {
   HYD_INFO,
   InfoModal,
 } from './HydraulicModalData';
+import BriefingModal from '../BriefingModal';
+import { THEME, DIAGRAM_FONT } from '../diagramTheme';
 
 // ── Keyframe animations injected once into the document ──────────────
 const KEYFRAMES = `
@@ -18,53 +20,57 @@ const KEYFRAMES = `
   @keyframes fallingPulse { 0%,100%{opacity:0.9} 50%{opacity:0.5} }
 `;
 
-// ── Color constants ──────────────────────────────────────────────────
-const C = {
-  supply:   '#ea4343',
-  emerg:    '#EF9F27',
-  ret:      '#ccf38e',
-  sel:      '#7e5ffbc5',
-  bg:       '#080f18',
-  box:      '#0c1624f2',
-  stroke:   '#2e3e52',
-  text:     '#c8d8e8',
-  muted:    '#6a8a9a',
-  caution:  '#FAC775',
-  advisory: 'rgba(80,130,40,0.22)',
+// ── Colors: shared THEME + hydraulic-specific fluid colors ───────────
+const LOCAL = {
+  supply: '#c0392b', emerg: '#d97c1e', ret: '#27ae60', sel: '#7b4bb8',
+  caution: THEME.cautionText, advisory: 'rgba(45,122,45,0.15)',
+  tCaution: '#7a5000', tAdvisory: '#1a5a1a',
 };
 
-// ── Text style presets (SVG) ─────────────────────────────────────────
-const FONT = "'Courier New', monospace";
+const C = { ...THEME, ...LOCAL };
+
+// ── Text style presets ───────────────────────────────────────────────
+const FONT = DIAGRAM_FONT;
 const T = {
-  h: { fontFamily: FONT, fill: C.text,  fontSize: 10, fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' },
-  s: { fontFamily: FONT, fill: C.muted, fontSize: 9,  textAnchor: 'middle', dominantBaseline: 'central' },
-  t: { fontFamily: FONT, fill: C.muted, fontSize: 8,  textAnchor: 'middle', dominantBaseline: 'central' },
-  caution:  { fontFamily: FONT, fill: '#4a2a08', fontSize: 8.5, fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' },
-  advisory: { fontFamily: FONT, fill: '#1a3a08', fontSize: 8.5, fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' },
+  h: { fontFamily: FONT, fill: C.text,     fontSize: 10, fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' },
+  s: { fontFamily: FONT, fill: C.muted,    fontSize: 9,  textAnchor: 'middle', dominantBaseline: 'central' },
+  t: { fontFamily: FONT, fill: C.muted,    fontSize: 8,  textAnchor: 'middle', dominantBaseline: 'central' },
+  caution:  { fontFamily: FONT, fill: C.tCaution,  fontSize: 8.5, fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' },
+  advisory: { fontFamily: FONT, fill: C.tAdvisory, fontSize: 8.5, fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' },
 };
 
 // ── Animated flow path ───────────────────────────────────────────────
 function F({ d, v = 'supply', paused = false, emergPaused = false, highlighted = false }) {
   const cfg = {
-    supply: { pipeColor: '#C34937', fluidColor: C.supply,  pipeWidth: 4, fluidWidth: 2,   strokeDasharray: '8 4', animation: 'hydFlowS 1s linear infinite' },
-    emerg:  { pipeColor: '#F8F36D', fluidColor: C.emerg,   pipeWidth: 4, fluidWidth: 2,   strokeDasharray: '6 4', animation: 'hydFlowE 1.2s linear infinite' },
-    ret:    { pipeColor: '#62A061', fluidColor: C.ret,     pipeWidth: 4, fluidWidth: 1.5, strokeDasharray: '5 5', animation: 'hydFlowR 1.6s linear infinite' },
-    sel:    { pipeColor: '#592976', fluidColor: C.sel,     pipeWidth: 4, fluidWidth: 2,   strokeDasharray: '8 4', animation: 'hydFlowR 1.6s linear infinite' },
-    elec:   { fluidColor: C.text,   fluidWidth: 2, strokeDasharray: '8 4' },
-    man:    { fluidColor: C.text,   fluidWidth: 2, strokeDasharray: '5 5' },
+    supply: { pipeColor: C.supply, fluidColor: C.wireDash, pipeWidth: 4, fluidWidth: 1.6, strokeDasharray: '8 4', animation: 'hydFlowS 1s linear infinite' },
+    emerg:  { pipeColor: C.emerg,  fluidColor: C.wireDash, pipeWidth: 4, fluidWidth: 1.6, strokeDasharray: '6 4', animation: 'hydFlowE 1.2s linear infinite' },
+    ret:    { pipeColor: C.ret,    fluidColor: C.wireDash, pipeWidth: 4, fluidWidth: 1.3, strokeDasharray: '5 5', animation: 'hydFlowR 1.6s linear infinite' },
+    sel:    { pipeColor: C.sel,    fluidColor: C.wireDash, pipeWidth: 4, fluidWidth: 1.6, strokeDasharray: '8 4', animation: 'hydFlowR 1.6s linear infinite' },
+    elec:   { fluidColor: C.muted,  fluidWidth: 2, strokeDasharray: '8 4' },
+    man:    { fluidColor: C.muted,  fluidWidth: 2, strokeDasharray: '0.1 5', strokeLinecap: 'round' },
   };
   const c = cfg[v];
   const isPaused = (paused && v !== 'emerg') || (emergPaused && v === 'emerg');
   const fluidStyle = {
     stroke: c.fluidColor, strokeWidth: highlighted ? c.fluidWidth + 1.5 : c.fluidWidth,
-    strokeDasharray: c.strokeDasharray, fill: 'none',
+    strokeDasharray: c.strokeDasharray, strokeLinecap: c.strokeLinecap, fill: 'none',
     animation: highlighted ? c.animation.replace(/[\d.]+s/, t => `${parseFloat(t) * 0.5}s`) : c.animation,
   };
   if (isPaused) { fluidStyle.animationPlayState = 'paused'; fluidStyle.opacity = 0.3; }
   return (
     <g>
+      {/* Glow halo — stacked translucent strokes, not an SVG filter: filter
+          regions collapse to nothing on straight (zero-extent-bbox) segments */}
+      {highlighted && !isPaused && (
+        <>
+          <path d={d} stroke={c.pipeColor} strokeWidth={c.pipeWidth + 11} fill="none"
+            opacity={0.12} strokeLinecap="round" />
+          <path d={d} stroke={c.pipeColor} strokeWidth={c.pipeWidth + 6} fill="none"
+            opacity={0.22} strokeLinecap="round" />
+        </>
+      )}
       <path d={d} stroke={c.pipeColor} strokeWidth={highlighted ? c.pipeWidth + 1 : c.pipeWidth} fill="none"
-        opacity={isPaused ? 0.3 : highlighted ? 1.0 : 0.6} />
+        opacity={isPaused ? 0.3 : 1} />
       <path d={d} style={fluidStyle} />
     </g>
   );
@@ -119,10 +125,10 @@ function HydPressGauge({ pressure = 3040, size = 160, embedded = false }) {
 
   const content = (
     <>
-      <circle cx={cx} cy={cy} r={outerR+5} fill="#0a0a0a" stroke="#1e2e3e" strokeWidth={1.5} />
+      <circle cx={cx} cy={cy} r={outerR+5} fill={C.gaugeFace} stroke={C.gaugeBezel} strokeWidth={1.5} />
       {arcBand(0,1800,'#DDDB55')} {arcBand(1800,2880,'#d8d8d8')} {arcBand(2880,3120,'#4a9030')}
       {arcBand(3120,3500,'#d8d8d8')} {arcBand(3500,4100,'#DDDB55')}
-      <circle cx={cx} cy={cy} r={innerR-2} fill="#080f18" />
+      <circle cx={cx} cy={cy} r={innerR-2} fill={C.gaugeFaceInner} />
       {majorTicks.map(psi => {
         const ang = psiToAngle(psi);
         const [ox,oy] = polar(ang,innerR-1), [ix,iy] = polar(ang,innerR-size*0.04);
@@ -131,275 +137,26 @@ function HydPressGauge({ pressure = 3040, size = 160, embedded = false }) {
       {[1200,2400,3600].map(psi => {
         const [lx,ly] = polar(psiToAngle(psi), innerR-size*0.13);
         return <text key={psi} x={lx} y={ly} textAnchor="middle" dominantBaseline="central"
-          fill="#c8d8e8" fontSize={size*0.082} fontFamily={FONT}>{psi}</text>;
+          fill={C.gaugeText} fontSize={size*0.082} fontFamily={FONT}>{psi}</text>;
       })}
       <polygon points={`${nx},${ny} ${b1x},${b1y} ${b2x},${b2y}`} fill={needleCol(pressure)} />
       <circle cx={cx} cy={cy} r={size*0.028} fill="#8a9aaa" />
       <text x={cx} y={cy+size*0.15} textAnchor="middle" dominantBaseline="central"
         fill={numberCol(pressure)} fontSize={size*0.18} fontFamily={FONT} fontWeight="bold">{pressure}</text>
       <text x={cx} y={cy+size*0.28} textAnchor="middle" dominantBaseline="central"
-        fill="#6a8a9a" fontSize={size*0.07} fontFamily={FONT}>PSI</text>
+        fill={C.gaugeTick} fontSize={size*0.07} fontFamily={FONT}>PSI</text>
       <text x={cx} y={cy+size*0.35} textAnchor="middle" dominantBaseline="central"
-        fill="#6a8a9a" fontSize={size*0.068} fontFamily={FONT}>HYD PRESS</text>
+        fill={C.gaugeTick} fontSize={size*0.068} fontFamily={FONT}>HYD PRESS</text>
     </>
   );
   if (embedded) return content;
   return <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block' }}>{content}</svg>;
 }
 
-// ── Briefing Modal ───────────────────────────────────────────────────
-function BriefingModal({ tab, onClose }) {
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
-
-  const COLOR_CAUTION  = '#FAC775';
-  const COLOR_ADVISORY = '#5dcc5d';
-  const COLOR_WARNING  = '#ff5555';
-
-  const eicasColor = (type) => {
-    if (type === 'warning')  return { bg: 'rgba(180,30,30,0.18)', border: '#cc3333', label: COLOR_WARNING };
-    if (type === 'advisory') return { bg: 'rgba(30,100,30,0.18)', border: '#3a7a3a', label: COLOR_ADVISORY };
-    return { bg: 'rgba(120,80,10,0.18)', border: '#8a6010', label: COLOR_CAUTION }; // caution
-  };
-
-  const sectionStyle = {
-    background: 'rgba(255,255,255,0.03)',
-    border: `0.5px solid ${C.stroke}`,
-    borderRadius: 5,
-    padding: '10px 14px',
-    marginBottom: 10,
-  };
-
-  let content = null;
-
-  if (tab === 'verbatim') {
-    content = (
-      <>
-        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '0.06em', marginBottom: 14 }}>
-          {HYD_VERBATIM.heading}
-        </div>
-        {/* Verbatim quote box */}
-        <div style={{
-          ...sectionStyle,
-          background: 'rgba(55,138,221,0.06)',
-          border: `0.5px solid #378ADD55`,
-          fontStyle: 'italic',
-          color: '#a8c8e0',
-          fontSize: 12,
-          lineHeight: 1.75,
-          marginBottom: 18,
-        }}>
-          {HYD_VERBATIM.quote}
-        </div>
-      </>
-    );
-  }
-
-  if (tab === 'numbers') {
-    content = (
-      <>
-        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '0.06em', marginBottom: 14 }}>
-          {HYD_NUMBERS.heading}
-        </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, background: 'transparent' }}>
-          <thead>
-            <tr>
-              <th style={{ color: C.muted, textAlign: 'left', padding: '4px 8px', borderBottom: `0.5px solid ${C.stroke}`, fontWeight: 400, letterSpacing: '0.08em', fontSize: 10, background: 'transparent' }}>
-                VALUE
-              </th>
-              <th style={{ color: C.muted, textAlign: 'left', padding: '4px 8px', borderBottom: `0.5px solid ${C.stroke}`, fontWeight: 400, letterSpacing: '0.08em', fontSize: 10, background: 'transparent' }}>
-                MEANING
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {HYD_NUMBERS.items.map((row, i) => (
-              <tr key={i} style={{ background: row.highlight ? 'rgba(250,199,117,0.06)' : 'transparent' }}>
-                <td style={{
-                  padding: '8px 8px',
-                  borderBottom: `0.5px solid ${C.stroke}22`,
-                  color: row.highlight ? COLOR_CAUTION : '#5ab8e8',
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  verticalAlign: 'top',
-                  minWidth: 180,
-                }}>
-                  {row.value}
-                </td>
-                <td style={{
-                  padding: '8px 8px',
-                  borderBottom: `0.5px solid ${C.stroke}22`,
-                  color: C.muted,
-                  lineHeight: 1.6,
-                }}>
-                  {row.label}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </>
-    );
-  }
-
-  if (tab === 'eicas') {
-    content = (
-      <>
-        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '0.06em', marginBottom: 14 }}>
-          {HYD_EICAS.heading}
-        </div>
-        {HYD_EICAS.items.map((msg) => {
-          const col = eicasColor(msg.color);
-          return (
-            <div key={msg.label} style={{
-              ...sectionStyle,
-              background: col.bg,
-              border: `0.5px solid ${col.border}`,
-              marginBottom: 10,
-            }}>
-              <div style={{
-                fontWeight: 700, fontSize: 13, letterSpacing: '0.14em',
-                color: col.label, marginBottom: 8,
-              }}>
-                {msg.label}
-              </div>
-              <div style={{ marginBottom: 5 }}>
-                <span style={{ color: C.muted, fontSize: 9, letterSpacing: '0.08em' }}>CAUSE — </span>
-                <span style={{ color: C.text, fontSize: 11, lineHeight: 1.6 }}>{msg.cause}</span>
-              </div>
-              <div>
-                <span style={{ color: C.muted, fontSize: 9, letterSpacing: '0.08em' }}>RESPONSE — </span>
-                <span style={{ color: C.text, fontSize: 11, lineHeight: 1.6 }}>{msg.response}</span>
-              </div>
-            </div>
-          );
-        })}
-      </>
-    );
-  }
-
-  if (tab === 'eps') {
-    content = (
-      <>
-        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '0.06em', marginBottom: 14 }}>
-          {HYD_EPS.heading}
-        </div>
-        {HYD_EPS.items.map((ep, i) => (
-          <div key={ep.title} style={{ ...sectionStyle, marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <span style={{
-                background: 'rgba(55,138,221,0.12)', border: `0.5px solid #378ADD66`,
-                color: '#5ab8e8', fontSize: 9, fontWeight: 700, padding: '2px 7px',
-                borderRadius: 3, letterSpacing: '0.1em',
-              }}>
-                EP {i + 1}
-              </span>
-              <span style={{ fontWeight: 700, color: C.text, fontSize: 11, letterSpacing: '0.1em' }}>
-                {ep.title}
-              </span>
-              {ep.memory && (
-                <span style={{
-                  background: 'rgba(255,80,80,0.15)', border: '0.5px solid #cc333366',
-                  color: COLOR_WARNING, fontSize: 8, fontWeight: 700, padding: '2px 6px',
-                  borderRadius: 3, letterSpacing: '0.1em',
-                }}>★ MEMORY</span>
-              )}
-            </div>
-
-            {ep.indications.length > 0 && (
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ color: C.muted, fontSize: 9, letterSpacing: '0.1em', marginBottom: 4 }}>
-                  INDICATIONS
-                </div>
-                <ul style={{ margin: 0, paddingLeft: 16, color: '#a8b8c8', fontSize: 11, lineHeight: 1.7 }}>
-                  {ep.indications.map((ind, j) => <li key={j}>{ind}</li>)}
-                </ul>
-              </div>
-            )}
-
-            <div style={{ marginBottom: ep.landing ? 8 : 0 }}>
-              <div style={{ color: C.muted, fontSize: 9, letterSpacing: '0.1em', marginBottom: 4 }}>
-                PROCEDURE
-              </div>
-              <ol style={{ margin: 0, paddingLeft: 18, color: C.text, fontSize: 11, lineHeight: 1.8 }}>
-                {ep.procedure.map((step, j) => <li key={j}>{step}</li>)}
-              </ol>
-            </div>
-
-            {ep.landing && (
-              <div style={{
-                marginTop: 8, padding: '5px 10px',
-                background: 'rgba(55,138,221,0.06)', borderLeft: `2px solid #378ADD66`,
-                color: '#7ab8d8', fontSize: 10, lineHeight: 1.5,
-              }}>
-                <span style={{ fontWeight: 700, letterSpacing: '0.08em', color: C.muted, fontSize: 9 }}>
-                  LANDING CRITERIA — {' '}
-                </span>
-                {ep.landing}
-              </div>
-            )}
-          </div>
-        ))}
-      </>
-    );
-  }
-
-  return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        background: 'rgba(4,10,20,0.82)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '16px',
-        backdropFilter: 'blur(2px)',
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: '#080f18',
-          border: `0.5px solid ${C.stroke}`,
-          borderRadius: 7,
-          width: '100%', maxWidth: 680,
-          maxHeight: '88vh',
-          display: 'flex', flexDirection: 'column',
-          fontFamily: FONT,
-          boxShadow: '0 8px 40px rgba(0,0,0,0.7)',
-        }}
-      >
-        {/* Scrollable body */}
-        <div style={{ overflowY: 'auto', padding: '14px 18px', flex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6 }}>
-            <button
-              onClick={onClose}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: C.muted, fontSize: 16, lineHeight: 1, padding: '0 4px',
-              }}
-            >×</button>
-          </div>
-          {content}
-        </div>
-        {/* Footer hint */}
-        <div style={{
-          padding: '6px 18px', borderTop: `0.5px solid ${C.stroke}22`,
-          color: '#2a4a5a', fontSize: 8, letterSpacing: '0.08em', flexShrink: 0,
-        }}>
-          CLICK OUTSIDE OR PRESS ESC TO CLOSE
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Main component ───────────────────────────────────────────────────
 export default function T6BHydraulicDiagram() {
   const [sel,      setSel]      = useState(null);
-  const [briefingTab, setBriefingTab] = useState(null);   // ← NEW: active briefing tab
+  const [briefingTab, setBriefingTab] = useState(null);
   const [hydFlo,   setHydFlo]   = useState(false);
   const [ehydPx,   setEhydPx]   = useState(false);
   const [hydPsi,   setHydPsi]   = useState(3040);
@@ -844,14 +601,14 @@ export default function T6BHydraulicDiagram() {
 
   // ── Tab button config ────────────────────────────────────────────────
   const TABS = [
-    { id: 'verbatim', label: 'NATOPS INTRO' },
-    { id: 'numbers',  label: 'NUMBERS'  },
+    { id: 'verbatim', label: 'NATOPS Intro' },
+    { id: 'numbers',  label: 'Numbers'  },
     { id: 'eicas',    label: 'EICAS'    },
     { id: 'eps',      label: 'EPs'      },
   ];
 
   return (
-    <div style={{ background: C.bg, width: '100%' }}>
+    <div style={{ background: C.bg, width: '100%', minHeight: '100vh' }}>
     <div style={{
       background: C.bg, borderRadius: 8, padding: 12,
       fontFamily: FONT, color: C.text,
@@ -869,12 +626,11 @@ export default function T6BHydraulicDiagram() {
               key={id}
               onClick={() => setBriefingTab(t => t === id ? null : id)}
               style={{
-                background: briefingTab === id ? 'rgba(55,138,221,0.18)' : 'transparent',
-                border: `0.5px solid ${briefingTab === id ? '#378ADD' : C.stroke}`,
-                color: briefingTab === id ? '#5ab8e8' : C.muted,
-                padding: '6px 8px', fontSize: 11, borderRadius: 3, cursor: 'pointer',
-                letterSpacing: '0.08em', fontFamily: FONT,
-                fontWeight: briefingTab === id ? 700 : 400,
+                background: briefingTab === id ? C.accent : C.box,
+                border: `1px solid ${briefingTab === id ? C.accent : C.stroke}`,
+                color: briefingTab === id ? '#ffffff' : C.accent,
+                padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
+                fontFamily: 'sans-serif', fontWeight: 600,
                 transition: 'all 0.15s',
                 minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}
@@ -887,50 +643,49 @@ export default function T6BHydraulicDiagram() {
         {/* RIGHT — fault sims (top: main hyd leak; bottom: two ehyd leaks) */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, maxWidth: 'calc(50% - 4px)', minWidth: 0 }}>
           {[
-            { active: hydFlo,        set: setHydFlo,        label: 'MAIN HYD LEAK',   bg: C.caution, border: '#BA7517', tc: '#4a2a08', col: 2 },
-            { active: ehydPx,        set: setEhydPx,        label: 'SMALL EHYD LEAK', bg: C.emerg,   border: '#BA7517', tc: '#4a2a08' },
-            { active: largeEhydSim,  set: setLargeEhydSim,  label: 'LARGE EHYD LEAK', bg: '#cc2222', border: '#991010', tc: '#f8e0e0' },
+            { active: hydFlo,        set: setHydFlo,        label: 'Main Hyd Leak',   bg: C.simCautBg, border: C.simCautBorder, tc: C.simCautText, col: 2 },
+            { active: ehydPx,        set: setEhydPx,        label: 'Small EHyd Leak', bg: C.emerg,     border: C.simCautBorder, tc: C.simCautText },
+            { active: largeEhydSim,  set: setLargeEhydSim,  label: 'Large EHyd Leak', bg: C.simWarnBg, border: C.simWarnBorder, tc: C.simWarnText },
           ].map(({ active, set, label, bg, border, tc, col }) => (
             <button key={label} onClick={() => set(v => !v)} style={{
               gridColumn: col,
-              background: active ? bg : 'transparent',
+              background: active ? bg : C.box,
               border: `1px solid ${active ? border : C.stroke}`,
               color: active ? tc : C.muted,
-              padding: '6px 8px', fontSize: 11, borderRadius: 3, cursor: 'pointer',
-              letterSpacing: '0.06em', fontFamily: FONT,
-              fontWeight: active ? 700 : 400,
+              padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
+              fontFamily: 'sans-serif', fontWeight: 600,
               minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
-              {active ? `● ${label}` : `▷ SIM ${label}`}
+              {`Sim ${label}`}
             </button>
           ))}
         </div>
       </div>
 
       {/* ── Attribution ── */}
-      <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 9, letterSpacing: '0.12em', color: '#3a6a8a' }}>
+      <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 9, letterSpacing: '0.12em', color: C.muted }}>
         IMAGES &amp; COMPONENT DESCRIPTIONS SOURCED FROM{' '}
-        <span style={{ color: '#5ab8e8', fontWeight: 700, letterSpacing: '0.14em' }}>T6BDRIVER.COM</span>
+        <span style={{ color: C.text, fontWeight: 700, letterSpacing: '0.14em' }}>T6BDRIVER.COM</span>
       </div>
 
       {/* ── Legend ── */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 8, fontSize: 9, color: C.muted, letterSpacing: '0.06em' }}>
         {[
-          { stroke: '#C34937', sw: 2.5, label: 'PRESSURIZED SUPPLY' },
-          { stroke: '#F8F36D', sw: 2.5, label: 'EMERGENCY' },
-          { stroke: '#62A061', sw: 2.5, label: 'RETURN' },
-          { stroke: '#592976', sw: 2.5, label: 'SELECTOR' },
-          { stroke: C.text,   sw: 1.5, da: '8 4', label: 'ELECTRICAL' },
-          { stroke: C.text,   sw: 1.5, da: '5 5', label: 'MANUAL' },
-        ].map(({ stroke, sw, da, label }) => (
+          { stroke: C.supply, sw: 2.5, label: 'PRESSURIZED SUPPLY' },
+          { stroke: C.emerg,  sw: 2.5, label: 'EMERGENCY' },
+          { stroke: C.ret,    sw: 2.5, label: 'RETURN' },
+          { stroke: C.sel,    sw: 2.5, label: 'SELECTOR' },
+          { stroke: C.muted,  sw: 1.5, da: '8 4', label: 'ELECTRICAL' },
+          { stroke: C.muted,  sw: 2, da: '0.1 4', lc: 'round', label: 'MANUAL' },
+        ].map(({ stroke, sw, da, lc, label }) => (
           <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <svg width="22" height="5" style={{ overflow: 'visible' }}>
-              <line x1="0" y1="2.5" x2="22" y2="2.5" stroke={stroke} strokeWidth={sw} strokeDasharray={da} />
+              <line x1="0" y1="2.5" x2="22" y2="2.5" stroke={stroke} strokeWidth={sw} strokeDasharray={da} strokeLinecap={lc} />
             </svg>
             {label}
           </span>
         ))}
-        <span style={{ marginLeft: 'auto', color: '#2a4a5a' }}>CLICK COMPONENTS FOR DETAILS</span>
+        <span style={{ marginLeft: 'auto', color: C.muted }}>CLICK COMPONENTS FOR DETAILS</span>
       </div>
 
       {/* ── SVG Schematic (wrapped in position:relative for modal) ── */}
@@ -938,7 +693,8 @@ export default function T6BHydraulicDiagram() {
 
         {/* ── Briefing Modal overlay ── */}
         {briefingTab && (
-          <BriefingModal tab={briefingTab} onClose={() => setBriefingTab(null)} />
+          <BriefingModal tab={briefingTab} onClose={() => setBriefingTab(null)}
+            verbatim={HYD_VERBATIM} numbers={HYD_NUMBERS} eicas={HYD_EICAS} eps={HYD_EPS} />
         )}
 
         {/* ── Component Info Modal overlay ── */}
@@ -948,6 +704,7 @@ export default function T6BHydraulicDiagram() {
             items={HYD_INFO[sel].items}
             photos={HYD_INFO[sel].photos ?? []}
             onClose={() => setSel(null)}
+            theme={C}
           />
         )}
 
@@ -966,8 +723,8 @@ export default function T6BHydraulicDiagram() {
             resDivPct < 15         && { key: 'hfl', label: 'HYD FL LO',  color: C.caution, blink: true },
             (hydPsi < 1800 || hydPsi > 3500) && { key: 'chk', label: 'CHK ENG',   color: C.caution, blink: true },
             accumLvlPct < 50       && { key: 'epx', label: 'EHYD PX LO', color: C.caution, blink: true },
-            sbDeployed             && { key: 'spd', label: 'SPDBRK OUT', color: '#2ecc40',  blink: false },
-            nwsOn                  && { key: 'nws', label: 'NWS ON',     color: '#2ecc40',  blink: false },
+            sbDeployed             && { key: 'spd', label: 'SPDBRK OUT', color: C.eicasAdvisory,  blink: false },
+            nwsOn                  && { key: 'nws', label: 'NWS ON',     color: C.eicasAdvisory,  blink: false },
           ].filter(Boolean);
           return (
             <g>
@@ -984,7 +741,7 @@ export default function T6BHydraulicDiagram() {
               </svg>
               {/* PSI slider track */}
               <rect x={sliderX} y={sliderY} width={sliderW} height={sliderH} rx={2}
-                fill="#111e2a" stroke="#2e3e52" strokeWidth={0.5} />
+                fill={C.panelFace} stroke={C.gaugeBezel} strokeWidth={0.5} />
               {/* Thumb */}
               <rect x={thumbX - 4} y={sliderY - 3} width={8} height={sliderH + 6} rx={2}
                 fill="#5ab030" stroke="#3a8020" strokeWidth={0.5}
@@ -1012,10 +769,13 @@ export default function T6BHydraulicDiagram() {
           <pattern id="crosshatch" width="4" height="4" patternUnits="userSpaceOnUse">
             <path d="M0,0 L4,4 M4,0 L0,4" stroke={C.stroke} strokeWidth="0.5" />
           </pattern>
-          {/* Glow filter for emergency activation */}
+          {/* Glow filter for emergency activation — subtle halo for light bg */}
           <filter id="emerGlow" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="5" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feComponentTransfer in="blur" result="soft">
+              <feFuncA type="linear" slope="0.55"/>
+            </feComponentTransfer>
+            <feMerge><feMergeNode in="soft"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
         </defs>
 
@@ -1179,8 +939,8 @@ export default function T6BHydraulicDiagram() {
 
         {/* Power Package dashed outline */}
         <rect x="140" y="65" width="365" height="170" rx="6"
-          fill="none" stroke="#1e3040" strokeWidth="0.5" strokeDasharray="6 4" />
-        <text x="185" y="225" style={{ ...T.t, fill: '#1e3a4a', letterSpacing: '0.1em', fontSize: 7.5 }}>POWER PACKAGE</text>
+          fill="none" stroke={C.stroke} strokeWidth="0.5" strokeDasharray="6 4" />
+        <text x="185" y="225" style={{ ...T.t, fill: C.muted, letterSpacing: '0.1em', fontSize: 7.5 }}>POWER PACKAGE</text>
 
         {/* Reservoir falling highlight */}
         {resFalling && (
@@ -1199,9 +959,9 @@ export default function T6BHydraulicDiagram() {
             return (
               <>
                 <rect x={rx + 2} y={ry + 2} width={Math.max(0, divX - rx - 2)} height={rh - 4} rx={2}
-                  fill="#62A061" opacity={0.45} style={{ pointerEvents: 'none' }} />
+                  fill={C.ret} opacity={0.45} style={{ pointerEvents: 'none' }} />
                 <rect x={divX} y={ry + 2} width={Math.max(0, rx + rw - divX - 2)} height={rh - 4}
-                  fill="#C34937" opacity={0.45} style={{ pointerEvents: 'none' }} />
+                  fill={C.supply} opacity={0.45} style={{ pointerEvents: 'none' }} />
                 <line x1={divX} y1={ry + 2} x2={divX} y2={ry + rh - 2}
                   stroke="#000000" strokeWidth={2.5}
                   style={{ cursor: 'ew-resize', touchAction: 'none' }}
@@ -1209,10 +969,10 @@ export default function T6BHydraulicDiagram() {
                   onTouchStart={e => { e.stopPropagation(); resDivDragging.current = true; }} />
                 {/* 1 QT low-level marker at 15% */}
                 <line x1={rx + 15} y1={ry + 2} x2={rx + 15} y2={ry + rh - 2}
-                  stroke="#ffffff" strokeWidth={1} strokeDasharray="3 2"
+                  stroke={C.text} strokeWidth={1} strokeDasharray="3 2"
                   style={{ pointerEvents: 'none' }} />
                 <text x={rx+10} y={ry - 6} dominantBaseline="hanging"
-                  style={{ fontFamily: FONT, fontSize: 5, fill: '#ffffff', pointerEvents: 'none' }}>
+                  style={{ fontFamily: FONT, fontSize: 5, fill: C.text, pointerEvents: 'none' }}>
                   1 QT
                 </text>
               </>
@@ -1279,8 +1039,8 @@ export default function T6BHydraulicDiagram() {
         </Box>
         {/* ────────────── SELECTOR MANIFOLD (VERTICAL) ────────────── */}
         <rect x="110" y="250" width="300" height="550" rx="5"
-          fill="none" stroke="#1e3040" strokeWidth="0.5" strokeDasharray="6 4" />
-        <text x="260" y="255" style={{ ...T.t, fill: '#1e3a4a', letterSpacing: '0.1em', fontSize: 7.5 }}>SELECTOR MANIFOLD</text>
+          fill="none" stroke={C.stroke} strokeWidth="0.5" strokeDasharray="6 4" />
+        <text x="260" y="255" style={{ ...T.t, fill: C.muted, letterSpacing: '0.1em', fontSize: 7.5 }}>SELECTOR MANIFOLD</text>
 
         {/* NWS */}
         <Box x={330} y={260} w={70} h={70} id="nws" sel={sel} onSel={pick} hi="#639922">
@@ -1328,11 +1088,11 @@ export default function T6BHydraulicDiagram() {
         {fuseBlown && (
           <g>
             {/* Dramatic glow ring */}
-           <rect x={475} y={475} width={20} height={10} rx={2} fill="none" stroke="#ff2020" strokeWidth={3}
+           <rect x={475} y={475} width={20} height={10} rx={2} fill="none" stroke={C.warningText} strokeWidth={3}
               filter="url(#emerGlow)" style={{ animation: 'fuseBlowFlash 1.2s ease-out 1 forwards' }} />
             {/* Permanent red X */}
-            <line x1={477} y1={477} x2={493} y2={483} stroke="#ff2020" strokeWidth={2} strokeLinecap="round" />
-            <line x1={493} y1={477} x2={477} y2={483} stroke="#ff2020" strokeWidth={2} strokeLinecap="round" />
+            <line x1={477} y1={477} x2={493} y2={483} stroke={C.warningText} strokeWidth={2} strokeLinecap="round" />
+            <line x1={493} y1={477} x2={477} y2={483} stroke={C.warningText} strokeWidth={2} strokeLinecap="round" />
           </g>
         )}
 
@@ -1370,7 +1130,7 @@ export default function T6BHydraulicDiagram() {
             const gearRed = ((emerGrPulled && gearPhase === 'up') || flapPos === 'LDG') && gearPhase !== 'down';
             return (
               <>
-                {gearRed && <circle cx={50} cy={470} r={20} fill="none" stroke="#ff2020" strokeWidth={3} filter="url(#emerGlow)" opacity={0.95} />}
+                {gearRed && <circle cx={50} cy={470} r={20} fill="none" stroke={C.warningText} strokeWidth={3} filter="url(#emerGlow)" opacity={0.95} />}
                 <circle cx={50} cy={470} r={20}
                   fill={gearRed?'#8b1010':gearPhase==='down'?'#b8b8a8':'#686860'} stroke="#c0c0b0" strokeWidth={1}
                   style={{ cursor: gearLocked?'not-allowed':'pointer' }} onClick={handleGearClick} />
@@ -1390,12 +1150,12 @@ export default function T6BHydraulicDiagram() {
             <g>
               {/* Track */}
               <rect x={trackX} y={trackY} width={trackW} height={trackH} rx={3}
-                fill="#111e2a" stroke="#2e3e52" strokeWidth={0.5} />
+                fill={C.panelFace} stroke={C.gaugeBezel} strokeWidth={0.5} />
               {/* Notch lines + labels + click zones */}
               {['UP','TO','LDG'].map(pos => (
                 <g key={pos} style={{ cursor:'pointer' }} onClick={() => setFlapSafe(pos)}>
                   <text x={trackX+trackW+10} y={FLAP_SNAP_Y[pos]} textAnchor="start" dominantBaseline="central"
-                    style={{ ...T.t, fontSize:7, fill:selectorPos===pos?'#c8d8e8':'#3a4a5a' }}>{pos}</text>
+                    style={{ ...T.t, fontSize:7, fontWeight:selectorPos===pos?700:400, fill:selectorPos===pos?C.text:C.muted }}>{pos}</text>
                   <rect x={trackX-6} y={FLAP_SNAP_Y[pos]-9} width={trackW+12} height={18} fill="transparent" />
                 </g>
               ))}
@@ -1415,15 +1175,15 @@ export default function T6BHydraulicDiagram() {
           const [nx,ny] = dp(flapDisplayAngle, dr*0.78);
           return (
             <g>
-              <circle cx={dcx} cy={dcy} r={dr+4} fill="#080f18" stroke="#2e3e52" strokeWidth={0.8} />
-              <circle cx={dcx} cy={dcy} r={dr} fill="#0d1620" />
+              <circle cx={dcx} cy={dcy} r={dr+4} fill={C.gaugeFaceInner} stroke={C.gaugeBezel} strokeWidth={0.8} />
+              <circle cx={dcx} cy={dcy} r={dr} fill={C.panelFace} />
               {Object.entries(angleMap).map(([label,ang]) => {
                 const [lx,ly] = dp(ang,dr+9);
                 return <text key={label} x={lx} y={ly} textAnchor="middle" dominantBaseline="central"
-                  style={{ ...T.t, fontSize:7, fill:flapPos===label?'#c8d8e8':'#3a4a5a' }}>{label}</text>;
+                  style={{ ...T.t, fontSize:7, fontWeight:flapPos===label?700:400, fill:flapPos===label?C.text:C.muted }}>{label}</text>;
               })}
               <text x={dcx-10} y={dcy+6} textAnchor="middle" style={{ ...T.t, fontSize:6, fill:C.muted }}>FLAPS</text>
-              <line x1={dcx} y1={dcy} x2={nx} y2={ny} stroke="#c8d8e8" strokeWidth={1.5} strokeLinecap="round" />
+              <line x1={dcx} y1={dcy} x2={nx} y2={ny} stroke={C.gaugeText} strokeWidth={1.5} strokeLinecap="round" />
               <circle cx={dcx} cy={dcy} r={2.5} fill="#8a9aaa" />
             </g>
           );
@@ -1437,7 +1197,7 @@ export default function T6BHydraulicDiagram() {
           const stripeXs=[-8,-5,-2,1,4,7];
           return (
             <g>
-              <rect x={trackX} y={trackCY-trackH/2} width={trackW} height={trackH} rx={3} fill="#0d1620" stroke="#2e3e52" strokeWidth={0.5} />
+              <rect x={trackX} y={trackCY-trackH/2} width={trackW} height={trackH} rx={3} fill={C.panelFace} stroke={C.gaugeBezel} strokeWidth={0.5} />
               <circle cx={tcx} cy={trackCY} r={r} fill="#7a7e88" stroke="#505460" strokeWidth={0.7}
                 style={{ cursor:'ew-resize', userSelect:'none', touchAction: 'none' }} onMouseDown={handleSbMouseDown} onTouchStart={handleSbMouseDown} />
               {stripeXs.map(ox => (

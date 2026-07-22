@@ -2,38 +2,31 @@ import { useState, useEffect, useRef, useContext, createContext } from 'react';
 import { createPortal } from 'react-dom';
 import { ELEC_VERBATIM, ELEC_NUMBERS, ELEC_EICAS, ELEC_EPS, ELEC_INFO } from './ElectricalModalData';
 import { InfoModal } from '../hyds/HydraulicModalData';
+import BriefingModal from '../BriefingModal';
+import { THEME, DIAGRAM_FONT, WIRE_KEYFRAMES } from '../diagramTheme';
 
-const KEYFRAMES = `
-  @keyframes wireFlow    { to { stroke-dashoffset: -12; } }
+const KEYFRAMES = WIRE_KEYFRAMES + `
   @keyframes wireFlowRev { to { stroke-dashoffset:  12; } }
   @keyframes wireFlowDim { to { stroke-dashoffset:  -7; } }
-  .wire-anim     { stroke-dasharray: 8 4; animation: wireFlow    0.9s linear infinite; }
   .wire-anim-rev { stroke-dasharray: 8 4; animation: wireFlowRev 0.9s linear infinite; }
   .wire-anim-dim { stroke-dasharray: 4 3; animation: wireFlowDim 0.7s linear infinite; }
   @keyframes eicasFlash  { 0%,100%{opacity:1} 25%{opacity:0.1} 50%{opacity:1} 75%{opacity:0.1} }
 `;
 
-// ── Color constants ──────────────────────────────────────────────────
-const FONT = "'Courier New', monospace";
-const C = {
-  bg:     '#080f18',
-  box:    '#0c1624f2',
-  stroke: '#2e3e52',
-  text:   '#c8d8e8',
-  muted:  '#6a8a9a',
-  hot:    '#d4a800',   // HOT BAT BUS — gold
-  bat:    '#3272c0',   // BAT buses — blue
-  gen:    '#b83838',   // GEN buses — red
-  avi:    '#7a50c8',   // AVI buses — purple
-  aux:    '#248888',   // AUX BAT buses — teal
-  wire:   '#c8c830',   // live wire — yellow
+// ── Colors: shared THEME + electrical bus colors ─────────────────────
+const LOCAL = {
+  hot: '#b07800', bat: '#1565c0', gen: '#b83838', avi: '#6a3db8', aux: '#007070',
+  wire: THEME.wireLive,
 };
 
-// ── Text style presets (SVG) ─────────────────────────────────────────
+const C = { ...THEME, ...LOCAL };
+
+// ── Text style presets ───────────────────────────────────────────────
+const FONT = DIAGRAM_FONT;
 const T = {
-  h:  { fontFamily: FONT, fill: C.text,  fontSize: 9,  fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' },
-  s:  { fontFamily: FONT, fill: C.muted, fontSize: 7.5, textAnchor: 'middle', dominantBaseline: 'central' },
-  t:  { fontFamily: FONT, fill: C.muted, fontSize: 7,  textAnchor: 'middle', dominantBaseline: 'central' },
+  h: { fontFamily: FONT, fill: C.text,  fontSize: 9,   fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' },
+  s: { fontFamily: FONT, fill: C.muted, fontSize: 7.5, textAnchor: 'middle', dominantBaseline: 'central' },
+  t: { fontFamily: FONT, fill: C.muted, fontSize: 7,   textAnchor: 'middle', dominantBaseline: 'central' },
 };
 
 // ── Clickable component box ──────────────────────────────────────────
@@ -69,7 +62,7 @@ function Bus({ x, y, w, label, color, id, sel, onSel }) {
 
 // ── Switch — lifting arm symbol ───────────────────────────────────────
 function Sw({ x, y, isOn = false, onToggle, isLive = false}) {
-  const color = isOn & isLive ? C.wire : '#4a6a8a';
+  const color = isOn & isLive ? C.wire : C.wireDead;
   const mid   = y + 9;
   const lc    = x + 4;
   const rc    = x + 24;
@@ -91,7 +84,7 @@ function Sw({ x, y, isOn = false, onToggle, isLive = false}) {
 // live: controls color/animation — defaults to isOn if not provided
 function Rly({ x, y, label, isOn = false, live, onToggle }) {
   const powered = live !== undefined ? live : isOn;
-  const color = powered ? C.wire : '#4a6a8a';
+  const color = powered ? C.wire : C.wireDead;
   const mid   = y + 9;
   const bx    = x, bw = 16, bh = 12; // relay box
 
@@ -130,9 +123,9 @@ function Panel({ x, y, w, h, label }) {
   return (
     <g>
       <rect x={x} y={y} width={w} height={h} rx={5}
-        fill="none" stroke="#1e3040" strokeWidth={0.5} strokeDasharray="5 3" />
+        fill="none" stroke={C.stroke} strokeWidth={0.5} strokeDasharray="5 3" />
       <text x={x + w / 2} y={y - 5}
-        style={{ fontFamily: FONT, fontSize: 7.5, fill: '#1e3a4a',
+        style={{ fontFamily: FONT, fontSize: 7.5, fill: C.muted,
           textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.09em' }}>
         {label}
       </text>
@@ -174,22 +167,22 @@ function EICASDisplay({ x, y, w = 82, h = 38, on = true, amps = 0, volts = 0 }) 
 // live: false → faint static grey dashes; true → animated yellow over dark pipe
 function Wire({ d, live = false, reverse = false, dim = false }) {
   if (!live) {
-    return <path d={d} stroke="#3a5060" strokeWidth={1.5} fill="none"
-      opacity={0.35} />;
+    return <path d={d} stroke={C.stroke} strokeWidth={1.5} fill="none"
+      opacity={0.5} />;
   }
   if (dim) {
     return (
       <g>
-        <path d={d} stroke="#1e2e3e" strokeWidth={2.5} fill="none" opacity={0.85} />
-        <path d={d} fill="none" stroke="#7a7818" strokeWidth={1}
+        <path d={d} stroke={C.wireDim} strokeWidth={2.5} fill="none" />
+        <path d={d} fill="none" stroke={C.wireDash} strokeWidth={1}
           className="wire-anim-dim" />
       </g>
     );
   }
   return (
     <g>
-      <path d={d} stroke="#1e2e3e" strokeWidth={3.5} fill="none" opacity={0.9} />
-      <path d={d} fill="none" stroke={C.wire} strokeWidth={1.5}
+      <path d={d} stroke={C.wire} strokeWidth={3.5} fill="none" />
+      <path d={d} fill="none" stroke={C.wireDash} strokeWidth={1.5}
         className={reverse ? 'wire-anim-rev' : 'wire-anim'} />
     </g>
   );
@@ -204,15 +197,15 @@ function Wire({ d, live = false, reverse = false, dim = false }) {
 const HopLayerContext = createContext(null);
 
 function HopShape({ x, y, dir = 'h', live = false, dim = false, r = 5 }) {
-  const color = live ? (dim ? '#7a7818' : C.wire) : '#3a5060';
+  const color = live ? (dim ? C.wireDim : C.wire) : C.stroke;
   const opacity = live ? 1 : 0.35;
   const arc = dir === 'h'
     ? `M ${x - r} ${y} A ${r} ${r} 0 0 1 ${x + r} ${y}`
     : `M ${x} ${y - r} A ${r} ${r} 0 0 1 ${x} ${y + r}`;
   return (
     <g>
-      {live && <path d={arc} fill="none" stroke="#1e2e3e" strokeWidth={dim ? 2.5 : 3.5} opacity={0.85} />}
-      <path d={arc} fill="none" stroke={color} strokeWidth={dim ? 1 : 1.5} opacity={opacity} />
+      <path d={arc} fill="none" stroke={color} strokeWidth={live ? (dim ? 2.5 : 3.5) : 1.5} opacity={opacity} />
+      {live && <path d={arc} fill="none" stroke={C.wireDash} strokeWidth={dim ? 1 : 1.5} />}
     </g>
   );
 }
@@ -241,10 +234,9 @@ function CB({ x, y, isOpen = false, live = false, dim = false, onToggle, label, 
   const r        = 5;
   const lift     = isOpen ? 4 : 0;
   const arcLive  = live && !isOpen;
-  const liveColor = dim ? '#7a7818' : C.wire;
-  var arcColor  = arcLive ? liveColor : '#3a5060';
-  var arcOpacity = arcLive ? 1 : 0.35;
-  if (legend){arcColor = C.muted; arcOpacity = 1;}; 
+  const liveColor  = dim ? C.wireDim : C.wire;
+  const arcColor   = legend ? C.muted : (arcLive ? liveColor : C.stroke);
+  const arcOpacity = (legend || arcLive) ? 1 : 0.35;
   const arc  = `M ${x - r} ${y-2} A ${r} ${r} 0 0 1 ${x + r} ${y-2}`;
   const topY = y - r - 2;
   const tStem = 3;
@@ -254,8 +246,8 @@ function CB({ x, y, isOpen = false, live = false, dim = false, onToggle, label, 
     <g style={{ cursor: onToggle ? 'pointer' : 'default' }} onClick={onToggle}>
       {/* Arc + T — translate upward when open */}
       <g style={{ transform: `translateY(${-lift}px)`, transition: 'transform 0.18s ease' }}>
-        {arcLive && <path d={arc} fill="none" stroke="#1e2e3e" strokeWidth={dim ? 2.5 : 3.5} opacity={0.9} />}
-        <path d={arc} fill="none" stroke={arcColor}
+        {arcLive && <path d={arc} fill="none" stroke={liveColor} strokeWidth={dim ? 2.5 : 3.5} />}
+        <path d={arc} fill="none" stroke={arcLive ? C.wireDash : arcColor}
           strokeWidth={dim ? 1 : 1.5} opacity={arcOpacity} />
         <line x1={x} y1={topY} x2={x} y2={topY - tStem}
           stroke={arcColor} strokeWidth={1} opacity={arcOpacity} />
@@ -332,215 +324,6 @@ function CBList({ x, y, items, cols = 2, colW = 148, rowH = 9, color, extraH = 0
   );
 }
 
-// ── Briefing Modal ───────────────────────────────────────────────────
-function BriefingModal({ tab, onClose }) {
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
-
-  const COLOR_CAUTION  = '#FAC775';
-  const COLOR_ADVISORY = '#5dcc5d';
-  const COLOR_WARNING  = '#ff5555';
-
-  const eicasColor = (type) => {
-    if (type === 'warning')  return { bg: 'rgba(180,30,30,0.18)', border: '#cc3333', label: COLOR_WARNING };
-    if (type === 'advisory') return { bg: 'rgba(30,100,30,0.18)', border: '#3a7a3a', label: COLOR_ADVISORY };
-    return { bg: 'rgba(120,80,10,0.18)', border: '#8a6010', label: COLOR_CAUTION };
-  };
-
-  const sectionStyle = {
-    background: 'rgba(255,255,255,0.03)',
-    border: `0.5px solid ${C.stroke}`,
-    borderRadius: 5,
-    padding: '10px 14px',
-    marginBottom: 10,
-  };
-
-  let content = null;
-
-  if (tab === 'verbatim') {
-    content = (
-      <>
-        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '0.06em', marginBottom: 14 }}>
-          {ELEC_VERBATIM.heading}
-        </div>
-        <div style={{
-          ...sectionStyle,
-          background: 'rgba(55,138,221,0.06)',
-          border: '0.5px solid #378ADD55',
-          fontStyle: 'italic',
-          color: '#a8c8e0',
-          fontSize: 12,
-          lineHeight: 1.75,
-          marginBottom: 18,
-        }}>
-          {ELEC_VERBATIM.quote}
-        </div>
-      </>
-    );
-  }
-
-  if (tab === 'numbers') {
-    content = (
-      <>
-        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '0.06em', marginBottom: 14 }}>
-          {ELEC_NUMBERS.heading}
-        </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, background: 'transparent' }}>
-          <thead>
-            <tr>
-              <th style={{ color: C.muted, textAlign: 'left', padding: '4px 8px', borderBottom: `0.5px solid ${C.stroke}`, fontWeight: 400, letterSpacing: '0.08em', fontSize: 10, background: 'transparent' }}>VALUE</th>
-              <th style={{ color: C.muted, textAlign: 'left', padding: '4px 8px', borderBottom: `0.5px solid ${C.stroke}`, fontWeight: 400, letterSpacing: '0.08em', fontSize: 10, background: 'transparent' }}>MEANING</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ELEC_NUMBERS.items.map((row, i) => {
-              if (row.section) {
-                return (
-                  <tr key={i}>
-                    <td colSpan={2} style={{ padding: '10px 8px 4px', color: C.muted, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', borderBottom: `0.5px solid ${C.stroke}44`, textTransform: 'uppercase' }}>
-                      {row.section}
-                    </td>
-                  </tr>
-                );
-              }
-              const rowColor = row.highlight === 'warning' ? COLOR_WARNING : row.highlight ? COLOR_CAUTION : '#5ab8e8';
-              const rowBg    = row.highlight === 'warning' ? 'rgba(180,30,30,0.10)' : row.highlight ? 'rgba(250,199,117,0.06)' : 'transparent';
-              return (
-                <tr key={i} style={{ background: rowBg }}>
-                  <td style={{ padding: '8px 8px', borderBottom: `0.5px solid ${C.stroke}22`, color: rowColor, fontWeight: 700, whiteSpace: 'nowrap', verticalAlign: 'top', minWidth: 180 }}>
-                    {row.value}
-                  </td>
-                  <td style={{ padding: '8px 8px', borderBottom: `0.5px solid ${C.stroke}22`, color: C.muted, lineHeight: 1.6 }}>
-                    {row.label}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </>
-    );
-  }
-
-  if (tab === 'eicas') {
-    content = (
-      <>
-        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '0.06em', marginBottom: 14 }}>
-          {ELEC_EICAS.heading}
-        </div>
-        {ELEC_EICAS.items.map((msg) => {
-          const col = eicasColor(msg.color);
-          return (
-            <div key={msg.label} style={{ ...sectionStyle, background: col.bg, border: `0.5px solid ${col.border}`, marginBottom: 10 }}>
-              <div style={{ fontWeight: 700, fontSize: 13, letterSpacing: '0.14em', color: col.label, marginBottom: 8 }}>
-                {msg.label}
-              </div>
-              <div style={{ marginBottom: 5 }}>
-                <span style={{ color: C.muted, fontSize: 9, letterSpacing: '0.08em' }}>CAUSE — </span>
-                <span style={{ color: C.text, fontSize: 11, lineHeight: 1.6 }}>{msg.cause}</span>
-              </div>
-              <div>
-                <span style={{ color: C.muted, fontSize: 9, letterSpacing: '0.08em' }}>RESPONSE — </span>
-                <span style={{ color: C.text, fontSize: 11, lineHeight: 1.6 }}>{msg.response}</span>
-              </div>
-            </div>
-          );
-        })}
-      </>
-    );
-  }
-
-  if (tab === 'eps') {
-    content = (
-      <>
-        <div style={{ fontSize: 11, color: C.muted, letterSpacing: '0.06em', marginBottom: 14 }}>
-          {ELEC_EPS.heading}
-        </div>
-        {[...ELEC_EPS.items].sort((a, b) => (b.memory ? 1 : 0) - (a.memory ? 1 : 0)).map((ep, i) => (
-          <div key={ep.title} style={{ ...sectionStyle, marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span style={{ background: 'rgba(55,138,221,0.12)', border: '0.5px solid #378ADD66', color: '#5ab8e8', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 3, letterSpacing: '0.1em' }}>
-                EP {i + 1}
-              </span>
-              <span style={{ fontWeight: 700, color: C.text, fontSize: 11, letterSpacing: '0.1em' }}>
-                {ep.title}
-              </span>
-              {ep.memory && (
-                <span style={{ background: 'rgba(255,80,80,0.15)', border: '0.5px solid #cc333366', color: COLOR_WARNING, fontSize: 8, fontWeight: 700, padding: '2px 6px', borderRadius: 3, letterSpacing: '0.1em' }}>
-                  ★ MEMORY
-                </span>
-              )}
-            </div>
-            {ep.subtitle && (
-              <div style={{ color: C.muted, fontSize: 10, fontStyle: 'italic', marginBottom: 10, lineHeight: 1.5 }}>
-                {ep.subtitle}
-              </div>
-            )}
-            {ep.indications && ep.indications.length > 0 && (
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ color: C.muted, fontSize: 9, letterSpacing: '0.1em', marginBottom: 4 }}>INDICATIONS</div>
-                <ul style={{ margin: 0, paddingLeft: 16, color: '#a8b8c8', fontSize: 11, lineHeight: 1.7 }}>
-                  {ep.indications.map((ind, j) => <li key={j}>{ind}</li>)}
-                </ul>
-              </div>
-            )}
-            <div style={{ marginBottom: ep.landing ? 8 : 0 }}>
-              <div style={{ color: C.muted, fontSize: 9, letterSpacing: '0.1em', marginBottom: 4 }}>PROCEDURE</div>
-              <div style={{ fontSize: 11, lineHeight: 1.8 }}>
-                {(() => {
-                  let count = 0;
-                  return ep.procedure.map((step, j) => {
-                    if (/^if\b/i.test(step.trim()) || step.trim().endsWith(':')) {
-                      return (
-                        <div key={j} style={{ color: C.muted, fontStyle: 'italic', margin: '4px 0 2px', paddingLeft: 8, borderLeft: `2px solid ${C.stroke}` }}>
-                          {step}
-                        </div>
-                      );
-                    }
-                    count++;
-                    const text = step.replace(/^\d+\.\s*/, '');
-                    return (
-                      <div key={j} style={{ color: C.text, display: 'flex', gap: 8, paddingLeft: 4, alignItems: 'baseline' }}>
-                        <span style={{ color: C.muted, fontSize: 10, minWidth: 14, flexShrink: 0, textAlign: 'right' }}>{count}.</span>
-                        <span>{text}</span>
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-            </div>
-            {ep.landing && (
-              <div style={{ marginTop: 8, padding: '5px 10px', background: 'rgba(55,138,221,0.06)', borderLeft: '2px solid #378ADD66', color: '#7ab8d8', fontSize: 10, lineHeight: 1.5 }}>
-                <span style={{ fontWeight: 700, letterSpacing: '0.08em', color: C.muted, fontSize: 9 }}>LANDING CRITERIA — </span>
-                {ep.landing}
-              </div>
-            )}
-          </div>
-        ))}
-      </>
-    );
-  }
-
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(4,10,20,0.82)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, backdropFilter: 'blur(2px)' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: '#080f18', border: `0.5px solid ${C.stroke}`, borderRadius: 7, width: '100%', maxWidth: 680, maxHeight: '88vh', display: 'flex', flexDirection: 'column', fontFamily: FONT, boxShadow: '0 8px 40px rgba(0,0,0,0.7)' }}>
-        <div style={{ overflowY: 'auto', padding: '14px 18px', flex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6 }}>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, fontSize: 16, lineHeight: 1, padding: '0 4px' }}>×</button>
-          </div>
-          {content}
-        </div>
-        <div style={{ padding: '6px 18px', borderTop: `0.5px solid ${C.stroke}22`, color: '#2a4a5a', fontSize: 8, letterSpacing: '0.08em', flexShrink: 0 }}>
-          CLICK OUTSIDE OR PRESS ESC TO CLOSE
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Main component ───────────────────────────────────────────────────
 export default function T6BElectricalDiagram() {
   const [sel, setSel] = useState(null);
@@ -564,8 +347,8 @@ export default function T6BElectricalDiagram() {
   useEffect(() => { if (simBusTieInop) flashMsg('BUS TIE'); }, [simBusTieInop]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const TABS = [
-    { id: 'verbatim', label: 'NATOPS INTRO' },
-    { id: 'numbers',  label: 'NUMBERS'      },
+    { id: 'verbatim', label: 'NATOPS Intro' },
+    { id: 'numbers',  label: 'Numbers'      },
     { id: 'eicas',    label: 'EICAS'        },
     { id: 'eps',      label: 'EPs'          },
   ];
@@ -713,7 +496,7 @@ export default function T6BElectricalDiagram() {
   const RX = 555, RW = 120; // right panel X + width
 
   return (
-    <div style={{ background: C.bg, width: '100%' }}>
+    <div style={{ background: C.bg, width: '100%', minHeight: '100vh' }}>
       <div style={{
         background: C.bg, borderRadius: 8, padding: 12,
         fontFamily: FONT, color: C.text,
@@ -730,12 +513,11 @@ export default function T6BElectricalDiagram() {
                 key={id}
                 onClick={() => setBriefingTab(t => t === id ? null : id)}
                 style={{
-                  background: briefingTab === id ? 'rgba(55,138,221,0.18)' : 'transparent',
-                  border: `0.5px solid ${briefingTab === id ? '#378ADD' : C.stroke}`,
-                  color: briefingTab === id ? '#5ab8e8' : C.muted,
-                  padding: '6px 8px', fontSize: 11, borderRadius: 3, cursor: 'pointer',
-                  letterSpacing: '0.08em', fontFamily: FONT,
-                  fontWeight: briefingTab === id ? 700 : 400,
+                  background: briefingTab === id ? C.accent : C.box,
+                  border: `1px solid ${briefingTab === id ? C.accent : C.stroke}`,
+                  color: briefingTab === id ? '#ffffff' : C.accent,
+                  padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
+                  fontFamily: 'sans-serif', fontWeight: 600,
                   transition: 'all 0.15s',
                   minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}
@@ -748,40 +530,44 @@ export default function T6BElectricalDiagram() {
           {/* RIGHT — EP fault sims */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, maxWidth: 'calc(50% - 4px)', minWidth: 0 }}>
             {[
-              { active: simGenBusInop, set: setSimGenBusInop, label: 'GEN BUS INOP', bg: '#cc2222', border: '#991010', tc: '#f8e0e0' },
-              { active: simBatBusInop, set: setSimBatBusInop, label: 'BAT BUS INOP', bg: '#cc2222', border: '#991010', tc: '#f8e0e0' },
-              { active: simBusTieInop, set: setSimBusTieInop, label: 'BUS TIE INOP', bg: '#8a6010', border: '#BA7517', tc: '#4a2a08' },
-              { active: simGenFail,    set: setSimGenFail,    label: 'GEN FAILURE',  bg: '#cc2222', border: '#991010', tc: '#f8e0e0' },
+              { active: simGenBusInop, set: setSimGenBusInop, label: 'Gen Bus Inop', bg: C.simWarnBg, border: C.simWarnBorder, tc: C.simWarnText },
+              { active: simBatBusInop, set: setSimBatBusInop, label: 'Bat Bus Inop', bg: C.simWarnBg, border: C.simWarnBorder, tc: C.simWarnText },
+              { active: simBusTieInop, set: setSimBusTieInop, label: 'Bus Tie Inop', bg: C.simCautBg, border: C.simCautBorder, tc: C.simCautText },
+              { active: simGenFail,    set: setSimGenFail,    label: 'Gen Failure',  bg: C.simWarnBg, border: C.simWarnBorder, tc: C.simWarnText },
             ].map(({ active, set, label, bg, border, tc }) => (
               <button key={label} onClick={() => set(v => !v)} style={{
-                background: active ? bg : 'transparent',
+                background: active ? bg : C.box,
                 border: `1px solid ${active ? border : C.stroke}`,
                 color: active ? tc : C.muted,
-                padding: '6px 8px', fontSize: 11, borderRadius: 3, cursor: 'pointer',
-                letterSpacing: '0.06em', fontFamily: FONT,
-                fontWeight: active ? 700 : 400,
+                padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
+                fontFamily: 'sans-serif', fontWeight: 600,
                 minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
-                {active ? `● ${label}` : `▷ SIM ${label}`}
+                {`Sim ${label}`}
               </button>
             ))}
           </div>
         </div>
 
         {/* ── Attribution ── */}
-        <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 9, letterSpacing: '0.12em', color: '#3a6a8a' }}>
+        <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 9, letterSpacing: '0.12em', color: C.muted }}>
           IMAGES &amp; COMPONENT DESCRIPTIONS SOURCED FROM{' '}
-          <span style={{ color: '#5ab8e8', fontWeight: 700, letterSpacing: '0.14em' }}>T6BDRIVER.COM</span>
+          <span style={{ color: C.text, fontWeight: 700, letterSpacing: '0.14em' }}>T6BDRIVER.COM</span>
         </div>
 
         {/* ── SVG Schematic ── */}
-        {briefingTab && <BriefingModal tab={briefingTab} onClose={() => setBriefingTab(null)} />}
+        {briefingTab && (
+          <BriefingModal tab={briefingTab} onClose={() => setBriefingTab(null)}
+            verbatim={ELEC_VERBATIM} numbers={ELEC_NUMBERS} eicas={ELEC_EICAS} eps={ELEC_EPS}
+            sortMemoryFirst conditionalSteps />
+        )}
         {extPwrInfo && ELEC_INFO['extpwr'] && (
           <InfoModal
             title={ELEC_INFO['extpwr'].title}
             items={ELEC_INFO['extpwr'].items}
             photos={ELEC_INFO['extpwr'].photos ?? []}
             onClose={() => setExtPwrInfo(false)}
+            theme={C}
           />
         )}
         {sel && ELEC_INFO[sel] && (
@@ -790,6 +576,7 @@ export default function T6BElectricalDiagram() {
             items={ELEC_INFO[sel].items}
             photos={ELEC_INFO[sel].photos ?? []}
             onClose={() => setSel(null)}
+            theme={C}
           />
         )}
         <style>{KEYFRAMES}</style>
@@ -813,12 +600,12 @@ export default function T6BElectricalDiagram() {
                 <text x={bx + bw / 2} y={by + 6}
                   style={{ fontFamily: FONT, fontSize: 5.5, fontWeight: 700, fill: color,
                     textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.06em' }}>
-                  EXT PWR
+                  {active ? 'UNPLUG' : 'PLUG IN'}
                 </text>
                 <text x={bx + bw / 2} y={by + 13}
                   style={{ fontFamily: FONT, fontSize: 5.5, fontWeight: 700, fill: color,
                     textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.06em' }}>
-                  {active ? 'DISC' : 'CONN'}
+                  EXT PWR
                 </text>
               </g>
             );
@@ -841,11 +628,11 @@ export default function T6BElectricalDiagram() {
                 {[cx1, cx2, cx3].map((cx, i) => (
                   <g key={i}>
                     <circle cx={cx} cy={cy} r={cr}
-                      fill={active ? `${C.wire}22` : '#0a1520'}
-                      stroke={active ? C.wire : '#3a5060'} strokeWidth={0.7} />
+                      fill={active ? `${C.wire}22` : C.boxAlt}
+                      stroke={active ? C.wire : C.stroke} strokeWidth={0.7} />
                     <text x={cx} y={cy}
                       style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700,
-                        fill: active ? C.wire : '#4a6878',
+                        fill: active ? C.wire : C.muted,
                         textAnchor: 'middle', dominantBaseline: 'central' }}>
                       {i === 0 ? '−' : '+'}
                     </text>
@@ -854,7 +641,7 @@ export default function T6BElectricalDiagram() {
                 {/* Status label above */}
                 <text x={px + pw / 2} y={py - 5}
                   style={{ fontFamily: FONT, fontSize: 6, fontWeight: 700,
-                    fill: active ? C.wire : '#3a5060',
+                    fill: active ? C.wire : C.stroke,
                     textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.07em' }}>
                   {active ? 'CONNECTED' : 'DISCONNECTED'}
                 </text>
@@ -900,8 +687,8 @@ export default function T6BElectricalDiagram() {
           <circle cx={236} cy={LY-102} r={2} fill="none" stroke={C.stroke} strokeWidth={0.5} />
           <circle cx={259} cy={LY-102} r={2} fill="none" stroke={C.stroke} strokeWidth={0.5} />
           <Box x={230} y={LY-100} w={35} h={20} id="battery" sel={sel} onSel={pick} hi={C.bat}>
-            <text x={234} y={LY-93} style={{ fontFamily: FONT, fontSize: 6, fill: '#4a6a8a', textAnchor: 'start' }}>-</text>
-            <text x={257} y={LY-93} style={{ fontFamily: FONT, fontSize: 6, fill: '#4a6a8a', textAnchor: 'start' }}>+</text>
+            <text x={234} y={LY-93} style={{ fontFamily: FONT, fontSize: 6, fill: C.muted, textAnchor: 'start' }}>-</text>
+            <text x={257} y={LY-93} style={{ fontFamily: FONT, fontSize: 6, fill: C.muted, textAnchor: 'start' }}>+</text>
             <text x={248} y={LY-72} style={T.h}>BATTERY</text>
             <text x={248} y={LY-62} style={{ ...T.s, fill: C.bat }}>42Ah</text>
           </Box>
@@ -921,7 +708,7 @@ export default function T6BElectricalDiagram() {
             {/* N1 display */}
             <text x={660} y={LY-108}
               style={{ fontFamily: FONT, fontSize: 10, fontWeight: 700,
-                fill: '#ffffff', textAnchor: 'middle', dominantBaseline: 'central' }}>
+                fill: C.text, textAnchor: 'middle', dominantBaseline: 'central' }}>
               {Math.round(n1)}
             </text>
             <text x={660} y={LY-98} style={T.h}>%</text>
@@ -1011,10 +798,10 @@ export default function T6BElectricalDiagram() {
           <EICASDisplay x={68} y={LY-50-19} on={eicasOn} amps={eicasAmps} volts={eicasVolts} />
           {/* EICAS-style EP warning messages below display — only when display is powered */}
           {(fwdAviGenLive || fwdAviBatLive || fwdBatBusLive) && [
-            simGenBusInop && { label: 'GEN BUS', color: '#ff5555' },
-            simBatBusInop && { label: 'BAT BUS', color: '#ff5555' },
-            simGenFail    && { label: 'GEN',     color: '#ff5555' },
-            simBusTieInop && { label: 'BUS TIE', color: '#fac777' },
+            simGenBusInop && { label: 'GEN BUS', color: C.eicasWarning },
+            simBatBusInop && { label: 'BAT BUS', color: C.eicasWarning },
+            simGenFail    && { label: 'GEN',     color: C.eicasWarning },
+            simBusTieInop && { label: 'BUS TIE', color: C.eicasCaution },
           ].filter(Boolean).map((msg, i) => (
             <text key={msg.label} x={90} y={LY - 25 + i * 10}
               style={{ fontFamily: FONT, fontSize: 8, fontWeight: 700, fill: msg.color,
@@ -1142,8 +929,8 @@ export default function T6BElectricalDiagram() {
           ═══════════════════════════════════════════════════════════ */}
           {(() => {
             const r = 10;
-            const SLV_ON  = { fill: '#7a8a9a', stroke: '#c8d8e8', text: '#ffffff' };
-            const SLV_OFF = { fill: '#0f1b26', stroke: '#405060', text: '#405868' };
+            const SLV_ON  = { fill: C.accent, stroke: C.accentDeep, text: '#ffffff' };
+            const SLV_OFF = { fill: C.boxAlt, stroke: C.stroke, text: C.muted };
 
             const cBtn = (cx, cy, label, isOn, key, labelAbove = false, states = ['OFF', 'ON'], onToggle = () => tog(key)) => {
               const s = isOn ? SLV_ON : SLV_OFF;
@@ -1151,7 +938,7 @@ export default function T6BElectricalDiagram() {
                 <g key={key} style={{ cursor: 'pointer' }} onClick={onToggle}>
                   {labelAbove && (
                     <text x={cx} y={cy - r - 5}
-                      style={{ fontFamily: FONT, fontSize: 5.5, fill: '#7a8a9a',
+                      style={{ fontFamily: FONT, fontSize: 5.5, fill: C.muted,
                         textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.04em' }}>
                       {label}
                     </text>
@@ -1164,7 +951,7 @@ export default function T6BElectricalDiagram() {
                   </text>
                   {!labelAbove && (
                     <text x={cx} y={cy + r + 6}
-                      style={{ fontFamily: FONT, fontSize: 5.5, fill: '#7a8a9a',
+                      style={{ fontFamily: FONT, fontSize: 5.5, fill: C.muted,
                         textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.04em' }}>
                       {label}
                     </text>
@@ -1182,20 +969,22 @@ export default function T6BElectricalDiagram() {
                 <g key={key} style={{ cursor: 'pointer' }} onClick={onToggle}>
                   {labelAbove && (
                     <text x={cx} y={cy - r - 5}
-                      style={{ fontFamily: FONT, fontSize: 5.5, fill: '#7a8a9a',
+                      style={{ fontFamily: FONT, fontSize: 5.5, fill: C.muted,
                         textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.04em' }}>
                       {label}
                     </text>
                   )}
                   <circle cx={cx} cy={cy} r={r} fill={s.fill} stroke={s.stroke} strokeWidth={0.9} />
-                  <text x={cx} y={cy}
-                    style={{ fontFamily: FONT, fontSize: 4.5, fontWeight: 700, fill: s.text,
-                      textAnchor: 'middle', dominantBaseline: 'central' }}>
-                    {STARTER_LABELS[val]}
-                  </text>
+                  {STARTER_LABELS[val].split('/').map((part, i, arr) => (
+                    <text key={i} x={cx} y={cy + (i - (arr.length - 1) / 2) * 5}
+                      style={{ fontFamily: FONT, fontSize: 4.5, fontWeight: 700, fill: s.text,
+                        textAnchor: 'middle', dominantBaseline: 'central' }}>
+                      {part}
+                    </text>
+                  ))}
                   {!labelAbove && (
                     <text x={cx} y={cy + r + 6}
-                      style={{ fontFamily: FONT, fontSize: 5.5, fill: '#7a8a9a',
+                      style={{ fontFamily: FONT, fontSize: 5.5, fill: C.muted,
                         textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.04em' }}>
                       {label}
                     </text>
@@ -1210,7 +999,7 @@ export default function T6BElectricalDiagram() {
                 <g key={key} style={{ cursor: 'pointer' }} onClick={() => tog(key)}>
                   {label.split(' ').map((word, i, arr) => (
                     <text key={i} x={x + w / 2} y={y - 5 - (arr.length - 1 - i) * 7}
-                      style={{ fontFamily: FONT, fontSize: 5.5, fill: '#7a8a9a',
+                      style={{ fontFamily: FONT, fontSize: 5.5, fill: C.muted,
                         textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.04em' }}>
                       {word}
                     </text>
@@ -1241,9 +1030,9 @@ export default function T6BElectricalDiagram() {
               <g>
                 {/* FRONT COCKPIT */}
                 <rect x={FX} y={FY} width={FW} height={FH} rx={4}
-                  fill="none" stroke="#2a4a62" strokeWidth={0.7} />
+                  fill="none" stroke={C.stroke} strokeWidth={0.7} />
                 <text x={FX + 7} y={FY + 10}
-                  style={{ fontFamily: FONT, fontSize: 7, fill: '#3a6080',
+                  style={{ fontFamily: FONT, fontSize: 7, fill: C.muted,
                     textAnchor: 'start', dominantBaseline: 'central', letterSpacing: '0.1em' }}>
                   FRONT COCKPIT
                 </text>
@@ -1262,9 +1051,9 @@ export default function T6BElectricalDiagram() {
 
                 {/* REAR COCKPIT */}
                 <rect x={RCX} y={RCY} width={RCW} height={RCH} rx={4}
-                  fill="none" stroke="#2a4a62" strokeWidth={0.7} />
+                  fill="none" stroke={C.stroke} strokeWidth={0.7} />
                 <text x={RCX + 7} y={RCY + 10}
-                  style={{ fontFamily: FONT, fontSize: 7, fill: '#3a6080',
+                  style={{ fontFamily: FONT, fontSize: 7, fill: C.muted,
                     textAnchor: 'start', dominantBaseline: 'central', letterSpacing: '0.1em' }}>
                   REAR COCKPIT
                 </text>
@@ -1427,8 +1216,8 @@ export default function T6BElectricalDiagram() {
           <circle cx={454} cy={RY+198} r={2} fill="none" stroke={C.stroke} strokeWidth={0.5} />
           <circle cx={477} cy={RY+198} r={2} fill="none" stroke={C.stroke} strokeWidth={0.5} />
           <Box x={448} y={RY+200} w={35} h={20} id="auxbat" sel={sel} onSel={pick} hi={C.aux}>
-            <text x={452} y={RY+207} style={{ fontFamily: FONT, fontSize: 6, fill: '#4a6a8a', textAnchor: 'start' }}>-</text>
-            <text x={475} y={RY+207} style={{ fontFamily: FONT, fontSize: 6, fill: '#4a6a8a', textAnchor: 'start' }}>+</text>
+            <text x={452} y={RY+207} style={{ fontFamily: FONT, fontSize: 6, fill: C.muted, textAnchor: 'start' }}>-</text>
+            <text x={475} y={RY+207} style={{ fontFamily: FONT, fontSize: 6, fill: C.muted, textAnchor: 'start' }}>+</text>
             <text x={466} y={RY+228} style={T.h}>AUX BAT</text>
             <text x={466} y={RY+239} style={{ ...T.s, fill: C.aux }}>(5Ah)</text>
           </Box>
@@ -1600,8 +1389,8 @@ function RedX({ cx, cy, size = 14 }) {
   const h = size / 2;
   return (
     <g opacity={0.55}>
-      <line x1={cx - h} y1={cy - h} x2={cx + h} y2={cy + h} stroke="#cc2222" strokeWidth={2} strokeLinecap="round" />
-      <line x1={cx + h} y1={cy - h} x2={cx - h} y2={cy + h} stroke="#cc2222" strokeWidth={2} strokeLinecap="round" />
+      <line x1={cx - h} y1={cy - h} x2={cx + h} y2={cy + h} stroke={C.warningText} strokeWidth={2} strokeLinecap="round" />
+      <line x1={cx + h} y1={cy - h} x2={cx - h} y2={cy + h} stroke={C.warningText} strokeWidth={2} strokeLinecap="round" />
     </g>
   );
 }

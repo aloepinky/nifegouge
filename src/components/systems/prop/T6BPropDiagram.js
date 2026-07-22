@@ -1,32 +1,22 @@
 import { useState, useRef, useEffect } from "react";
-import { PropBriefingModal, PROP_INFO } from './PropModalData';
+import { PROP_INFO, PROP_VERBATIM, PROP_NUMBERS, PROP_EICAS, PROP_EPS } from './PropModalData';
 import { InfoModal } from '../hyds/HydraulicModalData';
+import BriefingModal from '../BriefingModal';
+import { THEME, DIAGRAM_FONT, WIRE_KEYFRAMES } from '../diagramTheme';
 
-const FONT = "'Courier New', monospace";
+const FONT = DIAGRAM_FONT;
 
-const WIRE_KEYFRAMES = `
-  @keyframes wireFlow { to { stroke-dashoffset: -12; } }
-  .wire-anim { stroke-dasharray: 8 4; animation: wireFlow 0.9s linear infinite; }
-`;
-
-const C = {
-  bg:          '#080f18',
-  text:        '#c8d8e8',
-  muted:       '#6a8a9a',
-  stroke:      '#2e3e52',
-  hubBorder:   '#28405a',
-  metal:       '#6a7a8a',
-  metalMid:    '#4a5a6a',
-  metalLight:  '#9aaaba',
-  metalDark:   '#2a3a4a',
-  spring:      '#b89820',
-  oilMid:      '#2a70d0',
-  oilLight:    '#5090e8',
-  bladeEdge:   '#6a8aaa',
-  counterEdge: '#8a9aaa',
-  accent:      '#c8a820',
-  fine:        '#38bc78',
+// ── Colors: shared THEME + prop-specific mechanical/oil colors ───────
+const LOCAL = {
+  hubBorder: '#4a6888', metal: '#6a7a8a', metalMid: '#4a5a6a',
+  metalLight: '#9aaaba', metalDark: '#2a3a4a',
+  spring: '#a08010', oilMid: '#2a70d0', oilLight: '#5090e8',
+  bladeEdge: '#6a8aaa', counterEdge: '#8a9aaa',
+  amber: THEME.cautionText, fine: '#27ae60',
+  gaugeBezelDark: '#060d14', gaugeFaceDark: '#07101a', gaugeEdge: '#1a2e40',
 };
+
+const C = { ...THEME, ...LOCAL };
 
 // Zigzag spring path from (x0, y) rightward for totalWidth
 function springPath(x0, y, totalWidth, coils = 8, amp = 10) {
@@ -97,23 +87,23 @@ function PropCB({ x, y, live, isOpen = false, onToggle, label }) {
   const cr       = 2;
   const lift     = isOpen ? 4 : 0;
   const arcLive  = live && !isOpen;
-  const color    = arcLive ? '#c8c830' : '#3a5060';
+  const color    = arcLive ? THEME.wireLive : THEME.wireDead;
   const op       = arcLive ? 1 : 0.35;
   const arc      = `M ${x - r} ${y - 2} A ${r} ${r} 0 0 1 ${x + r} ${y - 2}`;
   const topY     = y - r - 2;
   return (
     <g style={{ cursor: onToggle ? 'pointer' : 'default' }} onClick={onToggle}>
       <g style={{ transform: `translateY(${-lift}px)`, transition: 'transform 0.18s ease' }}>
-        {arcLive && <path d={arc} fill="none" stroke="#1e2e3e" strokeWidth={3.5} />}
-        <path d={arc} fill="none" stroke={color} strokeWidth={1.5} opacity={op} />
+        {arcLive && <path d={arc} fill="none" stroke={THEME.wireLive} strokeWidth={3.5} />}
+        <path d={arc} fill="none" stroke={arcLive ? THEME.wireDash : color} strokeWidth={1.5} opacity={op} />
         <line x1={x} y1={topY} x2={x} y2={topY - 3} stroke={color} strokeWidth={1} opacity={op} />
         <line x1={x - 3} y1={topY - 3} x2={x + 3} y2={topY - 3} stroke={color} strokeWidth={1} opacity={op} />
       </g>
-      <circle cx={x - r} cy={y} r={cr} fill="#080f18" stroke={color} strokeWidth={0.8} strokeOpacity={op} />
-      <circle cx={x + r} cy={y} r={cr} fill="#080f18" stroke={color} strokeWidth={0.8} strokeOpacity={op} />
+      <circle cx={x - r} cy={y} r={cr} fill={C.bg} stroke={color} strokeWidth={0.8} strokeOpacity={op} />
+      <circle cx={x + r} cy={y} r={cr} fill={C.bg} stroke={color} strokeWidth={0.8} strokeOpacity={op} />
       {label && (Array.isArray(label) ? label : [label]).map((line, i) => (
         <text key={i} x={x} y={y + cr + 7 + i * 7}
-          style={{ fontFamily: FONT, fontSize: 5.5, fill: '#6a8a9a',
+          style={{ fontFamily: FONT, fontSize: 5.5, fill: C.muted,
             textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.04em', pointerEvents: 'none' }}>
           {line}
         </text>
@@ -123,6 +113,7 @@ function PropCB({ x, y, live, isOpen = false, onToggle, label }) {
 }
 
 export default function T6BPropDiagram() {
+
   // oil is animated/derived from pcl — not directly user-controlled
   const [oil, setOilState] = useState(0);
   const oilRef    = useRef(0);
@@ -145,6 +136,8 @@ export default function T6BPropDiagram() {
   const [pcl, setPcl] = useState(-0.15); // -0.15 = OFF, 0 = IDLE, 1 = MAX
   const [cutoffLifted, setCutoffLifted] = useState(false);
   const [pmuOff, setPmuOff] = useState(false);
+  // Ground vs flight mode: in flight the prop governs at 100% NP regardless of torque
+  const [flightMode, setFlightMode] = useState(false);
   const [cbPropSys, setCbPropSys] = useState(false);
   const [uncommandedFeather, setUncommandedFeather] = useState(false);
   const cutoffTimerRef = useRef(null);
@@ -460,8 +453,8 @@ export default function T6BPropDiagram() {
 
   // ── Tab button config ────────────────────────────────────────────────
   const TABS = [
-    { id: 'verbatim', label: 'NATOPS INTRO' },
-    { id: 'numbers',  label: 'NUMBERS'  },
+    { id: 'verbatim', label: 'NATOPS Intro' },
+    { id: 'numbers',  label: 'Numbers'  },
     { id: 'eicas',    label: 'EICAS'    },
     { id: 'eps',      label: 'EPs'      },
   ];
@@ -483,12 +476,11 @@ export default function T6BPropDiagram() {
               key={id}
               onClick={() => setBriefingTab(t => t === id ? null : id)}
               style={{
-                background: briefingTab === id ? 'rgba(55,138,221,0.18)' : 'transparent',
-                border: `0.5px solid ${briefingTab === id ? '#378ADD' : C.stroke}`,
-                color: briefingTab === id ? '#5ab8e8' : C.muted,
-                padding: '6px 8px', fontSize: 11, borderRadius: 3, cursor: 'pointer',
-                letterSpacing: '0.08em', fontFamily: FONT,
-                fontWeight: briefingTab === id ? 700 : 400,
+                background: briefingTab === id ? C.accent : C.box,
+                border: `1px solid ${briefingTab === id ? C.accent : C.stroke}`,
+                color: briefingTab === id ? '#ffffff' : C.accent,
+                padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
+                fontFamily: 'sans-serif', fontWeight: 600,
                 transition: 'all 0.15s',
                 minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}
@@ -501,15 +493,14 @@ export default function T6BPropDiagram() {
         {/* RIGHT — sim fault buttons */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 6, maxWidth: 'calc(50% - 4px)', minWidth: 0 }}>
           <button onClick={() => setUncommandedFeather(v => !v)} style={{
-            background: uncommandedFeather ? '#cc2222' : 'transparent',
-            border: `1px solid ${uncommandedFeather ? '#991010' : C.stroke}`,
-            color: uncommandedFeather ? '#f8e0e0' : C.muted,
-            padding: '6px 8px', fontSize: 11, borderRadius: 3, cursor: 'pointer',
-            letterSpacing: '0.06em', fontFamily: FONT,
-            fontWeight: uncommandedFeather ? 700 : 400,
+            background: uncommandedFeather ? C.simWarnBg : C.box,
+            border: `1px solid ${uncommandedFeather ? C.simWarnBorder : C.stroke}`,
+            color: uncommandedFeather ? C.simWarnText : C.muted,
+            padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
+            fontFamily: 'sans-serif', fontWeight: 600,
             minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
-            {uncommandedFeather ? '● UNCOMMANDED PROP FEATHER' : '▷ SIM UNCOMMANDED PROP FEATHER'}
+            Sim Uncommanded Prop Feather
           </button>
         </div>
 
@@ -517,17 +508,19 @@ export default function T6BPropDiagram() {
       
 
       {/* ── Attribution ── */}
-      <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 9, letterSpacing: '0.12em', color: '#3a6a8a' }}>
+      <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 9, letterSpacing: '0.12em', color: C.muted }}>
         IMAGES &amp; COMPONENT DESCRIPTIONS SOURCED FROM{' '}
-        <span style={{ color: '#5ab8e8', fontWeight: 700, letterSpacing: '0.14em' }}>T6BDRIVER.COM</span>
+        <span style={{ color: C.text, fontWeight: 700, letterSpacing: '0.14em' }}>T6BDRIVER.COM</span>
       </div>
 
       {/* Briefing modal overlay */}
       {briefingTab && (
-        <PropBriefingModal tab={briefingTab} onClose={() => setBriefingTab(null)} />
+        <BriefingModal tab={briefingTab} onClose={() => setBriefingTab(null)}
+          verbatim={PROP_VERBATIM} numbers={PROP_NUMBERS} eicas={PROP_EICAS} eps={PROP_EPS}
+          conditionalSteps valueMinWidth={120} />
       )}
       {infoKey && PROP_INFO[infoKey] && (
-        <InfoModal {...PROP_INFO[infoKey]} onClose={() => setInfoKey(null)} />
+        <InfoModal {...PROP_INFO[infoKey]} onClose={() => setInfoKey(null)} theme={C} />
       )}
 
       <svg ref={svgRef} viewBox="0 0 820 470" width="100%" style={{ display: 'block', overflow: 'visible' }}>
@@ -535,8 +528,8 @@ export default function T6BPropDiagram() {
         <defs>
 
           <linearGradient id="pp-hub" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%"   stopColor="#172534" />
-            <stop offset="100%" stopColor="#090e18" />
+            <stop offset="0%"   stopColor="#c2ccd6" />
+            <stop offset="100%" stopColor="#8ea0b0" />
           </linearGradient>
           <linearGradient id="pp-metal" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%"   stopColor="#9aaaba" />
@@ -562,19 +555,19 @@ export default function T6BPropDiagram() {
             FIXED CYLINDER
         ════════════════════════════════════════════ */}
         <rect x={CYL.x} y={CYL.y} width={CYL.w} height={CYL.h} rx={5}
-          fill="#0b1820" stroke="#28405a" strokeWidth={1.8} />
+          fill={C.metalLight} stroke={C.hubBorder} strokeWidth={1.8} />
         {/* Bore interior */}
         <rect x={CYL.x + 4} y={CYL.y + 6} width={CYL.w - 22} height={CYL.h - 12} rx={3}
-          fill="#07101a" stroke="#1a2e40" strokeWidth={0.7} />
+          fill={C.boxAlt} stroke={C.stroke} strokeWidth={0.7} />
         {/* End cap */}
         <rect x={CYL.x + CYL.w - 15} y={CYL.y - 4} width={19} height={CYL.h + 8} rx={6}
-          fill="#12202e" stroke="#28405a" strokeWidth={1.5} />
+          fill={C.metal} stroke={C.hubBorder} strokeWidth={1.5} />
         {/* Structural ribs */}
         {[0.3, 0.6].map((frac, i) => (
           <line key={i}
             x1={CYL.x + CYL.w * frac} y1={CYL.y}
             x2={CYL.x + CYL.w * frac} y2={CYL.y + CYL.h}
-            stroke="#1c2e40" strokeWidth={1.2} />
+            stroke={C.metalMid} strokeWidth={1.2} />
         ))}
         <text x={CYL.x + CYL.w / 2} y={CYL.y + CYL.h + 14}
           style={{ fontFamily: FONT, fontSize: 7.5, fill: C.muted, textAnchor: 'middle', letterSpacing: '0.05em' }}>
@@ -592,7 +585,7 @@ export default function T6BPropDiagram() {
         ════════════════════════════════════════════ */}
         {/* Port fitting */}
         <rect x={HUB.x - 9} y={HY - 7} width={10} height={14} rx={2}
-          fill="#0b1820" stroke={C.hubBorder} strokeWidth={0.8} />
+          fill={C.metalMid} stroke={C.hubBorder} strokeWidth={0.8} />
 
         {/* ════════════════════════════════════════════
             PIU  (Propeller Interface Unit — oil source)
@@ -600,9 +593,9 @@ export default function T6BPropDiagram() {
         ════════════════════════════════════════════ */}
         <g onClick={() => setInfoKey('piu')} style={{ cursor: 'pointer' }}>
           <rect x={174} y={HY - 13} width={56} height={26} rx={3}
-            fill="#0c1824" stroke={C.oilLight} strokeWidth={1.2} />
+            fill={C.box} stroke={C.oilMid} strokeWidth={1.2} />
           <text x={202} y={HY+2}
-            style={{ fontFamily: FONT, fontSize: 8, fontWeight: 700, fill: C.oilLight, textAnchor: 'middle', letterSpacing: '0.10em' }}>
+            style={{ fontFamily: FONT, fontSize: 8, fontWeight: 700, fill: C.oilMid, textAnchor: 'middle', letterSpacing: '0.10em' }}>
             PIU
           </text>
         </g>
@@ -611,16 +604,16 @@ export default function T6BPropDiagram() {
             COUNTERWEIGHT  (rotates with blade, rendered behind bore circle)
         ════════════════════════════════════════════ */}
         <g transform={`rotate(${assemblyRot.toFixed(2)}, ${HX}, ${HY})`} clipPath="url(#pp-cw-clip)">
-          <polygon points={cwPts} fill="#4a5868" stroke={C.counterEdge} strokeWidth={1.2} />
+          <polygon points={cwPts} fill={C.metalMid} stroke={C.counterEdge} strokeWidth={1.2} />
         </g>
 
         {/* ════════════════════════════════════════════
             BLADE ROOT BORE CIRCLE
         ════════════════════════════════════════════ */}
         <circle cx={HX} cy={HY} r={Rr}
-          fill="none" stroke="#2a4060" strokeWidth={1.5} />
+          fill="none" stroke={C.hubBorder} strokeWidth={1.5} />
         <circle cx={HX} cy={HY} r={Rr - 5}
-          fill="none" stroke="#1a2e3a" strokeWidth={0.7} opacity={0.6} />
+          fill="none" stroke={C.metalMid} strokeWidth={0.7} opacity={0.6} />
         {oil === 0 && <>
           <text x={HX+80} y={HUB.y + HUB.h - 14}
           style={{ fontFamily: FONT, fontSize: 7.5, fill: C.muted, textAnchor: 'middle' }}>
@@ -640,7 +633,7 @@ export default function T6BPropDiagram() {
         ════════════════════════════════════════════ */}
         {/* Travel axis guide */}
         <line x1={HX - Rr} y1={HY} x2={HX + Rr} y2={HY}
-          stroke="#1a3050" strokeWidth={0.9} strokeDasharray="3 2" />
+          stroke={C.hubBorder} strokeWidth={0.9} strokeDasharray="3 2" />
         {/* Fork assembly body (rectangle with cutout) */}
         <path d={cfPath} fill={C.metalDark} stroke={C.metalLight} strokeWidth={1.2} />
         {/* Cam follower — circle whose centre rides on the bore circle arc */}
@@ -651,20 +644,20 @@ export default function T6BPropDiagram() {
         ════════════════════════════════════════════ */}
         {/* Drain tube housings — rendered before main tube so main tube overlaps junction */}
         <rect x={240} y={HY} width={4} height={80}
-          fill="#07101a" stroke="#1a2e40" strokeWidth={0.5} />
+          fill={C.boxAlt} stroke={C.stroke} strokeWidth={0.5} />
         <rect x={240}
           y={psvDrainFilling ? HY : HY + 80 * (1 - psvDrainFill)}
           width={4} height={psvDrainFill * 80}
           fill="#2060c0" opacity={0.75} />
         <rect x={260} y={HY} width={4} height={114}
-          fill="#07101a" stroke="#1a2e40" strokeWidth={0.5} />
+          fill={C.boxAlt} stroke={C.stroke} strokeWidth={0.5} />
         <rect x={260}
           y={fdsDrainFilling ? HY : HY + 114 * (1 - fdsDrainFill)}
           width={4} height={fdsDrainFill * 114}
           fill="#2060c0" opacity={0.75} />
         {/* Tube housing — rendered after drain tubes so it overlaps the junction points */}
         <rect x={extTubeLeft} y={HY - 8} width={SR - extTubeLeft} height={16}
-          fill="#07101a" stroke="#1a2e40" strokeWidth={0.8} />
+          fill={C.boxAlt} stroke={C.stroke} strokeWidth={0.8} />
         {/* Oil fill — width tied directly to oil level */}
         {/* width={Math.max(0, oil * (pistonMin-extTubeLeft))} */}
         <rect x={extTubeLeft} y={HY - 7}
@@ -680,7 +673,7 @@ export default function T6BPropDiagram() {
         <line x1={SR} y1={HY - 16} x2={SR} y2={HY + 16}
           stroke={C.spring} strokeWidth={3} />
         <text x={(spLeft + SR) / 2} y={CYL.y - 10}
-          style={{ fontFamily: FONT, fontSize: 7.5, fill: C.accent, textAnchor: 'middle', letterSpacing: '0.06em' }}>
+          style={{ fontFamily: FONT, fontSize: 7.5, fill: C.amber, textAnchor: 'middle', letterSpacing: '0.06em' }}>
           FEATHERING SPRING
         </text>
 
@@ -691,13 +684,13 @@ export default function T6BPropDiagram() {
         {/* ── Prop Servo Valve ── */}
         <g onClick={() => setInfoKey('propservo')} style={{ cursor: 'pointer' }}>
           <rect x={234} y={348} width={16} height={16} rx={2}
-            fill="#0a1828" stroke={C.oilLight} strokeWidth={1.5} />
+            fill={C.box} stroke={C.oilMid} strokeWidth={1.5} />
           {!psvLive && <>
-            <line x1={234} y1={348} x2={250} y2={364} stroke={C.oilLight} strokeWidth={1} />
-            <line x1={250} y1={348} x2={234} y2={364} stroke={C.oilLight} strokeWidth={1} />
+            <line x1={234} y1={348} x2={250} y2={364} stroke={C.oilMid} strokeWidth={1} />
+            <line x1={250} y1={348} x2={234} y2={364} stroke={C.oilMid} strokeWidth={1} />
           </>}
-          <line x1={242} y1={364} x2={242} y2={386} stroke={C.oilLight} strokeWidth={1.5} />
-          <polygon points={`242,391 238,381 246,381`} fill={C.oilLight} />
+          <line x1={242} y1={364} x2={242} y2={386} stroke={C.oilMid} strokeWidth={1.5} />
+          <polygon points={`242,391 238,381 246,381`} fill={C.oilMid} />
           <text x={230} y={353}
             style={{ fontFamily: FONT, fontSize: 6, fill: C.muted, textAnchor: 'end', letterSpacing: '0.03em' }}>
             PROP SERVO
@@ -711,13 +704,13 @@ export default function T6BPropDiagram() {
         {/* ── Feather Dump Solenoid Valve ── */}
         <g onClick={() => setInfoKey('featherdump')} style={{ cursor: 'pointer' }}>
           <rect x={254} y={382} width={16} height={16} rx={2}
-            fill="#0a1828" stroke={C.oilLight} strokeWidth={1.5} />
+            fill={C.box} stroke={C.oilMid} strokeWidth={1.5} />
           {!fdsLive && <>
-            <line x1={254} y1={382} x2={270} y2={398} stroke={C.oilLight} strokeWidth={1} />
-            <line x1={270} y1={382} x2={254} y2={398} stroke={C.oilLight} strokeWidth={1} />
+            <line x1={254} y1={382} x2={270} y2={398} stroke={C.oilMid} strokeWidth={1} />
+            <line x1={270} y1={382} x2={254} y2={398} stroke={C.oilMid} strokeWidth={1} />
           </>}
-          <line x1={262} y1={398} x2={262} y2={420} stroke={C.oilLight} strokeWidth={1.5} />
-          <polygon points={`262,425 258,415 266,415`} fill={C.oilLight} />
+          <line x1={262} y1={398} x2={262} y2={420} stroke={C.oilMid} strokeWidth={1.5} />
+          <polygon points={`262,425 258,415 266,415`} fill={C.oilMid} />
           <text x={274} y={382}
             style={{ fontFamily: FONT, fontSize: 6, fill: C.muted, textAnchor: 'start', letterSpacing: '0.03em' }}>
             FEATHER DUMP
@@ -750,7 +743,7 @@ export default function T6BPropDiagram() {
             x2={pistonLeft + dx} y2={HY + 22}
             stroke={C.metalLight} strokeWidth={0.9} />
         ))}
-        <text x={pistonLeft + 26} y={HY + 33}
+        <text x={CYL.x + 5} y={CYL.y + CYL.h + 14}
           style={{ fontFamily: FONT, fontSize: 7.5, fill: C.muted, textAnchor: 'middle', letterSpacing: '0.04em' }}>
           SLIDING PISTON
         </text>
@@ -866,41 +859,41 @@ export default function T6BPropDiagram() {
           return (<>
             {/* Box */}
             <rect x={GL} y={GT} width={GW} height={GH} rx={4}
-              fill="#0c1824" stroke={C.stroke} strokeWidth={0.8} />
+              fill={C.boxAlt} stroke={C.stroke} strokeWidth={0.8} />
             {/* Plot background */}
             <rect x={px0} y={py0} width={pw} height={ph}
-              fill="#070e16" stroke="#1a2e40" strokeWidth={0.5} />
+              fill={C.box} stroke={C.stroke} strokeWidth={0.5} />
 
             {/* Grid lines */}
             {[25, 50, 75].map(t => {
               const x = (px0 + (t / 100) * pw).toFixed(1);
               return <line key={`vg${t}`} x1={x} y1={py0} x2={x} y2={pyB}
-                stroke="#1a2e40" strokeWidth={0.5} strokeDasharray="2 3" />;
+                stroke={C.stroke} strokeWidth={0.5} strokeDasharray="2 3" opacity={0.6} />;
             })}
             {[25, 50, 75].map(o => {
               const y = (pyB - (o / 100) * ph).toFixed(1);
               return <line key={`hg${o}`} x1={px0} y1={y} x2={pxR} y2={y}
-                stroke="#1a2e40" strokeWidth={0.5} strokeDasharray="2 3" />;
+                stroke={C.stroke} strokeWidth={0.5} strokeDasharray="2 3" opacity={0.6} />;
             })}
 
             {/* Curve */}
-            <path d={curvePath} fill="none" stroke={C.oilLight} strokeWidth={1.5} strokeLinejoin="round" />
+            <path d={curvePath} fill="none" stroke={C.oilMid} strokeWidth={1.5} strokeLinejoin="round" />
 
             {/* Off-region band: sits to the left of the 0 torque mark */}
             <rect x={px0 - offBandW} y={py0} width={offBandW} height={ph}
-              fill="#3a0808" opacity={0.75} />
+              fill={C.warningBg} />
             {/* Trace line: full 0–100% path down the centre of the band */}
             <line x1={px0} y1={py0} x2={offCenter} y2={pyB}
-              stroke="#cc3333" strokeWidth={1.2} strokeLinecap="round" />
+              stroke={C.warningBorder} strokeWidth={1.2} strokeLinecap="round" />
             {/* Right border of off band (at torque=0) */}
             <line x1={px0} y1={py0} x2={px0} y2={pyB}
-              stroke="#cc3333" strokeWidth={1} />
+              stroke={C.warningBorder} strokeWidth={1} />
 
             {/* Indicator: vertical line from x-axis up to dot */}
             <line x1={curX.toFixed(1)} y1={pyB} x2={curX.toFixed(1)} y2={curY.toFixed(1)}
-              stroke={onOffRegion ? '#cc3333' : C.accent} strokeWidth={1} strokeDasharray="3 2" />
+              stroke={onOffRegion ? C.warningBorder : C.amber} strokeWidth={1} strokeDasharray="3 2" />
             <circle cx={curX.toFixed(1)} cy={curY.toFixed(1)} r={2.8}
-              fill={onOffRegion ? '#cc3333' : C.accent} />
+              fill={onOffRegion ? C.warningBorder : C.amber} />
 
             {/* X-axis tick labels */}
             {[0, 25, 50, 75, 100].map(t => (
@@ -975,32 +968,32 @@ export default function T6BPropDiagram() {
           return (<>
             {/* Box */}
             <rect x={GL} y={GT2} width={GW} height={GH2} rx={4}
-              fill="#0c1824" stroke={C.stroke} strokeWidth={0.8} />
+              fill={C.boxAlt} stroke={C.stroke} strokeWidth={0.8} />
             {/* Plot background */}
             <rect x={px0} y={py0} width={pw} height={ph}
-              fill="#070e16" stroke="#1a2e40" strokeWidth={0.5} />
+              fill={C.box} stroke={C.stroke} strokeWidth={0.5} />
 
 
             {/* Grid lines */}
             {[20, 40, 60, 80].map(ag => {
               const x = (px0 + (ag / angMax) * pw).toFixed(1);
               return <line key={`vg2${ag}`} x1={x} y1={py0} x2={x} y2={pyB}
-                stroke="#1a2e40" strokeWidth={0.5} strokeDasharray="2 3" />;
+                stroke={C.stroke} strokeWidth={0.5} strokeDasharray="2 3" opacity={0.6} />;
             })}
             {[25, 50, 75].map(tq => {
               const y = (pyB - (tq / 100) * ph).toFixed(1);
               return <line key={`hg2${tq}`} x1={px0} y1={y} x2={pxR} y2={y}
-                stroke="#1a2e40" strokeWidth={0.5} strokeDasharray="2 3" />;
+                stroke={C.stroke} strokeWidth={0.5} strokeDasharray="2 3" opacity={0.6} />;
             })}
 
             {/* Curve */}
-            <path d={curvePath2} fill="none" stroke={C.oilLight} strokeWidth={1.5} strokeLinejoin="round" />
+            <path d={curvePath2} fill="none" stroke={C.oilMid} strokeWidth={1.5} strokeLinejoin="round" />
 
             {/* Indicator: vertical line from x-axis up to dot */}
             <line x1={curX2.toFixed(1)} y1={pyB} x2={curX2.toFixed(1)} y2={curY2.toFixed(1)}
-              stroke={onOffRegion2 ? '#cc3333' : C.accent} strokeWidth={1} strokeDasharray="3 2" />
+              stroke={onOffRegion2 ? C.warningBorder : C.amber} strokeWidth={1} strokeDasharray="3 2" />
             <circle cx={curX2.toFixed(1)} cy={curY2.toFixed(1)} r={2.8}
-              fill={onOffRegion2 ? '#cc3333' : C.accent} />
+              fill={onOffRegion2 ? C.warningBorder : C.amber} />
 
             {/* Y-axis tick labels */}
             {[0, 50, 100].map(tq => (
@@ -1027,11 +1020,11 @@ export default function T6BPropDiagram() {
 
         {/* Note under graphs */}
         <text x={532} y={462}
-          style={{ fontFamily: FONT, fontSize: 8, fill: '#3a5a70', textAnchor: 'start', fontStyle: 'italic' }}>
+          style={{ fontFamily: FONT, fontSize: 8, fill: C.muted, textAnchor: 'start', fontStyle: 'italic' }}>
           Note: Full pitch-change behavior not described in NATOPS.
         </text>
         <text x={528} y={472}
-          style={{ fontFamily: FONT, fontSize: 8, fill: '#3a5a70', textAnchor: 'start', fontStyle: 'italic' }}>
+          style={{ fontFamily: FONT, fontSize: 8, fill: C.muted, textAnchor: 'start', fontStyle: 'italic' }}>
           Diagram is rough estimate built to develop intuition only.
         </text>
 
@@ -1041,23 +1034,40 @@ export default function T6BPropDiagram() {
         {/* Track body (IDLE → MAX) */}
         <rect x={pclCX - 9} y={pclTrackTop} width={18}
           height={pclTrackBottom - pclTrackTop} rx={4}
-          fill="#060d14" stroke="#1a2e40" strokeWidth={1} />
+          fill={C.boxAlt} stroke={C.hubBorder} strokeWidth={1} />
         {/* OFF zone extension — always visible */}
         <rect x={pclCX - 9} y={pclTrackBottom} width={18}
           height={pclOffY - pclTrackBottom} rx={0}
-          fill="#1a0000" stroke="#6a1010" strokeWidth={1} strokeDasharray="3 2" />
+          fill={C.warningBg} stroke={C.warningBorder} strokeWidth={1} strokeDasharray="3 2" />
         {/* Detent lines: IDLE, ~60%, MAX */}
         {[0, 0.6, 1].map((f, i) => {
           const gy = pclTrackBottom - f * (pclTrackBottom - pclTrackTop);
           return <line key={i} x1={pclCX - 9} y1={gy} x2={pclCX + 9} y2={gy}
-            stroke="#2a4060" strokeWidth={1} />;
+            stroke={C.hubBorder} strokeWidth={1} />;
         })}
+        {/* Ground / flight mode toggle */}
+        {[
+          { label: 'GROUND', active: !flightMode, x: pclCX - 39 },
+          { label: 'FLIGHT', active: flightMode,  x: pclCX + 1  },
+        ].map(({ label, active, x }) => (
+          <g key={label} style={{ cursor: 'pointer' }} onClick={() => setFlightMode(label === 'FLIGHT')}>
+            <rect x={x} y={pclTrackTop - 56} width={38} height={16} rx={3}
+              fill={active ? C.accent : C.box}
+              stroke={active ? C.accent : C.stroke} strokeWidth={0.8} />
+            <text x={x + 19} y={pclTrackTop - 48}
+              style={{ fontFamily: FONT, fontSize: 6.5, fontWeight: 700,
+                fill: active ? '#ffffff' : C.muted,
+                textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.04em', pointerEvents: 'none' }}>
+              {label}
+            </text>
+          </g>
+        ))}
         <text x={pclCX} y={pclTrackTop - 20}
           style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, fill: C.text, textAnchor: 'middle', letterSpacing: '0.12em' }}>
           PCL
         </text>
         <text x={pclCX} y={pclTrackTop - 7}
-          style={{ fontFamily: FONT, fontSize: 7, fill: C.accent, textAnchor: 'middle', letterSpacing: '0.08em' }}>
+          style={{ fontFamily: FONT, fontSize: 7, fill: C.amber, textAnchor: 'middle', letterSpacing: '0.08em' }}>
           MAX
         </text>
         <text x={pclCX} y={pclTrackBottom + 12}
@@ -1066,7 +1076,7 @@ export default function T6BPropDiagram() {
         </text>
         {/* OFF label — always visible */}
         <text x={pclCX} y={pclOffY + 12}
-          style={{ fontFamily: FONT, fontSize: 7, fill: '#cc2222', textAnchor: 'middle', letterSpacing: '0.08em', fontWeight: 700 }}>
+          style={{ fontFamily: FONT, fontSize: 7, fill: C.warningText, textAnchor: 'middle', letterSpacing: '0.08em', fontWeight: 700 }}>
           OFF
         </text>
 
@@ -1078,7 +1088,7 @@ export default function T6BPropDiagram() {
           const effectiveFault = uncommandedFeather && !cbPropSys;
           const pmuWireLive = !pmuOff && pcl >= 0 && !effectiveFault
             && Math.abs(oil - computeTargetOil(pcl)) > 0.005;
-          const wC = (on) => on ? '#c8c830' : '#4a6a8a';
+          const wC = (on) => on ? C.wireLive : C.wireDead;
           const wCl = (on) => on ? 'wire-anim' : undefined;
           return (
             <path
@@ -1099,14 +1109,14 @@ export default function T6BPropDiagram() {
           return (
             <g onClick={() => setPmuOff(v => !v)} style={{ cursor: 'pointer' }}>
               <rect x={bx} y={by} width={bw} height={bh} rx={3}
-                fill={pmuOff ? '#2a0505' : '#051a0a'}
-                stroke={pmuOff ? '#cc2222' : '#28a050'} strokeWidth={1.2} />
+                fill={pmuOff ? C.warningBg : C.box}
+                stroke={pmuOff ? C.warningBorder : C.advisoryBorder} strokeWidth={1.2} />
               <text x={bx + bw / 2} y={by + 8}
                 style={{ fontFamily: FONT, fontSize: 7, fontWeight: 700, fill: C.muted, textAnchor: 'middle', letterSpacing: '0.10em', pointerEvents: 'none' }}>
                 PMU
               </text>
               <text x={bx + bw / 2} y={by + 18}
-                style={{ fontFamily: FONT, fontSize: 7.5, fontWeight: 700, fill: pmuOff ? '#cc2222' : '#44cc66', textAnchor: 'middle', letterSpacing: '0.08em', pointerEvents: 'none' }}>
+                style={{ fontFamily: FONT, fontSize: 7.5, fontWeight: 700, fill: pmuOff ? C.warningText : C.advisoryText, textAnchor: 'middle', letterSpacing: '0.08em', pointerEvents: 'none' }}>
                 {pmuOff ? 'OFF' : 'NORM'}
               </text>
             </g>
@@ -1123,24 +1133,28 @@ export default function T6BPropDiagram() {
             Live (animated yellow) when PCL is in OFF position.
         ════════════════════════════════════════════ */}
         {(() => {
-          const wC  = (on) => on ? '#c8c830' : '#4a6a8a';
-          const wCl = (on) => on ? 'wire-anim' : undefined;
+          const wC = (on) => on ? C.wireLive : C.wireDead;
+          // Two-layer wire matching the electrical diagram: colored conductor
+          // with white animated dashes when live, faint grey when dead.
+          const wire = (on, d) => on ? (
+            <g>
+              <path d={d} fill="none" stroke={C.wireLive} strokeWidth={3} />
+              <path d={d} fill="none" stroke={C.wireDash} strokeWidth={1.2} className="wire-anim" />
+            </g>
+          ) : (
+            <path d={d} fill="none" stroke={C.wireDead} strokeWidth={1.2} opacity={0.6} />
+          );
           return (<>
             {/* PMU wire: dead when PMU is OFF */}
-            <path d={`M ${pclCX + 14},${pclOffY + 49} H 110 V 364`}
-              fill="none" stroke={wC(psvLive)} strokeWidth={1.2} className={wCl(psvLive)} />
+            {wire(psvLive, `M ${pclCX + 14},${pclOffY + 49} H 110 V 364`)}
             {/* PCL OFF right wall → upper junction */}
-            <path d={`M 59,344 H 62 A 3 3 0 0 1 68,344 H 90`}
-              fill="none" stroke={wC(fdsUpstreamLive)} strokeWidth={1.2} className={wCl(fdsUpstreamLive)} />
+            {wire(fdsUpstreamLive, `M 59,344 H 62 A 3 3 0 0 1 68,344 H 90`)}
             {/* Upper junction → down to lower junction → right to PSV: dead when PMU OFF */}
-            <path d={`M 90,344 V 364 H 234`}
-              fill="none" stroke={wC(psvLive)} strokeWidth={1.2} className={wCl(psvLive)} />
+            {wire(psvLive, `M 90,344 V 364 H 234`)}
             {/* FDS branch: upper junction → CB left terminal */}
-            <path d={`M 90,344 H 170`}
-              fill="none" stroke={wC(fdsUpstreamLive)} strokeWidth={1.2} className={wCl(fdsUpstreamLive)} />
+            {wire(fdsUpstreamLive, `M 90,344 H 170`)}
             {/* FDS branch: CB right terminal → right → down to FDS solenoid */}
-            <path d={`M 180,344 H 254 V 382`}
-              fill="none" stroke={wC(fdsLive)} strokeWidth={1.2} className={wCl(fdsLive)} />
+            {wire(fdsLive, `M 180,344 H 254 V 382`)}
             {/* Lower junction dot (PSV circuit) */}
             <circle cx={110} cy={364} r={2.5} fill={wC(psvLive)} />
             {/* Endpoint dots */}
@@ -1193,7 +1207,7 @@ export default function T6BPropDiagram() {
             CUTOFF
           </text>
           {/* Hinge pin */}
-          <circle cx={23} cy={352} r={2.5} fill="#2a3a4a" stroke="#4a6a8a" strokeWidth={0.8} />
+          <circle cx={23} cy={352} r={2.5} fill={C.metalDark} stroke={C.hubBorder} strokeWidth={0.8} />
         </g>
 
         {/* PCL lever — rendered after cutoff guard so it sits on top */}
@@ -1218,7 +1232,7 @@ export default function T6BPropDiagram() {
           <rect x={38} y={285} width={42}
             height={pclOffY + 26 - 285} fill="transparent" />
           <rect x={pclCX - 20} y={pclLeverY - 10} width={40} height={20} rx={3}
-            fill="url(#pp-metal)" stroke={pcl < 0 ? '#cc2222' : C.metalLight} strokeWidth={1.2} />
+            fill="url(#pp-metal)" stroke={pcl < 0 ? C.warningText : C.metalLight} strokeWidth={1.2} />
           {[-6, 0, 6].map(dx => (
             <line key={dx}
               x1={pclCX + dx} y1={pclLeverY - 7}
@@ -1228,7 +1242,7 @@ export default function T6BPropDiagram() {
         </g>
         {/* PCL % readout */}
         <text x={pclCX} y={pclOffY + 26}
-          style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, fill: pcl < 0 ? '#cc2222' : C.text, textAnchor: 'middle' }}>
+          style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, fill: pcl < 0 ? C.warningText : C.text, textAnchor: 'middle' }}>
           {pcl < 0 ? 'OFF' : `${Math.round(pcl * 100)}%`}
         </text>
 
@@ -1242,10 +1256,14 @@ export default function T6BPropDiagram() {
           // oil decreasing toward lower target = power increasing; oil increasing = power decreasing
           const powerIncreasing = oil > targetOil;
 
-          // Normal NP value (used as recovery target during fault transition)
+          // Normal NP value (used as recovery target during fault transition).
+          // Airborne the prop governs at 100% NP regardless of torque; on the
+          // ground NP tracks PCL between ground idle and 100%.
           let normalNP;
           if (pcl < 0) {
             normalNP = Math.round(oil * 100);
+          } else if (flightMode) {
+            normalNP = 100;
           } else {
             normalNP = Math.min(100, Math.round(50 + (pcl / 0.27) * 50));
           }
@@ -1258,7 +1276,6 @@ export default function T6BPropDiagram() {
             npCorrection = 0.02 * Math.sign(bladeDelta)
           }
           let npPct = Math.round(normalNP*(1 - npCorrection));
-          console.log(npCorrection, normalNP, npCorrection*normalNP, oil)
           const npAlert = (npPct >= 62 && npPct <= 80) || npPct >= 102;
 
           const bh = 26, by = 7, bw = 88, bx = TCX - bw / 2;
@@ -1289,9 +1306,9 @@ export default function T6BPropDiagram() {
           const ney = TCY + (TR - 11) * Math.sin(needleAngle);
           return (<>
             {/* Outer bezel */}
-            <circle cx={TCX} cy={TCY} r={TR + 9} fill="#060d14" stroke="#1a2e40" strokeWidth={1.5} />
+            <circle cx={TCX} cy={TCY} r={TR + 9} fill={C.gaugeBezelDark} stroke={C.gaugeEdge} strokeWidth={1.5} />
             {/* Face */}
-            <circle cx={TCX} cy={TCY} r={TR} fill="#070e16" stroke="#0a1828" strokeWidth={0.5} />
+            <circle cx={TCX} cy={TCY} r={TR} fill={C.gaugeFaceDark} stroke={C.gaugeBezelDark} strokeWidth={0.5} />
             {/* Static arc: white 0–100%, red 100–110% */}
             {(() => {
               const a100 = gaugeAngleDeg(100) * Math.PI / 180;

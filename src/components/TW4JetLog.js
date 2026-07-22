@@ -21,6 +21,69 @@ const narrowCellFontSize = (val) => {
   return '0.57em';
 };
 
+// UHF/VHF frequencies for each preset BTN channel (Corpus frequency card).
+// Airport channel ranges (31-34 KCRP, etc.) are derived from Airport Info.csv instead.
+const CHANNEL_FREQS = {
+  1: ['290.9', '127.9'],
+  2: ['314.3'],
+  3: ['257.85', '118.7'],
+  4: ['340.2', '134.85'],
+  5: ['307.9', '125.4'],
+  6: ['348.725', '120.9'],
+  7: ['273.45', '124.8'],
+  8: ['233.7', '132.825'],
+  9: ['270.8', '124.65'],
+  10: ['284.6', '124.65'],
+  11: ['354.8', '124.65'],
+  12: ['343.75', '128.675'],
+  13: ['360.2', '125.525'],
+  14: ['353.675'],
+  15: ['307.075', '132.875'],
+  16: ['290.4'],
+  17: ['259.3', '127.5'],
+  18: ['254.3'],
+  19: ['306.6'],
+  20: ['266.575'],
+  21: ['380.6', '123.05'],
+  22: ['337.8', '135.05'],
+  23: ['350.3', '128.15'],
+  24: ['246.8', '136.975'],
+  25: ['346.65'],
+  26: ['343.5'],
+  27: ['299.6', '119.65'],
+  28: ['256.7'],
+  29: ['265.8'],
+  30: ['236.825', '133.85'],
+  75: ['246.7', '123.175'],
+  76: ['246.9', '123.27'],
+  77: ['252.525', '123.37'],
+  78: ['299.5', '151.0'],
+  79: ['300.6', '123.47'],
+  85: ['303.0', '123.57'],
+  86: ['303.05', '123.67'],
+  87: ['351.0', '123.77'],
+  88: ['356.0', '123.97'],
+  89: ['357.0', '124.07'],
+  99: ['243.0', '121.5'],
+};
+
+// Airports whose channels come as a range: base+1 = ATIS, +2 = CLNC DEL, +3 = GND, +4 = TWR.
+const AIRPORT_CHANNEL_BASES = { KCRP: 30, KVCT: 40, KSAT: 50, KMFE: 60, KCLL: 70, KAUS: 80, KROW: 90 };
+
+const normFreq = (s) => {
+  const n = parseFloat(s);
+  return isNaN(n) ? null : String(n);
+};
+
+// freq (normalized) -> array of channels it appears on (e.g. 124.65 -> [9,10,11])
+const STATIC_FREQ_CHANNELS = {};
+for (const [ch, freqs] of Object.entries(CHANNEL_FREQS)) {
+  for (const f of freqs) {
+    const key = normFreq(f);
+    (STATIC_FREQ_CHANNELS[key] = STATIC_FREQ_CHANNELS[key] || []).push(parseInt(ch));
+  }
+}
+
 function TW4JetLog() {
   const [mainRowCount, setMainRowCount] = useState(9);
   const [editRowsMode, setEditRowsMode] = useState(false);
@@ -408,6 +471,44 @@ function TW4JetLog() {
   const setInfoField = (key, val) => setInfoFields(prev => ({...prev, [key]: val}));
   const cleanVal = val => (!val || val.trim() === '-') ? '' : val.trim();
 
+  // "KNGP 19'" -> "KNGP"; used to give freq fields their airport context for channel lookup.
+  const airportCodeOf = (val) => (val || '').trim().split(/\s+/)[0].toUpperCase() || null;
+
+  // Channels a single frequency could be tuned on: the static card list, plus the
+  // airport-range channels (x1=ATIS .. x4=TWR) when the field belongs to a range airport.
+  const channelsForFreq = (freqKey, airportCode) => {
+    const found = new Set(STATIC_FREQ_CHANNELS[freqKey] || []);
+    const base = AIRPORT_CHANNEL_BASES[airportCode];
+    if (base != null) {
+      const ap = airports.find(a => a.airport.toUpperCase() === airportCode);
+      if (ap) {
+        [ap.atis, ap.clncDel, ap.gndCont, ap.tower].forEach((cell, i) => {
+          if (!cell) return;
+          for (const f of cell.replace(/\([^)]*\)/g, '').split('/')) {
+            if (normFreq(f) === freqKey) found.add(base + i + 1);
+          }
+        });
+      }
+    }
+    return [...found];
+  };
+
+  // Channel for a typed freq value ("314.3" or "236.825/133.85"). Every slash part must
+  // resolve, and they must agree on exactly one channel — otherwise no channel is shown.
+  const deriveChannel = (value, airportCode) => {
+    const parts = (value || '').split('/').map(s => s.trim()).filter(Boolean);
+    if (!parts.length) return null;
+    let common = null;
+    for (const p of parts) {
+      const key = normFreq(p);
+      if (key == null) return null;
+      const chans = channelsForFreq(key, airportCode);
+      if (!chans.length) return null;
+      common = common === null ? chans : common.filter(c => chans.includes(c));
+    }
+    return (common && common.length === 1) ? String(common[0]) : null;
+  };
+
   const selectAirport = (ap, type) => {
     if (type === 'dep') {
       const newDepElev = `${ap.airport} ${ap.elev}`;
@@ -520,10 +621,10 @@ function TW4JetLog() {
     return any ? totalSecs : null;
   };
 
-  const renderFreqInput = (value, onChange) => {
+  const renderFreqInput = (value, onChange, airportCode = null) => {
     const match = value.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
     const main = match ? match[1].trim() : value;
-    const qualifier = match ? match[2] : null;
+    const qualifier = (match ? match[2] : null) || deriveChannel(main, airportCode);
     return (
       <div style={{position: 'relative'}}>
         <input type="text" value={main} onChange={onChange} />
@@ -539,10 +640,17 @@ function TW4JetLog() {
     );
   };
 
+  // Airport context for each freq field, so airport-range channels (31-34 KCRP, etc.) resolve.
+  const freqFieldAirport = (key) => {
+    if (key.startsWith('dest')) return airportCodeOf(infoFields.destElev);
+    if (key.startsWith('alt')) return airportCodeOf(infoFields.alternate);
+    return airportCodeOf(infoFields.depElev);
+  };
+
   const renderFreqCell = (key, label, tdProps = {}) => (
     <td {...tdProps}>
       <span className="info-label">{label}</span>
-      {renderFreqInput(infoFields[key] || '', (e) => setInfoField(key, e.target.value))}
+      {renderFreqInput(infoFields[key] || '', (e) => setInfoField(key, e.target.value), freqFieldAirport(key))}
     </td>
   );
 
@@ -1694,8 +1802,8 @@ function TW4JetLog() {
         ? 'FL' + String(Math.round(selectedAlt / 100)).padStart(3, '0')
         : 'A'  + String(Math.round(selectedAlt / 100)).padStart(3, '0'));
 
-      // Airport codes: first word of each info field
-      const code = (s) => (s || '').trim().split(/\s+/)[0].toUpperCase().substring(0, 4);
+      // Airport codes: first word of each info field, clamped to ICAO length
+      const code = (s) => (airportCodeOf(s) || '').substring(0, 4);
       const depAirport  = code(infoFields.depElev);
       const destAirport = code(infoFields.destElev);
       const altnAirport = code(infoFields.alternate);
@@ -2075,26 +2183,36 @@ function TW4JetLog() {
       // ── Header block ────────────────────────────────────────────────
       const freqFont = vfrMode ? 6 : 8;
       const superFreqFont = vfrMode ? 5 : 8;
+      // Append a derived channel so typed freqs print like CSV values that carry "(##)".
+      const withChannel = (text, airportCode) => {
+        const t = (text || '').trim();
+        if (!t || /\([^)]*\)$/.test(t)) return t;
+        const ch = deriveChannel(t, airportCode);
+        return ch ? `${t} (${ch})` : t;
+      };
+      const depCode = airportCodeOf(infoFields.depElev);
+      const destCode = airportCodeOf(infoFields.destElev);
+      const altCode = airportCodeOf(infoFields.alternate);
       draw(C.depX,     C.row1Y, infoFields.depElev);
-      drawFreq(C.clncDelX, C.row1Y, infoFields.clncDel, freqFont);
-      drawFreq(C.gndContX, C.row1Y, infoFields.gndCont, freqFont);
-      drawFreq(C.towerX,   C.row1Y, infoFields.tower, freqFont);
+      drawFreq(C.clncDelX, C.row1Y, withChannel(infoFields.clncDel, depCode), freqFont);
+      drawFreq(C.gndContX, C.row1Y, withChannel(infoFields.gndCont, depCode), freqFont);
+      drawFreq(C.towerX,   C.row1Y, withChannel(infoFields.tower, depCode), freqFont);
 
       draw(C.destX,    C.row2Y, infoFields.destElev);
-      drawFreq(C.destApcX, C.row2Y, infoFields.destApcCont, freqFont);
-      drawFreq(C.destTwrX, C.row2Y, infoFields.destTower, freqFont);
-      drawFreq(C.destGndX, C.row2Y, infoFields.destGndCont, freqFont);
+      drawFreq(C.destApcX, C.row2Y, withChannel(infoFields.destApcCont, destCode), freqFont);
+      drawFreq(C.destTwrX, C.row2Y, withChannel(infoFields.destTower, destCode), freqFont);
+      drawFreq(C.destGndX, C.row2Y, withChannel(infoFields.destGndCont, destCode), freqFont);
 
       draw(C.altX,     C.row3Y, infoFields.alternate);
-      drawFreq(C.altApcX,  C.altRow2Y, infoFields.altApcCont, superFreqFont, 2);
-      drawFreq(C.altTwrX,  C.altRow2Y, infoFields.altTower, superFreqFont, 2);
-      drawFreq(C.altGndX,  C.altRow2Y, infoFields.altGndCont, superFreqFont, 2);
+      drawFreq(C.altApcX,  C.altRow2Y, withChannel(infoFields.altApcCont, altCode), superFreqFont, 2);
+      drawFreq(C.altTwrX,  C.altRow2Y, withChannel(infoFields.altTower, altCode), superFreqFont, 2);
+      drawFreq(C.altGndX,  C.altRow2Y, withChannel(infoFields.altGndCont, altCode), superFreqFont, 2);
 
       // ── Clearance / performance block ────────────────────────────────
       if (vfrMode) {
         draw(C.gsCalcX,    C.clnc1Y + 1, clncFields.vfrGsCalc);
         draw(C.lbsPhX,     C.clnc1Y + 1, clncFields.vfrLbsPh);
-        drawFreq(C.atisX,      C.clnc1Y + 4, clncFields.vfrAtis, freqFont);
+        drawFreq(C.atisX,      C.clnc1Y + 4, withChannel(clncFields.vfrAtis, depCode), freqFont);
         draw(C.windAtAltX, C.clnc2Y, clncFields.vfrWindAtAlt);
         draw(C.clnc1aX, C.clnc1Y - 16, clncFields.vfrClnc1a, 8);
         draw(C.clnc1bX, C.clnc1Y - 16, clncFields.vfrClnc1b, 8);
@@ -2489,7 +2607,7 @@ function TW4JetLog() {
             <tr>
               <td style={{verticalAlign: 'top'}}>
                 <span className="info-label">ATIS</span>
-                {renderFreqInput(clncFields.vfrAtis || '', e => setClncFields(prev => ({...prev, vfrAtis: e.target.value})))}
+                {renderFreqInput(clncFields.vfrAtis || '', e => setClncFields(prev => ({...prev, vfrAtis: e.target.value})), airportCodeOf(infoFields.depElev))}
               </td>
               <td style={{verticalAlign: 'top'}}><span className="info-label">WIND AT ALT</span><input type="text" value={clncFields.vfrWindAtAlt} onChange={e => setClncFields(prev => ({...prev, vfrWindAtAlt: e.target.value}))} /></td>
               <td style={{verticalAlign: 'top'}}>
