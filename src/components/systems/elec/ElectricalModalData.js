@@ -500,8 +500,8 @@ export const ELEC_INFO = {
       'Power to the GEN switch itself comes through the GEN SW circuit breaker on the front cockpit generator bus.',
     ],
     photos: [
-      { src: '/systems/elec/starter1.png', caption: 'Starter / generator' },
-      { src: '/systems/elec/starter2.png', caption: 'Starter / generator' },
+      { src: '/systems/elec/starter1.webp', caption: 'Starter / generator' },
+      { src: '/systems/elec/starter2.webp', caption: 'Starter / generator' },
     ],
   },
 
@@ -518,7 +518,7 @@ export const ELEC_INFO = {
       'Charged by the generator (needs ≥25 V) with Bus Tie in NORM or by external power. Positive amps indicate the battery is charging',
     ],
     photos: [
-      { src: '/systems/elec/Battery.png', caption: 'Main battery (42 Ah)' },
+      { src: '/systems/elec/Battery.webp', caption: 'Main battery (42 Ah)' },
     ],
   },
 
@@ -534,7 +534,7 @@ export const ELEC_INFO = {
       'Power level tested by holding the AUX BAT test switch (system test panel, front cockpit) for ≥5 seconds — light must remain illuminated.',
     ],
     photos: [
-      { src: '/systems/elec/auxbat.png', caption: 'Auxiliary battery (5 Ah)' },
+      { src: '/systems/elec/auxbat.webp', caption: 'Auxiliary battery (5 Ah)' },
     ],
   },
 
@@ -548,7 +548,7 @@ export const ELEC_INFO = {
       'External power is disconnected once the engine reaches self-sustaining speed (~50% N1) and the starter relay opens.',
     ],
     photos: [
-      { src: '/systems/elec/extpwr.png', caption: 'External power receptacle' },
+      { src: '/systems/elec/extpwr.webp', caption: 'External power receptacle' },
     ],
   },
 
@@ -584,7 +584,7 @@ export const ELEC_INFO = {
       'Items: Clock, ELT, Chip Detector, Emergency Flaps, OBOGS, Ram Air Valve, FDR Maintenance, Battery Switch.',
     ],
     photos: [
-      { src: '/systems/elec/hotbat.png', caption: 'Hot battery bus' },
+      { src: '/systems/elec/hotbat.webp', caption: 'Hot battery bus' },
     ],
   },
 

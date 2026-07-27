@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useContext, createContext } from 'react';
 import { createPortal } from 'react-dom';
 import { ELEC_VERBATIM, ELEC_NUMBERS, ELEC_EICAS, ELEC_EPS, ELEC_INFO } from './ElectricalModalData';
-import { InfoModal } from '../hyds/HydraulicModalData';
-import BriefingModal from '../BriefingModal';
+import { InfoModal } from '../InfoModal';
+import DiagramShell from '../DiagramShell';
 import { THEME, DIAGRAM_FONT, WIRE_KEYFRAMES } from '../diagramTheme';
 
 const KEYFRAMES = WIRE_KEYFRAMES + `
@@ -329,7 +329,6 @@ export default function T6BElectricalDiagram() {
   const [sel, setSel] = useState(null);
   const pick = (id) => setSel(s => s === id ? null : id);
   const [hopLayer, setHopLayer] = useState(null);
-  const [briefingTab, setBriefingTab] = useState(null);
   const [extPwrInfo, setExtPwrInfo] = useState(false);
   const [extPwrConn, setExtPwrConn] = useState(false);
   const [simGenBusInop,  setSimGenBusInop]  = useState(false);
@@ -345,13 +344,6 @@ export default function T6BElectricalDiagram() {
   useEffect(() => { if (simBatBusInop) flashMsg('BAT BUS'); }, [simBatBusInop]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (simGenFail)    flashMsg('GEN');     }, [simGenFail]);     // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (simBusTieInop) flashMsg('BUS TIE'); }, [simBusTieInop]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const TABS = [
-    { id: 'verbatim', label: 'NATOPS Intro' },
-    { id: 'numbers',  label: 'Numbers'      },
-    { id: 'eicas',    label: 'EICAS'        },
-    { id: 'eps',      label: 'EPs'          },
-  ];
 
   const [sw, setSw] = useState({
     fBat: false, fGen: false, fAuxBat: false,
@@ -496,71 +488,19 @@ export default function T6BElectricalDiagram() {
   const RX = 555, RW = 120; // right panel X + width
 
   return (
-    <div style={{ background: C.bg, width: '100%', minHeight: '100vh' }}>
-      <div style={{
-        background: C.bg, borderRadius: 8, padding: 12,
-        fontFamily: FONT, color: C.text,
-        minWidth: 340, maxWidth: 900, margin: '0 auto',
-      }}>
-
-        {/* ── Header ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-
-          {/* LEFT — briefing tabs (2×2 grid) */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, maxWidth: 'calc(50% - 4px)', minWidth: 0 }}>
-            {TABS.map(({ id, label }) => (
-              <button
-                key={id}
-                onClick={() => setBriefingTab(t => t === id ? null : id)}
-                style={{
-                  background: briefingTab === id ? C.accent : C.box,
-                  border: `1px solid ${briefingTab === id ? C.accent : C.stroke}`,
-                  color: briefingTab === id ? '#ffffff' : C.accent,
-                  padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
-                  fontFamily: 'sans-serif', fontWeight: 600,
-                  transition: 'all 0.15s',
-                  minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* RIGHT — EP fault sims */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, maxWidth: 'calc(50% - 4px)', minWidth: 0 }}>
-            {[
-              { active: simGenBusInop, set: setSimGenBusInop, label: 'Gen Bus Inop', bg: C.simWarnBg, border: C.simWarnBorder, tc: C.simWarnText },
-              { active: simBatBusInop, set: setSimBatBusInop, label: 'Bat Bus Inop', bg: C.simWarnBg, border: C.simWarnBorder, tc: C.simWarnText },
-              { active: simBusTieInop, set: setSimBusTieInop, label: 'Bus Tie Inop', bg: C.simCautBg, border: C.simCautBorder, tc: C.simCautText },
-              { active: simGenFail,    set: setSimGenFail,    label: 'Gen Failure',  bg: C.simWarnBg, border: C.simWarnBorder, tc: C.simWarnText },
-            ].map(({ active, set, label, bg, border, tc }) => (
-              <button key={label} onClick={() => set(v => !v)} style={{
-                background: active ? bg : C.box,
-                border: `1px solid ${active ? border : C.stroke}`,
-                color: active ? tc : C.muted,
-                padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
-                fontFamily: 'sans-serif', fontWeight: 600,
-                minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {`Sim ${label}`}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Attribution ── */}
-        <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 9, letterSpacing: '0.12em', color: C.muted }}>
-          IMAGES &amp; COMPONENT DESCRIPTIONS SOURCED FROM{' '}
-          <span style={{ color: C.text, fontWeight: 700, letterSpacing: '0.14em' }}>T6BDRIVER.COM</span>
-        </div>
-
-        {/* ── SVG Schematic ── */}
-        {briefingTab && (
-          <BriefingModal tab={briefingTab} onClose={() => setBriefingTab(null)}
-            verbatim={ELEC_VERBATIM} numbers={ELEC_NUMBERS} eicas={ELEC_EICAS} eps={ELEC_EPS}
-            sortMemoryFirst conditionalSteps />
-        )}
+    <DiagramShell
+      keyframes={KEYFRAMES}
+      briefing={{
+        verbatim: ELEC_VERBATIM, numbers: ELEC_NUMBERS, eicas: ELEC_EICAS, eps: ELEC_EPS,
+        sortMemoryFirst: true, conditionalSteps: true,
+      }}
+      sims={[
+        { active: simGenBusInop, onClick: () => setSimGenBusInop(v => !v), label: 'Gen Bus Inop', kind: 'warn' },
+        { active: simBatBusInop, onClick: () => setSimBatBusInop(v => !v), label: 'Bat Bus Inop', kind: 'warn' },
+        { active: simBusTieInop, onClick: () => setSimBusTieInop(v => !v), label: 'Bus Tie Inop', kind: 'caution' },
+        { active: simGenFail,    onClick: () => setSimGenFail(v => !v),    label: 'Gen Failure',  kind: 'warn' },
+      ]}
+    >
         {extPwrInfo && ELEC_INFO['extpwr'] && (
           <InfoModal
             title={ELEC_INFO['extpwr'].title}
@@ -579,7 +519,6 @@ export default function T6BElectricalDiagram() {
             theme={C}
           />
         )}
-        <style>{KEYFRAMES}</style>
         <HopLayerContext.Provider value={hopLayer}>
         <svg viewBox="0 0 760 730" width="100%" style={{ display: 'block' }}>
 
@@ -1274,7 +1213,7 @@ export default function T6BElectricalDiagram() {
           <Shunt cx={346} cy={LY-102} />
 
           {/* ── MFD screenshot ── */}
-          <image href="/systems/elec/MFDs.png" x={250} y={550} width={310} height={89}
+          <image href="/systems/elec/MFDs.webp" x={250} y={550} width={310} height={89}
             preserveAspectRatio="xMidYMid meet"
             style={{ cursor: 'pointer' }} onClick={() => pick('MFD')} />
           {!fwdAviGenLive && <rect x={307}       y={560} width={53} height={70} fill="black" />}
@@ -1340,8 +1279,7 @@ export default function T6BElectricalDiagram() {
           <g ref={setHopLayer} />
         </svg>
         </HopLayerContext.Provider>
-      </div>
-    </div>
+    </DiagramShell>
   );
 }
 

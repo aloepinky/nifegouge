@@ -883,6 +883,14 @@ td.xcell::after {
   white-space: pre-wrap;
 }
 
+/* Heading for a labelled .explanation-text block (the answer explanation on Questions). */
+.explanation-heading {
+  display: block;
+  margin-bottom: 4px;
+  font-style: normal;
+  color: #01202C;
+}
+
 .airspeed-notice {
   border: 1px solid #ccc;
   border-radius: 4px;

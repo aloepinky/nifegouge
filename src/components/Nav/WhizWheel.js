@@ -109,12 +109,12 @@ function WhizWheel() {
     container.innerHTML = '';
 
     const backImg = document.createElement('img');
-    backImg.src = '/images/Back Wheel.png';
+    backImg.src = '/images/Back Wheel.webp';
     backImg.alt = 'Back Wheel';
     backImg.style.cssText = 'width: 500px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-0.1deg);';
 
     const frontImg = document.createElement('img');
-    frontImg.src = '/images/Front Wheel.png';
+    frontImg.src = '/images/Front Wheel.webp';
     frontImg.alt = 'Front Wheel';
     frontImg.style.cssText = 'width: 430px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-0.5deg);';
 
@@ -128,9 +128,9 @@ function WhizWheel() {
     container.innerHTML = '';
 
     const images = [
-      { src: '/images/Back Wind Wheel.png', alt: 'Back Wind Wheel', width: '500px', transform: 'rotate(0.1deg)' },
-      { src: '/images/Middle Wind Wheel.png', alt: 'Middle Wind Wheel', width: '442px' },
-      { src: '/images/Front Wind Wheel.png', alt: 'Front Wind Wheel', width: '376px' },
+      { src: '/images/Back Wind Wheel.webp', alt: 'Back Wind Wheel', width: '500px', transform: 'rotate(0.1deg)' },
+      { src: '/images/Middle Wind Wheel.webp', alt: 'Middle Wind Wheel', width: '442px' },
+      { src: '/images/Front Wind Wheel.webp', alt: 'Front Wind Wheel', width: '376px' },
       { src: '/images/arrow.png', alt: 'Arrow', width: '500px', transform: 'scale(0.01)' },
       { src: '/images/hori.png', alt: 'Hori', width: '500px', transform: 'scale(0.01)' },
       { src: '/images/verti.png', alt: 'Verti', width: '500px', transform: 'scale(0.01)' },

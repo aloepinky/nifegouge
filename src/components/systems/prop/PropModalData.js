@@ -202,7 +202,7 @@ export const PROP_INFO = {
       'Contains a backup mechanical overspeed governor — used if PMU is turned off or fails.',
       'Backup governor keeps prop RPM at 100±2% NP.',
     ],
-    photos: [{ src: '/systems/prop/piu.png', caption: 'PIU mounted on top of the RGB' }],
+    photos: [{ src: '/systems/prop/piu.webp', caption: 'PIU mounted on top of the RGB' }],
   },
 };
 

@@ -1,10 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  Shared NATOPS briefing modal for the systems diagrams (hyds / elec / prop).
+//  Shared NATOPS briefing modal for the systems diagrams (hyds / elec / prop / fuel).
 //  Each diagram passes its own { verbatim, numbers, eicas, eps } data objects
 //  (see *ModalData.js). Colors come straight from THEME — no diagram overrides
 //  any modal color, so there is no theme prop.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect } from 'react';
+import { useEffect, memo } from 'react';
 import { THEME, DIAGRAM_FONT } from './diagramTheme';
 
 const C = THEME;
@@ -15,7 +15,7 @@ const FONT = DIAGRAM_FONT;
 //   off, the whole procedure is a plain numbered list (hyds EPs).
 // sortMemoryFirst: list ★ MEMORY EPs before the rest.
 // valueMinWidth: min width of the VALUE column in the numbers table.
-export default function BriefingModal({
+function BriefingModal({
   tab, onClose, verbatim, numbers, eicas, eps,
   conditionalSteps = false, sortMemoryFirst = false, valueMinWidth = 180,
 }) {
@@ -256,3 +256,9 @@ export default function BriefingModal({
     </div>
   );
 }
+
+// Memoized: DiagramShell renders this, and the host diagram re-renders the shell
+// constantly — fuel commits simulation state at 20 Hz, which would otherwise reconcile
+// the whole EPs list (~300 elements) on every tick while the modal is open. Every prop is
+// a module constant or a primitive except onClose, which DiagramShell holds stable.
+export default memo(BriefingModal);

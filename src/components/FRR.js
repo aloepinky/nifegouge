@@ -442,7 +442,7 @@ function FRR() {
         {questionType === 'runway' && (
           <>
             {showCompassImg && (
-              <img src="/images/heading.png" alt="Compass" style={{
+              <img src="/images/heading.webp" alt="Compass" style={{
                 position: 'absolute', top: '50%', left: '50%',
                 transform: `translate(-50%, -50%) rotate(${compassRotation}deg)`,
                 width: '250px', zIndex: 5

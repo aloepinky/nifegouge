@@ -5,9 +5,9 @@ import {
   HYD_EICAS,
   HYD_EPS,
   HYD_INFO,
-  InfoModal,
 } from './HydraulicModalData';
-import BriefingModal from '../BriefingModal';
+import DiagramShell from '../DiagramShell';
+import { InfoModal } from '../InfoModal';
 import { THEME, DIAGRAM_FONT } from '../diagramTheme';
 
 // ── Keyframe animations injected once into the document ──────────────
@@ -156,7 +156,6 @@ function HydPressGauge({ pressure = 3040, size = 160, embedded = false }) {
 // ── Main component ───────────────────────────────────────────────────
 export default function T6BHydraulicDiagram() {
   const [sel,      setSel]      = useState(null);
-  const [briefingTab, setBriefingTab] = useState(null);
   const [hydFlo,   setHydFlo]   = useState(false);
   const [ehydPx,   setEhydPx]   = useState(false);
   const [hydPsi,   setHydPsi]   = useState(3040);
@@ -599,75 +598,20 @@ export default function T6BHydraulicDiagram() {
     }
   };
 
-  // ── Tab button config ────────────────────────────────────────────────
-  const TABS = [
-    { id: 'verbatim', label: 'NATOPS Intro' },
-    { id: 'numbers',  label: 'Numbers'  },
-    { id: 'eicas',    label: 'EICAS'    },
-    { id: 'eps',      label: 'EPs'      },
-  ];
-
   return (
-    <div style={{ background: C.bg, width: '100%', minHeight: '100vh' }}>
-    <div style={{
-      background: C.bg, borderRadius: 8, padding: 12,
-      fontFamily: FONT, color: C.text,
-      minWidth: 340, maxWidth: 900, margin: '0 auto',
-    }}>
-      <style>{KEYFRAMES}</style>
-
-      {/* ── Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-
-        {/* LEFT — briefing tabs (2×2 grid) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, maxWidth: 'calc(50% - 4px)', minWidth: 0 }}>
-          {TABS.map(({ id, label }) => (
-            <button
-              key={id}
-              onClick={() => setBriefingTab(t => t === id ? null : id)}
-              style={{
-                background: briefingTab === id ? C.accent : C.box,
-                border: `1px solid ${briefingTab === id ? C.accent : C.stroke}`,
-                color: briefingTab === id ? '#ffffff' : C.accent,
-                padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
-                fontFamily: 'sans-serif', fontWeight: 600,
-                transition: 'all 0.15s',
-                minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* RIGHT — fault sims (top: main hyd leak; bottom: two ehyd leaks) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, maxWidth: 'calc(50% - 4px)', minWidth: 0 }}>
-          {[
-            { active: hydFlo,        set: setHydFlo,        label: 'Main Hyd Leak',   bg: C.simCautBg, border: C.simCautBorder, tc: C.simCautText, col: 2 },
-            { active: ehydPx,        set: setEhydPx,        label: 'Small EHyd Leak', bg: C.emerg,     border: C.simCautBorder, tc: C.simCautText },
-            { active: largeEhydSim,  set: setLargeEhydSim,  label: 'Large EHyd Leak', bg: C.simWarnBg, border: C.simWarnBorder, tc: C.simWarnText },
-          ].map(({ active, set, label, bg, border, tc, col }) => (
-            <button key={label} onClick={() => set(v => !v)} style={{
-              gridColumn: col,
-              background: active ? bg : C.box,
-              border: `1px solid ${active ? border : C.stroke}`,
-              color: active ? tc : C.muted,
-              padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
-              fontFamily: 'sans-serif', fontWeight: 600,
-              minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
-              {`Sim ${label}`}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Attribution ── */}
-      <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 9, letterSpacing: '0.12em', color: C.muted }}>
-        IMAGES &amp; COMPONENT DESCRIPTIONS SOURCED FROM{' '}
-        <span style={{ color: C.text, fontWeight: 700, letterSpacing: '0.14em' }}>T6BDRIVER.COM</span>
-      </div>
-
+    <DiagramShell
+      keyframes={KEYFRAMES}
+      briefing={{ verbatim: HYD_VERBATIM, numbers: HYD_NUMBERS, eicas: HYD_EICAS, eps: HYD_EPS }}
+      // The main-leak warning takes the top row on its own, pinned right; the two
+      // emergency-system leaks fill the row beneath it.
+      sims={[
+        { active: hydFlo,       onClick: () => setHydFlo(v => !v),       label: 'Main Hyd Leak',   kind: 'caution', col: 2, row: 1 },
+        // The small EHyd leak reads in the emergency system's own line color rather than
+        // the shared caution amber, so the button matches the line it affects.
+        { active: ehydPx,       onClick: () => setEhydPx(v => !v),       label: 'Small EHyd Leak', kind: 'caution', col: 1, row: 2, bg: C.emerg },
+        { active: largeEhydSim, onClick: () => setLargeEhydSim(v => !v), label: 'Large EHyd Leak', kind: 'warn',    col: 2, row: 2 },
+      ]}
+    >
       {/* ── Legend ── */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 8, fontSize: 9, color: C.muted, letterSpacing: '0.06em' }}>
         {[
@@ -688,16 +632,7 @@ export default function T6BHydraulicDiagram() {
         <span style={{ marginLeft: 'auto', color: C.muted }}>CLICK COMPONENTS FOR DETAILS</span>
       </div>
 
-      {/* ── SVG Schematic (wrapped in position:relative for modal) ── */}
-      <div style={{ position: 'relative' }}>
-
-        {/* ── Briefing Modal overlay ── */}
-        {briefingTab && (
-          <BriefingModal tab={briefingTab} onClose={() => setBriefingTab(null)}
-            verbatim={HYD_VERBATIM} numbers={HYD_NUMBERS} eicas={HYD_EICAS} eps={HYD_EPS} />
-        )}
-
-        {/* ── Component Info Modal overlay ── */}
+      {/* ── Component Info Modal overlay ── */}
         {sel && HYD_INFO[sel] && (
           <InfoModal
             title={HYD_INFO[sel].title}
@@ -1367,9 +1302,6 @@ export default function T6BHydraulicDiagram() {
         <text x="595" y="645" style={{ ...T.t, fill:'#7a5520', letterSpacing:'0.06em', fontSize:7.5 }}>EMER SELECTOR MANIFOLD</text>
 
       </svg>
-      </div>
-
-    </div>
-    </div>
+    </DiagramShell>
   );
 }

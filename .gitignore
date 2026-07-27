@@ -11,6 +11,11 @@
 # production
 /build
 
+# Original PNGs, archived by tools/convert-images.py after re-encoding to WebP.
+# Kept on disk (and in OneDrive) so they can be re-encoded at other settings, but out of
+# git and out of the Netlify deploy — anything left under public/ ships with every build.
+/_original-images
+
 # misc
 .DS_Store
 .env.local

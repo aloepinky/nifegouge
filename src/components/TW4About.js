@@ -6,13 +6,10 @@ function TW4About() {
   // Preload images for EPs page to reduce load times
   useEffect(() => {
     const imagesToPreload = [
-      '/images/croptop.png',
-      '/images/left.png',
-      '/images/right.png',
-      '/images/stick.png',
-      '/images/ldggrhandle.png',
-      '/images/defog.png',
-      '/images/parking.png'
+      '/images/croptop.webp',
+      '/images/left.webp',
+      '/images/right.webp',
+      '/images/stick.webp'
     ];
 
     imagesToPreload.forEach((src) => {

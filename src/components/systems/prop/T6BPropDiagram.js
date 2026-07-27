@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { PROP_INFO, PROP_VERBATIM, PROP_NUMBERS, PROP_EICAS, PROP_EPS } from './PropModalData';
-import { InfoModal } from '../hyds/HydraulicModalData';
-import BriefingModal from '../BriefingModal';
+import { InfoModal } from '../InfoModal';
+import DiagramShell from '../DiagramShell';
 import { THEME, DIAGRAM_FONT, WIRE_KEYFRAMES } from '../diagramTheme';
 
 const FONT = DIAGRAM_FONT;
@@ -159,7 +159,6 @@ export default function T6BPropDiagram() {
       el.removeEventListener('touchmove', prevent);
     };
   }, []);
-  const [briefingTab, setBriefingTab] = useState(null);
   const [infoKey, setInfoKey] = useState(null);
 
   const torque   = pcl <= 0 ? 0 : Math.round(pcl * 100);
@@ -215,7 +214,6 @@ export default function T6BPropDiagram() {
       if (pmuOff & oilRef.current<0.3125 & !effectiveFault) oilRate = 0.00025;
       const step = Math.sign(diff) * oilRate;
       oilRef.current += Math.abs(step) > Math.abs(diff) ? diff : step;
-      console.log('oil:', oilRef.current.toFixed(4));
       setOilState(oilRef.current);
       oilAnimRef.current = requestAnimationFrame(animate);
     }
@@ -451,80 +449,23 @@ export default function T6BPropDiagram() {
   // Shorthand for toFixed(1) used on SVG coordinates
   const fp = n => n.toFixed(1);
 
-  // ── Tab button config ────────────────────────────────────────────────
-  const TABS = [
-    { id: 'verbatim', label: 'NATOPS Intro' },
-    { id: 'numbers',  label: 'Numbers'  },
-    { id: 'eicas',    label: 'EICAS'    },
-    { id: 'eps',      label: 'EPs'      },
-  ];
-
   return (
-    <div style={{ background: C.bg, width: '100%', minHeight: '100vh' }}>
-    <div style={{
-      background: C.bg, padding: '12px 10px', borderRadius: 8,
-      maxWidth: 860, margin: '0 auto', fontFamily: FONT, color: C.text,
-    }}>
-
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-
-        {/* LEFT — briefing tabs (2×2 grid) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, maxWidth: 'calc(50% - 4px)', minWidth: 0 }}>
-          {TABS.map(({ id, label }) => (
-            <button
-              key={id}
-              onClick={() => setBriefingTab(t => t === id ? null : id)}
-              style={{
-                background: briefingTab === id ? C.accent : C.box,
-                border: `1px solid ${briefingTab === id ? C.accent : C.stroke}`,
-                color: briefingTab === id ? '#ffffff' : C.accent,
-                padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
-                fontFamily: 'sans-serif', fontWeight: 600,
-                transition: 'all 0.15s',
-                minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* RIGHT — sim fault buttons */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 6, maxWidth: 'calc(50% - 4px)', minWidth: 0 }}>
-          <button onClick={() => setUncommandedFeather(v => !v)} style={{
-            background: uncommandedFeather ? C.simWarnBg : C.box,
-            border: `1px solid ${uncommandedFeather ? C.simWarnBorder : C.stroke}`,
-            color: uncommandedFeather ? C.simWarnText : C.muted,
-            padding: '7px 10px', fontSize: 12, borderRadius: 6, cursor: 'pointer',
-            fontFamily: 'sans-serif', fontWeight: 600,
-            minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            Sim Uncommanded Prop Feather
-          </button>
-        </div>
-
-      </div>
-      
-
-      {/* ── Attribution ── */}
-      <div style={{ textAlign: 'center', margin: '6px 0', fontSize: 9, letterSpacing: '0.12em', color: C.muted }}>
-        IMAGES &amp; COMPONENT DESCRIPTIONS SOURCED FROM{' '}
-        <span style={{ color: C.text, fontWeight: 700, letterSpacing: '0.14em' }}>T6BDRIVER.COM</span>
-      </div>
-
-      {/* Briefing modal overlay */}
-      {briefingTab && (
-        <BriefingModal tab={briefingTab} onClose={() => setBriefingTab(null)}
-          verbatim={PROP_VERBATIM} numbers={PROP_NUMBERS} eicas={PROP_EICAS} eps={PROP_EPS}
-          conditionalSteps valueMinWidth={120} />
-      )}
+    <DiagramShell
+      keyframes={WIRE_KEYFRAMES}
+      briefing={{
+        verbatim: PROP_VERBATIM, numbers: PROP_NUMBERS, eicas: PROP_EICAS, eps: PROP_EPS,
+        conditionalSteps: true, valueMinWidth: 120,
+      }}
+      sims={[
+        { active: uncommandedFeather, onClick: () => setUncommandedFeather(v => !v),
+          label: 'Uncommanded Prop Feather', kind: 'warn' },
+      ]}
+    >
       {infoKey && PROP_INFO[infoKey] && (
         <InfoModal {...PROP_INFO[infoKey]} onClose={() => setInfoKey(null)} theme={C} />
       )}
 
       <svg ref={svgRef} viewBox="0 0 820 470" width="100%" style={{ display: 'block', overflow: 'visible' }}>
-        <style>{WIRE_KEYFRAMES}</style>
         <defs>
 
           <linearGradient id="pp-hub" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -1390,8 +1331,6 @@ export default function T6BPropDiagram() {
           />
         </g>{/* end rotating assembly */}
       </svg>
-
-    </div>
-    </div>
+    </DiagramShell>
   );
 }

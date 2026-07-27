@@ -855,7 +855,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
               <div style={{display: 'flex', flexDirection: 'column', gap: '0px', width: SIDE_CONTROLS_WIDTH, flexShrink: 1, minWidth: '80px'}}>
                 {/* Left Panel Image with clickable overlay */}
                 <div style={{position: 'relative', width: '100%'}}>
-                  <img src="/images/left.png" alt="Left Control" style={{width: '100%', height: 'auto', display: 'block'}} />
+                  <img src="/images/left.webp" alt="Left Control" style={{width: '100%', height: 'auto', display: 'block'}} />
                   <div
                     onClick={() => tryNextStep(clickableControls['trimIndi'])}
                     className = {getClickClass('trimIndi')} style={{top: '0.7%', left: '26%', width: '53%', height: '3.8%'}}
@@ -997,7 +997,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                 {cockpitMode === 'full' && (
                 <>
                 <div style={{position: 'relative', width: '100%'}}>
-                  <img src="/images/croptop.png" alt="Top Control" style={{width: '100%', height: 'auto', display: 'block', minWidth: 0}} />
+                  <img src="/images/croptop.webp" alt="Top Control" style={{width: '100%', height: 'auto', display: 'block', minWidth: 0}} />
                   <div
                     onClick={() => tryNextStep(clickableControls['masterArm'])}
                     className={getClickClass('masterArm')} style={{top: '45.7%', left: '11.8%', width: '2.4%', height: '2.6%'}}
@@ -1373,7 +1373,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                       title="Control Stick"
                       style={{cursor: 'pointer', display: 'inline-block', lineHeight: 0}}
                     >
-                      <img src="/images/stick.png" alt="Control Stick"
+                      <img src="/images/stick.webp" alt="Control Stick"
                         style={{width: '100%', height: 'auto', display: 'block', minWidth: 0}}
                       />
                     </div>
@@ -1670,7 +1670,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
 
                 {/* Right Panel Image with clickable overlay */}
                 <div style={{position: 'relative', width: '100%'}}>
-                  <img src="/images/right.png" alt="Right Control" style={{width: '100%', height: 'auto', display: 'block'}} />
+                  <img src="/images/right.webp" alt="Right Control" style={{width: '100%', height: 'auto', display: 'block'}} />
                   <div
                     onClick={() => tryNextStep(clickableControls['bat'])}
                     className={getClickClass('bat')} style={{top: '1.5%', left: '20.3%', width: '10%', height: '2%'}}
