@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { PROP_INFO, PROP_VERBATIM, PROP_NUMBERS, PROP_EICAS, PROP_EPS } from './PropModalData';
 import { InfoModal } from '../InfoModal';
+import { HotRing } from '../Hot';
 import DiagramShell from '../DiagramShell';
 import { THEME, DIAGRAM_FONT, WIRE_KEYFRAMES } from '../diagramTheme';
 
@@ -160,6 +161,9 @@ export default function T6BPropDiagram() {
     };
   }, []);
   const [infoKey, setInfoKey] = useState(null);
+  // Stable, so the memoized InfoModal can bail out — it re-binds its keydown
+  // listener whenever onClose changes identity.
+  const closeInfo = useCallback(() => setInfoKey(null), []);
 
   const torque   = pcl <= 0 ? 0 : Math.round(pcl * 100);
   const elecLive = pcl < 0;                        // PCL in OFF — feeds upper junction
@@ -462,7 +466,7 @@ export default function T6BPropDiagram() {
       ]}
     >
       {infoKey && PROP_INFO[infoKey] && (
-        <InfoModal {...PROP_INFO[infoKey]} onClose={() => setInfoKey(null)} theme={C} />
+        <InfoModal {...PROP_INFO[infoKey]} onClose={closeInfo} theme={C} />
       )}
 
       <svg ref={svgRef} viewBox="0 0 820 470" width="100%" style={{ display: 'block', overflow: 'visible' }}>
@@ -532,13 +536,14 @@ export default function T6BPropDiagram() {
             PIU  (Propeller Interface Unit — oil source)
             Right edge abuts main tube left edge (extTubeLeft=230)
         ════════════════════════════════════════════ */}
-        <g onClick={() => setInfoKey('piu')} style={{ cursor: 'pointer' }}>
+        <g className="dgm-hot" onClick={() => setInfoKey('piu')}>
           <rect x={174} y={HY - 13} width={56} height={26} rx={3}
             fill={C.box} stroke={C.oilMid} strokeWidth={1.2} />
           <text x={202} y={HY+2}
             style={{ fontFamily: FONT, fontSize: 8, fontWeight: 700, fill: C.oilMid, textAnchor: 'middle', letterSpacing: '0.10em' }}>
             PIU
           </text>
+          <HotRing x={174} y={HY - 13} w={56} h={26} r={5} out={2} />
         </g>
 
         {/* ════════════════════════════════════════════
@@ -623,7 +628,7 @@ export default function T6BPropDiagram() {
             Prop Servo Valve at x=242 (shallower), Feather Dump Sol. at x=262 (deeper)
         ════════════════════════════════════════════ */}
         {/* ── Prop Servo Valve ── */}
-        <g onClick={() => setInfoKey('propservo')} style={{ cursor: 'pointer' }}>
+        <g className="dgm-hot" onClick={() => setInfoKey('propservo')}>
           <rect x={234} y={348} width={16} height={16} rx={2}
             fill={C.box} stroke={C.oilMid} strokeWidth={1.5} />
           {!psvLive && <>
@@ -640,10 +645,11 @@ export default function T6BPropDiagram() {
             style={{ fontFamily: FONT, fontSize: 6, fill: C.muted, textAnchor: 'end', letterSpacing: '0.03em' }}>
             VALVE
           </text>
+          <HotRing x={234} y={348} w={16} h={16} r={4} out={2} />
         </g>
 
         {/* ── Feather Dump Solenoid Valve ── */}
-        <g onClick={() => setInfoKey('featherdump')} style={{ cursor: 'pointer' }}>
+        <g className="dgm-hot" onClick={() => setInfoKey('featherdump')}>
           <rect x={254} y={382} width={16} height={16} rx={2}
             fill={C.box} stroke={C.oilMid} strokeWidth={1.5} />
           {!fdsLive && <>
@@ -664,6 +670,7 @@ export default function T6BPropDiagram() {
             style={{ fontFamily: FONT, fontSize: 6, fill: C.muted, textAnchor: 'start', letterSpacing: '0.03em' }}>
             VALVE
           </text>
+          <HotRing x={254} y={382} w={16} h={16} r={4} out={2} />
         </g>
 
         {/* ════════════════════════════════════════════
@@ -991,7 +998,7 @@ export default function T6BPropDiagram() {
           { label: 'GROUND', active: !flightMode, x: pclCX - 39 },
           { label: 'FLIGHT', active: flightMode,  x: pclCX + 1  },
         ].map(({ label, active, x }) => (
-          <g key={label} style={{ cursor: 'pointer' }} onClick={() => setFlightMode(label === 'FLIGHT')}>
+          <g key={label} className="dgm-hot" onClick={() => setFlightMode(label === 'FLIGHT')}>
             <rect x={x} y={pclTrackTop - 56} width={38} height={16} rx={3}
               fill={active ? C.accent : C.box}
               stroke={active ? C.accent : C.stroke} strokeWidth={0.8} />
@@ -1048,7 +1055,7 @@ export default function T6BPropDiagram() {
         {(() => {
           const bx = pclCX - 14, by = pclOffY + 38, bw = 28, bh = 22;
           return (
-            <g onClick={() => setPmuOff(v => !v)} style={{ cursor: 'pointer' }}>
+            <g className="dgm-hot" onClick={() => setPmuOff(v => !v)}>
               <rect x={bx} y={by} width={bw} height={bh} rx={3}
                 fill={pmuOff ? C.warningBg : C.box}
                 stroke={pmuOff ? C.warningBorder : C.advisoryBorder} strokeWidth={1.2} />

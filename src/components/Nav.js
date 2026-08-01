@@ -12,7 +12,9 @@ function Nav() {
 
   return (
     <>
-      <div className="sub-navbar">
+      {/* Four tabs: without this they shrink and their labels wrap to two lines on a
+          narrow phone. Scrolling keeps them on one row. */}
+      <div className="sub-navbar sub-navbar--scrollable">
         <span
           className={activeTab === 'nav' ? 'active' : ''}
           onClick={() => navigate('/nife/nav/nav')}

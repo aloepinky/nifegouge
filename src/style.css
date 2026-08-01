@@ -2813,33 +2813,48 @@ textarea.incorrect-answer {
   display: flex;
   gap: 20px;
   align-items: center;
+}
+
+/* ── Horizontally scrolling nav rows ─────────────────────────────────────────
+   The top nav and any sub-navbar with more tabs than fit on one line. The two
+   differ only in scrollbar color, so those come in as custom properties and the
+   rest of the treatment is written once. */
+.nav-links,
+.sub-navbar--scrollable {
+  --scroll-track:       #01202C;
+  --scroll-thumb:       #003B4F;
+  --scroll-thumb-hover: #005070;
   overflow-x: auto;
   flex-wrap: nowrap;
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #003B4F #01202C; /* Firefox */
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track); /* Firefox */
 }
 
-/* Webkit scrollbar styling */
-.nav-links::-webkit-scrollbar {
+.nav-links::-webkit-scrollbar,
+.sub-navbar--scrollable::-webkit-scrollbar {
   height: 6px;
 }
 
-.nav-links::-webkit-scrollbar-track {
-  background: #01202C;
+.nav-links::-webkit-scrollbar-track,
+.sub-navbar--scrollable::-webkit-scrollbar-track {
+  background: var(--scroll-track);
 }
 
-.nav-links::-webkit-scrollbar-thumb {
-  background: #003B4F;
+.nav-links::-webkit-scrollbar-thumb,
+.sub-navbar--scrollable::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
   border-radius: 3px;
 }
 
-.nav-links::-webkit-scrollbar-thumb:hover {
-  background: #005070;
+.nav-links::-webkit-scrollbar-thumb:hover,
+.sub-navbar--scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
 }
 
-/* Prevent text wrapping in navigation links */
-.nav-links a {
+/* Keep each row's items on one line so the row scrolls instead of wrapping */
+.nav-links a,
+.sub-navbar--scrollable span {
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -3595,6 +3610,17 @@ textarea.incorrect-answer {
 /* Wrappable sub-navbar: tabs stay on row 1, controls push right and wrap to row 2 on narrow screens */
 .sub-navbar--wrappable {
   flex-wrap: wrap;
+}
+
+/* Scrollable sub-navbar: tabs stay on one row and scroll sideways. The scrolling
+   itself is shared with .nav-links above; only the scrollbar colors differ — inverted,
+   to read against the lighter sub-navbar.
+   Inherits justify-content: space-between from .sub-navbar — tabs spread when they fit,
+   and pack left automatically once they overflow and there is no free space to distribute. */
+.sub-navbar--scrollable {
+  --scroll-track:       #003B4F;
+  --scroll-thumb:       #01202C;
+  --scroll-thumb-hover: #002733;
 }
 
 .sub-navbar-tabs {

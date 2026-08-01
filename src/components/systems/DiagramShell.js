@@ -1,10 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  Shared page chrome for the T-6B systems diagrams (hyds / elec / prop / fuel).
+//  Shared page chrome for the T-6B systems diagrams (hyds / elec / prop / oil / fuel /
+//  obogs).
 //
-//  Everything outside the SVG: the full-height background, the centered card, the
+//  Everything outside the SVG: the background, the centered card, the
 //  briefing-tab grid, the sim-fault button grid, the attribution line, and the
 //  BriefingModal overlay. Each diagram was built by copying the previous one, so this
-//  block existed in four near-identical copies that had drifted apart — prop's card was
+//  block existed in several near-identical copies that had drifted apart — prop's card was
 //  40px narrower, fuel had lost the attribution line entirely.
 //
 //  `briefingTab` lives here because it is purely chrome state. `infoKey` stays with each
@@ -13,6 +14,8 @@
 import { useState, useCallback } from 'react';
 import { THEME, DIAGRAM_FONT } from './diagramTheme';
 import BriefingModal from './BriefingModal';
+import { HOT_STYLES } from './Hot';
+import { SIGNAL_KEYFRAMES } from './Notation';
 
 const C = THEME;
 const FONT = DIAGRAM_FONT;
@@ -47,11 +50,12 @@ const gridStyle = { display: 'grid', maxWidth: 'calc(50% - 4px)', minWidth: 0 };
  *            grid — hyds and fuel both have three sims, so one row is short and the odd
  *            button gets pinned right. `bg` overrides just the lit background, for a fault
  *            whose own line color says more than the severity amber does.
- * keyframes — CSS string of the diagram's animations, injected once at card level.
+ * keyframes — CSS string of the diagram's own fluid-line animations, injected once at
+ *             card level. The hover ring and the signal-run chase come from the shell.
  * children  — the schematic, plus anything diagram-specific above it (hyds's legend row).
  *             May be a function receiving `{ openBriefing }` for schematics that link into
- *             a briefing tab from inside the SVG — fuel's EICAS annunciators open the EICAS
- *             tab when clicked. A plain-JSX child cannot do this: the diagram renders the
+ *             a briefing tab from inside the SVG — fuel's and obogs's EICAS annunciators
+ *             open the EICAS tab when clicked. A plain-JSX child cannot do this: the diagram renders the
  *             shell, so it is the parent and cannot read a context the shell provides.
  */
 export default function DiagramShell({ briefing, sims = [], keyframes, children }) {
@@ -64,12 +68,18 @@ export default function DiagramShell({ briefing, sims = [], keyframes, children 
     : children;
 
   return (
-    <div style={{ background: C.bg, width: '100%', minHeight: '100vh' }}>
+    // No minHeight: the background hugs the card. A 100vh floor left a band of empty
+    // page under the shorter diagrams (obogs) before the site footer.
+    <div style={{ background: C.bg, width: '100%', paddingBottom: 8 }}>
       <div style={{
         background: C.bg, borderRadius: 8, padding: 12,
         fontFamily: FONT, color: C.text,
         minWidth: 340, maxWidth: 900, margin: '0 auto',
       }}>
+        {/* Shared rules first, then the diagram's own animations. Injecting these here
+            means a schematic gets the hover cue by using <Hot> and the signal-run chase
+            by using <El>, with nothing to remember. */}
+        <style>{HOT_STYLES}{SIGNAL_KEYFRAMES}</style>
         {keyframes && <style>{keyframes}</style>}
 
         {/* ── Header ── */}

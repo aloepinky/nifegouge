@@ -26,6 +26,12 @@ export const THEME = {
   cautionText, cautionBg, cautionBorder,
   advisoryText, advisoryBg, advisoryBorder,
 
+  // Opaque fills for a symbol that has tripped. The *Bg values above are translucent
+  // overlays for modal panels; a schematic symbol sits on top of pipes and needs to
+  // cover them, so these are the solid equivalents.
+  warningTint: '#f6d3d3',
+  cautionTint: '#f6ecd0',
+
   // EICAS message severities (aliases of the status colors above)
   eicasWarning: warningText,   eicasWarningBg: warningBg,   eicasWarningBorder: warningBorder,
   eicasCaution: cautionText,   eicasCautionBg: cautionBg,   eicasCautionBorder: cautionBorder,
@@ -61,6 +67,12 @@ export const THEME = {
   gaugeText:      '#c8d8e8',
   gaugeTick:      '#6a8a9a',
   panelFace:      '#080f18',
+
+  // Energized signal run (fuel / oil / obogs, via Notation.js `El`). Deliberately a
+  // neon yellow rather than wireLive's gold: on those pages the runs are background
+  // detail, not the subject the way they are on the electrical diagram, so they want
+  // to read as a flicker of current rather than as another weighted line.
+  signalLive: '#ffe500',
 
   // Electrical wiring (shared by elec + prop): saturated colored conductor
   // with white animated dashes riding on it — same idiom as the hyds pipes.

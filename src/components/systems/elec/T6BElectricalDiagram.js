@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useContext, createContext } from 'react';
+import { useState, useEffect, useRef, useCallback, useContext, createContext } from 'react';
 import { createPortal } from 'react-dom';
 import { ELEC_VERBATIM, ELEC_NUMBERS, ELEC_EICAS, ELEC_EPS, ELEC_INFO } from './ElectricalModalData';
 import { InfoModal } from '../InfoModal';
+import { HotRing } from '../Hot';
 import DiagramShell from '../DiagramShell';
 import { THEME, DIAGRAM_FONT, WIRE_KEYFRAMES } from '../diagramTheme';
 
@@ -34,12 +35,13 @@ function Box({ x, y, w, h, rx = 3, id, sel, onSel, hi, children }) {
   const active = id && sel === id;
   const color  = hi ?? C.bat;
   return (
-    <g style={{ cursor: id ? 'pointer' : 'default' }} onClick={id ? () => onSel(id) : undefined}>
+    <g className={id ? 'dgm-hot' : undefined} onClick={id ? () => onSel(id) : undefined}>
       <rect x={x} y={y} width={w} height={h} rx={rx}
         fill={active ? `${color}22` : C.box}
         stroke={active ? color : C.stroke}
         strokeWidth={active ? 0.9 : 0.5} />
       {children}
+      {id && <HotRing x={x} y={y} w={w} h={h} r={rx + 2} out={2} />}
     </g>
   );
 }
@@ -48,7 +50,7 @@ function Box({ x, y, w, h, rx = 3, id, sel, onSel, hi, children }) {
 function Bus({ x, y, w, label, color, id, sel, onSel }) {
   const active = id && sel === id;
   return (
-    <g style={{ cursor: id ? 'pointer' : 'default' }} onClick={id ? () => onSel(id) : undefined}>
+    <g className={id ? 'dgm-hot' : undefined} onClick={id ? () => onSel(id) : undefined}>
       <rect x={x} y={y} width={w} height={10} rx={2} fill={color} opacity={active ? 1 : 0.88} />
       {active && <rect x={x-1} y={y-1} width={w+2} height={12} rx={2} fill="none" stroke={color} strokeWidth={1} opacity={0.7} />}
       <text x={x + w / 2} y={y + 5}
@@ -56,6 +58,7 @@ function Bus({ x, y, w, label, color, id, sel, onSel }) {
           textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.04em' }}>
         {label}
       </text>
+      {id && <HotRing x={x} y={y} w={w} h={10} r={3} out={1.5} />}
     </g>
   );
 }
@@ -67,7 +70,7 @@ function Sw({ x, y, isOn = false, onToggle, isLive = false}) {
   const lc    = x + 4;
   const rc    = x + 24;
   return (
-    <g style={{ cursor: 'pointer' }} onClick={onToggle}>
+    <g className={onToggle ? 'dgm-hot' : undefined} onClick={onToggle}>
       <circle cx={lc} cy={mid} r={1.8} fill={color} />
       <circle cx={rc} cy={mid} r={1.8} fill={color} />
       {isOn
@@ -89,7 +92,9 @@ function Rly({ x, y, label, isOn = false, live, onToggle }) {
   const bx    = x, bw = 16, bh = 12; // relay box
 
   return (
-    <g style={{ cursor: 'pointer' }} onClick={onToggle}>
+    // Only the relays wired to a handler are clickable — several are drawn purely as
+    // schematic state, and a pointer cursor on those promised detail that never opened.
+    <g className={onToggle ? 'dgm-hot' : undefined} onClick={onToggle}>
       {/* Background cover — masks any wire passing behind the relay */}
       <rect x={bx - 1} y={mid - bh/2 - 1} width={bw + 2} height={bh + 2} rx={1} fill={C.bg} />
       {/* Relay box */}
@@ -114,6 +119,7 @@ function Rly({ x, y, label, isOn = false, live, onToggle }) {
           ? label.map((line, i) => <tspan key={i} x={x+bw/2} dy={i === 0 ? -(label.length - 1) * 7 : 7}>{line}</tspan>)
           : label}
       </text>
+      {onToggle && <HotRing x={bx} y={mid - bh/2} w={bw} h={bh} r={2} out={2} />}
     </g>
   );
 }
@@ -243,7 +249,9 @@ function CB({ x, y, isOpen = false, live = false, dim = false, onToggle, label, 
   const tBar  = 6;
   const cr = 2;
   return (
-    <g style={{ cursor: onToggle ? 'pointer' : 'default' }} onClick={onToggle}>
+    // Same gate as Sw and Rly: a breaker is only a click target when it has a handler
+    // (the legend copy and the fixed breakers do not).
+    <g className={onToggle ? 'dgm-hot' : undefined} onClick={onToggle}>
       {/* Arc + T — translate upward when open */}
       <g style={{ transform: `translateY(${-lift}px)`, transition: 'transform 0.18s ease' }}>
         {arcLive && <path d={arc} fill="none" stroke={liveColor} strokeWidth={dim ? 2.5 : 3.5} />}
@@ -304,7 +312,7 @@ function CBList({ x, y, items, cols = 2, colW = 148, rowH = 9, color, extraH = 0
   const totalW = cols * colW;
   const active = id && sel === id;
   return (
-    <g style={{ cursor: id ? 'pointer' : 'default' }} onClick={id ? () => onSel(id) : undefined}>
+    <g className={id ? 'dgm-hot' : undefined} onClick={id ? () => onSel(id) : undefined}>
       {color && (
         <rect x={x - 3} y={y - 2} width={totalW + 6} height={totalH + 4 + extraH} rx={2}
           fill={live ? `${color}33` : `${color}0d`} stroke={active ? color : color} strokeWidth={active ? 1 : 0.5} opacity={active ? 1 : 0.7} />
@@ -320,6 +328,7 @@ function CBList({ x, y, items, cols = 2, colW = 148, rowH = 9, color, extraH = 0
           </text>
         );
       })}
+      {id && <HotRing x={x - 3} y={y - 2} w={totalW + 6} h={totalH + 4 + extraH} r={4} out={2} />}
     </g>
   );
 }
@@ -330,6 +339,10 @@ export default function T6BElectricalDiagram() {
   const pick = (id) => setSel(s => s === id ? null : id);
   const [hopLayer, setHopLayer] = useState(null);
   const [extPwrInfo, setExtPwrInfo] = useState(false);
+  // Stable, so the memoized InfoModal can bail out — it re-binds its keydown
+  // listener whenever onClose changes identity.
+  const closeInfo    = useCallback(() => setSel(null), []);
+  const closeExtPwr  = useCallback(() => setExtPwrInfo(false), []);
   const [extPwrConn, setExtPwrConn] = useState(false);
   const [simGenBusInop,  setSimGenBusInop]  = useState(false);
   const [simBatBusInop,  setSimBatBusInop]  = useState(false);
@@ -506,7 +519,7 @@ export default function T6BElectricalDiagram() {
             title={ELEC_INFO['extpwr'].title}
             items={ELEC_INFO['extpwr'].items}
             photos={ELEC_INFO['extpwr'].photos ?? []}
-            onClose={() => setExtPwrInfo(false)}
+            onClose={closeExtPwr}
             theme={C}
           />
         )}
@@ -515,7 +528,7 @@ export default function T6BElectricalDiagram() {
             title={ELEC_INFO[sel].title}
             items={ELEC_INFO[sel].items}
             photos={ELEC_INFO[sel].photos ?? []}
-            onClose={() => setSel(null)}
+            onClose={closeInfo}
             theme={C}
           />
         )}
@@ -532,7 +545,7 @@ export default function T6BElectricalDiagram() {
             const color = active ? C.wire : C.muted;
             const bx = 5, by = 13, bw = 38, bh = 18;
             return (
-              <g style={{ cursor: 'pointer' }} onClick={() => setExtPwrConn(v => !v)}>
+              <g className="dgm-hot" onClick={() => setExtPwrConn(v => !v)}>
                 <rect x={bx} y={by} width={bw} height={bh} rx={2}
                   fill={active ? `${C.wire}22` : 'transparent'}
                   stroke={active ? C.wire : C.stroke} strokeWidth={0.6} />
@@ -558,7 +571,7 @@ export default function T6BElectricalDiagram() {
             const [cx1, cx2, cx3] = [px + 8, px + 20, px + 32];
             const active = extPwrConn;
             return (
-              <g style={{ cursor: 'pointer' }} onClick={() => setExtPwrInfo(true)}>
+              <g className="dgm-hot" onClick={() => setExtPwrInfo(true)}>
                 {/* Pill body */}
                 <rect x={px} y={py} width={pw} height={ph} rx={pr}
                   fill={active ? `${C.wire}18` : C.box}
@@ -590,6 +603,7 @@ export default function T6BElectricalDiagram() {
                     textAnchor: 'middle', dominantBaseline: 'central', letterSpacing: '0.08em' }}>
                   EXT PWR
                 </text>
+                <HotRing x={px} y={py} w={pw} h={ph} r={pr + 2} out={2} />
               </g>
             );
           })()}
@@ -635,7 +649,7 @@ export default function T6BElectricalDiagram() {
           {/* Starter / Generator */}
           <Wire d={`M 660 ${LY-77} L 660 ${LY-61}`} />
           <Ground x={660} y={LY-61} />
-          <g style={{ cursor: 'pointer' }} onClick={() => pick('strgen')}>
+          <g className="dgm-hot" onClick={() => pick('strgen')}>
             <circle cx={660} cy={LY-102} r={25}
               fill={sel === 'strgen' ? `${C.gen}22` : C.box}
               stroke={sel === 'strgen' ? C.gen : C.stroke}
@@ -657,6 +671,7 @@ export default function T6BElectricalDiagram() {
             <text x={673} y={LY-132} style={T.h}>STR</text>
             <text x={625} y={LY-95} style={T.h}>GEN</text>
             <text x={660} y={LY-23} style={{ ...T.s, fill: C.gen }}>(300A)</text>
+            <HotRing cx={660} cy={LY-102} rc={25} out={2} />
           </g>
           {/* Quick Start / Quick Shutdown button */}
           {(() => {
@@ -664,7 +679,7 @@ export default function T6BElectricalDiagram() {
             const color = isRunning ? C.gen : C.bat;
             const bx = 693, by = LY - 113, bw = 40, bh = 20;
             return (
-              <g style={{ cursor: 'pointer' }} onClick={() => setN1(isRunning ? 0 : 60)}>
+              <g className="dgm-hot" onClick={() => setN1(isRunning ? 0 : 60)}>
                 <rect x={bx} y={by} width={bw} height={bh} rx={2}
                   fill={`${color}22`} stroke={color} strokeWidth={0.6} />
                 <text x={bx + bw / 2} y={by + 6}
@@ -874,7 +889,7 @@ export default function T6BElectricalDiagram() {
             const cBtn = (cx, cy, label, isOn, key, labelAbove = false, states = ['OFF', 'ON'], onToggle = () => tog(key)) => {
               const s = isOn ? SLV_ON : SLV_OFF;
               return (
-                <g key={key} style={{ cursor: 'pointer' }} onClick={onToggle}>
+                <g key={key} className="dgm-hot" onClick={onToggle}>
                   {labelAbove && (
                     <text x={cx} y={cy - r - 5}
                       style={{ fontFamily: FONT, fontSize: 5.5, fill: C.muted,
@@ -905,7 +920,7 @@ export default function T6BElectricalDiagram() {
               const active = val !== 0;
               const s = active ? SLV_ON : SLV_OFF;
               return (
-                <g key={key} style={{ cursor: 'pointer' }} onClick={onToggle}>
+                <g key={key} className="dgm-hot" onClick={onToggle}>
                   {labelAbove && (
                     <text x={cx} y={cy - r - 5}
                       style={{ fontFamily: FONT, fontSize: 5.5, fill: C.muted,
@@ -935,7 +950,7 @@ export default function T6BElectricalDiagram() {
             const sBtn = (x, y, w, h, label, isOn, key) => {
               const s = isOn ? SLV_ON : SLV_OFF;
               return (
-                <g key={key} style={{ cursor: 'pointer' }} onClick={() => tog(key)}>
+                <g key={key} className="dgm-hot" onClick={() => tog(key)}>
                   {label.split(' ').map((word, i, arr) => (
                     <text key={i} x={x + w / 2} y={y - 5 - (arr.length - 1 - i) * 7}
                       style={{ fontFamily: FONT, fontSize: 5.5, fill: C.muted,
@@ -1213,9 +1228,11 @@ export default function T6BElectricalDiagram() {
           <Shunt cx={346} cy={LY-102} />
 
           {/* ── MFD screenshot ── */}
-          <image href="/systems/elec/MFDs.webp" x={250} y={550} width={310} height={89}
-            preserveAspectRatio="xMidYMid meet"
-            style={{ cursor: 'pointer' }} onClick={() => pick('MFD')} />
+          <g className="dgm-hot" onClick={() => pick('MFD')}>
+            <image href="/systems/elec/MFDs.webp" x={250} y={550} width={310} height={89}
+              preserveAspectRatio="xMidYMid meet" />
+            <HotRing x={250} y={550} w={310} h={89} r={2} />
+          </g>
           {!fwdAviGenLive && <rect x={307}       y={560} width={53} height={70} fill="black" />}
           {!fwdAviBatLive && <rect x={307 + 72} y={560} width={53} height={70} fill="black" />}
           {!fwdBatBusLive && <rect x={307 + 143} y={560} width={53} height={70} fill="black" />}

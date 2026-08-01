@@ -1,24 +1,19 @@
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { THEME, DIAGRAM_FONT } from '../diagramTheme';
 import { FUEL_VERBATIM, FUEL_NUMBERS, FUEL_EICAS, FUEL_EPS, FUEL_INFO } from './FuelModalData';
 import DiagramShell from '../DiagramShell';
 import { InfoModal } from '../InfoModal';
+import { Hot } from '../Hot';
+import { T, Lbl, Ldr, El, Mech } from '../Notation';
 
-// ── Keyframes (dash cycles: 8+4=12, 6+5=11, 5+5=10, 5+4=9 — offsets are one full cycle ×2) ──
+// ── Keyframes (dash cycles: 8+4=12, 6+5=11, 5+5=10 — offsets are one full cycle ×2) ──
+// The hover-ring rules and the signal-run chase are not here: DiagramShell injects
+// the shared HOT_STYLES and SIGNAL_KEYFRAMES.
 const KEYFRAMES = `
   @keyframes fuelFlowA { to { stroke-dashoffset: -24; } }
   @keyframes fuelFlowB { to { stroke-dashoffset: -22; } }
   @keyframes fuelFlowC { to { stroke-dashoffset: -20; } }
-  @keyframes elecFlow    { to { stroke-dashoffset: -18; } }
-  @keyframes elecFlowRev { to { stroke-dashoffset:  18; } }
   .fuel-paused * { animation-play-state: paused !important; }
-
-  /* Component click targets. Hydraulics, Electrical and Propeller all have
-     click-through detail with no hover cue at all — worth giving them this same
-     ring in a follow-on pass so the four systems pages behave alike. */
-  .fuel-hot { cursor: pointer; }
-  .fuel-hot-ring { opacity: 0; transition: opacity 0.12s; }
-  .fuel-hot:hover .fuel-hot-ring { opacity: 0.55; }
 `;
 
 // ── Colors: shared THEME + NATOPS line-function colors (named by function, not severity) ──
@@ -29,55 +24,11 @@ const LOCAL = {
   purgeLine:  '#5b9bd5', // PURGE LINE (blue)
   tankFill: '#d9dee4', tankStroke: '#8a97a5', collectorFill: '#cfd6dd',
   ventLine: '#8b9cad',
-  // Energized signal run. Deliberately a neon yellow rather than the shared
-  // THEME.wireLive gold: these runs are background detail here, not the subject the
-  // way they are on the electrical diagram, so they want to read as a flicker of
-  // current rather than as another weighted line.
-  signalLive: '#ffe500',
   annWarning: '#f2453d', annCaution: '#e0b830', annAdvisory: '#4fbf6b',
 };
 
 const C = { ...THEME, ...LOCAL };
 const FONT = DIAGRAM_FONT;
-
-// ── Text style presets ──
-const T = {
-  h: { fontFamily: FONT, fill: C.text,  fontSize: 10,  fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' },
-  sym: { fontFamily: FONT, fill: C.text, fontSize: 7.5, fontWeight: 700, textAnchor: 'middle', dominantBaseline: 'central' },
-};
-
-// ── Multi-line label ──
-function Lbl({ x, y, lines, anchor = 'middle', size = 8.5, fill = C.text, lh = 9.5, bold = true }) {
-  const arr = Array.isArray(lines) ? lines : [lines];
-  return (
-    <text style={{ fontFamily: FONT, fontSize: size, fontWeight: bold ? 700 : 400, fill }} textAnchor={anchor}>
-      {arr.map((l, i) => <tspan key={i} x={x} y={y + i * lh}>{l}</tspan>)}
-    </text>
-  );
-}
-
-// ── Leader line (label → component) ──
-const Ldr = ({ d }) => <path d={d} fill="none" stroke={C.stroke} strokeWidth={0.7} />;
-
-// ── Component click target ───────────────────────────────────────────────────
-// Wraps a symbol in a teal ring that fades in on hover plus a transparent hit shape,
-// so every part of the schematic opens its detail the same way. Order matters: the
-// symbol paints first, then the ring (so the symbol never covers it), then the hit
-// shape on top (so it always takes the click, whatever the symbol is made of).
-// Pass a rect (x/y/w/h), or `d` for a closed path where a box would sit wrong — the
-// wing tanks are trapezoids, so a rect ring around them reads as a mistake.
-function Hot({ x, y, w, h, r = 4, d, onClick, children }) {
-  const shape = extra => d
-    ? <path d={`${d} Z`} {...extra} />
-    : <rect x={x} y={y} width={w} height={h} rx={r} {...extra} />;
-  return (
-    <g className="fuel-hot" onClick={onClick}>
-      {children}
-      {shape({ className: 'fuel-hot-ring', fill: 'none', stroke: C.accent, strokeWidth: 1 })}
-      {shape({ fill: 'transparent', stroke: 'none' })}
-    </g>
-  );
-}
 
 // ── Fuel line: colored pipe + white animated dash overlay (site flow idiom) ──
 // spd scales dash speed (>1 faster, <1 slower) — used to speed motive supply and
@@ -207,30 +158,6 @@ const PX_SEQUENCE   = [1, 2, 0];               // phase per slot: FUEL PX → bo
 // winds down and all remaining lines stop after FW_FLAMEOUT_SECS.
 const FW_FLAMEOUT_SECS   = 0.5;
 
-// ── Electrical / mechanical connections ──
-// A de-energized run is the NATOPS grey dashed line. An energized one keeps the same
-// dashed line and turns it into travelling neon bars. The bars are outlined rather
-// than backed: two paths on the same dash pattern and the same animation, a slightly
-// wider grey one under a narrower neon one, so each bar gets a thin edge while the
-// gaps between them stay empty — the runs read as a flicker of current across the
-// fuel plumbing instead of another weighted line competing with it. The grey edge is
-// the de-energized line's own color, which keeps a run continuous with itself as it
-// switches state. `rev` flips the chase where the path happens to be drawn against
-// the direction the signal actually travels.
-const El = ({ d, live = false, rev = false }) => {
-  if (!live) return <path d={d} fill="none" stroke={C.muted} strokeWidth={1.1} strokeDasharray="5 4" opacity={0.9} />;
-  // Both paths mount together, so their animations stay in phase and the edge tracks
-  // the bar it is outlining.
-  const bars = { strokeDasharray: '5 4', animation: `${rev ? 'elecFlowRev' : 'elecFlow'} 1.1s linear infinite` };
-  return (
-    <g>
-      <path d={d} fill="none" stroke={C.muted}      strokeWidth={2.8} style={bars} />
-      <path d={d} fill="none" stroke={C.signalLive} strokeWidth={1.8} style={bars} />
-    </g>
-  );
-};
-const Mech = ({ d }) => <path d={d} fill="none" stroke={C.muted} strokeWidth={1.4} strokeDasharray="12 6" />;
-
 // ── NATOPS legend symbols (shared between legend + diagram body) ─────────────
 // Check valve — box with a thin shafted arrow in the flow direction (default points +x; use rot)
 const CheckValve = ({ x, y, rot = 0 }) => (
@@ -258,7 +185,7 @@ const JetPump = ({ x, y, rot = 0 }) => (
 );
 
 const SoRefuel = ({ x, y, hot }) => (
-  <g stroke={hot ? C.warningText : C.text} strokeWidth={hot ? 1.6 : 1} fill={hot ? '#f6d3d3' : C.box}>
+  <g stroke={hot ? C.warningText : C.text} strokeWidth={hot ? 1.6 : 1} fill={hot ? C.warningTint : C.box}>
     <rect x={x - 6} y={y - 6} width={12} height={12} />
     <path d={`M ${x - 6},${y - 6} L ${x + 6},${y + 6} M ${x + 6},${y - 6} L ${x - 6},${y + 6}`} />
   </g>
@@ -266,14 +193,14 @@ const SoRefuel = ({ x, y, hot }) => (
 
 const SoDefuel = ({ x, y, hot }) => (
   <g stroke={hot ? C.warningText : C.text} strokeWidth={hot ? 1.6 : 1} fill="none">
-    <circle cx={x} cy={y} r={6} fill={hot ? '#f6d3d3' : C.box} />
+    <circle cx={x} cy={y} r={6} fill={hot ? C.warningTint : C.box} />
     <circle cx={x} cy={y} r={2.8} />
   </g>
 );
 
 const PilotValve = ({ x, y, hot }) => (
   <g stroke={hot ? C.warningText : C.text} strokeWidth={hot ? 1.6 : 1}>
-    <rect x={x - 6} y={y - 6} width={12} height={12} fill={hot ? '#f6d3d3' : C.box} />
+    <rect x={x - 6} y={y - 6} width={12} height={12} fill={hot ? C.warningTint : C.box} />
     <circle cx={x} cy={y} r={3} fill="none" />
   </g>
 );
@@ -287,7 +214,7 @@ const CL = ({ x, y, l }) => (
 
 const Probe = ({ x, y, failed }) => (
   <g stroke={C.text} strokeWidth={1} fill="none">
-    <circle cx={x} cy={y} r={5.5} fill={failed ? '#f6d3d3' : C.box} />
+    <circle cx={x} cy={y} r={5.5} fill={failed ? C.warningTint : C.box} />
     <path d={`M ${x},${y} L ${x + 3.2},${y - 3.2}`} />
     <path d={`M ${x},${y + 5.5} V ${y + 9}`} />
     {failed && (
@@ -736,6 +663,9 @@ function T6BFuelDiagram() {
   // Briefing tabs — which of the four NATOPS tabs the modal is showing (null = closed).
   // Component detail — which FUEL_INFO entry the modal is showing (null = closed).
   const [infoKey, setInfoKey] = useState(null);
+  // Stable, so the memoized InfoModal can bail out — it re-binds its keydown
+  // listener whenever onClose changes identity.
+  const closeInfo = useCallback(() => setInfoKey(null), []);
   const fwRef = useRef({ t: null });                          // flameout countdown elapsed (s)
 
   const toggleFwShutoff = () => {
@@ -969,7 +899,7 @@ function T6BFuelDiagram() {
     >
       {({ openBriefing }) => (<>
         {infoKey && FUEL_INFO[infoKey] && (
-          <InfoModal {...FUEL_INFO[infoKey]} onClose={() => setInfoKey(null)} theme={C} />
+          <InfoModal {...FUEL_INFO[infoKey]} onClose={closeInfo} theme={C} />
         )}
 
         <svg viewBox="0 0 870 935" width="100%" style={{ display: 'block' }} className={paused ? 'fuel-paused' : undefined}>
@@ -1040,7 +970,7 @@ function T6BFuelDiagram() {
           </Hot>
           {/* Pre-check valve — manual, closed by default. Click the valve body or its
               indicator to open it; open under refuel pressure runs the pre-check. */}
-          <g style={{ cursor: 'pointer' }} onClick={() => setPrecheck(v => !v)}>
+          <g className="dgm-hot" onClick={() => setPrecheck(v => !v)}>
             <rect x={329} y={464} width={20} height={28} fill="transparent" />
             <rect x={338} y={471} width={7} height={14} rx={1}
               fill={precheck ? C.accent : C.box} stroke={C.text} strokeWidth={1.1} />
@@ -1073,7 +1003,7 @@ function T6BFuelDiagram() {
           {/* Low pressure switch on the motive return line — goes red while it is sensing
               low pressure, i.e. in step with the FUEL PX warning it drives */}
           <Hot x={418} y={410} w={20} h={20} r={10} onClick={() => setInfoKey('lpswitch')}>
-            <circle cx={428} cy={420} r={5.5} fill={pxLit ? '#f6d3d3' : C.box}
+            <circle cx={428} cy={420} r={5.5} fill={pxLit ? C.warningTint : C.box}
               stroke={pxLit ? C.warningText : C.text} strokeWidth={pxLit ? 1.7 : 1.1} />
             <text x={428} y={420.5} style={{ ...T.sym, fontSize: 6.5, fill: pxLit ? C.warningText : C.text }}>P</text>
           </Hot>
@@ -1215,7 +1145,7 @@ function T6BFuelDiagram() {
           <Mech d="M 150,344 V 352 H 377" />
           {/* Firewall shutoff handle — click to pull: the T lifts and lengthens, the
               valve rotates closed, engine feed is cut, and the engine flames out shortly. */}
-          <g style={{ cursor: 'pointer' }} onClick={toggleFwShutoff}>
+          <g className="dgm-hot" onClick={toggleFwShutoff}>
             <g style={{
               transformBox: 'view-box', transformOrigin: '150px 334px',
               transform: fwShutoff ? 'translateY(-5px) scaleY(1.2)' : 'none',

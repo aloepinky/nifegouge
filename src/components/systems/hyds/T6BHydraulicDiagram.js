@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   HYD_VERBATIM,
   HYD_NUMBERS,
@@ -8,6 +8,7 @@ import {
 } from './HydraulicModalData';
 import DiagramShell from '../DiagramShell';
 import { InfoModal } from '../InfoModal';
+import { HotRing } from '../Hot';
 import { THEME, DIAGRAM_FONT } from '../diagramTheme';
 
 // ── Keyframe animations injected once into the document ──────────────
@@ -77,14 +78,17 @@ function F({ d, v = 'supply', paused = false, emergPaused = false, highlighted =
 }
 
 // ── Clickable component box ──────────────────────────────────────────
+// The ring paints after children so nothing covers it; the filled rect already takes
+// the click, so no separate hit shape is needed here.
 function Box({ x, y, w, h, rx = 4, id, sel, onSel, hi = C.supply, children }) {
   const active = sel === id;
   return (
-    <g style={{ cursor: id ? 'pointer' : 'default' }} onClick={id ? () => onSel(id) : undefined}>
+    <g className={id ? 'dgm-hot' : undefined} onClick={id ? () => onSel(id) : undefined}>
       <rect x={x} y={y} width={w} height={h} rx={rx}
         fill={active ? `${hi}18` : C.box} stroke={active ? hi : C.stroke}
         strokeWidth={active ? 0.8 : 0.5} />
       {children}
+      {id && <HotRing x={x} y={y} w={w} h={h} r={rx + 2} out={2} />}
     </g>
   );
 }
@@ -156,6 +160,9 @@ function HydPressGauge({ pressure = 3040, size = 160, embedded = false }) {
 // ── Main component ───────────────────────────────────────────────────
 export default function T6BHydraulicDiagram() {
   const [sel,      setSel]      = useState(null);
+  // Stable, so the memoized InfoModal can bail out — it re-binds its keydown
+  // listener whenever onClose changes identity.
+  const closeInfo = useCallback(() => setSel(null), []);
   const [hydFlo,   setHydFlo]   = useState(false);
   const [ehydPx,   setEhydPx]   = useState(false);
   const [hydPsi,   setHydPsi]   = useState(3040);
@@ -638,7 +645,7 @@ export default function T6BHydraulicDiagram() {
             title={HYD_INFO[sel].title}
             items={HYD_INFO[sel].items}
             photos={HYD_INFO[sel].photos ?? []}
-            onClose={() => setSel(null)}
+            onClose={closeInfo}
             theme={C}
           />
         )}
@@ -1253,7 +1260,7 @@ export default function T6BHydraulicDiagram() {
           const cx=657,cy=408,hw=15,hh=40,r=4,r1=5,r2=7;
           const diamond = `M ${cx-hw},${cy-r} L ${cx-r},${cy-hh} A ${r1},${r1},0,0,1,${cx+r},${cy-hh} L ${cx+hw},${cy-r} A ${r2},${r2},0,0,1,${cx+hw},${cy+r} L ${cx+r},${cy+hh} A ${r1},${r1},0,0,1,${cx-r},${cy+hh} L ${cx-hw},${cy+r} A ${r2},${r2},0,0,1,${cx-hw},${cy-r}`;
           return (
-            <g style={{ cursor: 'pointer' }} onClick={() => {
+            <g className="dgm-hot" onClick={() => {
               if (accumLvlPct >= 50 || emerGrPulled) {
                 const next = !emerGrPulled;
                 setEmerGrPulled(next);
