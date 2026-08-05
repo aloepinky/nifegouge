@@ -16,6 +16,11 @@
 # git and out of the Netlify deploy — anything left under public/ ships with every build.
 /_original-images
 
+# System reference publications (NATOPS extracts, checklist pages, briefing decks),
+# one folder per system. Kept on disk so a diagram can be checked against its source,
+# but out of git and out of the Netlify deploy.
+/_reference-docs
+
 # misc
 .DS_Store
 .env.local

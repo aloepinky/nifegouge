@@ -50,9 +50,11 @@ export function HotRing(shape) {
   });
 }
 
-export function Hot({ onClick, children, ...shape }) {
+// The pointer handlers are forwarded rather than swallowed into `shape` so a diagram
+// can hang more than the ring off a hover — the oil page names the part it is over.
+export function Hot({ onClick, onMouseEnter, onMouseLeave, children, ...shape }) {
   return (
-    <g className="dgm-hot" onClick={onClick}>
+    <g className="dgm-hot" onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       {children}
       <HotRing {...shape} />
       {ringShape({ ...shape, out: 0 }, { fill: 'transparent', stroke: 'none' })}
