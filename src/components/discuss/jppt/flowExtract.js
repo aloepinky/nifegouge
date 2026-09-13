@@ -366,11 +366,39 @@ function classify(paths) {
         connectors.push(p);
         return;
       }
+      // A connector that hops over another with a little arc: the arc's two ends sit on the
+      // line and its midpoint off it. Flatten the hop and keep the line.
+      if (p.ops.every((o) => o === 'm' || o === 'l' || o === 'c') && p.ops.includes('l') && p.pts.length >= 3) {
+        const pts = straighten(p.pts);
+        if (pts.length >= 2) {
+          connectors.push({ ...p, pts });
+          return;
+        }
+      }
     }
     other.push(p);
   });
   return [nodes, arrows, connectors, other];
 }
+
+// Drop the off-axis midpoint of every hop, then any point collinear with its neighbours.
+function straighten(ptsIn) {
+  const same = (u, v) => Math.abs(u - v) <= 0.6;
+  let pts = ptsIn.filter((p, i) => {
+    if (i === 0 || i === ptsIn.length - 1) return true;
+    const [a, b] = [ptsIn[i - 1], ptsIn[i + 1]];
+    const axis = same(a[0], b[0]) ? 0 : same(a[1], b[1]) ? 1 : -1;
+    return axis === -1 || same(p[axis], a[axis]);
+  });
+  pts = pts.filter((p, i) => {
+    if (i === 0 || i === pts.length - 1) return true;
+    const [a, b] = [pts[i - 1], pts[i + 1]];
+    return !((same(a[0], p[0]) && same(p[0], b[0])) || (same(a[1], p[1]) && same(p[1], b[1])));
+  });
+  return pts;
+}
+
+const BANDS = ['thin', 'mid', 'thick'];
 
 function keyOf(shape, lw) {
   let band;
@@ -420,9 +448,28 @@ function attachLabels(nodes, runs) {
 
 function deriveCategories(labelled, leftover, warn) {
   const captions = [];
-  leftover.forEach((r) => {
+  const used = new Set();
+  const isCaption = (t) => Object.prototype.hasOwnProperty.call(CATEGORY_SLUG, t);
+  leftover.forEach((r, i) => {
     const t = pyStrip(r.text);
-    if (Object.prototype.hasOwnProperty.call(CATEGORY_SLUG, t)) captions.push([r.y, t, r.x]);
+    if (isCaption(t)) {
+      captions.push([r.y, t, r.x]);
+      used.add(i);
+    }
+  });
+  // A caption printed on two lines ("Flow" over "Connector"): the run directly beneath,
+  // left-aligned with it.
+  leftover.forEach((r, i) => {
+    if (used.has(i)) return;
+    leftover.forEach((q, j) => {
+      if (j === i || used.has(j) || used.has(i)) return;
+      if (Math.abs(q.x - r.x) > 2.0 || r.y - q.y <= 0 || r.y - q.y > 12.0) return;
+      const t = pyStrip(`${pyStrip(r.text)} ${pyStrip(q.text)}`.replace(PY_SPACE, ' '));
+      if (!isCaption(t)) return;
+      captions.push([(r.y + q.y) / 2.0, t, r.x]);
+      used.add(i);
+      used.add(j);
+    });
   });
   const keys = labelled.filter((n) => !n.label);
   const mapping = {};
@@ -448,6 +495,44 @@ function deriveCategories(labelled, leftover, warn) {
     pairs.push([text, kind, best]);
   });
   return [mapping, pairs];
+}
+
+// The kind of a chart box, from the legend. A box whose shape and stroke weight the legend
+// draws is that caption. Where the legend is no help — it draws two captions of one shape
+// with the same weight (Echo's Ground Training and P/P Exam are both thin), or the chart uses
+// a weight the legend never draws — the shape's captions are taken in legend order, top to
+// bottom, and the chart's weights for that shape in order, thin to thick: the publication
+// lists the lighter stroke first.
+function categoryMapper(mapping, pairs, labelled, warn) {
+  const byShape = {};
+  pairs.forEach(([text, kind, key]) => {
+    const [, ky, , kh] = bboxOf(key.path);
+    (byShape[key.shape] = byShape[key.shape] || []).push({
+      text, kind, y: ky + kh / 2.0, key: keyOf(key.shape, key.path.lw),
+    });
+  });
+  Object.values(byShape).forEach((list) => list.sort((a, b) => b.y - a.y));
+  const bandsOf = {};
+  labelled.filter((n) => n.label).forEach((n) => {
+    (bandsOf[n.shape] = bandsOf[n.shape] || new Set()).add(keyOf(n.shape, n.path.lw).split('|')[1]);
+  });
+  const ranked = {};
+  return (shape, lw) => {
+    const entries = byShape[shape] || [];
+    if (!entries.length) return undefined;
+    const direct = mapping[keyOf(shape, lw)];
+    const distinct = new Set(entries.map((e) => e.key)).size === entries.length;
+    if (distinct && direct !== undefined) return direct;
+    if (entries.length === 1) return entries[0].kind;
+    if (!ranked[shape]) {
+      const bands = BANDS.filter((b) => (bandsOf[shape] || new Set()).has(b));
+      ranked[shape] = {};
+      bands.forEach((b, i) => { ranked[shape][b] = entries[Math.min(i, entries.length - 1)].kind; });
+      const names = entries.map((e) => `"${e.text}"`).join(' and ');
+      warn(`The legend does not tell ${names} apart by stroke weight; the chart's ${shape === 'ellipse' ? 'ellipses' : `${shape} boxes`} were sorted by weight, lightest first.`);
+    }
+    return ranked[shape][keyOf(shape, lw).split('|')[1]];
+  };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -512,6 +597,32 @@ function nearestNode(point, nodeMids, tol) {
   return best;
 }
 
+// The point's right-angle projection onto the segment a-b.
+function footOn(point, a, b) {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const seg = dx * dx + dy * dy;
+  if (seg < 1e-9) return [a[0], a[1]];
+  const t = Math.max(0, Math.min(1, ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / seg));
+  return [a[0] + t * dx, a[1] + t * dy];
+}
+
+// The index of the segment of `pts` the point lies on, or -1.
+function segmentOn(point, pts, tol) {
+  for (let i = 0; i < pts.length - 1; i += 1) {
+    const [ax, ay] = pts[i];
+    const [bx, by] = pts[i + 1];
+    const dx = bx - ax;
+    const dy = by - ay;
+    const seg = Math.hypot(dx, dy);
+    if (seg < 1e-6) continue;
+    const t = ((point[0] - ax) * dx + (point[1] - ay) * dy) / (seg * seg);
+    if (t < -0.02 || t > 1.02) continue;
+    if (dist(point, [ax + t * dx, ay + t * dy]) <= tol) return i;
+  }
+  return -1;
+}
+
 function pointOnPath(point, pts, tol) {
   for (let i = 0; i < pts.length - 1; i += 1) {
     const [ax, ay] = pts[i];
@@ -525,57 +636,6 @@ function pointOnPath(point, pts, tol) {
     if (dist(point, [ax + t * dx, ay + t * dy]) <= tol) return true;
   }
   return false;
-}
-
-// Delta's three hand-resolved connectors. See REPAIRS in the Python for each one's reason. On
-// any other JPPT they match nothing, and the flow editor is where those connectors get fixed.
-const REPAIRS = [
-  {
-    at: [367.0, 619.9],
-    why: 'FAM1206 ends on another connector rather than on a box.',
-    from: 'FAM1206',
-    to: 'FAM4490',
-    points: [[367.0, 619.9], [367.0, 597.0], [308.8, 597.0]],
-  },
-  {
-    at: [358.1, 366.1],
-    why: 'FAM1204 joins the collector that also carries I6201-2.',
-    from: 'FAM1204',
-    to: 'I4101-3',
-    points: [[358.1, 366.1], [367.0, 366.1], [367.0, 449.1], [376.6, 449.1]],
-  },
-  {
-    at: [474.0, 275.6],
-    why: 'Redundant trunk off jump-F-3.',
-    drop: true,
-  },
-];
-
-// Unlike the Python, a repair that matches nothing is reported only when another one did: on a
-// JPPT other than Delta none will, and three warnings about Delta's figure would be noise.
-function applyRepairs(unresolved) {
-  const edges = [];
-  const matched = new Set();
-  const leftover = [];
-  unresolved.forEach((item) => {
-    const { pts } = item[0];
-    let hit = null;
-    for (let i = 0; i < REPAIRS.length; i += 1) {
-      if (Math.min(dist(REPAIRS[i].at, pts[0]), dist(REPAIRS[i].at, pts[pts.length - 1])) <= 1.0) {
-        hit = i;
-        break;
-      }
-    }
-    if (hit === null) {
-      leftover.push(item);
-      return;
-    }
-    matched.add(hit);
-    const rep = REPAIRS[hit];
-    if (!rep.drop) edges.push({ from: rep.from, to: rep.to, points: rep.points.map((p) => [...p]) });
-  });
-  const unmatched = matched.size ? REPAIRS.filter((r, i) => !matched.has(i)) : [];
-  return [edges, unmatched, leftover];
 }
 
 function chain(segsIn, nodeMids) {
@@ -618,21 +678,80 @@ function resolveEdges(nodes, connectors, arrows) {
     a.pts.reduce((s, p) => s + p[0], 0) / a.pts.length,
     a.pts.reduce((s, p) => s + p[1], 0) / a.pts.length,
   ]);
+  // The arrowhead at an end, if one sits there: its apex, the vertex farthest from the
+  // centroid, and which way it points. A head pointing on along the line's direction of
+  // travel into this end is the arrow into the box there; one pointing back down the line is
+  // the figure marking this end as the arrow's source (Delta draws FAM1204's that way).
+  // The apex matters because a connector stops at the base of its head, and a long head
+  // puts that base outside the snap tolerance while the apex touches the box.
+  const headAt = (p, prev) => {
+    const ux = p[0] - prev[0];
+    const uy = p[1] - prev[1];
+    const ulen = Math.hypot(ux, uy) || 1;
+    let best = null;
+    heads.forEach((c, i) => {
+      const d = dist(c, p);
+      if (d > ARROW_SNAP || (best && d >= best.d)) return;
+      const { pts } = arrows[i];
+      let apex = pts[0];
+      pts.forEach((q) => { if (dist(q, c) > dist(apex, c)) apex = q; });
+      const ax = apex[0] - c[0];
+      const ay = apex[1] - c[1];
+      const along = (ax * ux + ay * uy) / ((Math.hypot(ax, ay) || 1) * ulen);
+      // A head square to the line is another connector's, passing close by: the spine's
+      // arrow into PR0101-5 sits beside the start of SY0301's stub.
+      if (Math.abs(along) < 0.7) return;
+      best = { d, i, apex, incoming: along >= 0 };
+    });
+    return best;
+  };
 
   const [segs] = chain(connectors.map((p) => [...p.pts]), nodeMids);
 
   const raw = segs.map((pts) => {
     const a = pts[0];
     const b = pts[pts.length - 1];
+    const ha = headAt(a, pts[1]);
+    const hb = headAt(b, pts[pts.length - 2]);
+    let ra = nearestNode(a, nodeMids, EDGE_SNAP) || (ha && nearestNode(ha.apex, nodeMids, EDGE_SNAP)) || null;
+    let rb = nearestNode(b, nodeMids, EDGE_SNAP) || (hb && nearestNode(hb.apex, nodeMids, EDGE_SNAP)) || null;
+    // Two boxes drawn touching leave a connector a few points long between them, and both
+    // of its ends snap to the nearer box. Give the ends different boxes, the closest pair.
+    if (ra && rb && ra[0] === rb[0]) {
+      let best = null;
+      nodeMids.forEach(([na, midsA]) => midsA.forEach(([sa, ma]) => {
+        const da = dist(a, ma);
+        if (da > EDGE_SNAP) return;
+        nodeMids.forEach(([nb, midsB]) => midsB.forEach(([sb, mb]) => {
+          const db = dist(b, mb);
+          if (nb === na || db > EDGE_SNAP) return;
+          if (!best || da + db < best.d) best = { d: da + db, ra: [na, sa], rb: [nb, sb] };
+        }));
+      }));
+      if (best) [ra, rb] = [best.ra, best.rb];
+    }
+    // One head within reach of both ends of a short connector belongs to the end it is nearer.
+    let atA = ha;
+    let atB = hb;
+    if (ha && hb && ha.i === hb.i) {
+      if (ha.d < hb.d) atB = null;
+      else if (hb.d < ha.d) atA = null;
+    }
     return {
       pts,
-      a: nearestNode(a, nodeMids, EDGE_SNAP),
-      b: nearestNode(b, nodeMids, EDGE_SNAP),
-      headA: heads.some((h) => dist(h, a) <= ARROW_SNAP),
-      headB: heads.some((h) => dist(h, b) <= ARROW_SNAP),
+      a: ra,
+      b: rb,
+      headA: !!(atA && atA.incoming),
+      headB: !!(atB && atB.incoming),
+      outA: !!(atA && !atA.incoming),
+      outB: !!(atB && !atB.incoming),
+      apexA: atA ? atA.apex : null,
+      apexB: atB ? atB.apex : null,
     };
   });
 
+  // An end that hit no box may be glued to another connector. Follow the host to its own
+  // node end; that is the real source.
   const hostSource = (idx, point, depth = 0) => {
     if (depth > 4) return null;
     for (let j = 0; j < raw.length; j += 1) {
@@ -648,31 +767,95 @@ function resolveEdges(nodes, connectors, arrows) {
     return null;
   };
 
+  // The mirror image: an end that arrives on another connector joins it, and goes where it
+  // goes. The host's remaining points come back too, so the edge runs all the way to its box
+  // rather than stopping in the middle of a line.
+  const hostTarget = (idx, point, depth = 0) => {
+    if (depth > 4) return null;
+    for (let j = 0; j < raw.length; j += 1) {
+      if (j === idx) continue;
+      const other = raw[j];
+      const k = segmentOn(point, other.pts, JUNCTION_SNAP);
+      if (k === -1) continue;
+      if (!other.headA && !other.headB) return null;
+      const forward = other.headB && !other.headA;
+      const foot = footOn(point, other.pts[k], other.pts[k + 1]);
+      const rest = [foot].concat(forward ? other.pts.slice(k + 1) : other.pts.slice(0, k + 1).reverse());
+      const end = forward ? other.b : other.a;
+      if (end) return { id: end[0], tail: rest };
+      const onward = hostTarget(j, rest[rest.length - 1], depth + 1);
+      return onward ? { id: onward.id, tail: rest.concat(onward.tail) } : null;
+    }
+    return null;
+  };
+
   const edges = [];
   const unresolved = [];
   raw.forEach((r, i) => {
     const { pts } = r;
     let aId = r.a ? r.a[0] : null;
     let bId = r.b ? r.b[0] : null;
-    if (aId === null) aId = hostSource(i, pts[0]);
-    if (bId === null) bId = hostSource(i, pts[pts.length - 1]);
 
     let src;
     let dst;
     let order;
-    if (r.headB || (!r.headA && bId && !aId)) {
-      src = aId;
-      dst = bId;
-      order = [...pts];
+    if (r.headA || r.headB || r.outA || r.outB) {
+      const forward = r.headB && !r.headA ? true : r.headA ? false : r.outA;
+      const start = forward ? pts[0] : pts[pts.length - 1];
+      const end = forward ? pts[pts.length - 1] : pts[0];
+      const endApex = forward ? r.apexB : r.apexA;
+      src = forward ? aId : bId;
+      dst = forward ? bId : aId;
+      order = forward ? [...pts] : [...pts].reverse();
+      if (src === null) src = hostSource(i, start);
+      // A stub too short to clear its own box snaps both ends to it (Delta's FAM1204 is
+      // 3.5 pt long); the arrow leaves the box, so its far end is wherever it joins.
+      if (dst !== null && dst === src) dst = null;
+      if (dst === null) {
+        const joined = hostTarget(i, end) || (endApex && hostTarget(i, endApex));
+        if (joined) {
+          dst = joined.id;
+          order = order.concat(joined.tail);
+        }
+      }
     } else {
-      src = bId;
-      dst = aId;
-      order = [...pts].reverse();
+      // No head at either end. A stub from a box to another connector is that box joining
+      // the connector's flow: an arrow *into* the box would carry its own head. Only when
+      // the joined connector goes nowhere does the older reading apply, where the stub is a
+      // branch off a trunk and the trunk's source is its source.
+      if ((aId === null) !== (bId === null)) {
+        const boxEnd = aId ? aId : bId;
+        const free = aId ? pts[pts.length - 1] : pts[0];
+        const joined = hostTarget(i, free);
+        if (joined && joined.id !== boxEnd) {
+          src = boxEnd;
+          dst = joined.id;
+          order = (aId ? [...pts] : [...pts].reverse()).concat(joined.tail);
+        }
+      }
+    }
+    if (src === undefined) {
+      if (aId === null) aId = hostSource(i, pts[0]);
+      if (bId === null) bId = hostSource(i, pts[pts.length - 1]);
+      if (bId && !aId) {
+        src = aId;
+        dst = bId;
+        order = [...pts];
+      } else {
+        src = bId;
+        dst = aId;
+        order = [...pts].reverse();
+      }
     }
     if (!src || !dst || src === dst) {
       unresolved.push([r, src, dst]);
       return;
     }
+    // Joining a host lands on a point the host already has; keep each corner once.
+    order = order.filter((q, k) => k === 0 || dist(q, order[k - 1]) > 0.05);
+    // A trunk that feeds a bus resolves to the same pair as the bus's own branch, and the
+    // branch already draws the whole route. One edge per pair.
+    if (edges.some((e) => e.from === src && e.to === dst)) return;
     edges.push({ from: src, to: dst, points: order });
   });
   return [edges, unresolved];
@@ -732,12 +915,13 @@ export function extractFlow(pageContents, { knownEventIds = null } = {}) {
     kind, label: text, shape: key.shape, bbox: bboxOf(key.path),
   }));
 
+  const kindFor = categoryMapper(mapping, pairs, labelled, warn);
   const nodes = [];
   const jumpSeen = {};
   const missing = [];
   labelled.forEach((n) => {
     if (!n.label) return;
-    let kind = mapping[keyOf(n.shape, n.path.lw)];
+    let kind = kindFor(n.shape, n.path.lw);
     if (kind === undefined) {
       warn(`${n.label} matches no legend key.`);
       kind = 'other';
@@ -761,10 +945,7 @@ export function extractFlow(pageContents, { knownEventIds = null } = {}) {
   missing.forEach(([label, e]) => warn(`Box ${label} names ${e}, which the syllabus text does not list.`));
 
   const [edges, unresolved] = resolveEdges(nodes, connectors, arrows);
-  const [repaired, unmatched, left] = applyRepairs(unresolved);
-  edges.push(...repaired);
-  unmatched.forEach((rep) => warn(`Repair at (${rep.at[0]}, ${rep.at[1]}) matched nothing. ${rep.why}`));
-  left.forEach(([, src, dst]) => {
+  unresolved.forEach(([, src, dst]) => {
     warn(`A connector could not be resolved (${src || '?'} to ${dst || '?'}). Draw it in the editor.`);
   });
 

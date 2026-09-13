@@ -36,7 +36,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 PDF = os.path.join(ROOT, '_reference-docs', 'Fundamental References', 'Delta JPPT.pdf')
 OUT = os.path.join(ROOT, 'src', 'components', 'discuss', 'jppt', '__fixtures__', 'delta', 'FLOW.js')
-SYLLABUS = os.path.join(ROOT, 'src', 'components', 'discuss', 'SYLLABUS.js')
+SYLLABUS = os.path.join(ROOT, 'src', 'components', 'discuss', 'jppt', '__fixtures__', 'delta', 'SYLLABUS.js')
 
 TITLE = 'COMPLETE COURSE FLOW'
 PAGE_HEIGHT = 792.0
@@ -492,8 +492,46 @@ def classify(paths):
             if set(p.ops) <= {'m', 'l'} and len(p.pts) >= 2:
                 connectors.append(p)
                 continue
+            # A connector that hops over another with a little arc: the arc's two ends sit
+            # on the line and its midpoint off it. Flatten the hop and keep the line.
+            if set(p.ops) <= {'m', 'l', 'c'} and 'l' in p.ops and len(p.pts) >= 3:
+                pts = straighten(p.pts)
+                if len(pts) >= 2:
+                    q = Path()
+                    q.ops, q.pts, q.paint, q.clip, q.lw, q.order = (
+                        list(p.ops), pts, p.paint, p.clip, p.lw, p.order)
+                    connectors.append(q)
+                    continue
         other.append(p)
     return nodes, arrows, connectors, other
+
+
+def straighten(pts):
+    """Drop the off-axis midpoint of every hop, then any point collinear with its neighbours."""
+    def same(u, v):
+        return abs(u - v) <= 0.6
+    kept = []
+    for i, pt in enumerate(pts):
+        if i == 0 or i == len(pts) - 1:
+            kept.append(pt)
+            continue
+        a, b = pts[i - 1], pts[i + 1]
+        axis = 0 if same(a[0], b[0]) else 1 if same(a[1], b[1]) else -1
+        if axis == -1 or same(pt[axis], a[axis]):
+            kept.append(pt)
+    out = []
+    for i, pt in enumerate(kept):
+        if i == 0 or i == len(kept) - 1:
+            out.append(pt)
+            continue
+        a, b = kept[i - 1], kept[i + 1]
+        if (same(a[0], pt[0]) and same(pt[0], b[0])) or (same(a[1], pt[1]) and same(pt[1], b[1])):
+            continue
+        out.append(pt)
+    return out
+
+
+BANDS = ['thin', 'mid', 'thick']
 
 
 def key_of(shape, lw):
@@ -549,11 +587,28 @@ def derive_categories(labelled, leftover):
     This is what makes the categories evidence rather than guesswork: the publication draws
     its own key, so the mapping comes out of the page instead of out of the event ids.
     """
-    captions = []
-    for r in leftover:
+    captions, used = [], set()
+    for i, r in enumerate(leftover):
         t = r.text.strip()
         if t in LEGEND_TEXTS:
             captions.append((r.y, t, r.x))
+            used.add(i)
+    # A caption printed on two lines ("Flow" over "Connector"): the run directly beneath,
+    # left-aligned with it.
+    for i, r in enumerate(leftover):
+        if i in used:
+            continue
+        for j, q in enumerate(leftover):
+            if j == i or j in used or i in used:
+                continue
+            if abs(q.x - r.x) > 2.0 or r.y - q.y <= 0 or r.y - q.y > 12.0:
+                continue
+            t = re.sub(r'\s+', ' ', '%s %s' % (r.text.strip(), q.text.strip())).strip()
+            if t not in LEGEND_TEXTS:
+                continue
+            captions.append(((r.y + q.y) / 2.0, t, r.x))
+            used.add(i)
+            used.add(j)
     keys = [n for n in labelled if not n['label']]
     mapping, pairs = {}, []
     for y, text, x in captions:
@@ -572,6 +627,54 @@ def derive_categories(labelled, leftover):
         mapping[key_of(best['shape'], best['path'].lw)] = kind
         pairs.append((text, kind, best))
     return mapping, pairs
+
+
+def category_mapper(mapping, pairs, labelled):
+    """The kind of a chart box, from the legend.
+
+    A box whose shape and stroke weight the legend draws is that caption. Where the legend is
+    no help -- it draws two captions of one shape with the same weight (Echo's Ground Training
+    and P/P Exam are both thin), or the chart uses a weight the legend never draws -- the
+    shape's captions are taken in legend order, top to bottom, and the chart's weights for
+    that shape in order, thin to thick: the publication lists the lighter stroke first.
+    """
+    by_shape = {}
+    for text, kind, key in pairs:
+        kx, ky, kw, kh = key['path'].bbox
+        by_shape.setdefault(key['shape'], []).append({
+            'text': text, 'kind': kind, 'y': ky + kh / 2.0,
+            'key': key_of(key['shape'], key['path'].lw)})
+    for entries in by_shape.values():
+        entries.sort(key=lambda e: -e['y'])
+    bands_of = {}
+    for n in labelled:
+        if n['label']:
+            bands_of.setdefault(n['shape'], set()).add(key_of(n['shape'], n['path'].lw)[1])
+    ranked = {}
+
+    def kind_for(shape, lw):
+        entries = by_shape.get(shape, [])
+        if not entries:
+            return None
+        direct = mapping.get(key_of(shape, lw))
+        distinct = len(set(e['key'] for e in entries)) == len(entries)
+        if distinct and direct is not None:
+            return direct
+        if len(entries) == 1:
+            return entries[0]['kind']
+        if shape not in ranked:
+            bands = [b for b in BANDS if b in bands_of.get(shape, set())]
+            ranked[shape] = {}
+            for i, b in enumerate(bands):
+                ranked[shape][b] = entries[min(i, len(entries) - 1)]['kind']
+            names = ' and '.join('"%s"' % e['text'] for e in entries)
+            print('  WARNING: the legend does not tell %s apart by stroke weight; the '
+                  "chart's %s were sorted by weight, lightest first"
+                  % (names, 'ellipses' if shape == 'ellipse' else '%s boxes' % shape),
+                  file=sys.stderr)
+        return ranked[shape].get(key_of(shape, lw)[1])
+
+    return kind_for
 
 
 # ---------------------------------------------------------------------------------------
@@ -644,10 +747,21 @@ def nearest_node(point, node_mids, tol):
     return best
 
 
-def point_on_path(point, path, tol):
-    for i in range(len(path.pts) - 1):
-        ax, ay = path.pts[i]
-        bx, by = path.pts[i + 1]
+def foot_on(point, a, b):
+    """The point's right-angle projection onto the segment a-b."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    seg = dx * dx + dy * dy
+    if seg < 1e-9:
+        return (a[0], a[1])
+    t = max(0.0, min(1.0, ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / seg))
+    return (a[0] + t * dx, a[1] + t * dy)
+
+
+def segment_on(point, pts, tol):
+    """The index of the segment of `pts` the point lies on, or -1."""
+    for i in range(len(pts) - 1):
+        ax, ay = pts[i]
+        bx, by = pts[i + 1]
         dx, dy = bx - ax, by - ay
         seg = math.hypot(dx, dy)
         if seg < 1e-6:
@@ -655,63 +769,13 @@ def point_on_path(point, path, tol):
         t = ((point[0] - ax) * dx + (point[1] - ay) * dy) / (seg * seg)
         if t < -0.02 or t > 1.02:
             continue
-        px, py = ax + t * dx, ay + t * dy
-        if dist(point, (px, py)) <= tol:
-            return True
-    return False
+        if dist(point, (ax + t * dx, ay + t * dy)) <= tol:
+            return i
+    return -1
 
 
-# Three connectors the geometry cannot finish by itself. Each is checked on every run: a repair
-# that stops matching is reported rather than silently dropped, so a JPPT revision that redraws
-# this corner of the figure says so instead of quietly keeping a stale fix.
-#
-# Coordinates are PDF user space, y-up, matching the content stream.
-REPAIRS = [
-    {
-        'at': (367.0, 619.9),
-        'why': "FAM1206 ends on the FAM4301-4 -> FAM4490 vertical rather than on a box, so its "
-               "destination is a point on another connector. Safe for Solo before the check.",
-        'from': 'FAM1206',
-        'to': 'FAM4490',
-        'points': [(367.0, 619.9), (367.0, 597.0), (308.8, 597.0)],
-    },
-    {
-        'at': (358.1, 366.1),
-        'why': "FAM1204 joins the x=367 collector that also carries I6201-2, so both of I41's "
-               "prerequisites arrive on one bus. The arrowhead apex points right, away from the "
-               "box, which is what makes this an outgoing arrow rather than an incoming one.",
-        'from': 'FAM1204',
-        'to': 'I4101-3',
-        'points': [(358.1, 366.1), (367.0, 366.1), (367.0, 449.1), (376.6, 449.1)],
-    },
-    {
-        'at': (474.0, 275.6),
-        'why': "Redundant trunk: jump-F-3 feeds the y=269.5 bus and both branches off that bus "
-               "already carry the trunk in full.",
-        'drop': True,
-    },
-]
-
-
-def apply_repairs(unresolved):
-    """Turn the hand-resolved leftovers into edges, and say what did not match."""
-    edges, matched, leftover = [], set(), []
-    for item in unresolved:
-        pts = item[0]['path'].pts
-        hit = None
-        for i, rep in enumerate(REPAIRS):
-            if min(dist(rep['at'], pts[0]), dist(rep['at'], pts[-1])) <= 1.0:
-                hit = i
-                break
-        if hit is None:
-            leftover.append(item)
-            continue
-        matched.add(hit)
-        rep = REPAIRS[hit]
-        if not rep.get('drop'):
-            edges.append({'from': rep['from'], 'to': rep['to'], 'points': list(rep['points'])})
-    unmatched = [REPAIRS[i] for i in range(len(REPAIRS)) if i not in matched]
-    return edges, unmatched, leftover
+def point_on_path(point, pts, tol):
+    return segment_on(point, pts, tol) != -1
 
 
 def chain(segs, node_mids):
@@ -760,20 +824,81 @@ def resolve_edges(nodes, connectors, arrows):
     heads = [(sum(p[0] for p in a.pts) / len(a.pts),
               sum(p[1] for p in a.pts) / len(a.pts)) for a in arrows]
 
+    # The arrowhead at an end, if one sits there: its apex, the vertex farthest from the
+    # centroid, and which way it points. A head pointing on along the line's direction of
+    # travel into this end is the arrow into the box there; one pointing back down the line
+    # is the figure marking this end as the arrow's source (Delta draws FAM1204's that way).
+    # The apex matters because a connector stops at the base of its head, and a long head
+    # puts that base outside the snap tolerance while the apex touches the box.
+    def head_at(p, prev):
+        ux, uy = p[0] - prev[0], p[1] - prev[1]
+        ulen = math.hypot(ux, uy) or 1.0
+        best = None
+        for i, c in enumerate(heads):
+            d = dist(c, p)
+            if d > ARROW_SNAP or (best is not None and d >= best['d']):
+                continue
+            pts = arrows[i].pts
+            apex = pts[0]
+            for q in pts:
+                if dist(q, c) > dist(apex, c):
+                    apex = q
+            ax, ay = apex[0] - c[0], apex[1] - c[1]
+            along = (ax * ux + ay * uy) / ((math.hypot(ax, ay) or 1.0) * ulen)
+            # A head square to the line is another connector's, passing close by: the
+            # spine's arrow into PR0101-5 sits beside the start of SY0301's stub.
+            if abs(along) < 0.7:
+                continue
+            best = {'d': d, 'i': i, 'apex': apex, 'incoming': along >= 0}
+        return best
+
     segs, joins = chain([list(p.pts) for p in connectors], node_mids)
     print('  joined %d split connector path(s) -> %d polylines' % (joins, len(segs)),
           file=sys.stderr)
 
     raw = []
     for pts in segs:
-        path = Path()
-        path.pts = pts
         a, b = pts[0], pts[-1]
-        ra = nearest_node(a, node_mids, EDGE_SNAP)
-        rb = nearest_node(b, node_mids, EDGE_SNAP)
-        head_a = any(dist(h, a) <= ARROW_SNAP for h in heads)
-        head_b = any(dist(h, b) <= ARROW_SNAP for h in heads)
-        raw.append({'path': path, 'a': ra, 'b': rb, 'head_a': head_a, 'head_b': head_b})
+        ha = head_at(a, pts[1])
+        hb = head_at(b, pts[-2])
+        ra = nearest_node(a, node_mids, EDGE_SNAP) or (ha and nearest_node(ha['apex'], node_mids, EDGE_SNAP)) or None
+        rb = nearest_node(b, node_mids, EDGE_SNAP) or (hb and nearest_node(hb['apex'], node_mids, EDGE_SNAP)) or None
+        # Two boxes drawn touching leave a connector a few points long between them, and
+        # both of its ends snap to the nearer box. Give the ends different boxes, the
+        # closest pair.
+        if ra and rb and ra[0] == rb[0]:
+            best = None
+            for na, mids_a in node_mids.items():
+                for sa, ma in mids_a.items():
+                    da = dist(a, ma)
+                    if da > EDGE_SNAP:
+                        continue
+                    for nb, mids_b in node_mids.items():
+                        for sb, mb in mids_b.items():
+                            db = dist(b, mb)
+                            if nb == na or db > EDGE_SNAP:
+                                continue
+                            if best is None or da + db < best['d']:
+                                best = {'d': da + db, 'ra': (na, sa), 'rb': (nb, sb)}
+            if best:
+                ra, rb = best['ra'], best['rb']
+        # One head within reach of both ends of a short connector belongs to the end it is
+        # nearer.
+        at_a, at_b = ha, hb
+        if ha and hb and ha['i'] == hb['i']:
+            if ha['d'] < hb['d']:
+                at_b = None
+            elif hb['d'] < ha['d']:
+                at_a = None
+        raw.append({
+            'pts': pts, 'a': ra, 'b': rb,
+            'head_a': bool(at_a and at_a['incoming']),
+            'head_b': bool(at_b and at_b['incoming']),
+            'out_a': bool(at_a and not at_a['incoming']),
+            'out_b': bool(at_b and not at_b['incoming']),
+            'apex_a': at_a['apex'] if at_a else None,
+            'apex_b': at_b['apex'] if at_b else None,
+        })
 
     # An end that hit no box may be glued to another connector. Follow the host to its own
     # node end; that is the real source.
@@ -783,32 +908,97 @@ def resolve_edges(nodes, connectors, arrows):
         for j, other in enumerate(raw):
             if j == idx:
                 continue
-            if point_on_path(point, other['path'], JUNCTION_SNAP):
+            if point_on_path(point, other['pts'], JUNCTION_SNAP):
                 if other['a'] and not other['head_a']:
                     return other['a'][0]
                 if other['b'] and not other['head_b']:
                     return other['b'][0]
-                tail = other['path'].pts[0] if other['head_b'] else other['path'].pts[-1]
+                tail = other['pts'][0] if other['head_b'] else other['pts'][-1]
                 return host_source(j, tail, depth + 1)
         return None
 
+    # The mirror image: an end that arrives on another connector joins it, and goes where
+    # it goes. The host's remaining points come back too, so the edge runs all the way to
+    # its box rather than stopping in the middle of a line.
+    def host_target(idx, point, depth=0):
+        if depth > 4:
+            return None
+        for j, other in enumerate(raw):
+            if j == idx:
+                continue
+            k = segment_on(point, other['pts'], JUNCTION_SNAP)
+            if k == -1:
+                continue
+            if not other['head_a'] and not other['head_b']:
+                return None
+            forward = other['head_b'] and not other['head_a']
+            foot = foot_on(point, other['pts'][k], other['pts'][k + 1])
+            rest = [foot] + (other['pts'][k + 1:] if forward else list(reversed(other['pts'][:k + 1])))
+            end = other['b'] if forward else other['a']
+            if end:
+                return {'id': end[0], 'tail': rest}
+            onward = host_target(j, rest[-1], depth + 1)
+            return {'id': onward['id'], 'tail': rest + onward['tail']} if onward else None
+        return None
+
+    UNSET = object()
     edges, unresolved = [], []
     for i, r in enumerate(raw):
-        pts = r['path'].pts
+        pts = r['pts']
         a_id = r['a'][0] if r['a'] else None
         b_id = r['b'][0] if r['b'] else None
-        if a_id is None:
-            a_id = host_source(i, pts[0])
-        if b_id is None:
-            b_id = host_source(i, pts[-1])
 
-        if r['head_b'] or (not r['head_a'] and b_id and not a_id):
-            src, dst, order = a_id, b_id, list(pts)
+        src = dst = order = UNSET
+        if r['head_a'] or r['head_b'] or r['out_a'] or r['out_b']:
+            forward = True if (r['head_b'] and not r['head_a']) else (False if r['head_a'] else r['out_a'])
+            start = pts[0] if forward else pts[-1]
+            end = pts[-1] if forward else pts[0]
+            end_apex = r['apex_b'] if forward else r['apex_a']
+            src = a_id if forward else b_id
+            dst = b_id if forward else a_id
+            order = list(pts) if forward else list(reversed(pts))
+            if src is None:
+                src = host_source(i, start)
+            # A stub too short to clear its own box snaps both ends to it (Delta's FAM1204
+            # is 3.5 pt long); the arrow leaves the box, so its far end is wherever it joins.
+            if dst is not None and dst == src:
+                dst = None
+            if dst is None:
+                joined = host_target(i, end) or (end_apex and host_target(i, end_apex)) or None
+                if joined:
+                    dst = joined['id']
+                    order = order + joined['tail']
         else:
-            src, dst, order = b_id, a_id, list(reversed(pts))
+            # No head at either end. A stub from a box to another connector is that box
+            # joining the connector's flow: an arrow *into* the box would carry its own
+            # head. Only when the joined connector goes nowhere does the older reading
+            # apply, where the stub is a branch off a trunk and the trunk's source is its
+            # source.
+            if (a_id is None) != (b_id is None):
+                box_end = a_id if a_id else b_id
+                free = pts[-1] if a_id else pts[0]
+                joined = host_target(i, free)
+                if joined and joined['id'] != box_end:
+                    src, dst = box_end, joined['id']
+                    order = (list(pts) if a_id else list(reversed(pts))) + joined['tail']
+        if src is UNSET:
+            if a_id is None:
+                a_id = host_source(i, pts[0])
+            if b_id is None:
+                b_id = host_source(i, pts[-1])
+            if b_id and not a_id:
+                src, dst, order = a_id, b_id, list(pts)
+            else:
+                src, dst, order = b_id, a_id, list(reversed(pts))
 
         if not src or not dst or src == dst:
             unresolved.append((r, src, dst))
+            continue
+        # Joining a host lands on a point the host already has; keep each corner once.
+        order = [q for k, q in enumerate(order) if k == 0 or dist(q, order[k - 1]) > 0.05]
+        # A trunk that feeds a bus resolves to the same pair as the bus's own branch, and the
+        # branch already draws the whole route. One edge per pair.
+        if any(e['from'] == src and e['to'] == dst for e in edges):
             continue
         edges.append({'from': src, 'to': dst, 'points': order})
     return edges, unresolved
@@ -930,11 +1120,12 @@ def main():
                        'bbox': key['path'].bbox})
 
     known = syllabus_event_ids()
+    kind_for = category_mapper(mapping, pairs, labelled)
     nodes, jump_seen, tally, missing = [], {}, {}, []
     for n in labelled:
         if not n['label']:
             continue                                    # a legend key, handled above
-        kind = mapping.get(key_of(n['shape'], n['path'].lw))
+        kind = kind_for(n['shape'], n['path'].lw)
         if kind is None:
             print('  WARNING: %s (%s, lw %.3f) matches no legend key'
                   % (n['label'], n['shape'], n['path'].lw), file=sys.stderr)
@@ -976,19 +1167,10 @@ def main():
               file=sys.stderr)
 
     edges, unresolved = resolve_edges(nodes, connectors, arrows)
-    print('  %d edges resolved automatically, %d left to the repair table'
-          % (len(edges), len(unresolved)), file=sys.stderr)
-
-    repaired, unmatched, leftover = apply_repairs(unresolved)
-    for e in repaired:
-        print('    repaired: %s -> %s' % (e['from'], e['to']), file=sys.stderr)
-    edges.extend(repaired)
-    for rep in unmatched:
-        print('  WARNING: repair at (%.1f, %.1f) matched nothing -- the figure may have been '
-              'redrawn here. %s' % (rep['at'][0], rep['at'][1], rep['why']), file=sys.stderr)
-    for r, src, dst in leftover:
+    print('  %d edges resolved, %d unresolved' % (len(edges), len(unresolved)), file=sys.stderr)
+    for r, src, dst in unresolved:
         print('  WARNING: unresolved connector %s -> %s  %s' % (
-            src, dst, ' '.join('(%.1f,%.1f)' % p for p in r['path'].pts)), file=sys.stderr)
+            src, dst, ' '.join('(%.1f,%.1f)' % p for p in r['pts'])), file=sys.stderr)
 
     # A jump circle is an entrance or an exit depending on which way its arrows run. Derived,
     # not asserted: which circles pair with which is the publication's business, and this file

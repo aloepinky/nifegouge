@@ -338,9 +338,21 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
     if (!isFurniture(line.text)) lines.push({ ...line, page: p + 1 });
   }));
 
-  const allText = pages.map((pg) => pg.map((l) => l.text).join('\n')).join('\n');
-  const instruction = (allText.match(/CNATRAINST\s+[\d.]+[A-Z]?/) || [])[0] || null;
-  const date = (allText.match(/^\d{1,2}\s+[A-Z][a-z]{2}\s+\d{4}$/m) || [])[0] || null;
+  // The instruction number and date come from the running head, which every page prints
+  // as a line of its own. The first mention in the text is often the superseded revision
+  // ("cancels CNATRAINST 1542.166D"), so the most frequent head wins.
+  const commonest = (re) => {
+    const counts = new Map();
+    pages.forEach((pg) => pg.forEach((l) => {
+      const t = l.text.trim();
+      if (re.test(t)) counts.set(t, (counts.get(t) || 0) + 1);
+    }));
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t)[0] || null;
+  };
+  const instruction = commonest(/^CNATRAINST\s+[\d.]+[A-Z]?$/)
+    || (pages.flat().map((l) => l.text).join('\n').match(/CNATRAINST\s+[\d.]+[A-Z]?/) || [])[0]
+    || null;
+  const date = commonest(/^\d{1,2}\s+[A-Z][a-z]{2}\s+\d{4}$/);
 
   // Chapters, then blocks within each chapter.
   const chapters = [];
