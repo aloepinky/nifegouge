@@ -39,3 +39,10 @@ CLAUDE.md
 
 #AWS lambda
 lambda/submitDoc/node_modules/
+
+# discussApi: the lint rules are copied in from tools/lib at deploy time; a build artefact
+lambda/discussApi/discussRules.mjs
+lambda/**/function.zip
+
+# Local state for tools/discuss-dev-server.js
+/_discuss-dev

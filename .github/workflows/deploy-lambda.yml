@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'lambda/**'
+      - 'tools/lib/**'
 
 jobs:
   deploy:
@@ -92,4 +93,14 @@ jobs:
           zip -r function.zip .
           aws lambda update-function-code \
             --function-name tw4GetCompletionLeaderboard \
+            --zip-file fileb://function.zip
+      # The lint rules live in tools/lib and are shared with the CLI; the copy inside the
+      # function directory is gitignored and made here so the two can never drift.
+      - name: Deploy discussApi
+        run: |
+          cp tools/lib/discussRules.mjs lambda/discussApi/discussRules.mjs
+          cd lambda/discussApi
+          zip -r function.zip .
+          aws lambda update-function-code \
+            --function-name discussApi \
             --zip-file fileb://function.zip
