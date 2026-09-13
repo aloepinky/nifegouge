@@ -1289,7 +1289,7 @@ export default function T6BPropDiagram() {
                 <text
                   x={(TCX + lr * cosθ).toFixed(1)}
                   y={(TCY + lr * sinθ + 3).toFixed(1)}
-                  style={{ fontFamily: FONT, fontSize: 6.5, fill: C.muted, textAnchor: 'middle' }}>
+                  style={{ fontFamily: FONT, fontSize: 8, fill: '#ffffff', textAnchor: 'middle' }}>
                   {t}
                 </text>
               </g>;
@@ -1308,12 +1308,12 @@ export default function T6BPropDiagram() {
               style={{ fontFamily: FONT, fontSize: 14, fontWeight: 700, fill: '#ffffff', textAnchor: 'middle' }}>
               {displayedTorque}
             </text>
-            <text x={TCX} y={TCY + 39}
-              style={{ fontFamily: FONT, fontSize: 8, fontWeight: 700, fill: '#ffffff', textAnchor: 'middle' }}>
+            <text x={TCX} y={TCY + 40}
+              style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, fill: '#ffffff', textAnchor: 'middle' }}>
               %
             </text>
-            <text x={TCX} y={TCY + 50}
-              style={{ fontFamily: FONT, fontSize: 7.5, fill: '#ffffff', textAnchor: 'middle', letterSpacing: '0.1em' }}>
+            <text x={TCX} y={TCY + 51}
+              style={{ fontFamily: FONT, fontSize: 9, fontWeight: 700, fill: '#ffffff', textAnchor: 'middle', letterSpacing: '0.1em' }}>
               TORQUE
             </text>
           </>);

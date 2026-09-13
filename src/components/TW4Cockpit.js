@@ -79,6 +79,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   const modalBaseContentRef = useRef(null);
   const modalStepKeyRef = useRef(null);
   const prevCheckResultsRef = useRef({});
+  const cockpitRef = useRef(null);
+  const scrollToHintRef = useRef(false);
 
   useEffect(() => {
     if(isRandom) {
@@ -763,9 +765,37 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
     prevCheckResultsRef.current = {...checkResults};
   }, [checkResults, autoNWC, currentDivKey, currentIndex, currentIndexArray, divMap, inputAnswers]);
 
+  // Pressing Hint scrolls the highlighted control into view, unless one is already on screen.
+  // Only the button sets the flag: giveHint also runs while typing an EP, which must not move the page.
+  useEffect(() => {
+    if (!scrollToHintRef.current) return;
+    scrollToHintRef.current = false;
+    const hinted = [...cockpitRef.current.querySelectorAll('.correct-answer-hint, .correct-answer-hint-image, .correct-answer-hint-button')];
+    if (!hinted.length) return;
+    // visualViewport is the part of the page actually on screen when a phone is pinch-zoomed
+    const vv = window.visualViewport;
+    const view = vv
+      ? {top: vv.offsetTop, left: vv.offsetLeft, bottom: vv.offsetTop + vv.height, right: vv.offsetLeft + vv.width}
+      : {top: 0, left: 0, bottom: window.innerHeight, right: window.innerWidth};
+    const onScreen = (el) => {
+      const r = el.getBoundingClientRect();
+      return r.top >= view.top && r.bottom <= view.bottom && r.left >= view.left && r.right <= view.right;
+    };
+    if (hinted.some(onScreen)) return;
+    hinted[0].scrollIntoView({behavior: 'smooth', block: 'center', inline: 'center'});
+  }, [activeHints]);
+
+  const pressHint = () => {
+    scrollToHintRef.current = true;
+    giveHint();
+  };
+
+  // Hint under the left panel, Skip under the right, so they're in reach while zoomed on the cockpit
+  const showSideActions = !isGameActive || process.env.NODE_ENV === 'development';
+
   return (
     <>
-      <div className="limits-eps-container" style={{maxWidth: CONTAINER_MAX_WIDTH}}>
+      <div className="limits-eps-container" ref={cockpitRef} style={{maxWidth: CONTAINER_MAX_WIDTH}}>
         {/* Header with Instructions Button */}
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '100px', marginBottom: '5px'}}>
           <button onClick={() => setShowInstructions(true)}>
@@ -828,8 +858,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                 <ul>
                   <li><strong>Simple/Full Mode</strong> Toggle to remove/add cockpit poster and associated buttons</li>
                   <li><strong>NWC Buttons:</strong> Small buttons on individual steps that display Notes, Warnings, and Cautions relevant to that step.</li>
-                  <li><strong>Hint:</strong> Highlights controls related to the current step</li>
-                  <li><strong>Next Answer/Skip:</strong> Reveals and fills the next unanswered/unchecked step</li>
+                  <li><strong>Hint:</strong> Highlights controls related to the current step and scrolls to them. Found under the left panel</li>
+                  <li><strong>Skip:</strong> Reveals and fills the next unanswered/unchecked step. Found under the right panel (bottom row in Simple Mode)</li>
                   <li><strong>All Answers:</strong> Completes all remaining steps</li>
                   <li><strong>Check:</strong> Validates your answers (EPs only)</li>
                   <li><strong>Reset:</strong> Clears all answers and feedback</li>
@@ -982,6 +1012,11 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                     title="Anti-G test"
                   />
                 </div>
+                {showSideActions && (
+                  <div className="cockpit-side-actions">
+                    <button onClick={pressHint}>Hint</button>
+                  </div>
+                )}
               </div>
               )}
 
@@ -1783,6 +1818,11 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                     title="OBOGS Pressure Lever"
                   />
                 </div>
+                {showSideActions && (
+                  <div className="cockpit-side-actions cockpit-side-actions-right">
+                    <button onClick={nextAnswer}>Skip</button>
+                  </div>
+                )}
               </div>
               )}
             </div>
@@ -1796,8 +1836,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
               resetAnswers();}}>
               {isRandom ? "Random " : "Sequential "} Order
             </button>}
-            {cockpitMode === 'full' && <button onClick={() => giveHint()}>Hint?</button>}
-            <button onClick={nextAnswer}>Next Answer/Skip</button>
+            {cockpitMode === 'simplified' && <button onClick={nextAnswer}>Skip</button>}
             <button onClick={allAnswers}>All Answers</button>
           </>}
           {(currentDivKey === 'epDivs' || currentDivKey === 'fullEpDivs') && <button onClick={checkAnswers}>Check</button>}

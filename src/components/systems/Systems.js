@@ -6,17 +6,21 @@ import T6BOilDiagram from './oil/T6BOilDiagram';
 import T6BElectricalDiagram from './elec/T6BElectricalDiagram';
 import T6BObogsDiagram from './obogs/T6BObogsDiagram';
 import T6BFuelDiagram from './fuel/T6BFuelDiagram';
+import { SYSTEM_TABS } from './systemTabs';
 
-// One entry per system: the :tab value, its nav label, and the diagram it renders.
-// Adding a system is a single line here rather than three parallel edits.
-const TABS = [
-  { id: 'hyds', label: 'Hydraulics', Diagram: T6BHydraulicDiagram },
-  { id: 'prop', label: 'Propeller',  Diagram: T6BPropDiagram },
-  { id: 'oil',  label: 'Oil',        Diagram: T6BOilDiagram },
-  { id: 'elec', label: 'Electrical', Diagram: T6BElectricalDiagram },
-  { id: 'obogs', label: 'OBOGS',     Diagram: T6BObogsDiagram },
-  { id: 'fuel', label: 'Fuel',       Diagram: T6BFuelDiagram },
-];
+// The diagram each system renders. The :tab values and nav labels live in systemTabs.js,
+// which the discuss item pages also read — they link to a system without importing its
+// schematic. Adding a system is one line there and one line here.
+const DIAGRAMS = {
+  hyds: T6BHydraulicDiagram,
+  prop: T6BPropDiagram,
+  oil: T6BOilDiagram,
+  elec: T6BElectricalDiagram,
+  obogs: T6BObogsDiagram,
+  fuel: T6BFuelDiagram,
+};
+
+const TABS = SYSTEM_TABS.map(t => ({ ...t, Diagram: DIAGRAMS[t.id] }));
 
 function Systems() {
   const { tab } = useParams();

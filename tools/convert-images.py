@@ -35,8 +35,10 @@ ARCHIVE = os.path.join(REPO, "_original-images")
 
 # Quality by content type. The systems photos are camera images shown at maxHeight 300,
 # so q82 is invisible. public/images/ holds cockpit panels and whiz-wheel faces — line art
-# with fine printed text that softens at q82, so those get q90.
-QUALITY = {"systems": 82, "images": 90}
+# with fine printed text that softens at q82, so those get q90. public/discuss/ is the same
+# problem again: figures on the discussion item pages are charts with labels on them, and a
+# label a student cannot read is the whole value of the figure gone.
+QUALITY = {"systems": 82, "images": 90, "discuss": 90}
 
 # PWA manifest icons and the CTAF chart are referenced by manifest.json / index.html and
 # are already small; leaving them as PNG keeps those references valid.

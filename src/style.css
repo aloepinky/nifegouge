@@ -1260,6 +1260,27 @@ textarea.incorrect-answer {
   background-color: #003B4F;
 }
 
+.cockpit-side-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* right.webp is 35.25% of its width shorter than left.webp (aspect 5.642 vs 5.994). Both columns
+   share a width and a % margin resolves against width, so this keeps Skip level with Hint at any scale. */
+.cockpit-side-actions-right {
+  margin-top: calc(10px + 35.25%);
+}
+
+.limits-eps-container .cockpit-side-actions button {
+  width: 100%;
+  padding: 14px 0;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(1, 32, 44, 0.3);
+}
+
 /* EP Controls Panel Styles */
 .eps-with-controls {
   display: flex;
