@@ -2,10 +2,9 @@
 // at render time. No React — small named helpers over a raw key, the way
 // TW4Leaderboard.js and TW4JetLog.js already do it in this app.
 //
-// Saving an editor sends the page straight to the server, so a draft exists only when a save
-// did not go through: it is the copy kept in this browser until the edit is saved or
-// discarded (edit/PublishDialog.js sends it). It records `baseRev`, the revision it started
-// from, so a save against a page that moved on is refused with a 409 rather than overwriting.
+// A draft is private to the browser that made it until Publish sends it to the server as a
+// new revision (edit/PublishDialog.js). It records `baseRev`, the revision it started from,
+// so a publish against a page that moved on is refused with a 409 rather than overwriting.
 import { allIds } from './ids';
 
 const KEY = 'discussDrafts';
@@ -29,8 +28,8 @@ function writeAll(all) {
     localStorage.setItem(KEY, JSON.stringify(all));
     return true;
   } catch {
-    // Quota, private mode, a disabled store. The edit stays in the open editor for this
-    // session, and saving it again is still the way it gets out.
+    // Quota, private mode, a disabled store. The draft stays in React state for this
+    // session, and Publish is still the way it gets out.
     return false;
   }
 }

@@ -1,10 +1,11 @@
 // The editing affordances that sit in the reading view: the `[edit]` link beside a heading,
 // its sibling `[history]`, and the banner that says a page is showing local edits.
 //
-// All quiet on purpose. A wiki's edit links are furniture — present on every heading,
-// noticed only when you are looking for them — and the moment they compete with the prose
-// for attention the page has stopped being a reference and started being an application.
-import React from 'react';
+// The links are quiet on purpose. A wiki's edit links are furniture — present on every
+// heading, noticed only when you are looking for them — and the moment they compete with the
+// prose for attention the page has stopped being a reference and started being an
+// application. The banner is the one loud thing here, and it has to be.
+import React, { forwardRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ConfirmButton } from './fields';
 
@@ -47,28 +48,37 @@ function when(iso) {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
 }
 
-// Shown above the head whenever a draft is overlaying the published page. Saving publishes
-// straight to the site, so a draft only exists when a save did not go through — a refusal, a
-// dropped connection, a page reloaded mid-edit, or someone else saving first. Its whole job is
-// to stop somebody reading their own unsent edit and believing it is what the site says.
+// Shown above the head whenever a draft is overlaying the published page. Its whole job is to
+// stop somebody reading their own unsent edit and believing it is what the site says — and
+// to be the thing a Save lands on: ItemPage scrolls here and focuses Publish, because Save is
+// where users stop, and the site does not change until this button is pressed.
+//
 // `behind` is set when the page has been published since the draft started.
-export function DraftBanner({ savedAt, behind, onPublish, onDiscard }) {
+export const DraftBanner = forwardRef(function DraftBanner(
+  { savedAt, behind, publishing, onPublish, onDiscard },
+  ref,
+) {
   return (
-    <div className="discuss-draft-banner">
+    <div className="discuss-draft-banner" ref={ref} role="status">
+      <p className="discuss-draft-title">Saved in this browser only. Nothing has changed on the site yet.</p>
       <p>
-        <strong>You are reading edits that are not on the site yet.</strong> They are kept in
-        this browser only{savedAt ? `, last kept ${when(savedAt)}` : ''}. Save them to the site,
-        or discard them.
+        You are reading your own edits{savedAt ? `, last saved ${when(savedAt)}` : ''}. They stay
+        here until you publish them, and nobody else can see them until you do.
         {behind && (
           <>
-            {' '}The page has been saved by someone else since these edits started; check your
-            changes against it before saving.
+            {' '}The page has been published by someone else since these edits started; check
+            your changes against it before publishing.
           </>
         )}
       </p>
       <div className="discuss-draft-actions">
-        <button type="button" onClick={onPublish}>
-          Save to the site
+        <button
+          type="button"
+          className="discuss-draft-publish"
+          onClick={onPublish}
+          disabled={publishing}
+        >
+          Publish to the site
         </button>
         <ConfirmButton
           label="Discard edits"
@@ -79,4 +89,4 @@ export function DraftBanner({ savedAt, behind, onPublish, onDiscard }) {
       </div>
     </div>
   );
-}
+});

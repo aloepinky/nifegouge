@@ -5048,13 +5048,17 @@ textarea.incorrect-answer {
 
 /* ---- draft banner ---- */
 
+/* The one loud thing in the edit layer. A save scrolls here, so it has to
+   read as a stop sign, not as a note: heavy amber rule, a title line, and a
+   filled Publish button. scroll-margin keeps it clear of the top edge. */
 .discuss-draft-banner {
   border: 1px solid #d8c48a;
-  border-left: 4px solid #b07800;
+  border-left: 6px solid #b07800;
   background: #fdf8ec;
   border-radius: 4px;
-  padding: 12px 16px;
+  padding: 14px 18px 16px;
   margin: 0 0 20px;
+  scroll-margin-top: 24px;
 }
 
 .discuss-draft-banner p {
@@ -5064,7 +5068,36 @@ textarea.incorrect-answer {
   line-height: 1.5;
 }
 
+.discuss-draft-banner .discuss-draft-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: bold;
+  color: #01202C;
+}
+
 .discuss-draft-banner strong { color: #01202C; }
+
+.discuss-draft-actions .discuss-draft-publish {
+  background: #003B4F;
+  border-color: #003B4F;
+  color: #ffffff;
+  font-weight: bold;
+  padding: 7px 18px;
+  font-size: 14px;
+}
+
+.discuss-draft-actions .discuss-draft-publish:hover:not(:disabled),
+.discuss-draft-actions .discuss-draft-publish:focus-visible {
+  background: #01202C;
+  border-color: #01202C;
+}
+
+.discuss-draft-actions .discuss-draft-publish:focus-visible {
+  outline: 3px solid #b07800;
+  outline-offset: 2px;
+}
+
+.discuss-draft-actions .discuss-draft-publish:disabled { opacity: 0.5; cursor: default; }
 
 .discuss-draft-actions {
   display: flex;
@@ -5530,9 +5563,6 @@ textarea.incorrect-answer {
   font-size: 15px;
   color: #01202C;
 }
-
-/* The name and summary asked for at every Save, since Save is publish. */
-.discuss-editor-publish { margin-bottom: 4px; }
 
 @media (max-width: 700px) {
   .discuss-editor { padding: 12px; }

@@ -82,7 +82,7 @@ function SectionHead({ number, title, isSub, index, count, onMove, onRemove, onS
   );
 }
 
-function PageEditor({ item, onSave, onCancel, check, saving, saveError }) {
+function PageEditor({ item, onSave, onCancel, check }) {
   const [p, setP] = useState(() => clone(item));
   useEscape(onCancel);
 
@@ -149,7 +149,7 @@ function PageEditor({ item, onSave, onCancel, check, saving, saveError }) {
   const setRef = (i, key, value) => setRefs(refs.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
   const removeRef = (i) => setRefs(refs.filter((_, j) => j !== i));
 
-  const save = (meta) => {
+  const save = () => {
     const out = clone(p);
     // Reference numbers are position-derived, so commit the renumber and rewrite every
     // citation before the page goes out.
@@ -164,7 +164,7 @@ function PageEditor({ item, onSave, onCancel, check, saving, saveError }) {
       delete s.__new;
       for (const sub of s.subsections || []) delete sub.__new;
     }
-    onSave(out, meta);
+    onSave(out);
   };
 
   return (
@@ -354,9 +354,7 @@ function PageEditor({ item, onSave, onCancel, check, saving, saveError }) {
       </div>
 
       <EditorActions
-        publish
-        saving={saving}
-        saveError={saveError}
+        draft
         onSave={save}
         onCancel={onCancel}
         errors={problems.errors}

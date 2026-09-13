@@ -4,9 +4,8 @@
 // already uses — TW4JetLog.js's `handleInputChange(cellId, value)` and ToldCard.js's
 // two-key setter. No form library, no validation library; the editors own their own state and
 // hand a finished object back on save.
-import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { itemList, getItemMeta, useItemIndexVersion } from '../registry';
-import { getAuthor, setAuthor } from '../discussApi';
 
 // Destructive actions ask in the page, never through window.confirm. The app has no native
 // dialogs anywhere else, a browser dialog cannot say what is about to be lost, and the
@@ -231,77 +230,16 @@ export function SlugOptions() {
 // Save / Cancel, plus whatever else an editor wants. Save is disabled while the validator
 // reports an error, and the errors are printed above it rather than in an alert.
 //
-// With `publish`, Save is the whole job. The footer asks what changed (required, it is the
-// history's one line about this revision) and who did it (optional, remembered), and the
-// editor's `onSave` receives `{ author, summary }` to send with the page. There is no separate
-// publish step: a Save button that leaves the page unsaved is the thing every user reads
-// wrong. `saving` holds the button while the request is out, and `saveError` is the server's
-// refusal — printed here, so the fix happens in the still-open form.
+// Save commits to the draft, not to the site: publishing is a deliberate second step from the
+// banner ItemPage scrolls to. The hint under the button says so, because a Save that is not
+// the end of the job is the one thing every user reads wrong.
 //
 // `remove` is the optional destructive action beside Cancel — removing the section being
-// edited — as `{ label, question, summary, onConfirm }`. Removal is a save too, so it goes out
-// with the same name and summary; a removal with nothing typed in "what changed" gets the
-// stated `summary`, since a removal describes itself.
-export function EditorActions({
-  onSave, onCancel, errors, warnings, children, publish, saving, saveError, remove,
-}) {
-  const id = useId();
-  const [author, setAuthorField] = useState(() => (publish ? getAuthor() : ''));
-  const [summary, setSummary] = useState('');
+// edited — as `{ label, question, onConfirm }`.
+export function EditorActions({ onSave, onCancel, errors, warnings, children, remove, draft }) {
   const hasErrors = (errors || []).length > 0;
-  const unsaid = publish && !summary.trim();
-  const blocked = hasErrors || unsaid || !!saving;
-
-  const meta = (fallback) => {
-    const name = author.trim();
-    setAuthor(name);
-    return { author: name, summary: summary.trim() || fallback };
-  };
-
-  const save = () => {
-    if (blocked) return;
-    if (!publish) {
-      onSave();
-      return;
-    }
-    onSave(meta());
-  };
-
-  const lint = (saveError && saveError.lint) || [];
-
   return (
     <div className="discuss-editor-actions">
-      {publish && (
-        <div className="discuss-editor-publish">
-          <div className="discuss-editor-field">
-            <label className="discuss-editor-label" htmlFor={`${id}-summary`}>
-              What changed <span className="discuss-editor-req">required</span>
-            </label>
-            <Line
-              id={`${id}-summary`}
-              value={summary}
-              onChange={setSummary}
-              maxLength={200}
-              placeholder="e.g. Corrected the flap limit from §4.3"
-              onKeyDown={(e) => { if (e.key === 'Enter') save(); }}
-            />
-          </div>
-          <div className="discuss-editor-field">
-            <label className="discuss-editor-label" htmlFor={`${id}-author`}>Your name</label>
-            <Line
-              id={`${id}-author`}
-              value={author}
-              onChange={setAuthorField}
-              maxLength={40}
-              placeholder="Optional. Shown in the page's history"
-            />
-          </div>
-          <p className="discuss-editor-hint">
-            Saving puts your edits on the site for everyone. Every revision is kept, so a
-            mistake is undone from the page's history.
-          </p>
-        </div>
-      )}
       {hasErrors && (
         <ul className="discuss-editor-problems discuss-editor-problems--error">
           {errors.map((e) => (
@@ -316,25 +254,17 @@ export function EditorActions({
           ))}
         </ul>
       )}
-      {lint.length > 0 && (
-        <ul className="discuss-editor-problems discuss-editor-problems--error">
-          {lint.map((e) => (
-            <li key={`${e.rule}:${e.detail}`}>{e.rule}: {e.detail}</li>
-          ))}
-        </ul>
+      {draft && (
+        <p className="discuss-editor-hint">
+          Save keeps your edits in this browser. Nothing changes on the site until you publish
+          them, which is the next step.
+        </p>
       )}
-      {saveError && <p className="discuss-editor-warn">{saveError.message}</p>}
       <div className="discuss-editor-buttons">
-        <button
-          type="button"
-          className="discuss-editor-save"
-          onClick={save}
-          disabled={blocked}
-          title={unsaid && !hasErrors ? 'Say what you changed first' : undefined}
-        >
-          {saving ? 'Saving…' : 'Save'}
+        <button type="button" className="discuss-editor-save" onClick={onSave} disabled={hasErrors}>
+          Save
         </button>
-        <button type="button" className="discuss-editor-cancel" onClick={onCancel} disabled={!!saving}>
+        <button type="button" className="discuss-editor-cancel" onClick={onCancel}>
           Cancel
         </button>
         {children}
@@ -344,10 +274,7 @@ export function EditorActions({
             label={remove.label}
             question={remove.question}
             confirmLabel="Remove"
-            onConfirm={() => {
-              if (saving) return;
-              remove.onConfirm(publish ? meta(remove.summary) : undefined);
-            }}
+            onConfirm={remove.onConfirm}
           />
         )}
       </div>

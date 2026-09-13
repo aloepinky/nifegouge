@@ -12,7 +12,7 @@ import { clone } from './draft';
 import { newNumberId } from './ids';
 import { Line, RefsPicker, RowTools, EditorActions, ConfirmButton, useEscape, move } from './fields';
 
-function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange, saving, saveError }) {
+function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange }) {
   const [local, setLocal] = useState(() => clone(item.numbers || []));
   useEscape(embedded ? null : onCancel);
 
@@ -94,10 +94,8 @@ function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange, savi
 
       {!embedded && (
         <EditorActions
-          publish
-          saving={saving}
-          saveError={saveError}
-          onSave={(meta) => onSave(rows.length ? rows : undefined, meta)}
+          draft
+          onSave={() => onSave(rows.length ? rows : undefined)}
           onCancel={onCancel}
           errors={problems.errors}
           warnings={problems.warnings}

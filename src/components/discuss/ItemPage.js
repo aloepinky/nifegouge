@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { generatedFor } from './GENERATED';
 import { getItemMeta } from './registry';
 import { useSyllabus } from './SyllabusContext';
-import { rememberItem, refreshItem, saveItem } from './discussApi';
+import { rememberItem, refreshItem } from './discussApi';
 import ItemLink from './ItemLink';
 import { getSystemTab } from '../systems/systemTabs';
 import { getDraft, getRecord, saveDraft, clearDraft, clone } from './edit/draft';
@@ -451,11 +451,11 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const [draft, setDraft] = useState(() => (readOnly ? null : getDraft(item.slug)));
   const [draftRecord, setDraftRecord] = useState(() => (readOnly ? null : getRecord(item.slug)));
   const [editing, setEditing] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState(null); // { message, lint } for the open editor
   const [publishing, setPublishing] = useState(false);
   const [conflict, setConflict] = useState(false);
-  const [published, setPublished] = useState(null); // { warnings } after a save
+  const [published, setPublished] = useState(null); // { warnings } after a publish
+  const [justSaved, setJustSaved] = useState(false);
+  const bannerRef = useRef(null);
 
   const view = draft || item;
   const baseIds = draftRecord ? draftRecord.baseIds : allIds(item);
@@ -464,8 +464,42 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const draftBase = draftRecord && draftRecord.baseRev != null ? draftRecord.baseRev : rev;
   const behind = draft && draftBase !== rev;
 
-  // The page as saved: forget any draft and let the store carry the new revision.
-  const onPublished = (next, result) => {
+  // Save commits to the draft and closes the editor. Publishing is a deliberate second step,
+  // and the one step users skip: they read Save as the end of the job. So a save scrolls the
+  // page to the banner that says otherwise and puts focus on its Publish button, which is
+  // the difference between a warning and a warning that gets seen.
+  const commit = (next) => {
+    saveDraft(item.slug, next, item, draftBase);
+    setDraft(clone(next));
+    setDraftRecord(getRecord(item.slug));
+    setEditing(null);
+    setPublished(null);
+    setJustSaved(true);
+  };
+
+  // Instant, and a tick late: closing the editor shortens the page by a screenful or more,
+  // and the browser's clamp of the scroll position at that moment cancels a smooth scroll
+  // started in the same frame. A jump after the layout has settled always lands. A timeout
+  // rather than an animation frame, because a background tab runs no frames and the flag
+  // has to reset either way; it resets inside the callback, since resetting first would
+  // re-run this effect and its cleanup would cancel the timer before it fired.
+  useEffect(() => {
+    if (!justSaved) return undefined;
+    const el = bannerRef.current;
+    const timer = setTimeout(() => {
+      setJustSaved(false);
+      if (!el) return;
+      el.scrollIntoView({ block: 'start' });
+      const button = el.querySelector('.discuss-draft-publish');
+      if (button) button.focus({ preventScroll: true });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [justSaved]);
+
+  const cancel = () => setEditing(null);
+
+  // The draft has gone out: forget it here and let the store carry the new revision.
+  const onPublished = (result) => {
     clearDraft(item.slug);
     rememberItem({
       slug: item.slug,
@@ -473,53 +507,13 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       updatedAt: result.updatedAt,
       author: result.author,
       summary: result.summary,
-      item: clone(next),
+      item: clone(view),
     });
     setDraft(null);
     setDraftRecord(null);
-    setEditing(null);
-    setSaveError(null);
     setPublishing(false);
     setConflict(false);
     setPublished({ warnings: (result.lint && result.lint.warnings) || [] });
-  };
-
-  // Save is publish. The editor hands back the page and who/why, and it goes to the server
-  // as a new revision on the spot; the editor closes only once the server has taken it. A
-  // refusal (an added em dash, a dropped connection) stays in the open form with the reason,
-  // and a copy is kept in this browser in case the tab is closed on it. Someone else saving
-  // first closes the form and keeps the edit as a draft under a notice, because the fix
-  // there is to look at what they did.
-  const commit = async (next, meta) => {
-    setSaving(true);
-    setSaveError(null);
-    setPublished(null);
-    try {
-      const result = await saveItem(item.slug, draftBase, next, meta);
-      onPublished(next, { ...result, author: meta.author, summary: meta.summary });
-    } catch (err) {
-      saveDraft(item.slug, next, item, draftBase);
-      if (err.status === 409) {
-        setDraft(clone(next));
-        setDraftRecord(getRecord(item.slug));
-        setEditing(null);
-        setConflict(true);
-      } else {
-        setSaveError({
-          message: `Not saved. ${err.message}`,
-          lint: (err.data && err.data.lint && err.data.lint.errors) || [],
-        });
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Cancel means cancel: a copy kept only because a save failed goes with the form.
-  const cancel = () => {
-    if (!draft) clearDraft(item.slug);
-    setEditing(null);
-    setSaveError(null);
   };
 
   const discard = () => {
@@ -530,8 +524,8 @@ function ItemPage({ record, readOnly = false, banner = null }) {
     setConflict(false);
   };
 
-  // Someone saved first. The draft stays; loading the newest revision rebases it, so the
-  // next save goes against what is actually on the site.
+  // Someone published first. The draft stays; loading the newest revision rebases it, so the
+  // next publish goes against what is actually on the site.
   const loadNewest = async () => {
     const newest = await refreshItem(item.slug);
     if (newest && draft) saveDraft(item.slug, draft, newest.item, newest.rev);
@@ -543,10 +537,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   // One editor open at a time, as a wiki does it. Rather than asking whether to throw away
   // what is in the open form, every other `[edit]` is disabled while it is open — the answer
   // to "can I edit two things at once" is visible instead of being a question.
-  const open = (next) => {
-    setSaveError(null);
-    setEditing(next);
-  };
+  const open = (next) => setEditing(next);
   const busy = !!editing || publishing;
 
   // Every `[edit]` on the page goes through here, so a read-only rendering has none.
@@ -563,10 +554,12 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const head = (
     <>
       {banner}
-      {draft && !readOnly && !editing && (
+      {draft && !readOnly && (
         <DraftBanner
+          ref={bannerRef}
           savedAt={draftRecord && draftRecord.savedAt}
           behind={behind}
+          publishing={publishing}
           onPublish={() => {
             setPublished(null);
             setPublishing(true);
@@ -579,7 +572,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
           slug={item.slug}
           baseRev={draftBase}
           item={view}
-          onPublished={(result) => onPublished(view, result)}
+          onPublished={onPublished}
           onConflict={() => setConflict(true)}
           onCancel={() => setPublishing(false)}
         />
@@ -587,9 +580,9 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       {conflict && (
         <div className="discuss-editor-notice">
           <p>
-            <strong>Someone else saved this page while you were editing.</strong> Your edits
-            are kept in this browser. Load the newest version, check your changes against it,
-            then save again.
+            <strong>Someone else published this page while you were editing.</strong> Your
+            edits are kept in this browser. Load the newest version, check your changes
+            against it, then publish again.
           </p>
           <div className="discuss-draft-actions">
             <ConfirmButton
@@ -605,7 +598,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       {published && (
         <div className="discuss-editor-notice">
           <p>
-            <strong>Saved to the site.</strong>
+            <strong>Published.</strong>
             {published.warnings.length
               ? ' The linter flagged the following for a person to look at; none of it blocks the page.'
               : ' The linter found nothing to flag.'}
@@ -644,14 +637,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   );
 
   const pageEditor = (
-    <PageEditor
-      item={view}
-      onSave={commit}
-      onCancel={cancel}
-      check={check}
-      saving={saving}
-      saveError={saveError}
-    />
+    <PageEditor item={view} onSave={commit} onCancel={cancel} check={check} />
   );
 
   // A stub has no body to edit — it becomes a page by clearing the stub flag in the page
@@ -704,11 +690,9 @@ function ItemPage({ record, readOnly = false, banner = null }) {
               (editing && editing.kind === 'numbers' ? (
                 <NumbersEditor
                   item={view}
-                  onSave={(rows, meta) => commit({ ...view, numbers: rows }, meta)}
+                  onSave={(rows) => commit({ ...view, numbers: rows })}
                   onCancel={cancel}
                   check={(rows) => check({ ...view, numbers: rows })}
-                  saving={saving}
-                  saveError={saveError}
                 />
               ) : (
                 <NumbersBox
@@ -741,12 +725,10 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                     <SectionEditor
                       section={section}
                       item={view}
-                      onSave={(next, meta) => commit(replaceBlock(view, section.id, next), meta)}
+                      onSave={(next) => commit(replaceBlock(view, section.id, next))}
                       onCancel={cancel}
-                      onRemove={(meta) => commit(replaceBlock(view, section.id, null), meta)}
+                      onRemove={() => commit(replaceBlock(view, section.id, null))}
                       check={(next) => check(replaceBlock(view, section.id, next))}
-                      saving={saving}
-                      saveError={saveError}
                     />
                   ) : (
                     <SectionBody block={section} showCite={!collapsed} />
@@ -777,12 +759,10 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                             section={sub}
                             item={view}
                             isSub
-                            onSave={(next, meta) => commit(replaceBlock(view, sub.id, next), meta)}
+                            onSave={(next) => commit(replaceBlock(view, sub.id, next))}
                             onCancel={cancel}
-                            onRemove={(meta) => commit(replaceBlock(view, sub.id, null), meta)}
+                            onRemove={() => commit(replaceBlock(view, sub.id, null))}
                             check={(next) => check(replaceBlock(view, sub.id, next))}
-                            saving={saving}
-                            saveError={saveError}
                           />
                         ) : (
                           <>

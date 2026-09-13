@@ -294,7 +294,7 @@ function BulletRow({
 // form's Save sends everything at once. `item` is then the page as it stands in that form,
 // so an id minted here sees the paragraphs added in a sibling section a moment ago.
 function SectionEditor({
-  section, item, isSub, onSave, onCancel, onRemove, check, embedded, onChange, saving, saveError,
+  section, item, isSub, onSave, onCancel, onRemove, check, embedded, onChange,
 }) {
   const [local, setLocal] = useState(() => clone(section));
   useEscape(embedded ? null : onCancel);
@@ -519,13 +519,11 @@ function SectionEditor({
 
       {!embedded && (
         <EditorActions
-          publish
-          saving={saving}
-          saveError={saveError}
-          onSave={(meta) => {
+          draft
+          onSave={() => {
             const out = clone(s);
             delete out.__new;
-            onSave(out, meta);
+            onSave(out);
           }}
           onCancel={onCancel}
           errors={problems.errors}
@@ -533,7 +531,6 @@ function SectionEditor({
           remove={{
             label: `Remove ${isSub ? 'subsection' : 'section'}`,
             question: `Remove "${s.title}" and everything in it?`,
-            summary: `Removed the ${isSub ? 'subsection' : 'section'} "${s.title}"`,
             onConfirm: onRemove,
           }}
         />
