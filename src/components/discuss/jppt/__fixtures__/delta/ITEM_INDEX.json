@@ -1,0 +1,1340 @@
+[
+ {
+  "slug": "abnormal-starts",
+  "title": "Abnormal starts"
+ },
+ {
+  "slug": "aborted-takeoff",
+  "title": "Aborted takeoff"
+ },
+ {
+  "slug": "accelerated-stall",
+  "title": "Accelerated stall",
+  "maneuver": true
+ },
+ {
+  "slug": "acceleration-limitations",
+  "title": "Acceleration limitations"
+ },
+ {
+  "slug": "aerobatic-maneuvers",
+  "title": "Aerobatic maneuvers",
+  "maneuver": true
+ },
+ {
+  "slug": "aileron-roll",
+  "title": "Aileron roll",
+  "maneuver": true
+ },
+ {
+  "slug": "airborne-damaged-aircraft",
+  "title": "Airborne-damaged aircraft"
+ },
+ {
+  "slug": "aircraft-and-cockpit-lighting",
+  "title": "Aircraft and cockpit lighting"
+ },
+ {
+  "slug": "aircraft-departs-prepared-surface",
+  "title": "Aircraft departs prepared surface"
+ },
+ {
+  "slug": "aircraft-discrepancy-reporting",
+  "title": "Aircraft discrepancy reporting"
+ },
+ {
+  "slug": "aircraft-issue",
+  "title": "Aircraft issue"
+ },
+ {
+  "slug": "airfield-and-runway-lighting",
+  "title": "Airfield and runway lighting"
+ },
+ {
+  "slug": "airspace-classification",
+  "title": "Airspace classification"
+ },
+ {
+  "slug": "airspeed-changes",
+  "title": "Airspeed changes",
+  "maneuver": true
+ },
+ {
+  "slug": "airway-navigation",
+  "title": "Airway navigation"
+ },
+ {
+  "slug": "aldis-lamp-signals",
+  "title": "Aldis lamp signals"
+ },
+ {
+  "slug": "alternate-filing-minimums",
+  "title": "Alternate filing minimums"
+ },
+ {
+  "slug": "anti-spin-recovery-procedures",
+  "title": "Anti-spin recovery procedures",
+  "maneuver": true
+ },
+ {
+  "slug": "any-maneuver-in-this-block",
+  "title": "Any maneuver performed in this block",
+  "generated": true
+ },
+ {
+  "slug": "aoa-approach",
+  "title": "AOA approach",
+  "maneuver": true
+ },
+ {
+  "slug": "approach-maneuver",
+  "title": "Approach maneuver",
+  "maneuver": true
+ },
+ {
+  "slug": "arc-radial-intercepts",
+  "title": "Arc-radial intercepts",
+  "maneuver": true
+ },
+ {
+  "slug": "arcing-approach",
+  "title": "Arcing approach",
+  "maneuver": true
+ },
+ {
+  "slug": "arcing",
+  "title": "Arcing",
+  "maneuver": true
+ },
+ {
+  "slug": "area-sun-management",
+  "title": "Area and sun management"
+ },
+ {
+  "slug": "asr-approach",
+  "title": "ASR approach",
+  "maneuver": true
+ },
+ {
+  "slug": "avionics-failures",
+  "title": "Avionics failures"
+ },
+ {
+  "slug": "avionics-malfunctions",
+  "title": "Avionics malfunctions"
+ },
+ {
+  "slug": "barrel-roll",
+  "title": "Barrel roll",
+  "maneuver": true
+ },
+ {
+  "slug": "basic-air-work",
+  "title": "Basic air work"
+ },
+ {
+  "slug": "basic-transitions",
+  "title": "Basic transitions",
+  "maneuver": true
+ },
+ {
+  "slug": "battery-and-generator-failure",
+  "title": "Battery and generator failure"
+ },
+ {
+  "slug": "battery-bus-light-during-start",
+  "title": "Battery bus light during start"
+ },
+ {
+  "slug": "bfi-approach",
+  "title": "BFI approach",
+  "maneuver": true
+ },
+ {
+  "slug": "bfi",
+  "title": "Backup flight instrument"
+ },
+ {
+  "slug": "blind-procedures",
+  "title": "Blind procedures"
+ },
+ {
+  "slug": "blindfold-cockpit-check",
+  "title": "Blindfold cockpit check"
+ },
+ {
+  "slug": "brake-failure",
+  "title": "Brake failure"
+ },
+ {
+  "slug": "brief-and-debrief",
+  "title": "Brief and debrief"
+ },
+ {
+  "slug": "cdi-reverse-sensing-precautions",
+  "title": "CDI reverse sensing precautions"
+ },
+ {
+  "slug": "cfs-and-ejection-crm",
+  "title": "CFS and ejection CRM"
+ },
+ {
+  "slug": "change-of-route-or-destination",
+  "title": "Change of route or destination"
+ },
+ {
+  "slug": "checklist-challenge-action-response",
+  "title": "Checklist challenge-action response format"
+ },
+ {
+  "slug": "chip-detector-warning",
+  "title": "Chip detector warning"
+ },
+ {
+  "slug": "circling-maneuver",
+  "title": "Circling maneuver",
+  "maneuver": true
+ },
+ {
+  "slug": "clearance-and-departure-procedures",
+  "title": "Clearance and departure procedures"
+ },
+ {
+  "slug": "cloud-clearances",
+  "title": "Cloud clearances"
+ },
+ {
+  "slug": "combination-maneuvers",
+  "title": "Combination maneuvers",
+  "maneuver": true
+ },
+ {
+  "slug": "constant-airspeed-climbs-and-descents",
+  "title": "Constant airspeed climbs and descents",
+  "maneuver": true
+ },
+ {
+  "slug": "contact-unusual-attitudes",
+  "title": "Contact unusual attitudes",
+  "maneuver": true
+ },
+ {
+  "slug": "controlled-ejection",
+  "title": "Controlled ejection"
+ },
+ {
+  "slug": "crm",
+  "title": "Crew resource management"
+ },
+ {
+  "slug": "crosswind-computations",
+  "title": "Crosswind computations"
+ },
+ {
+  "slug": "crosswind-full-stops",
+  "title": "Crosswind full stops",
+  "maneuver": true
+ },
+ {
+  "slug": "crosswind-limits",
+  "title": "Crosswind limits"
+ },
+ {
+  "slug": "crosswind-takeoff-and-landings",
+  "title": "Crosswind takeoff and landings",
+  "maneuver": true
+ },
+ {
+  "slug": "crosswind-touch-and-goes",
+  "title": "Crosswind touch-and-goes",
+  "maneuver": true
+ },
+ {
+  "slug": "cruise-maneuvering",
+  "title": "Cruise maneuvering",
+  "maneuver": true
+ },
+ {
+  "slug": "day-emergencies",
+  "title": "Day emergency procedures"
+ },
+ {
+  "slug": "dd-175-1-weather-brief",
+  "title": "DD-175-1 weather brief"
+ },
+ {
+  "slug": "dd-1801",
+  "title": "DD-1801"
+ },
+ {
+  "slug": "destination-maintenance-facilities",
+  "title": "Destination maintenance facilities and operating procedures"
+ },
+ {
+  "slug": "direct-to-a-vor",
+  "title": "Direct to a VOR",
+  "maneuver": true
+ },
+ {
+  "slug": "discontinued-entry",
+  "title": "Discontinued entry",
+  "maneuver": true
+ },
+ {
+  "slug": "divert-to-alternate",
+  "title": "Divert to alternate"
+ },
+ {
+  "slug": "dor-tto-policy",
+  "title": "DOR/TTO policy"
+ },
+ {
+  "slug": "dual-concurrence-response-crm",
+  "title": "Dual concurrence/response CRM"
+ },
+ {
+  "slug": "eject",
+  "title": "Eject"
+ },
+ {
+  "slug": "ejection-seat-and-cfs",
+  "title": "Ejection seat and CFS"
+ },
+ {
+  "slug": "ejection",
+  "title": "Ejection"
+ },
+ {
+  "slug": "electrical-system-malfunctions",
+  "title": "Electrical system malfunctions"
+ },
+ {
+  "slug": "electrical-system",
+  "title": "Electrical system"
+ },
+ {
+  "slug": "emergency-engine-shutdown-on-the-ground",
+  "title": "Emergency engine shutdown on the ground"
+ },
+ {
+  "slug": "emergency-field-selection",
+  "title": "Emergency field selection"
+ },
+ {
+  "slug": "emergency-ground-egress",
+  "title": "Emergency ground egress"
+ },
+ {
+  "slug": "emergency-landing-pattern",
+  "title": "Emergency landing pattern",
+  "maneuver": true
+ },
+ {
+  "slug": "emergency-orbit-pattern",
+  "title": "Emergency orbit pattern",
+  "maneuver": true
+ },
+ {
+  "slug": "en-route-descent",
+  "title": "En route descent",
+  "maneuver": true
+ },
+ {
+  "slug": "en-route-fuel-management",
+  "title": "En route fuel management"
+ },
+ {
+  "slug": "en-route-procedures",
+  "title": "En route procedures"
+ },
+ {
+  "slug": "en-route-weather-sources",
+  "title": "En route weather sources"
+ },
+ {
+  "slug": "energy-management",
+  "title": "Energy management"
+ },
+ {
+  "slug": "engine-air-starts",
+  "title": "Engine air starts"
+ },
+ {
+  "slug": "engine-failure-during-flight",
+  "title": "Engine failure during flight"
+ },
+ {
+  "slug": "engine-failure-immediately-after-takeoff",
+  "title": "Engine failure immediately after takeoff"
+ },
+ {
+  "slug": "engine-failure-indications",
+  "title": "Engine failure indications"
+ },
+ {
+  "slug": "engine-malfunctions",
+  "title": "Engine malfunctions"
+ },
+ {
+  "slug": "engine-system",
+  "title": "Engine system"
+ },
+ {
+  "slug": "exams",
+  "title": "Exams"
+ },
+ {
+  "slug": "faf-to-map-timing-adjustments",
+  "title": "FAF-to-MAP timing adjustments"
+ },
+ {
+  "slug": "fan-break",
+  "title": "Fan break",
+  "maneuver": true
+ },
+ {
+  "slug": "feeder-fixes",
+  "title": "Feeder fixes"
+ },
+ {
+  "slug": "feeder-routes",
+  "title": "Feeder routes"
+ },
+ {
+  "slug": "feet-to-rudder-placement",
+  "title": "Feet to rudder placement",
+  "stub": true
+ },
+ {
+  "slug": "fire-on-ground",
+  "title": "Fire on ground"
+ },
+ {
+  "slug": "fire-warning-in-flight",
+  "title": "Fire warning in flight"
+ },
+ {
+  "slug": "flap-failures",
+  "title": "Flap failures"
+ },
+ {
+  "slug": "flight-gear-check",
+  "title": "Flight gear check"
+ },
+ {
+  "slug": "flight-service-station",
+  "title": "Flight Service Station"
+ },
+ {
+  "slug": "flight-split",
+  "title": "Flight split",
+  "maneuver": true
+ },
+ {
+  "slug": "fms-arrivals",
+  "title": "FMS arrivals"
+ },
+ {
+  "slug": "fms-flight-plan-usage",
+  "title": "FMS flight plan usage"
+ },
+ {
+  "slug": "fms-procedures",
+  "title": "FMS procedures"
+ },
+ {
+  "slug": "forced-landing",
+  "title": "Forced landing",
+  "maneuver": true
+ },
+ {
+  "slug": "formation-arrival-and-departure-procedures",
+  "title": "Formation arrival and departure procedures",
+  "maneuver": true
+ },
+ {
+  "slug": "formation-communications",
+  "title": "Formation communications"
+ },
+ {
+  "slug": "formation-emergency-procedures",
+  "title": "Formation emergency procedures"
+ },
+ {
+  "slug": "formation-maneuvers",
+  "title": "Formation maneuvers",
+  "maneuver": true
+ },
+ {
+  "slug": "formation-position-corrections",
+  "title": "Formation position corrections",
+  "maneuver": true
+ },
+ {
+  "slug": "fti-reference-material",
+  "title": "FTI reference material"
+ },
+ {
+  "slug": "fuel-cutoff-gate-finger-lift-guard",
+  "title": "Fuel cutoff gate finger lift guard"
+ },
+ {
+  "slug": "fuel-planning",
+  "title": "Fuel planning"
+ },
+ {
+  "slug": "fuel-system",
+  "title": "Fuel system"
+ },
+ {
+  "slug": "full-stop-landings",
+  "title": "Full-stop landings",
+  "maneuver": true
+ },
+ {
+  "slug": "fwb-website-and-weather-brief",
+  "title": "FWB website and weather brief",
+  "stub": true
+ },
+ {
+  "slug": "gca-pattern",
+  "title": "GCA pattern",
+  "maneuver": true
+ },
+ {
+  "slug": "gear-emergencies",
+  "title": "Gear emergencies"
+ },
+ {
+  "slug": "gps-allowable-operations",
+  "title": "GPS allowable operations"
+ },
+ {
+  "slug": "gps-approaches",
+  "title": "GPS approaches",
+  "maneuver": true
+ },
+ {
+  "slug": "gps-flight-modes",
+  "title": "GPS flight modes"
+ },
+ {
+  "slug": "gps-holding",
+  "title": "GPS holding",
+  "maneuver": true
+ },
+ {
+  "slug": "gps-procedures",
+  "title": "GPS procedures"
+ },
+ {
+  "slug": "grading-and-standards",
+  "title": "ATF, ATS, CTS and MIF"
+ },
+ {
+  "slug": "ground-handling-signals",
+  "title": "Ground handling signals"
+ },
+ {
+  "slug": "ground-speed-calculations",
+  "title": "Ground-speed calculations"
+ },
+ {
+  "slug": "half-cuban-eight",
+  "title": "Half cuban eight",
+  "maneuver": true
+ },
+ {
+  "slug": "hand-signals",
+  "title": "Hand signals"
+ },
+ {
+  "slug": "hard-landings",
+  "title": "Hard landings"
+ },
+ {
+  "slug": "headwork",
+  "title": "Headwork"
+ },
+ {
+  "slug": "heavy-weight-landing-considerations",
+  "title": "Heavy-weight landing considerations"
+ },
+ {
+  "slug": "hefoe",
+  "title": "HEFOE"
+ },
+ {
+  "slug": "high-altitude-approach",
+  "title": "High altitude approach",
+  "maneuver": true
+ },
+ {
+  "slug": "hilo-approach",
+  "title": "HILO approach",
+  "maneuver": true
+ },
+ {
+  "slug": "holding-corrections",
+  "title": "Holding corrections",
+  "maneuver": true
+ },
+ {
+  "slug": "holding-entry",
+  "title": "Holding entry",
+  "maneuver": true
+ },
+ {
+  "slug": "holding",
+  "title": "Holding",
+  "maneuver": true
+ },
+ {
+  "slug": "home-field-arrival",
+  "title": "Home field arrival",
+  "maneuver": true
+ },
+ {
+  "slug": "hot-start",
+  "title": "Hot start"
+ },
+ {
+  "slug": "hsi-orientation",
+  "title": "HSI orientation"
+ },
+ {
+  "slug": "hud",
+  "title": "HUD"
+ },
+ {
+  "slug": "hung-start",
+  "title": "Hung start"
+ },
+ {
+  "slug": "hydraulic-system-malfunctions",
+  "title": "Hydraulic system malfunctions"
+ },
+ {
+  "slug": "hydraulic-system",
+  "title": "Hydraulic system"
+ },
+ {
+  "slug": "hyperventilation-and-hypoxia",
+  "title": "Hyperventilation and hypoxia"
+ },
+ {
+  "slug": "iac-failure",
+  "title": "IAC failure"
+ },
+ {
+  "slug": "icing",
+  "title": "Icing"
+ },
+ {
+  "slug": "ifr-clearance-from-uncontrolled-airports",
+  "title": "IFR clearance from uncontrolled airports"
+ },
+ {
+  "slug": "ifr-flight-planning",
+  "title": "IFR flight planning"
+ },
+ {
+  "slug": "ifr-pickup",
+  "title": "IFR pick-up"
+ },
+ {
+  "slug": "ifr-supplement",
+  "title": "IFR Supplement"
+ },
+ {
+  "slug": "ifr-to-vfr-transition",
+  "title": "IFR to VFR transition"
+ },
+ {
+  "slug": "ifr-unusual-attitudes",
+  "title": "IFR unusual attitudes",
+  "maneuver": true
+ },
+ {
+  "slug": "ils-approach",
+  "title": "ILS approach",
+  "maneuver": true
+ },
+ {
+  "slug": "ils-full-procedure-turn",
+  "title": "ILS full procedure turn",
+  "maneuver": true
+ },
+ {
+  "slug": "imc-emergencies",
+  "title": "IMC emergencies"
+ },
+ {
+  "slug": "imc-lost-communications",
+  "title": "IMC lost communications"
+ },
+ {
+  "slug": "immediate-air-start",
+  "title": "Immediate air-start"
+ },
+ {
+  "slug": "immelmann",
+  "title": "Immelmann",
+  "maneuver": true
+ },
+ {
+  "slug": "impending-engine-failure-indications",
+  "title": "Impending engine failure indications"
+ },
+ {
+  "slug": "imsafe-checklist",
+  "title": "I'M SAFE checklist"
+ },
+ {
+  "slug": "inadvertent-instrument-flight",
+  "title": "Inadvertent instrument flight"
+ },
+ {
+  "slug": "inadvertent-thunderstorm-penetration",
+  "title": "Inadvertent thunderstorm penetration"
+ },
+ {
+  "slug": "inadvertent-trim-actuation",
+  "title": "Inadvertent trim actuation"
+ },
+ {
+  "slug": "incipient-spin-recovery",
+  "title": "Incipient spin recovery",
+  "maneuver": true
+ },
+ {
+  "slug": "instrument-scan-patterns",
+  "title": "Instrument scan patterns"
+ },
+ {
+  "slug": "integrated-vmc-scan",
+  "title": "Integrated (VMC) scan"
+ },
+ {
+  "slug": "intentional-spin-entry",
+  "title": "Intentional spin entry",
+  "maneuver": true
+ },
+ {
+  "slug": "intersections",
+  "title": "Intersections",
+  "maneuver": true
+ },
+ {
+  "slug": "inverted-spin",
+  "title": "Inverted spin",
+  "maneuver": true
+ },
+ {
+  "slug": "jet-log",
+  "title": "Jet log"
+ },
+ {
+  "slug": "knock-it-off",
+  "title": "Knock-it-off"
+ },
+ {
+  "slug": "landing-flap-landings",
+  "title": "Landing flap landings",
+  "maneuver": true
+ },
+ {
+  "slug": "landing-gear-emergency-extension",
+  "title": "Landing gear emergency extension"
+ },
+ {
+  "slug": "landing-gear-inspection",
+  "title": "Landing gear inspection"
+ },
+ {
+  "slug": "landing-irregularities",
+  "title": "Landing irregularities",
+  "maneuver": true
+ },
+ {
+  "slug": "landing-pattern-stalls",
+  "title": "Landing pattern stalls",
+  "maneuver": true
+ },
+ {
+  "slug": "landing-pattern",
+  "title": "Landing pattern",
+  "maneuver": true
+ },
+ {
+  "slug": "lead-lag-and-pure-pursuit",
+  "title": "Lead, lag and pure pursuit",
+  "maneuver": true
+ },
+ {
+  "slug": "level-speed-change",
+  "title": "Level speed change",
+  "maneuver": true
+ },
+ {
+  "slug": "local-area-departure",
+  "title": "Local area departure",
+  "maneuver": true
+ },
+ {
+  "slug": "local-area-flight-procedures-sop",
+  "title": "Local area flight procedures",
+  "stub": true
+ },
+ {
+  "slug": "local-cross-country-sop",
+  "title": "Local cross-country SOP"
+ },
+ {
+  "slug": "local-night-vnav-sop",
+  "title": "Local night VNAV SOP"
+ },
+ {
+  "slug": "local-vfr-sectional-review",
+  "title": "Local VFR sectional review"
+ },
+ {
+  "slug": "localizer-approach",
+  "title": "Localizer approach",
+  "maneuver": true
+ },
+ {
+  "slug": "loop",
+  "title": "Loop",
+  "maneuver": true
+ },
+ {
+  "slug": "loss-of-start-ready-light-during-start-sequence",
+  "title": "Loss of START READY light during start sequence"
+ },
+ {
+  "slug": "lost-aircraft-procedures",
+  "title": "Lost aircraft procedures"
+ },
+ {
+  "slug": "lost-communication-procedures",
+  "title": "Lost communication procedures"
+ },
+ {
+  "slug": "lost-communications",
+  "title": "Lost communications"
+ },
+ {
+  "slug": "lost-sight-procedures",
+  "title": "Lost sight procedures"
+ },
+ {
+  "slug": "low-fuel-pressure",
+  "title": "Low fuel pressure"
+ },
+ {
+  "slug": "maneuvering-speed",
+  "title": "Maneuvering speed"
+ },
+ {
+  "slug": "maneuvering-speeds",
+  "title": "Maneuvering speeds"
+ },
+ {
+  "slug": "memorized-checklists",
+  "title": "Memorized checklists"
+ },
+ {
+  "slug": "minimum-fuel-requirements",
+  "title": "Minimum fuel requirements"
+ },
+ {
+  "slug": "missed-approach",
+  "title": "Missed approach",
+  "maneuver": true
+ },
+ {
+  "slug": "natops-limitations",
+  "title": "NATOPS limitations"
+ },
+ {
+  "slug": "night-cockpit-setup",
+  "title": "Night cockpit setup"
+ },
+ {
+  "slug": "night-emergency-procedures",
+  "title": "Night emergency procedures"
+ },
+ {
+  "slug": "night-flying-considerations",
+  "title": "Night flying considerations"
+ },
+ {
+  "slug": "night-vfr-chart-interpretation",
+  "title": "Night VFR chart interpretation"
+ },
+ {
+  "slug": "night-vnav-timing-and-course-corrections",
+  "title": "Night VNAV timing and course corrections"
+ },
+ {
+  "slug": "no-flap-landings",
+  "title": "No-flap landings",
+  "maneuver": true
+ },
+ {
+  "slug": "no-gyro-approach",
+  "title": "No-gyro approach",
+  "maneuver": true
+ },
+ {
+  "slug": "no-start",
+  "title": "No start"
+ },
+ {
+  "slug": "no-wind-orbit",
+  "title": "No-wind orbit",
+  "maneuver": true
+ },
+ {
+  "slug": "non-radar-environment-communications",
+  "title": "Non-radar environment communications"
+ },
+ {
+  "slug": "normal-takeoff",
+  "title": "Normal takeoff",
+  "maneuver": true
+ },
+ {
+  "slug": "notams",
+  "title": "NOTAMs"
+ },
+ {
+  "slug": "obogs-and-pressurization-system",
+  "title": "OBOGS and pressurization system"
+ },
+ {
+  "slug": "obogs-fail-message",
+  "title": "OBOGS FAIL message"
+ },
+ {
+  "slug": "obogs-malfunctions",
+  "title": "OBOGS malfunctions"
+ },
+ {
+  "slug": "obstacle-departure-procedures",
+  "title": "Obstacle departure procedures"
+ },
+ {
+  "slug": "oil-and-propeller-systems",
+  "title": "Oil and propeller systems"
+ },
+ {
+  "slug": "oil-system-malfunction-or-low-oil-pressure",
+  "title": "Oil system malfunction or low oil pressure"
+ },
+ {
+  "slug": "olf-arrival-and-departure",
+  "title": "OLF arrival and departure",
+  "maneuver": true
+ },
+ {
+  "slug": "olf-course-rules",
+  "title": "OLF course rules"
+ },
+ {
+  "slug": "olf-rdo-communication",
+  "title": "OLF/RDO communication"
+ },
+ {
+  "slug": "out-of-control-flight",
+  "title": "Out-of-control flight",
+  "maneuver": true
+ },
+ {
+  "slug": "over-the-station-intercepts",
+  "title": "Over-the-station intercepts",
+  "maneuver": true
+ },
+ {
+  "slug": "par-approach",
+  "title": "PAR approach",
+  "maneuver": true
+ },
+ {
+  "slug": "par-without-glideslope",
+  "title": "PAR without glideslope",
+  "maneuver": true
+ },
+ {
+  "slug": "pattern-adjustments-for-crosswinds",
+  "title": "Pattern adjustments for crosswinds",
+  "maneuver": true
+ },
+ {
+  "slug": "pcl-cutoff-and-inadvertent-engine-shutdown",
+  "title": "PCL cutoff and inadvertent engine shutdown"
+ },
+ {
+  "slug": "pel-from-the-pattern",
+  "title": "PEL from the pattern",
+  "maneuver": true
+ },
+ {
+  "slug": "pmu-norm-air-start",
+  "title": "PMU NORM air-start"
+ },
+ {
+  "slug": "pmu-off-air-start",
+  "title": "PMU OFF air-start"
+ },
+ {
+  "slug": "point-to-point",
+  "title": "Point-to-point",
+  "maneuver": true
+ },
+ {
+  "slug": "power-off-stall",
+  "title": "Power-off stall",
+  "maneuver": true
+ },
+ {
+  "slug": "power-on-stalls",
+  "title": "Power-on stalls",
+  "maneuver": true
+ },
+ {
+  "slug": "precautionary-emergency-landing",
+  "title": "Precautionary emergency landing",
+  "maneuver": true
+ },
+ {
+  "slug": "previously-discussed-familiarization-items",
+  "title": "Any previously discussed familiarization items",
+  "generated": {
+   "stage": "FAM"
+  }
+ },
+ {
+  "slug": "previously-discussed-items",
+  "title": "Any previously discussed item",
+  "generated": {
+   "all": true
+  }
+ },
+ {
+  "slug": "previously-discussed-maneuvers",
+  "title": "Any previously discussed maneuver",
+  "generated": true
+ },
+ {
+  "slug": "procedure-turn-approach",
+  "title": "Procedure turn approach",
+  "maneuver": true
+ },
+ {
+  "slug": "progressive-spin",
+  "title": "Progressive spin",
+  "maneuver": true
+ },
+ {
+  "slug": "propeller-malfunctions",
+  "title": "Propeller malfunctions"
+ },
+ {
+  "slug": "radial-arc-intercepts",
+  "title": "Radial-arc intercepts",
+  "maneuver": true
+ },
+ {
+  "slug": "radial-intercept-procedures",
+  "title": "Radial intercept procedures",
+  "maneuver": true
+ },
+ {
+  "slug": "radial-rendezvous",
+  "title": "Radial rendezvous",
+  "maneuver": true
+ },
+ {
+  "slug": "recommended-altitudes",
+  "title": "Recommended altitudes"
+ },
+ {
+  "slug": "route-management",
+  "title": "Route management"
+ },
+ {
+  "slug": "runaway-trim",
+  "title": "Runaway trim"
+ },
+ {
+  "slug": "rvfac-for-rnav-approaches",
+  "title": "RVFAC for RNAV approaches",
+  "maneuver": true
+ },
+ {
+  "slug": "rvfac",
+  "title": "Radar vectors to final approach course",
+  "maneuver": true
+ },
+ {
+  "slug": "s-1-pattern",
+  "title": "S-1 pattern",
+  "maneuver": true
+ },
+ {
+  "slug": "safety-check-call",
+  "title": "Safety check and call"
+ },
+ {
+  "slug": "scatsafe",
+  "title": "SCATSAFE maneuver",
+  "maneuver": true
+ },
+ {
+  "slug": "scheduling",
+  "title": "Scheduling"
+ },
+ {
+  "slug": "seat-height-and-rudder-pedal-adjustment",
+  "title": "Seat height and rudder pedal adjustment"
+ },
+ {
+  "slug": "section-approach-procedures",
+  "title": "Section approach procedures",
+  "maneuver": true
+ },
+ {
+  "slug": "section-pel",
+  "title": "Section PEL",
+  "maneuver": true
+ },
+ {
+  "slug": "section-takeoff",
+  "title": "Section takeoff",
+  "maneuver": true
+ },
+ {
+  "slug": "securing-rear-cockpit-for-solo",
+  "title": "Securing the rear cockpit for solo"
+ },
+ {
+  "slug": "see-and-avoid",
+  "title": "See and avoid principle"
+ },
+ {
+  "slug": "shuttle-descent",
+  "title": "Shuttle descent",
+  "maneuver": true
+ },
+ {
+  "slug": "slip",
+  "title": "Slip",
+  "maneuver": true
+ },
+ {
+  "slug": "slow-flight",
+  "title": "Slow flight",
+  "maneuver": true
+ },
+ {
+  "slug": "smoke-and-fume-elimination",
+  "title": "Smoke and fume elimination"
+ },
+ {
+  "slug": "snivels",
+  "title": "Snivels"
+ },
+ {
+  "slug": "speed-brake-use-as-a-section",
+  "title": "Speed brake use as a section",
+  "maneuver": true
+ },
+ {
+  "slug": "spin",
+  "title": "Spin",
+  "maneuver": true
+ },
+ {
+  "slug": "split-s",
+  "title": "Split-S",
+  "maneuver": true
+ },
+ {
+  "slug": "standard-course-corrections",
+  "title": "Standard course corrections"
+ },
+ {
+  "slug": "standard-instrument-departure",
+  "title": "Standard instrument departure"
+ },
+ {
+  "slug": "standard-time-corrections",
+  "title": "Standard time corrections"
+ },
+ {
+  "slug": "star",
+  "title": "Standard terminal arrival"
+ },
+ {
+  "slug": "station-passage",
+  "title": "Station passage"
+ },
+ {
+  "slug": "steady-state-spin-recovery",
+  "title": "Steady-state spin recovery",
+  "maneuver": true
+ },
+ {
+  "slug": "steep-turns",
+  "title": "Steep turns",
+  "maneuver": true
+ },
+ {
+  "slug": "stereo-routes",
+  "title": "Stereo routes"
+ },
+ {
+  "slug": "strange-field-operations",
+  "title": "Strange Field operations"
+ },
+ {
+  "slug": "strike-of-ground-object",
+  "title": "Strike of ground object"
+ },
+ {
+  "slug": "takeoff-and-approach-minimums",
+  "title": "Takeoff and approach minimums"
+ },
+ {
+  "slug": "takeoff-flap-landings",
+  "title": "Takeoff flap landings",
+  "maneuver": true
+ },
+ {
+  "slug": "teardrop-approach",
+  "title": "Teardrop approach",
+  "maneuver": true
+ },
+ {
+  "slug": "terminate",
+  "title": "Terminate"
+ },
+ {
+  "slug": "three-cs",
+  "title": "Three Cs"
+ },
+ {
+  "slug": "time-on-target",
+  "title": "Time on target"
+ },
+ {
+  "slug": "timed-turns",
+  "title": "Timed turns",
+  "maneuver": true
+ },
+ {
+  "slug": "tire-failures",
+  "title": "Tire failures"
+ },
+ {
+  "slug": "tms",
+  "title": "TMS"
+ },
+ {
+  "slug": "tower-visit",
+  "title": "Tower visit",
+  "stub": true
+ },
+ {
+  "slug": "tracking",
+  "title": "Tracking",
+  "maneuver": true
+ },
+ {
+  "slug": "trim",
+  "title": "Trim"
+ },
+ {
+  "slug": "trouble-t",
+  "title": "Trouble T"
+ },
+ {
+  "slug": "turn-pattern",
+  "title": "Turn pattern",
+  "maneuver": true
+ },
+ {
+  "slug": "ufcp-failure",
+  "title": "UFCP failure"
+ },
+ {
+  "slug": "unauthorized-solo-maneuvers",
+  "title": "Unauthorized solo maneuvers"
+ },
+ {
+  "slug": "uncommanded-power-changes-lop",
+  "title": "Uncommanded power changes and loss of power"
+ },
+ {
+  "slug": "uncommanded-prop-feather",
+  "title": "Uncommanded prop feather"
+ },
+ {
+  "slug": "unintentional-instrument-flight",
+  "title": "Unintentional instrument flight"
+ },
+ {
+  "slug": "vfr-chart-preparation",
+  "title": "VFR chart preparation"
+ },
+ {
+  "slug": "vfr-field-entry-departure",
+  "title": "VFR field entry/departure (AIM)"
+ },
+ {
+  "slug": "visual-descent-point",
+  "title": "Visual descent point"
+ },
+ {
+  "slug": "visual-signals",
+  "title": "Visual signals"
+ },
+ {
+  "slug": "visual-straight-in",
+  "title": "Visual straight-in",
+  "maneuver": true
+ },
+ {
+  "slug": "vn-diagram",
+  "title": "V-n diagram"
+ },
+ {
+  "slug": "vor-approach-procedures",
+  "title": "VOR approach procedures",
+  "maneuver": true
+ },
+ {
+  "slug": "wave-off",
+  "title": "Wave-off",
+  "maneuver": true
+ },
+ {
+  "slug": "weight-and-balance",
+  "title": "Weight and balance"
+ },
+ {
+  "slug": "wind-shear-recovery",
+  "title": "Wind shear recovery"
+ },
+ {
+  "slug": "wingman-flight-leader-responsibilities",
+  "title": "Wingman/flight leader responsibilities"
+ },
+ {
+  "slug": "wingover",
+  "title": "Wingover",
+  "maneuver": true
+ }
+]

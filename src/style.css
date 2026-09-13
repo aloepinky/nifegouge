@@ -3982,3 +3982,1798 @@ textarea.incorrect-answer {
     text-align: left;
   }
 }
+
+/* ===================================================================
+   Discussion Items  (/tw4/discuss)
+   One page per JPPT discuss item. Palette is the site pair #01202C /
+   #003B4F plus the same rgba(0,59,79,*) washes the systems briefing
+   modals use, so a discuss page and a systems page read as one site.
+   =================================================================== */
+
+.discuss-wrap {
+  background: #f7f9fa;
+  min-height: 100vh;
+}
+
+/* Discuss uses real links in the sub-navbar (a wiki's tabs should be
+   linkable); the shared rules only target span. */
+.discuss-wrap .sub-navbar a {
+  color: #ffffff;
+  padding: 8px 12px;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.discuss-wrap .sub-navbar a:hover,
+.discuss-wrap .sub-navbar a.active {
+  background-color: #01202C;
+}
+
+/* Wikipedia-shaped: sticky contents rail on the left, article in the middle,
+   numbers infobox floated to the top right of the article. */
+.discuss-layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 30px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+  align-items: start;
+}
+
+.discuss-layout--plain {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 860px;
+}
+
+/* The All Events page carries the course-flow chart, which wants its full 820 px without the
+   article's measure squeezing it. */
+.discuss-layout--wide { max-width: 960px; }
+
+.discuss-page {
+  min-width: 0;
+  padding: 0 0 60px;
+  color: #1c2b31;
+  line-height: 1.55;
+}
+
+/* ---- contents rail ---- */
+
+.discuss-toc {
+  position: sticky;
+  top: 20px;
+  border-right: 1px solid #dde5e9;
+  padding: 4px 14px 4px 0;
+  font-size: 13px;
+}
+
+.discuss-toc h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #708995;
+  font-weight: 700;
+}
+
+.discuss-toc ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: toc;
+}
+
+.discuss-toc li {
+  margin-bottom: 5px;
+}
+
+/* On a narrow screen the rail becomes a multi-column block above the article. A section and
+   its subsections have to travel together — split across a column break, "2.1 Technique"
+   lands beside "1. Correction method" and the numbering reads as nonsense. */
+.discuss-toc > ol > li {
+  counter-increment: toc;
+  break-inside: avoid;
+}
+
+/* Subsections number 1.1, 1.2 under their section, as the MOS contents does. The nested list
+   carries its own counter so a section's parts restart at 1. */
+.discuss-toc ol ol {
+  counter-reset: tocsub;
+  list-style: none;
+  margin: 5px 0 0;
+  padding-left: 13px;
+}
+
+.discuss-toc ol ol li { counter-increment: tocsub; }
+.discuss-toc ol ol li a::before { content: counter(toc) '.' counter(tocsub) ' '; }
+.discuss-toc ol ol li a { font-size: 12px; color: #33566a; }
+
+.discuss-toc li a {
+  color: #003B4F;
+  text-decoration: none;
+  display: block;
+  line-height: 1.35;
+}
+
+.discuss-toc li a::before {
+  content: counter(toc) '. ';
+  color: #93a8b1;
+}
+
+/* The lede is not a numbered section, so it must not consume a number either. */
+.discuss-toc > ol > li:first-child { counter-increment: none; }
+.discuss-toc > ol > li:first-child a::before { content: ''; }
+.discuss-toc li a:hover { text-decoration: underline; }
+
+/* ---- lede + hatnote ---- */
+
+.discuss-lede-para {
+  margin: 0 0 18px;
+  font-size: 16px;
+}
+
+.discuss-note {
+  margin: 0 0 20px;
+  padding: 8px 12px;
+  background: rgba(0, 59, 79, 0.05);
+  border-left: 3px solid #b07800;
+  font-size: 13.5px;
+  color: #4a6674;
+}
+
+/* ---- numbers infobox ---- */
+
+/* Sized to its content, not to a fixed width: auto table columns then let every
+   row sit on one line, however the label/value lengths fall across the rows.
+   Capped so it can never crowd the text column. */
+.discuss-infobox {
+  float: right;
+  width: max-content;
+  max-width: min(330px, 45%);
+  margin: 0 0 18px 24px;
+  border: 1px solid #cfdbe0;
+  background: #ffffff;
+  font-size: 13px;
+}
+
+.discuss-infobox-head {
+  background: #01202C;
+  color: #ffffff;
+  padding: 7px 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 12px;
+}
+
+.discuss-infobox table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Bare th/td carry a global black border + grey th fill (jet log tables); an
+   infobox wants neither. */
+.discuss-infobox th,
+.discuss-infobox td {
+  border: none;
+  border-bottom: 1px solid #eef3f5;
+  background: none;
+  padding: 5px 11px;
+  text-align: left;
+  vertical-align: baseline;
+}
+
+.discuss-infobox tr:last-child th,
+.discuss-infobox tr:last-child td { border-bottom: none; }
+
+/* The box grows to fit, so nothing wraps until the cap above is reached. Past it,
+   a cell wraps to a second line rather than pushing the table off the page —
+   `balance` keeps the two lines close in length instead of leaving one orphan. */
+.discuss-infobox th {
+  font-weight: 400;
+  color: #5a7481;
+  padding-right: 16px;
+  text-wrap: balance;
+}
+
+.discuss-infobox td {
+  font-weight: 700;
+  color: #01202C;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  text-wrap: balance;
+}
+
+/* ---- header ---- */
+
+.discuss-head {
+  border-bottom: 2px solid #003B4F;
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+}
+
+.discuss-head h1 {
+  color: #01202C;
+  font-size: 30px;
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.discuss-head-title {
+  font-weight: 400;
+  color: #3d5866;
+}
+
+.discuss-meta {
+  margin: 0 0 10px;
+  color: #4a6674;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.discuss-lede {
+  margin: 0;
+  color: #3d5866;
+  font-size: 15px;
+}
+
+/* All Events: syllabus picker and the submit-a-JPPT button, centered under the title. */
+.discuss-syllabus {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.discuss-syllabus .discuss-syllabus-select {
+  min-width: 200px;
+  padding: 6px 10px;
+  border: 1px solid #b9c9d0;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #01202C;
+  font-size: 15px;
+}
+
+.discuss-syllabus .discuss-syllabus-select:hover { border-color: #003B4F; background: #ffffff; }
+
+.discuss-syllabus-submit {
+  background: #003B4F;
+  border: 1px solid #003B4F;
+  border-radius: 3px;
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffffff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.discuss-syllabus-submit:hover { background: #01202C; border-color: #01202C; color: #ffffff; }
+
+.discuss-syllabus-note {
+  margin: -8px 0 16px;
+  font-size: 13.5px;
+  color: #4a6674;
+  text-align: center;
+}
+
+.discuss-syllabus-note a { color: #003B4F; }
+
+/* "No page yet" rows: a quiet outline button beside the JPPT wording. */
+.discuss-create-page {
+  margin-left: 10px;
+  padding: 1px 8px;
+  border: 1px solid #5b8496;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #003B4F;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.discuss-create-page:hover { background: #eef4f6; border-color: #003B4F; }
+
+.discuss-briefed-in {
+  margin: 0;
+  font-size: 13px;
+  color: #4a6674;
+}
+
+.discuss-briefed-in a {
+  color: #003B4F;
+}
+
+.discuss-eventmeta {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+.discuss-eventmeta dt {
+  font-weight: 700;
+  color: #01202C;
+  margin-top: 8px;
+}
+
+.discuss-eventmeta dd {
+  margin: 2px 0 0;
+  color: #33505d;
+}
+
+/* ---- event context strip (?from=) ---- */
+
+.discuss-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  background: rgba(0, 59, 79, 0.05);
+  border-left: 3px solid #003B4F;
+  padding: 10px 14px;
+  margin-bottom: 26px;
+  font-size: 13px;
+}
+
+.discuss-strip-event {
+  font-weight: 700;
+  color: #003B4F;
+  text-decoration: none;
+}
+
+.discuss-strip-event:hover { text-decoration: underline; }
+
+.discuss-strip-pos { color: #5a7481; }
+
+.discuss-strip-nav {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+}
+
+.discuss-strip-nav a { color: #003B4F; text-decoration: none; }
+.discuss-strip-nav a:hover { text-decoration: underline; }
+.discuss-strip-end { color: #93a8b1; }
+
+/* ---- sections ---- */
+
+.discuss-section { margin-bottom: 30px; }
+
+.discuss-section h2 {
+  color: #01202C;
+  font-size: 19px;
+  margin: 0 0 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #cfdbe0;
+  font-weight: 600;
+}
+
+/* A subsection is a named part of a section, not a lesser section: no rule under the heading,
+   because the H2's rule already opened the block it belongs to. */
+.discuss-subsection { margin-top: 16px; }
+
+.discuss-subsection h3 {
+  color: #01202C;
+  font-size: 15px;
+  margin: 0 0 7px;
+  font-weight: 600;
+}
+
+.discuss-list,
+.discuss-sublist {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.discuss-sublist { margin-top: 5px; }
+
+.discuss-bullet { margin-bottom: 5px; }
+
+/* ---- citations ---- */
+
+/* A section sourced wholly to one reference is cited once, here, rather than on
+   every bullet. */
+.discuss-section-cite {
+  margin: 7px 0 0;
+  font-size: 11px;
+  color: #93a8b1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.discuss-cite {
+  font-size: 11px;
+  line-height: 0;
+  margin-left: 2px;
+}
+
+.discuss-cite a {
+  color: #5a7481;
+  text-decoration: none;
+  padding: 0 1px;
+}
+
+.discuss-cite a:hover { color: #003B4F; text-decoration: underline; }
+.discuss-cite-sep { color: #93a8b1; margin-right: 2px; }
+
+.discuss-ref-list {
+  margin: 0;
+  padding-left: 24px;
+  font-size: 14px;
+  color: #33505d;
+}
+
+.discuss-ref-list li { margin-bottom: 5px; }
+.discuss-ref-list li:target { background: rgba(0, 59, 79, 0.09); }
+
+.discuss-ref-work { color: #1c2b31; }
+
+/* MOS hatnote: sits directly under a section heading, indented and italic. */
+.discuss-hatnote {
+  margin: -2px 0 9px 22px;
+  font-size: 13.5px;
+  font-style: italic;
+  color: #5a7481;
+}
+
+.discuss-hatnote a { color: #003B4F; }
+
+/* Lead-section link out to a system's interactive diagram. Sits under the lede, quiet
+   enough not to compete with it, and never in the contents rail. */
+.discuss-diagram-link {
+  margin: -8px 0 18px;
+  font-size: 13.5px;
+  font-style: italic;
+  color: #5a7481;
+}
+
+.discuss-diagram-link a {
+  color: #003B4F;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.discuss-seealso {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 15px;
+}
+
+.discuss-seealso a { color: #003B4F; }
+
+/* ---- figures ---- */
+
+/* Full text-column width: these are schematics and signal charts, and shrinking one to
+   sit beside prose makes it unreadable. */
+.discuss-figure {
+  margin: 0 0 20px;
+}
+
+.discuss-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid #cfdbe0;
+  background: #ffffff;
+}
+
+.discuss-figure figcaption {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #5a7481;
+}
+
+/* ---- tables ---- */
+
+/* The table scrolls, the page does not. Same contract as the Numbers infobox: a seven-column
+   airspace matrix on a 375 px phone gets a scrollbar of its own rather than pushing the
+   article sideways. */
+.discuss-table-wrap {
+  overflow-x: auto;
+  margin: 0 0 20px;
+}
+
+.discuss-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+  background: #ffffff;
+}
+
+/* Bare th/td carry a global black border and a grey th fill for the jet log tables.
+   Neither belongs here, so every one is restated rather than inherited. */
+.discuss-table th,
+.discuss-table td {
+  border: 1px solid #cfdbe0;
+  padding: 7px 11px;
+  text-align: left;
+  vertical-align: top;
+  background: transparent;
+}
+
+.discuss-table thead th {
+  background: #01202C;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border-color: #01202C;
+}
+
+/* The row header is the label you look the row up by, so it carries the weight and a tint.
+   It wraps: a cloud-clearance band is a clause, not a word, and forcing it onto one line
+   is what turns a three-column table into a page-wide scroll. */
+.discuss-table tbody th {
+  font-weight: 600;
+  color: #01202C;
+  background: #f6f9fa;
+}
+
+.discuss-table tbody td { color: #24404b; }
+
+/* Numeric tables are lookups read down a column — the crosswind components, the circling
+   radii — and right alignment is what lets the digits line up. */
+.discuss-table--numeric td { text-align: right; }
+.discuss-table--numeric thead th:not(:first-child) { text-align: right; }
+
+.discuss-table caption {
+  caption-side: bottom;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #5a7481;
+  text-align: left;
+}
+
+/* ---- item / event lists ---- */
+
+.discuss-itemlist {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 15px;
+}
+
+.discuss-itemlist li { margin-bottom: 7px; }
+
+.discuss-itemlist a {
+  color: #003B4F;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.discuss-itemlist a:hover { text-decoration: underline; }
+
+.discuss-tag {
+  margin-left: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8a5f00;
+}
+
+.discuss-tag--quiet { color: #93a8b1; }
+.discuss-tag--missing { color: #b42525; }
+
+/* ---- stub ---- */
+
+.discuss-stub {
+  background: rgba(0, 59, 79, 0.05);
+  border-left: 3px solid #5b8496;
+  padding: 16px 18px;
+  font-size: 15px;
+}
+
+.discuss-stub h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #01202C;
+}
+
+.discuss-stub p { margin: 0 0 10px; color: #33505d; }
+.discuss-stub p:last-child { margin-bottom: 0; }
+
+.discuss-stub-lead {
+  border-left: 2px solid #cfdbe0;
+  padding-left: 12px;
+  font-size: 14px;
+}
+
+/* ---- breadcrumb and list furniture ---- */
+
+.discuss-crumb {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #5a7481;
+}
+
+.discuss-crumb a {
+  color: #003B4F;
+  text-decoration: none;
+}
+
+.discuss-crumb a:hover { text-decoration: underline; }
+
+/* An event or block with no page: named, but plainly not a link. */
+.discuss-inert {
+  color: #708995;
+  font-weight: 600;
+}
+
+.discuss-rowtitle {
+  margin-left: 8px;
+  color: #33505d;
+}
+
+.discuss-rownote {
+  margin-left: 8px;
+  font-size: 13px;
+  color: #708995;
+  font-style: italic;
+}
+
+.discuss-empty {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: #5a7481;
+}
+
+/* ---- sub-navbar with search ---- */
+
+.discuss-subnav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+}
+
+.discuss-search {
+  position: relative;
+  margin-left: auto;
+}
+
+.discuss-search-input {
+  width: 250px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #003B4F;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #01202C;
+  font-size: 14px;
+}
+
+.discuss-search-input::placeholder { color: #8ba1ab; }
+
+.discuss-search-input:focus {
+  outline: 2px solid #5b8496;
+  outline-offset: 1px;
+}
+
+.discuss-search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 40;
+  width: 340px;
+  max-width: 80vw;
+  max-height: 340px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #ffffff;
+  border: 1px solid #cfdbe0;
+  border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(1, 32, 44, 0.18);
+}
+
+.discuss-search-result {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #1c2b31;
+  cursor: pointer;
+}
+
+.discuss-search-result--active { background: rgba(0, 59, 79, 0.08); }
+
+/* The results list is a child of .sub-navbar, whose `.sub-navbar span` rule sets white text
+   and 8px padding — one class plus one element, which outranks a lone class. Every span in
+   here is therefore addressed by two classes, and none of them may be reduced to one. */
+.discuss-search-result > span {
+  padding: 0;
+  font-weight: 400;
+}
+
+.discuss-search-result .discuss-search-kind {
+  flex: none;
+  width: 42px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #93a8b1;
+}
+
+.discuss-search-result .discuss-search-label {
+  flex: none;
+  font-weight: 600;
+  color: #003B4F;
+}
+
+.discuss-search-result .discuss-search-sub {
+  min-width: 0;
+  color: #5a7481;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.discuss-search-result .discuss-tag {
+  flex: none;
+  margin-left: auto;
+  color: #8a5f00;
+}
+
+/* The global rule also gives every sub-navbar span a hover background. */
+.discuss-search-result > span:hover { background: none; }
+
+/* ---- course-flow chart (traced from JPPT p. I-3) ---- */
+
+/* The figure is portrait and its labels are 6.9 pt, so shrinking it to a phone width would
+   make it unreadable. The container scrolls instead; the page body never does. */
+.discuss-flow {
+  overflow-x: auto;
+  margin: 0 0 30px;
+  padding-bottom: 4px;
+}
+
+.discuss-flow-svg {
+  display: block;
+  width: 100%;
+  min-width: 680px;
+  max-width: 820px;
+  height: auto;
+  margin: 0 auto;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Category is carried by shape and stroke weight, exactly as the publication carries it, so
+   every box shares one stroke colour. Eight fills would be a rainbow that says no more. */
+.discuss-flow-node {
+  fill: #ffffff;
+  stroke: #5b8496;
+  stroke-width: 0.6;
+}
+
+.discuss-flow-node--check,
+.discuss-flow-node--cai,
+.discuss-flow-node--exam { stroke-width: 1.3; }
+
+/* Three states, in descending strength. A block carrying discuss items and having a page is
+   full strength; carrying them without a page yet is tinted, and still a link; carrying none at
+   all is a faint outline — complete, not a gap, and not a link. Never collapse the last two:
+   one is work outstanding and the other is work that does not exist. */
+.discuss-flow-node--thin {
+  fill: #eef4f6;
+  stroke: #8ea6b0;
+}
+
+.discuss-flow-node--inert {
+  fill: #ffffff;
+  stroke: #ccd8dd;
+}
+
+.discuss-flow-label {
+  font-size: 6.6px;
+  fill: #01202C;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.discuss-flow-node--thin + .discuss-flow-label { fill: #4a6674; }
+.discuss-flow-node--inert + .discuss-flow-label { fill: #93a8b1; }
+
+.discuss-flow-hit { cursor: pointer; }
+
+.discuss-flow-hit:hover .discuss-flow-node,
+.discuss-flow-hit:focus-visible .discuss-flow-node {
+  fill: #e4eff3;
+  stroke: #003B4F;
+  stroke-width: 1.6;
+}
+
+.discuss-flow-hit:hover .discuss-flow-label,
+.discuss-flow-hit:focus-visible .discuss-flow-label { fill: #01202C; }
+
+.discuss-flow-hit:focus { outline: none; }
+
+.discuss-flow-edge {
+  fill: none;
+  stroke: #86a0ab;
+  stroke-width: 0.7;
+}
+
+.discuss-flow-arrowhead {
+  fill: #86a0ab;
+  stroke: none;
+}
+
+/* Flow connectors are the figure's own off-page jump notation, not events, so they navigate
+   nowhere. Selecting one lights every circle sharing its letter. */
+.discuss-flow-jump { cursor: pointer; }
+
+.discuss-flow-jump:hover .discuss-flow-node,
+.discuss-flow-jump:focus-visible .discuss-flow-node { stroke: #003B4F; }
+
+.discuss-flow-jump--on .discuss-flow-node {
+  fill: #cfe2e9;
+  stroke: #003B4F;
+  stroke-width: 1.6;
+}
+
+.discuss-flow-jump:focus { outline: none; }
+
+.discuss-flow-letter {
+  font-size: 7.4px;
+  font-weight: 700;
+  fill: #003B4F;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.discuss-flow-legend-frame {
+  fill: none;
+  stroke: #cfdbe0;
+  stroke-width: 0.6;
+}
+
+.discuss-flow-legend-label {
+  font-size: 6.4px;
+  fill: #4a6674;
+  dominant-baseline: central;
+}
+
+.discuss-flow-source {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #708995;
+  text-align: center;
+}
+
+/* ---- stage / block / event disclosures ---- */
+
+.discuss-stagenav {
+  border-top: 1px solid #dde5e9;
+  font-size: 15px;
+}
+
+.discuss-stagenav-stage {
+  border-bottom: 1px solid #dde5e9;
+}
+
+.discuss-stagenav summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 9px 4px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.discuss-stagenav summary::-webkit-details-marker { display: none; }
+
+/* One disclosure triangle, rotated by the open state, rather than two competing markers. */
+.discuss-stagenav summary::before {
+  content: '▸';
+  color: #93a8b1;
+  font-size: 11px;
+  transition: transform 0.15s ease;
+}
+
+.discuss-stagenav details[open] > summary::before { transform: rotate(90deg); }
+
+.discuss-stagenav summary:hover { background: rgba(0, 59, 79, 0.04); }
+
+.discuss-stagenav-id {
+  font-weight: 700;
+  color: #01202C;
+  min-width: 58px;
+}
+
+.discuss-stagenav-name { color: #33505d; }
+
+.discuss-stagenav-meta {
+  margin-left: auto;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #93a8b1;
+}
+
+.discuss-stagenav-stage > .discuss-stagenav-block {
+  border-top: 1px solid #eef3f5;
+  margin-left: 18px;
+}
+
+.discuss-stagenav-block > summary { padding: 7px 4px; font-size: 14px; }
+
+.discuss-stagenav-events {
+  margin: 0 0 10px;
+  padding: 0 0 0 42px;
+  list-style: none;
+  font-size: 14px;
+}
+
+.discuss-stagenav-events li { margin-bottom: 4px; }
+
+.discuss-stagenav-events a {
+  color: #003B4F;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.discuss-stagenav-events a:hover { text-decoration: underline; }
+
+.discuss-stagenav-blocklink {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+/* Jump targets clear the section heading rather than butting against it. */
+.discuss-section,
+.discuss-infobox,
+.discuss-head { scroll-margin-top: 16px; }
+
+/* A stage reached from a block-page breadcrumb should not sit under the sticky bar. */
+.discuss-stagenav-stage { scroll-margin-top: 20px; }
+
+@media (max-width: 900px) {
+  /* Rail stops being a rail: contents become a plain block above the article. */
+  .discuss-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .discuss-toc {
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid #dde5e9;
+    padding: 0 0 12px;
+    margin-bottom: 20px;
+  }
+  .discuss-toc ol {
+    columns: 2;
+    column-gap: 24px;
+  }
+}
+
+@media (max-width: 700px) {
+  .discuss-layout { padding: 0 14px; }
+  .discuss-page { padding: 0 0 40px; }
+  .discuss-head h1 { font-size: 24px; }
+  /* Search drops to its own row rather than crushing the All Events tab. */
+  .discuss-subnav { flex-wrap: wrap; }
+  .discuss-search { margin-left: 0; width: 100%; }
+  .discuss-search-input { width: 100%; }
+  .discuss-search-results { right: auto; left: 0; width: 100%; max-width: none; }
+  .discuss-stagenav-meta { margin-left: 0; width: 100%; }
+  .discuss-stagenav-events { padding-left: 24px; }
+  .discuss-strip-nav { margin-left: 0; width: 100%; justify-content: space-between; }
+  .discuss-toc ol { columns: 1; }
+  /* An infobox narrower than the text column reads as a pull-quote on a phone;
+     let it span instead. */
+  .discuss-infobox {
+    float: none;
+    width: 100%;
+    max-width: none;
+    margin: 0 0 20px;
+  }
+  /* Buys a couple of columns before the wrap has to scroll. */
+  .discuss-table { font-size: 13px; }
+  .discuss-table th,
+  .discuss-table td { padding: 6px 8px; }
+}
+
+/* ===================================================================
+   Discussion Items — the edit layer
+   Wiki furniture: an [edit] beside every heading, a form that opens
+   in place of what it edits, and a banner when a page is showing
+   local edits. Same palette as the block above; nothing here should
+   read as a second application sitting on top of the article.
+   =================================================================== */
+
+/* The [edit] link. Present on every heading, noticed only when you go
+   looking — and it must not move the heading's baseline, so it is
+   sized in em and vertically aligned rather than positioned. */
+.discuss-edit-link {
+  font-size: 0.6em;
+  font-weight: normal;
+  margin-left: 10px;
+  white-space: nowrap;
+  vertical-align: middle;
+  letter-spacing: 0;
+}
+
+.discuss-edit-bracket { color: #a8bcc5; }
+
+.discuss-edit-link button {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  margin: 0;
+  font: inherit;
+  color: #708995;
+  cursor: pointer;
+}
+
+.discuss-edit-link button:hover,
+.discuss-edit-link button:focus-visible {
+  color: #003B4F;
+  text-decoration: underline;
+}
+
+/* One editor open at a time: the others grey out rather than asking, when
+   clicked, whether to throw away what is in the open form. */
+.discuss-edit-link.is-disabled { opacity: 0.4; }
+.discuss-edit-link.is-disabled button { cursor: default; }
+.discuss-edit-link.is-disabled button:hover { color: #708995; text-decoration: none; }
+
+.discuss-infobox-head .discuss-edit-link { float: right; }
+
+/* The one edit link that is not on a heading: it adds the blocks a page
+   does not have yet, so it sits at the foot with nothing around it. */
+.discuss-page-edit {
+  margin: 34px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #eef3f5;
+  font-size: 14px;
+}
+
+.discuss-page-edit .discuss-edit-link { font-size: 1em; margin-left: 0; }
+
+/* ---- draft banner ---- */
+
+.discuss-draft-banner {
+  border: 1px solid #d8c48a;
+  border-left: 4px solid #b07800;
+  background: #fdf8ec;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 0 0 20px;
+}
+
+.discuss-draft-banner p {
+  margin: 0;
+  font-size: 14px;
+  color: #5a4a20;
+  line-height: 1.5;
+}
+
+.discuss-draft-banner strong { color: #01202C; }
+
+.discuss-draft-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.discuss-draft-actions button,
+.discuss-editor-notice button {
+  background: #ffffff;
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  padding: 5px 12px;
+  font-size: 13px;
+  color: #003B4F;
+  cursor: pointer;
+}
+
+.discuss-draft-actions button:hover,
+.discuss-editor-notice button:hover { background: #f2f6f8; border-color: #8ba1ab; }
+
+.discuss-editor-notice {
+  border: 1px solid #cfdbe0;
+  border-left: 4px solid #003B4F;
+  background: rgba(0, 59, 79, 0.04);
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 0 0 20px;
+}
+
+.discuss-editor-notice p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #33505d;
+}
+
+/* ---- the editor form ---- */
+
+/* Clears the floated Numbers infobox. A form is a grid of full-width fields
+   and it cannot flow around a float — beside one, its labels narrow and its
+   inputs drop underneath it. The cost is a gap above the first section's
+   editor; the alternative is a form that overlaps the infobox. */
+.discuss-editor {
+  clear: both;
+  border: 1px solid #cfdbe0;
+  border-radius: 4px;
+  background: rgba(0, 59, 79, 0.03);
+  padding: 16px 18px;
+  margin: 12px 0 24px;
+}
+
+.discuss-editor h3 {
+  margin: 22px 0 8px;
+  font-size: 16px;
+  color: #01202C;
+  border-bottom: 1px solid #dde5e9;
+  padding-bottom: 4px;
+}
+
+.discuss-editor h3:first-child { margin-top: 0; }
+
+.discuss-editor h4 {
+  margin: 18px 0 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #5a7481;
+}
+
+.discuss-editor-field { margin-bottom: 14px; }
+
+.discuss-editor-field--inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.discuss-editor-label {
+  display: block;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #5a7481;
+  margin-bottom: 3px;
+}
+
+.discuss-editor-req {
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #b42525;
+}
+
+.discuss-editor-hint {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #708995;
+}
+
+.discuss-editor-hint code {
+  background: rgba(0, 59, 79, 0.07);
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 12px;
+}
+
+.discuss-editor-text,
+.discuss-editor-line {
+  width: 100%;
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  background: #ffffff;
+  padding: 7px 9px;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #1c2b31;
+  box-sizing: border-box;
+}
+
+.discuss-editor-text { resize: vertical; overflow: hidden; }
+
+.discuss-editor-line { font-size: 14px; }
+
+.discuss-editor-text:focus,
+.discuss-editor-line:focus {
+  outline: 2px solid #5b8496;
+  outline-offset: -1px;
+  border-color: #5b8496;
+}
+
+.discuss-editor-line:disabled {
+  background: #f1f5f7;
+  color: #708995;
+}
+
+/* One paragraph, bullet, figure or table: its id and controls on a head
+   row, its content below. */
+.discuss-editor-block {
+  border: 1px solid #dde5e9;
+  border-radius: 3px;
+  background: #ffffff;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.discuss-editor-block--sub {
+  margin: 8px 0 0 22px;
+  border-left: 3px solid #dde5e9;
+  background: #fafcfd;
+}
+
+.discuss-editor-blockhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.discuss-editor-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: #8ba1ab;
+  background: rgba(0, 59, 79, 0.05);
+  padding: 2px 6px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.discuss-editor-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid #eef3f5;
+}
+
+.discuss-editor-row--tight { border-bottom: none; padding: 3px 0; }
+.discuss-editor-row--sub { padding-left: 26px; }
+.discuss-editor-row .discuss-editor-line { width: auto; flex: 1 1 120px; min-width: 0; }
+.discuss-editor-row .discuss-editor-tools { margin-left: auto; }
+
+.discuss-editor-structure-title { flex: 1 1 auto; font-size: 14px; color: #24404b; }
+
+.discuss-editor-resolve { font-size: 13px; color: #708995; flex: 1 1 120px; }
+.discuss-editor-resolve.is-missing { color: #b42525; }
+
+/* ---- controls ---- */
+
+.discuss-editor-tools { display: inline-flex; gap: 2px; }
+
+/* `.discuss-editor-remove` is named here as well as inside the tools group
+   because the table's column control uses it standing on its own, and a
+   bare <button> in this app inherits a dark global style. */
+.discuss-editor-tools button,
+.discuss-editor-remove,
+.discuss-editor-shift {
+  background: #ffffff;
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  min-width: 26px;
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #4a6674;
+  cursor: pointer;
+}
+
+.discuss-editor-tools button:hover:not(:disabled),
+.discuss-editor-shift:hover:not(:disabled) { background: #eef3f5; border-color: #8ba1ab; }
+
+.discuss-editor-tools button:disabled,
+.discuss-editor-remove:disabled,
+.discuss-editor-shift:disabled { opacity: 0.35; cursor: default; }
+
+.discuss-editor-remove:hover:not(:disabled) {
+  background: #fbeaea;
+  border-color: #d79a9a;
+  color: #b42525;
+}
+
+/* The ✕ that takes content with it arms first and says so, rather than
+   removing on one click or raising a browser dialog. */
+.discuss-editor-remove.is-armed {
+  background: #fbeaea;
+  border-color: #b42525;
+  color: #b42525;
+  font-weight: bold;
+}
+
+/* The same idea at button size: the question replaces the button it was
+   asked from, next to the thing being removed. */
+.discuss-editor-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.discuss-editor-confirm-q {
+  font-size: 13px;
+  color: #b42525;
+  max-width: 34em;
+}
+
+.discuss-editor-confirm .discuss-editor-remove-block { margin-left: 0; }
+
+.discuss-draft-actions .discuss-editor-confirm { margin-left: 0; }
+
+.discuss-editor-adds { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+
+.discuss-editor-add {
+  background: none;
+  border: 1px dashed #a8bcc5;
+  border-radius: 3px;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: #003B4F;
+  cursor: pointer;
+}
+
+.discuss-editor-add:hover { background: rgba(0, 59, 79, 0.05); border-color: #003B4F; }
+.discuss-editor-add--sub { margin-left: 22px; font-size: 12px; }
+
+.discuss-editor-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: #33505d;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.discuss-editor-checks { display: flex; flex-wrap: wrap; gap: 14px; }
+
+/* The citation picker: one small toggle per reference the page declares. */
+.discuss-refpick { display: inline-flex; align-items: center; gap: 4px; }
+
+.discuss-refpick-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8ba1ab;
+}
+
+.discuss-refpick-btn {
+  min-width: 22px;
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  background: #ffffff;
+  padding: 1px 5px;
+  font-size: 12px;
+  color: #708995;
+  cursor: pointer;
+}
+
+.discuss-refpick-btn.is-on {
+  background: #003B4F;
+  border-color: #003B4F;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* ---- the table grid ---- */
+
+.discuss-editor-grid-wrap { overflow-x: auto; margin: 8px 0; }
+
+.discuss-editor-grid { border-collapse: collapse; }
+
+.discuss-editor-grid th,
+.discuss-editor-grid td {
+  border: 1px solid #dde5e9;
+  padding: 3px;
+  vertical-align: middle;
+}
+
+.discuss-editor-grid thead th {
+  background: rgba(0, 59, 79, 0.05);
+  white-space: nowrap;
+}
+
+/* A header cell holds its column name and the control that removes the
+   column, side by side. Without overriding the base full-width input the
+   name takes the whole cell and squeezes the ✕ to a sliver. */
+.discuss-editor-grid thead th {
+  display: table-cell;
+}
+
+.discuss-editor-grid thead th .discuss-editor-line {
+  width: auto;
+  min-width: 110px;
+  max-width: 200px;
+}
+
+.discuss-editor-grid thead th .discuss-editor-remove { margin-left: 4px; }
+
+.discuss-editor-grid td .discuss-editor-line { width: auto; min-width: 130px; max-width: 240px; }
+
+/* ---- the numbers preview ---- */
+
+.discuss-infobox--preview {
+  float: none;
+  margin: 0 0 14px;
+  max-width: 340px;
+}
+
+/* ---- figure preview ---- */
+
+.discuss-editor-preview { margin-top: 8px; }
+.discuss-editor-preview img {
+  max-width: 100%;
+  border: 1px solid #dde5e9;
+  border-radius: 3px;
+}
+
+.discuss-editor-warn {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #b42525;
+}
+
+.discuss-editor-warn code {
+  background: #fbeaea;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+/* ---- save / cancel ---- */
+
+.discuss-editor-actions {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #dde5e9;
+}
+
+.discuss-editor-buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.discuss-editor-save {
+  background: #003B4F;
+  border: 1px solid #003B4F;
+  border-radius: 3px;
+  padding: 6px 18px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.discuss-editor-save:hover:not(:disabled) { background: #01202C; border-color: #01202C; }
+.discuss-editor-save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.discuss-editor-cancel,
+.discuss-editor-secondary,
+.discuss-editor-remove-block {
+  background: #ffffff;
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  padding: 6px 14px;
+  font-size: 14px;
+  color: #003B4F;
+  cursor: pointer;
+}
+
+.discuss-editor-cancel:hover,
+.discuss-editor-secondary:hover { background: #f2f6f8; border-color: #8ba1ab; }
+
+.discuss-editor-remove-block { margin-left: auto; color: #b42525; }
+.discuss-editor-remove-block:hover { background: #fbeaea; border-color: #d79a9a; }
+
+/* Problems. Errors block the save and print above it; warnings do not,
+   because a half-written draft has to be saveable. */
+.discuss-editor-problems {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #8a5f00;
+}
+
+.discuss-editor-problems--error { color: #b42525; }
+
+/* ---- the source panel ---- */
+
+.discuss-source-panel {
+  max-width: 900px;
+  width: 92%;
+  margin: 5% auto;
+  text-align: left;
+}
+
+.discuss-source-panel h2 { margin: 0 0 10px; font-size: 18px; color: #01202C; }
+.discuss-source-panel h2 code { font-size: 15px; color: #003B4F; }
+
+.discuss-source-tabs { display: flex; gap: 8px; margin: 12px 0 8px; }
+
+.discuss-source-tabs button {
+  background: #ffffff;
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  padding: 5px 12px;
+  font-size: 13px;
+  color: #003B4F;
+  cursor: pointer;
+}
+
+.discuss-source-tabs button.is-on {
+  background: #003B4F;
+  border-color: #003B4F;
+  color: #ffffff;
+}
+
+.discuss-source-copy { margin-left: auto; }
+
+.discuss-source-text {
+  margin: 0;
+  padding: 12px;
+  max-height: 55vh;
+  overflow: auto;
+  background: #f7f9fa;
+  border: 1px solid #dde5e9;
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #1c2b31;
+  white-space: pre;
+  tab-size: 2;
+}
+
+@media (max-width: 700px) {
+  .discuss-editor { padding: 12px; }
+  .discuss-editor-row { align-items: flex-start; }
+  .discuss-editor-row .discuss-editor-tools { margin-left: 0; }
+  .discuss-editor-remove-block { margin-left: 0; }
+  .discuss-infobox--preview { max-width: none; }
+  .discuss-source-panel { width: 96%; margin: 4% auto; }
+}
+
+/* ---- JPPT upload and the course-flow editor ---- */
+
+.discuss-upload input[type="file"] { font-size: 14px; }
+
+.discuss-upload-progress {
+  font-size: 13px;
+  color: #4a6674;
+}
+
+.discuss-upload-name { max-width: 420px; }
+
+.discuss-floweditor {
+  border: 1px solid #cfdbe0;
+  border-radius: 4px;
+  background: rgba(0, 59, 79, 0.03);
+  padding: 12px 14px;
+  margin: 12px 0 24px;
+}
+
+.discuss-floweditor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+}
+
+.discuss-floweditor-tabs { display: inline-flex; border: 1px solid #b9c9d0; border-radius: 3px; overflow: hidden; }
+
+.discuss-floweditor-tabs button {
+  border: none;
+  background: #ffffff;
+  padding: 5px 14px;
+  font-size: 13px;
+  color: #003B4F;
+  cursor: pointer;
+}
+
+.discuss-floweditor-tabs button + button { border-left: 1px solid #b9c9d0; }
+.discuss-floweditor-tabs button.is-on { background: #003B4F; color: #ffffff; font-weight: bold; }
+
+.discuss-floweditor-tools { display: flex; flex-wrap: wrap; gap: 6px; }
+.discuss-floweditor-tools .discuss-editor-add:disabled { opacity: 0.4; cursor: not-allowed; }
+.discuss-editor-add.is-on { background: #003B4F; border-color: #003B4F; border-style: solid; color: #ffffff; }
+
+.discuss-floweditor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 14px;
+  align-items: start;
+}
+
+/* The chart scrolls inside its own box on a narrow screen, as the published chart does. */
+.discuss-floweditor-canvas {
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #dde5e9;
+  border-radius: 3px;
+}
+
+.discuss-floweditor-svg { max-width: none; touch-action: none; user-select: none; }
+.discuss-floweditor-node { cursor: move; }
+.discuss-floweditor-svg.is-connecting .discuss-floweditor-node { cursor: crosshair; }
+
+.discuss-flow-node.discuss-floweditor-node--on {
+  stroke: #003B4F;
+  stroke-width: 1.4;
+  fill: #e4eff3;
+}
+
+.discuss-floweditor-edgehit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 5;
+  cursor: pointer;
+  pointer-events: stroke;
+}
+
+.discuss-flow-edge.discuss-floweditor-edge--on { stroke: #003B4F; stroke-width: 1.3; }
+
+.discuss-floweditor-outline {
+  fill: none;
+  stroke: #003B4F;
+  stroke-width: 0.5;
+  stroke-dasharray: 2 1.5;
+  pointer-events: none;
+}
+
+.discuss-floweditor-handle,
+.discuss-floweditor-point {
+  fill: #ffffff;
+  stroke: #003B4F;
+  stroke-width: 0.5;
+}
+
+.discuss-floweditor-handle--nw,
+.discuss-floweditor-handle--se { cursor: nwse-resize; }
+.discuss-floweditor-handle--ne,
+.discuss-floweditor-handle--sw { cursor: nesw-resize; }
+.discuss-floweditor-point { cursor: grab; }
+
+.discuss-floweditor-panel {
+  background: #ffffff;
+  border: 1px solid #dde5e9;
+  border-radius: 3px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.discuss-floweditor-panel h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #01202C;
+}
+
+.discuss-floweditor-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0;
+  font-size: 12px;
+  color: #5a7481;
+}
+
+.discuss-floweditor-size input {
+  width: 64px;
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  padding: 3px 5px;
+  font-size: 13px;
+}
+
+.discuss-floweditor-jump {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline dotted;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .discuss-floweditor-body { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- discuss: server-backed pages (history, publishing, creating, event list editing) ---- */
+
+.discuss-para { margin: 0 0 14px; }
+
+.discuss-revision {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #708995;
+}
+
+.discuss-revision a { color: #003B4F; }
+
+.discuss-revision-banner {
+  border: 1px solid #cfdbe0;
+  border-left: 4px solid #003B4F;
+  background: rgba(0, 59, 79, 0.04);
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 0 0 20px;
+}
+
+.discuss-revision-banner p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #33505d;
+}
+
+.discuss-revision-banner strong { color: #01202C; }
+
+.discuss-revision-banner .discuss-draft-actions a {
+  display: inline-block;
+  padding: 5px 12px;
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  font-size: 13px;
+  color: #003B4F;
+  text-decoration: none;
+  background: #ffffff;
+}
+
+.discuss-revision-banner .discuss-draft-actions a:hover { background: #f2f6f8; border-color: #8ba1ab; }
+
+.discuss-history td,
+.discuss-history th { vertical-align: top; }
+
+.discuss-history-current th,
+.discuss-history-current td { background: rgba(0, 59, 79, 0.04); }
+
+.discuss-history-actions { white-space: nowrap; }
+
+.discuss-history-actions a { color: #003B4F; margin-right: 10px; }
+
+.discuss-history-restore,
+.discuss-history-actions .discuss-editor-confirm button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #003B4F;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.discuss-history-actions .discuss-editor-confirm { display: inline-flex; gap: 8px; align-items: center; }
+
+.discuss-history-actions .discuss-editor-confirm-q { font-size: 13px; color: #5a4a20; }
+
+.discuss-lint-warnings { margin: 0 0 10px; }
+
+.discuss-publish,
+.discuss-create { margin: 0 0 20px; }
+
+.discuss-itemlist .discuss-create { margin: 10px 0 4px; }
+
+.discuss-items-editor-kind { width: auto; flex: 0 0 auto; }
+
+.discuss-figure-upload { align-items: center; margin-bottom: 4px; }
+
+.discuss-figure-upload input[type="file"] { font-size: 13px; }
+
+.discuss-editor-secondary { font: inherit; }

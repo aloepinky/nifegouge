@@ -12,6 +12,7 @@ import NIFEAbout from './components/NIFEAbout.js';
 import LandingPage from './components/LandingPage.js';
 import CourseRules from './components/TW4CourseRules.js';
 import Systems from './components/systems/Systems.js';
+import Discuss from './components/discuss/Discuss.js';
 import TW4JetLog from './components/TW4JetLog.js';
 import TW4Docs from './components/TW4Docs.js';
 import Footer from './components/Footer.js';
@@ -66,6 +67,8 @@ function App() {
                 <NavLink to="/tw4/briefs" end className={navLinkClass}>Briefs/TOLD</NavLink>
                 <NavLink to="/tw4/courserules" end className={navLinkClass}>Course Rules</NavLink>
                 <NavLink to="/tw4/systems" className={navLinkClass}>Systems</NavLink>
+                {/* The Discuss tab is reachable from the foot of the About page while it is
+                    previewed; it gets a tab here when it is ready to be found. */}
                 <NavLink to="/tw4/jetlog" end className={navLinkClass}>Jet Log</NavLink>
               </>
             )}
@@ -92,6 +95,17 @@ function App() {
         <Route path="/tw4/courserules" element={<CourseRules />} />
         <Route path="/tw4/systems" element={<Systems />} />
         <Route path="/tw4/systems/:tab" element={<Systems />} />
+        <Route path="/tw4/discuss" element={<Discuss />} />
+        <Route path="/tw4/discuss/e/:event" element={<Discuss mode="event" />} />
+        <Route path="/tw4/discuss/b/:block" element={<Discuss mode="block" />} />
+        <Route path="/tw4/discuss/upload" element={<Discuss mode="upload" />} />
+        <Route path="/tw4/discuss/edit" element={<Discuss mode="edit" />} />
+        <Route path="/tw4/discuss/:item/history" element={<Discuss mode="history" />} />
+        <Route path="/tw4/discuss/s/:syllabus" element={<Discuss />} />
+        <Route path="/tw4/discuss/s/:syllabus/e/:event" element={<Discuss mode="event" />} />
+        <Route path="/tw4/discuss/s/:syllabus/b/:block" element={<Discuss mode="block" />} />
+        <Route path="/tw4/discuss/s/:syllabus/edit" element={<Discuss mode="edit" />} />
+        <Route path="/tw4/discuss/:item" element={<Discuss mode="item" />} />
         <Route path="/tw4/jetlog" element={<TW4JetLog />} />
       </Routes>
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function TW4About() {
   const navigate = useNavigate();
@@ -100,6 +100,11 @@ function TW4About() {
 
       <p className="about-text">
         Thanks,<br/>PinkSheetMafia
+      </p>
+
+      {/* Preview: not in the tab bar yet. */}
+      <p className="about-text" style={{ marginTop: '28px', fontSize: '12px', color: '#666' }}>
+        <Link to="/tw4/discuss" className="about-link">Discussion items</Link> (preview)
       </p>
     </div>
   );

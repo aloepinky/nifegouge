@@ -10,6 +10,7 @@
     "@testing-library/user-event": "^13.5.0",
     "leaflet": "^1.9.4",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^3.11.174",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-leaflet": "^5.0.0",
@@ -41,5 +42,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1131.0",
+    "@aws-sdk/client-s3": "^3.1131.0",
+    "@aws-sdk/lib-dynamodb": "^3.1131.0",
+    "@aws-sdk/s3-request-presigner": "^3.1131.0"
   }
 }
