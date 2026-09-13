@@ -157,8 +157,9 @@ export async function setItemHidden(slug, hidden) {
     await db().send(new UpdateCommand({
       TableName: CONFIG.itemsTable,
       Key: { slug, rev: 0 },
-      UpdateExpression: hidden ? 'SET hidden = :h' : 'REMOVE hidden',
+      UpdateExpression: hidden ? 'SET #hidden = :h' : 'REMOVE #hidden',
       ConditionExpression: 'attribute_exists(slug)',
+      ExpressionAttributeNames: { '#hidden': 'hidden' },
       ExpressionAttributeValues: hidden ? { ':h': true } : undefined,
     }));
   } catch (error) {
@@ -196,7 +197,8 @@ export async function listItemMetas() {
       TableName: CONFIG.itemsTable,
       FilterExpression: 'rev = :zero',
       ExpressionAttributeValues: { ':zero': 0 },
-      ProjectionExpression: 'slug, latestRev, title, flags, hidden, updatedAt',
+      ProjectionExpression: 'slug, latestRev, title, flags, #hidden, updatedAt',
+      ExpressionAttributeNames: { '#hidden': 'hidden' },
       ExclusiveStartKey: lastKey,
     }));
     out.push(...(result.Items || []));
@@ -251,8 +253,8 @@ export async function listSyllabi() {
   do {
     const result = await db().send(new ScanCommand({
       TableName: CONFIG.syllabiTable,
-      ProjectionExpression: 'syllabusId, rev, #n, createdAt, hidden',
-      ExpressionAttributeNames: { '#n': 'name' },
+      ProjectionExpression: 'syllabusId, rev, #n, createdAt, #hidden',
+      ExpressionAttributeNames: { '#n': 'name', '#hidden': 'hidden' },
       ExclusiveStartKey: lastKey,
     }));
     for (const row of result.Items || []) {
@@ -270,7 +272,8 @@ export async function setSyllabusHidden(id, hidden) {
   await db().send(new UpdateCommand({
     TableName: CONFIG.syllabiTable,
     Key: { syllabusId: id, rev: newest.rev },
-    UpdateExpression: hidden ? 'SET hidden = :h' : 'REMOVE hidden',
+    UpdateExpression: hidden ? 'SET #hidden = :h' : 'REMOVE #hidden',
+    ExpressionAttributeNames: { '#hidden': 'hidden' },
     ExpressionAttributeValues: hidden ? { ':h': true } : undefined,
   }));
   return { ...newest, hidden: hidden || undefined };
