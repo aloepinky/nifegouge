@@ -4,8 +4,9 @@
 // already uses — TW4JetLog.js's `handleInputChange(cellId, value)` and ToldCard.js's
 // two-key setter. No form library, no validation library; the editors own their own state and
 // hand a finished object back on save.
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { itemList, getItemMeta, useItemIndexVersion } from '../registry';
+import { getAuthor, setAuthor } from '../discussApi';
 
 // Destructive actions ask in the page, never through window.confirm. The app has no native
 // dialogs anywhere else, a browser dialog cannot say what is about to be lost, and the
@@ -229,10 +230,79 @@ export function SlugOptions() {
 
 // Save / Cancel, plus whatever else an editor wants. Save is disabled while the validator
 // reports an error, and the errors are printed above it rather than in an alert.
-export function EditorActions({ onSave, onCancel, errors, warnings, children }) {
+//
+// With `publish`, Save is the whole job. The footer asks what changed (required, it is the
+// history's one line about this revision) and who did it (optional, remembered), and the
+// editor's `onSave` receives `{ author, summary }` to send with the page. There is no separate
+// publish step: a Save button that leaves the page unsaved is the thing every user reads
+// wrong. `saving` holds the button while the request is out, and `saveError` is the server's
+// refusal — printed here, so the fix happens in the still-open form.
+//
+// `remove` is the optional destructive action beside Cancel — removing the section being
+// edited — as `{ label, question, summary, onConfirm }`. Removal is a save too, so it goes out
+// with the same name and summary; a removal with nothing typed in "what changed" gets the
+// stated `summary`, since a removal describes itself.
+export function EditorActions({
+  onSave, onCancel, errors, warnings, children, publish, saving, saveError, remove,
+}) {
+  const id = useId();
+  const [author, setAuthorField] = useState(() => (publish ? getAuthor() : ''));
+  const [summary, setSummary] = useState('');
+  const hasErrors = (errors || []).length > 0;
+  const unsaid = publish && !summary.trim();
+  const blocked = hasErrors || unsaid || !!saving;
+
+  const meta = (fallback) => {
+    const name = author.trim();
+    setAuthor(name);
+    return { author: name, summary: summary.trim() || fallback };
+  };
+
+  const save = () => {
+    if (blocked) return;
+    if (!publish) {
+      onSave();
+      return;
+    }
+    onSave(meta());
+  };
+
+  const lint = (saveError && saveError.lint) || [];
+
   return (
     <div className="discuss-editor-actions">
-      {(errors || []).length > 0 && (
+      {publish && (
+        <div className="discuss-editor-publish">
+          <div className="discuss-editor-field">
+            <label className="discuss-editor-label" htmlFor={`${id}-summary`}>
+              What changed <span className="discuss-editor-req">required</span>
+            </label>
+            <Line
+              id={`${id}-summary`}
+              value={summary}
+              onChange={setSummary}
+              maxLength={200}
+              placeholder="e.g. Corrected the flap limit from §4.3"
+              onKeyDown={(e) => { if (e.key === 'Enter') save(); }}
+            />
+          </div>
+          <div className="discuss-editor-field">
+            <label className="discuss-editor-label" htmlFor={`${id}-author`}>Your name</label>
+            <Line
+              id={`${id}-author`}
+              value={author}
+              onChange={setAuthorField}
+              maxLength={40}
+              placeholder="Optional. Shown in the page's history"
+            />
+          </div>
+          <p className="discuss-editor-hint">
+            Saving puts your edits on the site for everyone. Every revision is kept, so a
+            mistake is undone from the page's history.
+          </p>
+        </div>
+      )}
+      {hasErrors && (
         <ul className="discuss-editor-problems discuss-editor-problems--error">
           {errors.map((e) => (
             <li key={e}>{e}</li>
@@ -246,29 +316,51 @@ export function EditorActions({ onSave, onCancel, errors, warnings, children }) 
           ))}
         </ul>
       )}
+      {lint.length > 0 && (
+        <ul className="discuss-editor-problems discuss-editor-problems--error">
+          {lint.map((e) => (
+            <li key={`${e.rule}:${e.detail}`}>{e.rule}: {e.detail}</li>
+          ))}
+        </ul>
+      )}
+      {saveError && <p className="discuss-editor-warn">{saveError.message}</p>}
       <div className="discuss-editor-buttons">
         <button
           type="button"
           className="discuss-editor-save"
-          onClick={onSave}
-          disabled={(errors || []).length > 0}
+          onClick={save}
+          disabled={blocked}
+          title={unsaid && !hasErrors ? 'Say what you changed first' : undefined}
         >
-          Save
+          {saving ? 'Saving…' : 'Save'}
         </button>
-        <button type="button" className="discuss-editor-cancel" onClick={onCancel}>
+        <button type="button" className="discuss-editor-cancel" onClick={onCancel} disabled={!!saving}>
           Cancel
         </button>
         {children}
+        {remove && (
+          <ConfirmButton
+            className="discuss-editor-remove-block"
+            label={remove.label}
+            question={remove.question}
+            confirmLabel="Remove"
+            onConfirm={() => {
+              if (saving) return;
+              remove.onConfirm(publish ? meta(remove.summary) : undefined);
+            }}
+          />
+        )}
       </div>
     </div>
   );
 }
 
-// Escape cancels an open editor, as it closes a dialog everywhere else on the web.
+// Escape cancels an open editor, as it closes a dialog everywhere else on the web. An editor
+// embedded in another passes nothing, and the outer one answers.
 export function useEscape(onCancel) {
   const cb = useCallback(
     (e) => {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === 'Escape' && onCancel) onCancel();
     },
     [onCancel]
   );

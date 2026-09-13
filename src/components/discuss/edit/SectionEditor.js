@@ -10,8 +10,7 @@ import {
   newParaId, newBulletId, newFigureId, newTableId, newSubBulletId, newSectionId,
 } from './ids';
 import {
-  Grow, Line, RefsPicker, RowTools, SlugList, EditorActions, ConfirmButton, useEscape, move,
-  BOLD_HINT,
+  Grow, Line, RefsPicker, RowTools, SlugList, EditorActions, useEscape, move, BOLD_HINT,
 } from './fields';
 import { uploadFigure } from './figureUpload';
 
@@ -289,11 +288,23 @@ function BulletRow({
 // `check` builds the page as it would be with this section saved and validates that, rather
 // than validating the section alone — a citation of a reference that does not exist is only
 // visible from the whole page, and that is exactly the kind of break worth catching.
-function SectionEditor({ section, item, isSub, onSave, onCancel, onRemove, check }) {
-  const [s, setS] = useState(() => clone(section));
-  useEscape(onCancel);
+//
+// `embedded` is how PageEditor hosts one of these per section: the form then holds no state
+// of its own, every change goes up through `onChange`, and there is no footer — the page
+// form's Save sends everything at once. `item` is then the page as it stands in that form,
+// so an id minted here sees the paragraphs added in a sibling section a moment ago.
+function SectionEditor({
+  section, item, isSub, onSave, onCancel, onRemove, check, embedded, onChange, saving, saveError,
+}) {
+  const [local, setLocal] = useState(() => clone(section));
+  useEscape(embedded ? null : onCancel);
 
-  const problems = check ? check(s) : { errors: [], warnings: [] };
+  const s = embedded ? section : local;
+  const setS = embedded
+    ? (next) => onChange(typeof next === 'function' ? next(section) : next)
+    : setLocal;
+
+  const problems = !embedded && check ? check(s) : { errors: [], warnings: [] };
   const refs = item.references || [];
   const set = (key, value) => setS((prev) => ({ ...prev, [key]: value }));
 
@@ -323,7 +334,11 @@ function SectionEditor({ section, item, isSub, onSave, onCancel, onRemove, check
   const setList = (key, next) => set(key, next.length ? next : undefined);
 
   return (
-    <div className="discuss-editor" role="group" aria-label={`Editing ${section.title}`}>
+    <div
+      className={embedded ? 'discuss-editor-embedded' : 'discuss-editor'}
+      role="group"
+      aria-label={`Editing ${section.title}`}
+    >
       <div className="discuss-editor-field">
         <label className="discuss-editor-label">Heading</label>
         <Line value={s.title} onChange={setTitle} />
@@ -502,24 +517,27 @@ function SectionEditor({ section, item, isSub, onSave, onCancel, onRemove, check
         </button>
       </div>
 
-      <EditorActions
-        onSave={() => {
-          const out = clone(s);
-          delete out.__new;
-          onSave(out);
-        }}
-        onCancel={onCancel}
-        errors={problems.errors}
-        warnings={problems.warnings}
-      >
-        <ConfirmButton
-          className="discuss-editor-remove-block"
-          label={`Remove ${isSub ? 'subsection' : 'section'}`}
-          question={`Remove "${s.title}" and everything in it?`}
-          confirmLabel="Remove"
-          onConfirm={onRemove}
+      {!embedded && (
+        <EditorActions
+          publish
+          saving={saving}
+          saveError={saveError}
+          onSave={(meta) => {
+            const out = clone(s);
+            delete out.__new;
+            onSave(out, meta);
+          }}
+          onCancel={onCancel}
+          errors={problems.errors}
+          warnings={problems.warnings}
+          remove={{
+            label: `Remove ${isSub ? 'subsection' : 'section'}`,
+            question: `Remove "${s.title}" and everything in it?`,
+            summary: `Removed the ${isSub ? 'subsection' : 'section'} "${s.title}"`,
+            onConfirm: onRemove,
+          }}
         />
-      </EditorActions>
+      )}
     </div>
   );
 }

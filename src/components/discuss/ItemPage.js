@@ -3,19 +3,18 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { generatedFor } from './GENERATED';
 import { getItemMeta } from './registry';
 import { useSyllabus } from './SyllabusContext';
-import { rememberItem, refreshItem } from './discussApi';
+import { rememberItem, refreshItem, saveItem } from './discussApi';
 import ItemLink from './ItemLink';
 import { getSystemTab } from '../systems/systemTabs';
 import { getDraft, getRecord, saveDraft, clearDraft, clone } from './edit/draft';
 import { allIds } from './edit/ids';
 import { validate } from './edit/validate';
 import { SlugOptions, ConfirmButton } from './edit/fields';
-import { EditLink, DraftBanner } from './edit/EditLink';
+import { EditLink, HeadLink, DraftBanner } from './edit/EditLink';
 import PublishDialog from './edit/PublishDialog';
 import SectionEditor from './edit/SectionEditor';
 import NumbersEditor from './edit/NumbersEditor';
 import PageEditor from './edit/PageEditor';
-import SourcePanel from './edit/SourcePanel';
 
 // The one piece of inline markup the item data carries: `**bold**`. It exists for mnemonics —
 // the C-R-A-F-T of a clearance readback, the L-D-D-H-A of an approach setup — where the point
@@ -438,22 +437,25 @@ function replaceBlock(item, id, next) {
 
 // `record` is the published page as the mirror serves it: { slug, rev, item, author,
 // updatedAt }. `readOnly` renders it with no edit affordances, which is how an old revision
-// is shown from the history page; `banner` is that page's note above the head.
+// is shown from the history page; `banner` is that page's note above the head. The page
+// itself shows no revision number and no author: that is what the history page is for.
 function ItemPage({ record, readOnly = false, banner = null }) {
   const [params] = useSearchParams();
   const s = useSyllabus();
   const item = record.item;
   const rev = record.rev;
+  const historyTo = `/tw4/discuss/${item.slug}/history`;
 
   // The draft overlay. Discuss.js keys this component by slug, so navigating to another item
   // remounts and re-reads the store rather than carrying one page's edits onto the next.
   const [draft, setDraft] = useState(() => (readOnly ? null : getDraft(item.slug)));
   const [draftRecord, setDraftRecord] = useState(() => (readOnly ? null : getRecord(item.slug)));
   const [editing, setEditing] = useState(null);
-  const [showSource, setShowSource] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null); // { message, lint } for the open editor
   const [publishing, setPublishing] = useState(false);
-  const [conflict, setConflict] = useState(null); // the newer revision number
-  const [published, setPublished] = useState(null); // { rev, warnings } after a publish
+  const [conflict, setConflict] = useState(false);
+  const [published, setPublished] = useState(null); // { warnings } after a save
 
   const view = draft || item;
   const baseIds = draftRecord ? draftRecord.baseIds : allIds(item);
@@ -462,24 +464,8 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const draftBase = draftRecord && draftRecord.baseRev != null ? draftRecord.baseRev : rev;
   const behind = draft && draftBase !== rev;
 
-  const commit = (next) => {
-    saveDraft(item.slug, next, item, draftBase);
-    setDraft(clone(next));
-    setDraftRecord(getRecord(item.slug));
-    setEditing(null);
-    setPublished(null);
-  };
-
-  const discard = () => {
-    clearDraft(item.slug);
-    setDraft(null);
-    setDraftRecord(null);
-    setEditing(null);
-    setConflict(null);
-  };
-
-  // The draft has gone out: forget it here and let the store carry the new revision.
-  const onPublished = (result) => {
+  // The page as saved: forget any draft and let the store carry the new revision.
+  const onPublished = (next, result) => {
     clearDraft(item.slug);
     rememberItem({
       slug: item.slug,
@@ -487,29 +473,80 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       updatedAt: result.updatedAt,
       author: result.author,
       summary: result.summary,
-      item: clone(view),
+      item: clone(next),
     });
     setDraft(null);
     setDraftRecord(null);
+    setEditing(null);
+    setSaveError(null);
     setPublishing(false);
-    setConflict(null);
-    setPublished({ rev: result.rev, warnings: (result.lint && result.lint.warnings) || [] });
+    setConflict(false);
+    setPublished({ warnings: (result.lint && result.lint.warnings) || [] });
   };
 
-  // Someone published first. The draft stays; loading the newest revision rebases it, so the
-  // next publish goes against what is actually on the site.
+  // Save is publish. The editor hands back the page and who/why, and it goes to the server
+  // as a new revision on the spot; the editor closes only once the server has taken it. A
+  // refusal (an added em dash, a dropped connection) stays in the open form with the reason,
+  // and a copy is kept in this browser in case the tab is closed on it. Someone else saving
+  // first closes the form and keeps the edit as a draft under a notice, because the fix
+  // there is to look at what they did.
+  const commit = async (next, meta) => {
+    setSaving(true);
+    setSaveError(null);
+    setPublished(null);
+    try {
+      const result = await saveItem(item.slug, draftBase, next, meta);
+      onPublished(next, { ...result, author: meta.author, summary: meta.summary });
+    } catch (err) {
+      saveDraft(item.slug, next, item, draftBase);
+      if (err.status === 409) {
+        setDraft(clone(next));
+        setDraftRecord(getRecord(item.slug));
+        setEditing(null);
+        setConflict(true);
+      } else {
+        setSaveError({
+          message: `Not saved. ${err.message}`,
+          lint: (err.data && err.data.lint && err.data.lint.errors) || [],
+        });
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Cancel means cancel: a copy kept only because a save failed goes with the form.
+  const cancel = () => {
+    if (!draft) clearDraft(item.slug);
+    setEditing(null);
+    setSaveError(null);
+  };
+
+  const discard = () => {
+    clearDraft(item.slug);
+    setDraft(null);
+    setDraftRecord(null);
+    setEditing(null);
+    setConflict(false);
+  };
+
+  // Someone saved first. The draft stays; loading the newest revision rebases it, so the
+  // next save goes against what is actually on the site.
   const loadNewest = async () => {
     const newest = await refreshItem(item.slug);
     if (newest && draft) saveDraft(item.slug, draft, newest.item, newest.rev);
     setDraftRecord(getRecord(item.slug));
-    setConflict(null);
+    setConflict(false);
     setPublishing(false);
   };
 
   // One editor open at a time, as a wiki does it. Rather than asking whether to throw away
   // what is in the open form, every other `[edit]` is disabled while it is open — the answer
   // to "can I edit two things at once" is visible instead of being a question.
-  const open = (next) => setEditing(next);
+  const open = (next) => {
+    setSaveError(null);
+    setEditing(next);
+  };
   const busy = !!editing || publishing;
 
   // Every `[edit]` on the page goes through here, so a read-only rendering has none.
@@ -526,11 +563,10 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const head = (
     <>
       {banner}
-      {draft && !readOnly && (
+      {draft && !readOnly && !editing && (
         <DraftBanner
           savedAt={draftRecord && draftRecord.savedAt}
-          behind={behind ? { from: draftBase, to: rev } : null}
-          onSource={() => setShowSource(true)}
+          behind={behind}
           onPublish={() => {
             setPublished(null);
             setPublishing(true);
@@ -541,35 +577,35 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       {publishing && !conflict && (
         <PublishDialog
           slug={item.slug}
-          baseRev={rev}
+          baseRev={draftBase}
           item={view}
-          onPublished={onPublished}
-          onConflict={(newer) => setConflict(newer || rev + 1)}
+          onPublished={(result) => onPublished(view, result)}
+          onConflict={() => setConflict(true)}
           onCancel={() => setPublishing(false)}
         />
       )}
       {conflict && (
         <div className="discuss-editor-notice">
           <p>
-            <strong>Someone published revision {conflict} while you were editing.</strong> Your
-            edits are kept in this browser. Load the newest revision, check your changes against
-            it, then publish again.
+            <strong>Someone else saved this page while you were editing.</strong> Your edits
+            are kept in this browser. Load the newest version, check your changes against it,
+            then save again.
           </p>
           <div className="discuss-draft-actions">
             <ConfirmButton
               label="Load the newest version"
-              question="Your draft stays and will sit on top of the newest revision."
+              question="Your edits stay and will sit on top of the newest version."
               confirmLabel="Load it"
               onConfirm={loadNewest}
             />
-            <button type="button" onClick={() => setConflict(null)}>Not now</button>
+            <button type="button" onClick={() => setConflict(false)}>Not now</button>
           </div>
         </div>
       )}
       {published && (
         <div className="discuss-editor-notice">
           <p>
-            <strong>Published as revision {published.rev}.</strong>
+            <strong>Saved to the site.</strong>
             {published.warnings.length
               ? ' The linter flagged the following for a person to look at; none of it blocks the page.'
               : ' The linter found nothing to flag.'}
@@ -588,6 +624,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
         <h1>
           {view.title}
           <Edit onClick={() => open({ kind: 'page' })} what="this page" label="edit page" disabled={busy} />
+          {!readOnly && <HeadLink to={historyTo} label="history" />}
         </h1>
         {briefedIn.length > 0 && (
           <p className="discuss-briefed-in">
@@ -600,14 +637,6 @@ function ItemPage({ record, readOnly = false, banner = null }) {
             ))}
           </p>
         )}
-        {!readOnly && (
-          <p className="discuss-revision">
-            Revision {rev}
-            {record.author ? ` by ${record.author}` : ''}
-            {' · '}
-            <Link to={`/tw4/discuss/${item.slug}/history`}>History</Link>
-          </p>
-        )}
       </header>
       {fromEvent && position && <EventStrip event={fromEvent} position={position} />}
       {!readOnly && <SlugOptions />}
@@ -618,14 +647,11 @@ function ItemPage({ record, readOnly = false, banner = null }) {
     <PageEditor
       item={view}
       onSave={commit}
-      onCancel={() => setEditing(null)}
-      onSource={() => setShowSource(true)}
+      onCancel={cancel}
       check={check}
+      saving={saving}
+      saveError={saveError}
     />
-  );
-
-  const source = showSource && (
-    <SourcePanel item={view} published={item} onClose={() => setShowSource(false)} />
   );
 
   // A stub has no body to edit — it becomes a page by clearing the stub flag in the page
@@ -655,7 +681,6 @@ function ItemPage({ record, readOnly = false, banner = null }) {
             </section>
           )}
         </article>
-        {source}
       </div>
     );
   }
@@ -679,9 +704,11 @@ function ItemPage({ record, readOnly = false, banner = null }) {
               (editing && editing.kind === 'numbers' ? (
                 <NumbersEditor
                   item={view}
-                  onSave={(rows) => commit({ ...view, numbers: rows })}
-                  onCancel={() => setEditing(null)}
+                  onSave={(rows, meta) => commit({ ...view, numbers: rows }, meta)}
+                  onCancel={cancel}
                   check={(rows) => check({ ...view, numbers: rows })}
+                  saving={saving}
+                  saveError={saveError}
                 />
               ) : (
                 <NumbersBox
@@ -714,10 +741,12 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                     <SectionEditor
                       section={section}
                       item={view}
-                      onSave={(next) => commit(replaceBlock(view, section.id, next))}
-                      onCancel={() => setEditing(null)}
-                      onRemove={() => commit(replaceBlock(view, section.id, null))}
+                      onSave={(next, meta) => commit(replaceBlock(view, section.id, next), meta)}
+                      onCancel={cancel}
+                      onRemove={(meta) => commit(replaceBlock(view, section.id, null), meta)}
                       check={(next) => check(replaceBlock(view, section.id, next))}
+                      saving={saving}
+                      saveError={saveError}
                     />
                   ) : (
                     <SectionBody block={section} showCite={!collapsed} />
@@ -748,10 +777,12 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                             section={sub}
                             item={view}
                             isSub
-                            onSave={(next) => commit(replaceBlock(view, sub.id, next))}
-                            onCancel={() => setEditing(null)}
-                            onRemove={() => commit(replaceBlock(view, sub.id, null))}
+                            onSave={(next, meta) => commit(replaceBlock(view, sub.id, next), meta)}
+                            onCancel={cancel}
+                            onRemove={(meta) => commit(replaceBlock(view, sub.id, null), meta)}
                             check={(next) => check(replaceBlock(view, sub.id, next))}
+                            saving={saving}
+                            saveError={saveError}
                           />
                         ) : (
                           <>
@@ -822,14 +853,12 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                   label="edit this page"
                   disabled={busy}
                 />
-                {' · '}
-                <Link to={`/tw4/discuss/${item.slug}/history`}>history</Link>
+                <HeadLink to={historyTo} label="history" />
               </p>
             )}
           </>
         )}
       </article>
-      {source}
     </div>
   );
 }

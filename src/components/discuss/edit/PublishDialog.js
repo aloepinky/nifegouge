@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Line, useEscape } from './fields';
 import { saveItem, getAuthor, setAuthor } from '../discussApi';
 
-// The step between a draft and the site. Asks who and why, sends the page, and reports back:
-// a new revision with any lint warnings, a refusal naming what to fix, or a conflict when
-// someone published first.
+// Sends a draft to the site. An editor's own Save does this itself (EditorActions with
+// `publish`), so this panel is only reached from the draft banner: edits that were kept in the
+// browser because a save did not go through, or a page reloaded mid-edit. Asks who and why,
+// sends the page, and reports back: a new revision with any lint warnings, a refusal naming
+// what to fix, or a conflict when someone saved first.
 //
 // `onPublished({ rev, updatedAt, lint })` and `onConflict(rev)` are the two ways out besides
 // Cancel. The draft is untouched by this panel; ItemPage decides what to do with it.
@@ -41,10 +43,10 @@ function PublishDialog({ slug, baseRev, item, onPublished, onConflict, onCancel 
   };
 
   return (
-    <div className="discuss-editor discuss-publish" role="group" aria-label="Publish this page">
+    <div className="discuss-editor discuss-publish" role="group" aria-label="Save this page to the site">
       <p className="discuss-editor-hint">
-        Publishing puts your edits on the site for everyone, as revision {baseRev + 1}. Every
-        revision is kept, so a mistake is undone from the page's history.
+        Saving puts these edits on the site for everyone. Every revision is kept, so a mistake
+        is undone from the page's history.
       </p>
       <div className="discuss-editor-field">
         <label className="discuss-editor-label" htmlFor="publish-author">Your name</label>
@@ -80,7 +82,7 @@ function PublishDialog({ slug, baseRev, item, onPublished, onConflict, onCancel 
           disabled={!ready}
           title={summary.trim() ? undefined : 'Say what you changed first'}
         >
-          {busy ? 'Publishing…' : 'Publish'}
+          {busy ? 'Saving…' : 'Save to the site'}
         </button>
         <button type="button" className="discuss-editor-cancel" onClick={onCancel} disabled={busy}>
           Cancel

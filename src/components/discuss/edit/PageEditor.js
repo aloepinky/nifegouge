@@ -1,15 +1,19 @@
-// The page-level panel: everything that is not the inside of one section.
+// The whole page in one form: the lead, the Numbers box, every section and subsection in
+// page order, See also and the references, saved together. It is what `[edit page]` opens; a
+// heading's own `[edit]` still opens that one block, for the one-line fix.
 //
-// The lead is edited here rather than through an `[edit]` of its own, because the lead is not
-// a section — MOS gives it no heading, so there is nowhere honest to hang a link. Wikipedia
-// puts it behind the page edit for the same reason.
+// The section editors inside it are the same SectionEditor a heading's `[edit]` opens,
+// embedded: they hold no state of their own and every keystroke lands in this form's copy of
+// the page, so the ids minted for a new paragraph in one section see the paragraphs added in
+// another a moment ago. The lead is edited here and nowhere else, because the lead is not a
+// section — MOS gives it no heading, so there is nowhere honest to hang a link.
 import React, { useState } from 'react';
 import { clone } from './draft';
 import { newSectionId } from './ids';
 import { SYSTEM_TABS } from '../../systems/systemTabs';
-import {
-  Grow, Line, RowTools, SlugList, EditorActions, useEscape, move, BOLD_HINT,
-} from './fields';
+import { Grow, Line, RowTools, SlugList, EditorActions, useEscape, move, BOLD_HINT } from './fields';
+import SectionEditor from './SectionEditor';
+import NumbersEditor from './NumbersEditor';
 
 // References are numbered 1..N in list order and nothing else is coherent: `n` is the printed
 // marker, the `<li value>` and the anchor `#ref-n` all at once. So a removal or a reorder
@@ -25,6 +29,7 @@ function remapRefs(item, map) {
     if (b.refs) b.refs = fix(b.refs);
     for (const p of b.paras || []) p.refs = fix(p.refs);
     for (const f of b.figures || []) f.refs = fix(f.refs);
+    for (const t of b.tables || []) t.refs = fix(t.refs);
     const walk = (list) => {
       for (const x of list || []) {
         x.refs = fix(x.refs);
@@ -41,12 +46,16 @@ function remapRefs(item, map) {
   return item;
 }
 
-function StructureRow({ block, isSub, index, count, onMove, onRemove, onShift, shiftBlocked }) {
+// The head of a section's block in the form: where it sits, what level it is, and the two
+// moves the style guide names — a section whose every sentence is about a sibling's subject
+// is demoted under it, and a section that names a set promotes its members. No anchor id: it
+// is derived from the heading and nobody can act on it.
+function SectionHead({ number, title, isSub, index, count, onMove, onRemove, onShift, shiftBlocked }) {
   return (
-    <div className={`discuss-editor-row${isSub ? ' discuss-editor-row--sub' : ''}`}>
-      {/* No anchor id here. It is derived from the heading and nobody can act on it, so
-          printing it would be noise in a list that is about order and level. */}
-      <span className="discuss-editor-structure-title">{block.title}</span>
+    <div className="discuss-editor-sectionhead">
+      <h4>
+        {number} {title || (isSub ? 'Subsection' : 'Section')}
+      </h4>
       <button
         type="button"
         className="discuss-editor-shift"
@@ -73,14 +82,14 @@ function StructureRow({ block, isSub, index, count, onMove, onRemove, onShift, s
   );
 }
 
-function PageEditor({ item, onSave, onCancel, onSource, check }) {
+function PageEditor({ item, onSave, onCancel, check, saving, saveError }) {
   const [p, setP] = useState(() => clone(item));
   useEscape(onCancel);
 
   const problems = check ? check(p) : { errors: [], warnings: [] };
   const set = (key, value) => setP((prev) => ({ ...prev, [key]: value || undefined }));
   const sections = p.sections || [];
-  const setSections = (next) => setP((prev) => ({ ...prev, sections: next }));
+  const setSections = (next) => setP((prev) => ({ ...prev, sections: next.length ? next : undefined }));
 
   const diagrams = Array.isArray(p.diagram) ? p.diagram : p.diagram ? [p.diagram] : [];
   const toggleDiagram = (id) => {
@@ -88,11 +97,11 @@ function PageEditor({ item, onSave, onCancel, onSource, check }) {
     set('diagram', next.length === 0 ? undefined : next.length === 1 ? next[0] : next);
   };
 
+  const setSection = (i, next) => setSections(sections.map((x, j) => (j === i ? next : x)));
   const removeSection = (i) => setSections(sections.filter((_, j) => j !== i));
+  const setSubs = (i, subs) =>
+    setSection(i, { ...sections[i], subsections: subs.length ? subs : undefined });
 
-  // A section whose every sentence is about a sibling's subject belongs under it, and a
-  // section that names a set should promote its members. These are the two moves the style
-  // guide names, so they are the two buttons the structure list carries.
   const demote = (i) => {
     const above = sections[i - 1];
     const s = sections[i];
@@ -122,25 +131,16 @@ function PageEditor({ item, onSave, onCancel, onSource, check }) {
   };
 
   // The id minted here is a placeholder. `__new` marks the section as still tracking its
-  // heading, so the id becomes the real one the moment somebody types a real title in the
-  // section's own editor, and fixes when that editor is first saved.
+  // heading, so the id follows whatever gets typed into the heading field and fixes for good
+  // when the page is saved.
   const addSection = () => {
     const title = 'New section';
     setSections([...sections, { id: newSectionId(p, title), title, __new: true }]);
   };
 
   const addSubsection = (i) => {
-    const s = sections[i];
     const title = 'New subsection';
-    const next = [...sections];
-    next[i] = {
-      ...s,
-      subsections: [
-        ...(s.subsections || []),
-        { id: newSectionId(p, title), title, __new: true },
-      ],
-    };
-    setSections(next);
+    setSubs(i, [...(sections[i].subsections || []), { id: newSectionId(p, title), title, __new: true }]);
   };
 
   // --- references ------------------------------------------------------------------------
@@ -149,17 +149,22 @@ function PageEditor({ item, onSave, onCancel, onSource, check }) {
   const setRef = (i, key, value) => setRefs(refs.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
   const removeRef = (i) => setRefs(refs.filter((_, j) => j !== i));
 
-  const save = () => {
+  const save = (meta) => {
     const out = clone(p);
     // Reference numbers are position-derived, so commit the renumber and rewrite every
-    // citation before the draft sees it.
+    // citation before the page goes out.
     const map = {};
     for (const r of out.references || []) map[r.__was === undefined ? r.n : r.__was] = r.n;
     // Anything the page cited that is no longer in the list maps to nothing and its markers go.
     for (const r of item.references || []) if (!(r.n in map)) map[r.n] = null;
     remapRefs(out, map);
     for (const r of out.references || []) delete r.__was;
-    onSave(out);
+    // A new section's id stops tracking its heading the moment the page is saved.
+    for (const s of out.sections || []) {
+      delete s.__new;
+      for (const sub of s.subsections || []) delete sub.__new;
+    }
+    onSave(out, meta);
   };
 
   return (
@@ -246,58 +251,67 @@ function PageEditor({ item, onSave, onCancel, onSource, check }) {
         </div>
       )}
 
-      <h3>Structure</h3>
+      <h3>Numbers</h3>
+      <NumbersEditor
+        embedded
+        item={p}
+        onChange={(rows) => set('numbers', rows && rows.length ? rows : undefined)}
+      />
+
+      <h3>Sections</h3>
       <p className="discuss-editor-hint">
-        Order, level and removal. The words inside a section are edited from its own{' '}
-        <code>[edit]</code> link on the page.
+        Every section in page order. Move, demote, promote or remove one from its head; two
+        levels is the limit, and there is no H4.
       </p>
 
-      <div className="discuss-editor-structure">
-        {sections.map((s, i) => (
-          <React.Fragment key={s.id}>
-            <StructureRow
-              block={s}
-              index={i}
-              count={sections.length}
-              onMove={(from, to) => setSections(move(sections, from, to))}
-              onRemove={removeSection}
-              onShift={() => demote(i)}
-              shiftBlocked={demoteBlocked(s, i)}
-            />
-            {(s.subsections || []).map((sub, j) => (
-              <StructureRow
-                key={sub.id}
-                block={sub}
+      {sections.map((s, i) => (
+        <div className="discuss-editor-section" key={s.id}>
+          <SectionHead
+            number={`${i + 1}.`}
+            title={s.title}
+            index={i}
+            count={sections.length}
+            onMove={(from, to) => setSections(move(sections, from, to))}
+            onRemove={removeSection}
+            onShift={() => demote(i)}
+            shiftBlocked={demoteBlocked(s, i)}
+          />
+          <SectionEditor embedded section={s} item={p} onChange={(next) => setSection(i, next)} />
+
+          {(s.subsections || []).map((sub, j) => (
+            <div className="discuss-editor-section discuss-editor-section--sub" key={sub.id}>
+              <SectionHead
+                number={`${i + 1}.${j + 1}`}
+                title={sub.title}
                 isSub
                 index={j}
                 count={s.subsections.length}
-                onMove={(from, to) => {
-                  const next = [...sections];
-                  next[i] = { ...s, subsections: move(s.subsections, from, to) };
-                  setSections(next);
-                }}
-                onRemove={(k) => {
-                  const rest = s.subsections.filter((_, m) => m !== k);
-                  const next = [...sections];
-                  next[i] = { ...s, subsections: rest.length ? rest : undefined };
-                  setSections(next);
-                }}
+                onMove={(from, to) => setSubs(i, move(s.subsections, from, to))}
+                onRemove={(k) => setSubs(i, s.subsections.filter((_, m) => m !== k))}
                 onShift={() => promote(i, j)}
               />
-            ))}
-            <button
-              type="button"
-              className="discuss-editor-add discuss-editor-add--sub"
-              onClick={() => addSubsection(i)}
-            >
-              + subsection of {s.title}
-            </button>
-          </React.Fragment>
-        ))}
-        <button type="button" className="discuss-editor-add" onClick={addSection}>
-          + section
-        </button>
-      </div>
+              <SectionEditor
+                embedded
+                isSub
+                section={sub}
+                item={p}
+                onChange={(next) => setSubs(i, s.subsections.map((x, k) => (k === j ? next : x)))}
+              />
+            </div>
+          ))}
+
+          <button
+            type="button"
+            className="discuss-editor-add discuss-editor-add--sub"
+            onClick={() => addSubsection(i)}
+          >
+            + subsection of {s.title}
+          </button>
+        </div>
+      ))}
+      <button type="button" className="discuss-editor-add" onClick={addSection}>
+        + section
+      </button>
 
       <h3>See also</h3>
       <SlugList
@@ -340,15 +354,14 @@ function PageEditor({ item, onSave, onCancel, onSource, check }) {
       </div>
 
       <EditorActions
+        publish
+        saving={saving}
+        saveError={saveError}
         onSave={save}
         onCancel={onCancel}
         errors={problems.errors}
         warnings={problems.warnings}
-      >
-        <button type="button" className="discuss-editor-secondary" onClick={onSource}>
-          View source
-        </button>
-      </EditorActions>
+      />
     </div>
   );
 }

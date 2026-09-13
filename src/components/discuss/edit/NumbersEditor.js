@@ -4,20 +4,30 @@
 // it once" behaviour is visible while you are editing — that rule lives in the renderer
 // (ItemPage.js), and an author who cannot see it applying will write the label out twice and
 // wonder why the page swallowed one.
+//
+// `embedded` is how PageEditor hosts it: no state of its own, every change up through
+// `onChange(rows)`, and no footer of its own.
 import React, { useState } from 'react';
 import { clone } from './draft';
 import { newNumberId } from './ids';
 import { Line, RefsPicker, RowTools, EditorActions, ConfirmButton, useEscape, move } from './fields';
 
-function NumbersEditor({ item, onSave, onCancel, check }) {
-  const [rows, setRows] = useState(() => clone(item.numbers || []));
-  useEscape(onCancel);
+function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange, saving, saveError }) {
+  const [local, setLocal] = useState(() => clone(item.numbers || []));
+  useEscape(embedded ? null : onCancel);
 
-  const problems = check ? check(rows) : { errors: [], warnings: [] };
+  const rows = embedded ? item.numbers || [] : local;
+  const setRows = embedded ? onChange : setLocal;
+
+  const problems = !embedded && check ? check(rows) : { errors: [], warnings: [] };
   const set = (i, key, value) => setRows(rows.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
 
   return (
-    <div className="discuss-editor discuss-editor--numbers" role="group" aria-label="Editing Numbers">
+    <div
+      className={embedded ? 'discuss-editor-embedded' : 'discuss-editor discuss-editor--numbers'}
+      role="group"
+      aria-label="Editing Numbers"
+    >
       <p className="discuss-editor-hint">
         Figures a student has to have cold — pure recall. A row is a label and a value, never a
         sentence: if the value has no digits it belongs in prose. Spell the unit as it is
@@ -82,12 +92,17 @@ function NumbersEditor({ item, onSave, onCancel, check }) {
         )}
       </div>
 
-      <EditorActions
-        onSave={() => onSave(rows.length ? rows : undefined)}
-        onCancel={onCancel}
-        errors={problems.errors}
-        warnings={problems.warnings}
-      />
+      {!embedded && (
+        <EditorActions
+          publish
+          saving={saving}
+          saveError={saveError}
+          onSave={(meta) => onSave(rows.length ? rows : undefined, meta)}
+          onCancel={onCancel}
+          errors={problems.errors}
+          warnings={problems.warnings}
+        />
+      )}
     </div>
   );
 }

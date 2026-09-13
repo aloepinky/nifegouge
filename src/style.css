@@ -5006,18 +5006,22 @@ textarea.incorrect-answer {
 
 .discuss-edit-bracket { color: #a8bcc5; }
 
-.discuss-edit-link button {
+.discuss-edit-link button,
+.discuss-edit-link a {
   background: none;
   border: none;
   padding: 0 2px;
   margin: 0;
   font: inherit;
   color: #708995;
+  text-decoration: none;
   cursor: pointer;
 }
 
 .discuss-edit-link button:hover,
-.discuss-edit-link button:focus-visible {
+.discuss-edit-link button:focus-visible,
+.discuss-edit-link a:hover,
+.discuss-edit-link a:focus-visible {
   color: #003B4F;
   text-decoration: underline;
 }
@@ -5040,6 +5044,7 @@ textarea.incorrect-answer {
 }
 
 .discuss-page-edit .discuss-edit-link { font-size: 1em; margin-left: 0; }
+.discuss-page-edit .discuss-edit-link + .discuss-edit-link { margin-left: 10px; }
 
 /* ---- draft banner ---- */
 
@@ -5491,53 +5496,43 @@ textarea.incorrect-answer {
 
 .discuss-editor-problems--error { color: #b42525; }
 
-/* ---- the source panel ---- */
+/* ---- the whole-page form ---- */
 
-.discuss-source-panel {
-  max-width: 900px;
-  width: 92%;
-  margin: 5% auto;
-  text-align: left;
-}
+/* The section and Numbers editors embedded in the page form carry no
+   border of their own: the section block around them is the frame. */
+.discuss-editor-embedded { margin: 0; }
 
-.discuss-source-panel h2 { margin: 0 0 10px; font-size: 18px; color: #01202C; }
-.discuss-source-panel h2 code { font-size: 15px; color: #003B4F; }
-
-.discuss-source-tabs { display: flex; gap: 8px; margin: 12px 0 8px; }
-
-.discuss-source-tabs button {
-  background: #ffffff;
-  border: 1px solid #cfdbe0;
-  border-radius: 3px;
-  padding: 5px 12px;
-  font-size: 13px;
-  color: #003B4F;
-  cursor: pointer;
-}
-
-.discuss-source-tabs button.is-on {
-  background: #003B4F;
-  border-color: #003B4F;
-  color: #ffffff;
-}
-
-.discuss-source-copy { margin-left: auto; }
-
-.discuss-source-text {
-  margin: 0;
-  padding: 12px;
-  max-height: 55vh;
-  overflow: auto;
-  background: #f7f9fa;
+.discuss-editor-section {
   border: 1px solid #dde5e9;
-  border-radius: 3px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #1c2b31;
-  white-space: pre;
-  tab-size: 2;
+  border-radius: 4px;
+  background: #ffffff;
+  padding: 12px 14px;
+  margin: 0 0 14px;
 }
+
+.discuss-editor-section--sub { margin-left: 22px; margin-top: 14px; }
+
+.discuss-editor-sectionhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eef3f5;
+}
+
+.discuss-editor .discuss-editor-sectionhead h4 {
+  flex: 1 1 auto;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 15px;
+  color: #01202C;
+}
+
+/* The name and summary asked for at every Save, since Save is publish. */
+.discuss-editor-publish { margin-bottom: 4px; }
 
 @media (max-width: 700px) {
   .discuss-editor { padding: 12px; }
@@ -5545,7 +5540,7 @@ textarea.incorrect-answer {
   .discuss-editor-row .discuss-editor-tools { margin-left: 0; }
   .discuss-editor-remove-block { margin-left: 0; }
   .discuss-infobox--preview { max-width: none; }
-  .discuss-source-panel { width: 96%; margin: 4% auto; }
+  .discuss-editor-section--sub { margin-left: 10px; }
 }
 
 /* ---- JPPT upload and the course-flow editor ---- */
@@ -5698,14 +5693,6 @@ textarea.incorrect-answer {
 /* ---- discuss: server-backed pages (history, publishing, creating, event list editing) ---- */
 
 .discuss-para { margin: 0 0 14px; }
-
-.discuss-revision {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: #708995;
-}
-
-.discuss-revision a { color: #003B4F; }
 
 .discuss-revision-banner {
   border: 1px solid #cfdbe0;
