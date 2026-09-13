@@ -84,9 +84,16 @@ function opOf(event) {
 
 export const handler = async (event) => {
   const method = event.httpMethod || '';
+  const op = opOf(event);
+  const out = await dispatch(event, method, op);
+  // One line per request in CloudWatch: what came in and what went out.
+  console.log(`${method || '?'} ${op || event.path || '?'} -> ${out.statusCode}`);
+  return out;
+};
+
+async function dispatch(event, method, op) {
   if (method === 'OPTIONS') return { statusCode: 200, headers: HEADERS, body: '' };
 
-  const op = opOf(event);
   const route = ROUTES[op];
   if (!route || route.method !== method) return fail(404, 'Endpoint not found');
 
@@ -98,4 +105,4 @@ export const handler = async (event) => {
     console.error('Handler error:', error);
     return fail(500, 'Internal server error');
   }
-};
+}
