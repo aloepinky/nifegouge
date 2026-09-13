@@ -782,11 +782,25 @@ function resolveEdges(nodes, connectors, arrows) {
       const foot = footOn(point, other.pts[k], other.pts[k + 1]);
       const rest = [foot].concat(forward ? other.pts.slice(k + 1) : other.pts.slice(0, k + 1).reverse());
       const end = forward ? other.b : other.a;
-      if (end) return { id: end[0], tail: rest };
+      if (end) return { id: end[0], side: end[1], tail: rest };
       const onward = hostTarget(j, rest[rest.length - 1], depth + 1);
-      return onward ? { id: onward.id, tail: rest.concat(onward.tail) } : null;
+      return onward ? { id: onward.id, side: onward.side, tail: rest.concat(onward.tail) } : null;
     }
     return null;
+  };
+
+  // The figure stops a line at the base of its arrowhead, and a little short of the box it
+  // leaves. The rendered arrow is a line with its head at the line's end, so the line has to
+  // run to the box: move the end onto the side it snapped to, along the line's own axis, the
+  // way the editor draws an arrow between two boxes. Every arrow into one side then ends at
+  // the same point and draws one head.
+  const bboxOfNode = Object.fromEntries(nodes.map((n) => [n.id, n.bbox]));
+  const onSide = (pt, id, side) => {
+    const [x, y, w, h] = bboxOfNode[id];
+    if (side === 'L') return [x, pt[1]];
+    if (side === 'R') return [x + w, pt[1]];
+    if (side === 'T') return [pt[0], y + h];
+    return [pt[0], y];
   };
 
   const edges = [];
@@ -799,6 +813,8 @@ function resolveEdges(nodes, connectors, arrows) {
     let src;
     let dst;
     let order;
+    let srcSide = null;
+    let dstSide = null;
     if (r.headA || r.headB || r.outA || r.outB) {
       const forward = r.headB && !r.headA ? true : r.headA ? false : r.outA;
       const start = forward ? pts[0] : pts[pts.length - 1];
@@ -806,15 +822,21 @@ function resolveEdges(nodes, connectors, arrows) {
       const endApex = forward ? r.apexB : r.apexA;
       src = forward ? aId : bId;
       dst = forward ? bId : aId;
+      srcSide = (forward ? r.a : r.b) ? (forward ? r.a : r.b)[1] : null;
+      dstSide = (forward ? r.b : r.a) ? (forward ? r.b : r.a)[1] : null;
       order = forward ? [...pts] : [...pts].reverse();
       if (src === null) src = hostSource(i, start);
       // A stub too short to clear its own box snaps both ends to it (Delta's FAM1204 is
       // 3.5 pt long); the arrow leaves the box, so its far end is wherever it joins.
-      if (dst !== null && dst === src) dst = null;
+      if (dst !== null && dst === src) {
+        dst = null;
+        dstSide = null;
+      }
       if (dst === null) {
         const joined = hostTarget(i, end) || (endApex && hostTarget(i, endApex));
         if (joined) {
           dst = joined.id;
+          dstSide = joined.side;
           order = order.concat(joined.tail);
         }
       }
@@ -829,21 +851,44 @@ function resolveEdges(nodes, connectors, arrows) {
         const joined = hostTarget(i, free);
         if (joined && joined.id !== boxEnd) {
           src = boxEnd;
+          srcSide = (aId ? r.a : r.b)[1];
           dst = joined.id;
+          dstSide = joined.side;
           order = (aId ? [...pts] : [...pts].reverse()).concat(joined.tail);
         }
+      } else if (aId === null && bId === null) {
+        // Neither end on a box: a line that leaves one connector and arrives on another,
+        // carrying the first's source to the second's destination. FAM2101-5's branch to
+        // FAM6101-2 in Echo turns into a stub that already carries the head.
+        const tryWay = (from, to, reversed) => {
+          const s0 = hostSource(i, from);
+          const t0 = s0 ? hostTarget(i, to) : null;
+          if (!s0 || !t0 || t0.id === s0) return false;
+          src = s0;
+          dst = t0.id;
+          dstSide = t0.side;
+          order = (reversed ? [...pts].reverse() : [...pts]).concat(t0.tail);
+          return true;
+        };
+        if (!tryWay(pts[0], pts[pts.length - 1], false)) tryWay(pts[pts.length - 1], pts[0], true);
       }
     }
     if (src === undefined) {
+      const snappedA = r.a;
+      const snappedB = r.b;
       if (aId === null) aId = hostSource(i, pts[0]);
       if (bId === null) bId = hostSource(i, pts[pts.length - 1]);
       if (bId && !aId) {
         src = aId;
         dst = bId;
+        srcSide = snappedA ? snappedA[1] : null;
+        dstSide = snappedB ? snappedB[1] : null;
         order = [...pts];
       } else {
         src = bId;
         dst = aId;
+        srcSide = snappedB ? snappedB[1] : null;
+        dstSide = snappedA ? snappedA[1] : null;
         order = [...pts].reverse();
       }
     }
@@ -851,6 +896,8 @@ function resolveEdges(nodes, connectors, arrows) {
       unresolved.push([r, src, dst]);
       return;
     }
+    if (srcSide) order[0] = onSide(order[0], src, srcSide);
+    if (dstSide) order[order.length - 1] = onSide(order[order.length - 1], dst, dstSide);
     // Joining a host lands on a point the host already has; keep each corner once.
     order = order.filter((q, k) => k === 0 || dist(q, order[k - 1]) > 0.05);
     // A trunk that feeds a bus resolves to the same pair as the bus's own branch, and the

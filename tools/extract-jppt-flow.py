@@ -936,10 +936,28 @@ def resolve_edges(nodes, connectors, arrows):
             rest = [foot] + (other['pts'][k + 1:] if forward else list(reversed(other['pts'][:k + 1])))
             end = other['b'] if forward else other['a']
             if end:
-                return {'id': end[0], 'tail': rest}
+                return {'id': end[0], 'side': end[1], 'tail': rest}
             onward = host_target(j, rest[-1], depth + 1)
-            return {'id': onward['id'], 'tail': rest + onward['tail']} if onward else None
+            return ({'id': onward['id'], 'side': onward['side'], 'tail': rest + onward['tail']}
+                    if onward else None)
         return None
+
+    # The figure stops a line at the base of its arrowhead, and a little short of the box it
+    # leaves. The rendered arrow is a line with its head at the line's end, so the line has
+    # to run to the box: move the end onto the side it snapped to, along the line's own
+    # axis, the way the editor draws an arrow between two boxes. Every arrow into one side
+    # then ends at the same point and draws one head.
+    bbox_of_node = {n['id']: n['bbox'] for n in nodes}
+
+    def on_side(pt, nid, side):
+        x, y, w, h = bbox_of_node[nid]
+        if side == 'L':
+            return (x, pt[1])
+        if side == 'R':
+            return (x + w, pt[1])
+        if side == 'T':
+            return (pt[0], y + h)
+        return (pt[0], y)
 
     UNSET = object()
     edges, unresolved = [], []
@@ -949,6 +967,7 @@ def resolve_edges(nodes, connectors, arrows):
         b_id = r['b'][0] if r['b'] else None
 
         src = dst = order = UNSET
+        src_side = dst_side = None
         if r['head_a'] or r['head_b'] or r['out_a'] or r['out_b']:
             forward = True if (r['head_b'] and not r['head_a']) else (False if r['head_a'] else r['out_a'])
             start = pts[0] if forward else pts[-1]
@@ -956,6 +975,10 @@ def resolve_edges(nodes, connectors, arrows):
             end_apex = r['apex_b'] if forward else r['apex_a']
             src = a_id if forward else b_id
             dst = b_id if forward else a_id
+            src_snap = r['a'] if forward else r['b']
+            dst_snap = r['b'] if forward else r['a']
+            src_side = src_snap[1] if src_snap else None
+            dst_side = dst_snap[1] if dst_snap else None
             order = list(pts) if forward else list(reversed(pts))
             if src is None:
                 src = host_source(i, start)
@@ -963,10 +986,12 @@ def resolve_edges(nodes, connectors, arrows):
             # is 3.5 pt long); the arrow leaves the box, so its far end is wherever it joins.
             if dst is not None and dst == src:
                 dst = None
+                dst_side = None
             if dst is None:
                 joined = host_target(i, end) or (end_apex and host_target(i, end_apex)) or None
                 if joined:
                     dst = joined['id']
+                    dst_side = joined['side']
                     order = order + joined['tail']
         else:
             # No head at either end. A stub from a box to another connector is that box
@@ -980,20 +1005,44 @@ def resolve_edges(nodes, connectors, arrows):
                 joined = host_target(i, free)
                 if joined and joined['id'] != box_end:
                     src, dst = box_end, joined['id']
+                    src_side = (r['a'] if a_id else r['b'])[1]
+                    dst_side = joined['side']
                     order = (list(pts) if a_id else list(reversed(pts))) + joined['tail']
+            elif a_id is None and b_id is None:
+                # Neither end on a box: a line that leaves one connector and arrives on
+                # another, carrying the first's source to the second's destination.
+                # FAM2101-5's branch to FAM6101-2 in Echo turns into a stub that already
+                # carries the head.
+                for start, end, reverse in ((pts[0], pts[-1], False), (pts[-1], pts[0], True)):
+                    s0 = host_source(i, start)
+                    t0 = host_target(i, end) if s0 else None
+                    if not s0 or not t0 or t0['id'] == s0:
+                        continue
+                    src, dst, dst_side = s0, t0['id'], t0['side']
+                    order = (list(reversed(pts)) if reverse else list(pts)) + t0['tail']
+                    break
         if src is UNSET:
+            snapped_a, snapped_b = r['a'], r['b']
             if a_id is None:
                 a_id = host_source(i, pts[0])
             if b_id is None:
                 b_id = host_source(i, pts[-1])
             if b_id and not a_id:
                 src, dst, order = a_id, b_id, list(pts)
+                src_side = snapped_a[1] if snapped_a else None
+                dst_side = snapped_b[1] if snapped_b else None
             else:
                 src, dst, order = b_id, a_id, list(reversed(pts))
+                src_side = snapped_b[1] if snapped_b else None
+                dst_side = snapped_a[1] if snapped_a else None
 
         if not src or not dst or src == dst:
             unresolved.append((r, src, dst))
             continue
+        if src_side:
+            order[0] = on_side(order[0], src, src_side)
+        if dst_side:
+            order[-1] = on_side(order[-1], dst, dst_side)
         # Joining a host lands on a point the host already has; keep each corner once.
         order = [q for k, q in enumerate(order) if k == 0 or dist(q, order[k - 1]) > 0.05]
         # A trunk that feeds a bus resolves to the same pair as the bus's own branch, and the
