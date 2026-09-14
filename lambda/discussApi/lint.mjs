@@ -103,8 +103,13 @@ export function checkItem(item, slug) {
   const blocks = (b, where) => {
     if (!isStr(b.title) || !b.title.trim()) bad(`${where} has no heading`);
     for (const f of b.figures || []) {
-      if (!isStr(f.src) || !f.src) bad(`Figure ${f.id} has no image`);
-      if (!isStr(f.alt) || !f.alt.trim()) bad(`Figure ${f.id} has no alt text`);
+      // Several images under `images`, or the one on the figure itself; each needs both.
+      const shots = isArr(f.images) && f.images.length ? f.images : [f];
+      shots.forEach((im, k) => {
+        const which = shots.length > 1 ? `Figure ${f.id}, image ${k + 1}` : `Figure ${f.id}`;
+        if (!im || typeof im !== 'object' || !isStr(im.src) || !im.src) bad(`${which} has no image`);
+        if (!isStr(im.alt) || !im.alt.trim()) bad(`${which} has no alt text`);
+      });
     }
     for (const t of b.tables || []) {
       const cols = (t.cols || []).length;

@@ -21,11 +21,14 @@ import { uploadFigure } from './figureUpload';
 // A figure's image comes from the upload and nowhere else: the browser converts it to WebP
 // and the address it lands at is shown, never typed. The figures that shipped with the site
 // under public/ keep the address they have.
-function FigureRow({ figure, index, count, references, onAddReference, slug, onChange, onMove, onRemove }) {
+//
+// One image of a figure: its upload, file name and alt text, and in a gallery the words on
+// its button and its place in the order.
+function ImageSlot({ image, index, count, slug, gallery, onChange, onMove, onRemove }) {
   const [broken, setBroken] = useState(false);
   const [progress, setProgress] = useState(null);
   const [uploadError, setUploadError] = useState(null);
-  const set = (key, value) => onChange({ ...figure, [key]: value });
+  const set = (key, value) => onChange({ ...image, [key]: value });
 
   const upload = async (file) => {
     if (!file) return;
@@ -42,7 +45,88 @@ function FigureRow({ figure, index, count, references, onAddReference, slug, onC
     }
   };
 
-  const fileName = figure.src ? figure.src.split('/').pop() : '';
+  const fileName = image.src ? image.src.split('/').pop() : '';
+
+  return (
+    <div className={gallery ? 'discuss-editor-image discuss-editor-image--gallery' : 'discuss-editor-image'}>
+      {gallery && (
+        <div className="discuss-editor-blockhead">
+          <span className="discuss-editor-marker">Image {index + 1}</span>
+          <RowTools index={index} count={count} onMove={onMove} onRemove={onRemove} what="image" />
+        </div>
+      )}
+      <label className="discuss-editor-label">Image</label>
+      <div className="discuss-editor-row discuss-editor-row--tight discuss-figure-upload">
+        <input
+          type="file"
+          accept="image/*"
+          aria-label="Upload an image"
+          disabled={!!progress}
+          onChange={(e) => {
+            upload(e.target.files && e.target.files[0]);
+            e.target.value = '';
+          }}
+        />
+        {progress && <span className="discuss-upload-progress" role="status">{progress}…</span>}
+      </div>
+      {uploadError && <p className="discuss-editor-warn">{uploadError}</p>}
+      <p className="discuss-figure-src">
+        {image.src ? <>Image: <code>{fileName}</code></> : 'No image yet. Choose a file to upload it.'}
+      </p>
+      <label className="discuss-editor-label">
+        Alt text <span className="discuss-editor-req">required</span>
+      </label>
+      <p className="discuss-editor-hint">
+        Describe what the image shows, for someone who cannot see it.
+      </p>
+      <Grow value={image.alt} onChange={(v) => set('alt', v)} />
+      {gallery && (
+        <>
+          <label className="discuss-editor-label">Button</label>
+          <p className="discuss-editor-hint">
+            The words on this image's button, such as Page 1 or Day. Left blank, it is numbered.
+          </p>
+          <Line value={image.label} onChange={(v) => set('label', v)} maxLength={30} />
+        </>
+      )}
+      {image.src && (
+        <div className="discuss-editor-preview">
+          {broken ? (
+            <p className="discuss-editor-warn">
+              The image could not be loaded. Upload it again.
+            </p>
+          ) : (
+            <img src={image.src} alt={image.alt || ''} onError={() => setBroken(true)} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// A figure with one image keeps it on the figure itself (`src`, `alt`); from the second
+// image onward they live in `images`, shown on the page one at a time with a button each.
+// The editor moves between the two shapes as images are added and removed, so a figure
+// never carries both.
+function FigureRow({ figure, index, count, references, onAddReference, slug, onChange, onMove, onRemove }) {
+  const set = (key, value) => onChange({ ...figure, [key]: value });
+  const gallery = Array.isArray(figure.images);
+  const images = gallery ? figure.images : [{ src: figure.src, alt: figure.alt }];
+
+  const setImages = (next) => {
+    const out = { ...figure };
+    if (next.length <= 1) {
+      const one = next[0] || {};
+      delete out.images;
+      out.src = one.src || undefined;
+      out.alt = one.alt || undefined;
+    } else {
+      delete out.src;
+      delete out.alt;
+      out.images = next;
+    }
+    onChange(out);
+  };
 
   return (
     <div className="discuss-editor-block" data-block={figure.id}>
@@ -62,45 +146,36 @@ function FigureRow({ figure, index, count, references, onAddReference, slug, onC
           what="figure"
         />
       </div>
-      <label className="discuss-editor-label">Image</label>
-      <div className="discuss-editor-row discuss-editor-row--tight discuss-figure-upload">
-        <input
-          type="file"
-          accept="image/*"
-          aria-label="Upload an image"
-          disabled={!!progress}
-          onChange={(e) => {
-            upload(e.target.files && e.target.files[0]);
-            e.target.value = '';
-          }}
+      {images.map((im, i) => (
+        <ImageSlot
+          // eslint-disable-next-line react/no-array-index-key
+          key={i}
+          image={im}
+          index={i}
+          count={images.length}
+          slug={slug}
+          gallery={gallery}
+          onChange={(next) => setImages(images.map((x, j) => (j === i ? next : x)))}
+          onMove={(from, to) => setImages(move(images, from, to))}
+          onRemove={(j) => setImages(images.filter((_, k) => k !== j))}
         />
-        {progress && <span className="discuss-upload-progress" role="status">{progress}…</span>}
+      ))}
+      <div className="discuss-editor-adds">
+        <button
+          type="button"
+          className="discuss-editor-add"
+          onClick={() => setImages([...images, { src: '', alt: '' }])}
+        >
+          + image
+        </button>
       </div>
-      {uploadError && <p className="discuss-editor-warn">{uploadError}</p>}
-      <p className="discuss-figure-src">
-        {figure.src ? <>Image: <code>{fileName}</code></> : 'No image yet. Choose a file to upload it.'}
-      </p>
-      <label className="discuss-editor-label">
-        Alt text <span className="discuss-editor-req">required</span>
-      </label>
       <p className="discuss-editor-hint">
-        Describe what the image shows, for someone who cannot see it.
+        A figure with more than one image shows them one at a time, with a button for each:
+        for a chart too long for one image, or a set of near-identical ones.
       </p>
-      <Grow value={figure.alt} onChange={(v) => set('alt', v)} />
       <label className="discuss-editor-label">Caption</label>
       <p className="discuss-editor-hint">What the figure is and where it comes from.</p>
       <Grow value={figure.caption} onChange={(v) => set('caption', v)} />
-      {figure.src && (
-        <div className="discuss-editor-preview">
-          {broken ? (
-            <p className="discuss-editor-warn">
-              The image could not be loaded. Upload it again.
-            </p>
-          ) : (
-            <img src={figure.src} alt={figure.alt || ''} onError={() => setBroken(true)} />
-          )}
-        </div>
-      )}
     </div>
   );
 }

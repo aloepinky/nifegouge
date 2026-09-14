@@ -102,8 +102,13 @@ export function validate(item, baseIds) {
     if (!b.title || !b.title.trim()) errors.push(`A ${label} has no heading.`);
     const name = b.title && b.title.trim() ? `"${b.title}"` : `a ${label}`;
     (b.figures || []).forEach((f, i) => {
-      if (!f.src) errors.push(`Figure ${i + 1} in ${name} has no image. Upload one.`);
-      if (!f.alt || !f.alt.trim()) errors.push(`Figure ${i + 1} in ${name} needs alt text.`);
+      // A gallery is checked image by image; a single image sits on the figure itself.
+      const shots = Array.isArray(f.images) && f.images.length ? f.images : [f];
+      shots.forEach((im, k) => {
+        const which = shots.length > 1 ? `Figure ${i + 1} in ${name}, image ${k + 1}` : `Figure ${i + 1} in ${name}`;
+        if (!im.src) errors.push(`${which} has no image. Upload one.`);
+        if (!im.alt || !im.alt.trim()) errors.push(`${which} needs alt text.`);
+      });
     });
     (b.paras || []).forEach((p, i) => {
       if (!p.text || !p.text.trim()) warnings.push(`Paragraph ${i + 1} in ${name} is empty.`);

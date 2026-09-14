@@ -141,13 +141,49 @@ function LimitsLink({ limits }) {
 // `alt` is required and is not the caption: it describes the image for a reader who
 // cannot see it, while the caption says what it is. A figure with no alt fails the
 // validator rather than shipping unreadable.
+// The images a figure holds: several under `images`, or the one on the figure itself.
+const figureImages = (f) => (
+  Array.isArray(f.images) && f.images.length ? f.images : [{ src: f.src, alt: f.alt }]
+);
+
+// A figure holding several images shows one at a time in the figure's frame, with a button
+// for each beneath it: a chart too long for one image, cut into pages, or a set of
+// near-identical ones that belong in one place rather than stacked down the column. The
+// caption is the figure's; each image carries its own alt and, if given, the words on its
+// button.
+function Gallery({ images }) {
+  const [at, setAt] = useState(0);
+  const shown = images[Math.min(at, images.length - 1)];
+  return (
+    <>
+      <img src={shown.src} alt={shown.alt} loading="lazy" />
+      <div className="discuss-gallery-strip" role="group" aria-label="Images in this figure">
+        {images.map((im, i) => (
+          <button
+            type="button"
+            key={im.src || i}
+            className={`discuss-gallery-btn${i === at ? ' is-on' : ''}`}
+            aria-pressed={i === at}
+            onClick={() => setAt(i)}
+          >
+            {im.label || i + 1}
+          </button>
+        ))}
+        <span className="discuss-gallery-count">{at + 1} of {images.length}</span>
+      </div>
+    </>
+  );
+}
+
 function Figures({ figures, showCite }) {
   if (!figures || !figures.length) return null;
   return (
     <>
       {figures.map((f) => (
         <figure className="discuss-figure" key={f.id}>
-          <img src={f.src} alt={f.alt} loading="lazy" />
+          {figureImages(f).length > 1
+            ? <Gallery images={figureImages(f)} />
+            : <img src={figureImages(f)[0].src} alt={figureImages(f)[0].alt} loading="lazy" />}
           {f.caption && (
             <figcaption>
               {f.caption}

@@ -4490,6 +4490,43 @@ textarea.incorrect-answer {
   color: #5a7481;
 }
 
+/* A gallery: one image shown, a button per image beneath it. */
+.discuss-gallery-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.discuss-gallery-btn {
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  background: #ffffff;
+  padding: 3px 10px;
+  font-size: 13px;
+  color: #003B4F;
+  cursor: pointer;
+}
+
+/* Two classes: the site's global button:hover paints buttons dark, and hover must not read
+   as selected. */
+.discuss-gallery-strip .discuss-gallery-btn:hover { background: #ffffff; border-color: #003B4F; color: #003B4F; }
+
+.discuss-gallery-strip .discuss-gallery-btn.is-on:hover { background: #003B4F; color: #ffffff; }
+
+.discuss-gallery-btn.is-on {
+  background: #003B4F;
+  border-color: #003B4F;
+  color: #ffffff;
+}
+
+.discuss-gallery-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: #8ba1ab;
+}
+
 /* ---- tables ---- */
 
 /* The table scrolls, the page does not. Same contract as the Numbers infobox: a seven-column
@@ -5495,7 +5532,7 @@ textarea.incorrect-answer {
   white-space: nowrap;
 }
 
-.discuss-refpick-add:hover { border-style: solid; }
+.discuss-refpick .discuss-refpick-add:hover { border-style: solid; background: #ffffff; color: #003B4F; }
 
 .discuss-refpick-new {
   flex: 1 0 100%;
@@ -5561,6 +5598,13 @@ textarea.incorrect-answer {
 }
 
 /* ---- figure preview ---- */
+
+/* One image of a gallery in the editor, set off from its siblings. */
+.discuss-editor-image--gallery {
+  margin: 8px 0;
+  padding: 6px 10px;
+  border-left: 3px solid #dde5e9;
+}
 
 .discuss-editor-preview { margin-top: 8px; }
 .discuss-editor-preview img {
