@@ -228,6 +228,20 @@ function PageEditor({ item, onSave, onCancel, check }) {
       </div>
 
       <div className="discuss-editor-field">
+        <label className="discuss-editor-label">Memory limits</label>
+        <div className="discuss-editor-checks">
+          <label className="discuss-editor-check">
+            <input
+              type="checkbox"
+              checked={!!p.limits}
+              onChange={(e) => set('limits', e.target.checked || undefined)}
+            />
+            link the memory limits page under the lead
+          </label>
+        </div>
+      </div>
+
+      <div className="discuss-editor-field">
         <label className="discuss-editor-label">Flags</label>
         <div className="discuss-editor-checks">
           <label className="discuss-editor-check">

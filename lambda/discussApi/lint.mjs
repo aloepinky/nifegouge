@@ -20,7 +20,7 @@ export const MAX_ITEM_BYTES = 200 * 1024;
 
 const ALLOWED_KEYS = new Set([
   'slug', 'title', 'lede', 'note', 'numbers', 'sections', 'seeAlso', 'references',
-  'maneuver', 'stub', 'sourcingLead', 'generated', 'diagram', 'aircraft', 'school',
+  'maneuver', 'stub', 'sourcingLead', 'generated', 'diagram', 'limits', 'aircraft', 'school',
 ]);
 
 export function checkSlug(slug) {

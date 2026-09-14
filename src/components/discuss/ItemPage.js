@@ -120,6 +120,20 @@ function DiagramLink({ diagram }) {
   );
 }
 
+// Where the page's subject is the operating limitations, close the lead with a link to the
+// memory limits page, the way a systems page links its diagram. `limits: true` opts in; the
+// page itself then carries only what that page does not.
+//
+// This is lead content, not a section: it never appears in the contents rail.
+function LimitsLink({ limits }) {
+  if (!limits) return null;
+  return (
+    <p className="discuss-diagram-link">
+      Memory limits: <Link to="/tw4/eps-limits/limits">T-6B operating limitations</Link>
+    </p>
+  );
+}
+
 // Figures. A section carries `figures: [{ id, src, alt, caption, refs }]`; `src` is a path
 // under public/, by convention `/discuss/<slug>/<name>.webp`. Some items are mostly a
 // diagram — the visual signal set is the obvious one — and cannot be written as prose.
@@ -713,6 +727,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
               ))}
             {view.lede && <p className="discuss-lede-para">{inline(view.lede)}</p>}
             <DiagramLink diagram={view.diagram} />
+            <LimitsLink limits={view.limits} />
             {view.note && <p className="discuss-note">{view.note}</p>}
             <GeneratedLists groups={genGroups} />
 
