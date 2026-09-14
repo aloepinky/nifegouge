@@ -7,8 +7,10 @@
 // directory; the copy is gitignored and never hand-edited.
 //
 // Every rule function takes a parsed item object (the data an item file exports) and returns
-// `[level, rule, detail]` triples. Only `em-dash` is an error; the rest are advisory, since
-// each is occasionally the publication's own wording and needs a person to adjudicate.
+// `[level, rule, detail]` triples. Of the content rules, `unsourced-block` and
+// `thin-justification` are errors: a block with no source has to argue for itself. The prose rules are
+// advisory, since each is occasionally the publication's own wording and needs a person to
+// adjudicate.
 
 // ---------------------------------------------------------------------------------------
 // Walking an item
@@ -214,10 +216,10 @@ export function headingViolations(title, item, seen) {
 // WHY THESE ARE HERE. An item page is a compilation of source text, so the sentences a person
 // writes are the ones no publication supports — see "Sourcing and prose" in CLAUDE.md. Most of
 // that judgement cannot be mechanised, but the constructions it bans leave fingerprints, and
-// the fingerprints are cheap to look for. Only the em dash is an error: it is a character, it
-// is either present or it is not, and there is nothing to adjudicate. Everything else is a
-// phrase that is usually a symptom and occasionally the source's own wording, so it is
-// reported and left to a person, the same bargain proseAdvice() already makes.
+// the fingerprints are cheap to look for. Every one of them is advisory, the em dash included:
+// they are house style, and a page can break all of them and still be sourced, or pass all of
+// them and be invented. What is checked hard is whether a block has a source at all — see
+// sourcingViolations() below.
 
 const EM_DASH = /—/;
 
@@ -254,20 +256,44 @@ const PERSONIFIED = new RegExp(`\\b${AGENTS}\\s+(\\w+\\s+){0,2}(decides?|wants?|
 // is usually the publication's own imperative ("Maintain proper position"), which the
 // register rule says to reproduce rather than pad into a sentence.
 const FINITE = /\b(is|are|was|were|be|been|being|has|have|had|does|do|did|will|would|can|could|may|might|must|shall|should|comes?|goes?|gets?|makes?|means?|gives?|takes?|gains?|gain|gives|gets|gives)\b/i;
+// A word that may be the sentence's verb. Plural nouns end in -s too, so an -s word that is
+// the first word, or the last word straight after a count or determiner, is taken as the noun
+// it almost always is. Without that, "Two decisions." and "Three steps." pass as sentences.
+// Only the last word: in "Four constraints go with it" the verb is the word after the noun.
 const VERBISH = /\w+(s|ed|ing)$/i;
+const COUNT_OR_DET = /^(the|a|an|two|three|four|five|six|seven|eight|nine|ten|\d+|some|many|all|both|several|these|those|no)$/i;
+
+function hasVerbish(w) {
+  return w.some((x, i) => {
+    if (!VERBISH.test(x)) return false;
+    if (!/s$/i.test(x)) return true;
+    if (i === 0) return false;
+    return !(i === w.length - 1 && COUNT_OR_DET.test(w[i - 1]));
+  });
+}
 
 function fragments(text) {
   // A period inside a number (0.75) or an abbreviation (In.Hg, 3-52.1) is not a sentence
-  // boundary. Mask those before splitting, or every decimal on the page reads as a fragment.
-  const masked = text.replace(/(\w)\.(?=\w)/g, '$1');
-  return (masked.match(/[^.;:]+[.;]/g) || [])
-    .map((s) => s.replace(/[.;]$/, '').trim())
-    .filter((s) => {
+  // boundary, and neither is a colon inside a time (10:30). Mask those before splitting, or
+  // every decimal on the page reads as a fragment.
+  const masked = text.replace(/(\w)[.:](?=\w)/g, '$1');
+  // A colon ends a fragment too: a one- or two-word lead-in ("Worked:", "Two decisions:") is a
+  // label standing in for a sentence, and splitting only on . and ; folded it into whatever
+  // followed.
+  return (masked.match(/[^.;:]+[.;:]/g) || [])
+    .map((s) => ({ colon: s.endsWith(':'), s: s.replace(/[.;:]$/, '').trim() }))
+    .filter(({ colon, s }) => {
       const w = words(s);
-      if (w.length < 2 || w.length > 6) return false;
-      if (FINITE.test(s)) return false;
-      return !w.some((x) => VERBISH.test(x));
-    });
+      if (colon ? w.length > 2 : (w.length < 2 || w.length > 6)) return false;
+      if (!w.length || FINITE.test(s)) return false;
+      // A lone word before a colon is a label whatever its ending: "Worked:" is not a clause.
+      if (colon && w.length === 1) return true;
+      // A pronoun opening the sentence is its subject, and the base-form verb after it
+      // ("They combine:") carries no ending to find.
+      if (/^(i|we|you|he|she|it|they)$/i.test(w[0])) return false;
+      return !hasVerbish(w);
+    })
+    .map(({ colon, s }) => (colon ? `${s}:` : s));
 }
 
 // Every prose rule over every rendered string on the page. One report per rule per string, so
@@ -275,7 +301,7 @@ function fragments(text) {
 export function proseViolations(item) {
   const out = [];
   for (const { kind, where, text } of textsOf(item)) {
-    if (EM_DASH.test(text)) out.push(['error', 'em-dash', where]);
+    if (EM_DASH.test(text)) out.push(['info', 'em-dash', where]);
     const framing = FRAMING.find((re) => re.test(text));
     if (framing) out.push(['info', 'editorial-framing', `${where}: ${text.match(framing)[0]}`]);
     const anti = ANTITHESIS.find((re) => re.test(text));
@@ -317,10 +343,7 @@ const SET_TITLE = /^(categories|types|kinds|classes|components|phases|stages|par
 
 // Advisory checks on one prose block — a section or a subsection, since either can carry
 // paragraphs. Both are reported, never failed: each needs a person to say which fix applies.
-// `inherited` is the parent section's `refs` when linting a subsection: a section-level
-// citation covers its subsections too, which is exactly how ItemPage collapses them to one
-// SOURCE line. Without this every subsection of a cited section reads as uncited.
-function proseAdvice(block, item, where, inherited) {
+function proseAdvice(block, where) {
   const out = [];
   const paras = block.paras || [];
   if (!paras.length || (block.items || []).length) return out;
@@ -344,19 +367,65 @@ function proseAdvice(block, item, where, inherited) {
     out.push(['info', 'implied-subsections', `${where}, ${paras.length} paragraphs`]);
   }
 
-  // UNCITED SHORT PROSE. On a page that cites elsewhere, a short uncited passage is one of
-  // three things and a person has to pick: a bare fact that wants its citation, a pointer
-  // that wants to be a link, or editorializing that wants cutting. Uncited is not by itself
-  // a defect — see "An unsourced claim still gets written" — which is why this is advisory
-  // and why it only fires where the rest of the page is sourced.
-  const cited = (block.refs && block.refs.length)
-    || (inherited && inherited.length)
-    || paras.some((p) => p.refs && p.refs.length);
-  if (!cited && w <= 80 && !(block.subsections || []).length
-      && (item.references || []).length) {
-    out.push(['info', 'uncited-short-prose', `${where}, ${w}w`]);
-  }
+  return out;
+}
 
+// UNSOURCED BLOCK. Every paragraph, list element, table and figure traces to a publication, or
+// it carries `unsourced: '<why this exists without one>'` and a person has argued for it. This
+// is the rule behind "Sourcing and prose": a page is compiled from the publications, so a block
+// no publication supports is by default a sentence someone composed. crosswind-computations
+// passed every prose check with a lede, a whole section and a citation none of its sources
+// made, because each of those read as ordinary prose. No regex can see an invented sentence;
+// a missing source is visible every time.
+//
+// Coverage runs downward the way ItemPage renders it: a section's `refs` cover its subsections,
+// a subsection's cover its blocks, a list element's cover its sub-elements. `unsourced` on any
+// of those levels covers the same span, so a local-knowledge section is justified once rather
+// than on every paragraph. The lede and the Numbers rows are not blocks and are not checked.
+//
+// The justification is data only. Nothing renders it; it is for the next person to decide
+// whether the argument still holds.
+const MIN_JUSTIFICATION_WORDS = 10;
+
+export function sourcingViolations(item) {
+  const out = [];
+  if (item.stub || item.generated) return out;
+  const cited = (x) => Array.isArray(x.refs) && x.refs.length > 0;
+  const justified = (x) => typeof x.unsourced === 'string' && x.unsourced.trim() !== '';
+  const thin = (x, where) => {
+    if (justified(x) && wordsIn(x.unsourced) < MIN_JUSTIFICATION_WORDS) {
+      out.push(['error', 'thin-justification', `${where}: ${wordsIn(x.unsourced)} words`]);
+    }
+  };
+
+  const block = (b, where, coveredAbove) => {
+    thin(b, where);
+    const covered = coveredAbove || cited(b) || justified(b);
+    const bare = [];
+    const leaf = (x, label) => {
+      thin(x, `${where} / ${label}`);
+      if (!covered && !cited(x) && !justified(x)) bare.push(label);
+    };
+    for (const p of b.paras || []) leaf(p, p.id);
+    for (const f of b.figures || []) leaf(f, `fig:${f.id}`);
+    for (const t of b.tables || []) leaf(t, `tbl:${t.id}`);
+    const walk = (list, above) => {
+      for (const x of list || []) {
+        thin(x, `${where} / ${x.id}`);
+        const here = above || cited(x) || justified(x);
+        if (!here) bare.push(x.id);
+        walk(x.sub, here);
+      }
+    };
+    walk(b.items, covered);
+    if (bare.length) out.push(['error', 'unsourced-block', `${where}: ${bare.join(', ')}`]);
+    return covered;
+  };
+
+  for (const s of item.sections || []) {
+    const covered = block(s, s.title, false);
+    for (const sub of s.subsections || []) block(sub, `${s.title} / ${sub.title}`, covered);
+  }
   return out;
 }
 
@@ -444,14 +513,15 @@ export function structureViolations(item) {
   }
 
   for (const s of sections) {
-    out.push(...proseAdvice(s, item, s.title, null));
+    out.push(...proseAdvice(s, s.title));
     out.push(...sopAdvice(s, item, s.title, null));
     for (const sub of s.subsections || []) {
-      out.push(...proseAdvice(sub, item, `${s.title} / ${sub.title}`, s.refs));
+      out.push(...proseAdvice(sub, `${s.title} / ${sub.title}`));
       out.push(...sopAdvice(sub, item, `${s.title} / ${sub.title}`, s.refs, s.title));
     }
   }
 
+  out.push(...sourcingViolations(item));
   out.push(...tableViolations(item));
 
   return out;
