@@ -82,11 +82,12 @@ function ImageSlot({ image, index, count, slug, gallery, onChange, onMove, onRem
       <Grow value={image.alt} onChange={(v) => set('alt', v)} />
       {gallery && (
         <>
-          <label className="discuss-editor-label">Button</label>
+          <label className="discuss-editor-label">Caption on the image</label>
           <p className="discuss-editor-hint">
-            The words on this image's button, such as Page 1 or Day. Left blank, it is numbered.
+            Shown over the foot of this image, such as Figure B-1 General Signals. The figure&apos;s own
+            caption stays beneath the frame.
           </p>
-          <Line value={image.label} onChange={(v) => set('label', v)} maxLength={30} />
+          <Line value={image.label} onChange={(v) => set('label', v)} maxLength={80} />
         </>
       )}
       {image.src && (
@@ -170,8 +171,8 @@ function FigureRow({ figure, index, count, references, onAddReference, slug, onC
         </button>
       </div>
       <p className="discuss-editor-hint">
-        A figure with more than one image shows them one at a time, with a button for each:
-        for a chart too long for one image, or a set of near-identical ones.
+        A figure with more than one image shows them one at a time, with arrows to move between
+        them: for a chart too long for one image, or a set of near-identical ones.
       </p>
       <label className="discuss-editor-label">Caption</label>
       <p className="discuss-editor-hint">What the figure is and where it comes from.</p>

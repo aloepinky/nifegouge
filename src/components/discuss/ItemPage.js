@@ -146,32 +146,51 @@ const figureImages = (f) => (
   Array.isArray(f.images) && f.images.length ? f.images : [{ src: f.src, alt: f.alt }]
 );
 
-// A figure holding several images shows one at a time in the figure's frame, with a button
-// for each beneath it: a chart too long for one image, cut into pages, or a set of
-// near-identical ones that belong in one place rather than stacked down the column. The
-// caption is the figure's; each image carries its own alt and, if given, the words on its
-// button.
+// A figure holding several images shows one at a time in the figure's frame, with an arrow
+// on each side to move through them and each image's own caption floated over its foot: a
+// chart too long for one image, cut into pages, or a set of near-identical ones that belong
+// in one place rather than stacked down the column. The figure's caption stays beneath the
+// frame. The same idiom as the systems pages' photo carousel and Wikipedia's slideshow: the
+// arrows are the control, not a row of buttons.
 function Gallery({ images }) {
   const [at, setAt] = useState(0);
-  const shown = images[Math.min(at, images.length - 1)];
+  const n = images.length;
+  const shown = images[Math.min(at, n - 1)];
+  const step = (d) => setAt((i) => (i + d + n) % n);
   return (
-    <>
+    <div
+      className="discuss-gallery"
+      role="group"
+      aria-roledescription="carousel"
+      aria-label="Images in this figure"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+      }}
+    >
       <img src={shown.src} alt={shown.alt} loading="lazy" />
-      <div className="discuss-gallery-strip" role="group" aria-label="Images in this figure">
-        {images.map((im, i) => (
-          <button
-            type="button"
-            key={im.src || i}
-            className={`discuss-gallery-btn${i === at ? ' is-on' : ''}`}
-            aria-pressed={i === at}
-            onClick={() => setAt(i)}
-          >
-            {im.label || i + 1}
-          </button>
-        ))}
-        <span className="discuss-gallery-count">{at + 1} of {images.length}</span>
+      <button
+        type="button"
+        className="discuss-gallery-arrow discuss-gallery-arrow--prev"
+        onClick={() => step(-1)}
+        aria-label="Previous image"
+      >
+        ‹
+      </button>
+      <button
+        type="button"
+        className="discuss-gallery-arrow discuss-gallery-arrow--next"
+        onClick={() => step(1)}
+        aria-label="Next image"
+      >
+        ›
+      </button>
+      <div className="discuss-gallery-foot" aria-live="polite">
+        <span className="discuss-gallery-label">{shown.label || ''}</span>
+        <span className="discuss-gallery-count">{at + 1} / {n}</span>
       </div>
-    </>
+    </div>
   );
 }
 
