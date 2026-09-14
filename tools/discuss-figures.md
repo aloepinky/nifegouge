@@ -4,24 +4,23 @@ Hand-written, not generated. One row per image that appears in the gouge briefin
 in `_reference-docs/Discuss Items/`, plus the pages a figure would help that have no image
 behind them yet.
 
-**Read this before adding a `figures` entry.** CLAUDE.md's rule is that images have to be
-supplied, not extracted: the figures in NATOPS and the FTIs are copyrighted, which is why
-`_reference-docs/` is gitignored and why the systems diagrams are redrawn rather than
-reproduced. The gouge pastes those figures in; the site cannot. So most rows below are
-`redraw` or `supply`, and only one has shipped.
+**Read this before adding a `figures` entry.** A publication's own figure goes in as it is
+(CLAUDE.md, **Figures**): crop it from the rendered page, upload it through the page editor,
+and caption it with the publication's figure number. The rows below marked `redraw` were
+written under an earlier rule that barred reproducing publication figures. That rule is gone,
+so wherever a row names a NATOPS, PCL or FTI figure, uploading that figure is the job.
 
-Note what did ship instead. Where a gouge "figure" is really a table wearing a picture — the
-formation visual signals, the ground handling signals, the engine operating limits, the ELP
-key positions, the crosscheck instruments — the *drawing* is the publication's but the
-signal, the number and the meaning are facts. Those were transcribed into `tables` blocks on
-the item pages and the images were not reproduced. See `tools/discuss-inventory.md` for
-where each one landed.
+Where a gouge "figure" is really a table wearing a picture — the formation visual signals,
+the ground handling signals, the engine operating limits, the ELP key positions, the
+crosscheck instruments — the content already shipped as `tables` blocks on the item pages,
+which search and the editor can both read. Adding the figure beside the table is still
+welcome where the shapes matter. See `tools/discuss-inventory.md` for where each one landed.
 
 ## Status
 
 | | |
 |---|---|
-| `shipped` | in `public/discuss/` and referenced by a `figures` entry |
+| `shipped` | uploaded (or in `public/discuss/`) and referenced by a `figures` entry |
 | `redraw` | the geometry is the content; redraw it as SVG or a new image, the way the systems diagrams are redrawn from the NATOPS figures |
 | `supply` | needs an image the site is entitled to publish — a photograph, a screenshot of something we own, or original artwork |
 | `transcribed` | the content shipped as a table instead; no image needed |
@@ -42,7 +41,7 @@ where each one landed.
 | Aerobatic maneuver chart | BoomGloom FAM p. 238 | `aerobatic-maneuvers` | transcribed from the FTI's own entry parameters rather than from the gouge's chart |
 | ELP pattern, FAM FTI Figure 7-3 | BoomGloom FAM p. 26 | `emergency-landing-pattern` | redraw — a plan view of the four keys with the WTD offsets. The one figure on this list that would most change a page |
 | Holding entry sectors, standard and non-standard | BoomGloom I p. 24 | `holding-entry` | redraw — a circle, two chords and three labelled sectors. Pure geometry, no artwork in it |
-| Vₙ diagram, NATOPS Figure 5-4 | BoomGloom FAM p. 226, p. 254 | `vn-diagram` | redraw — an SVG plot of published numbers (7.0 / −3.5 / 4.7 / −1.0 g, 244 and 316 KIAS) |
+| Vₙ diagram, NATOPS Figure 5-4 | BoomGloom FAM p. 226, p. 254 | `vn-diagram` | **shipped** — the NATOPS figure itself, uploaded through the page editor |
 | Airspeed and Mach limitations, NATOPS Figure 5-3 | BoomGloom FAM p. 225 | `natops-limitations` | redraw, same shape as the Vₙ diagram. Lower value — the Numbers box already carries every figure on it |
 | Takeoff and landing crosswind chart, NATOPS Figure A3-6 | BoomGloom FAM p. 47 | `crosswind-computations` | redraw as a polar plot, or drop: the page's worked example teaches the chart and the CR-2 does the job airborne |
 | HUD symbology, labelled | BoomGloom FAM p. 51, p. 104, VNAV p. 7 | `hud` | supply — a screenshot of a HUD the site owns, or original artwork. The label set is the content and the underlying image is NATOPS's |
