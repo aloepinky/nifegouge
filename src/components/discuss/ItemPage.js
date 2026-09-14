@@ -9,7 +9,7 @@ import { getSystemTab } from '../systems/systemTabs';
 import { getDraft, getRecord, saveDraft, clearDraft, clone } from './edit/draft';
 import { allIds } from './edit/ids';
 import { validate } from './edit/validate';
-import { SlugOptions, ConfirmButton } from './edit/fields';
+import { SlugOptions, ConfirmButton, resolveLink } from './edit/fields';
 import { EditLink, HeadLink, DraftBanner } from './edit/EditLink';
 import PublishDialog from './edit/PublishDialog';
 import SectionEditor from './edit/SectionEditor';
@@ -68,17 +68,28 @@ function sectionCite(section) {
   return null;
 }
 
+// A See also or hatnote entry as a link: an item's page, or a link elsewhere ({ href, label }).
+function EntryLink({ target }) {
+  if (target.slug) return <ItemLink slug={target.slug}>{target.title}</ItemLink>;
+  if (/^https?:/.test(target.href)) {
+    return <a href={target.href} target="_blank" rel="noopener noreferrer">{target.label}</a>;
+  }
+  return <Link to={target.href}>{target.label}</Link>;
+}
+
+const entryKey = (t) => t.slug || t.href;
+
 // MOS: where a section's topic has its own page, link it immediately under the heading.
 function Hatnote({ slugs, label }) {
-  const targets = (slugs || []).map(getItemMeta).filter(Boolean);
+  const targets = (slugs || []).map(resolveLink).filter(Boolean);
   if (!targets.length) return null;
   return (
     <p className="discuss-hatnote">
       {label}:{' '}
       {targets.map((t, i) => (
-        <React.Fragment key={t.slug}>
+        <React.Fragment key={entryKey(t)}>
           {i > 0 && ', '}
-          <ItemLink slug={t.slug}>{t.title}</ItemLink>
+          <EntryLink target={t} />
         </React.Fragment>
       ))}
     </p>
@@ -453,7 +464,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const [editing, setEditing] = useState(null);
   const [publishing, setPublishing] = useState(false);
   const [conflict, setConflict] = useState(false);
-  const [published, setPublished] = useState(null); // { warnings } after a publish
+  const [published, setPublished] = useState(false); // a publish just went through
   const [justSaved, setJustSaved] = useState(false);
   const bannerRef = useRef(null);
 
@@ -513,7 +524,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
     setDraftRecord(null);
     setPublishing(false);
     setConflict(false);
-    setPublished({ warnings: (result.lint && result.lint.warnings) || [] });
+    setPublished(true);
   };
 
   const discard = () => {
@@ -547,7 +558,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const position = s.positionIn(fromEvent, view.slug);
   const briefedIn = s.eventsListing(view.slug);
   const hasNumbers = !view.stub && view.numbers && view.numbers.length > 0;
-  const seeAlso = (view.seeAlso || []).map(getItemMeta).filter(Boolean);
+  const seeAlso = (view.seeAlso || []).map(resolveLink).filter(Boolean);
   const genGroups = view.stub ? null : generatedFor(view, params.get('from'), s);
   const editingPage = editing && editing.kind === 'page';
 
@@ -597,20 +608,8 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       )}
       {published && (
         <div className="discuss-editor-notice">
-          <p>
-            <strong>Published.</strong>
-            {published.warnings.length
-              ? ' The linter flagged the following for a person to look at; none of it blocks the page.'
-              : ' The linter found nothing to flag.'}
-          </p>
-          {published.warnings.length > 0 && (
-            <ul className="discuss-editor-problems discuss-lint-warnings">
-              {published.warnings.map((w) => (
-                <li key={`${w.rule}:${w.detail}`}>{w.rule}: {w.detail}</li>
-              ))}
-            </ul>
-          )}
-          <button type="button" onClick={() => setPublished(null)}>Close</button>
+          <p><strong>Published.</strong> Your edits are on the site.</p>
+          <button type="button" onClick={() => setPublished(false)}>Close</button>
         </div>
       )}
       <header className="discuss-head" id="top">
@@ -797,8 +796,8 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                 </h2>
                 <ul className="discuss-seealso">
                   {seeAlso.map((t) => (
-                    <li key={t.slug}>
-                      <ItemLink slug={t.slug}>{t.title}</ItemLink>
+                    <li key={entryKey(t)}>
+                      <EntryLink target={t} />
                     </li>
                   ))}
                 </ul>

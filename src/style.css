@@ -5294,6 +5294,46 @@ textarea.incorrect-answer {
   white-space: nowrap;
 }
 
+/* "Paragraph 2", "Figure 1", a Numbers row's number: what a block is, in words. */
+.discuss-editor-marker {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #708995;
+  white-space: nowrap;
+}
+
+/* A list item with its marker beside the box, as the page will print it. */
+.discuss-editor-listrow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.discuss-editor-listmark {
+  flex: 0 0 auto;
+  min-width: 22px;
+  padding-top: 7px;
+  text-align: right;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #1c2b31;
+}
+
+.discuss-figure-src {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #708995;
+}
+
+.discuss-figure-src code {
+  background: rgba(0, 59, 79, 0.07);
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 12px;
+}
+
 .discuss-editor-row {
   display: flex;
   flex-wrap: wrap;
@@ -5801,7 +5841,6 @@ textarea.incorrect-answer {
 
 .discuss-history-actions .discuss-editor-confirm-q { font-size: 13px; color: #5a4a20; }
 
-.discuss-lint-warnings { margin: 0 0 10px; }
 
 .discuss-publish,
 .discuss-create { margin: 0 0 20px; }

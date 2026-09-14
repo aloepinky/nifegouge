@@ -115,7 +115,7 @@ function PageEditor({ item, onSave, onCancel, check }) {
   const demoteBlocked = (s, i) => {
     if (i === 0) return 'Nothing above it to become a subsection of';
     if (s.subsections && s.subsections.length) {
-      return 'A section with subsections cannot be demoted — two levels is the limit';
+      return 'A section with subsections of its own cannot become a subsection';
     }
     return null;
   };
@@ -175,17 +175,14 @@ function PageEditor({ item, onSave, onCancel, check }) {
         <label className="discuss-editor-label">Page title</label>
         <Line value={p.title} onChange={(v) => setP((prev) => ({ ...prev, title: v }))} />
         <p className="discuss-editor-hint">
-          A noun phrase, even where the JPPT's wording is not — <em>any applicable day
-          emergency</em> becomes <em>Day emergency procedures</em>. This is the one name the
-          item is shown under everywhere; the JPPT's wording stays on the event.
+          The name this page is shown under everywhere on the site.
         </p>
       </div>
 
       <div className="discuss-editor-field">
         <label className="discuss-editor-label">Lead</label>
         <p className="discuss-editor-hint">
-          A summary of the whole page, not a definition of the title. No heading, never
-          sectioned. {BOLD_HINT}
+          A short summary of the whole page, shown at the top. {BOLD_HINT}
         </p>
         <Grow value={p.lede} rows={4} onChange={(v) => setP((prev) => ({ ...prev, lede: v }))} />
       </div>
@@ -193,8 +190,7 @@ function PageEditor({ item, onSave, onCancel, check }) {
       <div className="discuss-editor-field">
         <label className="discuss-editor-label">Note</label>
         <p className="discuss-editor-hint">
-          A page-wide caveat above the body. Not a sourced claim and it carries no marker. No
-          markup.
+          Optional. A caveat shown above the body, if the whole page needs one.
         </p>
         <Grow value={p.note} rows={2} onChange={(v) => set('note', v)} />
       </div>
@@ -224,7 +220,7 @@ function PageEditor({ item, onSave, onCancel, check }) {
               checked={!!p.maneuver}
               onChange={(e) => set('maneuver', e.target.checked || undefined)}
             />
-            maneuver
+            this page is a maneuver
           </label>
           <label className="discuss-editor-check">
             <input
@@ -232,21 +228,21 @@ function PageEditor({ item, onSave, onCancel, check }) {
               checked={!!p.stub}
               onChange={(e) => set('stub', e.target.checked || undefined)}
             />
-            stub
+            not written yet
           </label>
         </div>
         <p className="discuss-editor-hint">
-          <strong>maneuver</strong> is what puts an item into the generated "any previously
-          discussed maneuver" lists — a flag rather than a derivation, because the JPPT does
-          not classify its discuss items. <strong>stub</strong> replaces the body with the
-          sourcing lead below.
+          A maneuver page is included in the "any previously discussed maneuver" lists. A page
+          marked not written yet shows a placeholder instead of its body.
         </p>
       </div>
 
       {p.stub && (
         <div className="discuss-editor-field">
-          <label className="discuss-editor-label">Sourcing lead</label>
-          <p className="discuss-editor-hint">Where the next writer should look.</p>
+          <label className="discuss-editor-label">Where to look</label>
+          <p className="discuss-editor-hint">
+            Optional. The publications and sections the next writer should start from.
+          </p>
           <Grow value={p.sourcingLead} rows={3} onChange={(v) => set('sourcingLead', v)} />
         </div>
       )}
@@ -260,8 +256,8 @@ function PageEditor({ item, onSave, onCancel, check }) {
 
       <h3>Sections</h3>
       <p className="discuss-editor-hint">
-        Every section in page order. Move, demote, promote or remove one from its head; two
-        levels is the limit, and there is no H4.
+        The sections in page order. Use the arrows to move one, and demote or promote to make
+        it a subsection or a section of its own.
       </p>
 
       {sections.map((s, i) => (
@@ -318,22 +314,21 @@ function PageEditor({ item, onSave, onCancel, check }) {
         slugs={p.seeAlso}
         onChange={(v) => set('seeAlso', v)}
         label="Links"
-        hint="Internal links only, and not ones already linked in the body."
+        hint="Related pages, and anything else worth reading next."
       />
 
       <h3>References</h3>
       <p className="discuss-editor-hint">
-        The section, plus the page that section starts on — never a range, never the page a
-        particular sentence sits on. No document numbers in the work name. Numbering follows
-        this order, so moving or removing an entry rewrites the markers on the page.
+        The publication, the section, and the page that section starts on. The numbers follow
+        this order, so moving or removing a reference renumbers the markers on the page.
       </p>
       <div className="discuss-editor-structure">
         {refs.map((r, i) => (
           <div className="discuss-editor-row" key={r.__was ?? `new-${i}`}>
-            <span className="discuss-editor-id">{r.n}</span>
-            <Line value={r.work} onChange={(v) => setRef(i, 'work', v)} placeholder="NATOPS" />
-            <Line value={r.loc} onChange={(v) => setRef(i, 'loc', v)} placeholder="§522 — Spin" />
-            <Line value={r.pages} onChange={(v) => setRef(i, 'pages', v)} placeholder="p. 5-33" />
+            <span className="discuss-editor-marker">{r.n}</span>
+            <Line value={r.work} onChange={(v) => setRef(i, 'work', v)} placeholder="Publication, e.g. NATOPS" />
+            <Line value={r.loc} onChange={(v) => setRef(i, 'loc', v)} placeholder="Section, e.g. §522 — Spin" />
+            <Line value={r.pages} onChange={(v) => setRef(i, 'pages', v)} placeholder="Page, e.g. p. 5-33" />
             <RowTools
               index={i}
               count={refs.length}

@@ -26,7 +26,7 @@ import { listItemMetas, newestItem } from './store.mjs';
 //   GET  get-item?slug=                    -> { item }
 //   GET  item-history?slug=                -> { latestRev, revisions }
 //   GET  item-revision?slug=&rev=          -> { revision }
-//   POST save-item                         { slug, baseRev, item, author?, summary }  -> { rev, lint }; 400 lint; 409
+//   POST save-item                         { slug, baseRev, item, author?, summary }  -> { rev, updatedAt }; 400; 409
 //   POST create-item                       { slug, title, sourcingLead?, author?, summary?, link? } -> { rev: 1, linked }
 //   POST restore-item                      { slug, rev, author?, summary? }           -> { rev }
 //   POST figure-upload-url                 { slug, name }                             -> { uploadUrl, publicUrl, key }

@@ -29,10 +29,9 @@ function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange }) {
       aria-label="Editing Numbers"
     >
       <p className="discuss-editor-hint">
-        Figures a student has to have cold — pure recall. A row is a label and a value, never a
-        sentence: if the value has no digits it belongs in prose. Spell the unit as it is
-        spoken (<code>210 knots GS</code>, not <code>210 KGS</code>). Consecutive rows sharing a
-        label print the label once.
+        The numbers a student has to know cold. Each row is a short label and a value, such as
+        <code>Max crosswind</code> and <code>25 knots</code>. Rows in a row with the same label
+        show it once.
       </p>
 
       {rows.length > 0 && (
@@ -53,7 +52,7 @@ function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange }) {
 
       {rows.map((n, i) => (
         <div className="discuss-editor-row" key={n.id}>
-          <span className="discuss-editor-id">{n.id}</span>
+          <span className="discuss-editor-marker">{i + 1}</span>
           <Line value={n.label} onChange={(v) => set(i, 'label', v)} placeholder="Label" />
           <Line value={n.value} onChange={(v) => set(i, 'value', v)} placeholder="Value" />
           <RefsPicker

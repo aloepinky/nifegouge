@@ -5,7 +5,7 @@ import {
 import {
   mirrorItem, rebuildItemsIndex, itemRecord, itemKey, deleteKey, presignFigure,
 } from './mirror.mjs';
-import { checkItem, checkSlug, lintForSave } from './lint.mjs';
+import { checkItem, checkSlug } from './lint.mjs';
 import { cleanAuthor, cleanSummary, relinkEvent } from './syllabi.mjs';
 
 // Discuss item pages. Open editing: anyone may publish a revision, every revision is kept,
@@ -80,15 +80,11 @@ export async function saveItemHandler(event) {
   if (!meta || meta.hidden) throw new HttpError(404, 'No such item');
   if (meta.latestRev !== baseRev) throw new HttpError(409, 'A newer revision exists', { rev: meta.latestRev });
 
-  const base = await itemRevision(slug, baseRev);
-  const lint = lintForSave(item, base ? JSON.parse(base.docJson) : null);
-  if (lint.errors.length) {
-    throw new HttpError(400, 'The page adds an em dash. Use a period, a comma or a colon.', { lint });
-  }
-
+  // No prose lint on the way in: the rules in discussRules.mjs are for the CLI and for a
+  // style guide page, not for refusing a student's edit. The shape check above is the gate.
   const saved = await saveItem(slug, baseRev, item, { author: cleanAuthor(body.author), summary });
   await afterWrite(saved.meta, saved.row);
-  return ok({ slug, rev: saved.row.rev, updatedAt: saved.row.createdAt, lint: { warnings: lint.warnings } });
+  return ok({ slug, rev: saved.row.rev, updatedAt: saved.row.createdAt });
 }
 
 // A new page starts as a stub. With `link`, the event row that named it is pointed at it in

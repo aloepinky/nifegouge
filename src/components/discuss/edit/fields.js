@@ -7,6 +7,21 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { itemList, getItemMeta, useItemIndexVersion } from '../registry';
 
+// A link in See also or a hatnote is either a discussion item's slug or `{ href, label }`,
+// the same shape an event row uses for a link elsewhere on the site. Resolved here for the
+// editor's row and for ItemPage's rendering, so the two agree about what an entry means.
+// -> { slug, title } | { href, label } | null
+export function resolveLink(entry) {
+  if (!entry) return null;
+  if (typeof entry === 'object') {
+    return entry.href ? { href: entry.href, label: entry.label || entry.href } : null;
+  }
+  const meta = getItemMeta(entry);
+  return meta ? { slug: meta.slug, title: meta.title } : null;
+}
+
+export const looksLikeUrl = (text) => /^(https?:\/\/|\/)/.test((text || '').trim());
+
 // Destructive actions ask in the page, never through window.confirm. The app has no native
 // dialogs anywhere else, a browser dialog cannot say what is about to be lost, and the
 // question belongs next to the thing being removed rather than in a box over the whole page.
@@ -163,8 +178,9 @@ export function move(list, from, to) {
   return next;
 }
 
-// A list of item slugs — See also, and the two hatnote fields. Entry is by typing a slug with
-// a datalist of every item, so an unwritten slug can still be entered: linking a page that
+// A list of links — See also, and the two hatnote fields. One box takes either a page's
+// address (a slug, with every page offered as you type) or a full link; a link grows a second
+// box for the words to show. An unwritten slug can still be entered: linking a page that
 // does not exist yet is how a red link works, and the validator warns rather than refusing.
 export function SlugList({ slugs, onChange, label, hint }) {
   const list = slugs || [];
@@ -174,13 +190,20 @@ export function SlugList({ slugs, onChange, label, hint }) {
     const next = list.filter((_, j) => j !== i);
     onChange(next.length ? next : undefined);
   };
+  const setAddress = (i, text) => {
+    const entry = list[i];
+    if (looksLikeUrl(text)) set(i, { href: text, label: typeof entry === 'object' ? entry.label || '' : '' });
+    else set(i, text);
+  };
 
   return (
     <div className="discuss-editor-field">
       <label className="discuss-editor-label">{label}</label>
       {hint && <p className="discuss-editor-hint">{hint}</p>}
-      {list.map((slug, i) => {
-        const target = getItemMeta(slug);
+      {list.map((entry, i) => {
+        const isUrl = typeof entry === 'object';
+        const address = isUrl ? entry.href : entry;
+        const target = isUrl ? null : getItemMeta(entry);
         return (
           // eslint-disable-next-line react/no-array-index-key
           <div className="discuss-editor-row discuss-editor-row--tight" key={i}>
@@ -188,13 +211,24 @@ export function SlugList({ slugs, onChange, label, hint }) {
               type="text"
               className="discuss-editor-line"
               list="discuss-slug-options"
-              value={slug}
-              placeholder="item-slug"
-              onChange={(e) => set(i, e.target.value)}
+              value={address || ''}
+              placeholder="page address, or a link"
+              onChange={(e) => setAddress(i, e.target.value)}
             />
-            <span className={`discuss-editor-resolve${target ? '' : ' is-missing'}`}>
-              {target ? target.title : slug ? 'no such item' : ''}
-            </span>
+            {isUrl ? (
+              <input
+                type="text"
+                className="discuss-editor-line"
+                value={entry.label || ''}
+                placeholder="words to show for the link"
+                aria-label="Words to show for the link"
+                onChange={(e) => set(i, { ...entry, label: e.target.value })}
+              />
+            ) : (
+              <span className={`discuss-editor-resolve${target ? '' : ' is-missing'}`}>
+                {target ? target.title : entry ? 'no page at that address' : ''}
+              </span>
+            )}
             <RowTools
               index={i}
               count={list.length}
@@ -297,4 +331,20 @@ export function useEscape(onCancel) {
   }, [cb]);
 }
 
-export const BOLD_HINT = 'Wrap a mnemonic in **asterisks** for bold. That is the only markup.';
+// Adding a block scrolls to it and puts the cursor in its first box. Returns the setter to
+// call with the new block's id; the block wrapper carries it as `data-block`.
+export function useFocusNew() {
+  const [pending, setPending] = useState(null);
+  useEffect(() => {
+    if (!pending) return;
+    setPending(null);
+    const el = document.querySelector(`[data-block="${pending}"]`);
+    if (!el) return;
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const input = el.querySelector('textarea, input:not([type=checkbox])');
+    if (input) input.focus({ preventScroll: true });
+  }, [pending]);
+  return setPending;
+}
+
+export const BOLD_HINT = 'Put **double asterisks** around words to make them bold.';

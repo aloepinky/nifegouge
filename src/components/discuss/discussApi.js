@@ -215,7 +215,7 @@ export function useItem(slug) {
   return { ...state, reload: () => setTick((t) => t + 1) };
 }
 
-// -> { slug, rev, updatedAt, lint: { warnings } }
+// -> { slug, rev, updatedAt }
 export function saveItem(slug, baseRev, item, { author, summary }) {
   return post('save-item', { slug, baseRev, item, author, summary });
 }

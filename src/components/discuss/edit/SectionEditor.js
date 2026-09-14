@@ -4,20 +4,23 @@
 //
 // It holds its own copy of the section and hands it back on Save. Nothing it does touches the
 // draft until then, which is what makes Cancel mean cancel.
+//
+// The words on screen are for a student editing a page, not for the person maintaining the
+// site: what a field is for, in a sentence, and nothing about why the rules are the rules.
+// The style guide is a page of its own (to be written), not the editor's hints.
 import React, { useState } from 'react';
 import { clone } from './draft';
 import {
   newParaId, newBulletId, newFigureId, newTableId, newSubBulletId, newSectionId,
 } from './ids';
 import {
-  Grow, Line, RefsPicker, RowTools, SlugList, EditorActions, useEscape, move, BOLD_HINT,
+  Grow, Line, RefsPicker, RowTools, SlugList, EditorActions, useEscape, useFocusNew, move, BOLD_HINT,
 } from './fields';
 import { uploadFigure } from './figureUpload';
 
-// A figure's `src` is an image address: a path under public/ for the figures that ship with
-// the site, or the mirror's URL for one uploaded here. Upload converts to WebP in the
-// browser, as tools/convert-images.py does for the repository's images, and fills the field
-// in. Either way the field previews it and says plainly when it resolves to nothing.
+// A figure's image comes from the upload and nowhere else: the browser converts it to WebP
+// and the address it lands at is shown, never typed. The figures that shipped with the site
+// under public/ keep the address they have.
 function FigureRow({ figure, index, count, references, slug, onChange, onMove, onRemove }) {
   const [broken, setBroken] = useState(false);
   const [progress, setProgress] = useState(null);
@@ -39,10 +42,12 @@ function FigureRow({ figure, index, count, references, slug, onChange, onMove, o
     }
   };
 
+  const fileName = figure.src ? figure.src.split('/').pop() : '';
+
   return (
-    <div className="discuss-editor-block">
+    <div className="discuss-editor-block" data-block={figure.id}>
       <div className="discuss-editor-blockhead">
-        <span className="discuss-editor-id">figure {figure.id}</span>
+        <span className="discuss-editor-marker">Figure {index + 1}</span>
         <RefsPicker
           refs={figure.refs}
           references={references}
@@ -71,36 +76,24 @@ function FigureRow({ figure, index, count, references, slug, onChange, onMove, o
         {progress && <span className="discuss-upload-progress" role="status">{progress}…</span>}
       </div>
       {uploadError && <p className="discuss-editor-warn">{uploadError}</p>}
-      <p className="discuss-editor-hint">
-        Upload converts to WebP and fills in the address below. Or type the address of an image
-        already on the site.
+      <p className="discuss-figure-src">
+        {figure.src ? <>Image: <code>{fileName}</code></> : 'No image yet. Choose a file to upload it.'}
       </p>
-      <Line
-        value={figure.src}
-        onChange={(v) => {
-          setBroken(false);
-          set('src', v);
-        }}
-        placeholder="/discuss/<slug>/<name>.webp"
-      />
       <label className="discuss-editor-label">
         Alt text <span className="discuss-editor-req">required</span>
       </label>
       <p className="discuss-editor-hint">
-        Alt describes the image for a reader who cannot see it. It is not the caption.
+        Describe what the image shows, for someone who cannot see it.
       </p>
       <Grow value={figure.alt} onChange={(v) => set('alt', v)} />
       <label className="discuss-editor-label">Caption</label>
-      <p className="discuss-editor-hint">
-        What the figure is, and the citation. No bold — captions take no markup.
-      </p>
+      <p className="discuss-editor-hint">What the figure is and where it comes from.</p>
       <Grow value={figure.caption} onChange={(v) => set('caption', v)} />
       {figure.src && (
         <div className="discuss-editor-preview">
           {broken ? (
             <p className="discuss-editor-warn">
-              Nothing at <code>{figure.src}</code>. Upload the image, or check the address; a
-              broken image is worse than the sentence saying where the chart lives.
+              The image could not be loaded. Upload it again.
             </p>
           ) : (
             <img src={figure.src} alt={figure.alt || ''} onError={() => setBroken(true)} />
@@ -125,8 +118,6 @@ function TableRow({ table, index, count, references, onChange, onMove, onRemove 
 
   const addColumn = () =>
     onChange({ ...table, cols: [...cols, ''], rows: rows.map((r) => [...r, '']) });
-  // Below two columns a table is a list, so the control is disabled rather than the action
-  // refused after the fact.
   const removeColumn = (c) =>
     onChange({
       ...table,
@@ -135,9 +126,9 @@ function TableRow({ table, index, count, references, onChange, onMove, onRemove 
     });
 
   return (
-    <div className="discuss-editor-block">
+    <div className="discuss-editor-block" data-block={table.id}>
       <div className="discuss-editor-blockhead">
-        <span className="discuss-editor-id">table {table.id}</span>
+        <span className="discuss-editor-marker">Table {index + 1}</span>
         <RefsPicker refs={table.refs} references={references} onChange={(v) => set('refs', v)} />
         <label className="discuss-editor-check">
           <input
@@ -145,7 +136,7 @@ function TableRow({ table, index, count, references, onChange, onMove, onRemove 
             checked={!!table.numeric}
             onChange={(e) => set('numeric', e.target.checked || undefined)}
           />
-          numeric
+          right-align numbers
         </label>
         <RowTools index={index} count={count} onMove={onMove} onRemove={onRemove} what="table" />
       </div>
@@ -155,6 +146,9 @@ function TableRow({ table, index, count, references, onChange, onMove, onRemove 
       </label>
       <Grow value={table.caption} onChange={(v) => set('caption', v)} />
 
+      <p className="discuss-editor-hint">
+        The top row holds the column headings. The first column names each row.
+      </p>
       <div className="discuss-editor-grid-wrap">
         <table className="discuss-editor-grid">
           <thead>
@@ -163,17 +157,17 @@ function TableRow({ table, index, count, references, onChange, onMove, onRemove 
               {cols.map((c, j) => (
                 // eslint-disable-next-line react/no-array-index-key
                 <th key={j}>
-                  <Line value={c} onChange={(v) => set('cols', cols.map((x, k) => (k === j ? v : x)))} />
+                  <Line
+                    value={c}
+                    onChange={(v) => set('cols', cols.map((x, k) => (k === j ? v : x)))}
+                    placeholder="Column heading"
+                  />
                   <button
                     type="button"
                     className="discuss-editor-remove"
                     onClick={() => removeColumn(j)}
                     disabled={cols.length <= 2}
-                    title={
-                      cols.length <= 2
-                        ? 'A table needs at least two columns — below that it is a list'
-                        : 'Remove column'
-                    }
+                    title={cols.length <= 2 ? 'A table needs at least two columns' : 'Remove column'}
                     aria-label={`Remove column ${j + 1}`}
                   >
                     ✕
@@ -220,26 +214,23 @@ function TableRow({ table, index, count, references, onChange, onMove, onRemove 
           + column
         </button>
       </div>
-      <p className="discuss-editor-hint">
-        The first cell of a row is its row header, which is what makes this a table to a screen
-        reader rather than a grid of text. A table earns itself by having two axes or by being
-        scanned under time pressure — two columns of parallel facts is a list wearing a border.
-      </p>
     </div>
   );
 }
 
+// One list item, with its marker beside it the way the page will print it: a number for a
+// numbered list, a bullet otherwise. Sub-items are always bulleted, as on the page.
 function BulletRow({
-  bullet, index, count, references, sectionId, item,
+  bullet, index, count, references, sectionId, item, numbered,
   onChange, onMove, onRemove, depth = 0,
 }) {
   const subs = bullet.sub || [];
   const setSubs = (next) => onChange({ ...bullet, sub: next.length ? next : undefined });
+  const marker = depth === 0 && numbered ? `${index + 1}.` : '•';
 
   return (
-    <div className={`discuss-editor-block${depth ? ' discuss-editor-block--sub' : ''}`}>
+    <div className={`discuss-editor-block${depth ? ' discuss-editor-block--sub' : ''}`} data-block={bullet.id}>
       <div className="discuss-editor-blockhead">
-        <span className="discuss-editor-id">{bullet.id}</span>
         <RefsPicker
           refs={bullet.refs}
           references={references}
@@ -250,10 +241,13 @@ function BulletRow({
           count={count}
           onMove={onMove}
           onRemove={onRemove}
-          what={depth ? 'sub-element' : 'element'}
+          what={depth ? 'sub-item' : 'list item'}
         />
       </div>
-      <Grow value={bullet.text} onChange={(v) => onChange({ ...bullet, text: v })} />
+      <div className="discuss-editor-listrow">
+        <span className="discuss-editor-listmark" aria-hidden="true">{marker}</span>
+        <Grow value={bullet.text} onChange={(v) => onChange({ ...bullet, text: v })} />
+      </div>
 
       {subs.map((s, i) => (
         <BulletRow
@@ -278,7 +272,7 @@ function BulletRow({
           className="discuss-editor-add discuss-editor-add--sub"
           onClick={() => setSubs([...subs, { id: newSubBulletId(item, bullet), text: '' }])}
         >
-          + sub-element
+          + sub-item
         </button>
       )}
     </div>
@@ -298,6 +292,8 @@ function SectionEditor({
 }) {
   const [local, setLocal] = useState(() => clone(section));
   useEscape(embedded ? null : onCancel);
+  // Adding a paragraph, figure or table scrolls to the new block and puts the cursor in it.
+  const focusNew = useFocusNew();
 
   const s = embedded ? section : local;
   const setS = embedded
@@ -333,6 +329,11 @@ function SectionEditor({
   // removed serializes without a `paras: []` nobody wrote.
   const setList = (key, next) => set(key, next.length ? next : undefined);
 
+  const addBlock = (key, block) => {
+    set(key, [...(s[key] || []), block]);
+    focusNew(block.id);
+  };
+
   return (
     <div
       className={embedded ? 'discuss-editor-embedded' : 'discuss-editor'}
@@ -342,10 +343,6 @@ function SectionEditor({
       <div className="discuss-editor-field">
         <label className="discuss-editor-label">Heading</label>
         <Line value={s.title} onChange={setTitle} />
-        <p className="discuss-editor-hint">
-          Sentence case, a noun phrase, four words or fewer, and never a restatement of the
-          page title. A heading is an index entry, not a sentence.
-        </p>
       </div>
 
       <div className="discuss-editor-field discuss-editor-field--inline">
@@ -353,7 +350,7 @@ function SectionEditor({
           refs={s.refs}
           references={refs}
           onChange={(v) => set('refs', v)}
-          label="Section source"
+          label="Source for the whole section"
         />
         <label className="discuss-editor-check">
           <input
@@ -365,16 +362,15 @@ function SectionEditor({
         </label>
       </div>
       <p className="discuss-editor-hint">
-        Setting a section source cites the whole section once at its foot and hides the
-        per-block markers. Right whenever every claim comes off one section of one publication.
-        Number a list only when the sequence is the content.
+        A source chosen here is cited once, at the foot of the section, instead of on every
+        paragraph. Tick numbered list when the order of the list matters.
       </p>
 
       <SlugList
         slugs={s.main}
         onChange={(v) => set('main', v)}
         label="Main page"
-        hint="Where this section's topic is itself a discussion item with a page of its own."
+        hint="If this section's topic has a page of its own, link it here."
       />
       <SlugList
         slugs={s.further}
@@ -424,9 +420,9 @@ function SectionEditor({
           <h4>Paragraphs</h4>
           <p className="discuss-editor-hint">{BOLD_HINT}</p>
           {paras.map((p, i) => (
-            <div className="discuss-editor-block" key={p.id}>
+            <div className="discuss-editor-block" key={p.id} data-block={p.id}>
               <div className="discuss-editor-blockhead">
-                <span className="discuss-editor-id">{p.id}</span>
+                <span className="discuss-editor-marker">Paragraph {i + 1}</span>
                 <RefsPicker
                   refs={p.refs}
                   references={refs}
@@ -453,10 +449,7 @@ function SectionEditor({
       {items.length > 0 && (
         <div className="discuss-editor-group">
           <h4>{s.numbered ? 'Numbered list' : 'List'}</h4>
-          <p className="discuss-editor-hint">
-            Keep every element the same grammatical form. An element running past two lines is
-            a paragraph wearing a bullet.
-          </p>
+          <p className="discuss-editor-hint">{BOLD_HINT}</p>
           {items.map((b, i) => (
             <BulletRow
               key={b.id}
@@ -466,6 +459,7 @@ function SectionEditor({
               references={refs}
               sectionId={s.id}
               item={item}
+              numbered={!!s.numbered}
               onChange={(next) => setList('items', items.map((x, j) => (j === i ? next : x)))}
               onMove={(from, to) => setList('items', move(items, from, to))}
               onRemove={(j) => setList('items', items.filter((_, k) => k !== j))}
@@ -478,23 +472,21 @@ function SectionEditor({
         <button
           type="button"
           className="discuss-editor-add"
-          onClick={() => set('paras', [...paras, { id: newParaId(item, s, s.id), text: '' }])}
+          onClick={() => addBlock('paras', { id: newParaId(item, s, s.id), text: '' })}
         >
           + paragraph
         </button>
         <button
           type="button"
           className="discuss-editor-add"
-          onClick={() => set('items', [...items, { id: newBulletId(item, s, s.id), text: '' }])}
+          onClick={() => addBlock('items', { id: newBulletId(item, s, s.id), text: '' })}
         >
-          + list element
+          + list item
         </button>
         <button
           type="button"
           className="discuss-editor-add"
-          onClick={() =>
-            set('figures', [...figures, { id: newFigureId(item, s), src: '', alt: '', caption: '' }])
-          }
+          onClick={() => addBlock('figures', { id: newFigureId(item, s), src: '', alt: '', caption: '' })}
         >
           + figure
         </button>
@@ -502,15 +494,12 @@ function SectionEditor({
           type="button"
           className="discuss-editor-add"
           onClick={() =>
-            set('tables', [
-              ...tables,
-              {
-                id: newTableId(item, s),
-                caption: '',
-                cols: ['', ''],
-                rows: [['', ''], ['', '']],
-              },
-            ])
+            addBlock('tables', {
+              id: newTableId(item, s),
+              caption: '',
+              cols: ['', ''],
+              rows: [['', ''], ['', '']],
+            })
           }
         >
           + table

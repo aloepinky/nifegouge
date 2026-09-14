@@ -51,7 +51,7 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, onCancel })
       navigate(`${DISCUSS_BASE}/${clean}${link && result.linked ? `?from=${link.eventId}` : ''}`);
     } catch (err) {
       setError(err.status === 409
-        ? 'A page with that slug already exists. Link it from the list instead, with [edit].'
+        ? 'A page with that address already exists. Link it from the list instead, with [edit].'
         : `Not created. ${err.message}`);
       setBusy(false);
     }
@@ -64,7 +64,7 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, onCancel })
           Page title <span className="discuss-editor-req">required</span>
         </label>
         <p className="discuss-editor-hint">
-          A noun phrase in sentence case, even when the JPPT&apos;s wording is not one.
+          The name the page is shown under everywhere on the site.
         </p>
         <Line
           id="create-title"
@@ -79,8 +79,8 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, onCancel })
       <div className="discuss-editor-field">
         <label className="discuss-editor-label" htmlFor="create-slug">Address</label>
         <p className="discuss-editor-hint">
-          The page&apos;s permanent URL: <code>/tw4/discuss/{clean || 'slug'}</code>. Lowercase words
-          joined by hyphens. It cannot change later without breaking links.
+          The page&apos;s web address: <code>/tw4/discuss/{clean || 'page-name'}</code>. Lowercase
+          words joined by hyphens. It cannot be changed later.
         </p>
         <Line id="create-slug" value={slug} onChange={setSlug} maxLength={80} />
         {taken && <p className="discuss-editor-warn">Taken: that address is already the page “{taken.title}”.</p>}
@@ -89,7 +89,7 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, onCancel })
       <div className="discuss-editor-field">
         <label className="discuss-editor-label" htmlFor="create-lead">Where to look</label>
         <p className="discuss-editor-hint">
-          Optional. The publication and section the next writer should start from.
+          Optional. The publications and sections whoever writes the page should start from.
         </p>
         <Grow id="create-lead" value={lead} onChange={setLead} rows={2} />
       </div>

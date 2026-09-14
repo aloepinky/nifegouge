@@ -22,13 +22,15 @@ function dupes(list) {
   return [...out];
 }
 
-// Every slug an item points at: See also, and the two hatnote fields on every block.
+// Every slug an item points at: See also, and the two hatnote fields on every block. A
+// `{ href, label }` entry is a link elsewhere and is not checked.
 function linkedSlugs(item) {
   const out = [];
-  for (const s of item.seeAlso || []) out.push({ slug: s, where: 'See also' });
+  const push = (s, where) => { if (typeof s === 'string') out.push({ slug: s, where }); };
+  for (const s of item.seeAlso || []) push(s, 'See also');
   const block = (b, where) => {
-    for (const s of b.main || []) out.push({ slug: s, where: `${where} — Main page` });
-    for (const s of b.further || []) out.push({ slug: s, where: `${where} — Further information` });
+    for (const s of b.main || []) push(s, `${where}, Main page`);
+    for (const s of b.further || []) push(s, `${where}, Further information`);
   };
   for (const s of item.sections || []) {
     block(s, s.title);
@@ -68,9 +70,9 @@ export function validate(item, baseIds) {
   // --- ids: the one thing worth blocking a save over ------------------------------------
   const ids = allIds(item);
   for (const id of dupes(ids)) {
-    errors.push(`Duplicate id "${id}" — an id is an anchor and has to be unique on the page.`);
+    errors.push(`Two parts of the page share the id "${id}". Remove one of them.`);
   }
-  if (ids.some((id) => !id || !id.trim())) errors.push('A block has an empty id.');
+  if (ids.some((id) => !id || !id.trim())) errors.push('A part of the page has no id.');
 
   if (baseIds && baseIds.length) {
     const now = new Set(ids);
@@ -84,14 +86,11 @@ export function validate(item, baseIds) {
       // prose section is rewritten as numbered steps — that is advisory.
       (anchors.has(id) ? lostAnchors : lostBlocks).push(id);
     }
-    for (const id of lostAnchors) errors.push(`Section id "${id}" no longer exists.`);
-    if (lostBlocks.length) {
-      warnings.push(
-        `${lostBlocks.length} block id${lostBlocks.length > 1 ? 's' : ''} removed since this ` +
-          `draft started (${lostBlocks.slice(0, 4).join(', ')}${lostBlocks.length > 4 ? '…' : ''}). ` +
-          'Anything written against them is orphaned.'
-      );
+    for (const id of lostAnchors) {
+      errors.push(`The section "${id}" was renamed or removed, which would break links to it.`);
     }
+    // Paragraph and list ids come and go as prose is rewritten; nothing hangs off them yet.
+    void lostBlocks;
   }
 
   // --- required fields ------------------------------------------------------------------
@@ -99,38 +98,35 @@ export function validate(item, baseIds) {
 
   const checkBlock = (b, label) => {
     if (!b.title || !b.title.trim()) errors.push(`A ${label} has no heading.`);
-    for (const f of b.figures || []) {
-      if (!f.src) errors.push(`Figure ${f.id} has no image path.`);
-      if (!f.alt || !f.alt.trim()) {
-        errors.push(`Figure ${f.id} has no alt text. Alt is required and is not the caption.`);
-      }
-    }
-    for (const p of b.paras || []) {
-      if (!p.text || !p.text.trim()) warnings.push(`Paragraph ${p.id} is empty.`);
-    }
+    const name = b.title && b.title.trim() ? `"${b.title}"` : `a ${label}`;
+    (b.figures || []).forEach((f, i) => {
+      if (!f.src) errors.push(`Figure ${i + 1} in ${name} has no image. Upload one.`);
+      if (!f.alt || !f.alt.trim()) errors.push(`Figure ${i + 1} in ${name} needs alt text.`);
+    });
+    (b.paras || []).forEach((p, i) => {
+      if (!p.text || !p.text.trim()) warnings.push(`Paragraph ${i + 1} in ${name} is empty.`);
+    });
     // A ragged row is the one defect in this data shape that is invisible on the page and
     // wrong in the DOM: React renders the short row, the columns silently shift, and nothing
     // about the rendered table says which cell went missing. Same check tools/discuss-lint.js
     // makes — it is worth having in both places because the editor can prevent it.
-    for (const t of b.tables || []) {
+    (b.tables || []).forEach((t, k) => {
       const cols = (t.cols || []).length;
-      if (!t.caption || !t.caption.trim()) errors.push(`Table ${t.id} has no caption.`);
-      if (cols < 2) errors.push(`Table ${t.id} has fewer than two columns.`);
-      if (!(t.rows || []).length) errors.push(`Table ${t.id} has no rows.`);
+      const tname = `Table ${k + 1} in ${name}`;
+      if (!t.caption || !t.caption.trim()) errors.push(`${tname} has no caption.`);
+      if (cols < 2) errors.push(`${tname} needs at least two columns.`);
+      if (!(t.rows || []).length) errors.push(`${tname} has no rows.`);
       (t.rows || []).forEach((row, i) => {
         if (row.length !== cols) {
-          errors.push(`Table ${t.id}, row ${i + 1} has ${row.length} cells of ${cols}.`);
+          errors.push(`${tname}, row ${i + 1} has ${row.length} cells but the table has ${cols} columns.`);
         }
       });
-      if (cols === 2 && (t.rows || []).length <= 3) {
-        warnings.push(`Table ${t.id} is ${cols}×${t.rows.length} — check it is not a list.`);
-      }
-    }
+    });
     const walk = (list) => {
-      for (const x of list || []) {
-        if (!x.text || !x.text.trim()) warnings.push(`List element ${x.id} is empty.`);
+      (list || []).forEach((x, i) => {
+        if (!x.text || !x.text.trim()) warnings.push(`List item ${i + 1} in ${name} is empty.`);
         walk(x.sub);
-      }
+      });
     };
     walk(b.items);
   };
@@ -139,13 +135,10 @@ export function validate(item, baseIds) {
     for (const sub of s.subsections || []) checkBlock(sub, 'subsection');
   }
 
-  for (const n of item.numbers || []) {
-    if (!n.label || !n.label.trim()) warnings.push(`Numbers row ${n.id} has no label.`);
-    if (!n.value || !n.value.trim()) warnings.push(`Numbers row ${n.id} has no value.`);
-    else if (!/\d/.test(n.value)) {
-      warnings.push(`Numbers row "${n.label}" has no digits in its value — a number is a number.`);
-    }
-  }
+  (item.numbers || []).forEach((n, i) => {
+    if (!n.label || !n.label.trim()) warnings.push(`Numbers row ${i + 1} has no label.`);
+    if (!n.value || !n.value.trim()) warnings.push(`Numbers row ${i + 1} has no value.`);
+  });
 
   const refNums = new Set((item.references || []).map((r) => r.n));
   for (const r of item.references || []) {
@@ -162,7 +155,7 @@ export function validate(item, baseIds) {
     }
   }
   for (const { slug, where } of linkedSlugs(item)) {
-    if (!getItemMeta(slug)) warnings.push(`${where} links "${slug}", which is not a discussion item.`);
+    if (!getItemMeta(slug)) warnings.push(`${where} links "${slug}", and there is no page at that address.`);
   }
 
   return { errors, warnings, ok: errors.length === 0 };
