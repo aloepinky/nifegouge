@@ -8,10 +8,11 @@ import { listItemMetas, listSyllabi, newestSyllabus } from './store.mjs';
 // page load. `Cache-Control: no-cache` means a browser revalidates with its ETag on every
 // load, so an edit is visible on the next navigation while an unchanged page costs a 304.
 //
-//   items/index.json      { generatedAt, items: [{ slug, title, rev, updatedAt, maneuver?, stub?, generated? }] }
+//   items/index.json      { generatedAt, items: [{ slug, title, rev, updatedAt, aircraft, school,
+//                           maneuver?, stub?, generated? }] }
 //   items/<slug>.json     { slug, rev, updatedAt, author, summary, item }
-//   syllabi/index.json    { generatedAt, syllabi: [{ id, name, rev, updatedAt }] }
-//   syllabi/<id>.json     { id, name, rev, updatedAt, doc }
+//   syllabi/index.json    { generatedAt, syllabi: [{ id, name, rev, updatedAt, aircraft, school }] }
+//   syllabi/<id>.json     { id, name, rev, updatedAt, aircraft, school, doc }
 //   figures/<slug>/<stamp>-<name>.webp
 
 export async function putJson(key, value) {
@@ -48,12 +49,27 @@ export function itemRecord(meta, row) {
 }
 
 export function syllabusRecord(row) {
+  const doc = JSON.parse(row.docJson);
   return {
     id: row.syllabusId,
     name: row.name,
     rev: row.rev,
     updatedAt: row.createdAt,
-    doc: JSON.parse(row.docJson),
+    aircraft: row.aircraft || doc.aircraft || '',
+    school: row.school || doc.school || '',
+    doc,
+  };
+}
+
+// A syllabus as the list and the index show it.
+export function syllabusEntry(row) {
+  return {
+    id: row.syllabusId,
+    name: row.name,
+    rev: row.rev,
+    updatedAt: row.createdAt,
+    aircraft: row.aircraft || '',
+    school: row.school || '',
   };
 }
 
@@ -88,7 +104,7 @@ export async function rebuildSyllabiIndex() {
   const rows = (await listSyllabi()).filter((r) => !r.hidden);
   await putJson('syllabi/index.json', {
     generatedAt: new Date().toISOString(),
-    syllabi: rows.map((r) => ({ id: r.syllabusId, name: r.name, rev: r.rev, updatedAt: r.createdAt })),
+    syllabi: rows.map(syllabusEntry),
   });
   return rows.length;
 }

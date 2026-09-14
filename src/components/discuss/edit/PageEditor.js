@@ -11,7 +11,8 @@ import React, { useState } from 'react';
 import { clone } from './draft';
 import { newSectionId } from './ids';
 import { SYSTEM_TABS } from '../../systems/systemTabs';
-import { Grow, Line, RowTools, SlugList, EditorActions, useEscape, move, BOLD_HINT } from './fields';
+import { Grow, Line, RowTools, SlugList, EditorActions, ProgramFields, useEscape, move, BOLD_HINT } from './fields';
+import { withDefaultProgram } from '../program';
 import SectionEditor from './SectionEditor';
 import NumbersEditor from './NumbersEditor';
 
@@ -83,7 +84,9 @@ function SectionHead({ number, title, isSub, index, count, onMove, onRemove, onS
 }
 
 function PageEditor({ item, onSave, onCancel, check }) {
-  const [p, setP] = useState(() => clone(item));
+  // A page from before the aircraft and school fields existed opens with the defaults filled
+  // in, so its next save carries them.
+  const [p, setP] = useState(() => ({ ...clone(item), ...withDefaultProgram(item) }));
   useEscape(onCancel);
 
   const problems = check ? check(p) : { errors: [], warnings: [] };
@@ -178,6 +181,12 @@ function PageEditor({ item, onSave, onCancel, check }) {
           The name this page is shown under everywhere on the site.
         </p>
       </div>
+
+      <ProgramFields
+        idPrefix="page-program"
+        value={p}
+        onChange={(v) => setP((prev) => ({ ...prev, ...v }))}
+      />
 
       <div className="discuss-editor-field">
         <label className="discuss-editor-label">Lead</label>

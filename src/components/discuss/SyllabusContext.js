@@ -29,6 +29,7 @@ export function rowKey(row) {
 
 export function buildSyllabus({
   id, name, base, source, rev = null, builtIn = false, record = null,
+  aircraft = '', school = '',
   stages, blocks, events, flow, isBriefed,
 }) {
   const blockIndex = index(blocks);
@@ -89,6 +90,9 @@ export function buildSyllabus({
     rev,
     builtIn,
     record,
+    // The aircraft and the school the syllabus is for; every page it links should match.
+    aircraft,
+    school,
     flow,
     stages,
     blocks,
@@ -148,6 +152,8 @@ export function fromDoc(record, { builtIn = false, matcher = null } = {}) {
     rev: record.rev,
     builtIn,
     record,
+    aircraft: doc.aircraft || record.aircraft || '',
+    school: doc.school || record.school || '',
     stages: doc.stages || [],
     blocks: doc.blocks || [],
     events,

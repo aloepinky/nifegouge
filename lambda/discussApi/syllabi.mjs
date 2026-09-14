@@ -1,13 +1,14 @@
-import { HttpError, cleanText, parseBody, reply } from './http.mjs';
+import { HttpError, cleanText, parseBody, reply, requireProgram } from './http.mjs';
 import { newestSyllabus, putSyllabus, listSyllabi, setSyllabusHidden } from './store.mjs';
 import {
-  mirrorSyllabus, rebuildSyllabiIndex, syllabusRecord, syllabusKey, deleteKey,
+  mirrorSyllabus, rebuildSyllabiIndex, syllabusRecord, syllabusEntry, syllabusKey, deleteKey,
 } from './mirror.mjs';
 
 // Syllabus documents: the Delta Primary registry and every JPPT anyone has uploaded. The
 // document shape is what jppt/parseJppt.js produces and SyllabusContext.fromDoc renders:
 //
-//   { version, source, stages, blocks: [{ ..., briefed, events }], events: [{ ..., items }], flow }
+//   { version, aircraft, school, source, stages, blocks: [{ ..., briefed, events }],
+//     events: [{ ..., items }], flow }
 //
 // Moved in from lambda/discussSyllabi with two additions: every write mirrors the newest
 // document to S3, and a revision records who saved it and why.
@@ -25,6 +26,11 @@ export const cleanSummary = (summary) => cleanText(summary, MAX_SUMMARY);
 // Shape, not content: enough that the site can render what comes back.
 export function checkDoc(doc) {
   if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return 'doc must be an object';
+  try {
+    requireProgram(doc, 'The syllabus');
+  } catch (error) {
+    return error.message;
+  }
   const flow = doc.flow;
   if (!flow || !Array.isArray(flow.NODES) || !Array.isArray(flow.EDGES)) return 'doc.flow needs NODES and EDGES';
   if (typeof flow.VIEWBOX !== 'string') return 'doc.flow.VIEWBOX must be a string';
@@ -66,7 +72,7 @@ export async function listSyllabiHandler() {
   const rows = (await listSyllabi()).filter((r) => !r.hidden);
   return reply(200, {
     success: true,
-    syllabi: rows.map((r) => ({ id: r.syllabusId, name: r.name, rev: r.rev, updatedAt: r.createdAt })),
+    syllabi: rows.map(syllabusEntry),
   });
 }
 

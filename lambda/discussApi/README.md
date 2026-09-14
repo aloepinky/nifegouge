@@ -147,6 +147,11 @@ DISCUSS_ADMIN_TOKEN=... node tools/discuss-migrate.js --verify --fixtures
   Unhide with `hidden:false`.
 - Take a syllabus down: `POST hide-syllabus {"id":"...","hidden":true}`.
 - A stale `items/index.json` (two saves raced): `POST rebuild-index {"what":"items"}`.
+- Pages and syllabi from before the aircraft and school fields existed:
+  `DISCUSS_ADMIN_TOKEN=... node tools/discuss-tag.js --aircraft=T-6B --school=Primary`
+  stamps every one that has neither, as a new revision each. Run it once after deploying a
+  function that requires the fields; until then a save of an untagged page is refused with
+  "The page names no aircraft".
 - Roll back a bad revision: open the page's History on the site and restore the one before
   it. Nothing is ever deleted from the table.
 

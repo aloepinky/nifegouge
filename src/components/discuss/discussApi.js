@@ -136,6 +136,8 @@ export function rememberItem(record) {
     maneuver: record.item.maneuver || undefined,
     stub: record.item.stub || undefined,
     generated: record.item.generated || undefined,
+    aircraft: record.item.aircraft || undefined,
+    school: record.item.school || undefined,
   });
 }
 

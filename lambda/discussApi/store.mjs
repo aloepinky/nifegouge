@@ -7,8 +7,8 @@ import { HttpError } from './http.mjs';
 // DynamoDB access for both tables. Nothing here knows about HTTP or S3.
 //
 // DiscussItems: partition `slug` (S), sort `rev` (N).
-//   rev 0      the meta row: { latestRev, title, flags: { maneuver?, stub?, generated? },
-//              hidden?, updatedAt }
+//   rev 0      the meta row: { latestRev, title, flags: { maneuver?, stub?, generated?,
+//              aircraft, school }, hidden?, updatedAt }
 //   rev >= 1   a revision: { docJson, author, summary, createdAt, baseRev }
 // A save is one transaction — put the revision, bump the meta row — so a lost race can never
 // leave a revision without its meta bump, and the meta row is the single answer to "which
@@ -51,11 +51,15 @@ export async function newestItem(slug) {
   return row ? { meta, row } : null;
 }
 
+// What the index carries about a page besides its title: the three flags, and the aircraft
+// and school it is for.
 export function flagsOf(item) {
   const flags = {};
   if (item.maneuver) flags.maneuver = true;
   if (item.stub) flags.stub = true;
   if (item.generated) flags.generated = item.generated;
+  if (item.aircraft) flags.aircraft = item.aircraft;
+  if (item.school) flags.school = item.school;
   return flags;
 }
 
@@ -226,6 +230,9 @@ export async function putSyllabus(id, rev, name, doc, { author, summary, baseRev
     syllabusId: id,
     rev,
     name,
+    // Copied out of the document so the list scan can read them without the document.
+    aircraft: doc.aircraft || '',
+    school: doc.school || '',
     docJson: JSON.stringify(doc),
     author: author || '',
     summary: summary || '',
@@ -253,7 +260,7 @@ export async function listSyllabi() {
   do {
     const result = await db().send(new ScanCommand({
       TableName: CONFIG.syllabiTable,
-      ProjectionExpression: 'syllabusId, rev, #n, createdAt, #hidden',
+      ProjectionExpression: 'syllabusId, rev, #n, createdAt, #hidden, aircraft, school',
       ExpressionAttributeNames: { '#n': 'name', '#hidden': 'hidden' },
       ExclusiveStartKey: lastKey,
     }));

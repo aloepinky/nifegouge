@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import FlowEditor from './FlowEditor';
-import { ConfirmButton, Line } from '../edit/fields';
+import { ConfirmButton, Line, ProgramFields } from '../edit/fields';
+import { programOf, withDefaultProgram } from '../program';
 import { getSyllabus, rememberSyllabus, saveSyllabus, getAuthor } from '../discussApi';
 import { DISCUSS_BASE, DELTA_ID } from '../SyllabusContext';
 
@@ -38,6 +39,7 @@ function EditFlowPage({ record: initialRecord }) {
   const [record, setRecord] = useState(initialRecord);
   const [draft] = useState(() => readDraft(initialRecord.id, initialRecord.rev));
   const [name, setName] = useState((draft && draft.name) || record.name);
+  const [program, setProgram] = useState(() => withDefaultProgram((draft && draft.program) || record.doc));
   const [editorKey, setEditorKey] = useState(0);
   const [initialDoc, setInitialDoc] = useState((draft && draft.doc) || record.doc);
   const [saving, setSaving] = useState(false);
@@ -47,10 +49,16 @@ function EditFlowPage({ record: initialRecord }) {
 
   const onCommit = useCallback((doc) => {
     if (doc === record.doc) return;
-    writeDraft(record.id, { baseRev: record.rev, doc, name });
-  }, [name, record.doc, record.id, record.rev]);
+    writeDraft(record.id, { baseRev: record.rev, doc, name, program });
+  }, [name, program, record.doc, record.id, record.rev]);
 
-  const save = async (doc) => {
+  const save = async (flowDoc) => {
+    const tags = programOf(program);
+    if (!tags.aircraft || !tags.school) {
+      setError('Say which aircraft and school this syllabus is for first.');
+      return;
+    }
+    const doc = { ...flowDoc, ...tags };
     setSaving(true);
     setError(null);
     try {
@@ -58,7 +66,7 @@ function EditFlowPage({ record: initialRecord }) {
         author: getAuthor(),
         summary: 'Edited the course flow',
       });
-      rememberSyllabus({ ...record, rev, doc, name: name.trim() || record.name });
+      rememberSyllabus({ ...record, rev, doc, name: name.trim() || record.name, ...tags });
       writeDraft(record.id, null);
       navigate(base);
     } catch (err) {
@@ -80,6 +88,7 @@ function EditFlowPage({ record: initialRecord }) {
       writeDraft(record.id, null);
       setRecord(newest);
       setName(newest.name);
+      setProgram(withDefaultProgram(newest.doc));
       setInitialDoc(newest.doc);
       setEditorKey((k) => k + 1);
       setConflict(false);
@@ -109,6 +118,12 @@ function EditFlowPage({ record: initialRecord }) {
           <label className="discuss-editor-label" htmlFor="flow-name">Name in the syllabus list</label>
           <Line id="flow-name" value={name} onChange={setName} />
         </div>
+        <ProgramFields
+          idPrefix="flow-program"
+          value={program}
+          onChange={setProgram}
+          hint="The aircraft and the school this syllabus trains for."
+        />
 
         <FlowEditor
           key={editorKey}

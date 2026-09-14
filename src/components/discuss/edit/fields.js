@@ -6,6 +6,7 @@
 // hand a finished object back on save.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { itemList, getItemMeta, useItemIndexVersion } from '../registry';
+import { knownPrograms } from '../program';
 
 // A link in See also or a hatnote is either a discussion item's slug or `{ href, label }`,
 // the same shape an event row uses for a link elsewhere on the site. Resolved here for the
@@ -348,3 +349,54 @@ export function useFocusNew() {
 }
 
 export const BOLD_HINT = 'Put **double asterisks** around words to make them bold.';
+
+// The aircraft and the school a page or a syllabus is for, side by side. Both are required
+// wherever a page or a syllabus is made, and both are shown wherever it is edited. The
+// suggestions are the values the pages already carry, so a second aircraft is typed once
+// and picked ever after.
+export function ProgramFields({ value, onChange, idPrefix = 'program', hint }) {
+  useItemIndexVersion();
+  const known = knownPrograms(itemList());
+  const set = (key, v) => onChange({ aircraft: value.aircraft || '', school: value.school || '', [key]: v });
+  return (
+    <div className="discuss-editor-field">
+      <div className="discuss-editor-pair">
+        <div>
+          <label className="discuss-editor-label" htmlFor={`${idPrefix}-aircraft`}>
+            Aircraft <span className="discuss-editor-req">required</span>
+          </label>
+          <Line
+            id={`${idPrefix}-aircraft`}
+            value={value.aircraft}
+            onChange={(v) => set('aircraft', v)}
+            list={`${idPrefix}-aircraft-options`}
+            placeholder="e.g. T-6B"
+            maxLength={40}
+          />
+          <datalist id={`${idPrefix}-aircraft-options`}>
+            {known.aircraft.map((a) => <option key={a} value={a} />)}
+          </datalist>
+        </div>
+        <div>
+          <label className="discuss-editor-label" htmlFor={`${idPrefix}-school`}>
+            School <span className="discuss-editor-req">required</span>
+          </label>
+          <Line
+            id={`${idPrefix}-school`}
+            value={value.school}
+            onChange={(v) => set('school', v)}
+            list={`${idPrefix}-school-options`}
+            placeholder="e.g. Primary"
+            maxLength={40}
+          />
+          <datalist id={`${idPrefix}-school-options`}>
+            {known.schools.map((a) => <option key={a} value={a} />)}
+          </datalist>
+        </div>
+      </div>
+      <p className="discuss-editor-hint">
+        {hint || 'The aircraft and the school this page is for. A page with the same name can exist for another aircraft, and this is what tells them apart.'}
+      </p>
+    </div>
+  );
+}

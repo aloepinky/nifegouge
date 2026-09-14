@@ -1,5 +1,5 @@
 import { lintItem } from './discussRules.mjs';
-import { HttpError } from './http.mjs';
+import { HttpError, requireProgram } from './http.mjs';
 
 // What the server checks before it stores an item.
 //
@@ -20,7 +20,7 @@ export const MAX_ITEM_BYTES = 200 * 1024;
 
 const ALLOWED_KEYS = new Set([
   'slug', 'title', 'lede', 'note', 'numbers', 'sections', 'seeAlso', 'references',
-  'maneuver', 'stub', 'sourcingLead', 'generated', 'diagram',
+  'maneuver', 'stub', 'sourcingLead', 'generated', 'diagram', 'aircraft', 'school',
 ]);
 
 export function checkSlug(slug) {
@@ -63,6 +63,7 @@ export function checkItem(item, slug) {
   if (!item || typeof item !== 'object' || isArr(item)) bad('item must be an object');
   if (item.slug !== slug) bad('item.slug must match the slug being saved');
   if (!isStr(item.title) || !item.title.trim()) bad('The page has no title');
+  requireProgram(item, 'The page');
   for (const key of Object.keys(item)) {
     if (!ALLOWED_KEYS.has(key)) bad(`Unknown field "${key}"`);
   }

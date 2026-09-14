@@ -7,6 +7,7 @@ import EventItemsEditor from './EventItemsEditor';
 import CreatePanel from './edit/CreatePanel';
 import { EditLink } from './edit/EditLink';
 import { SlugOptions } from './edit/fields';
+import { programLabel } from './program';
 
 // Where an `href` row sends the reader, named for the badge beside it. There is more than
 // one destination now — the EPs live on one tab and the course rules on another — so the
@@ -39,6 +40,7 @@ function EventHub({ event }) {
       <header className="discuss-head">
         {block && (
           <p className="discuss-crumb">
+            {programLabel(s) && <>{programLabel(s)} › </>}
             {inNav && <><Link to={s.stagePath(stage.id)}>{stage.label}</Link> › </>}
             <Link to={s.blockPath(block.id)}>{block.id} {block.title}</Link>
           </p>
@@ -115,6 +117,7 @@ function EventHub({ event }) {
                       )}
                       {creating && (
                         <CreatePanel
+                          program={s}
                           title={sentenceCase(row.label)}
                           link={{ syllabusId: s.id, eventId: event.id, label: row.label }}
                           onCancel={() => setEditing(null)}

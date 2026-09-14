@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import FlowEditor from './FlowEditor';
-import { ConfirmButton, Line } from '../edit/fields';
+import { ConfirmButton, Line, ProgramFields } from '../edit/fields';
+import { programOf, withDefaultProgram } from '../program';
 import { parseJppt } from '../jppt/parseJppt';
 import { preparePdfWorker } from '../jppt/pdfWorker';
 import { publishSyllabus, rememberSyllabus, getAuthor } from '../discussApi';
@@ -45,7 +46,7 @@ function UploadPage() {
   const [name, setName] = useState('');
   const [progress, setProgress] = useState(null);
   const [error, setError] = useState(null);
-  const [work, setWork] = useState(null); // { name, doc, warnings }
+  const [work, setWork] = useState(null); // { name, program, doc, warnings }
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState(null);
 
@@ -74,7 +75,8 @@ function UploadPage() {
         phrases: protectedPhrases(delta.events, itemList()),
       });
       const title = name.trim() || doc.source.instruction || file.name.replace(/\.pdf$/i, '');
-      setWork({ name: title, doc, warnings });
+      // The title page's guess, with the site's defaults where it named nothing.
+      setWork({ name: title, program: withDefaultProgram(doc, delta), doc, warnings });
       setSaved(null);
     } catch (err) {
       setError(`This PDF could not be read. ${err.message || ''}`.trim());
@@ -90,11 +92,17 @@ function UploadPage() {
       setPublishError('Give the syllabus a name for the dropdown first.');
       return;
     }
+    const program = programOf(work.program);
+    if (!program.aircraft || !program.school) {
+      setPublishError('Say which aircraft and school this JPPT is for first.');
+      return;
+    }
+    const tagged = { ...doc, ...program };
     setPublishing(true);
     setPublishError(null);
     try {
-      const { id, rev } = await publishSyllabus(title, doc, { author: getAuthor(), summary: 'Uploaded' });
-      rememberSyllabus({ id, rev, name: title, doc, updatedAt: new Date().toISOString() });
+      const { id, rev } = await publishSyllabus(title, tagged, { author: getAuthor(), summary: 'Uploaded' });
+      rememberSyllabus({ id, rev, name: title, ...program, doc: tagged, updatedAt: new Date().toISOString() });
       writeDraft(null);
       navigate(`${DISCUSS_BASE}/s/${id}`);
     } catch (err) {
@@ -190,6 +198,12 @@ function UploadPage() {
                 <p className="discuss-editor-hint">Read from {work.doc.source.citation}.</p>
               )}
             </div>
+            <ProgramFields
+              idPrefix="jppt-program"
+              value={work.program || {}}
+              onChange={(v) => setWork((w) => ({ ...w, program: v }))}
+              hint="The aircraft and the school this JPPT trains for. Read from the title page; check it."
+            />
             <FlowEditor
               initial={work.doc}
               warnings={work.warnings}

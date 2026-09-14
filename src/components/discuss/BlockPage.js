@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSyllabus } from './SyllabusContext';
+import { programLabel } from './program';
 
 // One training block: its JPPT metadata, then its events. The block holds no content of its
 // own — the course-flow chart draws blocks rather than events, so this page is where a box
@@ -28,6 +29,7 @@ function BlockPage({ block }) {
         <header className="discuss-head">
           {stage && (
             <p className="discuss-crumb">
+              {programLabel(s) && <>{programLabel(s)} › </>}
               {inNav ? <Link to={s.stagePath(stage.id)}>{stage.label}</Link> : stage.label}
             </p>
           )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Line, Grow, useEscape } from './fields';
+import { Line, Grow, ProgramFields, useEscape } from './fields';
+import { withDefaultProgram } from '../program';
 import { slugify } from './ids';
 import { getItemMeta } from '../registry';
 import { createItem, rememberItem, refreshSyllabus, getAuthor, setAuthor } from '../discussApi';
@@ -11,12 +12,14 @@ import { DISCUSS_BASE } from '../SyllabusContext';
 // pointed at the new page in the same request, so the hub shows it without a second edit.
 //
 // Used from an event hub's "no page yet" row and from the not-found page for a typed slug.
+// `program` is the aircraft and school to offer first: the syllabus's, where there is one.
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-function CreatePanel({ slug: initialSlug, title: initialTitle, link, onCancel }) {
+function CreatePanel({ slug: initialSlug, title: initialTitle, link, program: initialProgram, onCancel }) {
   const navigate = useNavigate();
   const [slug, setSlug] = useState(initialSlug || slugify(initialTitle || ''));
   const [title, setTitle] = useState(initialTitle || '');
+  const [program, setProgram] = useState(() => withDefaultProgram(initialProgram));
   const [lead, setLead] = useState('');
   const [author, setAuthorField] = useState(getAuthor);
   const [busy, setBusy] = useState(false);
@@ -26,7 +29,7 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, onCancel })
   const clean = slug.trim().toLowerCase();
   const taken = clean && getItemMeta(clean);
   const badSlug = clean && !SLUG_RE.test(clean);
-  const ready = clean && !taken && !badSlug && title.trim() && !busy;
+  const ready = clean && !taken && !badSlug && title.trim() && program.aircraft.trim() && program.school.trim() && !busy;
 
   const create = async () => {
     if (!ready) return;
@@ -35,14 +38,18 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, onCancel })
     const name = author.trim();
     setAuthor(name);
     try {
+      const aircraft = program.aircraft.trim();
+      const school = program.school.trim();
       const result = await createItem({
         slug: clean,
         title: title.trim(),
+        aircraft,
+        school,
         sourcingLead: lead.trim() || undefined,
         author: name,
         link: link || undefined,
       });
-      const item = { slug: clean, title: title.trim(), stub: true };
+      const item = { slug: clean, title: title.trim(), aircraft, school, stub: true };
       if (lead.trim()) item.sourcingLead = lead.trim();
       rememberItem({
         slug: clean, rev: 1, updatedAt: new Date().toISOString(), author: name, summary: 'Created the page', item,
@@ -86,6 +93,7 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, onCancel })
         {taken && <p className="discuss-editor-warn">Taken: that address is already the page “{taken.title}”.</p>}
         {badSlug && <p className="discuss-editor-warn">Only lowercase letters, digits and single hyphens.</p>}
       </div>
+      <ProgramFields idPrefix="create-program" value={program} onChange={setProgram} />
       <div className="discuss-editor-field">
         <label className="discuss-editor-label" htmlFor="create-lead">Where to look</label>
         <p className="discuss-editor-hint">

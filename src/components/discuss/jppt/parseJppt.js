@@ -2,16 +2,20 @@ import { loadPageContents } from './pdfSource';
 import { loadTextPages } from './pdfText';
 import { extractFlow } from './flowExtract';
 import { extractSyllabus } from './syllabusExtract';
+import { guessProgram } from '../program';
 
 // An uploaded JPPT, start to finish: the PDF in, a syllabus document out.
 //
 // The document is what gets published and what SyllabusContext.fromDoc renders:
 //
-//   { version, source: { instruction, date, flowPage, citation },
+//   { version, aircraft?, school?, source: { instruction, date, flowPage, citation },
 //     stages: [{ id, label, weight, graded }],
 //     blocks: [{ id, stage, media, title, hours, hx?, blkName?, prereqs?, briefed, events: [{ id, title? }] }],
 //     events: [{ id, title, block, media, hours, prereqs, syllabusNotes, items: [{ label, slug? | href? }] }],
 //     flow:   { VIEWBOX, NODES, LEGEND, EDGES } }
+//
+// `aircraft` and `school` are guessed from the title page and confirmed by whoever uploads;
+// the server refuses a document without both.
 //
 // `warnings` travels beside the document, not in it: it is for the person fixing the upload.
 
@@ -138,8 +142,10 @@ export async function parseJppt(data, onProgress = () => {}, { matcher = null, p
     date && `(${date})`,
   ].filter(Boolean).join(' ') + (flowPage ? `, p. ${flowPage}` : '');
 
+  const opening = textPages.slice(0, 3).flat().map((l) => l.text).join(' ');
   const doc = {
     version: DOC_VERSION,
+    ...guessProgram(opening),
     source: { instruction, date, flowPage, citation: citation || null },
     stages: syllabus.stages,
     blocks: orderBlocks(syllabus.blocks, flow),

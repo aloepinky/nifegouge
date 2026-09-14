@@ -34,6 +34,8 @@ const DISCUSS = path.join(ROOT, 'src', 'components', 'discuss');
 const FIXTURES = path.join(DISCUSS, 'jppt', '__fixtures__', 'delta');
 const DELTA_ID = 'delta-primary';
 const DELTA_NAME = 'Delta Primary';
+// Everything in the archive is for the one aircraft and school the site was written for.
+const PROGRAM = { aircraft: 'T-6B', school: 'Primary' };
 
 const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(`--${name}`);
@@ -87,7 +89,7 @@ function readItems() {
     if (data.slug !== path.basename(f, '.js')) {
       throw new Error(`${f} declares slug '${data.slug}'`);
     }
-    return data;
+    return { ...data, aircraft: data.aircraft || PROGRAM.aircraft, school: data.school || PROGRAM.school };
   });
 }
 
@@ -100,6 +102,7 @@ function buildDeltaDoc(dir) {
   const flow = evalModule(path.join(dir, 'FLOW.js'), '{ VIEWBOX, NODES, LEGEND, EDGES }');
   return {
     version: 1,
+    ...PROGRAM,
     source: {
       instruction: 'CNATRAINST 1542.166D',
       date: '15 Jul 2024',
@@ -116,7 +119,7 @@ function buildDeltaDoc(dir) {
 
 // The index entry the server derives for an item; also the parser test's fixture shape.
 function indexEntry(item) {
-  const out = { slug: item.slug, title: item.title };
+  const out = { slug: item.slug, title: item.title, aircraft: item.aircraft, school: item.school };
   if (item.maneuver) out.maneuver = true;
   if (item.stub) out.stub = true;
   if (item.generated) out.generated = item.generated;

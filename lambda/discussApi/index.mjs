@@ -11,6 +11,7 @@ import {
   rebuildItemsIndex, rebuildSyllabiIndex, remirrorSyllabi, mirrorItem,
 } from './mirror.mjs';
 import { listItemMetas, newestItem } from './store.mjs';
+import { tagProgramHandler } from './program.mjs';
 
 // The Discuss tab's API: item pages, syllabus documents, figure uploads, and the admin
 // operations behind X-Admin-Token. One API Gateway resource, /discuss/{proxy+}, routes every
@@ -21,13 +22,13 @@ import { listItemMetas, newestItem } from './store.mjs';
 //
 //   GET  list-syllabi                      -> { syllabi }
 //   GET  get-syllabus?id=                  -> { syllabus }
-//   POST publish-syllabus                  { name, doc, author? }                   -> { id, rev }
+//   POST publish-syllabus                  { name, doc, author? }                   -> { id, rev }; doc carries aircraft and school
 //   POST save-syllabus                     { id, baseRev, doc, name?, author?, summary? } -> { id, rev }; 409
 //   GET  get-item?slug=                    -> { item }
 //   GET  item-history?slug=                -> { latestRev, revisions }
 //   GET  item-revision?slug=&rev=          -> { revision }
 //   POST save-item                         { slug, baseRev, item, author?, summary }  -> { rev, updatedAt }; 400; 409
-//   POST create-item                       { slug, title, sourcingLead?, author?, summary?, link? } -> { rev: 1, linked }
+//   POST create-item                       { slug, title, aircraft, school, sourcingLead?, author?, summary?, link? } -> { rev: 1, linked }
 //   POST restore-item                      { slug, rev, author?, summary? }           -> { rev }
 //   POST figure-upload-url                 { slug, name }                             -> { uploadUrl, publicUrl, key }
 //   POST import-items        (admin)       { items, overwrite? }                      -> { imported, skipped }
@@ -35,6 +36,7 @@ import { listItemMetas, newestItem } from './store.mjs';
 //   POST hide-item           (admin)       { slug, hidden }
 //   POST hide-syllabus       (admin)       { id, hidden }
 //   POST rebuild-index       (admin)       { what?: 'items'|'syllabi'|'all', remirror?: bool } -> { items, syllabi }
+//   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
 
 async function rebuildIndexHandler(event) {
   const body = parseBody(event);
@@ -74,6 +76,7 @@ const ROUTES = {
   'hide-item': { method: 'POST', admin: true, run: hideItemHandler },
   'hide-syllabus': { method: 'POST', admin: true, run: hideSyllabusHandler },
   'rebuild-index': { method: 'POST', admin: true, run: rebuildIndexHandler },
+  'tag-program': { method: 'POST', admin: true, run: tagProgramHandler },
 };
 
 function opOf(event) {

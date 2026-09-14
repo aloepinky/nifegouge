@@ -11,6 +11,7 @@ import CreatePanel from './edit/CreatePanel';
 import { DISCUSS_BASE, DELTA_ID, SyllabusContext, fromDoc, useSyllabus } from './SyllabusContext';
 import { useRemoteSyllabus, useSyllabusList, useItem } from './discussApi';
 import { DiscussDataProvider, useDiscussData, useDelta } from './DiscussData';
+import { programLabel } from './program';
 
 // The upload page and the flow editor carry the PDF parser and pdf.js, so they load only when
 // someone opens them.
@@ -63,6 +64,7 @@ function Index() {
         </header>
 
         <p className="discuss-syllabus-note">
+          {programLabel(s) ? `${programLabel(s)}. ` : ''}
           {s.builtIn ? '' : 'Generated from an uploaded JPPT. '}
           If the chart does not match the publication,{' '}
           <Link to={`${s.base}/edit`}>edit the flow</Link>.
@@ -125,6 +127,7 @@ function LoadFailed({ error, retry }) {
 // An item page, by slug. Missing pages offer to be created: the slug is already typed.
 function ItemRoute({ slug }) {
   const it = useItem(slug);
+  const delta = useDelta();
   if (it.status === 'loading' || it.status === 'none') return <Loading />;
   if (it.status === 'error') {
     return (
@@ -145,7 +148,7 @@ function ItemRoute({ slug }) {
               created here; otherwise <Link to={DISCUSS_BASE}>back to all discussion items</Link>.
             </p>
           </header>
-          <CreatePanel slug={slug.toLowerCase()} title="" />
+          <CreatePanel slug={slug.toLowerCase()} title="" program={delta} />
         </article>
       </div>
     );

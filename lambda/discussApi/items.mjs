@@ -1,4 +1,4 @@
-import { HttpError, parseBody, reply } from './http.mjs';
+import { HttpError, parseBody, reply, requireProgram } from './http.mjs';
 import {
   newestItem, itemMeta, itemRevision, itemHistory, createItem, saveItem, setItemHidden,
 } from './store.mjs';
@@ -95,7 +95,7 @@ export async function createItemHandler(event) {
   checkSlug(slug);
   const title = typeof body.title === 'string' ? body.title.replace(/\s+/g, ' ').trim().slice(0, 120) : '';
   if (!title) throw new HttpError(400, 'A title is required');
-  const item = { slug, title, stub: true };
+  const item = { slug, title, ...requireProgram(body, 'The page'), stub: true };
   const lead = typeof body.sourcingLead === 'string' ? body.sourcingLead.trim().slice(0, 600) : '';
   if (lead) item.sourcingLead = lead;
   const author = cleanAuthor(body.author);
@@ -137,6 +137,13 @@ export async function restoreItemHandler(event) {
   const old = await itemRevision(slug, rev);
   if (!old) throw new HttpError(404, 'No such revision');
   const item = JSON.parse(old.docJson);
+  // A revision from before the page was tagged comes back tagged as the page is now.
+  if (!item.aircraft || !item.school) {
+    const current = await itemRevision(slug, meta.latestRev);
+    const now = current ? JSON.parse(current.docJson) : {};
+    item.aircraft = item.aircraft || now.aircraft;
+    item.school = item.school || now.school;
+  }
   const saved = await saveItem(slug, meta.latestRev, item, {
     author: cleanAuthor(body.author),
     summary: cleanSummary(body.summary) || `Restored revision ${rev}`,

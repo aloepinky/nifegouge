@@ -5294,6 +5294,18 @@ textarea.incorrect-answer {
   white-space: nowrap;
 }
 
+/* Aircraft and school side by side; one column on a phone. */
+.discuss-editor-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-width: 420px;
+}
+
+@media (max-width: 480px) {
+  .discuss-editor-pair { grid-template-columns: 1fr; }
+}
+
 /* "Paragraph 2", "Figure 1", a Numbers row's number: what a block is, in words. */
 .discuss-editor-marker {
   font-size: 12px;

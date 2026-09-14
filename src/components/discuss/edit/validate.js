@@ -95,6 +95,8 @@ export function validate(item, baseIds) {
 
   // --- required fields ------------------------------------------------------------------
   if (!item.title || !item.title.trim()) errors.push('The page has no title.');
+  if (!item.aircraft || !item.aircraft.trim()) errors.push('The page names no aircraft.');
+  if (!item.school || !item.school.trim()) errors.push('The page names no school.');
 
   const checkBlock = (b, label) => {
     if (!b.title || !b.title.trim()) errors.push(`A ${label} has no heading.`);

@@ -6,6 +6,7 @@ import { useSyllabus } from './SyllabusContext';
 import { rememberItem, refreshItem } from './discussApi';
 import ItemLink from './ItemLink';
 import { getSystemTab } from '../systems/systemTabs';
+import { programLabel, withDefaultProgram } from './program';
 import { getDraft, getRecord, saveDraft, clearDraft, clone } from './edit/draft';
 import { allIds } from './edit/ids';
 import { validate } from './edit/validate';
@@ -479,7 +480,10 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   // and the one step users skip: they read Save as the end of the job. So a save scrolls the
   // page to the banner that says otherwise and puts focus on its Publish button, which is
   // the difference between a warning and a warning that gets seen.
-  const commit = (next) => {
+  const commit = (draftNext) => {
+    // A page from before the aircraft and school fields existed is tagged with the
+    // syllabus's on its next save, which is what the server requires of every page now.
+    const next = { ...draftNext, ...withDefaultProgram(draftNext, s) };
     saveDraft(item.slug, next, item, draftBase);
     setDraft(clone(next));
     setDraftRecord(getRecord(item.slug));
@@ -613,6 +617,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
         </div>
       )}
       <header className="discuss-head" id="top">
+        {programLabel(view) && <p className="discuss-crumb">{programLabel(view)}</p>}
         <h1>
           {view.title}
           <Edit onClick={() => open({ kind: 'page' })} what="this page" label="edit page" disabled={busy} />
