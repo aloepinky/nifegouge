@@ -4,7 +4,7 @@
 // already uses — TW4JetLog.js's `handleInputChange(cellId, value)` and ToldCard.js's
 // two-key setter. No form library, no validation library; the editors own their own state and
 // hand a finished object back on save.
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { itemList, getItemMeta, useItemIndexVersion } from '../registry';
 import { knownPrograms } from '../program';
 
@@ -91,34 +91,109 @@ export function Line({ value, onChange, placeholder, ...rest }) {
   );
 }
 
-// The citation picker: one toggle per reference the page declares. A page with no references
-// shows the reason rather than an empty row, because "cite this" with nothing to cite reads
-// as a broken control.
-export function RefsPicker({ refs, references, onChange, label = 'Source' }) {
+// The publications the pages cite, offered when a new source is typed. The page's own
+// references are added to the list, so a work already on the page is picked, not retyped.
+export const KNOWN_WORKS = [
+  'NATOPS', 'TO 1T-6B-1CL-1', 'FAM FTI', 'I FTI', 'VNAV FTI', 'F FTI', 'TW-4 SOP', 'VT-27 SOP',
+  'VT-28 SOP', 'TW-4 Formation Supplement', 'Course Rules Manual', 'IFG', 'FIH', 'AIM',
+  'CNAF 3710', 'Delta JPPT',
+];
+
+// The citation picker: one toggle per reference the page declares, and a way to add one.
+//
+// A source is added where it is cited. `onAddReference(ref)` appends the reference to the
+// page's list and returns its number; the picker then cites it on the block it belongs to.
+// Without that step a writer had to leave the section, add the reference at the foot of the
+// page editor, come back and find it in the row, and most did not. A page with no references
+// and no way to add one shows the reason rather than an empty row.
+export function RefsPicker({ refs, references, onChange, onAddReference, label = 'Source' }) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState({ work: '', loc: '', pages: '' });
+  const listId = useId();
   const on = refs || [];
   const toggle = (n) => {
     const next = on.includes(n) ? on.filter((x) => x !== n) : [...on, n].sort((a, b) => a - b);
     onChange(next.length ? next : undefined);
   };
+  const works = [...new Set([...(references || []).map((r) => r.work), ...KNOWN_WORKS])].filter(Boolean);
+  const add = () => {
+    const work = draft.work.trim();
+    if (!work) return;
+    const ref = { work };
+    if (draft.loc.trim()) ref.loc = draft.loc.trim();
+    if (draft.pages.trim()) ref.pages = draft.pages.trim();
+    const n = onAddReference(ref);
+    onChange([...on, n].sort((a, b) => a - b));
+    setDraft({ work: '', loc: '', pages: '' });
+    setAdding(false);
+  };
   return (
-    <span className="discuss-refpick">
-      <span className="discuss-refpick-label">{label}</span>
-      {(references || []).length === 0 ? (
-        <span className="discuss-editor-hint">no references on this page yet</span>
-      ) : (
-        references.map((r) => (
+    <>
+      <span className="discuss-refpick">
+        <span className="discuss-refpick-label">{label}</span>
+        {(references || []).length === 0 && !onAddReference ? (
+          <span className="discuss-editor-hint">no references on this page yet</span>
+        ) : (
+          (references || []).map((r) => (
+            <button
+              type="button"
+              key={r.n}
+              className={`discuss-refpick-btn${on.includes(r.n) ? ' is-on' : ''}`}
+              onClick={() => toggle(r.n)}
+              title={`${r.work}${r.loc ? `, ${r.loc}` : ''}`}
+            >
+              {r.n}
+            </button>
+          ))
+        )}
+        {onAddReference && !adding && (
           <button
             type="button"
-            key={r.n}
-            className={`discuss-refpick-btn${on.includes(r.n) ? ' is-on' : ''}`}
-            onClick={() => toggle(r.n)}
-            title={`${r.work}${r.loc ? `, ${r.loc}` : ''}`}
+            className="discuss-refpick-add"
+            onClick={() => setAdding(true)}
+            title="Cite a publication that is not in this page's references yet"
           >
-            {r.n}
+            + source
           </button>
-        ))
+        )}
+      </span>
+      {adding && (
+        <span className="discuss-refpick-new" role="group" aria-label="New source">
+          <Line
+            value={draft.work}
+            onChange={(v) => setDraft((d) => ({ ...d, work: v }))}
+            placeholder="Publication, e.g. NATOPS"
+            aria-label="Publication"
+            list={listId}
+            autoFocus
+          />
+          <datalist id={listId}>
+            {works.map((w) => <option key={w} value={w} />)}
+          </datalist>
+          <Line
+            value={draft.loc}
+            onChange={(v) => setDraft((d) => ({ ...d, loc: v }))}
+            placeholder="Section, e.g. §522 — Spin"
+            aria-label="Section"
+          />
+          <Line
+            value={draft.pages}
+            onChange={(v) => setDraft((d) => ({ ...d, pages: v }))}
+            placeholder="Page, e.g. p. 5-33"
+            aria-label="Page the section starts on"
+          />
+          <button type="button" className="discuss-editor-add" onClick={add} disabled={!draft.work.trim()}>
+            Add and cite
+          </button>
+          <button type="button" className="discuss-editor-cancel" onClick={() => setAdding(false)}>
+            Cancel
+          </button>
+          <span className="discuss-editor-hint">
+            Goes into the References at the foot of the page, numbered next, and is cited here.
+          </span>
+        </span>
       )}
-    </span>
+    </>
   );
 }
 

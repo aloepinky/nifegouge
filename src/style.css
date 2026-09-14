@@ -5483,6 +5483,40 @@ textarea.incorrect-answer {
   font-weight: bold;
 }
 
+/* "+ source": a new reference typed where it is cited. */
+.discuss-refpick-add {
+  border: 1px dashed #9db3bc;
+  border-radius: 3px;
+  background: #ffffff;
+  padding: 1px 6px;
+  font-size: 12px;
+  color: #003B4F;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.discuss-refpick-add:hover { border-style: solid; }
+
+.discuss-refpick-new {
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 6px;
+}
+
+.discuss-refpick-new .discuss-editor-line {
+  width: auto;
+  flex: 1 1 150px;
+  padding: 4px 7px;
+  font-size: 13px;
+}
+
+.discuss-refpick-new .discuss-editor-hint { flex: 1 0 100%; margin: 0; }
+
+.discuss-editor-blockhead { flex-wrap: wrap; }
+
 /* ---- the table grid ---- */
 
 .discuss-editor-grid-wrap { overflow-x: auto; margin: 8px 0; }

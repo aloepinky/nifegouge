@@ -480,6 +480,12 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   // and the one step users skip: they read Save as the end of the job. So a save scrolls the
   // page to the banner that says otherwise and puts focus on its Publish button, which is
   // the difference between a warning and a warning that gets seen.
+  // Sources added inside a section or Numbers editor arrive beside the block on Save and join
+  // the page's list in the same commit, so the marker and its entry can never be published apart.
+  const withRefs = (page, added) => (
+    added && added.length ? { ...page, references: [...(page.references || []), ...added] } : page
+  );
+
   const commit = (draftNext) => {
     // A page from before the aircraft and school fields existed is tagged with the
     // syllabus's on its next save, which is what the server requires of every page now.
@@ -694,9 +700,9 @@ function ItemPage({ record, readOnly = false, banner = null }) {
               (editing && editing.kind === 'numbers' ? (
                 <NumbersEditor
                   item={view}
-                  onSave={(rows) => commit({ ...view, numbers: rows })}
+                  onSave={(rows, added) => commit(withRefs({ ...view, numbers: rows }, added))}
                   onCancel={cancel}
-                  check={(rows) => check({ ...view, numbers: rows })}
+                  check={(rows, added) => check(withRefs({ ...view, numbers: rows }, added))}
                 />
               ) : (
                 <NumbersBox
@@ -729,10 +735,10 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                     <SectionEditor
                       section={section}
                       item={view}
-                      onSave={(next) => commit(replaceBlock(view, section.id, next))}
+                      onSave={(next, added) => commit(withRefs(replaceBlock(view, section.id, next), added))}
                       onCancel={cancel}
                       onRemove={() => commit(replaceBlock(view, section.id, null))}
-                      check={(next) => check(replaceBlock(view, section.id, next))}
+                      check={(next, added) => check(withRefs(replaceBlock(view, section.id, next), added))}
                     />
                   ) : (
                     <SectionBody block={section} showCite={!collapsed} />
@@ -763,10 +769,10 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                             section={sub}
                             item={view}
                             isSub
-                            onSave={(next) => commit(replaceBlock(view, sub.id, next))}
+                            onSave={(next, added) => commit(withRefs(replaceBlock(view, sub.id, next), added))}
                             onCancel={cancel}
                             onRemove={() => commit(replaceBlock(view, sub.id, null))}
-                            check={(next) => check(replaceBlock(view, sub.id, next))}
+                            check={(next, added) => check(withRefs(replaceBlock(view, sub.id, next), added))}
                           />
                         ) : (
                           <>

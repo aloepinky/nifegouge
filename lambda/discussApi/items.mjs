@@ -1,6 +1,7 @@
 import { HttpError, parseBody, reply, requireProgram } from './http.mjs';
 import {
   newestItem, itemMeta, itemRevision, itemHistory, createItem, saveItem, setItemHidden,
+  setRevisionAuthor,
 } from './store.mjs';
 import {
   mirrorItem, rebuildItemsIndex, itemRecord, itemKey, deleteKey, presignFigure,
@@ -192,6 +193,25 @@ export async function importItemsHandler(event) {
   // One index rebuild per batch rather than per item.
   await rebuildItemsIndex();
   return ok({ imported, skipped });
+}
+
+// Rewrites the name shown on a page's revisions: every revision authored `from` becomes `to`.
+// For a name that should never have been on a revision; the pages themselves do not change,
+// and the page is re-mirrored if its newest revision was one of them.
+export async function setAuthorHandler(event) {
+  const body = parseBody(event);
+  checkSlug(body.slug);
+  const from = typeof body.from === 'string' ? body.from : '';
+  const to = cleanAuthor(body.to);
+  if (!to) throw new HttpError(400, 'to is required');
+  const meta = await itemMeta(body.slug);
+  if (!meta) throw new HttpError(404, 'No such item');
+  const revs = await setRevisionAuthor(body.slug, from, to);
+  if (revs.includes(meta.latestRev) && !meta.hidden) {
+    const found = await newestItem(body.slug);
+    if (found) await mirrorItem(found.meta, found.row);
+  }
+  return ok({ slug: body.slug, revs });
 }
 
 export async function hideItemHandler(event) {

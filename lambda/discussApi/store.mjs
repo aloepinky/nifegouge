@@ -156,6 +156,24 @@ export async function saveItem(slug, baseRev, item, meta) {
   return { meta: metaRow, row };
 }
 
+// Rewrites the display name on every revision of `slug` that carries `from`. Returns the
+// revisions changed. The document rows are untouched; only who is shown beside them.
+export async function setRevisionAuthor(slug, from, to) {
+  const changed = [];
+  for (const r of await itemHistory(slug)) {
+    if ((r.author || '') !== from) continue;
+    await db().send(new UpdateCommand({
+      TableName: CONFIG.itemsTable,
+      Key: { slug, rev: r.rev },
+      UpdateExpression: 'SET author = :to',
+      ConditionExpression: 'attribute_exists(slug)',
+      ExpressionAttributeValues: { ':to': to },
+    }));
+    changed.push(r.rev);
+  }
+  return changed;
+}
+
 export async function setItemHidden(slug, hidden) {
   try {
     await db().send(new UpdateCommand({

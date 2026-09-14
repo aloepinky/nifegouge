@@ -21,7 +21,7 @@ import { uploadFigure } from './figureUpload';
 // A figure's image comes from the upload and nowhere else: the browser converts it to WebP
 // and the address it lands at is shown, never typed. The figures that shipped with the site
 // under public/ keep the address they have.
-function FigureRow({ figure, index, count, references, slug, onChange, onMove, onRemove }) {
+function FigureRow({ figure, index, count, references, onAddReference, slug, onChange, onMove, onRemove }) {
   const [broken, setBroken] = useState(false);
   const [progress, setProgress] = useState(null);
   const [uploadError, setUploadError] = useState(null);
@@ -51,6 +51,7 @@ function FigureRow({ figure, index, count, references, slug, onChange, onMove, o
         <RefsPicker
           refs={figure.refs}
           references={references}
+          onAddReference={onAddReference}
           onChange={(refs) => set('refs', refs)}
         />
         <RowTools
@@ -108,7 +109,7 @@ function FigureRow({ figure, index, count, references, slug, onChange, onMove, o
 // arrays through anything else means counting commas. Adding or removing a column rewrites
 // every row in the same operation, which is what keeps a row from going ragged: a short row
 // renders with its columns silently shifted and nothing on the page says which cell went.
-function TableRow({ table, index, count, references, onChange, onMove, onRemove }) {
+function TableRow({ table, index, count, references, onAddReference, onChange, onMove, onRemove }) {
   const cols = table.cols || [];
   const rows = table.rows || [];
   const set = (key, value) => onChange({ ...table, [key]: value });
@@ -129,7 +130,7 @@ function TableRow({ table, index, count, references, onChange, onMove, onRemove 
     <div className="discuss-editor-block" data-block={table.id}>
       <div className="discuss-editor-blockhead">
         <span className="discuss-editor-marker">Table {index + 1}</span>
-        <RefsPicker refs={table.refs} references={references} onChange={(v) => set('refs', v)} />
+        <RefsPicker refs={table.refs} references={references} onAddReference={onAddReference} onChange={(v) => set('refs', v)} />
         <label className="discuss-editor-check">
           <input
             type="checkbox"
@@ -221,7 +222,7 @@ function TableRow({ table, index, count, references, onChange, onMove, onRemove 
 // One list item, with its marker beside it the way the page will print it: a number for a
 // numbered list, a bullet otherwise. Sub-items are always bulleted, as on the page.
 function BulletRow({
-  bullet, index, count, references, sectionId, item, numbered,
+  bullet, index, count, references, onAddReference, sectionId, item, numbered,
   onChange, onMove, onRemove, depth = 0,
 }) {
   const subs = bullet.sub || [];
@@ -234,6 +235,7 @@ function BulletRow({
         <RefsPicker
           refs={bullet.refs}
           references={references}
+          onAddReference={onAddReference}
           onChange={(refs) => onChange({ ...bullet, refs })}
         />
         <RowTools
@@ -256,6 +258,7 @@ function BulletRow({
           index={i}
           count={subs.length}
           references={references}
+          onAddReference={onAddReference}
           sectionId={sectionId}
           item={item}
           depth={depth + 1}
@@ -287,10 +290,14 @@ function BulletRow({
 // of its own, every change goes up through `onChange`, and there is no footer — the page
 // form's Save sends everything at once. `item` is then the page as it stands in that form,
 // so an id minted here sees the paragraphs added in a sibling section a moment ago.
+// `onAddReference` is the page form's, when embedded. On its own the editor keeps the sources
+// added while it is open in `added`, numbered after the page's, and hands them up with the
+// section on Save so the page's list grows in the same commit.
 function SectionEditor({
-  section, item, isSub, onSave, onCancel, onRemove, check, embedded, onChange,
+  section, item, isSub, onSave, onCancel, onRemove, check, embedded, onChange, onAddReference,
 }) {
   const [local, setLocal] = useState(() => clone(section));
+  const [added, setAdded] = useState([]);
   useEscape(embedded ? null : onCancel);
   // Adding a paragraph, figure or table scrolls to the new block and puts the cursor in it.
   const focusNew = useFocusNew();
@@ -300,8 +307,15 @@ function SectionEditor({
     ? (next) => onChange(typeof next === 'function' ? next(section) : next)
     : setLocal;
 
-  const problems = !embedded && check ? check(s) : { errors: [], warnings: [] };
-  const refs = item.references || [];
+  const problems = !embedded && check ? check(s, added) : { errors: [], warnings: [] };
+  const refs = [...(item.references || []), ...(embedded ? [] : added)];
+  const addRef = embedded
+    ? onAddReference
+    : (ref) => {
+      const n = refs.length + 1;
+      setAdded((prev) => [...prev, { n, ...ref }]);
+      return n;
+    };
   const set = (key, value) => setS((prev) => ({ ...prev, [key]: value }));
 
   // The anchor id is derived from the heading and never typed — there is no field for it and
@@ -349,6 +363,7 @@ function SectionEditor({
         <RefsPicker
           refs={s.refs}
           references={refs}
+          onAddReference={addRef}
           onChange={(v) => set('refs', v)}
           label="Source for the whole section"
         />
@@ -388,6 +403,7 @@ function SectionEditor({
               index={i}
               count={figures.length}
               references={refs}
+              onAddReference={addRef}
               slug={item.slug}
               onChange={(next) => setList('figures', figures.map((x, j) => (j === i ? next : x)))}
               onMove={(from, to) => setList('figures', move(figures, from, to))}
@@ -407,6 +423,7 @@ function SectionEditor({
               index={i}
               count={tables.length}
               references={refs}
+              onAddReference={addRef}
               onChange={(next) => setList('tables', tables.map((x, j) => (j === i ? next : x)))}
               onMove={(from, to) => setList('tables', move(tables, from, to))}
               onRemove={(j) => setList('tables', tables.filter((_, k) => k !== j))}
@@ -426,6 +443,7 @@ function SectionEditor({
                 <RefsPicker
                   refs={p.refs}
                   references={refs}
+                  onAddReference={addRef}
                   onChange={(v) => setList('paras', paras.map((x, j) => (j === i ? { ...x, refs: v } : x)))}
                 />
                 <RowTools
@@ -457,6 +475,7 @@ function SectionEditor({
               index={i}
               count={items.length}
               references={refs}
+              onAddReference={addRef}
               sectionId={s.id}
               item={item}
               numbered={!!s.numbered}
@@ -512,7 +531,7 @@ function SectionEditor({
           onSave={() => {
             const out = clone(s);
             delete out.__new;
-            onSave(out);
+            onSave(out, added);
           }}
           onCancel={onCancel}
           errors={problems.errors}

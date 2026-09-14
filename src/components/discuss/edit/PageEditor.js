@@ -151,6 +151,13 @@ function PageEditor({ item, onSave, onCancel, check }) {
   const setRefs = (next) => set('references', next.map((r, i) => ({ ...r, n: i + 1 })));
   const setRef = (i, key, value) => setRefs(refs.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
   const removeRef = (i) => setRefs(refs.filter((_, j) => j !== i));
+  // A source added from inside a section or the Numbers box: appended, numbered next, and
+  // its number handed back so the block that asked can cite it.
+  const addReference = (ref) => {
+    const n = refs.length + 1;
+    setRefs([...refs, { n, ...ref }]);
+    return n;
+  };
 
   const save = () => {
     const out = clone(p);
@@ -260,6 +267,7 @@ function PageEditor({ item, onSave, onCancel, check }) {
       <NumbersEditor
         embedded
         item={p}
+        onAddReference={addReference}
         onChange={(rows) => set('numbers', rows && rows.length ? rows : undefined)}
       />
 
@@ -281,7 +289,13 @@ function PageEditor({ item, onSave, onCancel, check }) {
             onShift={() => demote(i)}
             shiftBlocked={demoteBlocked(s, i)}
           />
-          <SectionEditor embedded section={s} item={p} onChange={(next) => setSection(i, next)} />
+          <SectionEditor
+            embedded
+            section={s}
+            item={p}
+            onAddReference={addReference}
+            onChange={(next) => setSection(i, next)}
+          />
 
           {(s.subsections || []).map((sub, j) => (
             <div className="discuss-editor-section discuss-editor-section--sub" key={sub.id}>
@@ -300,6 +314,7 @@ function PageEditor({ item, onSave, onCancel, check }) {
                 isSub
                 section={sub}
                 item={p}
+                onAddReference={addReference}
                 onChange={(next) => setSubs(i, s.subsections.map((x, k) => (k === j ? next : x)))}
               />
             </div>

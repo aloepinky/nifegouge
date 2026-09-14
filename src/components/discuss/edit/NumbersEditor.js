@@ -12,14 +12,24 @@ import { clone } from './draft';
 import { newNumberId } from './ids';
 import { Line, RefsPicker, RowTools, EditorActions, ConfirmButton, useEscape, move } from './fields';
 
-function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange }) {
+function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange, onAddReference }) {
   const [local, setLocal] = useState(() => clone(item.numbers || []));
+  // Sources added while the box is edited on its own, handed up with the rows on Save.
+  const [added, setAdded] = useState([]);
   useEscape(embedded ? null : onCancel);
 
   const rows = embedded ? item.numbers || [] : local;
   const setRows = embedded ? onChange : setLocal;
 
-  const problems = !embedded && check ? check(rows) : { errors: [], warnings: [] };
+  const problems = !embedded && check ? check(rows, added) : { errors: [], warnings: [] };
+  const refs = [...(item.references || []), ...(embedded ? [] : added)];
+  const addRef = embedded
+    ? onAddReference
+    : (ref) => {
+      const n = refs.length + 1;
+      setAdded((prev) => [...prev, { n, ...ref }]);
+      return n;
+    };
   const set = (i, key, value) => setRows(rows.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
 
   return (
@@ -57,7 +67,8 @@ function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange }) {
           <Line value={n.value} onChange={(v) => set(i, 'value', v)} placeholder="Value" />
           <RefsPicker
             refs={n.refs}
-            references={item.references}
+            references={refs}
+            onAddReference={addRef}
             onChange={(v) => set(i, 'refs', v)}
           />
           <RowTools
@@ -94,7 +105,7 @@ function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange }) {
       {!embedded && (
         <EditorActions
           draft
-          onSave={() => onSave(rows.length ? rows : undefined)}
+          onSave={() => onSave(rows.length ? rows : undefined, added)}
           onCancel={onCancel}
           errors={problems.errors}
           warnings={problems.warnings}

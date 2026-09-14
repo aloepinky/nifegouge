@@ -6,6 +6,7 @@ import {
 import {
   getItemHandler, itemHistoryHandler, itemRevisionHandler, saveItemHandler, createItemHandler,
   restoreItemHandler, figureUploadUrlHandler, importItemsHandler, hideItemHandler,
+  setAuthorHandler,
 } from './items.mjs';
 import {
   rebuildItemsIndex, rebuildSyllabiIndex, remirrorSyllabi, mirrorItem,
@@ -34,6 +35,7 @@ import { tagProgramHandler } from './program.mjs';
 //   POST import-items        (admin)       { items, overwrite? }                      -> { imported, skipped }
 //   POST import-syllabus     (admin)       { id, name, doc, replace? }                -> { id, rev }
 //   POST hide-item           (admin)       { slug, hidden }
+//   POST set-author          (admin)       { slug, from, to }                            -> { revs }
 //   POST hide-syllabus       (admin)       { id, hidden }
 //   POST rebuild-index       (admin)       { what?: 'items'|'syllabi'|'all', remirror?: bool } -> { items, syllabi }
 //   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
@@ -74,6 +76,7 @@ const ROUTES = {
   'import-items': { method: 'POST', admin: true, run: importItemsHandler },
   'import-syllabus': { method: 'POST', admin: true, run: importSyllabusHandler },
   'hide-item': { method: 'POST', admin: true, run: hideItemHandler },
+  'set-author': { method: 'POST', admin: true, run: setAuthorHandler },
   'hide-syllabus': { method: 'POST', admin: true, run: hideSyllabusHandler },
   'rebuild-index': { method: 'POST', admin: true, run: rebuildIndexHandler },
   'tag-program': { method: 'POST', admin: true, run: tagProgramHandler },
