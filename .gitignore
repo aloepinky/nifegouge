@@ -46,3 +46,8 @@ lambda/**/function.zip
 
 # Local state for tools/discuss-dev-server.js
 /_discuss-dev
+
+# Discuss audit: local only, never committed
+tools/discuss-audit.js
+tools/discuss-audit.md
+tools/discuss-audit.json
