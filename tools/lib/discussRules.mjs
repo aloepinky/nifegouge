@@ -523,6 +523,9 @@ export function structureViolations(item) {
 
   out.push(...sourcingViolations(item));
   out.push(...tableViolations(item));
+  out.push(...retiredContent(item));
+  out.push(...ledeRepeated(item));
+  out.push(...natopsCitations(item));
 
   return out;
 }
@@ -566,6 +569,82 @@ export function tableViolations(item) {
     for (const sub of s.subsections || []) check(sub, `${s.title} / ${sub.title}`);
   }
   return out;
+}
+
+// Material the site owner has ruled off the pages. Each entry was cut on purpose and then put
+// back by a later rewrite that found it in a publication and took its presence there as
+// licence, which is why it is an error rather than advice: finding it in the 3710 or an old
+// FTI edition is how it came back. Add to this list whenever a removal is a decision rather
+// than a tidy-up, with the reason, so the next writer meets the reason before the source.
+export const RETIRED = [
+  {
+    // Narrow on purpose: WAAS as a satellite system is ordinary AIM material (NOTAM categories
+    // name it), so the rule fires on the receiver classes and planning allowances, not the word.
+    pattern: /\bTSO-C1(29|45|46|96)\b|\bnon-WAAS\b|\bWAAS (GPS )?receivers?\b|\bLPV[- ]capable\b/i,
+    why: 'the 3710 GPS receiver allowances are fleet material; students plan GPS at the alternate to the I FTI §1001 rule alone',
+  },
+  {
+    pattern: /\binverse[- ]C\b/i,
+    why: 'the inverse C circling icon was removed from charts in August 2025; the six-row radii table by category and circling MDA is the only current one',
+  },
+];
+
+// Every rendered string plus the table cells and alt text textsOf leaves out, since a retired
+// rule can sit in a table as easily as in a paragraph.
+export function retiredContent(item) {
+  const out = [];
+  const strings = textsOf(item).map(({ where, text }) => ({ where, text }));
+  const extra = (b, prefix) => {
+    for (const t of b.tables || []) {
+      (t.rows || []).forEach((row, i) => row.forEach((cell) => strings.push({ where: `${prefix}/tbl:${t.id} row ${i + 1}`, text: String(cell) })));
+    }
+    for (const f of b.figures || []) {
+      strings.push({ where: `${prefix}/fig:${f.id} alt`, text: f.alt || '' });
+      for (const img of f.images || []) strings.push({ where: `${prefix}/fig:${f.id} alt`, text: img.alt || '' });
+    }
+  };
+  for (const s of item.sections || []) {
+    extra(s, s.id);
+    for (const sub of s.subsections || []) extra(sub, sub.id);
+  }
+  for (const { where, text } of strings) {
+    for (const r of RETIRED) {
+      const m = text.match(r.pattern);
+      if (m) out.push(['error', 'retired-content', `${where}: "${m[0]}" (${r.why})`]);
+    }
+  }
+  return out;
+}
+
+// LEDE REPEATED. The lede summarizes the page; a sentence of it copied word for word into a
+// section says the same thing twice in one screen. Sentences split at a period or semicolon
+// (a period inside a number or an abbreviation is not a boundary), are compared case- and
+// whitespace-insensitively, and ones under six words are ignored, since a short sentence
+// recurring is as likely to be a checklist phrase as a copy.
+const LEDE_MIN_WORDS = 6;
+const plain = (t) => t.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+export function ledeRepeated(item) {
+  if (!item.lede) return [];
+  const sentences = (item.lede.match(/(?:[^.;]|\.(?=\w))+/g) || [])
+    .map(plain)
+    .filter((x) => words(x).length >= LEDE_MIN_WORDS);
+  const out = [];
+  for (const { kind, where, text } of textsOf(item)) {
+    if (where === 'lede' || kind === 'label') continue;
+    const body = plain(text);
+    const hit = sentences.find((x) => body.includes(x));
+    if (hit) out.push(['info', 'lede-repeated', `${where}: "${hit.slice(0, 60)}"`]);
+  }
+  return out;
+}
+
+// NATOPS CITATION. NATOPS numbers its chapters but not its sections, so a reference names the
+// chapter, the section as printed and the section's first page: `Ch. 3 — Engine Failure`.
+export function natopsCitations(item) {
+  return (item.references || [])
+    .filter((r) => r.work === 'NATOPS' && !/^Ch\. [A-Z]?\d+(-\d+)? — \S/.test(r.loc || ''))
+    .map((r) => ['info', 'natops-citation', `ref ${r.n}: ${r.loc}`]);
 }
 
 // ---------------------------------------------------------------------------------------
