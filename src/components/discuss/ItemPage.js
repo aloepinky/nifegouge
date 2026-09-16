@@ -16,6 +16,7 @@ import PublishDialog from './edit/PublishDialog';
 import SectionEditor from './edit/SectionEditor';
 import NumbersEditor from './edit/NumbersEditor';
 import PageEditor from './edit/PageEditor';
+import { NWC_LABELS } from './nwc';
 
 // The one piece of inline markup the item data carries: `**bold**`. It exists for mnemonics —
 // the C-R-A-F-T of a clearance readback, the L-D-D-H-A of an approach setup — where the point
@@ -287,7 +288,9 @@ function SectionBody({ block, showCite }) {
         </p>
       ))}
       {block.items && block.items.length > 0 && (
-        block.numbered ? (
+        block.ep ? (
+          <EpList items={block.items} showCite={showCite} />
+        ) : block.numbered ? (
           <ol className="discuss-list">
             {block.items.map((entry) => (
               <Bullet key={entry.id} item={entry} showCite={showCite} />
@@ -305,15 +308,43 @@ function SectionBody({ block, showCite }) {
   );
 }
 
-function Bullet({ item, showCite }) {
+// An emergency procedure: numbered steps, with its notes, warnings and cautions drawn as they are
+// on the EPs/Limits page. Every step carries an explicit `value` because an NWC at the top level
+// is an <li> of the same list and must not take a number.
+function EpList({ items, showCite }) {
+  let step = 0;
   return (
-    <li className="discuss-bullet">
+    <ol className="discuss-list discuss-ep">
+      {items.map((entry) => (
+        entry.kind
+          ? <Nwc key={entry.id} entry={entry} showCite={showCite} />
+          : <Bullet key={entry.id} item={entry} showCite={showCite} value={++step} ep />
+      ))}
+    </ol>
+  );
+}
+
+function Nwc({ entry, showCite }) {
+  return (
+    <li className={`discuss-nwc discuss-nwc--${entry.kind}`}>
+      <strong className="discuss-nwc-label">{NWC_LABELS[entry.kind]}:</strong>{' '}
+      {inline(entry.text)}
+      {showCite && <Cite refs={entry.refs} />}
+    </li>
+  );
+}
+
+function Bullet({ item, showCite, value, ep }) {
+  return (
+    <li className="discuss-bullet" value={value}>
       {inline(item.text)}
       {showCite && <Cite refs={item.refs} />}
       {item.sub && item.sub.length > 0 && (
         <ul className="discuss-sublist">
           {item.sub.map((s) => (
-            <Bullet key={s.id} item={s} showCite={showCite} />
+            ep && s.kind
+              ? <Nwc key={s.id} entry={s} showCite={showCite} />
+              : <Bullet key={s.id} item={s} showCite={showCite} />
           ))}
         </ul>
       )}

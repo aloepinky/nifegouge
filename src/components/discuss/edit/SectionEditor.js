@@ -17,6 +17,7 @@ import {
   Grow, Line, RefsPicker, RowTools, SlugList, EditorActions, useEscape, useFocusNew, move, BOLD_HINT,
 } from './fields';
 import { uploadFigure } from './figureUpload';
+import { NWC_KINDS, NWC_LABELS, toEp, fromEp } from '../nwc';
 
 // A figure's image comes from the upload and nowhere else: the browser converts it to WebP
 // and the address it lands at is shown, never typed. The figures that shipped with the site
@@ -297,17 +298,43 @@ function TableRow({ table, index, count, references, onAddReference, onChange, o
 
 // One list item, with its marker beside it the way the page will print it: a number for a
 // numbered list, a bullet otherwise. Sub-items are always bulleted, as on the page.
+//
+// In an EP, `stepMarker` is the step's number, counted by the list because notes, warnings and
+// cautions take none. A note, warning or caution shows its label as its marker and can be
+// switched between the three; a step offers all three beneath it.
 function BulletRow({
-  bullet, index, count, references, onAddReference, sectionId, item, numbered,
-  onChange, onMove, onRemove, depth = 0,
+  bullet, index, count, references, onAddReference, sectionId, item, numbered, ep, stepMarker,
+  onChange, onMove, onRemove, focusNew, depth = 0,
 }) {
   const subs = bullet.sub || [];
   const setSubs = (next) => onChange({ ...bullet, sub: next.length ? next : undefined });
-  const marker = depth === 0 && numbered ? `${index + 1}.` : '•';
+  const nwc = ep && bullet.kind;
+  let marker = depth === 0 && numbered ? `${index + 1}.` : '•';
+  if (ep && depth === 0) marker = stepMarker;
+  if (nwc) marker = NWC_LABELS[bullet.kind];
+
+  const addSub = (extra) => {
+    const id = newSubBulletId(item, bullet);
+    setSubs([...subs, { id, text: '', ...extra }]);
+    if (focusNew) focusNew(id);
+  };
 
   return (
-    <div className={`discuss-editor-block${depth ? ' discuss-editor-block--sub' : ''}`} data-block={bullet.id}>
+    <div
+      className={`discuss-editor-block${depth ? ' discuss-editor-block--sub' : ''}${nwc ? ` discuss-editor-nwc discuss-nwc--${bullet.kind}` : ''}`}
+      data-block={bullet.id}
+    >
       <div className="discuss-editor-blockhead">
+        {nwc && (
+          <select
+            className="discuss-editor-select"
+            value={bullet.kind}
+            onChange={(e) => onChange({ ...bullet, kind: e.target.value })}
+            aria-label="Warning, caution or note"
+          >
+            {NWC_KINDS.map((k) => <option key={k} value={k}>{NWC_LABELS[k].toLowerCase()}</option>)}
+          </select>
+        )}
         <RefsPicker
           refs={bullet.refs}
           references={references}
@@ -319,11 +346,11 @@ function BulletRow({
           count={count}
           onMove={onMove}
           onRemove={onRemove}
-          what={depth ? 'sub-item' : 'list item'}
+          what={nwc ? NWC_LABELS[bullet.kind].toLowerCase() : depth ? 'sub-item' : ep ? 'step' : 'list item'}
         />
       </div>
       <div className="discuss-editor-listrow">
-        <span className="discuss-editor-listmark" aria-hidden="true">{marker}</span>
+        <span className={`discuss-editor-listmark${nwc ? ' discuss-editor-listmark--nwc' : ''}`} aria-hidden="true">{marker}</span>
         <Grow value={bullet.text} onChange={(v) => onChange({ ...bullet, text: v })} />
       </div>
 
@@ -337,6 +364,8 @@ function BulletRow({
           onAddReference={onAddReference}
           sectionId={sectionId}
           item={item}
+          ep={ep}
+          focusNew={focusNew}
           depth={depth + 1}
           onChange={(next) => setSubs(subs.map((x, j) => (j === i ? next : x)))}
           onMove={(from, to) => setSubs(move(subs, from, to))}
@@ -345,14 +374,17 @@ function BulletRow({
       ))}
 
       {/* Two levels is the limit — an item page has no H4 and no third-level bullet. */}
-      {depth === 0 && (
-        <button
-          type="button"
-          className="discuss-editor-add discuss-editor-add--sub"
-          onClick={() => setSubs([...subs, { id: newSubBulletId(item, bullet), text: '' }])}
-        >
-          + sub-item
-        </button>
+      {depth === 0 && !nwc && (
+        <div className="discuss-editor-adds discuss-editor-adds--sub">
+          {ep && NWC_KINDS.map((k) => (
+            <button key={k} type="button" className="discuss-editor-add" onClick={() => addSub({ kind: k })}>
+              + {NWC_LABELS[k].toLowerCase()}
+            </button>
+          ))}
+          <button type="button" className="discuss-editor-add" onClick={() => addSub()}>
+            + sub-item
+          </button>
+        </div>
       )}
     </div>
   );
@@ -424,6 +456,17 @@ function SectionEditor({
     focusNew(block.id);
   };
 
+  // A list is bulleted, numbered, or an EP. Turning one into an EP makes every entry and
+  // paragraph that opens NOTE:, WARNING: or CAUTION: into one of those; turning it back puts the
+  // label back into the text.
+  const listStyle = s.ep ? 'ep' : s.numbered ? 'numbered' : 'bullets';
+  const setListStyle = (next) => setS((prev) => {
+    if (next === 'ep') return prev.ep ? prev : toEp(prev);
+    return fromEp(prev, next === 'numbered');
+  });
+  let stepCount = 0;
+  const stepMarkers = items.map((b) => (b.kind ? null : `${++stepCount}.`));
+
   return (
     <div
       className={embedded ? 'discuss-editor-embedded' : 'discuss-editor'}
@@ -443,18 +486,21 @@ function SectionEditor({
           onChange={(v) => set('refs', v)}
           label="Source for the whole section"
         />
-        <label className="discuss-editor-check">
-          <input
-            type="checkbox"
-            checked={!!s.numbered}
-            onChange={(e) => set('numbered', e.target.checked || undefined)}
-          />
-          numbered list
-        </label>
+        {items.length > 0 && (
+          <label className="discuss-editor-check">
+            List
+            <select className="discuss-editor-select" value={listStyle} onChange={(e) => setListStyle(e.target.value)}>
+              <option value="bullets">bulleted</option>
+              <option value="numbered">numbered</option>
+              <option value="ep">emergency procedure</option>
+            </select>
+          </label>
+        )}
       </div>
       <p className="discuss-editor-hint">
         A source chosen here is cited once, at the foot of the section, instead of on every
-        paragraph. Tick numbered list when the order of the list matters.
+        paragraph. Number a list when its order matters. An emergency procedure numbers its steps
+        and shows its notes, warnings and cautions the way the EPs page does.
       </p>
 
       <SlugList
@@ -542,7 +588,7 @@ function SectionEditor({
 
       {items.length > 0 && (
         <div className="discuss-editor-group">
-          <h4>{s.numbered ? 'Numbered list' : 'List'}</h4>
+          <h4>{s.ep ? 'Emergency procedure' : s.numbered ? 'Numbered list' : 'List'}</h4>
           <p className="discuss-editor-hint">{BOLD_HINT}</p>
           {items.map((b, i) => (
             <BulletRow
@@ -555,6 +601,9 @@ function SectionEditor({
               sectionId={s.id}
               item={item}
               numbered={!!s.numbered}
+              ep={!!s.ep}
+              stepMarker={stepMarkers[i]}
+              focusNew={focusNew}
               onChange={(next) => setList('items', items.map((x, j) => (j === i ? next : x)))}
               onMove={(from, to) => setList('items', move(items, from, to))}
               onRemove={(j) => setList('items', items.filter((_, k) => k !== j))}
@@ -576,8 +625,35 @@ function SectionEditor({
           className="discuss-editor-add"
           onClick={() => addBlock('items', { id: newBulletId(item, s, s.id), text: '' })}
         >
-          + list item
+          {s.ep ? '+ step' : '+ list item'}
         </button>
+        {items.length === 0 && (
+          <button
+            type="button"
+            className="discuss-editor-add"
+            onClick={() => {
+              const block = { id: newBulletId(item, s, s.id), text: '' };
+              setS((prev) => {
+                const ep = toEp(prev);
+                return { ...ep, items: [...(ep.items || []), block] };
+              });
+              focusNew(block.id);
+            }}
+          >
+            + EP
+          </button>
+        )}
+        {s.ep && NWC_KINDS.map((k) => (
+          <button
+            key={k}
+            type="button"
+            className="discuss-editor-add"
+            title={`A ${NWC_LABELS[k].toLowerCase()} for the whole procedure`}
+            onClick={() => addBlock('items', { id: newBulletId(item, s, s.id), kind: k, text: '' })}
+          >
+            + {NWC_LABELS[k].toLowerCase()}
+          </button>
+        ))}
         <button
           type="button"
           className="discuss-editor-add"

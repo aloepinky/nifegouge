@@ -480,7 +480,7 @@ export function structureViolations(item) {
 
   // A Procedure that is a list must be an ordered one — the sequence is the content. A
   // Procedure written as prose (the I FTI states several that way) is left alone.
-  if (proc && (proc.items || []).length && !proc.numbered) {
+  if (proc && (proc.items || []).length && !proc.numbered && !proc.ep) {
     out.push(['error', 'procedure-not-numbered', 'Procedure']);
   }
 
