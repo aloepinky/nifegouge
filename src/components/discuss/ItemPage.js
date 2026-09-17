@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { generatedFor } from './GENERATED';
 import { getItemMeta } from './registry';
-import { useSyllabus } from './SyllabusContext';
+import { DISCUSS_BASE, useSyllabus } from './SyllabusContext';
 import { rememberItem, refreshItem } from './discussApi';
 import ItemLink from './ItemLink';
 import { getSystemTab } from '../systems/systemTabs';
@@ -402,28 +402,56 @@ function EventStrip({ event, position }) {
 // is generated against — on the canonical URL that is every event listing the item, because
 // F4290 and CS4101 genuinely get different answers.
 function GeneratedLists({ groups }) {
+  const navigate = useNavigate();
   if (!groups || !groups.length) return null;
   const many = groups.length > 1;
+  // A random draw from the whole list the event gets, not only the part shown under
+  // "All of the above and the following".
+  const random = (g) => {
+    const pick = g.entries[Math.floor(Math.random() * g.entries.length)];
+    navigate(`${DISCUSS_BASE}/${pick.item.slug}`);
+  };
   return (
     <>
-      {groups.map((g) => (
-        <section className="discuss-section" id={genId(g)} key={g.anchor.id}>
-          <h2>{genTitle(g, many)}</h2>
-          {g.entries.length === 0 ? (
-            <p className="discuss-para">
-              No {genNoun(g)} pages are written for this scope yet.
-            </p>
-          ) : (
-            <ul className="discuss-seealso">
-              {g.entries.map((e) => (
-                <li key={e.item.slug}>
-                  <ItemLink slug={e.item.slug}>{e.item.title}</ItemLink>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      ))}
+      {groups.map((g) => {
+        const shown = g.added || g.entries;
+        return (
+          <section className="discuss-section" id={genId(g)} key={g.anchor.id}>
+            <h2>
+              {genTitle(g, many)}
+              {g.entries.length > 0 && (
+                <span className="discuss-edit-link">
+                  <span className="discuss-edit-bracket">[</span>
+                  <button type="button" onClick={() => random(g)}>random page</button>
+                  <span className="discuss-edit-bracket">]</span>
+                </span>
+              )}
+            </h2>
+            {g.entries.length === 0 ? (
+              <p className="discuss-para">
+                No {genNoun(g)} pages are written for this scope yet.
+              </p>
+            ) : (
+              <>
+                {g.includesAbove && (
+                  <p className="discuss-para">
+                    {shown.length ? 'All of the above and the following:' : 'All of the above.'}
+                  </p>
+                )}
+                {shown.length > 0 && (
+                  <ul className="discuss-seealso">
+                    {shown.map((e) => (
+                      <li key={e.item.slug}>
+                        <ItemLink slug={e.item.slug}>{e.item.title}</ItemLink>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </section>
+        );
+      })}
     </>
   );
 }
