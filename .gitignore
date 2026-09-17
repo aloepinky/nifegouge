@@ -37,8 +37,16 @@ yarn-error.log*
 .claude/settings.local.json
 CLAUDE.md
 
-#AWS lambda
+# Python bytecode from tools/convert-images.py and tools/extract-jppt-flow.py. Regenerated on
+# every run and tied to the interpreter version, so it is never worth committing.
+__pycache__/
+*.py[cod]
+
+# AWS lambda: vendored dependencies. Each of these three has a package.json, so the folder is
+# rebuilt with `npm install` in it; what gets zipped up to the console is the local copy.
 lambda/submitDoc/node_modules/
+lambda/tw4RegisterUser/node_modules/
+lambda/tw4VerifyUser/node_modules/
 
 # discussApi: the lint rules are copied in from tools/lib at deploy time; a build artefact
 lambda/discussApi/discussRules.mjs

@@ -8,7 +8,9 @@ import StageNav from './StageNav';
 import SearchBox from './SearchBox';
 import HistoryPage from './HistoryPage';
 import CreatePanel from './edit/CreatePanel';
-import { DISCUSS_BASE, DELTA_ID, SyllabusContext, fromDoc, useSyllabus } from './SyllabusContext';
+import {
+  DISCUSS_BASE, DELTA_ID, STYLE_GUIDE_DRAFT, SyllabusContext, fromDoc, useSyllabus,
+} from './SyllabusContext';
 import { useRemoteSyllabus, useSyllabusList, useItem } from './discussApi';
 import { DiscussDataProvider, useDiscussData, useDelta } from './DiscussData';
 import { programLabel } from './program';
@@ -18,6 +20,9 @@ import { SelectedSyllabusContext, recalledSyllabus, rememberSyllabus } from './R
 // someone opens them.
 const UploadPage = lazy(() => import('./upload/UploadPage'));
 const EditFlowPage = lazy(() => import('./upload/EditFlowPage'));
+// Lazy for a second reason: while the guide is a draft it has no route on the deployed site,
+// and this keeps it out of the bundle every reader downloads.
+const StyleGuide = lazy(() => import('./StyleGuide'));
 
 // Delta Primary is always offered; published syllabi join it from the mirror's list.
 function SyllabusPicker() {
@@ -65,7 +70,7 @@ function Index() {
         </header>
 
         <p className="discuss-syllabus-note">
-          {programLabel(s) ? `${programLabel(s)}. ` : ''}
+          {programLabel(s) ? `${programLabel(s)}${s.sourceDate ? `, ${s.sourceDate}` : ''}. ` : ''}
           {s.builtIn ? '' : 'Generated from an uploaded JPPT. '}
           If the chart does not match the publication,{' '}
           <Link to={`${s.base}/edit`}>edit the flow</Link>.
@@ -78,6 +83,16 @@ function Index() {
           <h2>Stages</h2>
           <StageNav />
         </section>
+
+        {/* The one place someone who has not opened a page yet is told the pages are theirs to
+            fix, and where the guide to writing one lives. */}
+        {STYLE_GUIDE_DRAFT && (
+          <p className="discuss-foot">
+            Anyone can edit these pages, and every revision is kept. The{' '}
+            <Link to={`${DISCUSS_BASE}/style`}>style guide</Link> says how a page is written and
+            how its sources are cited.
+          </p>
+        )}
       </article>
     </div>
   );
@@ -195,6 +210,8 @@ function DiscussBody({ mode }) {
           <Link to={DISCUSS_BASE}>Back to Delta Primary</Link>
         </NotFound>
       );
+  } else if (mode === 'style') {
+    body = <StyleGuide />;
   } else if (mode === 'upload') {
     body = <UploadPage />;
   } else if (mode === 'edit') {

@@ -1,72 +1,15 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { upsertItemMeta } from './registry';
 import { DELTA_ID } from './SyllabusContext';
+import { call, post, readMirror, makeStore } from '../serverApi';
 
-// Everything the Discuss tab reads and writes over the network.
-//
-// Reads come from the S3 mirror that lambda/discussApi keeps: pre-gzipped JSON, revalidated
-// with an ETag on every load, no Lambda cold start between a click and a page. Writes go to
-// the API and the mirror is updated before the response comes back, so a read after a write
-// sees the write. Both bases can be pointed at tools/discuss-dev-server.js with the two
-// REACT_APP_ variables.
-//
-// Errors are normalised the way syllabusApi.js did it: `.status` and `.data` on the Error so a
-// caller can branch on a 404 or a 409 without parsing a message.
-
-export const API_BASE_URL = process.env.REACT_APP_DISCUSS_API
-  || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss';
-export const MIRROR_BASE_URL = process.env.REACT_APP_DISCUSS_MIRROR
-  || 'https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com';
+// Everything the Discuss tab reads and writes over the network: what an item and a syllabus
+// record are, how they are cached and when they are refetched. The transport under all of it
+// — the two bases, the `.status`/`.data` error contract, the store factory and the author
+// name — is shared with the jet log page and lives in ../serverApi.
 
 export { DELTA_ID };
-
-// ---------------------------------------------------------------------------------------
-// Transport
-
-async function call(path, options) {
-  let response;
-  try {
-    response = await fetch(`${API_BASE_URL}/${path}`, options);
-  } catch (err) {
-    throw new Error('Could not reach the server. Check your connection and try again.');
-  }
-  let data = {};
-  try {
-    data = await response.json();
-  } catch (err) {
-    // An empty or non-JSON body still has a status worth reporting.
-  }
-  if (!response.ok || data.success === false) {
-    const error = new Error(data.error || `The server answered ${response.status}.`);
-    error.status = response.status;
-    error.data = data;
-    throw error;
-  }
-  return data;
-}
-
-const post = (path, body) => call(path, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(body),
-});
-
-// null on a 404, which is how a missing page or a hidden one reads from the mirror.
-async function readMirror(key) {
-  let response;
-  try {
-    response = await fetch(`${MIRROR_BASE_URL}/${key}`, { cache: 'no-cache' });
-  } catch (err) {
-    throw new Error('Could not reach the server. Check your connection and try again.');
-  }
-  if (response.status === 404 || response.status === 403) return null;
-  if (!response.ok) {
-    const error = new Error(`The server answered ${response.status}.`);
-    error.status = response.status;
-    throw error;
-  }
-  return response.json();
-}
+export { API_BASE_URL, MIRROR_BASE_URL, getAuthor, setAuthor } from '../serverApi';
 
 // ---------------------------------------------------------------------------------------
 // Reads
@@ -95,29 +38,6 @@ export function listSyllabi() {
 }
 
 // ---------------------------------------------------------------------------------------
-// A tiny store: one Map per kind, and subscribers so a write re-renders whoever is showing
-// the thing written.
-
-function makeStore() {
-  const map = new Map();
-  const subs = new Set();
-  return {
-    get: (key) => map.get(key),
-    has: (key) => map.has(key),
-    set: (key, value) => {
-      map.set(key, value);
-      subs.forEach((fn) => fn(key));
-    },
-    delete: (key) => {
-      map.delete(key);
-      subs.forEach((fn) => fn(key));
-    },
-    subscribe: (fn) => {
-      subs.add(fn);
-      return () => subs.delete(fn);
-    },
-  };
-}
 
 const items = makeStore();
 const syllabi = makeStore();
@@ -332,24 +252,3 @@ export function useSyllabusList() {
   return list;
 }
 
-// ---------------------------------------------------------------------------------------
-// The display name a revision is attributed to. Optional, remembered in this browser.
-
-const AUTHOR_KEY = 'discussAuthor';
-
-export function getAuthor() {
-  try {
-    return localStorage.getItem(AUTHOR_KEY) || '';
-  } catch {
-    return '';
-  }
-}
-
-export function setAuthor(name) {
-  try {
-    if (name) localStorage.setItem(AUTHOR_KEY, name);
-    else localStorage.removeItem(AUTHOR_KEY);
-  } catch {
-    // Private mode. The name still goes out with this publish.
-  }
-}

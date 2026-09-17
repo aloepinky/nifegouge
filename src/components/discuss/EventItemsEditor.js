@@ -124,9 +124,10 @@ function EventItemsEditor({ event, onSaved, onCancel }) {
                   aria-label="Page"
                   onChange={(e) => set(i, { slug: e.target.value })}
                 />
-                <span className={`discuss-editor-resolve${meta ? '' : ' is-missing'}`}>
-                  {meta ? meta.title : r.slug ? 'no such page' : ''}
-                </span>
+                {/* Only the failure is worth saying. The page's title used to print here,
+                    from when the list showed it; the row's own name is what shows now, so
+                    echoing the title beside every row said nothing about this list. */}
+                {r.slug && !meta && <span className="discuss-editor-resolve is-missing">no such page</span>}
               </>
             )}
             {r.kind === 'href' && (

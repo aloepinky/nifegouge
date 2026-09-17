@@ -1,21 +1,26 @@
 # discussApi
 
-The backend for the Discuss tab: item pages, syllabus documents, figure uploads and the admin
-operations. One Lambda behind one API Gateway proxy resource. Every write lands in DynamoDB
-and is mirrored to a public S3 bucket; the site reads only the bucket.
+The backend for the Discuss tab — item pages, syllabus documents, figure uploads and the admin
+operations — and for the shared jet logs the jet log page offers under Preset Jet Logs. One
+Lambda behind one API Gateway proxy resource. Every write lands in DynamoDB and is mirrored to
+a public S3 bucket; the site reads only the bucket.
+
+Jet logs share this function rather than having their own because they share everything that
+matters: the revision model, the bucket, the admin token and the deploy.
 
 The deploy workflow (`.github/workflows/deploy-lambda.yml`) only updates code. Everything
 below is created once, by hand, in the AWS console for `us-east-2`.
 
 ## 1. DynamoDB
 
-Two tables, on-demand capacity, everything else default. Create whichever does not exist yet
+Three tables, on-demand capacity, everything else default. Create whichever does not exist yet
 (the older `discussSyllabi` function referenced `DiscussSyllabi`, but check that it was ever made):
 
 | Table | Partition key | Sort key |
 |---|---|---|
 | `DiscussItems` | `slug` (String) | `rev` (Number) |
 | `DiscussSyllabi` | `syllabusId` (String) | `rev` (Number) |
+| `JetLogs` | `logId` (String) | `rev` (Number) |
 
 ## 2. S3
 
@@ -78,7 +83,8 @@ of that page (`arn:aws:iam::ACCOUNT_ID:role/...`), and the bucket name if you ch
       ],
       "Resource": [
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/DiscussItems",
-        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/DiscussSyllabi"
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/DiscussSyllabi",
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/JetLogs"
       ]
     },
     {
@@ -91,6 +97,10 @@ of that page (`arn:aws:iam::ACCOUNT_ID:role/...`), and the bucket name if you ch
 ```
 
 `TransactWriteItems` is covered by `PutItem` + `UpdateItem` on the table.
+
+**Every table needs its own line.** A missing ARN does not fail at deploy; it fails at the
+first write to that table, with an `AccessDeniedException` that names the action and not the
+table. If jet logs 500 while the discuss pages work, this is why.
 
 ## 4. Lambda
 
@@ -106,6 +116,7 @@ Configuration → Environment variables:
 |---|---|
 | `DISCUSS_ITEMS_TABLE` | `DiscussItems` |
 | `DISCUSS_SYLLABI_TABLE` | `DiscussSyllabi` |
+| `JETLOGS_TABLE` | `JetLogs` |
 | `DISCUSS_BUCKET` | `pinksheetmafia-discuss` |
 | `DISCUSS_ADMIN_TOKEN` | a long random string (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`) |
 
@@ -139,6 +150,10 @@ curl -X POST https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss
 # then the corpus
 DISCUSS_ADMIN_TOKEN=... node tools/discuss-migrate.js --dry-run
 DISCUSS_ADMIN_TOKEN=... node tools/discuss-migrate.js --verify --fixtures
+
+# and the jet logs, from tools/jetlog-seed.json
+DISCUSS_ADMIN_TOKEN=... node tools/jetlog-migrate.js --dry-run
+DISCUSS_ADMIN_TOKEN=... node tools/jetlog-migrate.js --verify
 ```
 
 ## Operations
@@ -146,7 +161,13 @@ DISCUSS_ADMIN_TOKEN=... node tools/discuss-migrate.js --verify --fixtures
 - Hide a page: `POST hide-item {"slug":"...","hidden":true}` with the admin header.
   Unhide with `hidden:false`.
 - Take a syllabus down: `POST hide-syllabus {"id":"...","hidden":true}`.
+- Take a jet log down: `POST hide-jetlog {"id":"...","hidden":true}`. It leaves the table and
+  comes back with `hidden:false`; only the mirror copy is removed.
 - A stale `items/index.json` (two saves raced): `POST rebuild-index {"what":"items"}`.
+  `"jetlogs"` and `"all"` work the same way.
+- Roll back a bad jet log: open its **history** from the Preset Jet Logs list on the jet log
+  page and restore the revision before it. Nothing is deleted from the table, so the admin
+  token is not needed for this.
 - Pages and syllabi from before the aircraft and school fields existed:
   `DISCUSS_ADMIN_TOKEN=... node tools/discuss-tag.js --aircraft=T-6B --school=Primary`
   stamps every one that has neither, as a new revision each. Run it once after deploying a

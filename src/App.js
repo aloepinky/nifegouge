@@ -13,6 +13,7 @@ import LandingPage from './components/LandingPage.js';
 import CourseRules from './components/TW4CourseRules.js';
 import Systems from './components/systems/Systems.js';
 import Discuss from './components/discuss/Discuss.js';
+import { STYLE_GUIDE_DRAFT } from './components/discuss/SyllabusContext.js';
 import TW4JetLog from './components/TW4JetLog.js';
 import TW4Docs from './components/TW4Docs.js';
 import Footer from './components/Footer.js';
@@ -99,6 +100,9 @@ function App() {
         <Route path="/tw4/discuss/e/:event" element={<Discuss mode="event" />} />
         <Route path="/tw4/discuss/b/:block" element={<Discuss mode="block" />} />
         <Route path="/tw4/discuss/upload" element={<Discuss mode="upload" />} />
+        {/* A draft, on a dev server only. `Routes` ignores a non-element child, which is how a
+            route is conditioned. */}
+        {STYLE_GUIDE_DRAFT && <Route path="/tw4/discuss/style" element={<Discuss mode="style" />} />}
         <Route path="/tw4/discuss/edit" element={<Discuss mode="edit" />} />
         <Route path="/tw4/discuss/:item/history" element={<Discuss mode="history" />} />
         <Route path="/tw4/discuss/s/:syllabus" element={<Discuss />} />

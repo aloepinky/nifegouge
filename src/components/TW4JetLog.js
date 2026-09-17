@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import JetLogLibrary from './jetlogs/JetLogLibrary';
+import { DEFAULT_PARAMS, applyParams, captureParams } from './jetlogs/params';
 
 const toHHMM = (mins) => {
   const m = Math.max(0, Math.round(mins));
@@ -103,18 +105,7 @@ function TW4JetLog() {
   const [clncFields, setClncFields] = useState({ ttc: '', fuel: '', dist: '', deltaT: '', oat: '', tasClimb: '', lbsPhClimb: '', tasCruise: '', lbsPhCruise: '', ias: '', climbDir: '', climbVel: '', cruiseDir: '', cruiseVel: '', magVar: '3E', vfrGsCalc: '210', vfrLbsPh: '', vfrAtis: '', vfrWindAtAlt: '', vfrClnc1a: '', vfrClnc1b: 'KNQI APP 119.9  FSS 122.2 (San Angelo)', vfrClnc2a: '', vfrClnc2b: 'TW2 DECON 308.2', vfrClnc3a: '', vfrClnc3b: 'Houston Center 128.12/350.3', vfrClnc4a: '', vfrClnc4b: 'ERAA:' });
   const [splitCells, setSplitCells] = useState({});
   const [showParams, setShowParams] = useState(false);
-  const [params, setParams] = useState({
-    startFuel: '1100',
-    sttoTime: '1',
-    sttoFuel: '50',
-    holdTime: '15',
-    approachTime: '10',
-    approachFuel: '50',
-    tngTime: '5',
-    tngFuel: '25',
-    stdReserve: '200',
-    includeFinalApr: true,
-  });
+  const [params, setParams] = useState(DEFAULT_PARAMS);
   const [routeBadges, setRouteBadges] = useState({});
   const [holdCells, setHoldCells] = useState({});
   const [pdfUrl, setPdfUrl] = useState(null);
@@ -122,12 +113,12 @@ function TW4JetLog() {
   const [vfrTng, setVfrTng] = useState({});
   const [vfrApr, setVfrApr] = useState({});
   const [vfrStart, setVfrStart] = useState(null); // cellId of the 0+00 clock-start row
-  const [sharedPresets, setSharedPresets] = useState([]);
   const [localPresets, setLocalPresets] = useState([]);
   const [showPresets, setShowPresets] = useState(false);
-  const [collapsedFolders, setCollapsedFolders] = useState(new Set());
-  const [presetName, setPresetName] = useState('');
   const [loadedPresetName, setLoadedPresetName] = useState(null); // title of the currently loaded preset route
+  // The shared jet log on screen, if it came from the library: { id, rev, name, group, folder }.
+  // Replace needs the id and the revision it started from; a local preset has neither.
+  const [loadedLog, setLoadedLog] = useState(null);
   const [jetlogScale, setJetlogScale] = useState(1);
   const [showIntClimbSelector, setShowIntClimbSelector] = useState(false);
   const [intClimbs, setIntClimbs] = useState([]); // [{row: pairIdx, elev: '', alt: number}]
@@ -284,17 +275,6 @@ function TW4JetLog() {
     const obs = new ResizeObserver(() => requestAnimationFrame(update));
     if (containerRef.current) obs.observe(containerRef.current);
     return () => obs.disconnect();
-  }, []);
-
-  useEffect(() => {
-    fetch('/presets.json')
-      .then(r => r.json())
-      .then(data => {
-        const presets = Array.isArray(data) ? data : [];
-        setSharedPresets(presets);
-        setCollapsedFolders(new Set(presets.map(p => p.folder).filter(Boolean)));
-      })
-      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -1458,11 +1438,17 @@ function TW4JetLog() {
     setShowIntClimbSelector(false);
     setIntClimbs([]);
     setLoadedPresetName(null);
+    setLoadedLog(null);
   };
 
-  const capturePreset = (name) => ({
-    id: Date.now().toString(),
+  // The jet log on screen, as a document. `group` and `folder` come from whoever is filing it
+  // — a local preset has neither — and `params` carries only the parameters that belong to the
+  // route, never the pilot's own fuel load. See jetlogs/params.js.
+  const capturePreset = ({ id, name, group, folder }) => ({
+    id: id || Date.now().toString(),
     name,
+    ...(group ? { group } : {}),
+    ...(folder ? { folder } : {}),
     mode: vfrMode ? 'VFR' : 'IFR',
     mainRowCount,
     inputValues: Object.fromEntries(
@@ -1489,6 +1475,7 @@ function TW4JetLog() {
     destInput,
     infoFields: { ...infoFields },
     intClimbs: [...intClimbs],
+    ...(captureParams(params) ? { params: captureParams(params) } : {}),
   });
 
   const applyPreset = (preset) => {
@@ -1545,46 +1532,38 @@ function TW4JetLog() {
     setShowIntClimbSelector(false);
     setSplitCells({});
     setHoldCells(preset.holdCells || {});
-    if (preset.params) setParams(prev => ({ ...prev, ...preset.params }));
+    setParams(prev => applyParams(prev, preset.params));
     setLoadedPresetName(preset.name || null);
+    setLoadedLog(null);
     setShowPresets(false);
   };
 
+  // A shared jet log applied from the library, with what Replace needs to know: which record
+  // it was and which revision. A local preset has none of that, so it clears this.
+  const applySharedLog = (log, meta) => {
+    applyPreset(log);
+    setLoadedLog(meta || null);
+  };
+
+  // Returns a message when it did not save, which the library shows beside the name box.
+  // There are no browser dialogs on this page.
   const saveLocalPreset = (name) => {
-    if (!name.trim()) return;
-    const trimmed = name.trim();
+    const trimmed = (name || '').trim();
+    if (!trimmed) return 'Give it a name first.';
     const allNames = localPresets.map(p => p.name?.toLowerCase());
     if (allNames.includes(trimmed.toLowerCase())) {
-      alert(`A preset named "${trimmed}" already exists.`);
-      return;
+      return `You already have one called "${trimmed}".`;
     }
-    const preset = capturePreset(trimmed);
-    const updated = [...localPresets, preset];
+    const updated = [...localPresets, capturePreset({ name: trimmed })];
     setLocalPresets(updated);
     localStorage.setItem('tw4_jet_presets', JSON.stringify(updated));
-    setPresetName('');
+    return null;
   };
 
   const deleteLocalPreset = (id) => {
     const updated = localPresets.filter(p => p.id !== id);
     setLocalPresets(updated);
     localStorage.setItem('tw4_jet_presets', JSON.stringify(updated));
-  };
-
-  const exportPresetFile = (name) => {
-    if (!name.trim()) return;
-    const preset = {
-      ...capturePreset(name.trim()),
-      id: name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-    };
-    const blob = new Blob([JSON.stringify(preset, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `preset-${preset.id}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setPresetName('');
   };
 
   const renderVFRNotesCells = (top) => (
@@ -2538,6 +2517,20 @@ function TW4JetLog() {
           ? 'Input GS and Dist for each leg; check T&G/APR boxes as appropriate; and click Solve. Lbs/hr is auto calculated from GS for standard day sea level — if a different condition is desired, enter it manually. The "FP code" box should contain the radial-DME or lat/long definition of points as they will be written on the flight plan.'
           : 'Check that the Jet Log Parameters are set as you like. Input winds, ΔT, altitude, and OAT; MC and Dist for legs; mark approaches and holds as appropriate; and click solve. Input total distance into the DIST cell, the solver will split it into climb and cruise dist.'}
       </div>
+      {/* Above the row and on its own, because it does something different in kind: the row
+          acts on the jet log you are filling in, while this one fills in a different one. In
+          the row it read as a seventh option and people were not finding it. */}
+      <div style={{display: 'flex', justifyContent: 'center', margin: '4px 0 8px'}}>
+        <button
+          onClick={() => setShowPresets(s => !s)}
+          style={{background: '#003B4F', color: 'white', border: 'none', borderRadius: '5px',
+            padding: '7px 18px', fontSize: '0.95em', fontWeight: 'bold', cursor: 'pointer',
+            letterSpacing: '0.02em'}}
+        >
+          Preset Jet Logs
+        </button>
+      </div>
+
       <div className="button-container" style={{justifyContent: 'center'}}>
         <button onClick={() => handleSolve()}>Solve</button>
         <button onClick={handleClear}>Clear</button>
@@ -2550,7 +2543,6 @@ function TW4JetLog() {
           </button>
         )}
         <button onClick={() => setShowParams(true)}>Parameters</button>
-        <button onClick={() => setShowPresets(s => !s)}>Preset Routes</button>
         <button onClick={generateFlightPlan}>Generate Flight Plan + Jet Log</button>
         <div style={{display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold', cursor: 'pointer'}}
           onClick={() => { setVfrMode(m => { const next = !m; const newAlt = next ? 3000 : 1000; setSelectedAlt(newAlt); if (next) autoFillVFRCruise(clncFields.vfrGsCalc); else setVfrStart(null); return next; }); }}
@@ -2966,112 +2958,17 @@ function TW4JetLog() {
       )}
 
       {showPresets && (
-        <div
-          style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000,
-            display: 'flex', alignItems: 'center', justifyContent: 'center'}}
-          onClick={() => setShowPresets(false)}
-        >
-          <div
-            style={{background: 'white', borderRadius: '8px', padding: '24px 28px',
-              minWidth: '320px', maxHeight: '80vh', overflowY: 'auto',
-              boxShadow: '0 6px 24px rgba(0,0,0,0.3)', color: '#333'}}
-            onClick={e => e.stopPropagation()}
-          >
-            <div style={{fontWeight: 'bold', fontSize: '1em', marginBottom: '14px', textAlign: 'center', letterSpacing: '0.05em'}}>PRESETS</div>
-
-            {sharedPresets.length > 0 && (
-              <>
-                <div style={{fontSize: '0.7em', fontWeight: 'bold', color: '#888', marginBottom: '6px', letterSpacing: '0.05em'}}>SHARED</div>
-                {(() => {
-                  const byFolder = {};
-                  sharedPresets.forEach(p => {
-                    const f = p.folder || '';
-                    if (!byFolder[f]) byFolder[f] = [];
-                    byFolder[f].push(p);
-                  });
-                  const folders = Object.keys(byFolder).filter(f => f !== '').sort();
-                  const ungrouped = byFolder[''] || [];
-                  const toggleFolder = (f) => setCollapsedFolders(prev => {
-                    const next = new Set(prev);
-                    if (next.has(f)) next.delete(f); else next.add(f);
-                    return next;
-                  });
-                  const renderPresetRow = (p, indent) => (
-                    <div key={p.id}
-                      style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px',
-                        cursor: 'pointer', padding: `2px 0 2px ${indent ? '14px' : '0'}`}}
-                      onClick={() => { applyPreset(p); setShowPresets(false); }}
-                    >
-                      <span style={{fontSize: '0.65em', padding: '1px 5px', borderRadius: '3px',
-                        background: p.mode === 'VFR' ? '#1e40af' : '#444', color: 'white', flexShrink: 0}}>
-                        {p.mode}
-                      </span>
-                      <span style={{fontSize: '0.85em'}}>{p.name}</span>
-                    </div>
-                  );
-                  return (
-                    <>
-                      {folders.map(folder => {
-                        const isOpen = !collapsedFolders.has(folder);
-                        return (
-                          <div key={folder} style={{marginBottom: '2px'}}>
-                            <div onClick={() => toggleFolder(folder)}
-                              style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
-                                fontSize: '0.78em', fontWeight: '600', color: '#444', padding: '3px 2px',
-                                userSelect: 'none', borderRadius: '3px'}}
-                              onMouseEnter={e => e.currentTarget.style.background = '#f3f4f6'}
-                              onMouseLeave={e => e.currentTarget.style.background = ''}
-                            >
-                              <span style={{fontSize: '0.85em', width: '8px', display: 'inline-block'}}>{isOpen ? '▾' : '▸'}</span>
-                              {folder}
-                            </div>
-                            {isOpen && <div style={{marginTop: '2px'}}>{byFolder[folder].map(p => renderPresetRow(p, true))}</div>}
-                          </div>
-                        );
-                      })}
-                      {ungrouped.map(p => renderPresetRow(p, false))}
-                    </>
-                  );
-                })()}
-                <hr style={{margin: '10px 0', borderColor: '#e5e7eb'}} />
-              </>
-            )}
-
-            <div style={{fontSize: '0.7em', fontWeight: 'bold', color: '#888', marginBottom: '6px', letterSpacing: '0.05em'}}>MY PRESETS</div>
-            {localPresets.length === 0 && (
-              <div style={{fontSize: '0.8em', color: '#aaa', marginBottom: '8px'}}>None saved yet.</div>
-            )}
-            {localPresets.map(p => (
-              <div key={p.id} style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', padding: '3px 0'}}>
-                <span style={{fontSize: '0.65em', padding: '1px 5px', borderRadius: '3px',
-                  background: p.mode === 'VFR' ? '#1e40af' : '#444', color: 'white', flexShrink: 0}}>
-                  {p.mode}
-                </span>
-                <span style={{flex: 1, fontSize: '0.85em', cursor: 'pointer'}} onClick={() => applyPreset(p)}>{p.name}</span>
-                <button
-                  onClick={() => deleteLocalPreset(p.id)}
-                  style={{fontSize: '0.7em', padding: '1px 5px', background: '#fee2e2',
-                    border: '1px solid #fca5a5', borderRadius: '3px', cursor: 'pointer', flexShrink: 0}}
-                >✕</button>
-              </div>
-            ))}
-
-            <hr style={{margin: '12px 0', borderColor: '#e5e7eb'}} />
-            <div style={{fontSize: '0.75em', color: '#666', marginBottom: '6px'}}>Save current flight plan as preset:</div>
-            <div style={{display: 'flex', gap: '4px', flexWrap: 'wrap'}}>
-              <input
-                value={presetName}
-                onChange={e => setPresetName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') saveLocalPreset(presetName); }}
-                placeholder="Preset name…"
-                style={{flex: 1, minWidth: '120px', padding: '3px 6px', border: '1px solid #d1d5db', borderRadius: '4px'}}
-              />
-              <button onClick={() => saveLocalPreset(presetName)} style={{fontSize: '0.8em'}}>Save</button>
-              {/* TODO: temporary — re-gate behind process.env.NODE_ENV === 'development' once shared preset collection is done */}
-              <button onClick={() => exportPresetFile(presetName)} style={{fontSize: '0.8em'}} title="Download JSON to add to shared library">Export ↓</button>
-            </div>
-          </div>
-        </div>
+        <JetLogLibrary
+          onClose={() => setShowPresets(false)}
+          onApply={applySharedLog}
+          onPublished={(meta) => { setLoadedLog(meta); setLoadedPresetName(meta.name); }}
+          capture={capturePreset}
+          loadedLog={loadedLog}
+          params={params}
+          localPresets={localPresets}
+          onSaveLocal={saveLocalPreset}
+          onDeleteLocal={deleteLocalPreset}
+        />
       )}
       </>
       )}

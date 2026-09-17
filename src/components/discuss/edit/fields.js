@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { itemList, getItemMeta, useItemIndexVersion } from '../registry';
 import { knownPrograms } from '../program';
+import { DISCUSS_BASE, STYLE_GUIDE_DRAFT } from '../SyllabusContext';
 
 // A link in See also or a hatnote is either a discussion item's slug or `{ href, label }`,
 // the same shape an event row uses for a link elsewhere on the site. Resolved here for the
@@ -368,6 +369,14 @@ export function EditorActions({ onSave, onCancel, errors, warnings, children, re
         <p className="discuss-editor-hint">
           Save keeps your edits in this browser. Nothing changes on the site until you publish
           them, which is the next step.
+        </p>
+      )}
+      {/* A new tab, not a Link: an open editor holds unsaved work, and routing away from it
+          throws that work out to read a page about how to write it. */}
+      {STYLE_GUIDE_DRAFT && (
+        <p className="discuss-editor-hint">
+          How a page is worded, and how sources are written:{' '}
+          <a href={`${DISCUSS_BASE}/style`} target="_blank" rel="noreferrer">style guide</a>.
         </p>
       )}
       <div className="discuss-editor-buttons">

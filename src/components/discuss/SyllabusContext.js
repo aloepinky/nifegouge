@@ -13,6 +13,12 @@ import { createContext, useContext } from 'react';
 export const DISCUSS_BASE = '/tw4/discuss';
 export const DELTA_ID = 'delta-primary';
 
+// The style guide is a draft. It renders on a dev server and is neither routed nor linked on
+// the deployed site, so a reader cannot reach a page of rules nobody has agreed to yet. One
+// flag, read by the route and by both places that link it: taking the page live is deleting
+// this line and the three guards that read it, rather than hunting environment checks.
+export const STYLE_GUIDE_DRAFT = process.env.NODE_ENV !== 'production';
+
 function index(rows) {
   const out = {};
   rows.forEach((r) => { out[r.id.toUpperCase()] = r; });
@@ -52,7 +58,7 @@ export function rowSearchable(row) {
 }
 
 export function buildSyllabus({
-  id, name, base, source, rev = null, builtIn = false, record = null,
+  id, name, base, source, sourceDate = '', rev = null, builtIn = false, record = null,
   aircraft = '', school = '',
   stages, blocks, events, flow, isBriefed,
 }) {
@@ -111,6 +117,9 @@ export function buildSyllabus({
     name,
     base,
     source,
+    // The date the publication this syllabus was read from carries, shown beside the aircraft
+    // and school: which edition of the JPPT a student is reading is not a detail.
+    sourceDate,
     rev,
     builtIn,
     record,
@@ -175,6 +184,7 @@ export function fromDoc(record, { builtIn = false, matcher = null } = {}) {
     name: record.name || doc.name,
     base: builtIn ? DISCUSS_BASE : `${DISCUSS_BASE}/s/${record.id}`,
     source: doc.source && doc.source.citation,
+    sourceDate: (doc.source && doc.source.date) || '',
     rev: record.rev,
     builtIn,
     record,

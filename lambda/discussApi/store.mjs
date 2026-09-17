@@ -16,6 +16,13 @@ import { HttpError } from './http.mjs';
 //
 // DiscussSyllabi: partition `syllabusId` (S), sort `rev` (N), every revision a row, `hidden`
 // on the newest row takes the syllabus down. Unchanged from lambda/discussSyllabi.
+//
+// JetLogs: partition `logId` (S), sort `rev` (N), the same two-row shape as DiscussItems.
+//   rev 0      { latestRev, title, flags: { group, folder, mode }, hidden?, updatedAt }
+//   rev >= 1   { docJson, author, summary, createdAt, baseRev }
+// The jet log's name is stored as `title` and its group, folder and mode inside `flags`,
+// because `name`, `group` and `mode` are all DynamoDB reserved words. That leaves `hidden` as
+// the only reserved word any expression here names, and it already has its alias.
 
 const db = () => getDynamo();
 
@@ -302,4 +309,188 @@ export async function setSyllabusHidden(id, hidden) {
     ExpressionAttributeValues: hidden ? { ':h': true } : undefined,
   }));
   return { ...newest, hidden: hidden || undefined };
+}
+
+// ---------------------------------------------------------------------------------------
+// Jet logs
+//
+// A copy of the Items section with `slug` renamed to `logId`. The two stores above are
+// already two hand-written copies of one shape; a third is how this file is written.
+
+export async function jetLogMeta(logId) {
+  const result = await db().send(new GetCommand({
+    TableName: CONFIG.jetLogsTable,
+    Key: { logId, rev: 0 },
+  }));
+  return result.Item || null;
+}
+
+export async function jetLogRevision(logId, rev) {
+  const result = await db().send(new GetCommand({
+    TableName: CONFIG.jetLogsTable,
+    Key: { logId, rev },
+  }));
+  return result.Item || null;
+}
+
+export async function newestJetLog(logId) {
+  const meta = await jetLogMeta(logId);
+  if (!meta || meta.hidden) return null;
+  const row = await jetLogRevision(logId, meta.latestRev);
+  return row ? { meta, row } : null;
+}
+
+// What the index carries about a jet log besides its name: where it is filed, and whether it
+// is a VFR or an IFR log, which is the chip the list draws.
+export function jetLogFlagsOf(log) {
+  const flags = {};
+  if (log.group) flags.group = log.group;
+  if (log.folder) flags.folder = log.folder;
+  if (log.mode) flags.mode = log.mode;
+  return flags;
+}
+
+function jetLogRevisionRow(logId, rev, log, { author, summary, baseRev }) {
+  return {
+    logId,
+    rev,
+    // Stringified exactly as it arrived. tools/jetlog-migrate.js --verify compares the
+    // mirrored document against its source byte for byte, so nothing is normalised here.
+    docJson: JSON.stringify(log),
+    author: author || '',
+    summary: summary || '',
+    baseRev: baseRev == null ? rev - 1 : baseRev,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+export async function createJetLog(logId, log, meta) {
+  const row = jetLogRevisionRow(logId, 1, log, { ...meta, baseRev: 0 });
+  const metaRow = {
+    logId,
+    rev: 0,
+    latestRev: 1,
+    title: log.name,
+    flags: jetLogFlagsOf(log),
+    updatedAt: row.createdAt,
+  };
+  try {
+    await db().send(new TransactWriteCommand({
+      TransactItems: [
+        {
+          Put: {
+            TableName: CONFIG.jetLogsTable,
+            Item: metaRow,
+            ConditionExpression: 'attribute_not_exists(logId)',
+          },
+        },
+        {
+          Put: {
+            TableName: CONFIG.jetLogsTable,
+            Item: row,
+            ConditionExpression: 'attribute_not_exists(logId)',
+          },
+        },
+      ],
+    }));
+  } catch (error) {
+    if (isConflict(error)) throw new HttpError(409, 'That id is already taken');
+    throw error;
+  }
+  return { meta: metaRow, row };
+}
+
+export async function saveJetLog(logId, baseRev, log, meta) {
+  const rev = baseRev + 1;
+  const row = jetLogRevisionRow(logId, rev, log, { ...meta, baseRev });
+  const flags = jetLogFlagsOf(log);
+  try {
+    await db().send(new TransactWriteCommand({
+      TransactItems: [
+        {
+          Put: {
+            TableName: CONFIG.jetLogsTable,
+            Item: row,
+            ConditionExpression: 'attribute_not_exists(logId)',
+          },
+        },
+        {
+          Update: {
+            TableName: CONFIG.jetLogsTable,
+            Key: { logId, rev: 0 },
+            UpdateExpression: 'SET latestRev = :rev, title = :title, flags = :flags, updatedAt = :at',
+            ConditionExpression: 'latestRev = :base',
+            ExpressionAttributeValues: {
+              ':rev': rev,
+              ':title': log.name,
+              ':flags': flags,
+              ':at': row.createdAt,
+              ':base': baseRev,
+            },
+          },
+        },
+      ],
+    }));
+  } catch (error) {
+    if (isConflict(error)) {
+      const current = await jetLogMeta(logId);
+      throw new HttpError(409, 'A newer revision exists', { rev: current ? current.latestRev : null });
+    }
+    throw error;
+  }
+  const metaRow = await jetLogMeta(logId);
+  return { meta: metaRow, row };
+}
+
+export async function setJetLogHidden(logId, hidden) {
+  try {
+    await db().send(new UpdateCommand({
+      TableName: CONFIG.jetLogsTable,
+      Key: { logId, rev: 0 },
+      UpdateExpression: hidden ? 'SET #hidden = :h' : 'REMOVE #hidden',
+      ConditionExpression: 'attribute_exists(logId)',
+      ExpressionAttributeNames: { '#hidden': 'hidden' },
+      ExpressionAttributeValues: hidden ? { ':h': true } : undefined,
+    }));
+  } catch (error) {
+    if (isConflict(error)) throw new HttpError(404, 'No such jet log');
+    throw error;
+  }
+}
+
+// Newest first, without the documents.
+export async function jetLogHistory(logId) {
+  const out = [];
+  let lastKey;
+  do {
+    const result = await db().send(new QueryCommand({
+      TableName: CONFIG.jetLogsTable,
+      KeyConditionExpression: 'logId = :id AND rev >= :one',
+      ExpressionAttributeValues: { ':id': logId, ':one': 1 },
+      ProjectionExpression: 'rev, author, summary, createdAt, baseRev',
+      ScanIndexForward: false,
+      ExclusiveStartKey: lastKey,
+    }));
+    out.push(...(result.Items || []));
+    lastKey = result.LastEvaluatedKey;
+  } while (lastKey);
+  return out;
+}
+
+export async function listJetLogMetas() {
+  const out = [];
+  let lastKey;
+  do {
+    const result = await db().send(new ScanCommand({
+      TableName: CONFIG.jetLogsTable,
+      FilterExpression: 'rev = :zero',
+      ExpressionAttributeValues: { ':zero': 0 },
+      ProjectionExpression: 'logId, latestRev, title, flags, #hidden, updatedAt',
+      ExpressionAttributeNames: { '#hidden': 'hidden' },
+      ExclusiveStartKey: lastKey,
+    }));
+    out.push(...(result.Items || []));
+    lastKey = result.LastEvaluatedKey;
+  } while (lastKey);
+  return out.sort((a, b) => a.logId.localeCompare(b.logId));
 }

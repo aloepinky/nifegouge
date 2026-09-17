@@ -1,7 +1,9 @@
 import { gzipSync } from 'node:zlib';
 import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getS3, presignPut, CONFIG } from './clients.mjs';
-import { listItemMetas, listSyllabi, newestSyllabus } from './store.mjs';
+import {
+  listItemMetas, listSyllabi, newestSyllabus, listJetLogMetas, newestJetLog,
+} from './store.mjs';
 
 // The read path. Every write mirrors the newest version of what it touched to the public
 // bucket as pre-gzipped JSON, and the site reads only from here — no Lambda in the way of a
@@ -13,7 +15,13 @@ import { listItemMetas, listSyllabi, newestSyllabus } from './store.mjs';
 //   items/<slug>.json     { slug, rev, updatedAt, author, summary, item }
 //   syllabi/index.json    { generatedAt, syllabi: [{ id, name, rev, updatedAt, aircraft, school }] }
 //   syllabi/<id>.json     { id, name, rev, updatedAt, aircraft, school, doc }
+//   jetlogs/index.json    { generatedAt, logs: [{ id, name, group, folder, mode, rev, updatedAt }] }
+//   jetlogs/<id>.json     { id, rev, updatedAt, author, summary, log }
 //   figures/<slug>/<stamp>-<name>.webp
+//
+// The jet log index carries what the list on the jet log page draws — a name, where it is
+// filed and its mode — and not the document, which is fetched when a log is applied. At the
+// corpus's size that is 3 KB against 58 KB, and the gap widens with every syllabus added.
 
 export async function putJson(key, value) {
   await getS3().send(new PutObjectCommand({
@@ -36,6 +44,7 @@ export async function deleteKey(key) {
 
 export const itemKey = (slug) => `items/${slug}.json`;
 export const syllabusKey = (id) => `syllabi/${id}.json`;
+export const jetLogKey = (id) => `jetlogs/${id}.json`;
 
 export function itemRecord(meta, row) {
   return {
@@ -107,6 +116,49 @@ export async function rebuildSyllabiIndex() {
     syllabi: rows.map(syllabusEntry),
   });
   return rows.length;
+}
+
+export function jetLogRecord(meta, row) {
+  return {
+    id: meta.logId,
+    rev: row.rev,
+    updatedAt: row.createdAt,
+    author: row.author || '',
+    summary: row.summary || '',
+    log: JSON.parse(row.docJson),
+  };
+}
+
+export function jetLogEntry(meta) {
+  return {
+    id: meta.logId,
+    name: meta.title,
+    rev: meta.latestRev,
+    updatedAt: meta.updatedAt,
+    ...(meta.flags || {}),
+  };
+}
+
+export async function mirrorJetLog(meta, row) {
+  await putJson(jetLogKey(meta.logId), jetLogRecord(meta, row));
+}
+
+export async function rebuildJetLogsIndex() {
+  const metas = (await listJetLogMetas()).filter((m) => !m.hidden);
+  await putJson('jetlogs/index.json', {
+    generatedAt: new Date().toISOString(),
+    logs: metas.map(jetLogEntry),
+  });
+  return metas.length;
+}
+
+export async function remirrorJetLogs() {
+  const metas = (await listJetLogMetas()).filter((m) => !m.hidden);
+  for (const m of metas) {
+    const found = await newestJetLog(m.logId);
+    if (found) await mirrorJetLog(found.meta, found.row);
+  }
+  return metas.length;
 }
 
 // Re-mirror every visible syllabus document. This is how syllabi published before the mirror

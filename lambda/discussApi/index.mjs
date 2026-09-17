@@ -9,14 +9,22 @@ import {
   setAuthorHandler,
 } from './items.mjs';
 import {
-  rebuildItemsIndex, rebuildSyllabiIndex, remirrorSyllabi, mirrorItem,
+  getJetLogHandler, jetLogHistoryHandler, jetLogRevisionHandler, publishJetLogHandler,
+  saveJetLogHandler, restoreJetLogHandler, importJetLogsHandler, hideJetLogHandler,
+} from './jetlogs.mjs';
+import {
+  rebuildItemsIndex, rebuildSyllabiIndex, remirrorSyllabi, mirrorItem, rebuildJetLogsIndex,
+  remirrorJetLogs,
 } from './mirror.mjs';
 import { listItemMetas, newestItem } from './store.mjs';
 import { tagProgramHandler } from './program.mjs';
 
-// The Discuss tab's API: item pages, syllabus documents, figure uploads, and the admin
-// operations behind X-Admin-Token. One API Gateway resource, /discuss/{proxy+}, routes every
-// op here; the op is the last path segment and is matched exactly.
+// The Discuss tab's API: item pages, syllabus documents, figure uploads, the jet log corpus,
+// and the admin operations behind X-Admin-Token. One API Gateway resource, /discuss/{proxy+},
+// routes every op here; the op is the last path segment and is matched exactly.
+//
+// Jet logs share this function rather than getting their own because they share everything
+// that matters: the revision model, the mirror bucket, the admin token and the deploy.
 //
 // Reads by the site never come here. Every write mirrors what it changed to the public S3
 // bucket (see mirror.mjs), and the browser fetches from there.
@@ -37,7 +45,15 @@ import { tagProgramHandler } from './program.mjs';
 //   POST hide-item           (admin)       { slug, hidden }
 //   POST set-author          (admin)       { slug, from, to }                            -> { revs }
 //   POST hide-syllabus       (admin)       { id, hidden }
-//   POST rebuild-index       (admin)       { what?: 'items'|'syllabi'|'all', remirror?: bool } -> { items, syllabi }
+//   GET  get-jetlog?id=                    -> { jetlog }
+//   GET  jetlog-history?id=                -> { latestRev, revisions }
+//   GET  jetlog-revision?id=&rev=          -> { revision }
+//   POST publish-jetlog                    { log, author?, summary? }                 -> { id, rev: 1 }
+//   POST save-jetlog                       { id, baseRev, log, author?, summary }     -> { id, rev, updatedAt }; 409
+//   POST restore-jetlog                    { id, rev, author?, summary? }              -> { id, rev }
+//   POST import-jetlogs      (admin)       { logs, overwrite? }                        -> { imported, skipped }
+//   POST hide-jetlog         (admin)       { id, hidden }
+//   POST rebuild-index       (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'all', remirror?: bool } -> { items, syllabi, jetlogs }
 //   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
 
 async function rebuildIndexHandler(event) {
@@ -57,6 +73,10 @@ async function rebuildIndexHandler(event) {
   if (what === 'syllabi' || what === 'all') {
     if (body.remirror) await remirrorSyllabi();
     out.syllabi = await rebuildSyllabiIndex();
+  }
+  if (what === 'jetlogs' || what === 'all') {
+    if (body.remirror) await remirrorJetLogs();
+    out.jetlogs = await rebuildJetLogsIndex();
   }
   return reply(200, { success: true, ...out });
 }
@@ -78,6 +98,14 @@ const ROUTES = {
   'hide-item': { method: 'POST', admin: true, run: hideItemHandler },
   'set-author': { method: 'POST', admin: true, run: setAuthorHandler },
   'hide-syllabus': { method: 'POST', admin: true, run: hideSyllabusHandler },
+  'get-jetlog': { method: 'GET', run: getJetLogHandler },
+  'jetlog-history': { method: 'GET', run: jetLogHistoryHandler },
+  'jetlog-revision': { method: 'GET', run: jetLogRevisionHandler },
+  'publish-jetlog': { method: 'POST', run: publishJetLogHandler },
+  'save-jetlog': { method: 'POST', run: saveJetLogHandler },
+  'restore-jetlog': { method: 'POST', run: restoreJetLogHandler },
+  'import-jetlogs': { method: 'POST', admin: true, run: importJetLogsHandler },
+  'hide-jetlog': { method: 'POST', admin: true, run: hideJetLogHandler },
   'rebuild-index': { method: 'POST', admin: true, run: rebuildIndexHandler },
   'tag-program': { method: 'POST', admin: true, run: tagProgramHandler },
 };
