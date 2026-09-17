@@ -42,6 +42,10 @@ function JetLogLibrary({
   // Which folders are open. Empty is every folder shut, which is how this list has always
   // opened: the corpus is long and a student is after one event's route.
   const [opened, setOpened] = useState(() => new Set());
+  // Which groups are shut. Groups open by default, the opposite of folders — a shut group
+  // would put two clicks between opening the list and reaching anything — but they collapse,
+  // because a syllabus nobody is flying this week is three rows of nothing to scroll past.
+  const [shutGroups, setShutGroups] = useState(() => new Set());
   const [presetName, setPresetName] = useState('');
   const [saveError, setSaveError] = useState('');
   const [applyError, setApplyError] = useState('');
@@ -52,10 +56,11 @@ function JetLogLibrary({
 
   const logs = index.logs;
 
-  // Folders start collapsed, as they always have: the corpus is long and a student is after
-  // one event's route.
+  // Group, then folder, then the jet logs in it. Each level carries its own count, so a shut
+  // one still says how much is inside.
   const tree = useMemo(() => groupsFrom(logs).map((group) => ({
     group,
+    count: logs.filter((l) => (l.group || '') === group).length,
     folders: foldersFor(group, logs).map((folder) => ({
       folder,
       key: `${group}/${folder}`,
@@ -66,6 +71,12 @@ function JetLogLibrary({
   })), [logs]);
 
   const isOpen = useCallback((key) => opened.has(key), [opened]);
+
+  const toggleGroup = (group) => setShutGroups((prev) => {
+    const next = new Set(prev);
+    if (next.has(group)) next.delete(group); else next.add(group);
+    return next;
+  });
 
   const toggle = (key) => setOpened((prev) => {
     const next = new Set(prev);
@@ -150,14 +161,28 @@ function JetLogLibrary({
           </div>
         )}
 
-        {index.status === 'ready' && tree.map(({ group, folders }) => (
+        {index.status === 'ready' && tree.map(({ group, folders, count }) => {
+          const groupOpen = !shutGroups.has(group);
+          return (
           <div key={group} style={{marginBottom: '8px'}}>
-            <div style={{fontSize: '0.78em', fontWeight: 'bold', color: '#003B4F',
-              padding: '3px 2px'}}>
+            <div
+              onClick={() => toggleGroup(group)}
+              style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
+                fontSize: '0.78em', fontWeight: 'bold', color: '#003B4F', padding: '3px 2px',
+                userSelect: 'none', borderRadius: '3px'}}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#f3f4f6'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = ''; }}
+            >
+              <span style={{fontSize: '0.85em', width: '8px', display: 'inline-block'}}>
+                {groupOpen ? '▾' : '▸'}
+              </span>
               {group}
+              <span style={{color: '#aaa', fontWeight: 'normal'}}>({count})</span>
             </div>
-            {!folders.length && <div style={{...QUIET, paddingLeft: '10px'}}>None yet.</div>}
-            {folders.map(({ folder, key, logs: rows }) => (
+            {groupOpen && !folders.length && (
+              <div style={{...QUIET, paddingLeft: '10px'}}>None yet.</div>
+            )}
+            {groupOpen && folders.map(({ folder, key, logs: rows }) => (
               <div key={key} style={{marginBottom: '2px', paddingLeft: '10px'}}>
                 <div
                   onClick={() => toggle(key)}
@@ -206,7 +231,8 @@ function JetLogLibrary({
               </div>
             ))}
           </div>
-        ))}
+          );
+        })}
 
         {applyError && <div style={ERROR}>{applyError}</div>}
 
@@ -275,9 +301,13 @@ function JetLogLibrary({
   return (
     <div style={OVERLAY} onClick={onClose}>
       <div style={CARD} onClick={(e) => e.stopPropagation()}>
+        {/* The card is titled for what it is doing, so a view never repeats its own name in a
+            heading underneath. */}
         <div style={{fontWeight: 'bold', fontSize: '1em', marginBottom: '14px',
           textAlign: 'center', letterSpacing: '0.05em'}}>
-          JET LOGS
+          {view === 'publish' && 'Publish Jet Log'}
+          {view === 'replace' && `Replace "${loadedLog.name}"`}
+          {(view === 'list' || view === 'history') && 'JET LOGS'}
         </div>
         {notice && view === 'list' && (
           <div style={{fontSize: '0.8em', color: '#166534', marginBottom: '10px'}}>{notice}</div>

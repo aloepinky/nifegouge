@@ -13,22 +13,37 @@ import {
 // The name is saved before the request goes out, so it is still remembered when a publish
 // fails and the person tries again.
 
-const OTHER = '__other__';
+// The sentinel the two dropdowns use for their "new one" row. It can never collide with a
+// real name, which is what lets a group or folder be called anything at all.
+const NEW = '__new__';
 
 function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }) {
   const replacing = mode === 'replace';
   const [name, setName] = useState(replacing ? loadedLog.name : '');
   const [group, setGroup] = useState(replacing ? loadedLog.group || '' : GROUP_NAMES[0]);
-  const [otherGroup, setOtherGroup] = useState('');
+  const [newGroup, setNewGroup] = useState('');
   const [folder, setFolder] = useState(replacing ? loadedLog.folder || '' : '');
+  const [newFolder, setNewFolder] = useState('');
   const [author, setAuthorField] = useState(getAuthor);
   const [summary, setSummary] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [conflict, setConflict] = useState(null);
 
-  const chosenGroup = group === OTHER ? otherGroup.trim() : group;
-  const ready = name.trim() && chosenGroup && folder.trim() && summary.trim() && !busy;
+  // The known groups plus any the corpus has grown, so a group somebody else invented is
+  // pickable rather than something you have to spell again.
+  const groupNames = [...new Set([...GROUP_NAMES, ...logs.map((l) => l.group).filter(Boolean)])];
+  const chosenGroup = group === NEW ? newGroup.trim() : group;
+  const folders = folderOptions(chosenGroup, logs);
+  const chosenFolder = folder === NEW ? newFolder.trim() : folder;
+
+  // Replacing with a different filing moves the jet log. Said out loud, because Replace on its
+  // own does not suggest it, and the record leaves its old folder when it happens.
+  const moving = replacing && (
+    chosenGroup !== (loadedLog.group || '') || chosenFolder !== (loadedLog.folder || '')
+  );
+
+  const ready = name.trim() && chosenGroup && chosenFolder && summary.trim() && !busy;
   const riding = describeParams(params);
 
   // A publish that would make a second jet log of the same name in the same folder is usually
@@ -37,7 +52,7 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
   const twin = !replacing && logs.find((l) => (
     l.name.toLowerCase() === name.trim().toLowerCase()
     && (l.group || '') === chosenGroup
-    && (l.folder || '') === folder.trim()
+    && (l.folder || '') === chosenFolder
   ));
 
   const send = async (baseRev) => {
@@ -45,7 +60,7 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
       id: replacing ? loadedLog.id : undefined,
       name: name.trim(),
       group: chosenGroup,
-      folder: folder.trim(),
+      folder: chosenFolder,
     });
     setAuthor(author.trim());
     return baseRev == null
@@ -64,7 +79,7 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
         rev: out.rev,
         name: name.trim(),
         group: chosenGroup,
-        folder: folder.trim(),
+        folder: chosenFolder,
       });
     } catch (err) {
       if (err.status === 409) {
@@ -86,7 +101,7 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
     try {
       const out = await send(conflict);
       onDone({
-        id: out.id, rev: out.rev, name: name.trim(), group: chosenGroup, folder: folder.trim(),
+        id: out.id, rev: out.rev, name: name.trim(), group: chosenGroup, folder: chosenFolder,
       });
     } catch (err) {
       setError(`Not published. ${err.message}`);
@@ -121,10 +136,7 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
 
   return (
     <div>
-      <div style={{fontWeight: 'bold', fontSize: '0.9em', marginBottom: '10px'}}>
-        {replacing ? `Replace "${loadedLog.name}"` : 'Publish this jet log'}
-      </div>
-
+      {/* No heading here: the card's own title says which of the two this is. */}
       <Field label="Name">
         <input
           style={INPUT}
@@ -138,36 +150,54 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
       <Field label="Group">
         <select
           style={INPUT}
-          value={GROUP_NAMES.includes(group) || group === OTHER ? group : OTHER}
-          onChange={(e) => { setGroup(e.target.value); setFolder(''); }}
+          value={groupNames.includes(group) ? group : NEW}
+          onChange={(e) => { setGroup(e.target.value); setFolder(''); setNewFolder(''); }}
         >
-          {GROUP_NAMES.map((g) => <option key={g} value={g}>{g}</option>)}
-          <option value={OTHER}>Somewhere else…</option>
+          {groupNames.map((g) => <option key={g} value={g}>{g}</option>)}
+          <option value={NEW}>New Group…</option>
         </select>
-        {group === OTHER && (
+        {group === NEW && (
           <input
             style={{...INPUT, marginTop: '4px'}}
-            value={otherGroup}
+            value={newGroup}
             maxLength={40}
-            placeholder="Group name"
-            onChange={(e) => setOtherGroup(e.target.value)}
+            placeholder="Name of the new group"
+            autoFocus
+            onChange={(e) => setNewGroup(e.target.value)}
           />
         )}
       </Field>
 
-      <Field label="Folder" hint="Pick one or type a new one.">
-        <input
+      <Field label="Folder">
+        <select
           style={INPUT}
-          list="jetlog-folders"
-          value={folder}
-          maxLength={40}
-          placeholder="I3100"
+          value={folder === NEW || folders.includes(folder) ? folder : ''}
           onChange={(e) => setFolder(e.target.value)}
-        />
-        <datalist id="jetlog-folders">
-          {folderOptions(chosenGroup, logs).map((f) => <option key={f} value={f} />)}
-        </datalist>
+        >
+          {/* Nothing is chosen until it is chosen. Defaulting to the first folder files a jet
+              log somewhere nobody picked, and defaulting to New Folder hides the list. */}
+          <option value="" disabled>Choose a folder…</option>
+          {folders.map((f) => <option key={f} value={f}>{f}</option>)}
+          <option value={NEW}>New Folder…</option>
+        </select>
+        {folder === NEW && (
+          <input
+            style={{...INPUT, marginTop: '4px'}}
+            value={newFolder}
+            maxLength={40}
+            placeholder="Name of the new folder"
+            autoFocus
+            onChange={(e) => setNewFolder(e.target.value)}
+          />
+        )}
       </Field>
+
+      {moving && (
+        <div style={{...NOTE, marginTop: 0, marginBottom: '12px'}}>
+          This also moves it out of {loadedLog.group} / {loadedLog.folder}. The jet log keeps its
+          history; it just stops being listed there.
+        </div>
+      )}
 
       <Field label="Your name (optional)">
         <input
@@ -178,7 +208,7 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
         />
       </Field>
 
-      <Field label="What changed">
+      <Field label={replacing ? 'What changed' : 'Brief description'}>
         <input
           style={INPUT}
           value={summary}
@@ -197,7 +227,7 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
 
       {twin && (
         <div style={NOTE}>
-          There is already a jet log called "{twin.name}" in {chosenGroup} / {folder.trim()}.
+          There is already a jet log called "{twin.name}" in {chosenGroup} / {chosenFolder}.
           Publishing makes a second one; Replace changes that one.
         </div>
       )}
@@ -207,7 +237,7 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
           type="button"
           style={{...PRIMARY, opacity: ready ? 1 : 0.5, cursor: ready ? 'pointer' : 'default'}}
           disabled={!ready}
-          title={ready ? undefined : 'A name, a folder and a line about what changed'}
+          title={ready ? undefined : `A name, a folder and a ${replacing ? 'line about what changed' : 'brief description'}`}
           onClick={submit}
         >
           {busy ? 'Publishing…' : replacing ? 'Replace' : 'Publish'}
@@ -216,7 +246,7 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
       </div>
 
       <div style={{...LABEL, marginTop: '10px', color: '#999'}}>
-        This puts it on the site for everyone.
+        Publishes permanently on the site for anyone to see.
       </div>
 
       {error && <div style={ERROR}>{error}</div>}
