@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { generatedFor } from './GENERATED';
 import { getItemMeta } from './registry';
 import { DISCUSS_BASE, rowName, useSyllabus } from './SyllabusContext';
-import RandomPage from './RandomPage';
+import RandomPage, { SelectedSyllabusContext } from './RandomPage';
 import { rememberItem, refreshItem } from './discussApi';
 import ItemLink from './ItemLink';
 import { getSystemTab } from '../systems/systemTabs';
@@ -353,13 +353,11 @@ function Bullet({ item, showCite, value, ep }) {
   );
 }
 
-// An item is named by its page title everywhere it appears — hub list, prev/next,
-// hatnotes, See also. The event's `label` holds the JPPT's verbatim wording, which varies
-// in case and punctuation between events, and is used for search aliases rather than
-// display: one item, one name, however you arrived at it.
+// Prev/next name a neighbour the way the event's own list names it, since the strip is that
+// list walked one row at a time. Hatnotes and See also still use the page's title, which is
+// the page's own name rather than one event's name for it.
 function itemName(row) {
-  const item = getItemMeta(row.slug);
-  return item ? item.title : rowName(row);
+  return rowName(row) || (getItemMeta(row.slug) || {}).title || '';
 }
 
 // A neighbour with no page yet is named but not linked.
@@ -402,7 +400,7 @@ function EventStrip({ event, position }) {
 // prose, generated from the syllabus so they cannot go stale. One block per event the list
 // is generated against — on the canonical URL that is every event listing the item, because
 // F4290 and CS4101 genuinely get different answers.
-function GeneratedLists({ groups }) {
+function GeneratedLists({ groups, syllabusName }) {
   const navigate = useNavigate();
   if (!groups || !groups.length) return null;
   const many = groups.length > 1;
@@ -414,6 +412,9 @@ function GeneratedLists({ groups }) {
   };
   return (
     <>
+      {syllabusName && (
+        <p className="discuss-note">Generated from {syllabusName}, the syllabus last opened.</p>
+      )}
       {groups.map((g) => {
         const shown = g.added || g.entries;
         return (
@@ -584,6 +585,13 @@ function replaceBlock(item, id, next) {
 function ItemPage({ record, readOnly = false, banner = null }) {
   const [params] = useSearchParams();
   const s = useSyllabus();
+  // The generated lists are the one part of an item page that belongs to a syllabus rather
+  // than to the page: "any previously discussed maneuver" has a different answer in every
+  // syllabus that briefs it, and answering with Delta's events for a reader who came from
+  // another one is simply the wrong list. So they are built against the syllabus the reader
+  // last opened, which is the same choice Random page draws from. Everything else here
+  // (?from=, Briefed on, prev/next) stays Delta.
+  const gs = useContext(SelectedSyllabusContext) || s;
   const item = record.item;
   const rev = record.rev;
   const historyTo = `/tw4/discuss/${item.slug}/history`;
@@ -699,7 +707,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const briefedIn = s.eventsListing(view.slug);
   const hasNumbers = !view.stub && view.numbers && view.numbers.length > 0;
   const seeAlso = (view.seeAlso || []).map(resolveLink).filter(Boolean);
-  const genGroups = view.stub ? null : generatedFor(view, params.get('from'), s);
+  const genGroups = view.stub ? null : generatedFor(view, params.get('from'), gs);
   const editingPage = editing && editing.kind === 'page';
 
   const head = (
@@ -845,7 +853,10 @@ function ItemPage({ record, readOnly = false, banner = null }) {
             <DiagramLink diagram={view.diagram} />
             <LimitsLink limits={view.limits} />
             {view.note && <p className="discuss-note">{view.note}</p>}
-            <GeneratedLists groups={genGroups} />
+            <GeneratedLists
+              groups={genGroups}
+              syllabusName={gs.builtIn ? null : gs.name}
+            />
 
             {(view.sections || []).map((section) => {
               const collapsed = sectionCite(section);

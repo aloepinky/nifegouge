@@ -23,6 +23,14 @@
 const DICE_MIN = 0.8;
 const MAX_EXTRA = 2;
 
+// `suggest` is a second, far looser pass, and it exists for a different reader: the person
+// reviewing an upload, who can tell at a glance whether "Section emergencies" is the
+// Formation emergency procedures page. Nothing it returns is ever linked automatically —
+// `matchLabel` above is still what does that — so it is tuned to put the right page in a
+// short list rather than to be right on its own.
+const SUGGEST_MIN = 0.3;
+const SUGGEST_LIMIT = 4;
+
 const STOPWORDS = new Set([
   'a', 'an', 'the', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'with', 'at', 'by', 'from',
   'if', 'able', 'discuss',
@@ -41,6 +49,31 @@ export function tokens(text, { stemmed = true } = {}) {
     .split(' ')
     .filter((w) => w && !STOPWORDS.has(w));
   return stemmed ? words.map(stem) : words;
+}
+
+// The looser tokenizer `suggest` runs on: a heavier stem, so "emergencies" and "emergency"
+// or "lighting" and "lights" are one word, and a few more words dropped that carry nothing in
+// a JPPT phrase. It is deliberately not `tokens`: folding this hard would let the automatic
+// matcher tie two pages together on a suffix, and "maneuvering speed" and "maneuvering
+// speeds" are two different pages.
+const SOFT_STOPWORDS = new Set([...STOPWORDS, 'its', 'it', 'any', 'other', 'than', 'this']);
+
+function softTokens(text) {
+  return (text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter((w) => w && !SOFT_STOPWORDS.has(w))
+    .map((w) => {
+      let s = w;
+      if (s.length > 4 && s.endsWith('ies')) s = `${s.slice(0, -3)}y`;
+      else if (s.length > 3 && s.endsWith('es')) s = s.slice(0, -2);
+      else if (s.length > 3 && s.endsWith('s') && !s.endsWith('ss')) s = s.slice(0, -1);
+      if (s.length > 5 && s.endsWith('ing')) s = s.slice(0, -3);
+      if (s.length > 5 && s.endsWith('ed')) s = s.slice(0, -2);
+      return s;
+    });
 }
 
 function dice(a, b) {
@@ -149,7 +182,51 @@ export function buildMatcher(events, items) {
     return target ? { ...target } : {};
   };
 
-  return { matchDetail, matchLabel, candidates };
+  // Pages a person might mean by this wording, best first, for a review list. Scoring is a
+  // Dice coefficient weighted by how rare each shared word is across the candidates, because
+  // an unweighted one puts every page with "approach" in its title above the Circling
+  // maneuver page for "circling approach": "approach" is in 30 candidates and "circling" is
+  // in one, so the rare word is the one carrying the meaning. A candidate wholly inside the
+  // phrase, or a phrase wholly inside a candidate, scores at least 0.5 however long the other
+  // one is, which is what surfaces Ejection for "immediate ejection".
+  const softSets = candidates.map((c) => new Set(softTokens(c.key)));
+  const df = new Map();
+  softSets.forEach((set) => set.forEach((w) => df.set(w, (df.get(w) || 0) + 1)));
+  const idf = (w) => Math.log((candidates.length + 1) / ((df.get(w) || 0) + 1)) + 1;
+  const mass = (set) => [...set].reduce((n, w) => n + idf(w), 0);
+
+  // -> [{ slug } | { href }, each with `score` and the `via` wording it matched on]
+  const suggest = (label, limit = SUGGEST_LIMIT) => {
+    const set = new Set(softTokens(label));
+    if (!set.size) return [];
+    const phraseMass = mass(set);
+    const scored = [];
+    candidates.forEach((c, i) => {
+      const cs = softSets[i];
+      let common = 0;
+      let shared = 0;
+      cs.forEach((w) => { if (set.has(w)) { common += 1; shared += idf(w); } });
+      if (!common) return;
+      const d = (2 * shared) / (phraseMass + mass(cs));
+      const covers = common === cs.size || common === set.size;
+      const score = covers ? Math.max(d, 0.5 + d / 2) : d;
+      if (score >= SUGGEST_MIN) scored.push({ c, score });
+    });
+    scored.sort((a, b) => b.score - a.score || b.c.uses - a.c.uses);
+    // One row per page, not per wording: several Delta labels reach the same page and the
+    // reviewer is choosing a page.
+    const seen = new Set();
+    const out = [];
+    scored.forEach(({ c, score }) => c.ranked.forEach(({ target }) => {
+      const id = target.slug || target.href;
+      if (seen.has(id) || out.length >= limit) return;
+      seen.add(id);
+      out.push({ ...target, score, via: c.key });
+    }));
+    return out;
+  };
+
+  return { matchDetail, matchLabel, suggest, candidates };
 }
 
 // Wordings the Delta registry already treats as one item even though they contain a comma or

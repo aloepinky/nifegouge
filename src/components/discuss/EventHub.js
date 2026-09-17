@@ -96,13 +96,23 @@ function EventHub({ event }) {
                     </li>
                   );
                 }
+                // A row someone has decided wants no page: the JPPT names it and there is
+                // nothing to write. Shown as the JPPT's wording and nothing else — no tag
+                // saying work is outstanding, and no offer to start a page.
+                if (!row.slug && row.noPage) {
+                  return (
+                    <li key={rowKey(row)}>
+                      <span className="discuss-inert">{rowName(row)}</span>
+                    </li>
+                  );
+                }
                 // A label-only row: the JPPT names it and nobody has a page for it yet. Creating
                 // one starts a stub and points this row at it in the same step.
                 if (!row.slug) {
                   const creating = editing && editing.create === rowKey(row);
                   return (
                     <li key={rowKey(row)}>
-                      <span className="discuss-inert">{row.label}</span>
+                      <span className="discuss-inert">{rowName(row)}</span>
                       <span className="discuss-tag">no page yet</span>
                       {canEdit && !creating && (
                         <button
@@ -129,10 +139,10 @@ function EventHub({ event }) {
                 const item = getItemMeta(row.slug);
                 return (
                   <li key={rowKey(row)}>
-                    {/* The page's own title, not the event's JPPT label — an item is named
-                        the same way everywhere it appears. `label` stays in the document as
-                        the JPPT's verbatim wording and feeds the search aliases. */}
-                    <ItemLink slug={row.slug} to={s.rowTo(row, event.id)}>{item ? item.title : row.label}</ItemLink>
+                    {/* The row's own name, not the page's title: an event may list one page
+                        under several names (FAM1301's ATF, ATS, CTS and MIF), and the list is
+                        what that event briefs rather than an index of pages. */}
+                    <ItemLink slug={row.slug} to={s.rowTo(row, event.id)}>{rowName(row)}</ItemLink>
                     {item && item.stub && <span className="discuss-tag">not written</span>}
                     {!item && <span className="discuss-tag discuss-tag--missing">missing</span>}
                   </li>

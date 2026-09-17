@@ -30,12 +30,17 @@ export function rowKey(row) {
 // Link rows shown under one name wherever they appear, whatever the JPPT wording. The JPPT
 // writes the EP rows six ways ("any EP", "emergency procedures", "any critical action
 // emergency procedures", …) and all of them open the same page, so on screen they are one
-// item, the way a page's title stands in for its labels. `label` keeps the wording in the
-// data. `searchable: false` keeps them out of the search box, which lists pages to read.
+// item. `searchable: false` keeps them out of the search box, which lists pages to read.
 const LINK_ROWS = {
   '/tw4/eps-limits': { name: 'Any critical action emergency procedure', searchable: false },
 };
 
+// What a row is called on its event's list: the row's own `label`, which starts as the JPPT's
+// wording and is editable. Several rows may point at one page and each keeps its own name —
+// FAM1301 lists ATF, ATS, CTS and MIF, all of which open one page, and a list printing that
+// page's title four times says nothing about what is briefed. Search results, hatnotes and
+// See also still name the page by its `title`, which is the page's name rather than an
+// event's name for it.
 export function rowName(row) {
   const link = row.href && LINK_ROWS[row.href];
   return link ? link.name : row.label;
@@ -160,7 +165,9 @@ export function fromDoc(record, { builtIn = false, matcher = null } = {}) {
   const events = (doc.events || []).map((e) => ({
     ...e,
     items: (e.items || []).map((row) => (
-      row.slug || row.href || !matcher ? row : { ...row, ...matcher.matchLabel(row.label) }
+      // `noPage` is a decision that this item wants no page, so it is not re-matched: the
+      // re-match exists to catch up with pages written later, not to overrule the reader.
+      row.slug || row.href || row.noPage || !matcher ? row : { ...row, ...matcher.matchLabel(row.label) }
     )),
   }));
   return buildSyllabus({

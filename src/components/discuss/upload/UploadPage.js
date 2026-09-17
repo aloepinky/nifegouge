@@ -126,8 +126,8 @@ function UploadPage() {
           <h1>Submit a new JPPT</h1>
           <p className="discuss-lede">
             Upload the JPPT PDF and its course flow chart and syllabus are generated here. Check
-            the chart against the publication, fix anything the generator got wrong, then publish
-            it to the syllabus list.
+            the chart against the publication, settle the items it could not link to a page, then
+            publish it to the syllabus list from Preview.
           </p>
         </header>
 
@@ -212,6 +212,7 @@ function UploadPage() {
               saveLabel="Publish"
               saving={publishing}
               error={publishError}
+              review
             >
               <ConfirmButton
                 label="Start over"

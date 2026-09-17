@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import CourseFlow, { Shape, ArrowDefs, Legend, poly, round } from '../CourseFlow';
 import { SyllabusContext, fromDoc } from '../SyllabusContext';
 import { ConfirmButton, Line } from '../edit/fields';
+import LinkReview from './LinkReview';
 import { expand, blockOf } from '../jppt/flowExtract';
 import {
   KINDS, addBlockFor, addNode, checks, connect, fit, moveNode, movePoint, relabelNode,
@@ -13,8 +14,9 @@ import {
 // It exists because the tracer is only as good as the figure it reads. Delta's needed three
 // hand repairs; another JPPT may need more, or may print its chart as an image and need
 // drawing from scratch. What it edits is the chart and the one fact about each block the chart
-// shows, whether it carries discuss items. Everything else a syllabus holds is edited later,
-// elsewhere.
+// shows, whether it carries discuss items. The Items tab is the one other thing it settles,
+// because it is the other thing only a person can: which page a wording the generator could
+// not place actually means. Everything else a syllabus holds is edited later, elsewhere.
 //
 // Whole documents go on the undo stack: every operation in flowOps.js returns a new one.
 
@@ -209,7 +211,9 @@ function EdgePanel({ doc, index, commit, onRemove }) {
   );
 }
 
-function FlowEditor({ initial, warnings = [], onCommit, onSave, saveLabel, saving, error, children }) {
+function FlowEditor({
+  initial, warnings = [], onCommit, onSave, saveLabel, saving, error, review = false, children,
+}) {
   const { doc, commit, undo, redo, canUndo, canRedo } = useHistory(initial, onCommit);
   const [selection, setSelection] = useState(null);
   const [mode, setMode] = useState('select');
@@ -229,6 +233,29 @@ function FlowEditor({ initial, warnings = [], onCommit, onSave, saveLabel, savin
   const preview = useMemo(() => fromDoc({ id: 'preview', name: 'Preview', doc }), [doc]);
   const briefedOf = useMemo(() => new Set(doc.blocks.filter((b) => b.briefed).map((b) => b.id)), [doc.blocks]);
   const eventsWithItems = useMemo(() => new Set(doc.events.map((e) => e.id)), [doc.events]);
+  // The items still resolving to nothing, which is the Items tab's whole subject: no tab when
+  // the generator linked them all.
+  const unlinked = useMemo(
+    () => doc.events.reduce((n, e) => n + e.items.filter((r) => !r.slug && !r.href && !r.noPage).length, 0),
+    [doc.events],
+  );
+
+  // Publishing a new syllabus is the end of a walk-through rather than a button sitting beside
+  // the first screen. The chart and the items the generator could not place are both things
+  // only a person can settle, and a Publish button available from the start is an invitation to
+  // settle neither. With `review` on, the footer offers the next tab instead, and Publish
+  // appears once the reader is standing on Preview, having been through what came before.
+  // Editing a syllabus that is already up does not work this way: a one-arrow fix should not
+  // cost a tour.
+  const [seen, setSeen] = useState(() => new Set(['edit']));
+  useEffect(() => { setSeen((s) => (s.has(tab) ? s : new Set([...s, tab]))); }, [tab]);
+  const hasItemsTab = unlinked > 0 || tab === 'items';
+  const steps = ['edit', ...(hasItemsTab ? ['items'] : []), 'preview'];
+  const blocked = (t) => review
+    && steps.slice(0, Math.max(0, steps.indexOf(t))).some((s) => !seen.has(s));
+  const stepping = review && tab !== 'preview';
+  const nextTab = steps[Math.min(steps.indexOf(tab) + 1, steps.length - 1)];
+  const next = { tab: nextTab, label: nextTab === 'items' ? 'Next: the items' : 'Next: preview it' };
 
   const removeSelected = useCallback(() => {
     if (selectedNode) commit(removeNode(doc, selectedNode.id));
@@ -351,8 +378,17 @@ function FlowEditor({ initial, warnings = [], onCommit, onSave, saveLabel, savin
         <div className="discuss-floweditor-tabs" role="tablist">
           <button type="button" role="tab" aria-selected={tab === 'edit'}
                   className={tab === 'edit' ? 'is-on' : ''} onClick={() => setTab('edit')}>Edit</button>
+          {hasItemsTab && (
+            <button type="button" role="tab" aria-selected={tab === 'items'}
+                    className={tab === 'items' ? 'is-on' : ''} onClick={() => setTab('items')}>
+              Items{unlinked > 0 ? ` (${unlinked})` : ''}
+            </button>
+          )}
           <button type="button" role="tab" aria-selected={tab === 'preview'}
-                  className={tab === 'preview' ? 'is-on' : ''} onClick={() => setTab('preview')}>Preview</button>
+                  className={tab === 'preview' ? 'is-on' : ''}
+                  disabled={blocked('preview')}
+                  title={blocked('preview') ? 'Go through the items first' : ''}
+                  onClick={() => setTab('preview')}>Preview</button>
         </div>
         {tab === 'edit' && (
           <div className="discuss-floweditor-tools">
@@ -375,7 +411,9 @@ function FlowEditor({ initial, warnings = [], onCommit, onSave, saveLabel, savin
         )}
       </div>
 
-      {tab === 'preview' ? (
+      {tab === 'items' ? (
+        <LinkReview doc={doc} onChange={commit} />
+      ) : tab === 'preview' ? (
         <SyllabusContext.Provider value={preview}>
           <p className="discuss-editor-hint">
             The chart as it will publish. Links go nowhere until it is published.
@@ -527,11 +565,24 @@ function FlowEditor({ initial, warnings = [], onCommit, onSave, saveLabel, savin
       <div className="discuss-editor-actions">
         {error && <p className="discuss-editor-warn">{error}</p>}
         <div className="discuss-editor-buttons">
-          <button type="button" className="discuss-editor-save" disabled={saving} onClick={() => onSave(fit(doc))}>
-            {saving ? 'Saving…' : saveLabel}
-          </button>
+          {stepping ? (
+            <button type="button" className="discuss-editor-save" onClick={() => setTab(next.tab)}>
+              {next.label}
+            </button>
+          ) : (
+            <button type="button" className="discuss-editor-save" disabled={saving} onClick={() => onSave(fit(doc))}>
+              {saving ? 'Saving…' : saveLabel}
+            </button>
+          )}
           {children}
         </div>
+        {stepping && (
+          <p className="discuss-editor-hint">
+            {tab === 'edit'
+              ? 'Check the chart against the publication first. Publishing comes at the end, on Preview.'
+              : 'Settle what you want to settle here. Publishing comes at the end, on Preview.'}
+          </p>
+        )}
       </div>
     </div>
   );

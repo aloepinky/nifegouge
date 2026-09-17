@@ -5,18 +5,24 @@ import { getItemMeta } from './registry';
 import { saveSyllabus, rememberSyllabus, refreshSyllabus, getAuthor } from './discussApi';
 import { useSyllabus } from './SyllabusContext';
 
-// The list of discuss items an event briefs: their JPPT wording, and what each resolves to.
-// A row is one of three shapes — a page (`slug`), a link elsewhere on the site (`href`), or
-// nothing yet (label only) — and this editor keeps them exactly that shape. Saving publishes
-// a new revision of the whole syllabus document, since the events live inside it.
+// The list of discuss items an event briefs: what each one is called here, and what each
+// resolves to. The name starts as the JPPT's wording and is editable, because it is what the
+// event's list prints: one page can be listed under several names on one event (FAM1301 briefs
+// ATF, ATS, CTS and MIF, all on one page) and the name is what tells them apart.
+// A row is one of four shapes — a page (`slug`), a tab elsewhere on the site (`href`, called a
+// PSM tab on screen because that is what a student calls it), an item nobody has written yet
+// (label only), or one that wants no page (`noPage`) — and this editor keeps them exactly that
+// shape. Saving publishes a new revision of the whole syllabus document, since the events live
+// inside it.
 
 const KINDS = [
   { value: 'page', label: 'page' },
-  { value: 'href', label: 'link' },
+  { value: 'href', label: 'PSM tab' },
   { value: 'none', label: 'no page yet' },
+  { value: 'nopage', label: 'needs no page' },
 ];
 
-const kindOf = (row) => (row.slug ? 'page' : row.href ? 'href' : 'none');
+const kindOf = (row) => (row.slug ? 'page' : row.href ? 'href' : row.noPage ? 'nopage' : 'none');
 
 function normalise(rows) {
   return rows
@@ -24,6 +30,9 @@ function normalise(rows) {
       const label = (r.label || '').trim();
       if (r.kind === 'page' && r.slug) return { slug: r.slug.trim().toLowerCase(), label };
       if (r.kind === 'href' && r.href) return { href: r.href.trim(), label };
+      // "needs no page" is a decision, not an absence: the row stays, and the hub stops
+      // offering to start a page for it.
+      if (r.kind === 'nopage') return { label, noPage: true };
       return { label };
     })
     .filter((r) => r.label);
@@ -41,9 +50,9 @@ function EventItemsEditor({ event, onSaved, onCancel }) {
   const set = (i, patch) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const errors = [];
   rows.forEach((r, i) => {
-    if (!(r.label || '').trim()) errors.push(`Row ${i + 1} has no wording.`);
+    if (!(r.label || '').trim()) errors.push(`Row ${i + 1} has no name.`);
     if (r.kind === 'page' && !(r.slug || '').trim()) errors.push(`Row ${i + 1} names no page.`);
-    if (r.kind === 'href' && !/^\//.test((r.href || '').trim())) errors.push(`Row ${i + 1}: a link is a path on this site, starting with /.`);
+    if (r.kind === 'href' && !/^\//.test((r.href || '').trim())) errors.push(`Row ${i + 1}: a PSM tab is the URL path after pinksheetmafia.com, starting with /.`);
   });
   if (!summary.trim()) errors.push('Say what you changed.');
 
@@ -84,15 +93,18 @@ function EventItemsEditor({ event, onSaved, onCancel }) {
   return (
     <div className="discuss-editor discuss-items-editor" role="group" aria-label={`Editing the items of ${event.id}`}>
       <p className="discuss-editor-hint">
-        The JPPT&apos;s own wording for each item, in the JPPT&apos;s order, and the page it resolves to.
-        Keep the wording verbatim; the page&apos;s title is what the list shows.
+        List the discussion items for this event and what each one links to, in the JPPT&apos;s
+        order. The name is what the list shows, so start from the JPPT&apos;s wording and change
+        it where that wording reads badly on screen or where two items share a page. If the item
+        should link to a PSM tab, select PSM tab and input the corresponding URL path (the part
+        after pinksheetmafia.com).
       </p>
       {rows.map((r, i) => {
         const meta = r.kind === 'page' && getItemMeta(r.slug);
         return (
           // eslint-disable-next-line react/no-array-index-key
           <div className="discuss-editor-row" key={i}>
-            <Line value={r.label} onChange={(v) => set(i, { label: v })} placeholder="JPPT wording" aria-label="JPPT wording" />
+            <Line value={r.label} onChange={(v) => set(i, { label: v })} placeholder="Name on this list" aria-label="Name on this list" />
             <select
               className="discuss-editor-line discuss-items-editor-kind"
               value={r.kind}
@@ -118,7 +130,7 @@ function EventItemsEditor({ event, onSaved, onCancel }) {
               </>
             )}
             {r.kind === 'href' && (
-              <Line value={r.href} onChange={(v) => set(i, { href: v })} placeholder="/tw4/eps-limits" aria-label="Link" />
+              <Line value={r.href} onChange={(v) => set(i, { href: v })} placeholder="/tw4/eps-limits" aria-label="PSM tab" />
             )}
             <RowTools
               index={i}

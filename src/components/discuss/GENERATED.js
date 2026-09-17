@@ -14,11 +14,16 @@ import { getItemMeta } from './registry';
 // of this file. `{ all: true }` drops the maneuver filter and takes everything the earlier
 // events briefed. It is a different question from the maneuver lists, not a superset of one
 // of them, so it gets its own noun and its own heading rather than reusing theirs.
+//
+// `{ block: true }` scopes to the anchor event's own block instead of its stage, for an item
+// that asks for what this block has covered rather than what the stage has. The answer is a
+// different list from every other spec's, which is why it is a page of its own and not a
+// reuse of one: a syllabus asking for its block's items is not asking for its stage's.
 
-// Items briefed strictly before `beforeId`, optionally restricted to one stage, and by
-// default only the maneuvers. Deduped: an item recurring across events is one link, at its
-// first appearance. `href` rows are skipped — they have no page to link to.
-function collect(syllabus, beforeId, stage, all) {
+// Items briefed strictly before `beforeId`, optionally restricted to one stage or to one
+// block, and by default only the maneuvers. Deduped: an item recurring across events is one
+// link, at its first appearance. `href` rows are skipped — they have no page to link to.
+function collect(syllabus, beforeId, { stage, block, all } = {}) {
   // Syllabus order, which is JPPT flow order and not numeric order: the block array keeps
   // it, so the events flattened from it are in the order a student actually meets them.
   const order = syllabus.blocks.flatMap((b) => b.events.map((e) => e.id));
@@ -30,6 +35,7 @@ function collect(syllabus, beforeId, stage, all) {
     const se = syllabus.syllabusEvent(eid);
     if (!se) return;
     if (stage && se.stage !== stage) return;
+    if (block && se.block !== block) return;
     const row = syllabus.getEvent(eid);
     if (!row) return;
     row.items.forEach((r) => {
@@ -65,13 +71,14 @@ export function generatedFor(item, fromEventId, syllabus) {
     noun: spec.all ? 'item' : 'maneuver',
     // A Capstone event links every maneuver in the syllabus rather than its own stage's,
     // since recombining the whole course is what the stage is for. An explicit
-    // `spec.stage` wins, which is how the familiarization variant stays scoped to FAM.
-    entries: collect(
-      syllabus,
-      anchor.id,
-      spec.stage || (anchor.stage === 'CS' ? null : anchor.stage),
-      spec.all,
-    ),
+    // `spec.stage` wins, which is how the familiarization variant stays scoped to FAM, and
+    // `spec.block` narrows to the anchor's own block, which is a different question again:
+    // Echo's FAM3303 asks for the items of its block, not of the stage that contains it.
+    entries: collect(syllabus, anchor.id, {
+      stage: spec.block ? null : (spec.stage || (anchor.stage === 'CS' ? null : anchor.stage)),
+      block: spec.block ? anchor.block : null,
+      all: spec.all,
+    }),
   }));
   return from ? groups : stack(groups);
 }
