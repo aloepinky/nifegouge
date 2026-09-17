@@ -27,6 +27,25 @@ export function rowKey(row) {
   return `${row.slug || row.href || 'none'}|${row.label}`;
 }
 
+// Link rows shown under one name wherever they appear, whatever the JPPT wording. The JPPT
+// writes the EP rows six ways ("any EP", "emergency procedures", "any critical action
+// emergency procedures", …) and all of them open the same page, so on screen they are one
+// item, the way a page's title stands in for its labels. `label` keeps the wording in the
+// data. `searchable: false` keeps them out of the search box, which lists pages to read.
+const LINK_ROWS = {
+  '/tw4/eps-limits': { name: 'Any critical action emergency procedure', searchable: false },
+};
+
+export function rowName(row) {
+  const link = row.href && LINK_ROWS[row.href];
+  return link ? link.name : row.label;
+}
+
+export function rowSearchable(row) {
+  const link = row.href && LINK_ROWS[row.href];
+  return !link || link.searchable !== false;
+}
+
 export function buildSyllabus({
   id, name, base, source, rev = null, builtIn = false, record = null,
   aircraft = '', school = '',

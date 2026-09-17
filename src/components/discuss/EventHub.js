@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getItemMeta } from './registry';
-import { rowKey, useSyllabus } from './SyllabusContext';
+import { rowKey, rowName, useSyllabus } from './SyllabusContext';
 import ItemLink from './ItemLink';
 import EventItemsEditor from './EventItemsEditor';
 import CreatePanel from './edit/CreatePanel';
@@ -84,12 +84,12 @@ function EventHub({ event }) {
             <ol className="discuss-itemlist">
               {event.items.map((row) => {
                 // An `href` row has no page of its own — it is the JPPT's wording linking to
-                // where that content already lives. Shown by the JPPT's label, since there is
-                // no page title to prefer, and never tagged as outstanding work.
+                // where that content already lives. Shown by its shared name where it has one,
+                // else the JPPT's label, and never tagged as outstanding work.
                 if (row.href) {
                   return (
                     <li key={rowKey(row)}>
-                      <Link to={row.href}>{row.label}</Link>
+                      <Link to={row.href}>{rowName(row)}</Link>
                       {HREF_TARGETS[row.href] && (
                         <span className="discuss-tag discuss-tag--quiet">{HREF_TARGETS[row.href]}</span>
                       )}

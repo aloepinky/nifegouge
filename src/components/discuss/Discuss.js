@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useMemo } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import ItemPage from './ItemPage';
 import EventHub from './EventHub';
@@ -12,6 +12,7 @@ import { DISCUSS_BASE, DELTA_ID, SyllabusContext, fromDoc, useSyllabus } from '.
 import { useRemoteSyllabus, useSyllabusList, useItem } from './discussApi';
 import { DiscussDataProvider, useDiscussData, useDelta } from './DiscussData';
 import { programLabel } from './program';
+import { SelectedSyllabusContext, recalledSyllabus, rememberSyllabus } from './RandomPage';
 
 // The upload page and the flow editor carry the PDF parser and pdf.js, so they load only when
 // someone opens them.
@@ -171,6 +172,19 @@ function DiscussBody({ mode }) {
     [syllabusId, remote.status, remote.record, matcher, delta],
   );
 
+  // A syllabus's own pages (All Events, a block, an event, its flow editor) record it as the
+  // reader's choice; an item or history page, which belongs to no one syllabus, reads it back.
+  const onItemPage = mode === 'item' || mode === 'history';
+  useEffect(() => {
+    if (!onItemPage && mode !== 'upload' && syllabus) rememberSyllabus(syllabus.id);
+  }, [onItemPage, mode, syllabus]);
+  const recalled = onItemPage ? recalledSyllabus() : null;
+  const recalledRemote = useRemoteSyllabus(recalled && recalled !== DELTA_ID ? recalled : undefined);
+  const selected = useMemo(() => {
+    if (!onItemPage) return syllabus || delta;
+    return recalledRemote.status === 'ready' ? fromDoc(recalledRemote.record, { matcher }) : delta;
+  }, [onItemPage, syllabus, delta, recalledRemote.status, recalledRemote.record, matcher]);
+
   let body;
   if (syllabusId && !syllabus) {
     body = remote.status === 'loading'
@@ -201,6 +215,7 @@ function DiscussBody({ mode }) {
 
   return (
     <SyllabusContext.Provider value={syllabus || delta}>
+      <SelectedSyllabusContext.Provider value={selected}>
       <div className="discuss-wrap">
         {/* Not --scrollable: the results list is absolutely positioned and an overflow
             container would clip it. */}
@@ -210,6 +225,7 @@ function DiscussBody({ mode }) {
         </div>
         <Suspense fallback={<Loading />}>{body}</Suspense>
       </div>
+      </SelectedSyllabusContext.Provider>
     </SyllabusContext.Provider>
   );
 }

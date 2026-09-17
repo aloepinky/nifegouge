@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { generatedFor } from './GENERATED';
 import { getItemMeta } from './registry';
-import { DISCUSS_BASE, useSyllabus } from './SyllabusContext';
+import { DISCUSS_BASE, rowName, useSyllabus } from './SyllabusContext';
+import RandomPage from './RandomPage';
 import { rememberItem, refreshItem } from './discussApi';
 import ItemLink from './ItemLink';
 import { getSystemTab } from '../systems/systemTabs';
@@ -358,7 +359,7 @@ function Bullet({ item, showCite, value, ep }) {
 // display: one item, one name, however you arrived at it.
 function itemName(row) {
   const item = getItemMeta(row.slug);
-  return item ? item.title : row.label;
+  return item ? item.title : rowName(row);
 }
 
 // A neighbour with no page yet is named but not linked.
@@ -476,6 +477,7 @@ function genTitle(g, many) {
 function Contents({ item, extra, hasSeeAlso, hasRefs }) {
   return (
     <nav className="discuss-toc" aria-label="Contents">
+      <RandomPage current={item.slug} />
       <h2>Contents</h2>
       <ol>
         <li>

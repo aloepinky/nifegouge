@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDelta } from './DiscussData';
 import { itemList, useItemIndexVersion } from './registry';
 import { prefetchItem } from './discussApi';
+import { rowSearchable } from './SyllabusContext';
 
 // Jump straight to an event, a block or a discuss item. The index is built from the Delta
 // syllabus and the item index, so there is nothing to keep in step with the pages themselves;
@@ -62,7 +63,7 @@ function buildIndex(delta, items) {
   delta.events.forEach((event) => {
     event.items.forEach((row) => {
       if (row.href) {
-        links[row.label] = row.href;
+        if (rowSearchable(row)) links[row.label] = row.href;
         return;
       }
       if (!row.slug) {

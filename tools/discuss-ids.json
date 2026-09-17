@@ -268,11 +268,13 @@
   "numbers/num-03",
   "numbers/num-04",
   "numbers/num-05",
+  "numbers/num-11",
   "numbers/num-06",
   "numbers/num-07",
   "numbers/num-08",
   "numbers/num-09",
   "numbers/num-10",
+  "numbers/num-12",
   "classes",
   "classes/fig:fig-01",
   "classes/cl-01",
@@ -283,7 +285,6 @@
   "classes/cl-06",
   "classes/cl-07",
   "comparison",
-  "comparison/co-p1",
   "comparison/tbl:tbl-classification-chart",
   "entry",
   "entry/en-p1",
@@ -495,8 +496,11 @@
  ],
  "asr-approach": [
   "what-is-different",
-  "what-is-different/wd-p1",
   "what-is-different/wd-p2",
+  "what-is-different/wd-p1",
+  "what-is-different/wd-p3",
+  "what-is-different/wd-01",
+  "what-is-different/wd-02",
   "final-approach-abnormalities",
   "final-approach-abnormalities/fa-p1",
   "final-approach-abnormalities/fa-01",
@@ -792,6 +796,9 @@
   "the-system/bg-p5"
  ],
  "change-of-route-or-destination": [
+  "atc-request",
+  "atc-request/ar-p1",
+  "atc-request/ar-p2",
   "the-thirteen-items",
   "the-thirteen-items/ti-01",
   "the-thirteen-items/ti-02",
@@ -1233,6 +1240,7 @@
  "dd-175-1-weather-brief": [
   "numbers/num-01",
   "numbers/num-02",
+  "numbers/num-04",
   "numbers/num-03",
   "when-required",
   "when-required/wr-p2",
@@ -1241,15 +1249,22 @@
   "where-it-comes-from/wc-p2",
   "currency",
   "currency/cu-p1",
+  "tw-4-sop",
+  "tw-4-sop/tw-p1",
   "vt-27-sop",
   "vt-27-sop/wr-p1"
  ],
  "dd-1801": [
+  "cnaf-3710",
   "filing-away-from-a-military-field",
-  "filing-away-from-a-military-field/fa-p1",
-  "filing-away-from-a-military-field/fa-p2",
+  "filing-away-from-a-military-field/fa-p3",
+  "filing-away-from-a-military-field/fa-p4",
   "changing-it-airborne",
-  "changing-it-airborne/ca-p1"
+  "changing-it-airborne/ca-p2",
+  "course-rules-manual",
+  "course-rules-manual/cr-p1",
+  "vt-28-sop",
+  "vt-28-sop/v28-p1"
  ],
  "destination-maintenance-facilities": [
   "tw-4-sop",
@@ -1598,13 +1613,20 @@
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-04",
-  "numbers/num-05",
   "numbers/num-06",
   "numbers/num-07",
   "numbers/num-08",
   "chart-study",
-  "chart-study/cs-p1",
-  "chart-study/cs-p2",
+  "chart-study/cs-p3",
+  "chart-study/cs-01",
+  "chart-study/cs-02",
+  "chart-study/cs-03",
+  "chart-study/cs-04",
+  "chart-study/cs-05",
+  "chart-study/cs-06",
+  "chart-study/cs-07",
+  "most-suitable-field",
+  "most-suitable-field/cs-p4",
   "in-flight",
   "in-flight/if-p1",
   "reachability",
@@ -1796,7 +1818,8 @@
  "en-route-fuel-management": [
   "working-the-log",
   "working-the-log/wl-p1",
-  "working-the-log/wl-p2"
+  "endurance",
+  "endurance/en-p1"
  ],
  "en-route-procedures": [
   "numbers/num-01",
@@ -2015,8 +2038,6 @@
   "fan",
   "fan/fn-p1",
   "fan/fn-p2",
-  "interval",
-  "interval/in-p1",
   "pattern",
   "pattern/pa-p1"
  ],
@@ -2077,17 +2098,19 @@
  "flight-service-station": [
   "numbers/num-01",
   "numbers/num-03",
-  "numbers/num-04",
   "numbers/num-05",
   "reaching-one",
   "reaching-one/ro-p1",
-  "reaching-one/ro-p2",
+  "reaching-one/ro-p3",
   "filing-and-closing",
   "filing-and-closing/fc-p1",
   "filing-and-closing/fc-p2",
+  "filing-and-closing/fc-p3",
   "weather-and-notams",
+  "weather-and-notams/wn-p3",
   "weather-and-notams/wn-p1",
-  "weather-and-notams/wn-p2"
+  "vor-test-signal",
+  "vor-test-signal/wn-p2"
  ],
  "flight-split": [
   "numbers/num-01",
@@ -2251,7 +2274,6 @@
   "radio-or-signal",
   "radio-or-signal/rs-p1",
   "radio-or-signal/rs-p2",
-  "radio-or-signal/rs-p3",
   "common-errors",
   "common-errors/ce-01",
   "common-errors/ce-02",
@@ -2685,10 +2707,7 @@
   "in-procedures/ip-05",
   "in-procedures/ip-06",
   "in-procedures/ip-07",
-  "in-procedures/ip-08",
-  "in-procedures/ip-09",
-  "execution",
-  "execution/ex-p1"
+  "in-procedures/ip-09"
  ],
  "hard-landings": [
   "numbers/num-03",
@@ -2725,8 +2744,6 @@
   "flying-it/fi-p5"
  ],
  "hefoe": [
-  "what-it-is",
-  "what-it-is/wi-p1",
   "the-code",
   "the-code/tc-p1",
   "the-code/fig:fig-01",
@@ -2736,7 +2753,6 @@
   "the-code/tc-04",
   "the-code/tc-05",
   "passing-it",
-  "passing-it/pi-p1",
   "passing-it/pi-p2",
   "passing-it/pi-p3"
  ],
@@ -2747,19 +2763,25 @@
   "numbers/num-04",
   "numbers/num-05",
   "numbers/num-06",
-  "numbers/num-08",
+  "numbers/num-07",
   "numbers/num-09",
+  "numbers/num-10",
   "the-penetration",
   "the-penetration/tp-p1",
   "the-penetration/tp-p4",
-  "the-penetration/tp-p2",
   "the-penetration/tp-p3",
   "procedure",
   "procedure/pr-01",
   "procedure/pr-02",
+  "procedure/pr-02/pr-02a",
+  "procedure/pr-02/pr-02b",
+  "procedure/pr-02/pr-02c",
+  "procedure/pr-02/pr-02d",
+  "procedure/pr-02/pr-02e",
+  "procedure/pr-02/pr-02f",
   "procedure/pr-03",
-  "procedure/pr-04",
-  "procedure/pr-05",
+  "procedure/pr-03/pr-04",
+  "procedure/pr-03/pr-05",
   "procedure/pr-06"
  ],
  "hilo-approach": [
@@ -3197,16 +3219,13 @@
   "the-covers",
   "the-covers/tc-p1",
   "the-covers/tc-p2",
-  "the-covers/tc-p3",
   "what-it-does-not-cover",
-  "what-it-does-not-cover/wn-p1",
-  "what-it-does-not-cover/wn-p2"
+  "what-it-does-not-cover/wn-p1"
  ],
  "ifr-to-vfr-transition": [
   "closing",
   "closing/cl-p1",
   "closing/cl-p2",
-  "closing/cl-p3",
   "cancelling",
   "cancelling/ca-p1",
   "cancelling/ca-p2"
@@ -3307,10 +3326,10 @@
   "considerations/co-04",
   "considerations/co-05",
   "considerations/co-06",
+  "considerations/at-p3",
   "atc",
   "atc/at-p1",
-  "atc/at-p2",
-  "atc/at-p3"
+  "atc/at-p2"
  ],
  "imc-lost-communications": [
   "numbers/num-01",
@@ -3324,6 +3343,8 @@
   "after-takeoff/at-01",
   "after-takeoff/at-02",
   "after-takeoff/at-03",
+  "after-takeoff/at-03/at-04",
+  "after-takeoff/at-03/at-05",
   "local-coded-flight-plan",
   "local-coded-flight-plan/lc-p1",
   "local-coded-flight-plan/lc-01",
@@ -3331,8 +3352,15 @@
   "local-coded-flight-plan/lc-03",
   "in-the-gca-pattern",
   "in-the-gca-pattern/gp-p1",
+  "in-the-gca-pattern/gp-01",
+  "in-the-gca-pattern/gp-02",
+  "in-the-gca-pattern/gp-03",
   "on-gca-final",
-  "on-gca-final/gf-p1"
+  "on-gca-final/gf-p1",
+  "on-gca-final/gf-01",
+  "on-gca-final/gf-02",
+  "on-gca-final/gf-03",
+  "on-gca-final/gf-04"
  ],
  "immediate-air-start": [
   "numbers/num-01",
@@ -3624,9 +3652,8 @@
  ],
  "jet-log": [
   "using-it-airborne",
-  "using-it-airborne/ua-p1",
   "at-the-brief",
-  "at-the-brief/ab-p1"
+  "at-the-brief/ab-p2"
  ],
  "knock-it-off": [
   "when",
@@ -3902,26 +3929,18 @@
   "vt-28-sop/v28-p3"
  ],
  "local-night-vnav-sop": [
-  "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
   "numbers/num-04",
   "numbers/num-05",
-  "numbers/num-06",
-  "numbers/num-07",
   "numbers/num-08",
   "numbers/num-09",
-  "altitude",
-  "altitude/al-p1",
   "tw-4-sop",
   "runway",
   "runway/rw-p3",
   "runway/tbl:tbl-min-runway",
   "weather",
-  "weather/we-p1",
   "weather/we-p2",
-  "fuel",
-  "fuel/fu-p1",
   "what-is-off-limits",
   "what-is-off-limits/wo-p1",
   "night-routes",
@@ -4049,7 +4068,6 @@
   "numbers/num-01",
   "signalling",
   "signalling/sg-p1",
-  "signalling/sg-p2",
   "troubleshooting",
   "troubleshooting/ts-p1",
   "troubleshooting/ts-p2",
@@ -4066,9 +4084,14 @@
  ],
  "lost-communications": [
   "numbers/num-01",
+  "general",
+  "general/ge-p1",
+  "general/ge-p2",
+  "general/ge-p3",
   "vmc",
   "vmc/vm-p1",
   "vmc/vm-p2",
+  "vmc/vm-p3",
   "route",
   "route/rt-p1",
   "route/rt-01",
@@ -4330,13 +4353,10 @@
   "obstructions/ob-p1",
   "obstructions/ob-p2",
   "what-shows",
-  "what-shows/ws-p1",
   "what-shows/ws-p2"
  ],
  "night-vnav-timing-and-course-corrections": [
   "numbers/num-01",
-  "numbers/num-02",
-  "numbers/num-03",
   "numbers/num-04",
   "numbers/num-05",
   "numbers/num-06",
@@ -4471,11 +4491,21 @@
   "categories",
   "categories/ca-01",
   "categories/ca-02",
-  "categories/ca-03",
   "categories/ca-04",
   "categories/ca-05",
-  "categories/ca-06",
-  "categories/ca-07"
+  "artcc",
+  "artcc/ar-p1",
+  "notices",
+  "notices/no-p1",
+  "gps",
+  "gps/gp-p1",
+  "access",
+  "access/ac-p1",
+  "access/ac-p2",
+  "access/ac-p3",
+  "cnaf-3710",
+  "cnaf-3710/cn-p1",
+  "cnaf-3710/cn-p2"
  ],
  "obogs-and-pressurization-system": [
   "numbers/num-01",
@@ -5322,7 +5352,6 @@
   "numbers/num-02",
   "numbers/num-03",
   "numbers/num-04",
-  "numbers/num-05",
   "numbers/num-06",
   "visual-fixing",
   "visual-fixing/vf-p1",
@@ -5513,9 +5542,6 @@
   "planning/pl-p2",
   "before-faf",
   "before-faf/bf-p1",
-  "before-faf/bf-01",
-  "before-faf/bf-02",
-  "before-faf/bf-03",
   "configuring",
   "configuring/cf-p1",
   "configuring/cf-p2",
@@ -5526,7 +5552,6 @@
  "section-pel": [
   "numbers/num-01",
   "lead-change",
-  "lead-change/lc-p1",
   "lead-change/lc-p2",
   "wing-duties",
   "wing-duties/wd-p1",
@@ -5563,7 +5588,6 @@
   "rotation/ro-p3",
   "rotation/ro-p4",
   "rotation/ro-p5",
-  "rotation/ro-p6",
   "section-abort",
   "section-abort/sa-p1",
   "section-abort/sa-p2",
@@ -5725,10 +5749,6 @@
   "vt-28-sop/ns-p1"
  ],
  "speed-brake-use-as-a-section": [
-  "numbers/num-01",
-  "on-recovery",
-  "on-recovery/or-p1",
-  "on-recovery/or-p2",
   "procedure",
   "procedure/pr-p1",
   "procedure/pr-p2",
@@ -5817,9 +5837,7 @@
   "timing-cost",
   "timing-cost/tc-p1",
   "afterwards",
-  "afterwards/af-p1",
-  "chart-margin",
-  "chart-margin/cm-p1"
+  "afterwards/af-p1"
  ],
  "standard-instrument-departure": [
   "what-it-is",
@@ -5908,9 +5926,14 @@
   "common-errors/ce-03"
  ],
  "stereo-routes": [
+  "coded-departures",
+  "coded-departures/cd-p1",
+  "cnaf-3710",
+  "cnaf-3710/sc-p1",
+  "cnaf-3710/wb-p2",
   "what-they-buy-you",
-  "what-they-buy-you/wb-p1",
-  "what-they-buy-you/wb-p2"
+  "what-they-buy-you/cr-p1",
+  "what-they-buy-you/wb-p1"
  ],
  "strange-field-operations": [
   "numbers/num-04",
@@ -6016,7 +6039,6 @@
  "terminate": [
   "when",
   "when/wn-p1",
-  "when/wn-p2",
   "the-call",
   "the-call/tc-p1",
   "the-call/tc-p2"
@@ -6304,7 +6326,6 @@
   "numbers/num-07",
   "equipment",
   "equipment/eq-p1",
-  "equipment/eq-p2",
   "route",
   "route/rt-01",
   "route/rt-02",
@@ -6382,19 +6403,17 @@
  "visual-descent-point": [
   "numbers/num-01",
   "numbers/num-02",
+  "when-none-is-published",
+  "when-none-is-published/wn-p1",
   "computing-one",
   "computing-one/co-p1",
-  "computing-one/co-p2",
-  "when-none-is-published",
-  "when-none-is-published/wn-p1"
+  "computing-one/co-p3",
+  "use",
+  "use/co-p2"
  ],
  "visual-signals": [
-  "when",
-  "when/wn-p1",
-  "when/wn-p2",
   "execution",
   "execution/ex-p1",
-  "execution/ex-p2",
   "the-set",
   "the-set/fig:fig-01"
  ],
@@ -6449,16 +6468,6 @@
   "numbers/num-03",
   "numbers/num-04",
   "numbers/num-05",
-  "getting-established",
-  "getting-established/ge-p1",
-  "the-final-segment",
-  "the-final-segment/fs-01",
-  "the-final-segment/fs-02",
-  "the-final-segment/fs-03",
-  "the-final-segment/fs-04",
-  "the-final-segment/fs-05",
-  "descending-from-the-faf",
-  "descending-from-the-faf/df-p1",
   "variations-on-the-final-segment",
   "variations-on-the-final-segment/vf-p1",
   "variations-on-the-final-segment/vf-01",
@@ -6466,6 +6475,22 @@
   "variations-on-the-final-segment/vf-03",
   "variations-on-the-final-segment/vf-04",
   "variations-on-the-final-segment/vf-05",
+  "getting-established",
+  "the-final-segment",
+  "the-final-segment/fs-01",
+  "the-final-segment/fs-01/fs-01a",
+  "the-final-segment/fs-01/fs-01b",
+  "the-final-segment/fs-01/fs-01c",
+  "the-final-segment/fs-01/fs-01d",
+  "the-final-segment/fs-01/fs-01e",
+  "the-final-segment/fs-01/fs-01f",
+  "the-final-segment/fs-02",
+  "the-final-segment/fs-03",
+  "the-final-segment/fs-03/fs-03a",
+  "the-final-segment/fs-04",
+  "the-final-segment/fs-05",
+  "descending-from-the-faf",
+  "descending-from-the-faf/df-p1",
   "common-errors",
   "common-errors/ce-01",
   "common-errors/ce-02",
@@ -6566,8 +6591,7 @@
   "wingman/wm-03",
   "wingman/wm-04",
   "thinking-ahead",
-  "thinking-ahead/ta-p1",
-  "thinking-ahead/ta-p2"
+  "thinking-ahead/ta-p1"
  ],
  "wingover": [
   "numbers/num-01",

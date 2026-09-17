@@ -4071,6 +4071,33 @@ textarea.incorrect-answer {
   font-size: 13px;
 }
 
+/* Random page, above the contents. Quiet enough to sit in the rail, but a button. */
+.discuss-random {
+  display: block;
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #003B4F;
+  background: #fff;
+  border: 1px solid #c9d6dc;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.discuss-random:hover,
+.discuss-random:focus-visible {
+  border-color: #003B4F;
+  background: #f3f7f8;
+}
+
+@media (max-width: 900px) {
+  .discuss-random { width: auto; display: inline-block; }
+}
+
 .discuss-toc h2 {
   margin: 0 0 8px;
   font-size: 12px;
