@@ -13,11 +13,11 @@ import { createContext, useContext } from 'react';
 export const DISCUSS_BASE = '/tw4/discuss';
 export const DELTA_ID = 'delta-primary';
 
-// The style guide is a draft. It renders on a dev server and is neither routed nor linked on
-// the deployed site, so a reader cannot reach a page of rules nobody has agreed to yet. One
-// flag, read by the route and by both places that link it: taking the page live is deleting
-// this line and the three guards that read it, rather than hunting environment checks.
-export const STYLE_GUIDE_DRAFT = process.env.NODE_ENV !== 'production';
+// The style guide is a draft, and it is hidden everywhere while it is being edited — the dev
+// server included, so a half-written page of rules is not what a reader finds. One flag, read
+// by the route and by both places that link it: set it back to `process.env.NODE_ENV !==
+// 'production'` to work on the page, and delete the line and its three guards to take it live.
+export const STYLE_GUIDE_DRAFT = false;
 
 function index(rows) {
   const out = {};

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function TW4About() {
   const navigate = useNavigate();
@@ -29,9 +29,6 @@ function TW4About() {
 
   return (
     <div className="page-container">
-      <p className="about-text" style={{fontSize: '11px', color: '#666', textAlign: 'center', marginTop: '-18px', marginBottom: '-15px', fontStyle: 'italic'}}>
-        Tip: Scroll left/right through the tabs above if your screen is too narrow to display them all
-      </p>
       <h1 className="about-title">
         Welcome to <em>TW4 Primary</em>
       </h1>
@@ -56,6 +53,16 @@ function TW4About() {
       <p className="about-text">
         The Docs page is a community-driven library of primary study materials.
         Find gouge, study guides, and useful references shared by fellow students.
+      </p>
+
+      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => navigate('/tw4/discuss')}>Discussion Items</h2>
+      <p className="about-text">
+        A Wikipedia style compendium of the discussion items in primary. Each item can be found through search, the JPPT flow chart, or an event list.
+        Each page is built from the pubs — NATOPS, the FTIs, the course rules and the squadron SOPs — with a citation on every block, so you can verify the information yourself.
+      </p>
+      <p className="about-text">
+        Anyone can edit any content, with a full history available to track changes. That way the community can ensure all content is up to date and accurate.
+        Please help future SNAs and make changes where you see fit.
       </p>
 
       <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => navigate('/tw4/briefs')}>Briefs/TOLD</h2>
@@ -102,10 +109,6 @@ function TW4About() {
         Thanks,<br/>PinkSheetMafia
       </p>
 
-      {/* Preview: not in the tab bar yet. */}
-      <p className="about-text" style={{ marginTop: '28px', fontSize: '12px', color: '#666' }}>
-        <Link to="/tw4/discuss" className="about-link">Discussion items</Link> (preview)
-      </p>
     </div>
   );
 }

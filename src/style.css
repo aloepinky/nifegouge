@@ -6210,3 +6210,90 @@ textarea.incorrect-answer {
 .discuss-figure-upload input[type="file"] { font-size: 13px; }
 
 .discuss-editor-secondary { font: inherit; }
+
+/* ── Top nav dropdowns ───────────────────────────────────────────────────────
+   The tab row outgrew the bar, so both halves of the top nav are menus: the
+   program on the left, the page on the right. Each closed menu prints where you
+   are, which is what the row of tabs used to do, and the panel is light on the
+   dark bar so a menu reads as a menu rather than as more bar. */
+.topnav-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.topnav-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 60vw;
+  padding: 8px 12px;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  color: #ffffff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.navbar .topnav-trigger:hover,
+.navbar .topnav-trigger[aria-expanded="true"] {
+  background-color: #003B4F;
+}
+
+.topnav-current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topnav-caret {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.topnav-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 60;
+  min-width: 220px;
+  max-height: 70vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border: 1px solid #003B4F;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(1, 32, 44, 0.25);
+}
+
+.topnav-menu--right .topnav-panel {
+  left: auto;
+  right: 0;
+}
+
+/* `.navbar a` paints every link in the bar white, so the panel's own links have
+   to say otherwise; the button and the link forms are styled as one row. */
+.navbar .topnav-panel .topnav-item {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 14px;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  color: #01202C;
+  font-weight: bold;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.navbar .topnav-panel .topnav-item:hover {
+  background-color: #E8F0F3;
+  border-radius: 0;
+}
+
+.navbar .topnav-panel .topnav-item.active {
+  background-color: #003B4F;
+  color: #ffffff;
+}

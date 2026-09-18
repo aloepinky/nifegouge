@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './style.css';
 import Questions from './components/Questions';
 import Nav from './components/Nav';
@@ -17,65 +17,16 @@ import { STYLE_GUIDE_DRAFT } from './components/discuss/SyllabusContext.js';
 import TW4JetLog from './components/TW4JetLog.js';
 import TW4Docs from './components/TW4Docs.js';
 import Footer from './components/Footer.js';
+import TopNav from './components/TopNav.js';
 
 function App() {
   const location = useLocation();
-  const navigate = useNavigate();
 
-  const isTW4 = location.pathname.startsWith('/tw4');
-  const isNIFE = location.pathname.startsWith('/nife');
   const isLanding = location.pathname === '/';
-
-  const navLinkClass = ({ isActive }) => isActive ? 'active' : '';
 
   return (
     <div>
-      {!isLanding && (
-        <div className="navbar">
-          {/* Mode Toggle */}
-          <div className="page-toggle-container">
-            <span className={isNIFE ? 'active' : ''} onClick={() => navigate('/nife/about')}>
-              NIFE
-            </span>
-            <div
-              className="page-toggle-switch"
-              onClick={() => navigate(isTW4 ? '/nife/about' : '/tw4/about')}
-            >
-              <div className={`page-toggle-slider ${isTW4 ? 'right' : 'left'}`}></div>
-            </div>
-            <span className={isTW4 ? 'active' : ''} onClick={() => navigate('/tw4/about')}>
-              TW4 Primary
-            </span>
-          </div>
-
-          {/* Navigation Links */}
-          <div className="nav-links">
-            <NavLink to={isNIFE ? '/nife/about' : '/tw4/about'} end className={navLinkClass}>
-              About
-            </NavLink>
-            {isNIFE && (
-              <>
-                <NavLink to="/nife/questions" end className={navLinkClass}>Questions</NavLink>
-                <NavLink to="/nife/docs" end className={navLinkClass}>Docs</NavLink>
-                <NavLink to="/nife/nav" className={navLinkClass}>Problem Generator</NavLink>
-                <NavLink to="/nife/flight" className={navLinkClass}>Flight</NavLink>
-              </>
-            )}
-            {isTW4 && (
-              <>
-                <NavLink to="/tw4/eps-limits" className={navLinkClass}>EPs/Limits</NavLink>
-                <NavLink to="/tw4/docs" end className={navLinkClass}>Docs</NavLink>
-                <NavLink to="/tw4/briefs" end className={navLinkClass}>Briefs/TOLD</NavLink>
-                <NavLink to="/tw4/courserules" end className={navLinkClass}>Course Rules</NavLink>
-                <NavLink to="/tw4/systems" className={navLinkClass}>Systems</NavLink>
-                {/* The Discuss tab is reachable from the foot of the About page while it is
-                    previewed; it gets a tab here when it is ready to be found. */}
-                <NavLink to="/tw4/jetlog" end className={navLinkClass}>Jet Log</NavLink>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      {!isLanding && <TopNav />}
 
       <Routes>
         <Route path="/" element={<LandingPage />} />

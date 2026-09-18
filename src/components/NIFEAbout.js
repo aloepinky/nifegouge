@@ -13,9 +13,6 @@ function NIFEAbout() {
 
   return (
     <div className="page-container">
-      <p className="about-text" style={{fontSize: '11px', color: '#666', textAlign: 'center', marginTop: '-18px', marginBottom: '-15px', fontStyle: 'italic'}}>
-        Tip: Scroll left/right through the tabs above if your screen is too narrow to display them all
-      </p>
       <h1 className="about-title">
         Welcome to <em>NIFE</em>
       </h1>
