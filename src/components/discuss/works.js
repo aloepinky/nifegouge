@@ -28,6 +28,7 @@ export const WORKS = [
   { work: 'KNGP IFG', date: '05JUN26' },
   { work: 'FIH', date: '10JUL25' },
   { work: 'AIM', date: '09JUL26' },
+  { work: 'Instrument Procedures Handbook', date: '2017' },
   { work: 'CNAF 3710', date: '07FEB25' },
   { work: 'Delta JPPT', date: '15JUL24' },
   { work: 'Echo JPPT', date: '24APR26' },
