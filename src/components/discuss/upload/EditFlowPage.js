@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import FlowEditor from './FlowEditor';
 import { ConfirmButton, Line, ProgramFields } from '../edit/fields';
-import { programOf, withDefaultProgram } from '../program';
+import { SCHOOLS, programOf, withDefaultProgram } from '../program';
 import { getSyllabus, rememberSyllabus, saveSyllabus, getAuthor } from '../discussApi';
 import { DISCUSS_BASE, DELTA_ID } from '../SyllabusContext';
 
@@ -123,6 +123,7 @@ function EditFlowPage({ record: initialRecord }) {
           value={program}
           onChange={setProgram}
           hint="The aircraft and the school this syllabus trains for."
+          schools={SCHOOLS}
         />
 
         <FlowEditor

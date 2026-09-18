@@ -1,7 +1,7 @@
 import { HEADERS, HttpError, fail, parseBody, reply, requireAdmin } from './http.mjs';
 import {
   listSyllabiHandler, getSyllabusHandler, publishSyllabusHandler, saveSyllabusHandler,
-  importSyllabusHandler, hideSyllabusHandler,
+  importSyllabusHandler, hideSyllabusHandler, renameSyllabusHandler,
 } from './syllabi.mjs';
 import {
   getItemHandler, itemHistoryHandler, itemRevisionHandler, saveItemHandler, createItemHandler,
@@ -45,6 +45,7 @@ import { tagProgramHandler } from './program.mjs';
 //   POST hide-item           (admin)       { slug, hidden }
 //   POST set-author          (admin)       { slug, from, to }                            -> { revs }
 //   POST hide-syllabus       (admin)       { id, hidden }
+//   POST rename-syllabus     (admin)       { id, name }                               -> { id, rev, name }
 //   GET  get-jetlog?id=                    -> { jetlog }
 //   GET  jetlog-history?id=                -> { latestRev, revisions }
 //   GET  jetlog-revision?id=&rev=          -> { revision }
@@ -98,6 +99,7 @@ const ROUTES = {
   'hide-item': { method: 'POST', admin: true, run: hideItemHandler },
   'set-author': { method: 'POST', admin: true, run: setAuthorHandler },
   'hide-syllabus': { method: 'POST', admin: true, run: hideSyllabusHandler },
+  'rename-syllabus': { method: 'POST', admin: true, run: renameSyllabusHandler },
   'get-jetlog': { method: 'GET', run: getJetLogHandler },
   'jetlog-history': { method: 'GET', run: jetLogHistoryHandler },
   'jetlog-revision': { method: 'GET', run: jetLogRevisionHandler },

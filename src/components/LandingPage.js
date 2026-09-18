@@ -40,9 +40,9 @@ function LandingPage() {
           className="landing-button"
           onClick={() => navigate('/tw4/about')}
         >
-          <div className="landing-button-fallback">TW4 Primary</div>
-          <img src="/images/t6b.jpg" alt="TW4 Primary - T-6B Texan II" />
-          <div className="landing-button-label">TW4 Primary</div>
+          <div className="landing-button-fallback">Primary</div>
+          <img src="/images/t6b.jpg" alt="Primary - T-6B Texan II" />
+          <div className="landing-button-label">Primary</div>
         </div>
       </div>
     </div>

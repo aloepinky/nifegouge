@@ -311,6 +311,22 @@ export async function setSyllabusHidden(id, hidden) {
   return { ...newest, hidden: hidden || undefined };
 }
 
+// Renames a syllabus on its newest row, in place: no revision, because the name is how the
+// dropdown lists the document and not part of it. Older rows keep the name they were saved
+// under, which is what History shows for them.
+export async function setSyllabusName(id, name) {
+  const newest = await newestSyllabus(id);
+  if (!newest) throw new HttpError(404, 'No such syllabus');
+  await db().send(new UpdateCommand({
+    TableName: CONFIG.syllabiTable,
+    Key: { syllabusId: id, rev: newest.rev },
+    UpdateExpression: 'SET #n = :n',
+    ExpressionAttributeNames: { '#n': 'name' },
+    ExpressionAttributeValues: { ':n': name },
+  }));
+  return { ...newest, name };
+}
+
 // ---------------------------------------------------------------------------------------
 // Jet logs
 //

@@ -1,5 +1,6 @@
-import React, { Suspense, lazy, useEffect, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
+import useMenuDismiss from '../useMenuDismiss';
 import ItemPage from './ItemPage';
 import EventHub from './EventHub';
 import BlockPage from './BlockPage';
@@ -24,31 +25,71 @@ const EditFlowPage = lazy(() => import('./upload/EditFlowPage'));
 // and this keeps it out of the bundle every reader downloads.
 const StyleGuide = lazy(() => import('./StyleGuide'));
 
-// Delta Primary is always offered; published syllabi join it from the mirror's list.
+// A syllabus's name, then its school in quieter type: "Delta Syllabus Primary".
+function SyllabusName({ name, school }) {
+  return (
+    <>
+      <span>{name}</span>
+      {school && <span className="discuss-syllabus-school">{school}</span>}
+    </>
+  );
+}
+
+// Delta is always offered; published syllabi join it from the mirror's list.
 function SyllabusPicker() {
   const s = useSyllabus();
   const delta = useDelta();
   const navigate = useNavigate();
   const published = useSyllabusList().filter((o) => o.id !== DELTA_ID);
+  const [open, setOpen] = useState(false);
+  const wrap = useRef(null);
+  const trigger = useRef(null);
+  useMenuDismiss(open, setOpen, wrap, trigger);
 
-  const options = [{ id: delta.id, name: delta.name }, ...published];
-  if (!options.some((o) => o.id === s.id)) options.push({ id: s.id, name: s.name });
+  const options = [{ id: delta.id, name: delta.name, school: delta.school }, ...published];
+  if (!options.some((o) => o.id === s.id)) options.push({ id: s.id, name: s.name, school: s.school });
+  const current = options.find((o) => o.id === s.id);
+
+  const choose = (id) => {
+    setOpen(false);
+    // Remembered before navigating: the bare All Events route opens the remembered syllabus.
+    rememberSyllabus(id);
+    navigate(id === DELTA_ID ? DISCUSS_BASE : `${DISCUSS_BASE}/s/${id}`);
+  };
 
   return (
     <div className="discuss-syllabus">
-      <select
-        className="discuss-syllabus-select"
-        aria-label="Syllabus"
-        value={s.id}
-        onChange={(e) => {
-          const id = e.target.value;
-          navigate(id === DELTA_ID ? DISCUSS_BASE : `${DISCUSS_BASE}/s/${id}`);
-        }}
-      >
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>{o.name}</option>
-        ))}
-      </select>
+      <div className="discuss-syllabus-menu" ref={wrap}>
+        <button
+          type="button"
+          ref={trigger}
+          className="discuss-syllabus-select"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-label={`Syllabus: ${current.name}${current.school ? ` ${current.school}` : ''}`}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <SyllabusName name={current.name} school={current.school} />
+          <span className="discuss-syllabus-caret" aria-hidden="true">▾</span>
+        </button>
+        {open && (
+          <ul className="discuss-syllabus-panel" role="listbox" aria-label="Syllabus">
+            {options.map((o) => (
+              <li key={o.id} role="presentation">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={o.id === s.id}
+                  className="discuss-syllabus-option"
+                  onClick={() => choose(o.id)}
+                >
+                  <SyllabusName name={o.name} school={o.school} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       <Link to={`${DISCUSS_BASE}/upload`} className="discuss-syllabus-submit">
         Submit a new JPPT
       </Link>
@@ -190,15 +231,27 @@ function DiscussBody({ mode }) {
   // A syllabus's own pages (All Events, a block, an event, its flow editor) record it as the
   // reader's choice; an item or history page, which belongs to no one syllabus, reads it back.
   const onItemPage = mode === 'item' || mode === 'history';
+  // The bare All Events route opens the syllabus this reader last used, so a student on Echo
+  // is not dropped back on Delta every time they open the tab. Choosing Delta in the picker
+  // remembers Delta, which is what lets this route show it.
+  const home = !mode && !syllabusId ? recalledSyllabus() : null;
+  const redirectTo = home && home !== DELTA_ID ? `${DISCUSS_BASE}/s/${home}` : null;
   useEffect(() => {
-    if (!onItemPage && mode !== 'upload' && syllabus) rememberSyllabus(syllabus.id);
-  }, [onItemPage, mode, syllabus]);
+    if (!redirectTo && !onItemPage && mode !== 'upload' && syllabus) rememberSyllabus(syllabus.id);
+  }, [redirectTo, onItemPage, mode, syllabus]);
+  // A remembered syllabus that has since been taken down is forgotten, or the redirect above
+  // would keep landing on its "no such syllabus" page.
+  useEffect(() => {
+    if (syllabusId && remote.status === 'missing' && recalledSyllabus() === syllabusId) rememberSyllabus(DELTA_ID);
+  }, [syllabusId, remote.status]);
   const recalled = onItemPage ? recalledSyllabus() : null;
   const recalledRemote = useRemoteSyllabus(recalled && recalled !== DELTA_ID ? recalled : undefined);
   const selected = useMemo(() => {
     if (!onItemPage) return syllabus || delta;
     return recalledRemote.status === 'ready' ? fromDoc(recalledRemote.record, { matcher }) : delta;
   }, [onItemPage, syllabus, delta, recalledRemote.status, recalledRemote.record, matcher]);
+
+  if (redirectTo) return <Navigate replace to={redirectTo} />;
 
   let body;
   if (syllabusId && !syllabus) {
@@ -207,7 +260,7 @@ function DiscussBody({ mode }) {
       : (
         <NotFound what="syllabus">
           {remote.status === 'error' ? `${remote.error.message} ` : ''}
-          <Link to={DISCUSS_BASE}>Back to Delta Primary</Link>
+          <Link to={DISCUSS_BASE} onClick={() => rememberSyllabus(DELTA_ID)}>Back to Delta Syllabus</Link>
         </NotFound>
       );
   } else if (mode === 'style') {

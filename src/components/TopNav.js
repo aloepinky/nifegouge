@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import useMenuDismiss from './useMenuDismiss';
 
 // The top bar: which program you are in, and which page of it you are on. Both are dropdowns
 // rather than rows of tabs, because the row stopped fitting — TW4 has eight pages now, and the
@@ -8,7 +9,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const PROGRAMS = [
   { id: 'nife', label: 'NIFE', aircraft: 'C172', home: '/nife/about', base: '/nife' },
-  { id: 'tw4', label: 'TW4 Primary', aircraft: 'T-6B', home: '/tw4/about', base: '/tw4' },
+  { id: 'tw4', label: 'Primary', aircraft: 'T-6B', home: '/tw4/about', base: '/tw4' },
 ];
 
 const TABS = {
@@ -41,28 +42,12 @@ function currentTab(tabs, pathname) {
     .sort((a, b) => b.to.length - a.to.length)[0] || null;
 }
 
-// A menu that closes the way a menu should: on a choice, on Escape, and on a click anywhere
-// else. Focus returns to the trigger after Escape so the keyboard does not lose its place.
+// A menu that closes on a choice, and (through useMenuDismiss) on Escape or a click elsewhere.
 function Dropdown({ name, current, align = 'left', children }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef(null);
   const trigger = useRef(null);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const onDown = (e) => { if (wrap.current && !wrap.current.contains(e.target)) setOpen(false); };
-    const onKey = (e) => {
-      if (e.key !== 'Escape') return;
-      setOpen(false);
-      if (trigger.current) trigger.current.focus();
-    };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
+  useMenuDismiss(open, setOpen, wrap, trigger);
 
   return (
     <div className={`topnav-menu topnav-menu--${align}`} ref={wrap}>
@@ -110,6 +95,8 @@ function TopNav() {
           </button>
         ))}
       </Dropdown>
+
+      <Link to="/" className="topnav-brand" aria-label="pinksheetmafia.com home">PSM</Link>
 
       <Dropdown name="Page" current={tab ? tab.label : 'Menu'} align="right">
         {tabs.map((t) => (

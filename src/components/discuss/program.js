@@ -56,3 +56,6 @@ export function guessProgram(text) {
   if (s) out.school = s[1].charAt(0).toUpperCase() + s[1].slice(1).toLowerCase();
   return out;
 }
+
+// The schools a JPPT can be submitted for, offered as a fixed choice on the upload page.
+export const SCHOOLS = ['NIFE', 'Primary', 'Advanced'];

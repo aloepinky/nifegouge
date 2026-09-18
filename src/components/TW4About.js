@@ -30,11 +30,11 @@ function TW4About() {
   return (
     <div className="page-container">
       <h1 className="about-title">
-        Welcome to <em>TW4 Primary</em>
+        Welcome to <em>Primary</em>
       </h1>
 
       <p className="about-text">
-        This section is dedicated to TW4 Primary training resources (sorry Whiting)
+        This section is dedicated to Primary training resources. It was made from a TW4 perspective so may have some inaccuracies for TW5
       </p>
 
       <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => navigate('/tw4/eps-limits')}>EPs/Limits</h2>

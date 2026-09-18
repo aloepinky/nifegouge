@@ -33,7 +33,7 @@ const ROOT = path.resolve(__dirname, '..');
 const DISCUSS = path.join(ROOT, 'src', 'components', 'discuss');
 const FIXTURES = path.join(DISCUSS, 'jppt', '__fixtures__', 'delta');
 const DELTA_ID = 'delta-primary';
-const DELTA_NAME = 'Delta Primary';
+const DELTA_NAME = 'Delta Syllabus';
 // Everything in the archive is for the one aircraft and school the site was written for.
 const PROGRAM = { aircraft: 'T-6B', school: 'Primary' };
 

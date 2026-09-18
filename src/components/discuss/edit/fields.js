@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { itemList, getItemMeta, useItemIndexVersion } from '../registry';
 import { knownPrograms } from '../program';
+import { WORKS } from '../works';
 import { DISCUSS_BASE, STYLE_GUIDE_DRAFT } from '../SyllabusContext';
 
 // A link in See also or a hatnote is either a discussion item's slug or `{ href, label }`,
@@ -94,11 +95,7 @@ export function Line({ value, onChange, placeholder, ...rest }) {
 
 // The publications the pages cite, offered when a new source is typed. The page's own
 // references are added to the list, so a work already on the page is picked, not retyped.
-export const KNOWN_WORKS = [
-  'NATOPS', 'TO 1T-6B-1CL-1', 'FAM FTI', 'I FTI', 'VNAV FTI', 'F FTI', 'TW-4 SOP', 'VT-27 SOP',
-  'VT-28 SOP', 'TW-4 Formation Supplement', 'Course Rules Manual', 'IFG', 'FIH', 'AIM',
-  'CNAF 3710', 'Delta JPPT',
-];
+export const KNOWN_WORKS = WORKS.map((w) => w.work);
 
 // The citation picker: one toggle per reference the page declares, and a way to add one.
 //
@@ -432,13 +429,33 @@ export function useFocusNew() {
   return setPending;
 }
 
-export const BOLD_HINT = 'Put **double asterisks** around words to make them bold.';
+// The school as a fixed choice, starting unchosen so that choosing it is a decision. A value
+// already on the document that is not in the list (a syllabus published before the list
+// existed) is kept as an option rather than silently dropped.
+export function SchoolSelect({ id, value, onChange, schools }) {
+  const options = value && !schools.includes(value) ? [...schools, value] : schools;
+  return (
+    <select
+      id={id}
+      className="discuss-editor-line"
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      <option value="">Choose…</option>
+      {options.map((s) => <option key={s} value={s}>{s}</option>)}
+    </select>
+  );
+}
+
+export const BOLD_HINT ='Put **double asterisks** around words to make them bold.';
 
 // The aircraft and the school a page or a syllabus is for, side by side. Both are required
 // wherever a page or a syllabus is made, and both are shown wherever it is edited. The
 // suggestions are the values the pages already carry, so a second aircraft is typed once
 // and picked ever after.
-export function ProgramFields({ value, onChange, idPrefix = 'program', hint }) {
+//
+// `schools`, where given, makes the school a fixed choice from that list rather than free text.
+export function ProgramFields({ value, onChange, idPrefix = 'program', hint, schools }) {
   useItemIndexVersion();
   const known = knownPrograms(itemList());
   const set = (key, v) => onChange({ aircraft: value.aircraft || '', school: value.school || '', [key]: v });
@@ -465,17 +482,28 @@ export function ProgramFields({ value, onChange, idPrefix = 'program', hint }) {
           <label className="discuss-editor-label" htmlFor={`${idPrefix}-school`}>
             School <span className="discuss-editor-req">required</span>
           </label>
-          <Line
-            id={`${idPrefix}-school`}
-            value={value.school}
-            onChange={(v) => set('school', v)}
-            list={`${idPrefix}-school-options`}
-            placeholder="e.g. Primary"
-            maxLength={40}
-          />
-          <datalist id={`${idPrefix}-school-options`}>
-            {known.schools.map((a) => <option key={a} value={a} />)}
-          </datalist>
+          {schools ? (
+            <SchoolSelect
+              id={`${idPrefix}-school`}
+              value={value.school}
+              onChange={(v) => set('school', v)}
+              schools={schools}
+            />
+          ) : (
+            <>
+              <Line
+                id={`${idPrefix}-school`}
+                value={value.school}
+                onChange={(v) => set('school', v)}
+                list={`${idPrefix}-school-options`}
+                placeholder="e.g. Primary"
+                maxLength={40}
+              />
+              <datalist id={`${idPrefix}-school-options`}>
+                {known.schools.map((a) => <option key={a} value={a} />)}
+              </datalist>
+            </>
+          )}
         </div>
       </div>
       <p className="discuss-editor-hint">

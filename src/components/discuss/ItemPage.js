@@ -18,6 +18,7 @@ import SectionEditor from './edit/SectionEditor';
 import NumbersEditor from './edit/NumbersEditor';
 import PageEditor from './edit/PageEditor';
 import { NWC_LABELS } from './nwc';
+import { workDate } from './works';
 
 // The one piece of inline markup the item data carries: `**bold**`. It exists for mnemonics —
 // the C-R-A-F-T of a clearance readback, the L-D-D-H-A of an approach setup — where the point
@@ -976,6 +977,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                       <span className="discuss-ref-work">{ref.work}</span>
                       {ref.loc ? `, ${ref.loc}` : ''}
                       {ref.pages ? `, ${ref.pages}` : ''}
+                      {workDate(ref.work) ? `, ${workDate(ref.work)}` : ''}
                     </li>
                   ))}
                 </ol>

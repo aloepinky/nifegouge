@@ -1070,7 +1070,7 @@ function TW4CourseRules() {
 
   return (
     <div className="page-container">
-      <h1 className="about-title">Course Rules</h1>
+      <h1 className="about-title">TW4 Course Rules</h1>
       <p className="about-text" style={{textAlign: 'center', fontStyle: 'italic', marginTop: '-30px'}}>
         Huge thank you to Francis Chval for the <a href="https://drive.google.com/drive/folders/1zRndKMJi24wtqIwm_tSC3z71ZMJgFVEk?usp=sharing" target="_blank" rel="noopener noreferrer">map data</a>
       </p>

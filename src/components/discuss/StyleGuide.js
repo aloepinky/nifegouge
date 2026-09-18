@@ -313,6 +313,11 @@ function StyleGuide() {
             <em>Ch. A3 — Takeoff and Landing Crosswind, p. A3-3</em>.
           </p>
           <p className="discuss-para">
+            The date of the edition is added to every citation for you: the References list
+            prints <em>NATOPS, Ch. 5 — Wind Limitations, p. 5-10, 01AUG23</em>. Leave it out of
+            what you type.
+          </p>
+          <p className="discuss-para">
             One entry per section: if two entries would read the same, they are one source cited
             twice. When everything in a section comes from one source, put the source on the
             section itself and it prints once at the foot instead of a marker after every bullet.

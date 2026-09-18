@@ -4279,17 +4279,76 @@ textarea.incorrect-answer {
   margin-top: 8px;
 }
 
+/* The picker is a menu rather than a <select>, because an <option> cannot style half its text
+   and the school after each name is printed quieter than the name. */
+.discuss-syllabus-menu { position: relative; }
+
 .discuss-syllabus .discuss-syllabus-select {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   min-width: 200px;
+  margin: 0;
   padding: 6px 10px;
   border: 1px solid #b9c9d0;
   border-radius: 3px;
   background: #ffffff;
   color: #01202C;
   font-size: 15px;
+  font-weight: normal;
+  text-align: left;
+  cursor: pointer;
 }
 
-.discuss-syllabus .discuss-syllabus-select:hover { border-color: #003B4F; background: #ffffff; }
+.discuss-syllabus .discuss-syllabus-select:hover,
+.discuss-syllabus .discuss-syllabus-select[aria-expanded="true"] { border-color: #003B4F; background: #ffffff; color: #01202C; }
+
+.discuss-syllabus-caret { margin-left: auto; padding-left: 8px; font-size: 10px; color: #4a6674; }
+
+.discuss-syllabus-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 40;
+  min-width: 100%;
+  max-height: 60vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #ffffff;
+  border: 1px solid #b9c9d0;
+  border-radius: 3px;
+  box-shadow: 0 4px 12px rgba(1, 32, 44, 0.15);
+}
+
+.discuss-syllabus-panel .discuss-syllabus-option {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #01202C;
+  font-size: 15px;
+  font-weight: normal;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.discuss-syllabus-panel .discuss-syllabus-option:hover { background: #E8F0F3; color: #01202C; }
+
+.discuss-syllabus-panel .discuss-syllabus-option[aria-selected="true"] { font-weight: bold; }
+
+.discuss-syllabus .discuss-syllabus-school {
+  color: #6b7f88;
+  font-size: 13px;
+  font-weight: normal;
+}
 
 .discuss-syllabus-submit {
   background: #003B4F;
@@ -6219,6 +6278,38 @@ textarea.incorrect-answer {
 .topnav-menu {
   position: relative;
   flex: 0 0 auto;
+}
+
+/* The wordmark between the two menus. Absolutely centred on the bar, so it sits in the true
+   middle however wide either menu's label is; the bar is the containing block. Pink from the
+   landing page's own heading. */
+.navbar { position: relative; }
+
+.navbar a.topnav-brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  font-size: 26px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 3px;
+  line-height: 1;
+  background: linear-gradient(135deg, #E9B5D5 0%, #ffd6f0 30%, #E9B5D5 60%, #c297b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.navbar a.topnav-brand:hover {
+  background: linear-gradient(135deg, #f3cde4 0%, #ffe6f6 30%, #f3cde4 60%, #d4abc9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* On a phone the two menu labels fill the bar; the wordmark gives way rather than sit on them. */
+@media (max-width: 560px) {
+  .navbar a.topnav-brand { display: none; }
 }
 
 .topnav-trigger {

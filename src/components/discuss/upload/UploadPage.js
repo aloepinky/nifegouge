@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import FlowEditor from './FlowEditor';
-import { ConfirmButton, Line, ProgramFields } from '../edit/fields';
-import { programOf, withDefaultProgram } from '../program';
+import { ConfirmButton, Line, ProgramFields, SchoolSelect } from '../edit/fields';
+import { SCHOOLS, programOf, withDefaultProgram } from '../program';
 import { parseJppt } from '../jppt/parseJppt';
 import { preparePdfWorker } from '../jppt/pdfWorker';
 import { publishSyllabus, rememberSyllabus, getAuthor } from '../discussApi';
@@ -44,6 +44,7 @@ function UploadPage() {
   const [saved, setSaved] = useState(readDraft);
   const [file, setFile] = useState(null);
   const [name, setName] = useState('');
+  const [school, setSchool] = useState('');
   const [progress, setProgress] = useState(null);
   const [error, setError] = useState(null);
   const [work, setWork] = useState(null); // { name, program, doc, warnings }
@@ -59,7 +60,7 @@ function UploadPage() {
   }, []);
 
   const read = async () => {
-    if (!file) return;
+    if (!file || !school) return;
     setError(null);
     if (file.size > MAX_BYTES) {
       setError('That file is over 25 MB. A JPPT is usually 1 to 3 MB; check it is the right PDF.');
@@ -75,8 +76,9 @@ function UploadPage() {
         phrases: protectedPhrases(delta.events, itemList()),
       });
       const title = name.trim() || doc.source.instruction || file.name.replace(/\.pdf$/i, '');
-      // The title page's guess, with the site's defaults where it named nothing.
-      setWork({ name: title, program: withDefaultProgram(doc, delta), doc, warnings });
+      // The aircraft from the title page's guess, with the site's default where it named
+      // nothing; the school is the one chosen above.
+      setWork({ name: title, program: { ...withDefaultProgram(doc, delta), school }, doc, warnings });
       setSaved(null);
     } catch (err) {
       setError(`This PDF could not be read. ${err.message || ''}`.trim());
@@ -167,14 +169,21 @@ function UploadPage() {
             <div className="discuss-editor-field">
               <label className="discuss-editor-label" htmlFor="jppt-name">Name in the syllabus list</label>
               <p className="discuss-editor-hint">Optional now; defaults to the instruction number.</p>
-              <Line id="jppt-name" value={name} onChange={setName} placeholder="e.g. Delta Primary (2025)" />
+              <Line id="jppt-name" value={name} onChange={setName} placeholder="e.g. Delta Syllabus (2025)" />
+            </div>
+            <div className="discuss-editor-field">
+              <label className="discuss-editor-label" htmlFor="jppt-school">
+                School <span className="discuss-editor-req">required</span>
+              </label>
+              <p className="discuss-editor-hint">The school this JPPT trains for.</p>
+              <SchoolSelect id="jppt-school" value={school} onChange={setSchool} schools={SCHOOLS} />
             </div>
             <div className="discuss-editor-buttons">
               <button
                 type="button"
                 className="discuss-editor-save"
-                disabled={!file || !!progress}
-                title={file ? '' : 'Choose a PDF first'}
+                disabled={!file || !school || !!progress}
+                title={!file ? 'Choose a PDF first' : !school ? 'Choose the school first' : ''}
                 onClick={read}
               >
                 {progress ? 'Reading…' : 'Generate'}
@@ -202,7 +211,8 @@ function UploadPage() {
               idPrefix="jppt-program"
               value={work.program || {}}
               onChange={(v) => setWork((w) => ({ ...w, program: v }))}
-              hint="The aircraft and the school this JPPT trains for. Read from the title page; check it."
+              hint="The aircraft and the school this JPPT trains for. The aircraft is read from the title page; check it."
+              schools={SCHOOLS}
             />
             <FlowEditor
               initial={work.doc}

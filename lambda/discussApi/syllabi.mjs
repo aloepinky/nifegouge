@@ -1,5 +1,5 @@
 import { HttpError, cleanText, parseBody, reply, requireProgram } from './http.mjs';
-import { newestSyllabus, putSyllabus, listSyllabi, setSyllabusHidden } from './store.mjs';
+import { newestSyllabus, putSyllabus, listSyllabi, setSyllabusHidden, setSyllabusName } from './store.mjs';
 import {
   mirrorSyllabus, rebuildSyllabiIndex, syllabusRecord, syllabusEntry, syllabusKey, deleteKey,
 } from './mirror.mjs';
@@ -147,6 +147,20 @@ export async function importSyllabusHandler(event) {
   });
   await afterWrite(row);
   return reply(200, { success: true, id, rev });
+}
+
+// Admin. Changes the name the dropdown lists a syllabus under, without a revision: a rename
+// is not an edit to the document, and nobody reading its History needs an entry for it.
+export async function renameSyllabusHandler(event) {
+  const body = parseBody(event);
+  if (typeof body.id !== 'string') throw new HttpError(400, 'id is required');
+  const name = cleanName(body.name);
+  if (!name) throw new HttpError(400, 'A name is required');
+  const current = await newestSyllabus(body.id);
+  if (!current || current.hidden) throw new HttpError(404, 'No such syllabus');
+  const row = await setSyllabusName(body.id, name);
+  await afterWrite(row);
+  return reply(200, { success: true, id: body.id, rev: row.rev, name });
 }
 
 export async function hideSyllabusHandler(event) {
