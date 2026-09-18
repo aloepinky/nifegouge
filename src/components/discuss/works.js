@@ -24,8 +24,8 @@ export const WORKS = [
   { work: 'TW-4 Briefing Guide', date: '31MAR25' },
   { work: 'Checklist Study Guide', date: '31MAR25' },
   { work: 'Course Rules Manual', date: '20FEB25' },
-  { work: 'IFG' },
-  { work: 'KNGP IFG' },
+  { work: 'IFG', date: '05JUN26' },
+  { work: 'KNGP IFG', date: '05JUN26' },
   { work: 'FIH', date: '10JUL25' },
   { work: 'AIM', date: '09JUL26' },
   { work: 'CNAF 3710', date: '07FEB25' },
@@ -38,4 +38,11 @@ const DATES = new Map(WORKS.filter((w) => w.date).map((w) => [w.work, w.date]));
 // The date of the edition a work is cited from, or '' for a work with none on record.
 export function workDate(work) {
   return DATES.get((work || '').trim()) || '';
+}
+
+// The date a reference prints: the one typed on the reference, where a page cites an edition
+// other than the one above or a publication not listed here, otherwise the list's.
+export function citedDate(ref) {
+  const own = ref && typeof ref.date === 'string' ? ref.date.trim() : '';
+  return own || workDate(ref && ref.work);
 }

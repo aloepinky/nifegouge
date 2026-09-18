@@ -18,7 +18,7 @@ import SectionEditor from './edit/SectionEditor';
 import NumbersEditor from './edit/NumbersEditor';
 import PageEditor from './edit/PageEditor';
 import { NWC_LABELS } from './nwc';
-import { workDate } from './works';
+import { citedDate } from './works';
 
 // The one piece of inline markup the item data carries: `**bold**`. It exists for mnemonics —
 // the C-R-A-F-T of a clearance readback, the L-D-D-H-A of an approach setup — where the point
@@ -159,7 +159,7 @@ function Gallery({ images }) {
         if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
       }}
     >
-      <img src={shown.src} alt={shown.alt} loading="lazy" />
+      <img src={shown.src} alt={shown.alt} />
       <button
         type="button"
         className="discuss-gallery-arrow discuss-gallery-arrow--prev"
@@ -184,25 +184,41 @@ function Gallery({ images }) {
   );
 }
 
+// One figure. A single image is sized by its own shape (see `.discuss-figure` in style.css),
+// which CSS cannot read off an <img>, so its natural width and aspect ratio are handed to the
+// stylesheet as custom properties once it loads. Until then the figure takes the 75% cap.
+function Figure({ f, showCite }) {
+  const [size, setSize] = useState(null);
+  const images = figureImages(f);
+  const gallery = images.length > 1;
+  const style = size ? { '--fig-w': `${size.w}px`, '--fig-ar': size.ar } : undefined;
+  return (
+    <figure className={`discuss-figure${gallery ? ' discuss-figure--gallery' : ''}`} style={style}>
+      {gallery
+        ? <Gallery images={images} />
+        : (
+          <img
+            src={images[0].src}
+            alt={images[0].alt}
+            onLoad={(e) => {
+              const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
+              if (w && h) setSize({ w, ar: w / h });
+            }}
+          />
+        )}
+      {f.caption && (
+        <figcaption>
+          {f.caption}
+          {showCite && <Cite refs={f.refs} />}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
 function Figures({ figures, showCite }) {
   if (!figures || !figures.length) return null;
-  return (
-    <>
-      {figures.map((f) => (
-        <figure className="discuss-figure" key={f.id}>
-          {figureImages(f).length > 1
-            ? <Gallery images={figureImages(f)} />
-            : <img src={figureImages(f)[0].src} alt={figureImages(f)[0].alt} loading="lazy" />}
-          {f.caption && (
-            <figcaption>
-              {f.caption}
-              {showCite && <Cite refs={f.refs} />}
-            </figcaption>
-          )}
-        </figure>
-      ))}
-    </>
-  );
+  return figures.map((f) => <Figure key={f.id} f={f} showCite={showCite} />);
 }
 
 // Tables. A section carries `tables: [{ id, caption, cols, rows, refs, numeric }]`.
@@ -977,7 +993,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                       <span className="discuss-ref-work">{ref.work}</span>
                       {ref.loc ? `, ${ref.loc}` : ''}
                       {ref.pages ? `, ${ref.pages}` : ''}
-                      {workDate(ref.work) ? `, ${workDate(ref.work)}` : ''}
+                      {citedDate(ref) ? `, ${citedDate(ref)}` : ''}
                     </li>
                   ))}
                 </ol>

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useMenuDismiss from './useMenuDismiss';
 
@@ -72,16 +72,58 @@ function Dropdown({ name, current, align = 'left', children }) {
   );
 }
 
+// The wordmark's full size, and the smallest it is shrunk to before it gives way altogether.
+const BRAND_PX = 26;
+const BRAND_MIN_PX = 11;
+const BRAND_GAP = 10; // clear space kept between the wordmark and either menu
+
+// Sizes the wordmark to the room the two menus leave it. It is centred on the bar, so what it
+// may use is twice the distance from the centre to the nearer menu. Measured at full size and
+// scaled down in proportion, which is exact because the letter-spacing is in em.
+function useBrandFit(bar, brand, deps) {
+  useLayoutEffect(() => {
+    const el = bar.current;
+    const mark = brand.current;
+    if (!el || !mark) return undefined;
+    const fit = () => {
+      const menus = el.querySelectorAll('.topnav-menu');
+      if (menus.length < 2) return;
+      const box = el.getBoundingClientRect();
+      const centre = box.left + box.width / 2;
+      const room = 2 * Math.min(
+        centre - menus[0].getBoundingClientRect().right,
+        menus[1].getBoundingClientRect().left - centre,
+      ) - 2 * BRAND_GAP;
+      mark.style.fontSize = `${BRAND_PX}px`;
+      const full = mark.getBoundingClientRect().width;
+      const px = Math.min(BRAND_PX, (BRAND_PX * room) / full);
+      mark.style.fontSize = `${Math.max(px, BRAND_MIN_PX)}px`;
+      mark.style.visibility = px < BRAND_MIN_PX ? 'hidden' : '';
+    };
+    fit();
+    const watch = new ResizeObserver(fit);
+    watch.observe(el);
+    el.querySelectorAll('.topnav-menu').forEach((m) => watch.observe(m));
+    // The web font arriving changes every width measured here without resizing the bar.
+    if (document.fonts) document.fonts.ready.then(fit);
+    return () => watch.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+}
+
 function TopNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const bar = useRef(null);
+  const brand = useRef(null);
 
   const program = PROGRAMS.find((p) => pathname.startsWith(p.base)) || PROGRAMS[0];
   const tabs = TABS[program.id] || [];
   const tab = currentTab(tabs, pathname);
+  useBrandFit(bar, brand, [program.id, tab && tab.to]);
 
   return (
-    <div className="navbar">
+    <div className="navbar" ref={bar}>
       <Dropdown name="Program" current={programName(program)}>
         {PROGRAMS.map((p) => (
           <button
@@ -96,7 +138,7 @@ function TopNav() {
         ))}
       </Dropdown>
 
-      <Link to="/" className="topnav-brand" aria-label="pinksheetmafia.com home">PSM</Link>
+      <Link to="/" className="topnav-brand" ref={brand} aria-label="pinksheetmafia.com home">PSM</Link>
 
       <Dropdown name="Page" current={tab ? tab.label : 'Menu'} align="right">
         {tabs.map((t) => (

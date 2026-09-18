@@ -13,6 +13,7 @@ import { newSectionId } from './ids';
 import { psmPage, psmPagesForSchool, psmLinksOf } from '../psmPages';
 import { Grow, Line, RowTools, SlugList, EditorActions, ProgramFields, useEscape, move, BOLD_HINT } from './fields';
 import { withDefaultProgram } from '../program';
+import { workDate } from '../works';
 import SectionEditor from './SectionEditor';
 import NumbersEditor from './NumbersEditor';
 
@@ -213,7 +214,12 @@ function PageEditor({ item, onSave, onCancel, check }) {
     // Anything the page cited that is no longer in the list maps to nothing and its markers go.
     for (const r of item.references || []) if (!(r.n in map)) map[r.n] = null;
     remapRefs(out, map);
-    for (const r of out.references || []) delete r.__was;
+    for (const r of out.references || []) {
+      delete r.__was;
+      // A blank date prints the site's own date for the work, so it is not stored.
+      if (typeof r.date === 'string') r.date = r.date.trim();
+      if (!r.date) delete r.date;
+    }
     // A new section's id stops tracking its heading the moment the page is saved.
     for (const s of out.sections || []) {
       delete s.__new;
@@ -386,6 +392,14 @@ function PageEditor({ item, onSave, onCancel, check }) {
               <Line value={r.work} onChange={(v) => setRef(i, 'work', v)} placeholder="Publication, e.g. NATOPS" />
               <Line value={r.loc} onChange={(v) => setRef(i, 'loc', v)} placeholder="Section, e.g. §522 — Spin" />
               <Line value={r.pages} onChange={(v) => setRef(i, 'pages', v)} placeholder="Page, e.g. p. 5-33" />
+              <Line
+                value={r.date}
+                onChange={(v) => setRef(i, 'date', v)}
+                placeholder={workDate(r.work) || 'Date, e.g. 08AUG16'}
+                aria-label="Date of the publication"
+                title="The date of the edition cited. Filled in for the publications the site knows; type one to change it."
+                className="discuss-editor-line discuss-editor-date"
+              />
               <RowTools
                 index={i}
                 count={refs.length}

@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { itemList, getItemMeta, useItemIndexVersion } from '../registry';
 import { knownPrograms } from '../program';
-import { WORKS } from '../works';
+import { WORKS, workDate } from '../works';
 import { DISCUSS_BASE, STYLE_GUIDE_DRAFT } from '../SyllabusContext';
 
 // A link in See also or a hatnote is either a discussion item's slug or `{ href, label }`,
@@ -106,7 +106,7 @@ export const KNOWN_WORKS = WORKS.map((w) => w.work);
 // and no way to add one shows the reason rather than an empty row.
 export function RefsPicker({ refs, references, onChange, onAddReference, label = 'Source' }) {
   const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState({ work: '', loc: '', pages: '' });
+  const [draft, setDraft] = useState({ work: '', loc: '', pages: '', date: '' });
   const listId = useId();
   const on = refs || [];
   const toggle = (n) => {
@@ -120,9 +120,10 @@ export function RefsPicker({ refs, references, onChange, onAddReference, label =
     const ref = { work };
     if (draft.loc.trim()) ref.loc = draft.loc.trim();
     if (draft.pages.trim()) ref.pages = draft.pages.trim();
+    if (draft.date.trim()) ref.date = draft.date.trim();
     const n = onAddReference(ref);
     onChange([...on, n].sort((a, b) => a - b));
-    setDraft({ work: '', loc: '', pages: '' });
+    setDraft({ work: '', loc: '', pages: '', date: '' });
     setAdding(false);
   };
   return (
@@ -179,6 +180,13 @@ export function RefsPicker({ refs, references, onChange, onAddReference, label =
             onChange={(v) => setDraft((d) => ({ ...d, pages: v }))}
             placeholder="Page, e.g. p. 5-33"
             aria-label="Page the section starts on"
+          />
+          <Line
+            value={draft.date}
+            onChange={(v) => setDraft((d) => ({ ...d, date: v }))}
+            placeholder={workDate(draft.work) || 'Date, e.g. 08AUG16'}
+            aria-label="Date of the publication"
+            className="discuss-editor-line discuss-editor-date"
           />
           <button type="button" className="discuss-editor-add" onClick={add} disabled={!draft.work.trim()}>
             Add and cite

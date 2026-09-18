@@ -4625,13 +4625,27 @@ textarea.incorrect-answer {
 
 /* ---- figures ---- */
 
-/* Full text-column width: these are schematics and signal charts, and shrinking one to
-   sit beside prose makes it unreadable. */
+/* A single-image figure is sized by the image's own width and shape, centred in the column:
+     width = min( its own width,
+                  75% of the column,
+                  max( 50% of the column, the width at which it is min(70vh, 640px) tall ) )
+   - 75% of the column at most. A figure never sits beside prose, so a narrower one simply
+     leaves space either side, and a chart still reads at three quarters.
+   - A wide image stops at the cap; a small one shows at its own size and is never scaled up.
+   - A tall one is narrowed until it fits about one screen, but never below half the column:
+     a dense portrait chart (NATOPS's ground handling signals) is unreadable any narrower, and
+     scrolling past it is the lesser cost.
+   ItemPage supplies --fig-w (natural width) and --fig-ar (width / height) once the image has
+   loaded; until then the figure takes the 75% cap, which also gives the image a box to load
+   into. The caption wraps to the figure's width. A gallery's images differ in shape, so its
+   frame takes the full 75% and each image is letterboxed inside it. On a phone every figure
+   takes the full column. */
 .discuss-figure {
-  margin: 0 0 20px;
+  width: min(var(--fig-w, 100%), 75%, max(50%, calc(min(70vh, 640px) * var(--fig-ar, 100))));
+  margin: 0 auto 20px;
 }
 
-.discuss-figure img {
+.discuss-figure > img {
   display: block;
   width: 100%;
   height: auto;
@@ -4639,10 +4653,17 @@ textarea.incorrect-answer {
   background: #ffffff;
 }
 
+.discuss-figure--gallery { width: 75%; }
+
 .discuss-figure figcaption {
   margin-top: 6px;
   font-size: 13px;
   color: #5a7481;
+}
+
+@media (max-width: 700px) {
+  .discuss-figure,
+  .discuss-figure--gallery { width: 100%; }
 }
 
 /* A gallery: one image shown, an arrow on each side, the image's caption over its foot. */
@@ -4655,7 +4676,14 @@ textarea.incorrect-answer {
 
 .discuss-gallery:focus-visible { outline: 2px solid #003B4F; outline-offset: 2px; }
 
-.discuss-figure .discuss-gallery img { border: 0; }
+.discuss-figure .discuss-gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(70vh, 640px);
+  object-fit: contain;
+  border: 0;
+}
 
 /* Two classes, because the site's global button rule paints buttons dark and its :hover
    outranks one class. */
@@ -6289,11 +6317,12 @@ textarea.incorrect-answer {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  padding: 2px 6px;
-  font-size: 26px;
+  padding: 0.08em 0.25em;
+  font-size: 26px; /* the full size; TopNav shrinks it to the room the menus leave */
   font-weight: 800;
   font-style: italic;
-  letter-spacing: 3px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
   line-height: 1;
   background: linear-gradient(135deg, #E9B5D5 0%, #ffd6f0 30%, #E9B5D5 60%, #c297b8 100%);
   -webkit-background-clip: text;
@@ -6307,10 +6336,6 @@ textarea.incorrect-answer {
   background-clip: text;
 }
 
-/* On a phone the two menu labels fill the bar; the wordmark gives way rather than sit on them. */
-@media (max-width: 560px) {
-  .navbar a.topnav-brand { display: none; }
-}
 
 .topnav-trigger {
   display: flex;
@@ -6388,3 +6413,7 @@ textarea.incorrect-answer {
   background-color: #003B4F;
   color: #ffffff;
 }
+
+/* The date box on a reference row is short: a date is seven characters. */
+.discuss-editor-row .discuss-editor-date,
+.discuss-refpick-new .discuss-editor-date { flex: 0 0 110px; width: 110px; }
