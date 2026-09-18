@@ -173,10 +173,13 @@ function FigureRow({ figure, index, count, references, onAddReference, slug, onC
       </div>
       <p className="discuss-editor-hint">
         A figure with more than one image shows them one at a time, with arrows to move between
-        them: for a chart too long for one image, or a set of near-identical ones.
+        them.
       </p>
       <label className="discuss-editor-label">Caption</label>
-      <p className="discuss-editor-hint">What the figure is and where it comes from.</p>
+      <p className="discuss-editor-hint">
+        Figure description and source. (i.e. NATOPS Figure 2-6. Typical Instrument (Non Radar)
+        Approach)
+      </p>
       <Grow value={figure.caption} onChange={(v) => set('caption', v)} />
     </div>
   );
@@ -224,9 +227,6 @@ function TableRow({ table, index, count, references, onAddReference, onChange, o
       </label>
       <Grow value={table.caption} onChange={(v) => set('caption', v)} />
 
-      <p className="discuss-editor-hint">
-        The top row holds the column headings. The first column names each row.
-      </p>
       <div className="discuss-editor-grid-wrap">
         <table className="discuss-editor-grid">
           <thead>
@@ -498,9 +498,7 @@ function SectionEditor({
         )}
       </div>
       <p className="discuss-editor-hint">
-        A source chosen here is cited once, at the foot of the section, instead of on every
-        paragraph. Number a list when its order matters. An emergency procedure numbers its steps
-        and shows its notes, warnings and cautions the way the EPs page does.
+        A source chosen here is cited once at the foot of the section.
       </p>
 
       <SlugList
@@ -589,7 +587,15 @@ function SectionEditor({
       {items.length > 0 && (
         <div className="discuss-editor-group">
           <h4>{s.ep ? 'Emergency procedure' : s.numbered ? 'Numbered list' : 'List'}</h4>
-          <p className="discuss-editor-hint">{BOLD_HINT}</p>
+          {/* What the list style above it means, said where the list is rather than beside the
+              control: the two facts a writer needs are which kind of list this is and what it
+              carries, and both belong to the list itself. */}
+          <p className="discuss-editor-hint">
+            {BOLD_HINT}{' '}
+            {s.ep
+              ? 'An emergency procedure numbers its steps and contains all notes, warnings and cautions.'
+              : 'Number a list when its order matters.'}
+          </p>
           {items.map((b, i) => (
             <BulletRow
               key={b.id}

@@ -1,12 +1,12 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { generatedFor } from './GENERATED';
 import { getItemMeta } from './registry';
 import { DISCUSS_BASE, rowName, useSyllabus } from './SyllabusContext';
 import RandomPage, { SelectedSyllabusContext } from './RandomPage';
 import { rememberItem, refreshItem } from './discussApi';
 import ItemLink from './ItemLink';
-import { getSystemTab } from '../systems/systemTabs';
+import { psmPage, psmLinksOf } from './psmPages';
 import { programLabel, withDefaultProgram } from './program';
 import { getDraft, getRecord, saveDraft, clearDraft, clone } from './edit/draft';
 import { allIds } from './edit/ids';
@@ -99,39 +99,26 @@ function Hatnote({ slugs, label }) {
   );
 }
 
-// Where the page's subject is a system that has an interactive diagram, close the lead with
-// a link to it. `diagram` is a systemTabs id, or a list of them for a page covering two
-// systems (oil-and-propeller-systems). An id with no diagram behind it renders nothing, so
-// naming a system the site has not drawn yet is inert rather than a dead link.
+// Where the page's subject is carried by another tab of this site — the interactive diagram
+// of the system it is about, the memory limits, the course rules — close the lead with a link
+// to it. The page itself then carries only what that tab does not.
+//
+// `psmLinks` is a list of paths; `psmLinksOf` reads the older `diagram` and `limits` fields
+// for a page that has not been saved since the list replaced them.
 //
 // This is lead content, not a section: it never appears in the contents rail.
-function DiagramLink({ diagram }) {
-  const ids = Array.isArray(diagram) ? diagram : diagram ? [diagram] : [];
-  const targets = ids.map(getSystemTab).filter(Boolean);
+function PsmLinks({ item }) {
+  const targets = psmLinksOf(item).map(psmPage).filter(Boolean);
   if (!targets.length) return null;
   return (
     <p className="discuss-diagram-link">
-      {targets.length > 1 ? 'Systems diagrams' : 'Systems diagram'}:{' '}
+      Also on the site:{' '}
       {targets.map((t, i) => (
-        <React.Fragment key={t.id}>
+        <React.Fragment key={t.path}>
           {i > 0 && ', '}
-          <Link to={`/tw4/systems/${t.id}`}>{t.label}</Link>
+          <Link to={t.path}>{t.label}</Link>
         </React.Fragment>
       ))}
-    </p>
-  );
-}
-
-// Where the page's subject is the operating limitations, close the lead with a link to the
-// memory limits page, the way a systems page links its diagram. `limits: true` opts in; the
-// page itself then carries only what that page does not.
-//
-// This is lead content, not a section: it never appears in the contents rail.
-function LimitsLink({ limits }) {
-  if (!limits) return null;
-  return (
-    <p className="discuss-diagram-link">
-      Memory limits: <Link to="/tw4/eps-limits/limits">T-6B operating limitations</Link>
     </p>
   );
 }
@@ -584,6 +571,8 @@ function replaceBlock(item, id, next) {
 // itself shows no revision number and no author: that is what the history page is for.
 function ItemPage({ record, readOnly = false, banner = null }) {
   const [params] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const s = useSyllabus();
   // The generated lists are the one part of an item page that belongs to a syllabus rather
   // than to the page: "any previously discussed maneuver" has a different answer in every
@@ -600,12 +589,27 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   // remounts and re-reads the store rather than carrying one page's edits onto the next.
   const [draft, setDraft] = useState(() => (readOnly ? null : getDraft(item.slug)));
   const [draftRecord, setDraftRecord] = useState(() => (readOnly ? null : getRecord(item.slug)));
-  const [editing, setEditing] = useState(null);
+  // Create page hands the writer straight into the form — the same one "write this page"
+  // opens — because making a page and writing it are one job, and a stub screen in between is
+  // a step nobody asked for. It arrives as navigation state rather than in the URL, since an
+  // item has exactly one URL; the state is dropped once it has been read, so a reload of the
+  // page does not open the form again.
+  const [editing, setEditing] = useState(
+    () => (!readOnly && location.state && location.state.write ? { kind: 'page' } : null)
+  );
   const [publishing, setPublishing] = useState(false);
   const [conflict, setConflict] = useState(false);
   const [published, setPublished] = useState(false); // a publish just went through
   const [justSaved, setJustSaved] = useState(false);
   const bannerRef = useRef(null);
+
+  // The form is open; the instruction to open it has been carried out and is cleared, so a
+  // reload or a step back does not re-open it over whatever the writer did next.
+  const openedFromCreate = location.state && location.state.write;
+  useEffect(() => {
+    if (openedFromCreate) navigate(`${location.pathname}${location.search}`, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openedFromCreate]);
 
   const view = draft || item;
   const baseIds = draftRecord ? draftRecord.baseIds : allIds(item);
@@ -799,9 +803,13 @@ function ItemPage({ record, readOnly = false, banner = null }) {
             pageEditor
           ) : (
             <section className="discuss-stub">
-              <h2>Not written yet</h2>
-              <p>Nobody has distilled this item.{view.sourcingLead ? " Where the next person should look:" : ""}</p>
-              {view.sourcingLead && <p className="discuss-stub-lead">{view.sourcingLead}</p>}
+              <h2>No page written</h2>
+              {view.sourcingLead && (
+                <>
+                  <p>Where an author could look:</p>
+                  <p className="discuss-stub-lead">{view.sourcingLead}</p>
+                </>
+              )}
               {!readOnly && (
                 <p className="discuss-page-edit">
                   <Edit
@@ -850,8 +858,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                 />
               ))}
             {view.lede && <p className="discuss-lede-para">{inline(view.lede)}</p>}
-            <DiagramLink diagram={view.diagram} />
-            <LimitsLink limits={view.limits} />
+            <PsmLinks item={view} />
             {view.note && <p className="discuss-note">{view.note}</p>}
             <GeneratedLists
               groups={genGroups}

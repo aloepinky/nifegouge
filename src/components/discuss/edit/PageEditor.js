@@ -10,7 +10,7 @@
 import React, { useState } from 'react';
 import { clone } from './draft';
 import { newSectionId } from './ids';
-import { SYSTEM_TABS } from '../../systems/systemTabs';
+import { psmPage, psmPagesForSchool, psmLinksOf } from '../psmPages';
 import { Grow, Line, RowTools, SlugList, EditorActions, ProgramFields, useEscape, move, BOLD_HINT } from './fields';
 import { withDefaultProgram } from '../program';
 import SectionEditor from './SectionEditor';
@@ -83,22 +83,67 @@ function SectionHead({ number, title, isSub, index, count, onMove, onRemove, onS
   );
 }
 
+// The pages of this site this page links under its lead. A dropdown of every page for this
+// school rather than a checkbox per destination: the two checkboxes it replaced could say
+// "systems diagram" and "memory limits" and nothing else, and a page about the course rules
+// or the jet log has the same reason to point at the tab that carries it.
+function PsmLinkPicker({ school, links, onChange }) {
+  const offered = psmPagesForSchool(school).filter((p) => !links.includes(p.path));
+  return (
+    <div className="discuss-editor-field">
+      <label className="discuss-editor-label">Pages on this site</label>
+      <p className="discuss-editor-hint">
+        Optional. Another part of pinksheetmafia.com that carries this subject — its systems
+        diagram, the limits, the course rules. The links show under the lead.
+      </p>
+      <div className="discuss-editor-structure">
+        {links.map((path, i) => (
+          <div className="discuss-editor-row" key={path}>
+            <span className="discuss-editor-resolve">{psmPage(path).label}</span>
+            <RowTools
+              index={i}
+              count={links.length}
+              onMove={(from, to) => onChange(move(links, from, to))}
+              onRemove={(k) => onChange(links.filter((_, j) => j !== k))}
+              what="link"
+            />
+          </div>
+        ))}
+        <select
+          className="discuss-editor-select"
+          aria-label="Add a page on this site"
+          value=""
+          onChange={(e) => e.target.value && onChange([...links, e.target.value])}
+        >
+          <option value="">+ page on this site</option>
+          {offered.map((p) => (
+            <option value={p.path} key={p.path}>{p.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 function PageEditor({ item, onSave, onCancel, check }) {
   // A page from before the aircraft and school fields existed opens with the defaults filled
-  // in, so its next save carries them.
-  const [p, setP] = useState(() => ({ ...clone(item), ...withDefaultProgram(item) }));
+  // in, so its next save carries them. `diagram` and `limits` are read the same way: the form
+  // holds them as the list of site pages that replaced them and writes that list alone, so a
+  // page converts the next time anyone saves it and nothing has to be migrated on the server.
+  const [p, setP] = useState(() => {
+    const next = { ...clone(item), ...withDefaultProgram(item) };
+    const links = psmLinksOf(next);
+    delete next.diagram;
+    delete next.limits;
+    if (links.length) next.psmLinks = links;
+    return next;
+  });
   useEscape(onCancel);
 
   const problems = check ? check(p) : { errors: [], warnings: [] };
   const set = (key, value) => setP((prev) => ({ ...prev, [key]: value || undefined }));
   const sections = p.sections || [];
   const setSections = (next) => setP((prev) => ({ ...prev, sections: next.length ? next : undefined }));
-
-  const diagrams = Array.isArray(p.diagram) ? p.diagram : p.diagram ? [p.diagram] : [];
-  const toggleDiagram = (id) => {
-    const next = diagrams.includes(id) ? diagrams.filter((d) => d !== id) : [...diagrams, id];
-    set('diagram', next.length === 0 ? undefined : next.length === 1 ? next[0] : next);
-  };
 
   const setSection = (i, next) => setSections(sections.map((x, j) => (j === i ? next : x)));
   const removeSection = (i) => setSections(sections.filter((_, j) => j !== i));
@@ -179,14 +224,11 @@ function PageEditor({ item, onSave, onCancel, check }) {
 
   return (
     <div className="discuss-editor discuss-editor--page" role="group" aria-label="Editing the page">
-      <h3>The lead</h3>
+      <h3>The page</h3>
 
       <div className="discuss-editor-field">
         <label className="discuss-editor-label">Page title</label>
         <Line value={p.title} onChange={(v) => setP((prev) => ({ ...prev, title: v }))} />
-        <p className="discuss-editor-hint">
-          The name this page is shown under everywhere on the site.
-        </p>
       </div>
 
       <ProgramFields
@@ -194,52 +236,6 @@ function PageEditor({ item, onSave, onCancel, check }) {
         value={p}
         onChange={(v) => setP((prev) => ({ ...prev, ...v }))}
       />
-
-      <div className="discuss-editor-field">
-        <label className="discuss-editor-label">Lead</label>
-        <p className="discuss-editor-hint">
-          A short summary of the whole page, shown at the top. {BOLD_HINT}
-        </p>
-        <Grow value={p.lede} rows={4} onChange={(v) => setP((prev) => ({ ...prev, lede: v }))} />
-      </div>
-
-      <div className="discuss-editor-field">
-        <label className="discuss-editor-label">Note</label>
-        <p className="discuss-editor-hint">
-          Optional. A caveat shown above the body, if the whole page needs one.
-        </p>
-        <Grow value={p.note} rows={2} onChange={(v) => set('note', v)} />
-      </div>
-
-      <div className="discuss-editor-field">
-        <label className="discuss-editor-label">Systems diagram</label>
-        <div className="discuss-editor-checks">
-          {SYSTEM_TABS.map((t) => (
-            <label className="discuss-editor-check" key={t.id}>
-              <input
-                type="checkbox"
-                checked={diagrams.includes(t.id)}
-                onChange={() => toggleDiagram(t.id)}
-              />
-              {t.label}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="discuss-editor-field">
-        <label className="discuss-editor-label">Memory limits</label>
-        <div className="discuss-editor-checks">
-          <label className="discuss-editor-check">
-            <input
-              type="checkbox"
-              checked={!!p.limits}
-              onChange={(e) => set('limits', e.target.checked || undefined)}
-            />
-            link the memory limits page under the lead
-          </label>
-        </div>
-      </div>
 
       <div className="discuss-editor-field">
         <label className="discuss-editor-label">Flags</label>
@@ -250,7 +246,7 @@ function PageEditor({ item, onSave, onCancel, check }) {
               checked={!!p.maneuver}
               onChange={(e) => set('maneuver', e.target.checked || undefined)}
             />
-            this page is a maneuver
+            Maneuver
           </label>
           <label className="discuss-editor-check">
             <input
@@ -258,133 +254,158 @@ function PageEditor({ item, onSave, onCancel, check }) {
               checked={!!p.stub}
               onChange={(e) => set('stub', e.target.checked || undefined)}
             />
-            not written yet
+            Placeholder
           </label>
         </div>
         <p className="discuss-editor-hint">
-          A maneuver page is included in the "any previously discussed maneuver" lists. A page
-          marked not written yet shows a placeholder instead of its body.
+          A maneuver page is included in the "any previously discussed maneuver" lists. A
+          placeholder creates an empty page to be fleshed out by someone else. You may provide
+          a pointer to potential sources to help others.
         </p>
       </div>
 
-      {p.stub && (
+      {/* A placeholder has no body to write, so the form does not offer one. A lead written
+          above a page that then says no page is written is work thrown away, and the fields
+          under it are the same invitation. Untick it and the page comes back, with whatever
+          was in it. */}
+      {p.stub ? (
         <div className="discuss-editor-field">
           <label className="discuss-editor-label">Where to look</label>
           <p className="discuss-editor-hint">
-            Optional. The publications and sections the next writer should start from.
+            Optional. The publications and sections an author could start from.
           </p>
           <Grow value={p.sourcingLead} rows={3} onChange={(v) => set('sourcingLead', v)} />
         </div>
-      )}
+      ) : (
+        <>
+        <div className="discuss-editor-field">
+          <label className="discuss-editor-label">Lead</label>
+          <p className="discuss-editor-hint">
+            A short summary of the whole page, shown at the top. {BOLD_HINT}
+          </p>
+          <Grow value={p.lede} rows={4} onChange={(v) => setP((prev) => ({ ...prev, lede: v }))} />
+        </div>
 
-      <h3>Numbers</h3>
-      <NumbersEditor
-        embedded
-        item={p}
-        onAddReference={addReference}
-        onChange={(rows) => set('numbers', rows && rows.length ? rows : undefined)}
-      />
+        <div className="discuss-editor-field">
+          <label className="discuss-editor-label">Note</label>
+          <p className="discuss-editor-hint">
+            Optional. A caveat shown above the body, if the whole page needs one.
+          </p>
+          <Grow value={p.note} rows={2} onChange={(v) => set('note', v)} />
+        </div>
 
-      <h3>Sections</h3>
-      <p className="discuss-editor-hint">
-        The sections in page order. Use the arrows to move one, and demote or promote to make
-        it a subsection or a section of its own.
-      </p>
+        <PsmLinkPicker
+          school={p.school}
+          links={p.psmLinks || []}
+          onChange={(next) => set('psmLinks', next.length ? next : undefined)}
+        />
 
-      {sections.map((s, i) => (
-        <div className="discuss-editor-section" key={s.id}>
-          <SectionHead
-            number={`${i + 1}.`}
-            title={s.title}
-            index={i}
-            count={sections.length}
-            onMove={(from, to) => setSections(move(sections, from, to))}
-            onRemove={removeSection}
-            onShift={() => demote(i)}
-            shiftBlocked={demoteBlocked(s, i)}
-          />
-          <SectionEditor
-            embedded
-            section={s}
-            item={p}
-            onAddReference={addReference}
-            onChange={(next) => setSection(i, next)}
-          />
+        <h3>Numbers</h3>
+        <NumbersEditor
+          embedded
+          item={p}
+          onAddReference={addReference}
+          onChange={(rows) => set('numbers', rows && rows.length ? rows : undefined)}
+        />
 
-          {(s.subsections || []).map((sub, j) => (
-            <div className="discuss-editor-section discuss-editor-section--sub" key={sub.id}>
-              <SectionHead
-                number={`${i + 1}.${j + 1}`}
-                title={sub.title}
-                isSub
-                index={j}
-                count={s.subsections.length}
-                onMove={(from, to) => setSubs(i, move(s.subsections, from, to))}
-                onRemove={(k) => setSubs(i, s.subsections.filter((_, m) => m !== k))}
-                onShift={() => promote(i, j)}
-              />
-              <SectionEditor
-                embedded
-                isSub
-                section={sub}
-                item={p}
-                onAddReference={addReference}
-                onChange={(next) => setSubs(i, s.subsections.map((x, k) => (k === j ? next : x)))}
+        <h3>Sections</h3>
+        <p className="discuss-editor-hint">
+          The arrows change section order, demote a section to make it a subsection or promote
+          a subsection to make it a section.
+        </p>
+
+        {sections.map((s, i) => (
+          <div className="discuss-editor-section" key={s.id}>
+            <SectionHead
+              number={`${i + 1}.`}
+              title={s.title}
+              index={i}
+              count={sections.length}
+              onMove={(from, to) => setSections(move(sections, from, to))}
+              onRemove={removeSection}
+              onShift={() => demote(i)}
+              shiftBlocked={demoteBlocked(s, i)}
+            />
+            <SectionEditor
+              embedded
+              section={s}
+              item={p}
+              onAddReference={addReference}
+              onChange={(next) => setSection(i, next)}
+            />
+
+            {(s.subsections || []).map((sub, j) => (
+              <div className="discuss-editor-section discuss-editor-section--sub" key={sub.id}>
+                <SectionHead
+                  number={`${i + 1}.${j + 1}`}
+                  title={sub.title}
+                  isSub
+                  index={j}
+                  count={s.subsections.length}
+                  onMove={(from, to) => setSubs(i, move(s.subsections, from, to))}
+                  onRemove={(k) => setSubs(i, s.subsections.filter((_, m) => m !== k))}
+                  onShift={() => promote(i, j)}
+                />
+                <SectionEditor
+                  embedded
+                  isSub
+                  section={sub}
+                  item={p}
+                  onAddReference={addReference}
+                  onChange={(next) => setSubs(i, s.subsections.map((x, k) => (k === j ? next : x)))}
+                />
+              </div>
+            ))}
+
+            <button
+              type="button"
+              className="discuss-editor-add discuss-editor-add--sub"
+              onClick={() => addSubsection(i)}
+            >
+              + subsection of {s.title}
+            </button>
+          </div>
+        ))}
+        <button type="button" className="discuss-editor-add" onClick={addSection}>
+          + section
+        </button>
+
+        <h3>See also</h3>
+        <SlugList
+          slugs={p.seeAlso}
+          onChange={(v) => set('seeAlso', v)}
+          label="Links"
+          hint="Related pages, and anything else worth reading next."
+        />
+
+        <h3>References</h3>
+        <div className="discuss-editor-structure">
+          {refs.map((r, i) => (
+            <div className="discuss-editor-row" key={r.__was ?? `new-${i}`}>
+              <span className="discuss-editor-marker">{r.n}</span>
+              <Line value={r.work} onChange={(v) => setRef(i, 'work', v)} placeholder="Publication, e.g. NATOPS" />
+              <Line value={r.loc} onChange={(v) => setRef(i, 'loc', v)} placeholder="Section, e.g. §522 — Spin" />
+              <Line value={r.pages} onChange={(v) => setRef(i, 'pages', v)} placeholder="Page, e.g. p. 5-33" />
+              <RowTools
+                index={i}
+                count={refs.length}
+                onMove={(from, to) => setRefs(move(refs, from, to))}
+                onRemove={removeRef}
+                what="reference"
+                confirmRemove
               />
             </div>
           ))}
-
           <button
             type="button"
-            className="discuss-editor-add discuss-editor-add--sub"
-            onClick={() => addSubsection(i)}
+            className="discuss-editor-add"
+            onClick={() => setRefs([...refs, { n: refs.length + 1, work: '', loc: '', pages: '' }])}
           >
-            + subsection of {s.title}
+            + reference
           </button>
         </div>
-      ))}
-      <button type="button" className="discuss-editor-add" onClick={addSection}>
-        + section
-      </button>
-
-      <h3>See also</h3>
-      <SlugList
-        slugs={p.seeAlso}
-        onChange={(v) => set('seeAlso', v)}
-        label="Links"
-        hint="Related pages, and anything else worth reading next."
-      />
-
-      <h3>References</h3>
-      <p className="discuss-editor-hint">
-        The publication, the section, and the page that section starts on. The numbers follow
-        this order, so moving or removing a reference renumbers the markers on the page.
-      </p>
-      <div className="discuss-editor-structure">
-        {refs.map((r, i) => (
-          <div className="discuss-editor-row" key={r.__was ?? `new-${i}`}>
-            <span className="discuss-editor-marker">{r.n}</span>
-            <Line value={r.work} onChange={(v) => setRef(i, 'work', v)} placeholder="Publication, e.g. NATOPS" />
-            <Line value={r.loc} onChange={(v) => setRef(i, 'loc', v)} placeholder="Section, e.g. §522 — Spin" />
-            <Line value={r.pages} onChange={(v) => setRef(i, 'pages', v)} placeholder="Page, e.g. p. 5-33" />
-            <RowTools
-              index={i}
-              count={refs.length}
-              onMove={(from, to) => setRefs(move(refs, from, to))}
-              onRemove={removeRef}
-              what="reference"
-              confirmRemove
-            />
-          </div>
-        ))}
-        <button
-          type="button"
-          className="discuss-editor-add"
-          onClick={() => setRefs([...refs, { n: refs.length + 1, work: '', loc: '', pages: '' }])}
-        >
-          + reference
-        </button>
-      </div>
+        </>
+      )}
 
       <EditorActions
         draft

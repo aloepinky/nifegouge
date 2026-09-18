@@ -368,7 +368,7 @@ export function EditorActions({ onSave, onCancel, errors, warnings, children, re
       {draft && (
         <p className="discuss-editor-hint">
           Save keeps your edits in this browser. Nothing changes on the site until you publish
-          them, which is the next step.
+          them.
         </p>
       )}
       {/* A new tab, not a Link: an open editor holds unsaved work, and routing away from it
@@ -479,7 +479,7 @@ export function ProgramFields({ value, onChange, idPrefix = 'program', hint }) {
         </div>
       </div>
       <p className="discuss-editor-hint">
-        {hint || 'The aircraft and the school this page is for. A page with the same name can exist for another aircraft, and this is what tells them apart.'}
+        {hint || 'The aircraft and the school this page is for. A page with the same name can exist for another aircraft, so this distinguishes them.'}
       </p>
     </div>
   );

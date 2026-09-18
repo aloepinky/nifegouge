@@ -20,7 +20,11 @@ export const MAX_ITEM_BYTES = 200 * 1024;
 
 const ALLOWED_KEYS = new Set([
   'slug', 'title', 'lede', 'note', 'numbers', 'sections', 'seeAlso', 'references',
-  'maneuver', 'stub', 'sourcingLead', 'generated', 'diagram', 'limits', 'aircraft', 'school',
+  'maneuver', 'stub', 'sourcingLead', 'generated', 'aircraft', 'school',
+  // The pages of this site a page links under its lead. `diagram` and `limits` are what it
+  // carried before that list existed; the page editor reads them and writes `psmLinks`, so a
+  // page converts on its next save and both spellings have to be accepted meanwhile.
+  'psmLinks', 'diagram', 'limits',
 ]);
 
 export function checkSlug(slug) {
@@ -72,6 +76,12 @@ export function checkItem(item, slug) {
   }
   for (const key of ['lede', 'note', 'sourcingLead']) {
     if (item[key] !== undefined && !isStr(item[key])) bad(`${key} must be a string`);
+  }
+  if (item.psmLinks !== undefined) {
+    if (!isArr(item.psmLinks)) bad('psmLinks must be an array');
+    for (const path of item.psmLinks) {
+      if (!isStr(path) || !path.startsWith('/')) bad('Every site link is a path starting with /');
+    }
   }
   if (Buffer.byteLength(JSON.stringify(item), 'utf8') > MAX_ITEM_BYTES) bad('The page is too large to store');
 

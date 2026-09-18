@@ -39,9 +39,8 @@ function NumbersEditor({ item, onSave, onCancel, check, embedded, onChange, onAd
       aria-label="Editing Numbers"
     >
       <p className="discuss-editor-hint">
-        The numbers a student has to know cold. Each row is a short label and a value, such as
-        <code>Max crosswind</code> and <code>25 knots</code>. Rows in a row with the same label
-        show it once.
+        Any relevant number an SNA could have memorized. Each row has a short label and a
+        number with units.
       </p>
 
       {rows.length > 0 && (

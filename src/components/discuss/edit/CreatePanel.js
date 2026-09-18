@@ -7,9 +7,10 @@ import { getItemMeta } from '../registry';
 import { createItem, rememberItem, refreshSyllabus, getAuthor, setAuthor } from '../discussApi';
 import { DISCUSS_BASE } from '../SyllabusContext';
 
-// Makes a page. It starts as a stub — a title and where the next writer should look — and
-// becomes a page through the page editor. With `link`, the event row that named the item is
-// pointed at the new page in the same request, so the hub shows it without a second edit.
+// Makes a page. It starts as a placeholder — a title, and where an author could look — and
+// opens in the page editor, where clearing the Placeholder flag and adding a section is what
+// turns it into a page. With `link`, the event row that named the item is pointed at the new
+// page in the same request, so the hub shows it without a second edit.
 //
 // Used from an event hub's "no page yet" row and from the not-found page for a typed slug.
 // `program` is the aircraft and school to offer first: the syllabus's, where there is one.
@@ -55,7 +56,13 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, program: in
         slug: clean, rev: 1, updatedAt: new Date().toISOString(), author: name, summary: 'Created the page', item,
       });
       if (link) await refreshSyllabus(link.syllabusId).catch(() => null);
-      navigate(`${DISCUSS_BASE}/${clean}${link && result.linked ? `?from=${link.eventId}` : ''}`);
+      // Straight into the page form, which is what the new page's own "write this page"
+      // opens. Creating a page and writing it are one job; the stub screen in between is a
+      // step nobody asked for.
+      navigate(
+        `${DISCUSS_BASE}/${clean}${link && result.linked ? `?from=${link.eventId}` : ''}`,
+        { state: { write: true } },
+      );
     } catch (err) {
       setError(err.status === 409
         ? 'A page with that address already exists. Link it from the list instead, with [edit].'
@@ -97,7 +104,7 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, program: in
       <div className="discuss-editor-field">
         <label className="discuss-editor-label" htmlFor="create-lead">Where to look</label>
         <p className="discuss-editor-hint">
-          Optional. The publications and sections whoever writes the page should start from.
+          Optional. The publications and sections an author could start from.
         </p>
         <Grow id="create-lead" value={lead} onChange={setLead} rows={2} />
       </div>
