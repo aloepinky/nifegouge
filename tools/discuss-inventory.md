@@ -27,21 +27,21 @@ where to look, not what to fix.
 | `href` rows (not items) | 21 |
 | Label-only rows (no page yet) | 5 |
 | Tables | 25 (in 22 items) |
-| Cited blocks | 4614 |
+| Cited blocks | 4640 |
 | Uncited blocks | 18 (in 8 items) |
 
 ## Publications cited
 
 | Work | Items |
 |---|---|
-| NATOPS | 98 |
-| FAM FTI | 86 |
-| I FTI | 80 |
+| NATOPS | 99 |
+| FAM FTI | 87 |
+| I FTI | 81 |
 | VT-28 SOP | 33 |
 | VT-27 SOP | 30 |
 | F FTI | 30 |
 | CNAF 3710 | 26 |
-| VNAV FTI | 15 |
+| VNAV FTI | 16 |
 | TW-4 SOP | 13 |
 | Course Rules Manual | 12 |
 | AIM | 10 |
@@ -327,7 +327,7 @@ figures with no reference marker and no section-level `refs`.
 | Speed brake use as a section | `speed-brake-use-as-a-section` | F | F4102 | F FTI |  | maneuver |
 | Spin | `spin` | FAM | FAM4202 FAM4702 | FAM FTI, NATOPS |  | maneuver |
 | Split-S | `split-s` | FAM | FAM3401 | FAM FTI |  | maneuver |
-| Stabilized approach criteria | `stabilized-approach-criteria` | — | — | Instrument Procedures Handbook |  | orphan |
+| Stabilized approach criteria | `stabilized-approach-criteria` | — | — | FAM FTI, I FTI, Instrument Procedures Handbook, NATOPS |  | orphan |
 | Standard course corrections | `standard-course-corrections` | N | N3101 N4101 | VNAV FTI |  |  |
 | Standard instrument departure | `standard-instrument-departure` | I | I3104 I4304 | I FTI |  |  |
 | Standard time corrections | `standard-time-corrections` | N | N3101 N4101 | VNAV FTI |  |  |
@@ -355,7 +355,7 @@ figures with no reference marker and no section-level `refs`.
 | Unauthorized solo maneuvers | `unauthorized-solo-maneuvers` | FAM | FAM4304 FAM4490 | FAM FTI, VT-27 SOP, VT-28 SOP |  |  |
 | Uncommanded power changes and loss of power | `uncommanded-power-changes-lop` | FAM | FAM2201 | NATOPS |  |  |
 | Uncommanded prop feather | `uncommanded-prop-feather` | FAM, I | FAM2201 I3103 | NATOPS |  |  |
-| Uncontrolled field instrument communications | `uncontrolled-field-instrument-communications` | — | — | AIM, I FTI |  | orphan |
+| Uncontrolled field instrument communications | `uncontrolled-field-instrument-communications` | — | — | AIM, I FTI, VNAV FTI |  | orphan |
 | Unintentional instrument flight | `unintentional-instrument-flight` | FAM | FAM4304 FAM4490 | FAM FTI |  |  |
 | VFR chart preparation | `vfr-chart-preparation` | N | N3101 N4101 | VNAV FTI |  |  |
 | VFR field entry/departure (AIM) | `vfr-field-entry-departure` | N | N3101 N4101 | VNAV FTI |  |  |
@@ -481,7 +481,7 @@ the item, and its section headings. Longest first.
 - `formation-arrival-and-departure-procedures` — Formation arrival and departure procedures · Section missed approach · Departure and climbout · Running rendezvous · Common errors · Break entry · Arrival
 - `formation-communications` — Formation tactical voice communications · Formation communications · Radio or visual signal · Tactical frequency · Frequency changes · Common errors · Call signs
 - `formation-emergency-procedures` — Formation emergency procedures · Backup assistance · Lead assignment · Perch position · ATC call signs · Section EP
-- `formation-maneuvers` — Breakup and rendezvous · Formation maneuvers · Cruise formation · Parade position · Common errors · Parade turns · Crossunder
+- `formation-maneuvers` — Breakup and rendezvous · Formation maneuvers · Interval takeoff · Cruise formation · Parade position · Common errors · Parade turns · Crossunder · Underrun
 - `formation-position-corrections` — Formation position corrections · Correction method · Position keeping
 - `formation-preflight-planning` — Formation preflight planning · TW-4 Formation Supplement · Integrity check · Fuel awareness · Outbound · Taxi
 - `formation-squadron-sop` — Formation squadron SOP · Squadron SOP · VT-27 SOP · VT-28 SOP · TW-4 SOP
@@ -638,7 +638,7 @@ the item, and its section headings. Longest first.
 - `speed-brake-use-as-a-section` — Speed brake use as a section · Extension and retraction · Wing use
 - `spin` — Common errors · Limitations · Variants · Phases · Entry · Spin
 - `split-s` — Solo restriction · Common errors · Procedure · Technique · Split-S
-- `stabilized-approach-criteria` — Stabilized approach criteria · Maximum descent rate · Minimum heights · Decision point
+- `stabilized-approach-criteria` — Stabilized approach criteria · Instrument approaches · Maximum descent rate · VFR straight-in · Minimum heights · Decision point · Windshear
 - `standard-course-corrections` — Standard course corrections · Standard closing angle · Drift analysis · Timing cost · Techniques
 - `standard-instrument-departure` — Standard instrument departure · Common errors · Definition · Procedure · SID
 - `standard-time-corrections` — Standard time corrections · Off-course maneuvering · Proportional method · Fuel considerations · Ten percent method

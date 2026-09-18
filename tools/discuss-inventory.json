@@ -10,7 +10,7 @@
     "tableItems": 22,
     "uncitedItems": 8,
     "uncitedBlocks": 18,
-    "citedBlocks": 4614,
+    "citedBlocks": 4640,
     "events": 92,
     "hrefRows": 21,
     "unwrittenRows": 5
@@ -90,6 +90,7 @@
       "slow-flight",
       "spin",
       "split-s",
+      "stabilized-approach-criteria",
       "steady-state-spin-recovery",
       "strike-of-ground-object",
       "takeoff-flap-landings",
@@ -193,6 +194,7 @@
       "securing-rear-cockpit-for-solo",
       "smoke-and-fume-elimination",
       "spin",
+      "stabilized-approach-criteria",
       "strange-field-operations",
       "strike-of-ground-object",
       "tire-failures",
@@ -364,6 +366,7 @@
       "standard-course-corrections",
       "standard-time-corrections",
       "time-on-target",
+      "uncontrolled-field-instrument-communications",
       "vfr-chart-preparation",
       "vfr-field-entry-departure"
     ],
@@ -435,6 +438,7 @@
       "rvfac",
       "s-1-pattern",
       "shuttle-descent",
+      "stabilized-approach-criteria",
       "standard-instrument-departure",
       "star",
       "station-passage",
@@ -14201,6 +14205,21 @@
       ],
       "sections": [
         {
+          "id": "interval-takeoff",
+          "title": "Interval takeoff",
+          "refs": [
+            7
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/formation-maneuvers/mu74gpni-f-fti-fig-3-2.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "parade-position",
           "title": "Parade position",
           "refs": [
@@ -14247,6 +14266,21 @@
           ],
           "paras": 3,
           "items": 0,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/formation-maneuvers/mu74gq5i-f-fti-fig-4-6.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "underrun",
+          "title": "Underrun",
+          "refs": [
+            8
+          ],
+          "paras": 1,
+          "items": 5,
           "figures": [],
           "tables": [],
           "main": null,
@@ -14260,7 +14294,9 @@
           ],
           "paras": 1,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/formation-maneuvers/mu74gq9d-f-fti-fig-4-10.webp"
+          ],
           "tables": [],
           "main": null,
           "further": [
@@ -14272,7 +14308,7 @@
           "title": "Common errors",
           "refs": null,
           "paras": 0,
-          "items": 4,
+          "items": 5,
           "figures": [],
           "tables": [],
           "main": null,
@@ -14344,10 +14380,22 @@
           "work": "F FTI",
           "loc": "Appendix A — Glossary",
           "pages": "p. A-1"
+        },
+        {
+          "n": 7,
+          "work": "F FTI",
+          "loc": "§301 — Interval Takeoff",
+          "pages": "p. 3-2"
+        },
+        {
+          "n": 8,
+          "work": "F FTI",
+          "loc": "§305 — Rendezvous Underrun",
+          "pages": "p. 3-5"
         }
       ],
       "coverage": {
-        "cited": 24,
+        "cited": 37,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -14360,11 +14408,13 @@
       "terms": [
         "Breakup and rendezvous",
         "Formation maneuvers",
+        "Interval takeoff",
         "Cruise formation",
         "Parade position",
         "Common errors",
         "Parade turns",
-        "Crossunder"
+        "Crossunder",
+        "Underrun"
       ]
     },
     {
@@ -23188,7 +23238,9 @@
           ],
           "paras": 1,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/lead-lag-and-pure-pursuit/mu74gp6v-f-fti-fig-1-4.webp"
+          ],
           "tables": [],
           "main": [
             "formation-position-corrections"
@@ -23215,7 +23267,7 @@
         }
       ],
       "coverage": {
-        "cited": 1,
+        "cited": 2,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -24011,14 +24063,6 @@
           "value": "5000' x 100'"
         },
         {
-          "label": "Student solo, below 3500 feet MSL",
-          "value": "5000' x 100'"
-        },
-        {
-          "label": "Student solo, above 3500 feet MSL",
-          "value": "6000' x 100'"
-        },
-        {
           "label": "VT-28 RADALT in transit",
           "value": "2000 feet"
         },
@@ -24077,7 +24121,7 @@
         }
       ],
       "coverage": {
-        "cited": 10,
+        "cited": 8,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -29899,7 +29943,9 @@
           ],
           "paras": 1,
           "items": 3,
-          "figures": [],
+          "figures": [
+            null
+          ],
           "tables": [],
           "main": null,
           "further": [
@@ -29914,7 +29960,9 @@
           ],
           "paras": 2,
           "items": 0,
-          "figures": [],
+          "figures": [
+            null
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -29927,7 +29975,9 @@
           ],
           "paras": 1,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/parade-sequence-checkpoints/mu73tsxg-f-fti-fig-4-5.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -29940,7 +29990,9 @@
           ],
           "paras": 2,
           "items": 0,
-          "figures": [],
+          "figures": [
+            null
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -30039,7 +30091,7 @@
         }
       ],
       "coverage": {
-        "cited": 27,
+        "cited": 31,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -32024,7 +32076,9 @@
           ],
           "paras": 1,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/radial-rendezvous/mu74gq15-f-fti-fig-3-5.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -32103,7 +32157,7 @@
         }
       ],
       "coverage": {
-        "cited": 14,
+        "cited": 15,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -33471,7 +33525,9 @@
           ],
           "paras": 2,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/section-approach-procedures/mu74gqdh-f-fti-fig-5-1.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -33516,7 +33572,7 @@
         }
       ],
       "coverage": {
-        "cited": 10,
+        "cited": 11,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -33582,7 +33638,9 @@
           ],
           "paras": 2,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/section-pel/mu74gqhm-f-fti-fig-6-2.webp"
+          ],
           "tables": [],
           "main": null,
           "further": [
@@ -33621,7 +33679,7 @@
         }
       ],
       "coverage": {
-        "cited": 6,
+        "cited": 7,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -34943,6 +35001,45 @@
       "events": [],
       "sections": [
         {
+          "id": "instrument-approaches",
+          "title": "Instrument approaches",
+          "refs": null,
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "vfr-straight-in",
+          "title": "VFR straight-in",
+          "refs": [
+            7
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "windshear",
+          "title": "Windshear",
+          "refs": [
+            3
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": [
+            "wind-shear-recovery"
+          ]
+        },
+        {
           "id": "decision-point",
           "title": "Decision point",
           "refs": [
@@ -35000,10 +35097,21 @@
         {
           "label": "Circling, final segment",
           "value": "500 feet above airport elevation or MDA, lower"
+        },
+        {
+          "label": "Windshear, stabilized by",
+          "value": "1000 feet AGL"
+        },
+        {
+          "label": "VFR straight-in glideslope",
+          "value": "400-600 feet per NM"
         }
       ],
       "works": [
-        "Instrument Procedures Handbook"
+        "FAM FTI",
+        "I FTI",
+        "Instrument Procedures Handbook",
+        "NATOPS"
       ],
       "references": [
         {
@@ -35017,15 +35125,44 @@
           "work": "Instrument Procedures Handbook",
           "loc": "Ch. 4 — Descent Rates and Glidepaths for Nonprecision Approaches",
           "pages": "p. 4-37"
+        },
+        {
+          "n": 3,
+          "work": "NATOPS",
+          "loc": "Ch. 7 — Windshear or Microburst",
+          "pages": "p. 7-2"
+        },
+        {
+          "n": 4,
+          "work": "I FTI",
+          "loc": "§901 — Non-Precision Approach",
+          "pages": "p. 9-1"
+        },
+        {
+          "n": 5,
+          "work": "I FTI",
+          "loc": "§902 — Instrument Landing System (ILS) Approach",
+          "pages": "p. 9-5"
+        },
+        {
+          "n": 6,
+          "work": "I FTI",
+          "loc": "§907 — Airport Surveillance Approach (ASR) and PAR Without Glideslope (PAR W/O GS)",
+          "pages": "p. 9-31"
+        },
+        {
+          "n": 7,
+          "work": "FAM FTI",
+          "loc": "§613 — VFR Straight-In Approach",
+          "pages": "p. 6-32"
         }
       ],
       "coverage": {
-        "cited": 11,
+        "cited": 18,
         "uncited": 0,
         "uncitedIds": []
       },
       "seeAlso": [
-        "wind-shear-recovery",
         "circling-maneuver",
         "missed-approach"
       ],
@@ -35033,9 +35170,12 @@
       "lede": "Maintaining a constant approach speed, descent rate, vertical flight path, and configuration during the final stages of an approach is referred to as the stabilized approach concept. A stabilized approach is essential for safe turbojet operations and is also strongly recommended for propeller-driven airplanes and helicopters.",
       "terms": [
         "Stabilized approach criteria",
+        "Instrument approaches",
         "Maximum descent rate",
+        "VFR straight-in",
         "Minimum heights",
-        "Decision point"
+        "Decision point",
+        "Windshear"
       ]
     },
     {
@@ -38390,7 +38530,8 @@
       ],
       "works": [
         "AIM",
-        "I FTI"
+        "I FTI",
+        "VNAV FTI"
       ],
       "references": [
         {
@@ -38413,9 +38554,9 @@
         },
         {
           "n": 4,
-          "work": "AIM",
-          "loc": "§4-1-9 — Traffic Advisory Practices at Airports Without Operating Control Towers",
-          "pages": "p. 4-1-2"
+          "work": "VNAV FTI",
+          "loc": "§608 — Traffic Advisory Practices at Airports Without Operating Control Towers",
+          "pages": "p. 6-6"
         },
         {
           "n": 5,
