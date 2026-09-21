@@ -10,7 +10,7 @@
     "tableItems": 22,
     "uncitedItems": 8,
     "uncitedBlocks": 18,
-    "citedBlocks": 4640,
+    "citedBlocks": 4661,
     "events": 92,
     "hrefRows": 21,
     "unwrittenRows": 5
@@ -1645,7 +1645,8 @@
         "flap-failures",
         "gear-emergencies",
         "visual-straight-in",
-        "ejection"
+        "ejection",
+        "bash"
       ],
       "sourcingLead": null,
       "lede": "If a bird strike, structural damage, or a flight control malfunction occurs or is suspected in flight, a decision to abandon the aircraft or attempt a landing must be made. A mid-air collision is an inherent risk when flying formation. Mid-air collisions can be either minimal or catastrophic and can be within the section or external to the flight.",
@@ -3292,7 +3293,8 @@
       "seeAlso": [
         "landing-pattern",
         "hud",
-        "full-stop-landings"
+        "full-stop-landings",
+        "on-speed-crosscheck-in-crosswind-conditions"
       ],
       "sourcingLead": null,
       "lede": "The AOA approach is a descending 180° balanced turn to final followed by a normal flared landing. During the approach, the optimum AOA is maintained by controlling nose/pitch attitude and rate of descent is controlled by power adjustment. The purpose of the AOA approach is to fly the aircraft as slow and as safe as possible.",
@@ -5125,7 +5127,9 @@
           ],
           "paras": 3,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/blind-procedures/mu7ddryw-f-fti-fig-6-1.webp"
+          ],
           "tables": [],
           "main": null,
           "further": [
@@ -5174,7 +5178,7 @@
         }
       ],
       "coverage": {
-        "cited": 11,
+        "cited": 12,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -7745,7 +7749,8 @@
         "crosswind-full-stops",
         "crosswind-touch-and-goes",
         "crosswind-limits",
-        "wave-off"
+        "wave-off",
+        "on-speed-crosscheck-in-crosswind-conditions"
       ],
       "sourcingLead": null,
       "lede": "The procedures for a takeoff with a crosswind are the same as for a no wind takeoff, except aileron is held into the wind to keep the wings level. Throughout the final, flare and touchdown, the aircraft should track in a straight line down the runway. The application of crosswind correction must be continued as necessary during the landing transition and flare to prevent drift.",
@@ -8034,7 +8039,8 @@
       },
       "seeAlso": [
         "terminate",
-        "speed-brake-use-as-a-section"
+        "speed-brake-use-as-a-section",
+        "tail-chase"
       ],
       "sourcingLead": null,
       "lede": "Cruise maneuvering will build on the two dimensional fundamentals learned while adding the challenge of maneuvering in the vertical plane as well. During VMC parade turns into and away, Wing was limited to one side or the other from Lead while conducting level turns. Cruise maneuvering will use a fixed power setting, but Wing will now have the ability to change sides as required, using radius of turn principles to maintain the 60° cruise bearing line.",
@@ -10884,7 +10890,8 @@
       "seeAlso": [
         "constant-airspeed-climbs-and-descents",
         "shuttle-descent",
-        "en-route-procedures"
+        "en-route-procedures",
+        "rate-of-descent-calculation"
       ],
       "sourcingLead": null,
       "lede": "In the enroute structure, the FAA expects the pilot to descend at an optimum rate consistent with the operating characteristics of the aircraft to 1000 feet above the assigned altitude, and then attempt to descend at a rate of 500 to 1500 FPM until the assigned altitude is reached.",
@@ -14229,7 +14236,9 @@
           "items": 3,
           "figures": [],
           "tables": [],
-          "main": null,
+          "main": [
+            "parade-sequence-checkpoints"
+          ],
           "further": null
         },
         {
@@ -14253,7 +14262,9 @@
           ],
           "paras": 4,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/formation-maneuvers/mu7ddqic-f-fti-fig-4-5.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -14395,7 +14406,7 @@
         }
       ],
       "coverage": {
-        "cited": 37,
+        "cited": 38,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -14490,7 +14501,8 @@
         "uncitedIds": []
       },
       "seeAlso": [
-        "formation-maneuvers"
+        "formation-maneuvers",
+        "parade-sequence-checkpoints"
       ],
       "sourcingLead": null,
       "lede": "Good formation flying is the result of anticipation and the use of small, timely corrections about all three axes. Strive to maintain perfect positioning, but understand that Wing will only be there for a fleeting moment. What makes a good formation pilot is the ability to recognize and limit deviations and make timely and efficient corrections.",
@@ -14539,7 +14551,9 @@
           ],
           "paras": 4,
           "items": 0,
-          "figures": [],
+          "figures": [
+            null
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -14629,7 +14643,7 @@
         }
       ],
       "coverage": {
-        "cited": 20,
+        "cited": 21,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -15160,7 +15174,9 @@
           ],
           "paras": 2,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/full-stop-landings/mu7zklgo-fam-fti-fig-6-6.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -15312,7 +15328,7 @@
         }
       ],
       "coverage": {
-        "cited": 34,
+        "cited": 35,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -17455,7 +17471,9 @@
           "refs": null,
           "paras": 4,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/holding-corrections/mu7zkrid-i-fti-fig-7-19.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -17466,7 +17484,9 @@
           "refs": null,
           "paras": 2,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/holding-corrections/mu7zkr97-i-fti-fig-7-18.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -17534,7 +17554,7 @@
         }
       ],
       "coverage": {
-        "cited": 28,
+        "cited": 30,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -17583,7 +17603,8 @@
           "paras": 0,
           "items": 3,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/holding-entry/mu1o30zv-standardhold.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/holding-entry/mu1o30zv-standardhold.webp",
+            null
           ],
           "tables": [],
           "main": null,
@@ -17598,7 +17619,8 @@
           "paras": 0,
           "items": 3,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/holding-entry/mu1o41at-nonstandardhold.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/holding-entry/mu1o41at-nonstandardhold.webp",
+            null
           ],
           "tables": [],
           "main": null,
@@ -17612,7 +17634,9 @@
           ],
           "paras": 2,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/holding-entry/mu7zkpug-i-fti-fig-7-12.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -17625,7 +17649,9 @@
           ],
           "paras": 2,
           "items": 0,
-          "figures": [],
+          "figures": [
+            null
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -17692,7 +17718,7 @@
         }
       ],
       "coverage": {
-        "cited": 32,
+        "cited": 36,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -17755,7 +17781,10 @@
           ],
           "paras": 0,
           "items": 7,
-          "figures": [],
+          "figures": [
+            null,
+            null
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -17933,7 +17962,7 @@
         }
       ],
       "coverage": {
-        "cited": 40,
+        "cited": 42,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -19379,7 +19408,8 @@
       "seeAlso": [
         "clearance-and-departure-procedures",
         "obstacle-departure-procedures",
-        "ifr-pickup"
+        "ifr-pickup",
+        "uncontrolled-field-instrument-communications"
       ],
       "sourcingLead": null,
       "lede": "Where there is no clearance delivery, an IFR clearance may be obtained in one of several ways, and which are available is listed for the field in the IFR Supplement. A clearance obtained on the ground may carry a void time, and you must be airborne before it.",
@@ -19959,7 +19989,8 @@
       },
       "seeAlso": [
         "ifr-pickup",
-        "lost-communications"
+        "lost-communications",
+        "uncontrolled-field-instrument-communications"
       ],
       "sourcingLead": null,
       "lede": "It is the responsibility of the pilot in command to ensure that the proper agency is notified of flight termination. Cancellation of an instrument flight plan does not meet the requirement for closing out the flight plan; when a landing report has been properly delivered, the flight plan will be considered closed out.",
@@ -22431,7 +22462,8 @@
       "seeAlso": [
         "terminate",
         "blind-procedures",
-        "formation-emergency-procedures"
+        "formation-emergency-procedures",
+        "tail-chase"
       ],
       "sourcingLead": null,
       "lede": "Knock-it-off is a radio call used by a flight member to alert the formation to cease maneuvering. It is used when safety of flight is an issue, such as an emergency, a traffic threat, or a crewmember who has G-locked due to poor Anti-G Straining Maneuver execution during Tail Chase. This radio call should be preserved as an \"unexpected stop and attention getter\" and may be initiated by any flight member.",
@@ -23023,7 +23055,9 @@
           ],
           "paras": 2,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/landing-pattern/mu7zkjsl-fam-fti-fig-6-1.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -23049,7 +23083,9 @@
           ],
           "paras": 0,
           "items": 9,
-          "figures": [],
+          "figures": [
+            null
+          ],
           "tables": [],
           "main": null,
           "further": [
@@ -23165,10 +23201,16 @@
           "work": "VT-28 SOP",
           "loc": "§3.4 — Landing Procedures",
           "pages": "p. 11"
+        },
+        {
+          "n": 5,
+          "work": "FAM FTI",
+          "loc": "§604 — The Break",
+          "pages": "p. 6-4"
         }
       ],
       "coverage": {
-        "cited": 42,
+        "cited": 44,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -23272,7 +23314,8 @@
         "uncitedIds": []
       },
       "seeAlso": [
-        "cruise-maneuvering"
+        "cruise-maneuvering",
+        "tail-chase"
       ],
       "sourcingLead": null,
       "lede": "The concept of pursuit geometry between aircraft is fundamental to formation maneuvering. This geometry relates specifically to flight paths and planes of motion. Assuming both aircraft are moving forward at the same speed and in the same plane of motion, aircraft nose position relative to the other aircraft will determine the type of pursuit. There are three basic types of pursuit: lead, pure and lag.",
@@ -25939,7 +25982,8 @@
         "visual-descent-point",
         "faf-to-map-timing-adjustments",
         "gca-pattern",
-        "approach-maneuver"
+        "approach-maneuver",
+        "stabilized-approach-criteria"
       ],
       "sourcingLead": null,
       "lede": "A missed approach is a procedure used to discontinue an instrument approach if the runway environment is not in sight, or the aircraft is not in a position to make a safe landing. The primary concern if unable to land is to climb to a safe altitude. Therefore, establishing and maintaining a positive rate of climb should be your first priority if a missed approach is commenced. Your second priority should be to turn the aircraft, if required, to intercept the missed approach course or to the designated heading.",
@@ -27453,7 +27497,8 @@
         "en-route-procedures",
         "high-altitude-approach",
         "ground-speed-calculations",
-        "lost-communications"
+        "lost-communications",
+        "uncontrolled-field-instrument-communications"
       ],
       "sourcingLead": null,
       "lede": "Federal Aviation Regulations require pilots to maintain a listening watch on the appropriate frequency and to furnish position reports passing certain reporting points. Reporting points are indicated by symbol on enroute charts: the designated compulsory reporting point symbol is the solid triangle and the on request reporting point symbol is an open triangle. Reports passing an on request reporting point are only necessary when requested by ATC.",
@@ -30141,7 +30186,9 @@
           ],
           "paras": 1,
           "items": 0,
-          "figures": [],
+          "figures": [
+            null
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -30154,7 +30201,9 @@
           ],
           "paras": 2,
           "items": 0,
-          "figures": [],
+          "figures": [
+            null
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -30239,14 +30288,15 @@
         }
       ],
       "coverage": {
-        "cited": 18,
+        "cited": 20,
         "uncited": 0,
         "uncitedIds": []
       },
       "seeAlso": [
         "crosswind-takeoff-and-landings",
         "crosswind-limits",
-        "landing-pattern"
+        "landing-pattern",
+        "on-speed-crosscheck-in-crosswind-conditions"
       ],
       "sourcingLead": null,
       "lede": "Compensate for crosswinds in the landing pattern to maintain the normal ground track. All pilots should be able to assess crosswinds and understand how they affect pattern operations. The proper application of crosswind controls is essential to executing landings.",
@@ -33737,7 +33787,9 @@
           ],
           "paras": 1,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/section-takeoff/mu7ddrrl-f-fti-fig-3-1.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -33852,10 +33904,16 @@
           "work": "F FTI",
           "loc": "§307 — Section Abort",
           "pages": "p. 3-10"
+        },
+        {
+          "n": 3,
+          "work": "F FTI",
+          "loc": "§300 — Line-up",
+          "pages": "p. 3-1"
         }
       ],
       "coverage": {
-        "cited": 31,
+        "cited": 32,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -37839,7 +37897,9 @@
           ],
           "paras": 1,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/turn-pattern/mu7zkj9n-fam-fti-fig-5-7.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -37927,7 +37987,7 @@
         }
       ],
       "coverage": {
-        "cited": 20,
+        "cited": 21,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -38732,7 +38792,9 @@
           ],
           "paras": 0,
           "items": 5,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/vfr-chart-preparation/mu7zkrqv-vnav-fti-fig-4-5.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -38801,7 +38863,9 @@
           ],
           "paras": 1,
           "items": 4,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/vfr-chart-preparation/mu7zkrzn-vnav-fti-fig-4-6.webp"
+          ],
           "tables": [],
           "main": null,
           "further": null
@@ -38873,7 +38937,7 @@
         }
       ],
       "coverage": {
-        "cited": 29,
+        "cited": 31,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -39338,7 +39402,9 @@
           ],
           "paras": 1,
           "items": 0,
-          "figures": [],
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/visual-straight-in/mu7zkmq7-fam-fti-fig-6-11.webp"
+          ],
           "tables": [],
           "main": null,
           "further": [
@@ -39463,7 +39529,7 @@
         }
       ],
       "coverage": {
-        "cited": 26,
+        "cited": 27,
         "uncited": 0,
         "uncitedIds": []
       },
