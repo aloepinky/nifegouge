@@ -23,6 +23,9 @@ import { HttpError } from './http.mjs';
 // The jet log's name is stored as `title` and its group, folder and mode inside `flags`,
 // because `name`, `group` and `mode` are all DynamoDB reserved words. That leaves `hidden` as
 // the only reserved word any expression here names, and it already has its alias.
+//
+// Briefs: partition `briefId` (S), sort `rev` (N), the same two-row shape.
+//   rev 0      { latestRev, title, flags: { short, aircraft, school, order }, hidden?, updatedAt }
 
 const db = () => getDynamo();
 
@@ -328,32 +331,166 @@ export async function setSyllabusName(id, name) {
 }
 
 // ---------------------------------------------------------------------------------------
-// Jet logs
+// Jet logs and briefs
 //
-// A copy of the Items section with `slug` renamed to `logId`. The two stores above are
-// already two hand-written copies of one shape; a third is how this file is written.
+// Both are the Items shape with the partition key renamed: a meta row at rev 0 carrying the
+// newest revision, a title and the flags the index draws, and one row per revision. The
+// Items section above predates this and is written out by hand; the two corpora after it
+// share one implementation rather than being a third and a fourth copy of it.
 
-export async function jetLogMeta(logId) {
-  const result = await db().send(new GetCommand({
-    TableName: CONFIG.jetLogsTable,
-    Key: { logId, rev: 0 },
-  }));
-  return result.Item || null;
-}
+function revisionStore({ table, key, noun, titleOf, flagsOf }) {
+  const tableName = () => CONFIG[table];
 
-export async function jetLogRevision(logId, rev) {
-  const result = await db().send(new GetCommand({
-    TableName: CONFIG.jetLogsTable,
-    Key: { logId, rev },
-  }));
-  return result.Item || null;
-}
+  async function meta(id) {
+    const result = await db().send(new GetCommand({ TableName: tableName(), Key: { [key]: id, rev: 0 } }));
+    return result.Item || null;
+  }
 
-export async function newestJetLog(logId) {
-  const meta = await jetLogMeta(logId);
-  if (!meta || meta.hidden) return null;
-  const row = await jetLogRevision(logId, meta.latestRev);
-  return row ? { meta, row } : null;
+  async function revision(id, rev) {
+    const result = await db().send(new GetCommand({ TableName: tableName(), Key: { [key]: id, rev } }));
+    return result.Item || null;
+  }
+
+  async function newest(id) {
+    const m = await meta(id);
+    if (!m || m.hidden) return null;
+    const row = await revision(id, m.latestRev);
+    return row ? { meta: m, row } : null;
+  }
+
+  function revisionRow(id, rev, doc, { author, summary, baseRev }) {
+    return {
+      [key]: id,
+      rev,
+      // Stringified exactly as it arrived. tools/jetlog-migrate.js --verify compares the
+      // mirrored document against its source byte for byte, so nothing is normalised here.
+      docJson: JSON.stringify(doc),
+      author: author || '',
+      summary: summary || '',
+      baseRev: baseRev == null ? rev - 1 : baseRev,
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  async function create(id, doc, m) {
+    const row = revisionRow(id, 1, doc, { ...m, baseRev: 0 });
+    const metaRow = {
+      [key]: id,
+      rev: 0,
+      latestRev: 1,
+      title: titleOf(doc),
+      flags: flagsOf(doc),
+      updatedAt: row.createdAt,
+    };
+    const absent = `attribute_not_exists(${key})`;
+    try {
+      await db().send(new TransactWriteCommand({
+        TransactItems: [
+          { Put: { TableName: tableName(), Item: metaRow, ConditionExpression: absent } },
+          { Put: { TableName: tableName(), Item: row, ConditionExpression: absent } },
+        ],
+      }));
+    } catch (error) {
+      if (isConflict(error)) throw new HttpError(409, 'That id is already taken');
+      throw error;
+    }
+    return { meta: metaRow, row };
+  }
+
+  async function save(id, baseRev, doc, m) {
+    const rev = baseRev + 1;
+    const row = revisionRow(id, rev, doc, { ...m, baseRev });
+    try {
+      await db().send(new TransactWriteCommand({
+        TransactItems: [
+          {
+            Put: {
+              TableName: tableName(),
+              Item: row,
+              ConditionExpression: `attribute_not_exists(${key})`,
+            },
+          },
+          {
+            Update: {
+              TableName: tableName(),
+              Key: { [key]: id, rev: 0 },
+              UpdateExpression: 'SET latestRev = :rev, title = :title, flags = :flags, updatedAt = :at',
+              ConditionExpression: 'latestRev = :base',
+              ExpressionAttributeValues: {
+                ':rev': rev,
+                ':title': titleOf(doc),
+                ':flags': flagsOf(doc),
+                ':at': row.createdAt,
+                ':base': baseRev,
+              },
+            },
+          },
+        ],
+      }));
+    } catch (error) {
+      if (isConflict(error)) {
+        const current = await meta(id);
+        throw new HttpError(409, 'A newer revision exists', { rev: current ? current.latestRev : null });
+      }
+      throw error;
+    }
+    return { meta: await meta(id), row };
+  }
+
+  async function setHidden(id, hidden) {
+    try {
+      await db().send(new UpdateCommand({
+        TableName: tableName(),
+        Key: { [key]: id, rev: 0 },
+        UpdateExpression: hidden ? 'SET #hidden = :h' : 'REMOVE #hidden',
+        ConditionExpression: `attribute_exists(${key})`,
+        ExpressionAttributeNames: { '#hidden': 'hidden' },
+        ExpressionAttributeValues: hidden ? { ':h': true } : undefined,
+      }));
+    } catch (error) {
+      if (isConflict(error)) throw new HttpError(404, `No such ${noun}`);
+      throw error;
+    }
+  }
+
+  // Newest first, without the documents.
+  async function history(id) {
+    const out = [];
+    let lastKey;
+    do {
+      const result = await db().send(new QueryCommand({
+        TableName: tableName(),
+        KeyConditionExpression: `${key} = :id AND rev >= :one`,
+        ExpressionAttributeValues: { ':id': id, ':one': 1 },
+        ProjectionExpression: 'rev, author, summary, createdAt, baseRev',
+        ScanIndexForward: false,
+        ExclusiveStartKey: lastKey,
+      }));
+      out.push(...(result.Items || []));
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey);
+    return out;
+  }
+
+  async function listMetas() {
+    const out = [];
+    let lastKey;
+    do {
+      const result = await db().send(new ScanCommand({
+        TableName: tableName(),
+        FilterExpression: 'rev = :zero',
+        ExpressionAttributeValues: { ':zero': 0 },
+        ProjectionExpression: `${key}, latestRev, title, flags, #hidden, updatedAt`,
+        ExpressionAttributeNames: { '#hidden': 'hidden' },
+        ExclusiveStartKey: lastKey,
+      }));
+      out.push(...(result.Items || []));
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey);
+    return out.sort((a, b) => a[key].localeCompare(b[key]));
+  }
+
+  return { meta, revision, newest, create, save, setHidden, history, listMetas };
 }
 
 // What the index carries about a jet log besides its name: where it is filed, and whether it
@@ -366,147 +503,37 @@ export function jetLogFlagsOf(log) {
   return flags;
 }
 
-function jetLogRevisionRow(logId, rev, log, { author, summary, baseRev }) {
-  return {
-    logId,
-    rev,
-    // Stringified exactly as it arrived. tools/jetlog-migrate.js --verify compares the
-    // mirrored document against its source byte for byte, so nothing is normalised here.
-    docJson: JSON.stringify(log),
-    author: author || '',
-    summary: summary || '',
-    baseRev: baseRev == null ? rev - 1 : baseRev,
-    createdAt: new Date().toISOString(),
-  };
+const jetLogs = revisionStore({
+  table: 'jetLogsTable', key: 'logId', noun: 'jet log', titleOf: (log) => log.name, flagsOf: jetLogFlagsOf,
+});
+
+export const jetLogMeta = jetLogs.meta;
+export const jetLogRevision = jetLogs.revision;
+export const newestJetLog = jetLogs.newest;
+export const createJetLog = jetLogs.create;
+export const saveJetLog = jetLogs.save;
+export const setJetLogHidden = jetLogs.setHidden;
+export const jetLogHistory = jetLogs.history;
+export const listJetLogMetas = jetLogs.listMetas;
+
+// What the brief buttons draw rides in the index: the short name on the button, the program,
+// and the order the buttons come in.
+export function briefFlagsOf(brief) {
+  const flags = { aircraft: brief.aircraft, school: brief.school };
+  if (brief.short) flags.short = brief.short;
+  if (Number.isFinite(brief.order)) flags.order = brief.order;
+  return flags;
 }
 
-export async function createJetLog(logId, log, meta) {
-  const row = jetLogRevisionRow(logId, 1, log, { ...meta, baseRev: 0 });
-  const metaRow = {
-    logId,
-    rev: 0,
-    latestRev: 1,
-    title: log.name,
-    flags: jetLogFlagsOf(log),
-    updatedAt: row.createdAt,
-  };
-  try {
-    await db().send(new TransactWriteCommand({
-      TransactItems: [
-        {
-          Put: {
-            TableName: CONFIG.jetLogsTable,
-            Item: metaRow,
-            ConditionExpression: 'attribute_not_exists(logId)',
-          },
-        },
-        {
-          Put: {
-            TableName: CONFIG.jetLogsTable,
-            Item: row,
-            ConditionExpression: 'attribute_not_exists(logId)',
-          },
-        },
-      ],
-    }));
-  } catch (error) {
-    if (isConflict(error)) throw new HttpError(409, 'That id is already taken');
-    throw error;
-  }
-  return { meta: metaRow, row };
-}
+const briefs = revisionStore({
+  table: 'briefsTable', key: 'briefId', noun: 'brief', titleOf: (brief) => brief.title, flagsOf: briefFlagsOf,
+});
 
-export async function saveJetLog(logId, baseRev, log, meta) {
-  const rev = baseRev + 1;
-  const row = jetLogRevisionRow(logId, rev, log, { ...meta, baseRev });
-  const flags = jetLogFlagsOf(log);
-  try {
-    await db().send(new TransactWriteCommand({
-      TransactItems: [
-        {
-          Put: {
-            TableName: CONFIG.jetLogsTable,
-            Item: row,
-            ConditionExpression: 'attribute_not_exists(logId)',
-          },
-        },
-        {
-          Update: {
-            TableName: CONFIG.jetLogsTable,
-            Key: { logId, rev: 0 },
-            UpdateExpression: 'SET latestRev = :rev, title = :title, flags = :flags, updatedAt = :at',
-            ConditionExpression: 'latestRev = :base',
-            ExpressionAttributeValues: {
-              ':rev': rev,
-              ':title': log.name,
-              ':flags': flags,
-              ':at': row.createdAt,
-              ':base': baseRev,
-            },
-          },
-        },
-      ],
-    }));
-  } catch (error) {
-    if (isConflict(error)) {
-      const current = await jetLogMeta(logId);
-      throw new HttpError(409, 'A newer revision exists', { rev: current ? current.latestRev : null });
-    }
-    throw error;
-  }
-  const metaRow = await jetLogMeta(logId);
-  return { meta: metaRow, row };
-}
-
-export async function setJetLogHidden(logId, hidden) {
-  try {
-    await db().send(new UpdateCommand({
-      TableName: CONFIG.jetLogsTable,
-      Key: { logId, rev: 0 },
-      UpdateExpression: hidden ? 'SET #hidden = :h' : 'REMOVE #hidden',
-      ConditionExpression: 'attribute_exists(logId)',
-      ExpressionAttributeNames: { '#hidden': 'hidden' },
-      ExpressionAttributeValues: hidden ? { ':h': true } : undefined,
-    }));
-  } catch (error) {
-    if (isConflict(error)) throw new HttpError(404, 'No such jet log');
-    throw error;
-  }
-}
-
-// Newest first, without the documents.
-export async function jetLogHistory(logId) {
-  const out = [];
-  let lastKey;
-  do {
-    const result = await db().send(new QueryCommand({
-      TableName: CONFIG.jetLogsTable,
-      KeyConditionExpression: 'logId = :id AND rev >= :one',
-      ExpressionAttributeValues: { ':id': logId, ':one': 1 },
-      ProjectionExpression: 'rev, author, summary, createdAt, baseRev',
-      ScanIndexForward: false,
-      ExclusiveStartKey: lastKey,
-    }));
-    out.push(...(result.Items || []));
-    lastKey = result.LastEvaluatedKey;
-  } while (lastKey);
-  return out;
-}
-
-export async function listJetLogMetas() {
-  const out = [];
-  let lastKey;
-  do {
-    const result = await db().send(new ScanCommand({
-      TableName: CONFIG.jetLogsTable,
-      FilterExpression: 'rev = :zero',
-      ExpressionAttributeValues: { ':zero': 0 },
-      ProjectionExpression: 'logId, latestRev, title, flags, #hidden, updatedAt',
-      ExpressionAttributeNames: { '#hidden': 'hidden' },
-      ExclusiveStartKey: lastKey,
-    }));
-    out.push(...(result.Items || []));
-    lastKey = result.LastEvaluatedKey;
-  } while (lastKey);
-  return out.sort((a, b) => a.logId.localeCompare(b.logId));
-}
+export const briefMeta = briefs.meta;
+export const briefRevision = briefs.revision;
+export const newestBrief = briefs.newest;
+export const createBrief = briefs.create;
+export const saveBrief = briefs.save;
+export const setBriefHidden = briefs.setHidden;
+export const briefHistory = briefs.history;
+export const listBriefMetas = briefs.listMetas;

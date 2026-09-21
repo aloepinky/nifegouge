@@ -13,18 +13,27 @@ import {
   saveJetLogHandler, restoreJetLogHandler, importJetLogsHandler, hideJetLogHandler,
 } from './jetlogs.mjs';
 import {
+  getBriefHandler, briefHistoryHandler, briefRevisionHandler, publishBriefHandler,
+  saveBriefHandler, restoreBriefHandler, hideBriefHandler,
+} from './briefs.mjs';
+import {
   rebuildItemsIndex, rebuildSyllabiIndex, remirrorSyllabi, mirrorItem, rebuildJetLogsIndex,
-  remirrorJetLogs,
+  remirrorJetLogs, rebuildBriefsIndex, remirrorBriefs,
 } from './mirror.mjs';
 import { listItemMetas, newestItem } from './store.mjs';
+import { leaderboardHandler, submitScoreHandler, importScoresHandler } from './scores.mjs';
 import { tagProgramHandler } from './program.mjs';
 
-// The Discuss tab's API: item pages, syllabus documents, figure uploads, the jet log corpus,
-// and the admin operations behind X-Admin-Token. One API Gateway resource, /discuss/{proxy+},
-// routes every op here; the op is the last path segment and is matched exactly.
+// The Discuss tab's API: item pages, syllabus documents, figure uploads, the jet log and
+// brief corpora, and the admin operations behind X-Admin-Token. One API Gateway resource,
+// /discuss/{proxy+}, routes every op here; the op is the last path segment and is matched
+// exactly.
 //
 // Jet logs share this function rather than getting their own because they share everything
-// that matters: the revision model, the mirror bucket, the admin token and the deploy.
+// that matters: the revision model, the mirror bucket, the admin token and the deploy. The
+// EPs/Limits leaderboard (scores.mjs) is here for the admin token, the deploy and the local
+// fakes. Its board is the one read that comes to the Lambda rather than the mirror, because it
+// is computed per window on request.
 //
 // Reads by the site never come here. Every write mirrors what it changed to the public S3
 // bucket (see mirror.mjs), and the browser fetches from there.
@@ -54,7 +63,17 @@ import { tagProgramHandler } from './program.mjs';
 //   POST restore-jetlog                    { id, rev, author?, summary? }              -> { id, rev }
 //   POST import-jetlogs      (admin)       { logs, overwrite? }                        -> { imported, skipped }
 //   POST hide-jetlog         (admin)       { id, hidden }
-//   POST rebuild-index       (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'all', remirror?: bool } -> { items, syllabi, jetlogs }
+//   GET  get-brief?id=                     -> { brief }
+//   GET  brief-history?id=                 -> { latestRev, revisions }
+//   GET  brief-revision?id=&rev=           -> { revision }
+//   POST publish-brief                     { brief, author?, summary? }               -> { id, rev: 1 }; brief carries aircraft and school
+//   POST save-brief                        { id, baseRev, brief, author?, summary }   -> { id, rev, updatedAt }; 409
+//   POST restore-brief                     { id, rev, author?, summary? }              -> { id, rev }
+//   POST hide-brief          (admin)       { id, hidden }
+//   GET  leaderboard?school=&mode=&period=month|year|all&player= -> { entries, you, players }
+//   POST submit-score                      { school, mode, elapsedTime, epsTime?, limitsTime?, playerName, country, branch, designator, trainingClass } -> { board, createdAt }
+//   POST import-scores       (admin)       { runs: [{ school, mode, elapsedTime, createdAt, playerName, ... }] } -> { imported, skipped, refused }
+//   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs }
 //   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
 
 async function rebuildIndexHandler(event) {
@@ -78,6 +97,10 @@ async function rebuildIndexHandler(event) {
   if (what === 'jetlogs' || what === 'all') {
     if (body.remirror) await remirrorJetLogs();
     out.jetlogs = await rebuildJetLogsIndex();
+  }
+  if (what === 'briefs' || what === 'all') {
+    if (body.remirror) await remirrorBriefs();
+    out.briefs = await rebuildBriefsIndex();
   }
   return reply(200, { success: true, ...out });
 }
@@ -108,6 +131,16 @@ const ROUTES = {
   'restore-jetlog': { method: 'POST', run: restoreJetLogHandler },
   'import-jetlogs': { method: 'POST', admin: true, run: importJetLogsHandler },
   'hide-jetlog': { method: 'POST', admin: true, run: hideJetLogHandler },
+  'get-brief': { method: 'GET', run: getBriefHandler },
+  'brief-history': { method: 'GET', run: briefHistoryHandler },
+  'brief-revision': { method: 'GET', run: briefRevisionHandler },
+  'publish-brief': { method: 'POST', run: publishBriefHandler },
+  'save-brief': { method: 'POST', run: saveBriefHandler },
+  'restore-brief': { method: 'POST', run: restoreBriefHandler },
+  'hide-brief': { method: 'POST', admin: true, run: hideBriefHandler },
+  'leaderboard': { method: 'GET', run: leaderboardHandler },
+  'submit-score': { method: 'POST', run: submitScoreHandler },
+  'import-scores': { method: 'POST', admin: true, run: importScoresHandler },
   'rebuild-index': { method: 'POST', admin: true, run: rebuildIndexHandler },
   'tag-program': { method: 'POST', admin: true, run: tagProgramHandler },
 };

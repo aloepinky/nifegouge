@@ -13,7 +13,7 @@ below is created once, by hand, in the AWS console for `us-east-2`.
 
 ## 1. DynamoDB
 
-Three tables, on-demand capacity, everything else default. Create whichever does not exist yet
+Five tables, on-demand capacity, everything else default. Create whichever does not exist yet
 (the older `discussSyllabi` function referenced `DiscussSyllabi`, but check that it was ever made):
 
 | Table | Partition key | Sort key |
@@ -21,6 +21,12 @@ Three tables, on-demand capacity, everything else default. Create whichever does
 | `DiscussItems` | `slug` (String) | `rev` (Number) |
 | `DiscussSyllabi` | `syllabusId` (String) | `rev` (Number) |
 | `JetLogs` | `logId` (String) | `rev` (Number) |
+| `Briefs` | `briefId` (String) | `rev` (Number) |
+| `EPsLimitsScores` | `board` (String) | `runId` (String) |
+
+`EPsLimitsScores` is the EPs/Limits leaderboard (`scores.mjs`): one row per finished run, keyed
+`NIFE#EPs`, `Primary#Limits` and so on, never deleted. Its sort key is a String, unlike the
+others.
 
 ## 2. S3
 
@@ -84,7 +90,9 @@ of that page (`arn:aws:iam::ACCOUNT_ID:role/...`), and the bucket name if you ch
       "Resource": [
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/DiscussItems",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/DiscussSyllabi",
-        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/JetLogs"
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/JetLogs",
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/Briefs",
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/EPsLimitsScores"
       ]
     },
     {
@@ -100,7 +108,7 @@ of that page (`arn:aws:iam::ACCOUNT_ID:role/...`), and the bucket name if you ch
 
 **Every table needs its own line.** A missing ARN does not fail at deploy; it fails at the
 first write to that table, with an `AccessDeniedException` that names the action and not the
-table. If jet logs 500 while the discuss pages work, this is why.
+table. If jet logs or briefs 500 while the discuss pages work, this is why.
 
 ## 4. Lambda
 
@@ -117,6 +125,8 @@ Configuration → Environment variables:
 | `DISCUSS_ITEMS_TABLE` | `DiscussItems` |
 | `DISCUSS_SYLLABI_TABLE` | `DiscussSyllabi` |
 | `JETLOGS_TABLE` | `JetLogs` |
+| `BRIEFS_TABLE` | `Briefs` (optional; this is the default) |
+| `SCORES_TABLE` | `EPsLimitsScores` (optional; this is the default) |
 | `DISCUSS_BUCKET` | `pinksheetmafia-discuss` |
 | `DISCUSS_ADMIN_TOKEN` | a long random string (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`) |
 
@@ -156,15 +166,26 @@ DISCUSS_ADMIN_TOKEN=... node tools/jetlog-migrate.js --dry-run
 DISCUSS_ADMIN_TOKEN=... node tools/jetlog-migrate.js --verify
 ```
 
+The briefs have no seed file and no admin import. They are generated from the Briefing Guide
+PDF in the browser: open `/tw4/briefs/upload`, choose the PDF, and publish. That is also how a
+new edition goes in, as a new revision of each brief.
+
 ## Operations
+
+- Carry the old EPs/Limits leaderboards over (once, after the first deploy with `scores.mjs`):
+  `DISCUSS_ADMIN_TOKEN=... node tools/leaderboard-migrate.js --dry-run`, then without it. It
+  reads `FlightTestLeaderboard`, `TW4TimeLeaderboard` and `TW4Users` with the AWS CLI and is
+  safe to rerun. The old `getLeaderboard`, `submitScore` and `tw4*` functions and their tables
+  are unused after that and can be deleted by hand.
 
 - Hide a page: `POST hide-item {"slug":"...","hidden":true}` with the admin header.
   Unhide with `hidden:false`.
 - Take a syllabus down: `POST hide-syllabus {"id":"...","hidden":true}`.
 - Take a jet log down: `POST hide-jetlog {"id":"...","hidden":true}`. It leaves the table and
   comes back with `hidden:false`; only the mirror copy is removed.
+- Take a brief down: `POST hide-brief {"id":"...","hidden":true}`, the same as a jet log.
 - A stale `items/index.json` (two saves raced): `POST rebuild-index {"what":"items"}`.
-  `"jetlogs"` and `"all"` work the same way.
+  `"jetlogs"`, `"briefs"` and `"all"` work the same way.
 - Roll back a bad jet log: open its **history** from the Preset Jet Logs list on the jet log
   page and restore the revision before it. Nothing is deleted from the table, so the admin
   token is not needed for this.
