@@ -27,7 +27,8 @@ const TW4 = [
 const NIFE = [
   { path: '/nife/questions', label: 'Questions' },
   { path: '/nife/nav', label: 'Problem generator' },
-  { path: '/nife/flight', label: 'Flight' },
+  { path: '/nife/eps-limits', label: 'EPs and limits' },
+  { path: '/nife/briefs', label: 'Briefs and TOLD' },
   { path: '/nife/docs', label: 'Documents' },
 ];
 

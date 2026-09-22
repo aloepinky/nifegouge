@@ -7,16 +7,21 @@
 //   DISCUSS_ADMIN_TOKEN=... node tools/leaderboard-migrate.js --dry-run
 //   DISCUSS_ADMIN_TOKEN=... node tools/leaderboard-migrate.js
 //
-// The old tables are read with the AWS CLI (`aws dynamodb scan`), using whatever credentials
-// the CLI has. Without the CLI, export them yourself and pass the files:
+// The old tables are read with the SDK, on whatever credentials it finds — `aws login`, a
+// profile in ~/.aws, or the environment. Not the AWS CLI: on Windows it prints through a cp1252
+// stdout and dies partway with "'charmap' codec can't encode characters" on a row holding
+// anything outside that encoding, and one TW4Users class does. Exported files still work, and
+// are the way in from a machine with no credentials at all (run these where the CLI is happy,
+// such as CloudShell):
 //
 //   aws dynamodb scan --table-name FlightTestLeaderboard --output json > nife.json
 //   aws dynamodb scan --table-name TW4TimeLeaderboard    --output json > tw4.json
 //   aws dynamodb scan --table-name TW4Users              --output json > tw4-users.json
 //   node tools/leaderboard-migrate.js --nife=nife.json --tw4=tw4.json --tw4-users=tw4-users.json
 //
-//   --api=<url>   the API base (default: the production API Gateway stage)
-//   --dry-run     print what would be imported, and send nothing
+//   --api=<url>    the API base (default: the production API Gateway stage)
+//   --region=<r>   where the old tables live (default: us-east-2)
+//   --dry-run      print what would be imported, and send nothing
 //
 // What maps to what:
 //   FlightTestLeaderboard  testType EPs | Limits | EPs_and_Limits   -> NIFE, same mode; every field
@@ -26,7 +31,7 @@
 // idempotent: a run already imported is skipped, so this can be rerun after a failure.
 
 const fs = require('node:fs');
-const { execFileSync } = require('node:child_process');
+const { DynamoDBClient, ScanCommand } = require('@aws-sdk/client-dynamodb');
 
 const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(`--${name}`);
@@ -40,6 +45,7 @@ const OPT = {
   nife: value('nife'),
   tw4: value('tw4'),
   tw4Users: value('tw4-users'),
+  region: value('region') || process.env.AWS_REGION || 'us-east-2',
   dryRun: flag('dry-run'),
   token: process.env.DISCUSS_ADMIN_TOKEN || value('token'),
 };
@@ -56,20 +62,32 @@ function plain(attr) {
   return attr;
 }
 
-function scan(table, file) {
-  const raw = file
-    ? fs.readFileSync(file, 'utf8')
-    : execFileSync('aws', ['dynamodb', 'scan', '--table-name', table, '--output', 'json'], {
-      encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, shell: process.platform === 'win32',
-    });
-  const items = JSON.parse(raw).Items || [];
-  return items.map((item) => Object.fromEntries(Object.entries(item).map(([k, v]) => [k, plain(v)])));
+const unwrap = (item) => Object.fromEntries(Object.entries(item).map(([k, v]) => [k, plain(v)]));
+
+let client;
+const dynamo = () => {
+  if (!client) client = new DynamoDBClient({ region: OPT.region });
+  return client;
+};
+
+// A whole table, from a file exported earlier or from DynamoDB itself. The boards are small,
+// but a scan still pages, and a half-read table would quietly import half a board.
+async function scan(table, file) {
+  if (file) return (JSON.parse(fs.readFileSync(file, 'utf8')).Items || []).map(unwrap);
+  const items = [];
+  let start;
+  do {
+    const out = await dynamo().send(new ScanCommand({ TableName: table, ExclusiveStartKey: start }));
+    items.push(...(out.Items || []));
+    start = out.LastEvaluatedKey;
+  } while (start);
+  return items.map(unwrap);
 }
 
 const nameOf = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) || 'ANON';
 
-function nifeRuns() {
-  return scan('FlightTestLeaderboard', OPT.nife).map((r) => ({
+async function nifeRuns() {
+  return (await scan('FlightTestLeaderboard', OPT.nife)).map((r) => ({
     school: 'NIFE',
     mode: r.testType,
     elapsedTime: r.elapsedTime,
@@ -84,9 +102,9 @@ function nifeRuns() {
   }));
 }
 
-function tw4Runs() {
-  const users = new Map(scan('TW4Users', OPT.tw4Users).map((u) => [u.username, u]));
-  return scan('TW4TimeLeaderboard', OPT.tw4).map((r) => {
+async function tw4Runs() {
+  const users = new Map((await scan('TW4Users', OPT.tw4Users)).map((u) => [u.username, u]));
+  return (await scan('TW4TimeLeaderboard', OPT.tw4)).map((r) => {
     const u = users.get(r.username) || {};
     return {
       school: 'Primary',
@@ -115,7 +133,7 @@ async function post(op, body) {
 }
 
 async function main() {
-  const runs = [...nifeRuns(), ...tw4Runs()];
+  const runs = [...await nifeRuns(), ...await tw4Runs()];
   const byBoard = {};
   for (const r of runs) byBoard[`${r.school}#${r.mode}`] = (byBoard[`${r.school}#${r.mode}`] || 0) + 1;
   console.log(`${runs.length} runs:`, byBoard);

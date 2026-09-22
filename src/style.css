@@ -1044,6 +1044,8 @@ iframe {
   margin: 0 auto;
 }
 
+/* NIFE's limits table (Flight/C172Limits.js). A limits table recreates its own school's exam
+   sheet, so each is styled on its own; Primary's is inline in TW4Limits.js. */
 .limits-table-container {
   margin-bottom: 30px;
 }
@@ -1093,102 +1095,6 @@ iframe {
   padding: 2px;
   font-size: 0.9em;
   height: 20px;
-}
-
-/* Emergency Procedures Styles */
-.eps-container {
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-.eps-two-column {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.eps-column {
-  flex: 1;
-  min-width: 300px;
-}
-
-.ep-section {
-  margin-bottom: 6px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  overflow: hidden;
-  background-color: #f9f9f9;
-}
-
-.ep-section h3 {
-  margin: 0;
-  padding: 6px 8px;
-  background-color: #f8d0d0;
-  color: #01202C;
-  font-size: 0.75em;
-  text-align: center;
-  font-weight: bold;
-  border-bottom: 1px solid #ddd;
-}
-
-.ep-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px;
-}
-
-/* Emergency Procedures Uniform Input Styles */
-.ep-step {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.7em;
-  width: 100%;
-}
-
-.ep-step input[type="text"] {
-  padding: 1px 4px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  font-size: 0.8em;
-  background-color: white;
-}
-
-/* All rows have two inputs with flexible sizing */
-.ep-input-pair {
-  display: flex;
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
-}
-
-/* First input - starts at 75% */
-.ep-input-pair input:first-child {
-  flex: 3 0 75%;
-  min-width: 100px;
-  padding: 2px 1px;
-}
-
-/* Second input - starts at 25% */
-.ep-input-pair input:last-child {
-  flex: 1 0 25%;
-  min-width: 60px;
-  text-align: center;
-  padding: 2px 1px;
-}
-
-/* Decision points and notes */
-.ep-step.decision-point {
-  font-weight: bold;
-  padding-left: 15px;
-  font-size: 0.75em;
-}
-
-.ep-step.note-text {
-  font-style: italic;
-  padding-left: 15px;
-  font-size: 0.7em;
 }
 
 /* Answer validation colors */
@@ -1281,24 +1187,9 @@ textarea.incorrect-answer {
   box-shadow: 0 2px 6px rgba(1, 32, 44, 0.3);
 }
 
-/* EP Controls Panel Styles */
-.eps-with-controls {
-  display: flex;
-  gap: 15px;
-  max-width: 1600px;
-  margin: 0 auto;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.eps-main-content {
-  flex: 1;
-  min-width: 700px;
-}
-
 .left-controls, .right-controls {
-  width: 300px;
-  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -1755,49 +1646,8 @@ textarea.incorrect-answer {
   background: linear-gradient(135deg, #A52A2A, #8B0000);
 }
 
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-  .eps-with-controls {
-    flex-direction: column;
-  }
-  
-  .controls-panel {
-    width: 100%;
-    max-width: 700px;
-    margin: 0 auto;
-  }
-}
 
 /* Game Mode Styles */
-.title-with-game {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 10px;
-}
-
-.title-with-game h1 {
-  margin: 0;
-}
-
-.game-mode-button {
-  position: absolute;
-  right: 0;
-  padding: 8px 16px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
-}
-
-.game-mode-button:hover {
-  background-color: #45a049;
-}
-
 .game-timer {
   position: absolute;
   right: 0;
@@ -1924,89 +1774,6 @@ textarea.incorrect-answer {
 
 .game-button-secondary:hover {
   background-color: #003B4F;
-}
-
-/* Game Score Display */
-.game-score-display {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  z-index: 1001;
-  text-align: center;
-  min-width: 300px;
-}
-
-.game-score-display h2 {
-  margin-top: 0;
-  color: #4CAF50;
-  font-size: 24px;
-}
-
-.game-score-display p {
-  font-size: 18px;
-  margin: 10px 0;
-  color: #333;
-}
-
-.game-score-display button {
-  margin-top: 15px;
-  padding: 10px 20px;
-  background-color: #01202C;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
-}
-
-.game-score-display button:hover {
-  background-color: #003B4F;
-}
-
-/* Leaderboard table row hover */
-.leaderboard-table tbody tr {
-  transition: background-color 0.1s;
-}
-
-.leaderboard-table tbody tr:hover {
-  background-color: #f5f7fa;
-}
-
-/* Leaderboard Tabs */
-.leaderboard-tabs {
-  display: flex;
-  border-bottom: 2px solid #ddd;
-  margin-bottom: 20px;
-}
-
-.leaderboard-tab {
-  padding: 12px 20px;
-  background-color: #01202C;
-  color: white;
-  border: none;
-  border-bottom: 3px solid transparent;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  flex: 1;
-  text-align: center;
-  margin-right: 2px;
-}
-
-.leaderboard-tab:hover {
-  background-color: #003B4F;
-}
-
-.leaderboard-tab.active {
-  background-color: #003B4F;
-  border-bottom-color: #ffffff;
 }
 
 /* TOLD Card Styles */
@@ -3676,30 +3443,6 @@ textarea.incorrect-answer {
 
 .sub-navbar-btn.danger {
   color: #ff9090;
-}
-
-.tw4-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.65);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.tw4-modal {
-  background: white;
-  color: #1a1a1a;
-  border-radius: 12px;
-  padding: 24px;
-  width: 95vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
 }
 
 .game-button-danger {
@@ -6317,7 +6060,9 @@ textarea.incorrect-answer {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  padding: 0.08em 0.25em;
+  /* The left padding is the right plus the 0.12em letter-spacing trailing the M. That space is
+     part of the width the centring transform halves, and without it the letters sit left of centre. */
+  padding: 0.08em 0.25em 0.08em 0.37em;
   font-size: 26px; /* the full size; TopNav shrinks it to the room the menus leave */
   font-weight: 800;
   font-style: italic;
@@ -6328,6 +6073,14 @@ textarea.incorrect-answer {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Even spacing reads uneven here: the P's bowl stops at mid-height, so its bottom right is open
+   air, while the S's lower terminal curves in toward the M's stem and closes that pair up. The
+   italic slant widens the first gap again. letter-spacing applies after every letter, so tightening
+   the one pair means spacing the P alone. In em, so the wordmark's shrink-to-fit stays exact. */
+.navbar a.topnav-brand .topnav-brand-p {
+  letter-spacing: 0.085em;
 }
 
 .navbar a.topnav-brand:hover {
@@ -6417,3 +6170,895 @@ textarea.incorrect-answer {
 /* The date box on a reference row is short: a date is seven characters. */
 .discuss-editor-row .discuss-editor-date,
 .discuss-refpick-new .discuss-editor-date { flex: 0 0 110px; width: 110px; }
+
+/* ==========================================================================
+   Briefs (/tw4/briefs): the briefing guides and the TOLD card
+   ========================================================================== */
+
+.brief-page { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+.brief-title { font-size: 16px; margin-bottom: 12px; text-align: center; }
+
+/* The big buttons: which brief, or TOLD. These are what everyone uses. */
+.brief-chooser {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.brief-chooser .brief-choice {
+  display: inline-block;
+  padding: 10px 20px;
+  border: 2px solid #01202C;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #01202C;
+  font-size: 15px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.brief-chooser .brief-choice:hover { background: rgba(0, 59, 79, 0.08); }
+
+.brief-chooser .brief-choice.is-active { background: #01202C; color: #ffffff; }
+
+/* TOLD is a card, not a brief, so it is shaped differently and stands behind a rule — the
+   chart's rule, where shape carries what a thing is and colour is left to say which one you
+   are on. Fill still means chosen, on the pill exactly as on the briefs. */
+.brief-chooser .brief-choice--told {
+  margin-left: 18px;
+  border-radius: 999px;
+  padding-left: 24px;
+  padding-right: 24px;
+  position: relative;
+}
+
+.brief-chooser .brief-choice--told::before {
+  content: '';
+  position: absolute;
+  left: -13px; /* centred in the 8px flex gap plus the 18px margin */
+  top: 2px;
+  bottom: 2px;
+  width: 1px;
+  background: #c6d2d8;
+}
+
+/* Narrow enough that the row can wrap, where a rule would start a line with nothing to its
+   left. CSS cannot ask whether a flex line broke, so this is the width at which three briefs
+   and the card stop fitting; below it the pill carries the distinction on its own. */
+@media (max-width: 760px) {
+  .brief-chooser .brief-choice--told { margin-left: 0; }
+  .brief-chooser .brief-choice--told::before { display: none; }
+}
+
+/* The small row: first letters, then plain text links. Niche on purpose. */
+.brief-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #5a7481;
+}
+
+.brief-tools-links { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+.brief-page button.brief-link,
+.brief-page a.brief-link,
+.discuss-upload button.brief-link {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-size: 12px;
+  font-weight: normal;
+  color: #003B4F;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.brief-page button.brief-link:hover,
+.brief-page a.brief-link:hover,
+.discuss-upload button.brief-link:hover { background: none; text-decoration: underline; }
+
+.brief-page button.brief-link:disabled { color: #9fb3bc; cursor: default; text-decoration: none; }
+
+.brief-page button.brief-toggle {
+  background: #ffffff;
+  border: 1px solid #9fb3bc;
+  border-radius: 12px;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #01202C;
+}
+
+.brief-page button.brief-toggle:hover { background: rgba(0, 59, 79, 0.08); }
+
+.brief-page button.brief-toggle.is-on { background: #003B4F; border-color: #003B4F; color: #ffffff; }
+
+.brief-status { font-size: 13px; color: #24404b; text-align: center; }
+
+/* ---- the brief ---- */
+
+.brief-sheet { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+
+.brief-sheet--two { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+.brief-sheet + .brief-sheet {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 6px solid #01202C;
+}
+
+.brief-section { margin-bottom: 20px; }
+
+.brief-section-title,
+.brief-page button.brief-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 4px;
+  border: 1px solid #000000;
+  border-radius: 0;
+  background: #dddddd;
+  color: #000000;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: left;
+  text-decoration: underline;
+}
+
+.brief-page button.brief-quicklinks-toggle { cursor: pointer; }
+.brief-page button.brief-quicklinks-toggle:hover { background: #d2d2d2; }
+
+.brief-quicklinks { margin-bottom: 12px; }
+
+.brief-quicklinks-list {
+  list-style: none;
+  margin: 0;
+  padding: 5px;
+  border: 1px solid #cccccc;
+  background: #f9f9f9;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.brief-quicklinks-list a { color: #01202C; text-decoration: underline; }
+
+.brief-item {
+  margin-bottom: 4px;
+  border: 1px solid #cccccc;
+  background: #f5f5f5;
+}
+
+.brief-item.is-expandable { background: #ffffff; }
+.brief-item.is-open { background: #f0f8ff; }
+
+.brief-item-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.brief-item.is-expandable .brief-item-head { cursor: pointer; }
+
+/* An item nobody opens is a heading for the lines under it, and the card sets it bold. */
+.brief-item:not(.is-expandable) > .brief-item-head > .brief-item-name > span:first-child {
+  font-weight: bold;
+}
+
+.brief-caret { flex-shrink: 0; font-size: 10px; line-height: 1.5; color: #666666; text-decoration: none; }
+
+.brief-item-name { flex: 1; min-width: 0; }
+
+.brief-fixed { margin: 3px 0 0 14px; }
+
+.brief-textline { }
+.brief-gap { height: 6px; }
+
+.brief-item-body {
+  padding: 8px 12px 8px 20px;
+  border-top: 1px solid #cccccc;
+  background: #f9f9f9;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.brief-para { margin: 0 0 6px; }
+.brief-para:last-child { margin-bottom: 0; }
+
+.brief-section-text { font-size: 11px; line-height: 1.6; padding: 4px 8px; }
+
+.brief-fixed-body {
+  padding: 4px 8px 6px;
+  border: 1px solid #cccccc;
+  border-top: none;
+  background: #f5f5f5;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.brief-section--fixed .brief-section-title { margin-bottom: 0; }
+
+.brief-note {
+  margin-top: 30px;
+  padding: 15px;
+  border: 1px solid #cccccc;
+  background: #f0f0f0;
+  font-size: 11px;
+}
+
+/* Which guide this brief came out of. */
+.brief-source {
+  margin: 10px 0 0;
+  color: #5a6b73;
+  font-size: 11px;
+}
+
+/* The browser's file control, wearing the page's own words. */
+.brief-file { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.brief-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.brief-file-button {
+  padding: 6px 14px;
+  border: 1px solid #003B4F;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #003B4F;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.brief-file-button:hover { background: #eef4f6; }
+
+.brief-file-input:focus-visible + .brief-file-button {
+  outline: 2px solid #003B4F;
+  outline-offset: 2px;
+}
+
+.brief-file-name { color: #5a6b73; font-size: 12px; }
+
+/* ---- a brief against the edition it replaces ---- */
+
+.brief-diff-summary { margin: 0 0 14px; }
+.brief-diff-summary p { margin: 0 0 4px; }
+
+.brief-diff { border-left: 3px solid transparent; padding-left: 8px; }
+.brief-diff--added { border-left-color: #2f6f4e; background: #f2f8f4; }
+.brief-diff--changed { border-left-color: #8a6d1f; background: #fbf7ec; }
+.brief-diff--removed { border-left-color: #8a3a3a; background: #faf2f2; color: #7a5a5a; }
+.brief-diff--removed .brief-item-name > span:first-child { text-decoration: line-through; }
+
+.brief-diff-tag {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.brief-diff-tag--added { background: #dcebe1; color: #24583e; }
+.brief-diff-tag--changed { background: #f2e8cc; color: #6d5516; }
+.brief-diff-tag--removed { background: #f0dada; color: #7a2f2f; }
+
+.brief-diff-changed { background: #f7eecf; }
+
+/* `del` and `ins` carry the strikethrough and say what the line is to a screen reader. */
+.brief-diffline--added { background: #e8f3ec; }
+.brief-diffline--added ins { text-decoration: none; }
+
+.brief-diffline--removed { background: #f7e7e7; color: #7a5a5a; }
+
+/* ---- editing ---- */
+
+.brief-edit-section { margin-top: 18px; padding-top: 10px; border-top: 1px solid #dde5e9; }
+
+.brief-edit-item {
+  margin: 6px 0 0;
+  padding: 0 0 6px 8px;
+  border-left: 3px solid #dde5e9;
+}
+
+.brief-page button.brief-edit-open { flex: 0 0 auto; font-size: 12px; }
+
+.brief-edit-itemfields { margin: 6px 0 4px 18px; }
+
+.brief-switches { font-size: 13px; }
+.brief-switches .brief-switch-small { font-size: 12px; color: #5a7481; }
+
+.discuss-editor .brief-edit-select { width: auto; }
+
+.brief-conflict p { font-size: 14px; margin: 0 0 10px; }
+
+/* ---- upload ---- */
+
+.brief-upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 0;
+  border-top: 1px solid #dde5e9;
+}
+
+.brief-upload-include { display: inline-flex; align-items: center; gap: 6px; }
+.brief-upload-include input { margin: 0; width: auto; }
+
+.brief-upload-meta { flex: 1 1 240px; font-size: 13px; color: #5a7481; }
+
+.brief-upload-preview { flex-basis: 100%; }
+
+.brief-upload-results { font-size: 14px; }
+
+@media (max-width: 600px) {
+  .brief-page { padding: 12px 16px; }
+  .brief-chooser .brief-choice { padding: 8px 12px; font-size: 13px; }
+  .brief-chooser .brief-choice--told { margin-left: 0; padding-left: 16px; padding-right: 16px; }
+}
+
+
+/* EPs/Limits leaderboard (leaderboard/Leaderboard.js), shared by every school */
+.lb-modal {
+  width: 95vw;
+  max-width: 560px;
+  min-width: 0;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px;
+}
+
+.lb-modal h2 {
+  font-size: 1.25em;
+  padding-right: 24px;
+}
+
+.lb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.lb-field label {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #4a5a61;
+}
+
+.lb-field .game-mode-select {
+  font-size: 15px;
+  padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lb-form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.lb-other {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.lb-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #003B4F;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.lb-result {
+  background: #f0f4f6;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.lb-result-label {
+  font-size: 0.85em;
+  color: #5b6b73;
+}
+
+.lb-result-time {
+  font-family: monospace;
+  font-size: 1.7em;
+  font-weight: 700;
+  color: #01202C;
+}
+
+.lb-result-splits {
+  font-size: 0.8em;
+  color: #5b6b73;
+}
+
+.lb-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.lb-error {
+  color: #b3261e;
+  font-size: 0.9em;
+  margin: 0;
+  text-align: center;
+}
+
+.lb-sent {
+  color: #2e6b34;
+  font-size: 0.9em;
+  text-align: center;
+  margin: 0 0 12px;
+}
+
+.lb-empty {
+  color: #6b7f88;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.lb-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.lb-pill {
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: 1px solid #003B4F;
+  background: transparent;
+  color: #003B4F;
+  font-size: 0.85em;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.lb-pill.active {
+  background: #003B4F;
+  color: #fff;
+  font-weight: 700;
+}
+
+.lb-pill--quiet {
+  border-color: #b8c6cc;
+  color: #4a5a61;
+}
+
+.lb-pill--quiet.active {
+  background: #e3ecef;
+  color: #01202C;
+  border-color: #003B4F;
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+}
+
+.lb-table th {
+  text-align: left;
+  font-weight: 700;
+  color: #01202C;
+  background: #f5f7fa;
+  border-bottom: 2px solid #ddd;
+  padding: 8px 10px;
+}
+
+.lb-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.lb-table .lb-rank {
+  width: 36px;
+  color: #8a989e;
+  font-weight: 600;
+}
+
+.lb-table .lb-time,
+.lb-table .lb-split {
+  text-align: right;
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+.lb-table td.lb-time {
+  font-weight: 600;
+  color: #01202C;
+}
+
+.lb-table td.lb-split {
+  color: #5b6b73;
+}
+
+.lb-name {
+  font-weight: 700;
+  color: #01202C;
+}
+
+.lb-tag {
+  font-size: 0.75em;
+  color: #8a989e;
+  margin-top: 2px;
+}
+
+.lb-table tr.lb-me td {
+  background: #e3f0f4;
+}
+
+.lb-table tr.lb-sep td {
+  text-align: center;
+  color: #c3ccd0;
+  letter-spacing: 6px;
+  padding: 2px 10px;
+}
+
+@media (max-width: 480px) {
+  .lb-form-row { flex-direction: column; gap: 15px; }
+  .lb-table th, .lb-table td { padding: 6px; }
+}
+
+
+
+/* EPs/Limits pages (epsLimits/EPDrill.js, Flight/C172Limits.js): the look of Primary's page,
+   copied from the inline styles in EPDivsData.js and TW4Cockpit.js so every school's EPs page
+   matches it. Change them together. Limits tables are each school's own. */
+.epl-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: min(100px, 6vw);
+  margin-bottom: 5px;
+}
+
+.limits-eps-container .epl-header h1 {
+  font-size: 20px;
+  margin: 15px 0;
+}
+
+.limits-eps-container button.epl-mode {
+  padding: 8px 16px;
+  font-size: 14px;
+  background-color: #01202C;
+  min-width: 100px;
+}
+
+.limits-eps-container button.epl-mode--simple {
+  background-color: #003B4F;
+}
+
+.epl-mode-spacer {
+  min-width: 100px;
+}
+
+.epl-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.epl-side {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 1;
+  min-width: 80px;
+}
+
+.epl-scale {
+  width: 100%;
+}
+
+.epl-scale-inner {
+  transform-origin: top left;
+}
+
+.epl-center {
+  flex: 0 1 650px;
+  width: 650px;
+  max-width: 650px;
+  min-width: 300px;
+}
+
+.epl-center--simple {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.epl-card {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #f9f9f9;
+  max-width: 350px;
+  margin: 0 auto;
+}
+
+.epl-card-title {
+  background-color: #ef5350;
+  color: #fff;
+  padding: 6px 12px;
+  font-weight: bold;
+  font-size: 12px;
+  text-align: center;
+  border-bottom: 1px solid #000;
+}
+
+.epl-step {
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid #ddd;
+  font-size: 12px;
+  font-weight: bold;
+  background-color: #fff;
+}
+
+.epl-num {
+  min-width: 20px;
+}
+
+.epl-input {
+  padding: 2px;
+  font-size: 11px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-family: inherit;
+  min-width: 0;
+  flex: 1;
+}
+
+.epl-decision {
+  font-style: italic;
+  padding: 6px;
+  background-color: #9e9e9e;
+  color: #fff;
+  font-size: 11px;
+}
+
+.epl-note {
+  padding: 4px 12px 4px 32px;
+  font-size: 10px;
+  font-style: italic;
+  border-bottom: 1px solid #eee;
+  background-color: #fff;
+}
+
+.epl-counter {
+  position: relative;
+}
+
+.limits-eps-container button.epl-count {
+  background: none;
+  color: #333;
+  padding: 0;
+  min-width: 61px;
+  font-size: 16px;
+  text-decoration: underline;
+}
+
+.epl-list {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 5px 0 0;
+  padding: 0;
+  list-style: none;
+  background: #fff;
+  border: 2px solid #333;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  min-width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.limits-eps-container .epl-list button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 0;
+  border-bottom: 1px solid #ddd;
+  background: #fff;
+  color: #01202C;
+  font-size: 11px;
+  font-weight: normal;
+  text-align: center;
+}
+
+.limits-eps-container .epl-list li:last-child button {
+  border-bottom: none;
+}
+
+.limits-eps-container .epl-list button:hover {
+  background: #f5f5f5;
+}
+
+.limits-eps-container .epl-list button.active {
+  background: #e3f2fd;
+  font-weight: bold;
+}
+
+.epl-footnote {
+  margin-top: 16px;
+  font-size: 0.9em;
+  text-align: center;
+}
+
+/* The control a Hint points at. */
+.epl-hint {
+  outline: 3px solid rgba(255, 235, 59, 0.95);
+  outline-offset: 2px;
+  animation: hintPulse 2s ease-in-out infinite;
+}
+
+/* The Instructions explainer, rendered into <body> so the page's scale transform cannot move it. */
+.epl-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.epl-modal {
+  background-color: #fff;
+  color: #1a1a1a;
+  padding: 30px;
+  border-radius: 8px;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: auto;
+  position: relative;
+  line-height: 1.6;
+}
+
+.epl-modal h2 {
+  margin: 0 0 20px;
+  color: #01202C;
+}
+
+.epl-modal h3 {
+  font-size: 14px;
+  margin-top: 15px;
+}
+
+button.epl-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  padding: 0 4px;
+  cursor: pointer;
+  color: #666;
+}
+
+button.epl-modal-close:hover {
+  background: none;
+  color: #000;
+}
+
+.epl-swatch {
+  padding: 0 2px;
+}
+
+.epl-swatch--red { background-color: #f8d0d0; }
+.epl-swatch--yellow { background-color: #faf6be; }
+.epl-swatch--green { background-color: #d0f0d0; }
+
+.epl-limits-progress {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.limits-eps-container .button-row button.epl-random {
+  background-color: #f0f0f0;
+  color: #000;
+  font-weight: normal;
+  border: 1px solid #ccc;
+}
+
+.limits-eps-container .button-row button.epl-random.active {
+  font-weight: bold;
+  background-color: #4CAF50;
+  color: #fff;
+  border: 2px solid #45a049;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ---- briefs: editing in place ---- */
+
+.brief-page button.brief-editlink {
+  background: none;
+  border: none;
+  border-radius: 0;
+  margin-left: 6px;
+  padding: 0;
+  font-size: 10px;
+  font-weight: normal;
+  color: #003B4F;
+  text-transform: none;
+  text-decoration: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.brief-page button.brief-editlink:hover { background: none; text-decoration: underline; }
+
+.brief-form { margin: 0 0 10px; padding: 12px 14px; }
+.brief-form .discuss-editor-field { margin-bottom: 10px; }
+.brief-form-buttons { margin-top: 4px; }
+
+.brief-publishbar {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #cfdbe0;
+  border-left: 4px solid #003B4F;
+  border-radius: 4px;
+  background: rgba(0, 59, 79, 0.04);
+}
+
+.brief-publishbar p { margin: 0 0 8px; font-size: 13px; }
+.brief-publishbar-lead strong { color: #01202C; }
+
+.brief-publishbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+}
+
+.brief-publishbar-row > span { display: block; }
+.brief-publishbar-summary { flex: 1 1 260px; }
+
+.brief-publishbar--conflict { border-left-color: #b26a00; background: rgba(178, 106, 0, 0.06); }
+
+.brief-addsection { margin: 10px 0 0; }

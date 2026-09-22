@@ -1,6 +1,6 @@
 // The draft overlay: an edited item, held in localStorage and merged over the published one
 // at render time. No React — small named helpers over a raw key, the way
-// TW4Leaderboard.js and TW4JetLog.js already do it in this app.
+// leaderboard/leaderboardApi.js and TW4JetLog.js already do it in this app.
 //
 // A draft is private to the browser that made it until Publish sends it to the server as a
 // new revision (edit/PublishDialog.js). It records `baseRev`, the revision it started from,

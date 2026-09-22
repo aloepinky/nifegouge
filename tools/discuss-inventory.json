@@ -10,7 +10,7 @@
     "tableItems": 22,
     "uncitedItems": 8,
     "uncitedBlocks": 18,
-    "citedBlocks": 4661,
+    "citedBlocks": 4660,
     "events": 92,
     "hrefRows": 21,
     "unwrittenRows": 5
@@ -3649,8 +3649,8 @@
         {
           "n": 1,
           "work": "I FTI",
-          "loc": "§816 — Arcing Approach",
-          "pages": "p. 8-21"
+          "loc": "§817 — Arcing Approach",
+          "pages": "p. 8-25"
         },
         {
           "n": 2,
@@ -6155,8 +6155,8 @@
         {
           "n": 2,
           "work": "I FTI",
-          "loc": "§811 — Landing Minima Section",
-          "pages": "p. 8-10"
+          "loc": "§812 — Landing Minima Section",
+          "pages": "p. 8-14"
         },
         {
           "n": 3,
@@ -6173,7 +6173,7 @@
         {
           "n": 5,
           "work": "I FTI",
-          "loc": "§907 — Airport Surveillance Approach (ASR) and PAR Without Glideslope",
+          "loc": "§907 — Airport Surveillance Approach (ASR) and PAR Without Glideslope (PAR W/O GS)",
           "pages": "p. 9-31"
         }
       ],
@@ -10878,8 +10878,8 @@
         {
           "n": 1,
           "work": "I FTI",
-          "loc": "§804 — Enroute Descent",
-          "pages": "p. 8-2"
+          "loc": "§805 — En route Descent",
+          "pages": "p. 8-3"
         }
       ],
       "coverage": {
@@ -11167,14 +11167,14 @@
         {
           "n": 3,
           "work": "I FTI",
-          "loc": "§806 — Instrument Approach Brief",
-          "pages": "p. 8-4"
+          "loc": "§807 — Instrument Approach Brief",
+          "pages": "p. 8-5"
         },
         {
           "n": 4,
           "work": "I FTI",
-          "loc": "§802 — Descent Checklist",
-          "pages": "p. 8-1"
+          "loc": "§803 — Descent Checklist",
+          "pages": "p. 8-2"
         },
         {
           "n": 5,
@@ -12272,8 +12272,8 @@
         {
           "n": 1,
           "work": "I FTI",
-          "loc": "§813 — Aerodrome Sketch",
-          "pages": "p. 8-13"
+          "loc": "§814 — Aerodrome Sketch",
+          "pages": "p. 8-17"
         }
       ],
       "coverage": {
@@ -17310,14 +17310,14 @@
         {
           "n": 1,
           "work": "I FTI",
-          "loc": "§820 — High Altitude Approach",
-          "pages": "p. 8-34"
+          "loc": "§821 — High Altitude Approach",
+          "pages": "p. 8-38"
         },
         {
           "n": 2,
           "work": "I FTI",
-          "loc": "§804 — Enroute Descent",
-          "pages": "p. 8-2"
+          "loc": "§805 — En route Descent",
+          "pages": "p. 8-3"
         }
       ],
       "coverage": {
@@ -17420,8 +17420,8 @@
         {
           "n": 1,
           "work": "I FTI",
-          "loc": "§817 — Holding Pattern Approach (HILO)",
-          "pages": "p. 8-24"
+          "loc": "§818 — Holding Pattern Approach (HILO)",
+          "pages": "p. 8-28"
         }
       ],
       "coverage": {
@@ -17782,7 +17782,6 @@
           "paras": 0,
           "items": 7,
           "figures": [
-            null,
             null
           ],
           "tables": [],
@@ -17958,11 +17957,11 @@
           "n": 7,
           "work": "I FTI",
           "loc": "§707 — Holding Communications",
-          "pages": "p. 7-21"
+          "pages": "p. 7-20"
         }
       ],
       "coverage": {
-        "cited": 42,
+        "cited": 41,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -20437,8 +20436,8 @@
         {
           "n": 2,
           "work": "I FTI",
-          "loc": "§814 — Procedure Turn Approach",
-          "pages": "p. 8-14"
+          "loc": "§815 — Procedure Turn Approach",
+          "pages": "p. 8-18"
         }
       ],
       "coverage": {
@@ -24459,7 +24458,7 @@
           "n": 1,
           "work": "I FTI",
           "loc": "§903 — Localizer Approach",
-          "pages": "p. 9-16"
+          "pages": "p. 9-17"
         }
       ],
       "coverage": {
@@ -31754,8 +31753,8 @@
         {
           "n": 1,
           "work": "I FTI",
-          "loc": "§814 — Procedure Turn Approach",
-          "pages": "p. 8-14"
+          "loc": "§815 — Procedure Turn Approach",
+          "pages": "p. 8-18"
         }
       ],
       "coverage": {
@@ -32558,7 +32557,7 @@
           "n": 3,
           "work": "VNAV FTI",
           "loc": "§505 — Weather Deviations",
-          "pages": "p. 5-4"
+          "pages": "p. 5-5"
         }
       ],
       "coverage": {
@@ -32887,8 +32886,8 @@
         {
           "n": 1,
           "work": "I FTI",
-          "loc": "§819 — Radar Vectors to Final Approach Course (RVFAC)",
-          "pages": "p. 8-32"
+          "loc": "§820 — Radar Vectors to Final Approach Course (RVFAC)",
+          "pages": "p. 8-36"
         }
       ],
       "coverage": {
@@ -35681,8 +35680,8 @@
         {
           "n": 1,
           "work": "I FTI",
-          "loc": "§803 — Standard Terminal Arrival (STAR)",
-          "pages": "p. 8-1"
+          "loc": "§804 — Standard Terminal Arrival (STAR)",
+          "pages": "p. 8-2"
         }
       ],
       "coverage": {
@@ -36943,8 +36942,8 @@
         {
           "n": 1,
           "work": "I FTI",
-          "loc": "§815 — Teardrop Approach",
-          "pages": "p. 8-18"
+          "loc": "§816 — Teardrop Approach",
+          "pages": "p. 8-22"
         }
       ],
       "coverage": {

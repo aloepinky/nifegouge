@@ -10,7 +10,7 @@
 //
 //   --api=<url>          the API base (default: the production API Gateway stage)
 //   --mirror=<url>       where to verify against (default: the production bucket)
-//   --items=<dir>        the item files (default: _reference-docs/discuss-items-archive/items,
+//   --items=<dir>        the item files (default: _reference-docs/T6b Primary/discuss-items-archive/items,
 //                        where they were moved once the server became the source)
 //   --registries=<dir>   EVENTS.js, SYLLABUS.js, FLOW.js (default: src/components/discuss,
 //                        falling back to the jppt/__fixtures__/delta copies)
@@ -47,7 +47,7 @@ const value = (name) => {
 const OPT = {
   api: value('api') || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss',
   mirror: value('mirror') || process.env.DISCUSS_MIRROR_URL || 'https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com',
-  items: value('items') || [path.join(ROOT, '_reference-docs', 'discuss-items-archive', 'items'), path.join(DISCUSS, 'items')].find((d) => fs.existsSync(d)) || path.join(DISCUSS, 'items'),
+  items: value('items') || [path.join(ROOT, '_reference-docs', 'T6b Primary', 'discuss-items-archive', 'items'), path.join(DISCUSS, 'items')].find((d) => fs.existsSync(d)) || path.join(DISCUSS, 'items'),
   registries: value('registries'),
   out: value('out'),
   overwrite: flag('overwrite'),

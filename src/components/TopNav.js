@@ -1,16 +1,14 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useMenuDismiss from './useMenuDismiss';
+import { PROGRAMS, programName } from './programs';
 
 // The top bar: which program you are in, and which page of it you are on. Both are dropdowns
 // rather than rows of tabs, because the row stopped fitting — TW4 has eight pages now, and the
 // program list grows as the advanced aircraft arrive. Neither is a hamburger: each closed menu
 // names where you are, so the bar still answers "what am I looking at" without being opened.
 
-const PROGRAMS = [
-  { id: 'nife', label: 'NIFE', aircraft: 'C172', home: '/nife/about', base: '/nife' },
-  { id: 'tw4', label: 'Primary', aircraft: 'T-6B', home: '/tw4/about', base: '/tw4' },
-];
+// The program list is shared with everything else that names a school: see programs.js.
 
 const TABS = {
   nife: [
@@ -18,7 +16,8 @@ const TABS = {
     { to: '/nife/questions', label: 'Questions' },
     { to: '/nife/docs', label: 'Docs' },
     { to: '/nife/nav', label: 'Problem Generator' },
-    { to: '/nife/flight', label: 'Flight' },
+    { to: '/nife/eps-limits', label: 'EPs/Limits' },
+    { to: '/nife/briefs', label: 'Briefs/TOLD' },
   ],
   tw4: [
     { to: '/tw4/about', label: 'About' },
@@ -31,8 +30,6 @@ const TABS = {
     { to: '/tw4/jetlog', label: 'Jet Log' },
   ],
 };
-
-const programName = (p) => `${p.label} - ${p.aircraft}`;
 
 // The tab you are on: the longest `to` the path starts with, so /tw4/discuss/hud is still
 // Discussion Items and /tw4/systems/fuel is still Systems.
@@ -138,7 +135,10 @@ function TopNav() {
         ))}
       </Dropdown>
 
-      <Link to="/" className="topnav-brand" ref={brand} aria-label="pinksheetmafia.com home">PSM</Link>
+      {/* The P carries its own letter-spacing: see .topnav-brand-p for why the even one is wrong. */}
+      <Link to="/" className="topnav-brand" ref={brand} aria-label="pinksheetmafia.com home">
+        <span className="topnav-brand-p">P</span>SM
+      </Link>
 
       <Dropdown name="Page" current={tab ? tab.label : 'Menu'} align="right">
         {tabs.map((t) => (

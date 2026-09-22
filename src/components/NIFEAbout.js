@@ -44,9 +44,14 @@ function NIFEAbout() {
         The weather generator creates SETAI practice problems to help you for the test.
       </p>
 
-      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => navigate('/nife/flight')}>Flight</h2>
+      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => navigate('/nife/eps-limits')}>EPs/Limits</h2>
       <p className="about-text">
-        EP flows, limits practice, and TOLD card generators for the flight stage of NIFE. Practice your emergency procedures and verify your performance data before stepping to the jet.
+        The C172 emergency procedures one at a time, with the controls beside them, and the limits table as the exam prints it. Game mode times you through the lot and puts you on the leaderboard.
+      </p>
+
+      <h2 className="about-subtitle" style={navHeadingStyle} onClick={() => navigate('/nife/briefs')}>Briefs/TOLD</h2>
+      <p className="about-text">
+        The briefing guides and the TOLD card generator. Verify your performance data before stepping to the aircraft.
       </p>
 
       <p className="about-text" style={{marginTop: '20px'}}>

@@ -34,7 +34,7 @@ import zlib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-PDF = os.path.join(ROOT, '_reference-docs', 'Fundamental References', 'Delta JPPT.pdf')
+PDF = os.path.join(ROOT, '_reference-docs', 'T6b Primary', 'Fundamental References', 'Delta JPPT.pdf')
 OUT = os.path.join(ROOT, 'src', 'components', 'discuss', 'jppt', '__fixtures__', 'delta', 'FLOW.js')
 SYLLABUS = os.path.join(ROOT, 'src', 'components', 'discuss', 'jppt', '__fixtures__', 'delta', 'SYLLABUS.js')
 

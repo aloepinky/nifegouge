@@ -56,8 +56,41 @@ export function toLines(items) {
   return lines;
 }
 
+// -> [[item, ...], ...], pdf.js's own text items (str, transform, width) plus `bold`, one
+// array per page. For a reader that needs the gaps between runs rather than pdf.js's word
+// boundaries: the briefing guide is OCR, and its text layer splits words mid-run.
+//
+// A run's font is only in `commonObjs` once the page's operator list has been fetched, which
+// is why that call is here and why text content is read after it. It is what the brief parser
+// reads bold from, and the only caller is that parser.
+export async function loadTextItems(data, onProgress) {
+  return loadPages(data, async (content, page) => {
+    const bolds = new Map();
+    const isBold = (fontName) => {
+      if (!bolds.has(fontName)) {
+        let bold = false;
+        try {
+          const font = page.commonObjs.get(fontName);
+          bold = !!font && (font.black || /bold/i.test(font.name || ''));
+        } catch (err) {
+          bold = false; // an unresolved font reads as not bold, never as an error
+        }
+        bolds.set(fontName, bold);
+      }
+      return bolds.get(fontName);
+    };
+    return content.items.map((i) => ({
+      str: i.str, transform: i.transform, width: i.width, bold: isBold(i.fontName),
+    }));
+  }, onProgress, { fonts: true });
+}
+
 // -> [[line, ...], ...], one array per page, top of page first.
 export async function loadTextPages(data, onProgress) {
+  return loadPages(data, (content) => toLines(content.items), onProgress);
+}
+
+async function loadPages(data, read, onProgress, { fonts = false } = {}) {
   // pdf.js transfers the buffer to its worker, which detaches it; give it a copy.
   const bytes = new Uint8Array(data).slice();
   const doc = await pdfjs.getDocument({
@@ -72,8 +105,11 @@ export async function loadTextPages(data, onProgress) {
       // eslint-disable-next-line no-await-in-loop
       const page = await doc.getPage(p);
       // eslint-disable-next-line no-await-in-loop
+      if (fonts) await page.getOperatorList();
+      // eslint-disable-next-line no-await-in-loop
       const content = await page.getTextContent();
-      pages.push(toLines(content.items));
+      // eslint-disable-next-line no-await-in-loop
+      pages.push(await read(content, page));
       page.cleanup();
       if (onProgress) onProgress(p, doc.numPages);
     }

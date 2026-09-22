@@ -25,7 +25,7 @@ if (typeof global.ReadableStream === 'undefined') {
 // server (__fixtures__/delta), which is what the parser has to reproduce from the PDF. The
 // live Delta document is edited on the site and drifts from them on purpose.
 
-const PDF = path.join(__dirname, '..', '..', '..', '..', '_reference-docs', 'Fundamental References', 'Delta JPPT.pdf');
+const PDF = path.join(__dirname, '..', '..', '..', '..', '_reference-docs', 'T6b Primary', 'Fundamental References', 'Delta JPPT.pdf');
 const HAVE_PDF = fs.existsSync(PDF);
 const maybe = HAVE_PDF ? describe : describe.skip;
 

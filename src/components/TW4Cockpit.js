@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef} from 'react';
 import {getEPDivs, EP_LENGTHS, EP_ANSWERS, EP_NWC, EP_NWC_GROUPS, EP_NWC_HINTS, EP_FULL_LENGTHS, EP_FULL_ANSWERS, EP_TITLES, EP_FULL_TITLES} from './EPDivsData';
 import {getQuadDivs, QUAD_LENGTHS, QUAD_ANSWERS, QUAD_ACTIONS, QUAD_TITLES, QUAD_NWC} from './QuadfoldData';
-import { normalizeAnswer } from '../utils/answerUtils';
+import { gradeAnswer } from '../utils/answerUtils';
 
 // stepKey -> ordered list of every NWC key in the same procedure
 const NWC_GROUP_BY_KEY = {};
@@ -311,21 +311,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
 
     Object.keys(answers).forEach(key => {
       const rawCorrect = Array.isArray(answers[key]) ? answers[key].join('') : answers[key];
-      const normalizedUser = normalizeAnswer(data[key] || '');
-      const normalizedCorrect = normalizeAnswer(rawCorrect);
-
-      if (normalizedUser === normalizedCorrect) {
-        results[key] = 'correct';
-      } else if (normalizedUser === '') {
-        results[key] = '';
-      } else if (normalizedCorrect === '') {
-        results[key] = 'correct';
-      } else {
-        const userWords = normalizedUser.split(' ').filter(Boolean);
-        const correctWordSet = new Set(normalizedCorrect.split(' ').filter(Boolean));
-        const isPartial = userWords.length > 0 && userWords.every(w => correctWordSet.has(w));
-        results[key] = isPartial ? 'partial' : 'incorrect';
-      }
+      results[key] = gradeAnswer(data[key], rawCorrect);
     });
 
     setCheckResults(results);
@@ -425,9 +411,12 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       )
     );
 
+    // A click marks the step it filled and leaves every other step's marking alone, so what
+    // Check told you stays on the page until you retype the box or check again. Every school's
+    // EPs and limits work this way.
     if(matchingAnswers.length === correctAnswers.length){
       inputData[nextEmptyField] = matchingAnswers.join('');
-      const results = emptyResults();
+      const results = {...checkResults};
       results[nextEmptyField] = 'checked';
       setCheckResults(results);
       if(emptyNum + 1 === inputLengths[currentIndexArray[currentIndex]]){
@@ -435,11 +424,11 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       }
     }else if (matchingAnswers.length > 0){
       inputData[nextEmptyField] = matchingAnswers.join('');
-      const results = emptyResults();
+      const results = {...checkResults};
       results[nextEmptyField] = 'partial';
       setCheckResults(results);
     }else{
-      const results = emptyResults();
+      const results = {...checkResults};
       results[nextEmptyField] = 'incorrect';
       setCheckResults(results);
     }
@@ -471,7 +460,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
     if(!nextEmptyField){return}
     let correctAnswers = inputAnswers[nextEmptyField]
     inputData[nextEmptyField] = correctAnswers.join('');
-    const results = emptyResults();
+    const results = {...checkResults};
     results[nextEmptyField] = 'checked';
     setCheckResults(results);
     if(emptyNum + 1 === inputLengths[currentIndexArray[currentIndex]]){
@@ -791,11 +780,16 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   };
 
   // Hint under the left panel, Skip under the right, so they're in reach while zoomed on the cockpit
-  const showSideActions = !isGameActive || process.env.NODE_ENV === 'development';
+  const showSideActions = !isGameActive;
+
+  // Enter in any answer box checks, on every EPs and limits page.
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT') checkAnswers();
+  };
 
   return (
     <>
-      <div className="limits-eps-container" ref={cockpitRef} style={{maxWidth: CONTAINER_MAX_WIDTH}}>
+      <div className="limits-eps-container" ref={cockpitRef} style={{maxWidth: CONTAINER_MAX_WIDTH}} onKeyDown={onKeyDown}>
         {/* Header with Instructions Button */}
         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '100px', marginBottom: '5px'}}>
           <button onClick={() => setShowInstructions(true)}>
@@ -1600,7 +1594,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   </div>
                 )}
                 </div>
-                {(!isGameActive || process.env.NODE_ENV === 'development') && <div className="navigation-buttons">
+                {(!isGameActive) && <div className="navigation-buttons">
                   <button onClick={() => {
                     setCurrentIndex(currentIndex-1);
                     setCheckResults(emptyResults());
@@ -1828,7 +1822,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
             </div>
         </div>
         <div className="button-row" style={{ justifyContent: 'center', marginTop: '0px' }}>
-          {(!isGameActive || process.env.NODE_ENV === 'development') && <>
+          {(!isGameActive) && <>
             {(currentDivKey === 'epDivs' || currentDivKey === 'fullEpDivs') && <button style={{minWidth: '147px'}} onClick={() => {
               setisRandom(!isRandom);
               refreshIndices(divMap[currentDivKey][0], !isRandom);
@@ -1840,7 +1834,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
             <button onClick={allAnswers}>All Answers</button>
           </>}
           {(currentDivKey === 'epDivs' || currentDivKey === 'fullEpDivs') && <button onClick={checkAnswers}>Check</button>}
-          {(!isGameActive || process.env.NODE_ENV === 'development') && <>
+          {(!isGameActive) && <>
             <button onClick={resetAnswers}>Reset</button>
             {currentDivKey === 'quadDivs' && (
               <button
@@ -1870,7 +1864,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
             Auto NWC
           </button>
         </div>
-        {(!isGameActive || process.env.NODE_ENV === 'development') && <div style={{display: 'flex', justifyContent: 'center', marginTop: '10px'}}>
+        {(!isGameActive) && <div style={{display: 'flex', justifyContent: 'center', marginTop: '10px'}}>
           <div style={{position: 'relative', height: '60px', width: '300px'}}>
             {/* Labels and circles container */}
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', width: '100%'}}>

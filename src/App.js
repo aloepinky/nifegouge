@@ -1,13 +1,14 @@
 import React from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import './style.css';
 import Questions from './components/Questions';
 import Nav from './components/Nav';
-import Flight from './components/Flight.js';
+import NIFEEPsLimits from './components/NIFEEPsLimits.js';
+import NIFEBriefs from './components/NIFEBriefs.js';
 import Docs from './components/Docs.js';
 import TW4About from './components/TW4About.js';
 import TW4EPsLimits from './components/TW4EPsLimits.js';
-import TW4Briefs from './components/TW4Briefs.js';
+import BriefsPage from './components/briefs/BriefsPage';
 import NIFEAbout from './components/NIFEAbout.js';
 import LandingPage from './components/LandingPage.js';
 import CourseRules from './components/TW4CourseRules.js';
@@ -18,6 +19,12 @@ import TW4JetLog from './components/TW4JetLog.js';
 import TW4Docs from './components/TW4Docs.js';
 import Footer from './components/Footer.js';
 import TopNav from './components/TopNav.js';
+
+// /nife/flight/told is now on the Briefs/TOLD page; its other tabs are on EPs/Limits.
+function FlightTabRedirect() {
+  const { tab } = useParams();
+  return <Navigate to={tab === 'told' ? '/nife/briefs/told' : `/nife/eps-limits/${tab}`} replace />;
+}
 
 function App() {
   const location = useLocation();
@@ -36,14 +43,18 @@ function App() {
         <Route path="/nife/docs" element={<Docs />} />
         <Route path="/nife/nav" element={<Nav />} />
         <Route path="/nife/nav/:tab" element={<Nav />} />
-        <Route path="/nife/flight" element={<Flight />} />
-        <Route path="/nife/flight/:tab" element={<Flight />} />
+        <Route path="/nife/eps-limits" element={<NIFEEPsLimits />} />
+        <Route path="/nife/eps-limits/:tab" element={<NIFEEPsLimits />} />
+        <Route path="/nife/briefs/*" element={<NIFEBriefs />} />
+        {/* The Flight page was split into those two; its addresses are in the wild. */}
+        <Route path="/nife/flight" element={<Navigate to="/nife/eps-limits" replace />} />
+        <Route path="/nife/flight/:tab" element={<FlightTabRedirect />} />
         <Route path="/tw4" element={<Navigate to="/tw4/about" replace />} />
         <Route path="/tw4/about" element={<TW4About />} />
         <Route path="/tw4/eps-limits" element={<TW4EPsLimits />} />
         <Route path="/tw4/eps-limits/:tab" element={<TW4EPsLimits />} />
         <Route path="/tw4/docs" element={<TW4Docs />} />
-        <Route path="/tw4/briefs" element={<TW4Briefs />} />
+        <Route path="/tw4/briefs/*" element={<BriefsPage />} />
         <Route path="/tw4/courserules" element={<CourseRules />} />
         <Route path="/tw4/systems" element={<Systems />} />
         <Route path="/tw4/systems/:tab" element={<Systems />} />

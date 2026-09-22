@@ -11,12 +11,12 @@ import {
 // a revision, a stale baseRev gets a 409, and nothing is ever deleted.
 //
 // A brief is generated in the browser from an uploaded guide PDF and then edited on the page.
-// What is checked here is the shape the page renders, and nothing about the words: sections
-// with ids and titles, items with ids and names, children nested at most three deep.
+// It is plain text throughout, so what is checked here is the shape the page renders and
+// nothing about the words: sections with ids and titles, items with ids and names, and a
+// fixed section carrying its text instead of items.
 
 const MAX_DOC_BYTES = 200 * 1024;
 const MAX_ID = 60;
-const MAX_DEPTH = 3;
 
 const ok = (extra) => reply(200, { success: true, ...extra });
 
@@ -43,19 +43,6 @@ function idParam(event) {
 }
 
 const isText = (v) => v == null || typeof v === 'string';
-
-function checkNodes(nodes, where, ids, depth) {
-  if (nodes == null) return;
-  if (!Array.isArray(nodes)) throw new HttpError(400, `${where}: children must be a list`);
-  if (depth > MAX_DEPTH) throw new HttpError(400, `${where}: nested too deep`);
-  nodes.forEach((node, i) => {
-    const at = `${where}, line ${i + 1}`;
-    if (!node || typeof node !== 'object') throw new HttpError(400, `${at} is not an object`);
-    checkId(node.id, at, ids);
-    if (!isText(node.text) || !isText(node.marker)) throw new HttpError(400, `${at}: text must be text`);
-    checkNodes(node.children, at, ids, depth + 1);
-  });
-}
 
 function checkId(id, where, ids) {
   if (typeof id !== 'string' || !id) throw new HttpError(400, `${where} has no id`);
@@ -85,17 +72,23 @@ function checkBrief(brief, id) {
       throw new HttpError(400, `${where}: column must be 1 or 2`);
     }
     if (!isText(section.text)) throw new HttpError(400, `${where}: text must be text`);
-    if (!Array.isArray(section.items)) throw new HttpError(400, `${where}: items must be a list`);
-    section.items.forEach((item, i) => {
+    // A fixed section is one block of text with nothing to open, so it carries no items.
+    if (section.fixed && !(section.text || '').trim()) {
+      throw new HttpError(400, `${where} is fixed but has no text in it`);
+    }
+    if (section.items != null && !Array.isArray(section.items)) {
+      throw new HttpError(400, `${where}: items must be a list`);
+    }
+    (section.items || []).forEach((item, i) => {
       const at = `${where}, item ${i + 1}`;
       if (!item || typeof item !== 'object') throw new HttpError(400, `${at} is not an object`);
       checkId(item.id, at, ids);
       if (typeof item.label !== 'string' || !item.label.trim()) throw new HttpError(400, `${at} has no name`);
-      if (!isText(item.text)) throw new HttpError(400, `${at}: text must be text`);
-      if (item.card != null && (!Array.isArray(item.card) || item.card.some((c) => typeof c !== 'string'))) {
-        throw new HttpError(400, `${at}: card lines must be text`);
+      if (!isText(item.text) || !isText(item.subtext)) throw new HttpError(400, `${at}: text must be text`);
+      // Fixed reads the same on an item as on a section: its text is always on screen.
+      if (item.fixed && !(item.text || '').trim()) {
+        throw new HttpError(400, `${at} is fixed but has no text in it`);
       }
-      checkNodes(item.children, at, ids, 1);
     });
   });
   const doc = {

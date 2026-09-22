@@ -27,7 +27,7 @@ where to look, not what to fix.
 | `href` rows (not items) | 21 |
 | Label-only rows (no page yet) | 5 |
 | Tables | 25 (in 22 items) |
-| Cited blocks | 4661 |
+| Cited blocks | 4660 |
 | Uncited blocks | 18 (in 8 items) |
 
 ## Publications cited

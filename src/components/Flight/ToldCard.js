@@ -184,10 +184,10 @@ function ToldCard() {
     }));
   };
 
+  // The heading comes from the page above, as Primary's TOLD card has it.
   return (
     <div className="told-card-container">
-      <h1>NIFE TOLD Card - Weight & Balance</h1>
-      
+
       <div className="told-header">
         <div className="told-header-item">
           <label>Student Position: </label>

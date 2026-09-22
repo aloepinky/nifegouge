@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { normalizeAnswer } from '../utils/answerUtils';
+import { normalizeAnswer, gradeLimit } from '../utils/answerUtils';
 
 function TW4Limits({ isGameActive = false, onGameComplete }) {
   // Layout width parameters - adjust these to test different configurations
@@ -246,46 +246,10 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
       return norm(userAnswer) === norm(correctAnswer) ? 'correct' : 'incorrect';
     }
 
-    // Normalize user answer
-    let normalizedUserAnswer = userAnswer.replace(/[,\-–;()/ ]/g, '');
-
-    // Get correct answer from limitsAnswers
-    let correctAnswer = Array.isArray(limitsAnswers[field]) ? limitsAnswers[field].join('') : limitsAnswers[field];
-    correctAnswer = correctAnswer.replace(/[,\-–;()/ ]/g, '');
-
-    // Check if it's a range answer (e.g., "871-1000")
-    const isRange = /\d\s*(to|-)\s*-?\d/.test(correctAnswer);
-
-    if (isRange) {
-      let normalizedUser = normalizedUserAnswer.toString().replace(/\s+/g, '').replace(/to/i, '-');
-      let normalizedCorrect = correctAnswer.replace(/\s+/g, '').replace(/to/i, '-');
-
-      if (normalizedUser === normalizedCorrect) {
-        return 'correct';
-      } else if (normalizedUserAnswer === '') {
-        return '';
-      } else {
-        return 'incorrect';
-      }
-    } else {
-      let normalizedUser = normalizedUserAnswer.toString().trim().toLowerCase();
-      let normalizedCorrect = correctAnswer.toString().toLowerCase();
-
-      // Only convert to float if the ENTIRE string is numeric
-      const isUserNumeric = /^-?\d+\.?\d*$/.test(normalizedUser);
-      const isCorrectNumeric = /^-?\d+\.?\d*$/.test(normalizedCorrect);
-
-      normalizedUser = isUserNumeric ? parseFloat(normalizedUser) : normalizedUser;
-      normalizedCorrect = isCorrectNumeric ? parseFloat(normalizedCorrect) : normalizedCorrect;
-
-      if (normalizedUser === normalizedCorrect) {
-        return 'correct';
-      } else if (normalizedUserAnswer === '') {
-        return '';
-      } else {
-        return 'incorrect';
-      }
-    }
+    // Numbers and ranges: the shared checker. "871 to 1000" and "871-1000" are the same range,
+    // and a minus sign counts.
+    const correctAnswer = Array.isArray(limitsAnswers[field]) ? limitsAnswers[field].join('') : limitsAnswers[field];
+    return gradeLimit(userAnswer, correctAnswer);
   };
 
   const handleLimitsChange = (field, value) => {
@@ -517,9 +481,14 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     fontFamily: 'inherit'
   };
 
+  // Enter in any answer box checks, on every EPs and limits page.
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT') checkAnswers();
+  };
+
   return (
     <>
-      <div className="limits-eps-container">
+      <div className="limits-eps-container" onKeyDown={onKeyDown}>
         <h1 style={{fontSize: '16px', marginBottom: '5px'}}>T-6B OPERATING LIMITATIONS</h1>
         
         <p className="page-subtitle" style={{fontSize: '11px', marginBottom: '10px'}}>
