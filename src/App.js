@@ -5,16 +5,18 @@ import Questions from './components/Questions';
 import Nav from './components/Nav';
 import NIFEEPsLimits from './components/NIFEEPsLimits.js';
 import NIFEBriefs from './components/NIFEBriefs.js';
+import NIFEDiscuss from './components/NIFEDiscuss.js';
+import { DRAFT } from './components/programs.js';
 import Docs from './components/Docs.js';
 import TW4About from './components/TW4About.js';
 import TW4EPsLimits from './components/TW4EPsLimits.js';
+import T44CEPsLimits from './components/T44CEPsLimits.js';
 import BriefsPage from './components/briefs/BriefsPage';
 import NIFEAbout from './components/NIFEAbout.js';
 import LandingPage from './components/LandingPage.js';
 import CourseRules from './components/TW4CourseRules.js';
 import Systems from './components/systems/Systems.js';
 import Discuss from './components/discuss/Discuss.js';
-import { STYLE_GUIDE_DRAFT } from './components/discuss/SyllabusContext.js';
 import TW4JetLog from './components/TW4JetLog.js';
 import TW4Docs from './components/TW4Docs.js';
 import Footer from './components/Footer.js';
@@ -46,6 +48,9 @@ function App() {
         <Route path="/nife/eps-limits" element={<NIFEEPsLimits />} />
         <Route path="/nife/eps-limits/:tab" element={<NIFEEPsLimits />} />
         <Route path="/nife/briefs/*" element={<NIFEBriefs />} />
+        {/* Draft: shown on a dev server, absent from the live site — nav AND route, so a
+            deep link cannot reach a half-written tab. See programs.js. */}
+        {DRAFT && <Route path="/nife/discuss/*" element={<NIFEDiscuss />} />}
         {/* The Flight page was split into those two; its addresses are in the wild. */}
         <Route path="/nife/flight" element={<Navigate to="/nife/eps-limits" replace />} />
         <Route path="/nife/flight/:tab" element={<FlightTabRedirect />} />
@@ -58,21 +63,11 @@ function App() {
         <Route path="/tw4/courserules" element={<CourseRules />} />
         <Route path="/tw4/systems" element={<Systems />} />
         <Route path="/tw4/systems/:tab" element={<Systems />} />
-        <Route path="/tw4/discuss" element={<Discuss />} />
-        <Route path="/tw4/discuss/e/:event" element={<Discuss mode="event" />} />
-        <Route path="/tw4/discuss/b/:block" element={<Discuss mode="block" />} />
-        <Route path="/tw4/discuss/upload" element={<Discuss mode="upload" />} />
-        {/* A draft, on a dev server only. `Routes` ignores a non-element child, which is how a
-            route is conditioned. */}
-        {STYLE_GUIDE_DRAFT && <Route path="/tw4/discuss/style" element={<Discuss mode="style" />} />}
-        <Route path="/tw4/discuss/edit" element={<Discuss mode="edit" />} />
-        <Route path="/tw4/discuss/:item/history" element={<Discuss mode="history" />} />
-        <Route path="/tw4/discuss/s/:syllabus" element={<Discuss />} />
-        <Route path="/tw4/discuss/s/:syllabus/e/:event" element={<Discuss mode="event" />} />
-        <Route path="/tw4/discuss/s/:syllabus/b/:block" element={<Discuss mode="block" />} />
-        <Route path="/tw4/discuss/s/:syllabus/edit" element={<Discuss mode="edit" />} />
-        <Route path="/tw4/discuss/:item" element={<Discuss mode="item" />} />
+        <Route path="/tw4/discuss/*" element={<Discuss />} />
         <Route path="/tw4/jetlog" element={<TW4JetLog />} />
+        {DRAFT && <Route path="/t44c" element={<Navigate to="/t44c/eps-limits" replace />} />}
+        {DRAFT && <Route path="/t44c/eps-limits" element={<T44CEPsLimits />} />}
+        {DRAFT && <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />}
       </Routes>
 
       {!isLanding && <Footer />}

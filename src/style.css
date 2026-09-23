@@ -675,6 +675,279 @@ td.xcell::after {
   color: #0066cc;
 }
 
+/* ---------- About pages (AboutPage.js) ---------- */
+.about-page {
+  max-width: 1040px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+/* Masthead: the program's aircraft behind the title, washed out to the left. */
+.about-masthead {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 30px;
+  background-color: #01202C;
+  background-position: center 45%;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.about-mast-in {
+  position: relative;
+  padding: 34px 30px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(255, 255, 255, 0.74) 46%,
+    rgba(255, 255, 255, 0) 84%);
+}
+
+.about-mast-in h1 {
+  margin: 0;
+  color: #01202C;
+  font-size: clamp(28px, 4.6vw, 40px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.about-mast-in p {
+  margin: 10px 0 0;
+  color: #4a6674;
+  max-width: 40ch;
+}
+
+/* The index of tabs, and the preview of whichever one is pointed at. */
+.about-index {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 36px;
+  align-items: start;
+}
+
+.about-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #cfdbe0;
+}
+
+.about-nav li {
+  border-bottom: 1px solid #cfdbe0;
+}
+
+.about-nav a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 4px;
+  text-decoration: none;
+  color: #708995;
+  transition: color 0.14s, padding 0.14s, background 0.14s;
+}
+
+.about-nav a::after {
+  content: "\2192";
+  font-size: 20px;
+  opacity: 0;
+  transition: opacity 0.14s;
+}
+
+.about-nav a[aria-current="true"] {
+  color: #01202C;
+  padding-left: 12px;
+  background: linear-gradient(90deg, #e8eff2, rgba(232, 239, 242, 0));
+}
+
+.about-nav a[aria-current="true"]::after {
+  opacity: 1;
+  color: #003B4F;
+}
+
+.about-nav-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: clamp(21px, 2.8vw, 28px);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.about-nav-icon {
+  display: inline-flex;
+  color: #cfdbe0;
+  transition: color 0.14s;
+}
+
+.about-nav a[aria-current="true"] .about-nav-icon {
+  color: #003B4F;
+}
+
+.about-nav-blurb {
+  display: none;
+}
+
+.about-preview {
+  position: sticky;
+  top: 16px;
+  background: #ffffff;
+  border: 1px solid #cfdbe0;
+  border-radius: 10px;
+  padding: 22px 24px 24px;
+  min-height: 320px;
+}
+
+.about-preview-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #708995;
+}
+
+.about-preview-icon {
+  display: inline-flex;
+  color: #003B4F;
+}
+
+.about-preview h2 {
+  margin: 6px 0 10px;
+  font-size: 24px;
+  letter-spacing: -0.01em;
+  color: #01202C;
+}
+
+.about-preview p {
+  margin: 0 0 10px;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.about-open {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 9px 16px;
+  border-radius: 6px;
+  background: #003B4F;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.about-open:hover {
+  background: #01202C;
+}
+
+/* The prose that used to be the page: one disclosure at the foot. */
+.about-explainer {
+  margin-top: 36px;
+  border-top: 1px solid #cfdbe0;
+  padding-top: 14px;
+}
+
+.about-explainer summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #003B4F;
+  font-weight: 600;
+  list-style: none;
+}
+
+.about-explainer summary::-webkit-details-marker {
+  display: none;
+}
+
+.about-explainer summary::before {
+  content: "+";
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #cfdbe0;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.about-explainer[open] summary::before {
+  content: "\2212";
+}
+
+.about-explainer-body {
+  max-width: 68ch;
+  line-height: 1.6;
+}
+
+.about-explainer-body p {
+  margin: 12px 0 0;
+}
+
+@media (max-width: 760px) {
+  .about-index {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .about-preview {
+    display: none;
+  }
+
+  .about-nav a,
+  .about-nav a[aria-current="true"] {
+    color: #01202C;
+    padding-left: 4px;
+    padding-bottom: 6px;
+    background: none;
+  }
+
+  .about-nav a::after {
+    opacity: 1;
+    color: #003B4F;
+  }
+
+  .about-nav-icon,
+  .about-nav a[aria-current="true"] .about-nav-icon {
+    color: #003B4F;
+  }
+
+  .about-nav-blurb {
+    display: block;
+    margin: 0;
+    padding: 0 4px 12px;
+    font-size: 14px;
+    color: #4a6674;
+  }
+
+  .about-mast-in {
+    min-height: 250px;
+    justify-content: flex-end;
+    padding: 24px 20px;
+    background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0) 18%,
+      rgba(255, 255, 255, 0.74) 52%,
+      rgba(255, 255, 255, 0.88) 78%,
+      #ffffff 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-nav a,
+  .about-nav-icon,
+  .about-nav a::after {
+    transition: none;
+  }
+}
+
 .coming-soon {
   text-align: center;
   padding: 50px 20px;
@@ -4706,7 +4979,9 @@ textarea.incorrect-answer {
 
 .discuss-search-result .discuss-search-kind {
   flex: none;
-  width: 42px;
+  /* Wide enough for the aircraft and the kind on one line ("T-6B item", "C172 event"):
+     the qualifier names which corpus answered, and wrapping it made two lines of shouting. */
+  width: 72px;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -7062,3 +7337,190 @@ button.epl-modal-close:hover {
 .brief-publishbar--conflict { border-left-color: #b26a00; background: rgba(178, 106, 0, 0.06); }
 
 .brief-addsection { margin: 10px 0 0; }
+
+/* ── Advanced's T-44C operating limits sheet (T44C/T44CLimits.js) ────────────────────
+   A limits table recreates its own school's exam sheet, so this is styled on its own, beside
+   NIFE's `.limits-table` and Primary's inline styles. Answer colours come from the global
+   `input.correct-answer` rules, so nothing here sets them.
+
+   The sheet never reflows. An EPs/Limits exam is remembered spatially — which column a limit is
+   in and how far down — so a narrow screen scrolls the whole sheet sideways rather than
+   stacking its two columns, which would teach a shape the exam does not have. Everything below
+   that sets an alignment is measured off the publication: the airspeed block is right-aligned,
+   the general block is centred, the right-hand column is left-aligned, and the fuel line
+   centres across both. The columns are 56.5/43.5, which is where the sheet's own divider
+   falls. */
+
+/* The container's 900px cap is sized for NIFE's narrower table. This sheet is wider, so the
+   page keeps the full width at every viewport and `.t44c-sheet-scroll` handles the rest. */
+.limits-eps-container.t44c-page,
+.t44c-page.t44c-page { max-width: 1125px; }
+
+.t44c-sheet-scroll {
+  overflow-x: auto;
+}
+
+/* A fixed layout width, not a range: the sheet is the same shape on every screen, and the
+   container's own scale() shrinks it to fit. SHEET_PX in T44CLimits.js is this number. */
+.t44c-sheet {
+  width: 1085px;
+  margin: 0 auto 10px;
+  border: 2px solid #01202C;
+  font-size: 0.86em;
+  color: #01202C;
+}
+
+.t44c-banner {
+  background: #dcdcdc;
+  border-bottom: 1px solid #01202C;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: 0.02em;
+  padding: 4px 8px;
+}
+
+.t44c-banner--section {
+  border-top: 1px solid #01202C;
+}
+
+/* The engine limits grid. */
+.t44c-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.t44c-grid th,
+.t44c-grid td {
+  border: 1px solid #01202C;
+  padding: 2px 4px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 0.92em;
+}
+
+.t44c-grid thead th {
+  background: #f1f1f1;
+  font-weight: bold;
+  line-height: 1.15;
+}
+
+.t44c-grid thead th.t44c-banner {
+  background: #dcdcdc;
+}
+
+.t44c-grid tbody th {
+  background: #fff;
+  text-align: left;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+.t44c-grid th:first-child,
+.t44c-grid td:first-child {
+  width: 15%;
+}
+
+.t44c-dash {
+  color: #666;
+  letter-spacing: 0.08em;
+}
+
+.t44c-unit {
+  color: #444;
+  font-size: 0.9em;
+}
+
+/* One blank. Underlined rather than boxed, the way the sheet prints its answer lines. */
+.t44c-blank {
+  border: none;
+  border-bottom: 1px solid #7a8a91;
+  background: transparent;
+  text-align: center;
+  padding: 1px 2px;
+  font: inherit;
+  color: #01202C;
+  min-width: 0;
+}
+
+.t44c-blank:focus {
+  outline: none;
+  border-bottom-color: #003B4F;
+  background: rgba(0, 59, 79, 0.06);
+}
+
+.t44c-blank--xs { width: 2.6em; }
+.t44c-blank--sm { width: 3.6em; }
+.t44c-blank--md { width: 5em; }
+.t44c-blank--wide { width: 6em; }
+.t44c-blank--lg { width: 13em; }
+
+/* In the grid a blank fills its column, so "CONTINUOUS" is not clipped to "CONTII"; the cells
+   that print a "(Min)" or a footnote beside the answer keep a fixed, narrower box. */
+.t44c-grid .t44c-blank--fill { width: 100%; }
+
+.t44c-notes {
+  margin: 0;
+  padding: 8px 16px 10px 34px;
+  line-height: 1.55;
+}
+
+.t44c-notes li {
+  margin-bottom: 3px;
+}
+
+/* The boxed sections, split where the sheet's own divider falls. */
+.t44c-cols {
+  display: grid;
+  grid-template-columns: 56.5% 43.5%;
+}
+
+.t44c-box + .t44c-box {
+  border-left: 1px solid #01202C;
+}
+
+.t44c-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.t44c-rows--numbered {
+  list-style: decimal;
+  padding-left: 30px;
+}
+
+.t44c-rows li {
+  border-bottom: 1px solid #c4ccd0;
+  padding: 3px 10px;
+  line-height: 1.7;
+}
+
+.t44c-rows--numbered li {
+  padding-left: 0;
+}
+
+.t44c-rows li:last-child {
+  border-bottom: none;
+}
+
+.t44c-rows--right { text-align: right; }
+.t44c-rows--center { text-align: center; }
+
+/* A second line of a row, under the first and following its alignment. */
+.t44c-subrow {
+  display: block;
+}
+
+/* The sheet sets the acceleration values off from their labels at a tab stop. */
+.t44c-tab {
+  display: inline-block;
+  min-width: 7em;
+}
+
+.t44c-fuel {
+  border-top: 1px solid #01202C;
+  margin: 0;
+  padding: 6px 10px;
+  text-align: center;
+}

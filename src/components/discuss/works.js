@@ -26,6 +26,16 @@ export const WORKS = [
   { work: 'Course Rules Manual', date: '20FEB25' },
   { work: 'IFG', date: '05JUN26' },
   { work: 'KNGP IFG', date: '05JUN26' },
+  // NIFE. The names carry the school because three of these collide with a Primary
+  // publication of the same short name — `IFG` and `Checklist Study Guide` are both taken
+  // above, and there is more than one FTI, SOP and MCG on the site.
+  { work: 'NIFE FTI', date: '21MAR22' },
+  { work: 'NIFE SOP', date: '22JUN26' },
+  { work: 'NIFE MCG', date: '11JUL25' },
+  { work: 'NIFE IFG', date: '20AUG26' },
+  { work: 'NIFE Checklist Study Guide', date: '13MAR26' },
+  { work: 'Ground School Trainee Guide', date: '29AUG23' },
+  { work: 'NWP LOA', date: '01OCT24' },
   { work: 'FIH', date: '10JUL25' },
   { work: 'AIM', date: '09JUL26' },
   { work: 'Instrument Procedures Handbook', date: '2017' },

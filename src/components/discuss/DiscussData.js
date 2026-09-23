@@ -1,25 +1,34 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { fetchItemIndex, useRemoteSyllabus } from './discussApi';
+import { fetchItemIndex, useRemoteSyllabus, setCorpusSchool } from './discussApi';
 import { setItemIndex, itemList, useItemIndexVersion } from './registry';
 import { fromDoc, DELTA_ID } from './SyllabusContext';
 import { buildMatcher } from './jppt/matchItems';
+import { DEFAULT_PROGRAM } from './program';
+import { isSchool } from '../programs';
+import { useDiscussBase } from './paths';
 
 // What every discuss page needs before it can render: the item index (titles and flags for
-// every page, into registry.js) and the Delta Primary syllabus document. Both come from the
-// mirror in parallel, once per session; the index is held here so a route change does not
+// every page, into registry.js) and the mount's own built-in syllabus document. Both come from
+// the mirror in parallel, once per session; the index is held here so a route change does not
 // fetch it again.
+//
+// A mount names its school and its built-in syllabus. Primary's is Delta, and is the default,
+// so the tab this was written for passes nothing. The index is one file for the whole site and
+// is fetched once, but registry.js is keyed by bare slug and holds ONE school's pages: NIFE and
+// Primary both have a `turn-pattern`, and an index holding both would answer the wrong one to
+// the validator's dangling-link check, the slug datalist, the generated lists and search.
 
 const Ctx = createContext(null);
 
 let indexPromise = null;
-let indexLoaded = false;
+// The whole corpus index, every school's. Filtered per mount below.
+let allItems = null;
 
 function loadIndex() {
   if (!indexPromise) {
     indexPromise = fetchItemIndex().then((data) => {
       if (!data) throw new Error('The discussion items are not published yet.');
-      setItemIndex(data.items);
-      indexLoaded = true;
+      allItems = data.items;
       return data;
     }).catch((err) => {
       indexPromise = null;
@@ -29,49 +38,67 @@ function loadIndex() {
   return indexPromise;
 }
 
-export function DiscussDataProvider({ children, renderLoading, renderError }) {
-  const [indexState, setIndexState] = useState(() => ({ status: indexLoaded ? 'ready' : 'loading' }));
+export function DiscussDataProvider({
+  children,
+  renderLoading,
+  renderError,
+  school = DEFAULT_PROGRAM.school,
+  syllabusId = DELTA_ID,
+  syllabusName = 'Delta Primary',
+}) {
+  // Set before anything below can fetch a page: discussApi composes a page's address from the
+  // school, so a read that started under the previous mount's school would ask for the wrong
+  // file. It is a module scalar and the route decides it, so it is set during render rather
+  // than in an effect, which would run after the children had already asked.
+  setCorpusSchool(school);
+
+  const root = useDiscussBase();
+
+  const [indexState, setIndexState] = useState({ status: 'loading' });
   const [tick, setTick] = useState(0);
-  const remote = useRemoteSyllabus(DELTA_ID);
+  const remote = useRemoteSyllabus(syllabusId);
   const version = useItemIndexVersion();
 
   useEffect(() => {
     let live = true;
-    if (indexLoaded) {
-      setIndexState({ status: 'ready' });
-      return undefined;
-    }
     setIndexState({ status: 'loading' });
     loadIndex().then(
-      () => { if (live) setIndexState({ status: 'ready' }); },
+      () => {
+        if (!live) return;
+        setItemIndex(allItems.filter((entry) => isSchool(entry, school)));
+        setIndexState({ status: 'ready' });
+      },
       (error) => { if (live) setIndexState({ status: 'error', error }); },
     );
     return () => { live = false; };
-  }, [tick]);
+  }, [tick, school]);
 
-  const delta = useMemo(
-    () => (remote.status === 'ready' ? fromDoc(remote.record, { builtIn: true }) : null),
-    [remote.status, remote.record],
+  const builtIn = useMemo(
+    () => (remote.status === 'ready' ? fromDoc(remote.record, { builtIn: true, root }) : null),
+    [remote.status, remote.record, root],
   );
 
   // The phrase matcher an upload and a generated syllabus use to tie JPPT wordings to pages:
-  // every Delta label and every page title.
+  // every label on the built-in syllabus and every page title.
   const matcher = useMemo(
-    () => (delta ? buildMatcher(delta.events, itemList()) : null),
+    () => (builtIn ? buildMatcher(builtIn.events, itemList()) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [delta, version],
+    [builtIn, version],
   );
 
-  const value = useMemo(() => ({ delta, matcher, deltaRecord: remote.record || null }), [delta, matcher, remote.record]);
+  const value = useMemo(
+    () => ({ builtIn, matcher, builtInRecord: remote.record || null, school, syllabusId, syllabusName }),
+    [builtIn, matcher, remote.record, school, syllabusId, syllabusName],
+  );
 
   const failed = indexState.status === 'error'
     ? indexState.error
     : (remote.status === 'error' && remote.error)
-      || (remote.status === 'missing' && new Error('The Delta Primary syllabus is not published yet.'))
+      || (remote.status === 'missing' && new Error(`The ${syllabusName} syllabus is not published yet.`))
       || null;
 
   if (failed) return renderError(failed, () => setTick((t) => t + 1));
-  if (!delta || indexState.status !== 'ready') return renderLoading();
+  if (!builtIn || indexState.status !== 'ready') return renderLoading();
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -80,6 +107,7 @@ export function useDiscussData() {
   return useContext(Ctx);
 }
 
-export function useDelta() {
-  return useContext(Ctx).delta;
+// The mount's own syllabus: Delta on the Primary tab, the NIFE document on NIFE's.
+export function useBuiltInSyllabus() {
+  return useContext(Ctx).builtIn;
 }

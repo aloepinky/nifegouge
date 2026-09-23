@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import useMenuDismiss from '../useMenuDismiss';
 import ItemPage from './ItemPage';
 import EventHub from './EventHub';
@@ -10,11 +10,13 @@ import SearchBox from './SearchBox';
 import HistoryPage from './HistoryPage';
 import CreatePanel from './edit/CreatePanel';
 import {
-  DISCUSS_BASE, DELTA_ID, STYLE_GUIDE_DRAFT, SyllabusContext, fromDoc, useSyllabus,
+  DELTA_ID, STYLE_GUIDE_DRAFT, SyllabusContext, fromDoc, useSyllabus,
 } from './SyllabusContext';
+import { DISCUSS_BASE, DiscussBaseProvider, useDiscussBase } from './paths';
 import { useRemoteSyllabus, useSyllabusList, useItem } from './discussApi';
-import { DiscussDataProvider, useDiscussData, useDelta } from './DiscussData';
-import { programLabel } from './program';
+import { DiscussDataProvider, useDiscussData, useBuiltInSyllabus } from './DiscussData';
+import { programLabel, DEFAULT_PROGRAM } from './program';
+import { isSchool } from '../programs';
 import { SelectedSyllabusContext, recalledSyllabus, rememberSyllabus } from './RandomPage';
 
 // The upload page and the flow editor carry the PDF parser and pdf.js, so they load only when
@@ -38,9 +40,13 @@ function SyllabusName({ name, school }) {
 // Delta is always offered; published syllabi join it from the mirror's list.
 function SyllabusPicker() {
   const s = useSyllabus();
-  const delta = useDelta();
+  const delta = useBuiltInSyllabus();
   const navigate = useNavigate();
-  const published = useSyllabusList().filter((o) => o.id !== DELTA_ID);
+  const base = useDiscussBase();
+  const { school, syllabusId } = useDiscussData();
+  // This tab's own syllabi only: a document for another school briefs pages this tab cannot
+  // reach, and offering it would strand the reader.
+  const published = useSyllabusList().filter((o) => o.id !== syllabusId && isSchool(o, school));
   const [open, setOpen] = useState(false);
   const wrap = useRef(null);
   const trigger = useRef(null);
@@ -53,8 +59,8 @@ function SyllabusPicker() {
   const choose = (id) => {
     setOpen(false);
     // Remembered before navigating: the bare All Events route opens the remembered syllabus.
-    rememberSyllabus(id);
-    navigate(id === DELTA_ID ? DISCUSS_BASE : `${DISCUSS_BASE}/s/${id}`);
+    rememberSyllabus(id, school);
+    navigate(id === syllabusId ? base : `${base}/s/${id}`);
   };
 
   return (
@@ -90,7 +96,7 @@ function SyllabusPicker() {
           </ul>
         )}
       </div>
-      <Link to={`${DISCUSS_BASE}/upload`} className="discuss-syllabus-submit">
+      <Link to={`${base}/upload`} className="discuss-syllabus-submit">
         Submit a new JPPT
       </Link>
     </div>
@@ -102,6 +108,11 @@ function SyllabusPicker() {
 // through the search box, both of which carry the context an alphabetical list throws away.
 function Index() {
   const s = useSyllabus();
+  const base = useDiscussBase();
+  // A syllabus small enough not to need the JPPT's course-flow chart carries no `flow`, and
+  // CourseFlow renders nothing for it. The sentence about correcting the chart would then be
+  // pointing at something that is not on the page.
+  const hasChart = !!(s.flow && s.flow.NODES && s.flow.NODES.length);
   return (
     <div className="discuss-layout discuss-layout--plain discuss-layout--wide">
       <article className="discuss-page">
@@ -113,8 +124,12 @@ function Index() {
         <p className="discuss-syllabus-note">
           {programLabel(s) ? `${programLabel(s)}${s.sourceDate ? `, ${s.sourceDate}` : ''}. ` : ''}
           {s.builtIn ? '' : 'Generated from an uploaded JPPT. '}
-          If the chart does not match the publication,{' '}
-          <Link to={`${s.base}/edit`}>edit the flow</Link>.
+          {hasChart && (
+            <>
+              If the chart does not match the publication,{' '}
+              <Link to={`${s.base}/edit`}>edit the flow</Link>.
+            </>
+          )}
           {s.rev ? ` Revision ${s.rev}.` : ''}
         </p>
 
@@ -130,7 +145,7 @@ function Index() {
         {STYLE_GUIDE_DRAFT && (
           <p className="discuss-foot">
             Anyone can edit these pages, and every revision is kept. The{' '}
-            <Link to={`${DISCUSS_BASE}/style`}>style guide</Link> says how a page is written and
+            <Link to={`${base}/style`}>style guide</Link> says how a page is written and
             how its sources are cited.
           </p>
         )}
@@ -141,13 +156,14 @@ function Index() {
 
 function NotFound({ what, children }) {
   const s = useSyllabus();
+  const base = useDiscussBase();
   return (
     <div className="discuss-layout discuss-layout--plain">
       <article className="discuss-page">
         <header className="discuss-head">
           <h1>No such {what}</h1>
           <p className="discuss-lede">
-            {children || <Link to={s ? s.base : DISCUSS_BASE}>Back to all discussion items</Link>}
+            {children || <Link to={s ? s.base : base}>Back to all discussion items</Link>}
           </p>
         </header>
       </article>
@@ -184,7 +200,8 @@ function LoadFailed({ error, retry }) {
 // An item page, by slug. Missing pages offer to be created: the slug is already typed.
 function ItemRoute({ slug }) {
   const it = useItem(slug);
-  const delta = useDelta();
+  const delta = useBuiltInSyllabus();
+  const base = useDiscussBase();
   if (it.status === 'loading' || it.status === 'none') return <Loading />;
   if (it.status === 'error') {
     return (
@@ -201,8 +218,8 @@ function ItemRoute({ slug }) {
           <header className="discuss-head">
             <h1>No such discussion item</h1>
             <p className="discuss-lede">
-              Nothing is published at <code>/tw4/discuss/{slug}</code>. If the JPPT names it, it can be
-              created here; otherwise <Link to={DISCUSS_BASE}>back to all discussion items</Link>.
+              Nothing is published at <code>{base}/{slug}</code>. If the JPPT names it, it can be
+              created here; otherwise <Link to={base}>back to all discussion items</Link>.
             </p>
           </header>
           <CreatePanel slug={slug.toLowerCase()} title="" program={delta} />
@@ -220,12 +237,15 @@ function ItemRoute({ slug }) {
 // A generated syllabus lives under /tw4/discuss/s/:syllabus, with the same /b/ and /e/ pages
 // beneath it. Item pages are never under it: every syllabus links the one canonical page.
 function DiscussBody({ mode }) {
-  const { event: eventId, item: slug, block: blockId, syllabus: syllabusId } = useParams();
-  const { delta, matcher } = useDiscussData();
-  const remote = useRemoteSyllabus(syllabusId);
+  const { event: eventId, item: slug, block: blockId, syllabus: routeSyllabusId } = useParams();
+  const { builtIn: delta, matcher, school, syllabusId: builtInId, syllabusName } = useDiscussData();
+  const root = useDiscussBase();
+  const remote = useRemoteSyllabus(routeSyllabusId);
   const syllabus = useMemo(
-    () => (syllabusId ? (remote.status === 'ready' ? fromDoc(remote.record, { matcher }) : null) : delta),
-    [syllabusId, remote.status, remote.record, matcher, delta],
+    () => (routeSyllabusId
+      ? (remote.status === 'ready' ? fromDoc(remote.record, { matcher, root }) : null)
+      : delta),
+    [routeSyllabusId, remote.status, remote.record, matcher, delta, root],
   );
 
   // A syllabus's own pages (All Events, a block, an event, its flow editor) record it as the
@@ -234,33 +254,33 @@ function DiscussBody({ mode }) {
   // The bare All Events route opens the syllabus this reader last used, so a student on Echo
   // is not dropped back on Delta every time they open the tab. Choosing Delta in the picker
   // remembers Delta, which is what lets this route show it.
-  const home = !mode && !syllabusId ? recalledSyllabus() : null;
-  const redirectTo = home && home !== DELTA_ID ? `${DISCUSS_BASE}/s/${home}` : null;
+  const home = !mode && !routeSyllabusId ? recalledSyllabus(school) : null;
+  const redirectTo = home && home !== builtInId ? `${root}/s/${home}` : null;
   useEffect(() => {
-    if (!redirectTo && !onItemPage && mode !== 'upload' && syllabus) rememberSyllabus(syllabus.id);
-  }, [redirectTo, onItemPage, mode, syllabus]);
+    if (!redirectTo && !onItemPage && mode !== 'upload' && syllabus) rememberSyllabus(syllabus.id, school);
+  }, [redirectTo, onItemPage, mode, syllabus, school]);
   // A remembered syllabus that has since been taken down is forgotten, or the redirect above
   // would keep landing on its "no such syllabus" page.
   useEffect(() => {
-    if (syllabusId && remote.status === 'missing' && recalledSyllabus() === syllabusId) rememberSyllabus(DELTA_ID);
-  }, [syllabusId, remote.status]);
-  const recalled = onItemPage ? recalledSyllabus() : null;
-  const recalledRemote = useRemoteSyllabus(recalled && recalled !== DELTA_ID ? recalled : undefined);
+    if (routeSyllabusId && remote.status === 'missing' && recalledSyllabus(school) === routeSyllabusId) rememberSyllabus(builtInId, school);
+  }, [routeSyllabusId, remote.status, school, builtInId]);
+  const recalled = onItemPage ? recalledSyllabus(school) : null;
+  const recalledRemote = useRemoteSyllabus(recalled && recalled !== builtInId ? recalled : undefined);
   const selected = useMemo(() => {
     if (!onItemPage) return syllabus || delta;
-    return recalledRemote.status === 'ready' ? fromDoc(recalledRemote.record, { matcher }) : delta;
-  }, [onItemPage, syllabus, delta, recalledRemote.status, recalledRemote.record, matcher]);
+    return recalledRemote.status === 'ready' ? fromDoc(recalledRemote.record, { matcher, root }) : delta;
+  }, [onItemPage, syllabus, delta, recalledRemote.status, recalledRemote.record, matcher, root]);
 
   if (redirectTo) return <Navigate replace to={redirectTo} />;
 
   let body;
-  if (syllabusId && !syllabus) {
+  if (routeSyllabusId && !syllabus) {
     body = remote.status === 'loading'
       ? <Loading />
       : (
         <NotFound what="syllabus">
           {remote.status === 'error' ? `${remote.error.message} ` : ''}
-          <Link to={DISCUSS_BASE} onClick={() => rememberSyllabus(DELTA_ID)}>Back to Delta Syllabus</Link>
+          <Link to={root} onClick={() => rememberSyllabus(builtInId, school)}>Back to {syllabusName}</Link>
         </NotFound>
       );
   } else if (mode === 'style') {
@@ -301,24 +321,67 @@ function DiscussBody({ mode }) {
 }
 
 function Shell({ children }) {
+  const base = useDiscussBase();
   return (
     <div className="discuss-wrap">
       <div className="sub-navbar discuss-subnav">
-        <Link to={DISCUSS_BASE}>All Events</Link>
+        <Link to={base}>All Events</Link>
       </div>
       {children}
     </div>
   );
 }
 
-function Discuss({ mode }) {
+// The routes, relative to wherever the tab is mounted. `mode` is what tells one from another
+// inside DiscussBody — an item keeps one canonical URL, and event context rides as ?from=
+// rather than as a path segment, so there is only ever one URL to link, cite or edit.
+//
+// A generated syllabus lives under `s/:syllabus`, with the same `b/` and `e/` pages beneath
+// it. Item pages are never under it: every syllabus links the one canonical page.
+//
+// The `e`, `b`, `s`, `upload` and `edit` prefixes are what keep the bare `:item` catch-all
+// from swallowing them, so it stays last and new routes are declared above it.
+function DiscussRoutes() {
   return (
-    <DiscussDataProvider
-      renderLoading={() => <Shell><Loading /></Shell>}
-      renderError={(error, retry) => <Shell><LoadFailed error={error} retry={retry} /></Shell>}
-    >
-      <DiscussBody mode={mode} />
-    </DiscussDataProvider>
+    <Routes>
+      <Route path="e/:event" element={<DiscussBody mode="event" />} />
+      <Route path="b/:block" element={<DiscussBody mode="block" />} />
+      <Route path="upload" element={<DiscussBody mode="upload" />} />
+      {/* A draft, on a dev server only. `Routes` ignores a non-element child, which is how a
+          route is conditioned. */}
+      {STYLE_GUIDE_DRAFT && <Route path="style" element={<DiscussBody mode="style" />} />}
+      <Route path="edit" element={<DiscussBody mode="edit" />} />
+      <Route path="s/:syllabus" element={<DiscussBody />} />
+      <Route path="s/:syllabus/e/:event" element={<DiscussBody mode="event" />} />
+      <Route path="s/:syllabus/b/:block" element={<DiscussBody mode="block" />} />
+      <Route path="s/:syllabus/edit" element={<DiscussBody mode="edit" />} />
+      <Route path=":item/history" element={<DiscussBody mode="history" />} />
+      <Route path=":item" element={<DiscussBody mode="item" />} />
+      <Route index element={<DiscussBody />} />
+    </Routes>
+  );
+}
+
+// The tab. Primary's is the default, so its mount passes nothing; NIFE's names its address,
+// its school and its own syllabus. See paths.js and DiscussData.js.
+function Discuss({
+  base = DISCUSS_BASE,
+  school = DEFAULT_PROGRAM.school,
+  syllabusId = DELTA_ID,
+  syllabusName = 'Delta Syllabus',
+}) {
+  return (
+    <DiscussBaseProvider value={base}>
+      <DiscussDataProvider
+        school={school}
+        syllabusId={syllabusId}
+        syllabusName={syllabusName}
+        renderLoading={() => <Shell><Loading /></Shell>}
+        renderError={(error, retry) => <Shell><LoadFailed error={error} retry={retry} /></Shell>}
+      >
+        <DiscussRoutes />
+      </DiscussDataProvider>
+    </DiscussBaseProvider>
   );
 }
 

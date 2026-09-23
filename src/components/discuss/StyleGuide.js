@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { DISCUSS_BASE } from './SyllabusContext';
+import { useDiscussBase } from './paths';
 
 // The style guide, written for whoever is about to add a section to a page.
 //
@@ -31,7 +31,8 @@ const SECTIONS = [
 
 // A page named as an example. Written once here so a retitled page is corrected in one place.
 function Eg({ slug, children }) {
-  return <Link to={`${DISCUSS_BASE}/${slug}`}>{children}</Link>;
+  const base = useDiscussBase();
+  return <Link to={`${base}/${slug}`}>{children}</Link>;
 }
 
 // A right and a wrong way to write the same thing, side by side. Two lines, no prose between
@@ -47,6 +48,7 @@ function Pair({ yes, no, note }) {
 }
 
 function StyleGuide() {
+  const base = useDiscussBase();
   return (
     <div className="discuss-layout">
       <nav className="discuss-toc" aria-label="Contents">
@@ -61,7 +63,7 @@ function StyleGuide() {
 
       <article className="discuss-page discuss-guide" id="top">
         <header className="discuss-head">
-          <p className="discuss-crumb"><Link to={DISCUSS_BASE}>Discussion Items</Link></p>
+          <p className="discuss-crumb"><Link to={base}>Discussion Items</Link></p>
           <h1>Style guide</h1>
           <p className="discuss-lede">
             These pages are what a student says out loud at the brief table. This is how to write

@@ -1,9 +1,10 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDelta } from './DiscussData';
+import { useBuiltInSyllabus } from './DiscussData';
 import { itemList, useItemIndexVersion } from './registry';
 import { prefetchItem } from './discussApi';
 import { rowSearchable } from './SyllabusContext';
+import { useDiscussBase } from './paths';
 
 // Jump straight to an event, a block or a discuss item. The index is built from the Delta
 // syllabus and the item index, so there is nothing to keep in step with the pages themselves;
@@ -19,7 +20,7 @@ function norm(s) {
   return (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
-function buildIndex(delta, items) {
+function buildIndex(delta, items, base) {
   const rows = [];
 
   // Only events and blocks that carry discuss items are indexed. The academics, exams and
@@ -35,7 +36,7 @@ function buildIndex(delta, items) {
       key: `e:${e.id}`,
       label: e.id,
       sub: e.title,
-      to: written ? `/tw4/discuss/e/${e.id}` : `/tw4/discuss/b/${e.block}`,
+      to: written ? `${base}/e/${e.id}` : `${base}/b/${e.block}`,
       written,
       terms: [norm(e.id), norm(e.title)],
     });
@@ -47,7 +48,7 @@ function buildIndex(delta, items) {
       key: `b:${b.id}`,
       label: b.id,
       sub: b.title,
-      to: `/tw4/discuss/b/${b.id}`,
+      to: `${base}/b/${b.id}`,
       written: true,
       terms: [norm(b.id), norm(b.title), norm(b.blkName)].filter(Boolean),
     });
@@ -93,7 +94,7 @@ function buildIndex(delta, items) {
       key: `u:${label}`,
       label,
       sub: 'no page yet',
-      to: `/tw4/discuss/e/${unwritten[label]}`,
+      to: `${base}/e/${unwritten[label]}`,
       written: false,
       terms: [norm(label)],
     });
@@ -104,9 +105,10 @@ function buildIndex(delta, items) {
       kind: 'item',
       key: `i:${item.slug}`,
       slug: item.slug,
+      aircraft: item.aircraft,
       label: item.title,
       sub: item.stub ? 'not written' : null,
-      to: `/tw4/discuss/${item.slug}`,
+      to: `${base}/${item.slug}`,
       written: !item.stub,
       terms: [norm(item.title), ...(aliases[item.slug] || []).map(norm)],
     });
@@ -132,6 +134,11 @@ function score(row, q) {
 const KIND_ORDER = { item: 0, event: 1, block: 2 };
 const KIND_LABEL = { item: 'item', event: 'event', block: 'block' };
 
+// What a result calls itself: the aircraft, then what kind of thing it is — "C172 item",
+// "T-6B event". The aircraft comes off the page's own index entry where it has one, and off
+// the syllabus otherwise, so a result always names the corpus that answered.
+const kindLabel = (row, aircraft) => [row.aircraft || aircraft, KIND_LABEL[row.kind]].filter(Boolean).join(' ');
+
 function search(index, query) {
   const q = norm(query);
   if (q.length < 2) return [];
@@ -154,11 +161,12 @@ function SearchBox() {
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const inputRef = useRef(null);
-  const delta = useDelta();
+  const delta = useBuiltInSyllabus();
+  const base = useDiscussBase();
   const version = useItemIndexVersion();
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const index = useMemo(() => buildIndex(delta, itemList()), [delta, version]);
+  const index = useMemo(() => buildIndex(delta, itemList(), base), [delta, version, base]);
   const results = useMemo(() => search(index, query), [index, query]);
   const showing = open && results.length > 0;
 
@@ -237,7 +245,7 @@ function SearchBox() {
               }}
               onClick={() => go(row)}
             >
-              <span className="discuss-search-kind">{KIND_LABEL[row.kind]}</span>
+              <span className="discuss-search-kind">{kindLabel(row, delta.aircraft)}</span>
               <span className="discuss-search-label">{row.label}</span>
               {row.sub && <span className="discuss-search-sub">{row.sub}</span>}
               {!row.written && row.kind === 'event' && (

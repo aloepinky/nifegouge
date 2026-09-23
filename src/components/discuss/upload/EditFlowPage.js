@@ -4,14 +4,15 @@ import FlowEditor from './FlowEditor';
 import { ConfirmButton, Line, ProgramFields } from '../edit/fields';
 import { SCHOOLS, programOf, withDefaultProgram } from '../program';
 import { getSyllabus, rememberSyllabus, saveSyllabus, getAuthor } from '../discussApi';
-import { DISCUSS_BASE, DELTA_ID } from '../SyllabusContext';
+import { DELTA_ID } from '../SyllabusContext';
+import { useDiscussBase } from '../paths';
 
 // Correct a syllabus's course flow — Delta Primary's or an uploaded one. Anyone can; every
 // save is a new revision, so a bad one can be rolled back. An unsaved edit is kept in this
 // browser against the revision it started from, and a save that would overwrite someone
 // else's newer revision is refused.
 
-const baseFor = (id) => (id === DELTA_ID ? DISCUSS_BASE : `${DISCUSS_BASE}/s/${id}`);
+const baseFor = (root, id) => (id === DELTA_ID ? root : `${root}/s/${id}`);
 
 const draftKey = (id) => `discuss-flow-draft-${id}`;
 
@@ -36,6 +37,7 @@ function writeDraft(id, draft) {
 
 function EditFlowPage({ record: initialRecord }) {
   const navigate = useNavigate();
+  const root = useDiscussBase();
   const [record, setRecord] = useState(initialRecord);
   const [draft] = useState(() => readDraft(initialRecord.id, initialRecord.rev));
   const [name, setName] = useState((draft && draft.name) || record.name);
@@ -45,7 +47,7 @@ function EditFlowPage({ record: initialRecord }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [conflict, setConflict] = useState(false);
-  const base = baseFor(record.id);
+  const base = baseFor(root, record.id);
 
   const onCommit = useCallback((doc) => {
     if (doc === record.doc) return;

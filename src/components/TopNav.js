@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useMenuDismiss from './useMenuDismiss';
-import { PROGRAMS, programName } from './programs';
+import { navPrograms, programName, DRAFT } from './programs';
 
 // The top bar: which program you are in, and which page of it you are on. Both are dropdowns
 // rather than rows of tabs, because the row stopped fitting — TW4 has eight pages now, and the
@@ -10,11 +10,14 @@ import { PROGRAMS, programName } from './programs';
 
 // The program list is shared with everything else that names a school: see programs.js.
 
+// A tab marked `draft` is shown on a dev server and left out of a production build, the way
+// programs.js gates a draft program. The page it points at is unrouted there too.
 const TABS = {
   nife: [
     { to: '/nife/about', label: 'About' },
     { to: '/nife/questions', label: 'Questions' },
     { to: '/nife/docs', label: 'Docs' },
+    { to: '/nife/discuss', label: 'Discussion Items', draft: true },
     { to: '/nife/nav', label: 'Problem Generator' },
     { to: '/nife/eps-limits', label: 'EPs/Limits' },
     { to: '/nife/briefs', label: 'Briefs/TOLD' },
@@ -29,7 +32,12 @@ const TABS = {
     { to: '/tw4/systems', label: 'Systems' },
     { to: '/tw4/jetlog', label: 'Jet Log' },
   ],
+  t44c: [
+    { to: '/t44c/eps-limits', label: 'EPs/Limits' },
+  ],
 };
+
+const shownTabs = (tabs) => tabs.filter((t) => !t.draft || DRAFT);
 
 // The tab you are on: the longest `to` the path starts with, so /tw4/discuss/hud is still
 // Discussion Items and /tw4/systems/fuel is still Systems.
@@ -114,15 +122,19 @@ function TopNav() {
   const bar = useRef(null);
   const brand = useRef(null);
 
-  const program = PROGRAMS.find((p) => pathname.startsWith(p.base)) || PROGRAMS[0];
-  const tabs = TABS[program.id] || [];
+  // Chosen from the programs the navigation offers, not from every program there is: a draft
+  // program's routes do not exist on the live site, and picking it here would leave the bar
+  // announcing a program whose pages render nothing.
+  const offered = navPrograms();
+  const program = offered.find((p) => pathname.startsWith(p.base)) || offered[0];
+  const tabs = shownTabs(TABS[program.id] || []);
   const tab = currentTab(tabs, pathname);
   useBrandFit(bar, brand, [program.id, tab && tab.to]);
 
   return (
     <div className="navbar" ref={bar}>
       <Dropdown name="Program" current={programName(program)}>
-        {PROGRAMS.map((p) => (
+        {navPrograms().map((p) => (
           <button
             type="button"
             key={p.id}

@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import { DISCUSS_BASE } from './paths';
 
 // One syllabus, whichever document it came from. The chart, the stage nav, the block page and
 // the event hub read the syllabus they are showing through this shape and never touch a
@@ -10,8 +11,12 @@ import { createContext, useContext } from 'react';
 // syllabi brief it. Only Delta carries ?from= event context onto them, because the item page's
 // context strip reads Delta's events.
 
-export const DISCUSS_BASE = '/tw4/discuss';
+// Re-exported so the many modules that import it from here keep working; it is defined in
+// paths.js beside the context that overrides it per mount.
+export { DISCUSS_BASE };
 export const DELTA_ID = 'delta-primary';
+// NIFE's flight stage, the built-in syllabus of the /nife/discuss mount.
+export const NIFE_SYLLABUS_ID = 'nife-flight';
 
 // The style guide is a draft, and it is hidden everywhere while it is being edited — the dev
 // server included, so a half-written page of rules is not what a reader finds. One flag, read
@@ -58,7 +63,10 @@ export function rowSearchable(row) {
 }
 
 export function buildSyllabus({
-  id, name, base, source, sourceDate = '', rev = null, builtIn = false, record = null,
+  // `base` is this syllabus's own root — the mount for a built-in one, `<root>/s/<id>` for a
+  // generated one. `root` is the mount itself, and is what an item link uses: a page has one
+  // canonical URL at the root however many syllabi brief it.
+  id, name, base, root = DISCUSS_BASE, source, sourceDate = '', rev = null, builtIn = false, record = null,
   aircraft = '', school = '',
   stages, blocks, events, flow, isBriefed,
 }) {
@@ -109,13 +117,14 @@ export function buildSyllabus({
     if (!row) return null;
     if (row.href) return row.href;
     if (!row.slug) return null;
-    return `${DISCUSS_BASE}/${row.slug}${builtIn && eventId ? `?from=${eventId}` : ''}`;
+    return `${root}/${row.slug}${builtIn && eventId ? `?from=${eventId}` : ''}`;
   };
 
   return {
     id,
     name,
     base,
+    root,
     source,
     // The date the publication this syllabus was read from carries, shown beside the aircraft
     // and school: which edition of the JPPT a student is reading is not a detail.
@@ -169,7 +178,7 @@ export function buildSyllabus({
 // `matcher` re-matches the rows an upload could not link, so a page written after the upload
 // is linked without anyone republishing. Delta passes none: its label-only rows are
 // deliberate, and fuzzy-matching them would silently relink pages.
-export function fromDoc(record, { builtIn = false, matcher = null } = {}) {
+export function fromDoc(record, { builtIn = false, matcher = null, root = DISCUSS_BASE } = {}) {
   const { doc } = record;
   const events = (doc.events || []).map((e) => ({
     ...e,
@@ -182,7 +191,8 @@ export function fromDoc(record, { builtIn = false, matcher = null } = {}) {
   return buildSyllabus({
     id: record.id,
     name: record.name || doc.name,
-    base: builtIn ? DISCUSS_BASE : `${DISCUSS_BASE}/s/${record.id}`,
+    root,
+    base: builtIn ? root : `${root}/s/${record.id}`,
     source: doc.source && doc.source.citation,
     sourceDate: (doc.source && doc.source.date) || '',
     rev: record.rev,

@@ -6,7 +6,7 @@ import { SCHOOLS, programOf, withDefaultProgram } from '../program';
 import { parseJppt } from '../jppt/parseJppt';
 import { preparePdfWorker } from '../jppt/pdfWorker';
 import { publishSyllabus, rememberSyllabus, getAuthor } from '../discussApi';
-import { DISCUSS_BASE } from '../SyllabusContext';
+import { useDiscussBase } from '../paths';
 import { useDiscussData } from '../DiscussData';
 import { itemList } from '../registry';
 import { protectedPhrases } from '../jppt/matchItems';
@@ -39,8 +39,9 @@ function writeDraft(draft) {
 }
 
 function UploadPage() {
+  const base = useDiscussBase();
   const navigate = useNavigate();
-  const { delta, matcher } = useDiscussData();
+  const { builtIn: delta, matcher } = useDiscussData();
   const [saved, setSaved] = useState(readDraft);
   const [file, setFile] = useState(null);
   const [name, setName] = useState('');
@@ -106,7 +107,7 @@ function UploadPage() {
       const { id, rev } = await publishSyllabus(title, tagged, { author: getAuthor(), summary: 'Uploaded' });
       rememberSyllabus({ id, rev, name: title, ...program, doc: tagged, updatedAt: new Date().toISOString() });
       writeDraft(null);
-      navigate(`${DISCUSS_BASE}/s/${id}`);
+      navigate(`${base}/s/${id}`);
     } catch (err) {
       setPublishError(`Not published. ${err.message} Your work is saved in this browser; try again.`);
       setPublishing(false);
@@ -124,7 +125,7 @@ function UploadPage() {
     <div className="discuss-layout discuss-layout--plain discuss-layout--wide">
       <article className="discuss-page">
         <header className="discuss-head">
-          <p className="discuss-crumb"><Link to={DISCUSS_BASE}>Discussion Items</Link></p>
+          <p className="discuss-crumb"><Link to={base}>Discussion Items</Link></p>
           <h1>Submit a new JPPT</h1>
           <p className="discuss-lede">
             Upload the JPPT PDF and its course flow chart and syllabus are generated here. Check

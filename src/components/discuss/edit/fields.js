@@ -8,7 +8,8 @@ import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { itemList, getItemMeta, useItemIndexVersion } from '../registry';
 import { knownPrograms } from '../program';
 import { WORKS, workDate } from '../works';
-import { DISCUSS_BASE, STYLE_GUIDE_DRAFT } from '../SyllabusContext';
+import { STYLE_GUIDE_DRAFT } from '../SyllabusContext';
+import { useDiscussBase } from '../paths';
 
 // A link in See also or a hatnote is either a discussion item's slug or `{ href, label }`,
 // the same shape an event row uses for a link elsewhere on the site. Resolved here for the
@@ -353,6 +354,7 @@ export function SlugOptions() {
 // `remove` is the optional destructive action beside Cancel — removing the section being
 // edited — as `{ label, question, onConfirm }`.
 export function EditorActions({ onSave, onCancel, errors, warnings, children, remove, draft }) {
+  const base = useDiscussBase();
   const hasErrors = (errors || []).length > 0;
   return (
     <div className="discuss-editor-actions">
@@ -381,7 +383,7 @@ export function EditorActions({ onSave, onCancel, errors, warnings, children, re
       {STYLE_GUIDE_DRAFT && (
         <p className="discuss-editor-hint">
           How a page is worded, and how sources are written:{' '}
-          <a href={`${DISCUSS_BASE}/style`} target="_blank" rel="noreferrer">style guide</a>.
+          <a href={`${base}/style`} target="_blank" rel="noreferrer">style guide</a>.
         </p>
       )}
       <div className="discuss-editor-buttons">

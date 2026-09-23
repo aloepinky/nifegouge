@@ -5,7 +5,7 @@ import { withDefaultProgram } from '../program';
 import { slugify } from './ids';
 import { getItemMeta } from '../registry';
 import { createItem, rememberItem, refreshSyllabus, getAuthor, setAuthor } from '../discussApi';
-import { DISCUSS_BASE } from '../SyllabusContext';
+import { useDiscussBase } from '../paths';
 
 // Makes a page. It starts as a placeholder — a title, and where an author could look — and
 // opens in the page editor, where clearing the Placeholder flag and adding a section is what
@@ -18,6 +18,7 @@ const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 function CreatePanel({ slug: initialSlug, title: initialTitle, link, program: initialProgram, onCancel }) {
   const navigate = useNavigate();
+  const base = useDiscussBase();
   const [slug, setSlug] = useState(initialSlug || slugify(initialTitle || ''));
   const [title, setTitle] = useState(initialTitle || '');
   const [program, setProgram] = useState(() => withDefaultProgram(initialProgram));
@@ -60,7 +61,7 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, program: in
       // opens. Creating a page and writing it are one job; the stub screen in between is a
       // step nobody asked for.
       navigate(
-        `${DISCUSS_BASE}/${clean}${link && result.linked ? `?from=${link.eventId}` : ''}`,
+        `${base}/${clean}${link && result.linked ? `?from=${link.eventId}` : ''}`,
         { state: { write: true } },
       );
     } catch (err) {

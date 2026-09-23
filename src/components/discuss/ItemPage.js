@@ -2,7 +2,8 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { generatedFor } from './GENERATED';
 import { getItemMeta } from './registry';
-import { DISCUSS_BASE, rowName, useSyllabus } from './SyllabusContext';
+import { rowName, useSyllabus } from './SyllabusContext';
+import { useDiscussBase } from './paths';
 import RandomPage, { SelectedSyllabusContext } from './RandomPage';
 import { rememberItem, refreshItem } from './discussApi';
 import ItemLink from './ItemLink';
@@ -406,13 +407,14 @@ function EventStrip({ event, position }) {
 // F4290 and CS4101 genuinely get different answers.
 function GeneratedLists({ groups, syllabusName }) {
   const navigate = useNavigate();
+  const base = useDiscussBase();
   if (!groups || !groups.length) return null;
   const many = groups.length > 1;
   // A random draw from the whole list the event gets, not only the part shown under
   // "All of the above and the following".
   const random = (g) => {
     const pick = g.entries[Math.floor(Math.random() * g.entries.length)];
-    navigate(`${DISCUSS_BASE}/${pick.item.slug}`);
+    navigate(`${base}/${pick.item.slug}`);
   };
   return (
     <>
@@ -591,6 +593,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const location = useLocation();
   const navigate = useNavigate();
   const s = useSyllabus();
+  const base = useDiscussBase();
   // The generated lists are the one part of an item page that belongs to a syllabus rather
   // than to the page: "any previously discussed maneuver" has a different answer in every
   // syllabus that briefs it, and answering with Delta's events for a reader who came from
@@ -600,7 +603,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const gs = useContext(SelectedSyllabusContext) || s;
   const item = record.item;
   const rev = record.rev;
-  const historyTo = `/tw4/discuss/${item.slug}/history`;
+  const historyTo = `${base}/${item.slug}/history`;
 
   // The draft overlay. Discuss.js keys this component by slug, so navigating to another item
   // remounts and re-reads the store rather than carrying one page's edits onto the next.

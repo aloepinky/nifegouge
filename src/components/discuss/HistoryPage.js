@@ -4,7 +4,7 @@ import ItemPage from './ItemPage';
 import { ConfirmButton } from './edit/fields';
 import { itemHistory, itemRevision, restoreItem, refreshItem, getAuthor } from './discussApi';
 import { getItemMeta } from './registry';
-import { DISCUSS_BASE } from './SyllabusContext';
+import { useDiscussBase } from './paths';
 
 // Every revision of one page, newest first, with what changed and who changed it. Any
 // revision can be viewed as the page it was, and any but the newest restored — which is a
@@ -16,6 +16,7 @@ function when(iso) {
 }
 
 function RevisionView({ slug, rev, latestRev, onRestore, restoring, error }) {
+  const base = useDiscussBase();
   const [state, setState] = useState({ status: 'loading' });
   useEffect(() => {
     let live = true;
@@ -40,7 +41,7 @@ function RevisionView({ slug, rev, latestRev, onRestore, restoring, error }) {
         <article className="discuss-page">
           <header className="discuss-head">
             <h1>No such revision</h1>
-            <p className="discuss-lede">{state.error.message} <Link to={`${DISCUSS_BASE}/${slug}/history`}>Back to the history</Link></p>
+            <p className="discuss-lede">{state.error.message} <Link to={`${base}/${slug}/history`}>Back to the history</Link></p>
           </header>
         </article>
       </div>
@@ -56,8 +57,8 @@ function RevisionView({ slug, rev, latestRev, onRestore, restoring, error }) {
         {rev === latestRev ? ' This is the current page.' : ' The current page may differ.'}
       </p>
       <div className="discuss-draft-actions">
-        <Link to={`${DISCUSS_BASE}/${slug}/history`}>All revisions</Link>
-        <Link to={`${DISCUSS_BASE}/${slug}`}>Current page</Link>
+        <Link to={`${base}/${slug}/history`}>All revisions</Link>
+        <Link to={`${base}/${slug}`}>Current page</Link>
         {rev !== latestRev && (
           <ConfirmButton
             label={restoring ? 'Restoring…' : 'Restore this revision'}
@@ -81,6 +82,7 @@ function RevisionView({ slug, rev, latestRev, onRestore, restoring, error }) {
 }
 
 function HistoryPage({ slug }) {
+  const base = useDiscussBase();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const rev = Number(params.get('rev')) || null;
@@ -105,7 +107,7 @@ function HistoryPage({ slug }) {
     try {
       await restoreItem(slug, target, { author: getAuthor() });
       await refreshItem(slug);
-      navigate(`${DISCUSS_BASE}/${slug}`);
+      navigate(`${base}/${slug}`);
     } catch (err) {
       setError(`Not restored. ${err.message}`);
       setRestoring(false);
@@ -127,7 +129,7 @@ function HistoryPage({ slug }) {
             <h1>{state.status === 'missing' ? 'No such discussion item' : 'Could not load the history'}</h1>
             <p className="discuss-lede">
               {state.status === 'error' ? `${state.error.message} ` : ''}
-              <Link to={DISCUSS_BASE}>Back to all discussion items</Link>
+              <Link to={base}>Back to all discussion items</Link>
             </p>
           </header>
         </article>
@@ -154,7 +156,7 @@ function HistoryPage({ slug }) {
     <div className="discuss-layout discuss-layout--plain">
       <article className="discuss-page">
         <header className="discuss-head">
-          <p className="discuss-crumb"><Link to={`${DISCUSS_BASE}/${slug}`}>{title}</Link></p>
+          <p className="discuss-crumb"><Link to={`${base}/${slug}`}>{title}</Link></p>
           <h1>History</h1>
           <p className="discuss-lede">
             {data.revisions.length} revision{data.revisions.length === 1 ? '' : 's'}. View any of them as the
@@ -181,7 +183,7 @@ function HistoryPage({ slug }) {
                   <td>{r.author || <span className="discuss-inert">anonymous</span>}</td>
                   <td>{r.summary}</td>
                   <td className="discuss-history-actions">
-                    <Link to={`${DISCUSS_BASE}/${slug}/history?rev=${r.rev}`}>view</Link>
+                    <Link to={`${base}/${slug}/history?rev=${r.rev}`}>view</Link>
                     {r.rev !== data.latestRev && (
                       <ConfirmButton
                         label={restoring ? 'restoring…' : 'restore'}
