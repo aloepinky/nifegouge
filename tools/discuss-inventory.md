@@ -27,7 +27,7 @@ where to look, not what to fix.
 | `href` rows (not items) | 21 |
 | Label-only rows (no page yet) | 5 |
 | Tables | 25 (in 22 items) |
-| Cited blocks | 4660 |
+| Cited blocks | 4680 |
 | Uncited blocks | 18 (in 8 items) |
 
 ## Publications cited
@@ -36,7 +36,7 @@ where to look, not what to fix.
 |---|---|
 | NATOPS | 99 |
 | FAM FTI | 87 |
-| I FTI | 81 |
+| I FTI | 82 |
 | VT-28 SOP | 33 |
 | VT-27 SOP | 30 |
 | F FTI | 30 |
@@ -307,7 +307,7 @@ figures with no reference marker and no section-level `refs`.
 | Recommended altitudes | `recommended-altitudes` | I | I3103 | I FTI |  |  |
 | Route management | `route-management` | N | N3101 N4101 | VNAV FTI |  |  |
 | Runaway trim | `runaway-trim` | FAM | FAM2202 | NATOPS |  |  |
-| RVFAC for RNAV approaches | `rvfac-for-rnav-approaches` | I | I3202 | NATOPS |  | maneuver |
+| RVFAC for RNAV approaches | `rvfac-for-rnav-approaches` | I | I3202 | I FTI, NATOPS |  | maneuver |
 | Radar vectors to final approach course | `rvfac` | I | I6102 I3104 I4102 | I FTI |  | maneuver |
 | S-1 pattern | `s-1-pattern` | I | I2102 | I FTI |  | maneuver |
 | Safety check and call | `safety-check-call` | FAM | FAM2101 | Checklist Study Guide, FAM FTI, NATOPS |  |  |
@@ -454,7 +454,7 @@ the item, and its section headings. Longest first.
 - `emergency-orbit-pattern` — Emergency orbit pattern · Entry and exit · Emergency use · Home field
 - `en-route-descent` — Intermediate level-offs · En route descent · Steeper descents · Common errors · Procedure
 - `en-route-fuel-management` — En route fuel management · Operations check · Fuel management · Bingo fuel · Endurance
-- `en-route-procedures` — En route procedures · Changeover points · Approach brief · Brief timing · ABCD
+- `en-route-procedures` — Approach brief mnemonics · En route procedures · Changeover points · Approach brief · Brief timing · Field brief · ABCD
 - `en-route-weather-sources` — En route weather sources · En route weather · Adverse weather · Sources
 - `energy-management` — Altitude and airspeed exchange · Optimum energy level · Energy gain and loss · Energy management · Glide performance · Planning
 - `engine-air-starts` — After a successful airstart · Immediate airstart · Engine air starts · PMU NORM airstart · PMU OFF airstart · Applicability
@@ -638,7 +638,7 @@ the item, and its section headings. Longest first.
 - `speed-brake-use-as-a-section` — Speed brake use as a section · Extension and retraction · Wing use
 - `spin` — Common errors · Limitations · Variants · Phases · Entry · Spin
 - `split-s` — Solo restriction · Common errors · Procedure · Technique · Split-S
-- `stabilized-approach-criteria` — Stabilized approach criteria · Instrument approaches · Maximum descent rate · VFR straight-in · Minimum heights · Decision point · Windshear
+- `stabilized-approach-criteria` — Stabilized approach criteria · Instrument approaches · Maximum descent rate · VFR straight-in · Radar altimeter · Minimum heights · Decision point · Windshear
 - `standard-course-corrections` — Standard course corrections · Standard closing angle · Drift analysis · Timing cost · Techniques
 - `standard-instrument-departure` — Standard instrument departure · Common errors · Definition · Procedure · SID
 - `standard-time-corrections` — Standard time corrections · Off-course maneuvering · Proportional method · Fuel considerations · Ten percent method

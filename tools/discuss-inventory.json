@@ -10,7 +10,7 @@
     "tableItems": 22,
     "uncitedItems": 8,
     "uncitedBlocks": 18,
-    "citedBlocks": 4660,
+    "citedBlocks": 4680,
     "events": 92,
     "hrefRows": 21,
     "unwrittenRows": 5
@@ -435,6 +435,7 @@
       "radial-intercept-procedures",
       "rate-of-descent-calculation",
       "recommended-altitudes",
+      "rvfac-for-rnav-approaches",
       "rvfac",
       "s-1-pattern",
       "shuttle-descent",
@@ -8244,7 +8245,7 @@
           "refs": [
             1
           ],
-          "paras": 2,
+          "paras": 3,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -8342,7 +8343,7 @@
         }
       ],
       "coverage": {
-        "cited": 10,
+        "cited": 11,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -11085,12 +11086,25 @@
           "further": null
         },
         {
+          "id": "field-brief",
+          "title": "Field brief",
+          "refs": [
+            6
+          ],
+          "paras": 1,
+          "items": 7,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "the-approach-brief",
           "title": "Approach brief",
           "refs": [
             3
           ],
-          "paras": 1,
+          "paras": 2,
           "items": 10,
           "figures": [],
           "tables": [],
@@ -11100,6 +11114,19 @@
         {
           "id": "briefing-late",
           "title": "Brief timing",
+          "refs": [
+            3
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "approach-brief-mnemonics",
+          "title": "Approach brief mnemonics",
           "refs": [
             3
           ],
@@ -11181,10 +11208,16 @@
           "work": "I FTI",
           "loc": "§800 — Introduction",
           "pages": "p. 8-1"
+        },
+        {
+          "n": 6,
+          "work": "I FTI",
+          "loc": "§802 — Field Brief",
+          "pages": "p. 8-1"
         }
       ],
       "coverage": {
-        "cited": 26,
+        "cited": 36,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -11192,15 +11225,19 @@
         "en-route-descent",
         "point-to-point",
         "non-radar-environment-communications",
-        "clearance-and-departure-procedures"
+        "clearance-and-departure-procedures",
+        "airfield-and-runway-lighting",
+        "notams"
       ],
       "sourcingLead": null,
       "lede": "Due to the increasing complexity of the air traffic system, the terminal phase can be one of the more challenging phases of flight. To maintain constant situational awareness and avoid task saturation, the pilot must know the procedures and stay ahead of the aircraft. To aid in task management, as you approach and enter your terminal area, the mnemonic ABCD can be useful.",
       "terms": [
+        "Approach brief mnemonics",
         "En route procedures",
         "Changeover points",
         "Approach brief",
         "Brief timing",
+        "Field brief",
         "ABCD"
       ]
     },
@@ -15953,7 +15990,7 @@
         },
         {
           "label": "Descent power at FAWP",
-          "value": "15% torque"
+          "value": "20% torque"
         },
         {
           "label": "TAA obstacle clearance",
@@ -17839,7 +17876,7 @@
           "refs": [
             7
           ],
-          "paras": 3,
+          "paras": 0,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -17961,7 +17998,7 @@
         }
       ],
       "coverage": {
-        "cited": 41,
+        "cited": 38,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -24431,7 +24468,7 @@
       "numbers": [
         {
           "label": "Descent power at FAF",
-          "value": "15% torque"
+          "value": "20% torque"
         },
         {
           "label": "Descent speed",
@@ -24439,7 +24476,7 @@
         },
         {
           "label": "Maximum descent rate",
-          "value": "1000 fpm"
+          "value": "1000 FPM"
         },
         {
           "label": "Level-off lead",
@@ -26729,7 +26766,7 @@
           "id": "what-shows",
           "title": "Night references",
           "refs": null,
-          "paras": 1,
+          "paras": 3,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -26756,24 +26793,18 @@
         {
           "n": 2,
           "work": "VNAV FTI",
-          "loc": "§205 — Aeronautical Information",
-          "pages": "p. 2-8"
-        },
-        {
-          "n": 3,
-          "work": "VNAV FTI",
           "loc": "§406 — Nav Altitudes",
           "pages": "p. 4-12"
         },
         {
-          "n": 4,
+          "n": 3,
           "work": "VNAV FTI",
           "loc": "§204 — Cultural Features",
           "pages": "p. 2-6"
         }
       ],
       "coverage": {
-        "cited": 3,
+        "cited": 5,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -26881,6 +26912,14 @@
         {
           "label": "Uncontrolled, night",
           "value": "3 SM visibility"
+        },
+        {
+          "label": "Wingtip distance",
+          "value": "2.5 NM at 2500 feet AGL"
+        },
+        {
+          "label": "Wingtip distance",
+          "value": "1 NM at 1000 feet AGL"
         }
       ],
       "works": [
@@ -26913,7 +26952,7 @@
         }
       ],
       "coverage": {
-        "cited": 8,
+        "cited": 10,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -26922,7 +26961,7 @@
         "local-night-vnav-sop"
       ],
       "sourcingLead": null,
-      "lede": "Timing corrections are simply a matter of changing your GS for a period of time or off-course maneuvering; course corrections use, in the following order, a feature in the distance that is on course, funneling features between 10 and 2 o'clock, and a Standard Closing Angle. When flying a visual navigation route under VFR, visibility and cloud clearance requirements are different in controlled and uncontrolled airspace.",
+      "lede": "Timing corrections use, in order, the proportional method, the ten percent method, and off-course maneuvering; course corrections use a feature on your route, flown to with the Flight Path Marker in the HUD, then funneling features between 10 and 2 o'clock, then a Standard Closing Angle. During Night VNAV, where most useful references will be lighted, the Wingtip Method gives your distance from a reference as you pass abeam it. When flying a visual navigation route under VFR, visibility and cloud clearance requirements are different in controlled and uncontrolled airspace.",
       "terms": [
         "Night VNAV timing and course corrections",
         "Timing corrections",
@@ -29743,7 +29782,7 @@
           "value": "15 NM"
         },
         {
-          "label": "On glidepath power",
+          "label": "On glide-path power",
           "value": "24% torque"
         },
         {
@@ -29900,7 +29939,7 @@
         },
         {
           "label": "Descent power, without them",
-          "value": "15% torque"
+          "value": "20% torque"
         },
         {
           "label": "Descent speed",
@@ -32569,7 +32608,7 @@
         "vfr-chart-preparation"
       ],
       "sourcingLead": null,
-      "lede": "The primary means of navigation used on Visual Navigation flights will be a combination of Dead Reckoning and pilotage. DR is a logical system in which time, velocity, and distance are combined to arrive at a position. Pilotage is flying by visual reference to features on the ground.",
+      "lede": "The primary means of navigation used on Visual Navigation flights will be a combination of Dead Reckoning (DR) and pilotage. DR is a logical system in which time, velocity, and distance are combined to arrive at a position. Pilotage is flying by visual reference to features on the ground.",
       "terms": [
         "Checkpoint procedures",
         "Correction criteria",
@@ -32726,10 +32765,8 @@
         {
           "id": "converting-to-a-straight-in",
           "title": "Straight-in conversion",
-          "refs": [
-            1
-          ],
-          "paras": 1,
+          "refs": null,
+          "paras": 2,
           "items": 3,
           "figures": [],
           "tables": [],
@@ -32754,6 +32791,7 @@
       ],
       "numbers": [],
       "works": [
+        "I FTI",
         "NATOPS"
       ],
       "references": [
@@ -32762,10 +32800,16 @@
           "work": "NATOPS",
           "loc": "Ch. 1 — Vectoring to Final Approach Fix (FAF)",
           "pages": "p. 1-148"
+        },
+        {
+          "n": 2,
+          "work": "I FTI",
+          "loc": "§1005 — RNAV (GPS) Approaches",
+          "pages": "p. 10-6"
         }
       ],
       "coverage": {
-        "cited": 5,
+        "cited": 6,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -35110,6 +35154,19 @@
           "further": null
         },
         {
+          "id": "radar-altimeter",
+          "title": "Radar altimeter",
+          "refs": [
+            8
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "stabilized-approach-heights",
           "title": "Minimum heights",
           "refs": [
@@ -35162,6 +35219,18 @@
         {
           "label": "VFR straight-in glideslope",
           "value": "400-600 feet per NM"
+        },
+        {
+          "label": "RAD ALT, precision approach",
+          "value": "HAT, never less than 200'"
+        },
+        {
+          "label": "RAD ALT, non-precision straight-in",
+          "value": "HAT minus 10%"
+        },
+        {
+          "label": "RAD ALT, circling",
+          "value": "HAA minus 10%"
         }
       ],
       "works": [
@@ -35212,16 +35281,23 @@
           "work": "FAM FTI",
           "loc": "§613 — VFR Straight-In Approach",
           "pages": "p. 6-32"
+        },
+        {
+          "n": 8,
+          "work": "I FTI",
+          "loc": "§813 — Use of Radar Altimeter During Instrument Approaches",
+          "pages": "p. 8-16"
         }
       ],
       "coverage": {
-        "cited": 18,
+        "cited": 24,
         "uncited": 0,
         "uncitedIds": []
       },
       "seeAlso": [
         "circling-maneuver",
-        "missed-approach"
+        "missed-approach",
+        "landing-pattern"
       ],
       "sourcingLead": null,
       "lede": "Maintaining a constant approach speed, descent rate, vertical flight path, and configuration during the final stages of an approach is referred to as the stabilized approach concept. A stabilized approach is essential for safe turbojet operations and is also strongly recommended for propeller-driven airplanes and helicopters.",
@@ -35230,6 +35306,7 @@
         "Instrument approaches",
         "Maximum descent rate",
         "VFR straight-in",
+        "Radar altimeter",
         "Minimum heights",
         "Decision point",
         "Windshear"
@@ -35322,7 +35399,7 @@
         },
         {
           "label": "SCA at 210 knots GS",
-          "value": "15°"
+          "value": "17°"
         },
         {
           "label": "Hold SCA",
@@ -35330,7 +35407,7 @@
         },
         {
           "label": "Double angle",
-          "value": "30° for 30 seconds per mile"
+          "value": "34° for 30 seconds per mile"
         },
         {
           "label": "90° correction, 2 miles off",
@@ -35358,7 +35435,7 @@
         "day-emergencies"
       ],
       "sourcingLead": null,
-      "lede": "Making in-flight corrections to course and time is simple; however, you must know how far off course you are before determining a correction. Making a correction without knowing your exact location typically results in greater error. The techniques, in order, are to aim for a feature in the distance that is on course, to use funneling features, and to use a Standard Closing Angle.",
+      "lede": "Making in-flight corrections to course and time is simple; however, you must know how far off course you are before determining a correction. Making a correction without knowing your exact location typically results in greater error. The techniques, in order, are to identify a feature on your route and fly back to it, to use funneling features, and to use a Standard Closing Angle.",
       "terms": [
         "Standard course corrections",
         "Standard closing angle",
@@ -35499,19 +35576,6 @@
       ],
       "sections": [
         {
-          "id": "off-course",
-          "title": "Off-course maneuvering",
-          "refs": [
-            1
-          ],
-          "paras": 2,
-          "items": 0,
-          "figures": [],
-          "tables": [],
-          "main": null,
-          "further": null
-        },
-        {
           "id": "proportional",
           "title": "Proportional method",
           "refs": [
@@ -35531,6 +35595,19 @@
             1
           ],
           "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "off-course",
+          "title": "Off-course maneuvering",
+          "refs": [
+            1
+          ],
+          "paras": 2,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -35598,7 +35675,7 @@
         "route-management"
       ],
       "sourcingLead": null,
-      "lede": "Timing corrections are simply a matter of changing your GS for a period of time or off-course maneuvering. Off-course maneuvering will change the distance you fly, which will affect your timing. The recommended methods are off-course maneuvering, the proportional method and the ten percent method.",
+      "lede": "Timing corrections are simply a matter of changing your GS for a period of time or off-course maneuvering. Off-course maneuvering will change the distance you fly, which will affect your timing. The recommended methods are the proportional method, the ten percent method and off-course maneuvering.",
       "terms": [
         "Standard time corrections",
         "Off-course maneuvering",
@@ -38790,7 +38867,7 @@
             1
           ],
           "paras": 0,
-          "items": 5,
+          "items": 6,
           "figures": [
             "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/vfr-chart-preparation/mu7zkrqv-vnav-fti-fig-4-5.webp"
           ],
@@ -38936,7 +39013,7 @@
         }
       ],
       "coverage": {
-        "cited": 31,
+        "cited": 32,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -39748,7 +39825,7 @@
       "numbers": [
         {
           "label": "Descent power at FAF",
-          "value": "approximately 15% torque"
+          "value": "approximately 20% torque"
         },
         {
           "label": "Descent speed",
