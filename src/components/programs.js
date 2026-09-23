@@ -19,7 +19,7 @@ export const DRAFT = process.env.NODE_ENV !== 'production';
 // `draft` hides the program from the navigation and unroutes it on the live site.
 // `discuss: 'draft'` does the same for that one tab of an otherwise live program.
 export const PROGRAMS = [
-  { id: 'nife', label: 'NIFE', aircraft: 'C172', home: '/nife/about', base: '/nife', briefs: true, discuss: 'draft' },
+  { id: 'nife', label: 'NIFE', aircraft: 'C172', home: '/nife/about', base: '/nife', briefs: true, discuss: true },
   { id: 'tw4', label: 'Primary', aircraft: 'T-6B', home: '/tw4/about', base: '/tw4', briefs: true, discuss: true },
   { id: 't44c', label: 'Advanced', aircraft: 'T-44C', home: '/t44c/about', base: '/t44c' },
 ];
@@ -46,7 +46,7 @@ export const PROGRAM_TABS = {
     { to: '/nife/nav', label: 'Problem Generator' },
     { to: '/nife/docs', label: 'Docs' },
     { to: '/nife/eps-limits', label: 'EPs/Limits' },
-    { to: '/nife/discuss', label: 'Discussion Items', draft: true },
+    { to: '/nife/discuss', label: 'Discussion Items' },
     { to: '/nife/briefs', label: 'Briefs/TOLD' },
   ],
   tw4: [

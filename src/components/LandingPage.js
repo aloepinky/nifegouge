@@ -7,7 +7,8 @@ function LandingPage() {
   useEffect(() => {
     const imagesToPreload = [
       '/images/c172.webp',
-      '/images/t6b.webp'
+      '/images/t6b.webp',
+      '/images/t44c.webp'
     ];
 
     imagesToPreload.forEach((src) => {
@@ -43,6 +44,16 @@ function LandingPage() {
           <div className="landing-button-fallback">Primary</div>
           <img src="/images/t6b.webp" alt="Primary - T-6B Texan II" />
           <div className="landing-button-label">Primary</div>
+        </div>
+
+        <div
+          className="landing-button"
+          onClick={() => navigate('/t44c/about')}
+        >
+          {/* Named for the airframe, not just the stage: Advanced covers several schools. */}
+          <div className="landing-button-fallback">T-44C Advanced</div>
+          <img src="/images/t44c.webp" alt="T-44C Advanced - Pegasus" />
+          <div className="landing-button-label">T-44C Advanced</div>
         </div>
       </div>
     </div>

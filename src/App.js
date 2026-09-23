@@ -6,7 +6,6 @@ import Nav from './components/Nav';
 import NIFEEPsLimits from './components/NIFEEPsLimits.js';
 import NIFEBriefs from './components/NIFEBriefs.js';
 import NIFEDiscuss from './components/NIFEDiscuss.js';
-import { DRAFT } from './components/programs.js';
 import Docs from './components/Docs.js';
 import TW4About from './components/TW4About.js';
 import TW4EPsLimits from './components/TW4EPsLimits.js';
@@ -51,7 +50,7 @@ function App() {
         <Route path="/nife/briefs/*" element={<NIFEBriefs />} />
         {/* Draft: shown on a dev server, absent from the live site — nav AND route, so a
             deep link cannot reach a half-written tab. See programs.js. */}
-        {DRAFT && <Route path="/nife/discuss/*" element={<NIFEDiscuss />} />}
+        <Route path="/nife/discuss/*" element={<NIFEDiscuss />} />
         {/* The Flight page was split into those two; its addresses are in the wild. */}
         <Route path="/nife/flight" element={<Navigate to="/nife/eps-limits" replace />} />
         <Route path="/nife/flight/:tab" element={<FlightTabRedirect />} />
