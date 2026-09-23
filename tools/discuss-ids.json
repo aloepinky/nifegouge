@@ -1,5 +1,1145 @@
 {
- "abnormal-starts": [
+ "nife/aborted-takeoff": [
+  "reasons-to-abort",
+  "reasons-to-abort/p1",
+  "reasons-to-abort/p2",
+  "procedure",
+  "procedure/li-1",
+  "procedure/li-2",
+  "procedure/li-3",
+  "procedure/li-4",
+  "procedure/li-5",
+  "procedure/li-6",
+  "procedure/li-7",
+  "doors",
+  "doors/p3"
+ ],
+ "nife/aircraft-documentation-and-airworthiness": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "documents-on-board",
+  "documents-on-board/db-p1",
+  "documents-on-board/db-1",
+  "documents-on-board/db-2",
+  "documents-on-board/db-3",
+  "documents-on-board/db-4",
+  "recurrent-inspections",
+  "recurrent-inspections/ri-p1",
+  "recurrent-inspections/ri-1",
+  "recurrent-inspections/ri-2",
+  "recurrent-inspections/ri-3",
+  "airworthiness-directives",
+  "airworthiness-directives/ad-p1",
+  "airworthiness-directives/ad-p2",
+  "minimum-vfr-equipment",
+  "minimum-vfr-equipment/mv-p1",
+  "minimum-vfr-equipment/mv-1",
+  "minimum-vfr-equipment/mv-2",
+  "minimum-vfr-equipment/mv-3",
+  "minimum-vfr-equipment/mv-4",
+  "minimum-vfr-equipment/mv-5",
+  "minimum-vfr-equipment/mv-6",
+  "minimum-vfr-equipment/mv-7",
+  "minimum-vfr-equipment/mv-8",
+  "minimum-vfr-equipment/mv-9",
+  "inoperative-equipment",
+  "inoperative-equipment/ie-p1",
+  "inoperative-equipment/ie-p2",
+  "inoperative-equipment/fig:fig-01",
+  "inoperative-equipment/ie-1",
+  "inoperative-equipment/ie-2",
+  "discrepancies",
+  "discrepancies/dc-p1",
+  "discrepancies/dc-p2"
+ ],
+ "nife/aircraft-preflight-inspection": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "general-appearance",
+  "general-appearance/ga-p1",
+  "general-appearance/ga-p2",
+  "general-appearance/fig:fig-01",
+  "inside-the-cockpit",
+  "inside-the-cockpit/ic-p1",
+  "inside-the-cockpit/ic-p2",
+  "inside-the-cockpit/ic-p3",
+  "inside-the-cockpit/ic-p4",
+  "inside-the-cockpit/ic-p5",
+  "inside-the-cockpit/ic-p6",
+  "wings-and-tail",
+  "wings-and-tail/wt-p1",
+  "wings-and-tail/wt-p2",
+  "wings-and-tail/wt-p3",
+  "fuel-and-oil",
+  "fuel-and-oil/fo-p1",
+  "fuel-and-oil/fo-p2",
+  "fuel-and-oil/fo-p3",
+  "fuel-and-oil/fo-p4",
+  "fuel-and-oil/fo-p5",
+  "landing-gear-and-brakes",
+  "landing-gear-and-brakes/lg-p1",
+  "landing-gear-and-brakes/lg-p2",
+  "landing-gear-and-brakes/lg-p3",
+  "engine-and-propeller",
+  "engine-and-propeller/ep-p1",
+  "engine-and-propeller/ep-p2",
+  "engine-and-propeller/ep-p3",
+  "engine-and-propeller/ep-p4"
+ ],
+ "nife/atc-light-gun-signals": [
+  "colors-and-meanings",
+  "colors-and-meanings/fig:fig-01",
+  "disadvantages",
+  "disadvantages/dv-p1",
+  "disadvantages/dv-li-1",
+  "disadvantages/dv-li-2",
+  "acknowledgement",
+  "acknowledgement/ak-p1"
+ ],
+ "nife/class-c-airspace": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "dimensions",
+  "dimensions/p1",
+  "dimensions/p2",
+  "dimensions/fig:fig-01",
+  "equipment",
+  "equipment/p3",
+  "entry-requirements",
+  "entry-requirements/p4",
+  "entry-requirements/p5"
+ ],
+ "nife/cloud-clearances": [
+  "minimums-by-airspace",
+  "minimums-by-airspace/tbl:tbl-1",
+  "ceiling",
+  "ceiling/p1"
+ ],
+ "nife/crm": [
+  "critical-skills",
+  "critical-skills/p1",
+  "critical-skills/li-cs-1",
+  "critical-skills/li-cs-2",
+  "critical-skills/li-cs-3",
+  "critical-skills/li-cs-4",
+  "critical-skills/li-cs-5",
+  "critical-skills/li-cs-6",
+  "critical-skills/li-cs-7",
+  "barriers-to-coordination",
+  "barriers-to-coordination/p2",
+  "barriers-to-coordination/li-dc-1",
+  "barriers-to-coordination/li-dc-2",
+  "barriers-to-coordination/li-dc-3",
+  "barriers-to-coordination/li-dc-4",
+  "barriers-to-coordination/li-dc-5",
+  "barriers-to-coordination/li-dc-6",
+  "barriers-to-coordination/li-dc-7",
+  "aids-to-coordination",
+  "aids-to-coordination/li-ac-1",
+  "aids-to-coordination/li-ac-2",
+  "aids-to-coordination/li-ac-3",
+  "aids-to-coordination/li-ac-4",
+  "aids-to-coordination/li-ac-5",
+  "transfer-of-controls",
+  "transfer-of-controls/p3",
+  "transfer-of-controls/p4",
+  "nife-sop",
+  "nife-sop/p5",
+  "nife-sop/p6",
+  "nife-sop/p7"
+ ],
+ "nife/crosswind-landing": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "sideslip-method",
+  "sideslip-method/p1",
+  "sideslip-method/p2",
+  "sideslip-method/p3",
+  "sideslip-method/p4",
+  "sideslip-method/fig:fig-01",
+  "sideslip-method/li-1",
+  "sideslip-method/li-2",
+  "flare",
+  "flare/p5",
+  "flare/p6",
+  "flare/p7",
+  "touchdown",
+  "touchdown/p8",
+  "touchdown/p9",
+  "touchdown/p10",
+  "rollout",
+  "rollout/p11",
+  "rollout/p12",
+  "rollout/p13",
+  "crosswind-limits",
+  "crosswind-limits/p14",
+  "crosswind-limits/p15",
+  "turbulent-air",
+  "turbulent-air/ta-p1",
+  "turbulent-air/ta-p2",
+  "turbulent-air/ta-p3",
+  "turbulent-air/ta-p4",
+  "turbulent-air/ta-p5",
+  "common-errors",
+  "common-errors/li-3",
+  "common-errors/li-4",
+  "common-errors/li-5",
+  "common-errors/li-6",
+  "common-errors/li-7",
+  "common-errors/li-8",
+  "common-errors/li-9",
+  "common-errors/li-10",
+  "common-errors/li-11",
+  "common-errors/li-12"
+ ],
+ "nife/electrical-fire-in-flight": [
+  "faulty-circuit",
+  "faulty-circuit/fc-p1",
+  "power-essential",
+  "power-essential/pe-p1",
+  "power-essential/li-pe1",
+  "power-essential/li-pe2",
+  "power-essential/li-pe3",
+  "power-essential/li-pe4",
+  "electrical-master-switch",
+  "electrical-master-switch/em-p1",
+  "smoke-in-the-cabin",
+  "smoke-in-the-cabin/sc-p1",
+  "smoke-in-the-cabin/sc-p2",
+  "smoke-in-the-cabin/sc-p3"
+ ],
+ "nife/emergency-landing-pattern": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "numbers/num-07",
+  "numbers/num-08",
+  "numbers/num-09",
+  "numbers/num-10",
+  "numbers/num-11",
+  "planning",
+  "planning/p1",
+  "planning/p2",
+  "planning/fig:fig-01",
+  "key-positions",
+  "high-key",
+  "high-key/p3",
+  "low-key",
+  "low-key/p4",
+  "low-key/p5",
+  "base-key",
+  "base-key/p6",
+  "final",
+  "final/p7",
+  "landing",
+  "landing/p8",
+  "simulated-approaches",
+  "simulated-approaches/p9",
+  "simulated-approaches/p10",
+  "simulated-approaches/p11",
+  "simulated-approaches/p12",
+  "simulated-approaches/p13",
+  "common-errors",
+  "common-errors/li-1",
+  "common-errors/li-2",
+  "common-errors/li-3",
+  "common-errors/li-4",
+  "common-errors/li-5",
+  "common-errors/li-6",
+  "common-errors/li-7"
+ ],
+ "nife/engine-failure-after-takeoff": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "aircraft-control",
+  "aircraft-control/ac-p1",
+  "decision-points",
+  "decision-points/dp-p1",
+  "decision-points/dp-p2",
+  "landing-area-selection",
+  "landing-area-selection/la-p1",
+  "turn-back",
+  "turn-back/tb-p1",
+  "turn-back/tb-p2",
+  "descent-rates",
+  "descent-rates/dr-p1"
+ ],
+ "nife/engine-failure-during-flight": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "procedure",
+  "procedure/li-1",
+  "procedure/li-2",
+  "procedure/li-3",
+  "procedure/li-4",
+  "procedure/li-5",
+  "procedure/li-6",
+  "procedure/li-7",
+  "procedure/li-8",
+  "landing-site-selection",
+  "landing-site-selection/p1",
+  "landing-site-selection/p2",
+  "landing-site-selection/p3",
+  "approach-planning",
+  "approach-planning/p4",
+  "approach-planning/p5",
+  "airplane-configuration",
+  "airplane-configuration/p6",
+  "airplane-configuration/p7",
+  "airplane-configuration/p8",
+  "attitude-and-sink-rate",
+  "attitude-and-sink-rate/p9",
+  "attitude-and-sink-rate/p10"
+ ],
+ "nife/engine-fire-during-start": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "indications",
+  "indications/p1",
+  "procedure",
+  "procedure/li-1",
+  "procedure/li-2",
+  "procedure/li-3",
+  "procedure/li-4",
+  "procedure/li-5",
+  "emergency-shutdown-on-deck",
+  "emergency-shutdown-on-deck/li-6",
+  "emergency-shutdown-on-deck/li-7",
+  "emergency-shutdown-on-deck/li-8",
+  "emergency-shutdown-on-deck/li-9",
+  "emergency-shutdown-on-deck/li-10"
+ ],
+ "nife/engine-run-up": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "numbers/num-07",
+  "numbers/num-08",
+  "numbers/num-09",
+  "position",
+  "position/po-p1",
+  "position/po-p2",
+  "position/po-p3",
+  "engine-warm-up",
+  "engine-warm-up/ew-p1",
+  "engine-warm-up/ew-p2",
+  "checks",
+  "checks/ck-01",
+  "checks/ck-02",
+  "checks/ck-03",
+  "checks/ck-04",
+  "checks/ck-05",
+  "checks/ck-06",
+  "checks/ck-07",
+  "checks/ck-08",
+  "checks/ck-09",
+  "checks/ck-10",
+  "checks/ck-11",
+  "checks/ck-12",
+  "checks/ck-13",
+  "checks/ck-14",
+  "checks/ck-15",
+  "engine-limits",
+  "engine-limits/lm-1",
+  "engine-limits/lm-2",
+  "checklist-use",
+  "checklist-use/cu-p1"
+ ],
+ "nife/four-ts": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "procedure",
+  "procedure/li-1",
+  "procedure/li-2",
+  "procedure/li-3",
+  "procedure/li-4"
+ ],
+ "nife/im-safe": [
+  "external-human-factors",
+  "external-human-factors/ehf-p1",
+  "external-human-factors/ehf-p2",
+  "external-human-factors/ehf-p3",
+  "personal-preflight",
+  "personal-preflight/pp-p1",
+  "elements",
+  "elements/el-1",
+  "elements/el-2",
+  "elements/el-3",
+  "elements/el-4",
+  "elements/el-5",
+  "elements/el-6"
+ ],
+ "nife/instrument-usage-during-vfr-flying": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "composite-method",
+  "composite-method/cm-p1",
+  "attitude-and-performance",
+  "attitude-and-performance/ap-p1",
+  "attitude-and-performance/ap-p2",
+  "attitude-and-performance/ap-p3"
+ ],
+ "nife/level-speed-change": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "numbers/num-07",
+  "slow-flight",
+  "slow-flight/p1",
+  "slow-flight/p2",
+  "slow-flight/p3",
+  "slow-flight/p4",
+  "procedure",
+  "procedure/li-1",
+  "procedure/li-2",
+  "procedure/li-3",
+  "procedure/li-4",
+  "procedure/li-5",
+  "procedure/li-6",
+  "procedure/li-7",
+  "procedure/li-8",
+  "procedure/li-9",
+  "procedure/li-10",
+  "procedure/li-11",
+  "procedure/li-12",
+  "procedure/li-13",
+  "procedure/li-14",
+  "procedure/li-15",
+  "procedure/li-16",
+  "procedure/li-17",
+  "course-training-standards",
+  "course-training-standards/li-cts-1",
+  "course-training-standards/li-cts-2",
+  "course-training-standards/li-cts-3",
+  "course-training-standards/li-cts-4",
+  "common-errors",
+  "common-errors/li-ce-1",
+  "common-errors/li-ce-2",
+  "common-errors/li-ce-3",
+  "common-errors/li-ce-4",
+  "common-errors/li-ce-5",
+  "common-errors/li-ce-6",
+  "common-errors/li-ce-7"
+ ],
+ "nife/local-area-procedures": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "numbers/num-07",
+  "numbers/num-08",
+  "numbers/num-09",
+  "numbers/num-10",
+  "definitions",
+  "definitions/p1",
+  "definitions/p2",
+  "definitions/li-1",
+  "definitions/li-2",
+  "definitions/li-3",
+  "definitions/li-4",
+  "departure-procedures",
+  "departure-procedures/p3",
+  "departure-procedures/p4",
+  "arrival-procedures",
+  "arrival-procedures/p5",
+  "arrival-procedures/li-5",
+  "arrival-procedures/li-6",
+  "arrival-procedures/li-7",
+  "pattern-entry",
+  "pattern-entry/p6",
+  "areas-to-avoid",
+  "areas-to-avoid/p7",
+  "areas-to-avoid/fig:fig-1",
+  "local-callsigns",
+  "local-callsigns/p8",
+  "local-callsigns/tbl:tbl-1"
+ ],
+ "nife/lost-communication": [
+  "numbers/num-01",
+  "inbound-to-destination",
+  "inbound-to-destination/ib-p1",
+  "on-the-taxiway",
+  "on-the-taxiway/tx-p1"
+ ],
+ "nife/normal-takeoff-and-climb": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "takeoff-roll",
+  "takeoff-roll/p1",
+  "takeoff-roll/p2",
+  "takeoff-roll/p3",
+  "takeoff-roll/p4",
+  "takeoff-roll/p5",
+  "lift-off",
+  "lift-off/p6",
+  "lift-off/p7",
+  "lift-off/p8",
+  "lift-off/p9",
+  "initial-climb",
+  "initial-climb/p10",
+  "initial-climb/p11",
+  "initial-climb/p12",
+  "initial-climb/p13",
+  "procedure",
+  "procedure/p14",
+  "procedure/li-1",
+  "procedure/li-2",
+  "procedure/li-3",
+  "procedure/li-4",
+  "procedure/li-5",
+  "procedure/li-6",
+  "procedure/li-7",
+  "procedure/li-8",
+  "procedure/li-9",
+  "procedure/li-10",
+  "course-training-standards",
+  "course-training-standards/li-cts-1",
+  "course-training-standards/li-cts-2",
+  "course-training-standards/li-cts-3",
+  "course-training-standards/li-cts-4",
+  "course-training-standards/li-cts-5",
+  "course-training-standards/li-cts-6",
+  "common-errors",
+  "common-errors/li-ce-1",
+  "common-errors/li-ce-2",
+  "common-errors/li-ce-3",
+  "common-errors/li-ce-4",
+  "common-errors/li-ce-5",
+  "common-errors/li-ce-6",
+  "common-errors/li-ce-7",
+  "common-errors/li-ce-8",
+  "common-errors/li-ce-9",
+  "common-errors/li-ce-10",
+  "common-errors/li-ce-11",
+  "common-errors/li-ce-12"
+ ],
+ "nife/orm": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "levels",
+  "levels/p1",
+  "in-depth",
+  "in-depth/p2",
+  "deliberate",
+  "deliberate/p3",
+  "time-critical",
+  "time-critical/p4",
+  "time-critical/li-abcd-1",
+  "time-critical/li-abcd-2",
+  "time-critical/li-abcd-3",
+  "time-critical/li-abcd-4",
+  "principles",
+  "principles/p5",
+  "principles/li-pr-1",
+  "principles/li-pr-2",
+  "principles/li-pr-3",
+  "principles/li-pr-4",
+  "steps",
+  "steps/p6",
+  "steps/li-st-1",
+  "steps/li-st-2",
+  "steps/li-st-3",
+  "steps/li-st-4",
+  "steps/li-st-5",
+  "severity-and-probability",
+  "severity-and-probability/li-sp-1",
+  "severity-and-probability/li-sp-2",
+  "severity-and-probability/li-sp-3",
+  "nife-sop",
+  "nife-sop/p7",
+  "nife-sop/p8",
+  "nife-sop/p9",
+  "nife-sop/p10",
+  "nife-sop/li-ws-1",
+  "nife-sop/li-ws-2",
+  "nife-sop/li-ws-3"
+ ],
+ "nife/pat-principle": [
+  "execution",
+  "execution/p1",
+  "execution/p2",
+  "execution/p3"
+ ],
+ "nife/power-off-stall": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "numbers/num-07",
+  "numbers/num-08",
+  "numbers/num-09",
+  "numbers/num-10",
+  "stall-awareness",
+  "stall-awareness/p1",
+  "stall-awareness/p2",
+  "stall-awareness/p3",
+  "stall-awareness/p4",
+  "recognition",
+  "recognition/p5",
+  "recognition/li-r-1",
+  "recognition/li-r-2",
+  "recognition/li-r-3",
+  "recognition/li-r-4",
+  "recovery-fundamentals",
+  "recovery-fundamentals/p6",
+  "recovery-fundamentals/p7",
+  "recovery-fundamentals/p8",
+  "recovery-fundamentals/p9",
+  "ailerons-and-rudder",
+  "ailerons-and-rudder/p10",
+  "ailerons-and-rudder/p11",
+  "ailerons-and-rudder/p12",
+  "landing-configuration",
+  "landing-configuration/p13",
+  "landing-configuration/p14",
+  "procedure",
+  "procedure/li-1",
+  "procedure/li-2",
+  "procedure/li-3",
+  "procedure/li-4",
+  "procedure/li-5",
+  "procedure/li-6",
+  "procedure/li-7",
+  "procedure/li-8",
+  "procedure/li-9",
+  "procedure/li-10",
+  "procedure/li-11",
+  "procedure/li-12",
+  "procedure/li-13",
+  "procedure/li-14",
+  "course-training-standards",
+  "course-training-standards/li-cts-1",
+  "course-training-standards/li-cts-2",
+  "course-training-standards/li-cts-3",
+  "course-training-standards/li-cts-4",
+  "course-training-standards/li-cts-5",
+  "common-errors",
+  "common-errors/li-ce-1",
+  "common-errors/li-ce-2",
+  "common-errors/li-ce-3",
+  "common-errors/li-ce-4",
+  "common-errors/li-ce-5",
+  "common-errors/li-ce-6",
+  "common-errors/li-ce-7",
+  "common-errors/li-ce-8",
+  "common-errors/li-ce-9",
+  "common-errors/li-ce-10",
+  "common-errors/li-ce-11",
+  "common-errors/li-ce-12"
+ ],
+ "nife/power-on-stall": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "numbers/num-07",
+  "numbers/num-08",
+  "numbers/num-09",
+  "numbers/num-10",
+  "entry-and-recovery",
+  "entry-and-recovery/p1",
+  "entry-and-recovery/p2",
+  "procedure",
+  "procedure/li-1",
+  "procedure/li-2",
+  "procedure/li-3",
+  "procedure/li-4",
+  "procedure/li-5",
+  "procedure/li-6",
+  "procedure/li-7",
+  "procedure/li-8",
+  "procedure/li-9",
+  "procedure/li-10",
+  "procedure/li-11",
+  "procedure/li-12",
+  "course-training-standards",
+  "course-training-standards/li-cts-1",
+  "course-training-standards/li-cts-2",
+  "course-training-standards/li-cts-3",
+  "course-training-standards/li-cts-4",
+  "course-training-standards/li-cts-5",
+  "common-errors",
+  "common-errors/li-ce-1",
+  "common-errors/li-ce-2",
+  "common-errors/li-ce-3",
+  "common-errors/li-ce-4"
+ ],
+ "nife/racetrack-pattern": [
+  "numbers/num-01",
+  "numbers/num-08",
+  "numbers/num-09",
+  "numbers/num-10",
+  "numbers/num-11",
+  "numbers/num-12",
+  "numbers/num-02",
+  "numbers/num-13",
+  "numbers/num-14",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-15",
+  "numbers/num-16",
+  "numbers/num-17",
+  "numbers/num-05",
+  "numbers/num-06",
+  "numbers/num-07",
+  "pattern-positions",
+  "pattern-positions/fig:fig-01",
+  "pattern-positions/li-pos1",
+  "pattern-positions/li-pos2",
+  "pattern-positions/li-pos3",
+  "pattern-positions/li-pos4",
+  "pattern-positions/li-pos5",
+  "pattern-positions/li-pos6",
+  "pattern-positions/li-pos7",
+  "pattern-positions/li-pos8",
+  "runway-references",
+  "runway-references/li-ref1",
+  "runway-references/li-ref2",
+  "runway-references/li-ref3",
+  "runway-references/li-ref4",
+  "downwind",
+  "downwind/dw-p1",
+  "downwind/dw-p2",
+  "downwind/dw-p3",
+  "downwind/li-dw1",
+  "downwind/li-dw2",
+  "downwind/li-dw3",
+  "downwind/li-dw4",
+  "downwind/li-dw5",
+  "abeam-and-the-180",
+  "abeam-and-the-180/ab-p1",
+  "abeam-and-the-180/ab-p2",
+  "abeam-and-the-180/ab-p3",
+  "abeam-and-the-180/ab-p4",
+  "abeam-and-the-180/ab-p5",
+  "abeam-and-the-180/ab-p6",
+  "abeam-and-the-180/ab-p7",
+  "abeam-and-the-180/li-ab1",
+  "abeam-and-the-180/li-ab2",
+  "abeam-and-the-180/li-ab3",
+  "abeam-and-the-180/li-ab4",
+  "ninety-position",
+  "ninety-position/np-p1",
+  "ninety-position/np-p2",
+  "ninety-position/np-p3",
+  "ninety-position/fig:fig-02",
+  "ninety-position/li-np1",
+  "ninety-position/li-np2",
+  "ninety-position/li-np3",
+  "ninety-position/li-np4",
+  "ninety-position/li-np5",
+  "final-approach",
+  "final-approach/fa-p1",
+  "final-approach/fa-p2",
+  "final-approach/fa-p3",
+  "final-approach/fa-p4",
+  "final-approach/fa-p5",
+  "final-approach/fa-p6",
+  "final-approach/fig:fig-03",
+  "final-approach/li-fa1",
+  "final-approach/li-fa2",
+  "final-approach/li-fa3",
+  "final-approach/li-fa4",
+  "final-approach/li-fa5",
+  "final-approach/li-fa6",
+  "use-of-flaps",
+  "use-of-flaps/uf-p1",
+  "use-of-flaps/uf-p2",
+  "use-of-flaps/uf-p3",
+  "use-of-flaps/uf-p4",
+  "use-of-flaps/fig:fig-04",
+  "use-of-flaps/li-uf1",
+  "use-of-flaps/li-uf2",
+  "use-of-flaps/li-uf3",
+  "visual-focus",
+  "visual-focus/vf-p1",
+  "visual-focus/vf-p2",
+  "visual-focus/vf-p3",
+  "visual-focus/vf-p4",
+  "flare",
+  "flare/fl-p1",
+  "flare/fl-p2",
+  "flare/fl-p3",
+  "flare/fl-p4",
+  "flare/fl-p5",
+  "flare/fl-p6",
+  "flare/fl-p7",
+  "flare/fl-p8",
+  "flare/fig:fig-05",
+  "flare/li-fl1",
+  "flare/li-fl2",
+  "flare/li-fl3",
+  "flare/li-fl4",
+  "flare/li-fl5",
+  "flare/li-fl6",
+  "touchdown",
+  "touchdown/td-p1",
+  "touchdown/td-p2",
+  "touchdown/td-p3",
+  "touchdown/td-p4",
+  "touch-and-go",
+  "touch-and-go/tg-p1",
+  "touch-and-go/tg-p2",
+  "touch-and-go/li-tg1",
+  "touch-and-go/li-tg2",
+  "touch-and-go/li-tg3",
+  "touch-and-go/li-tg4",
+  "touch-and-go/li-tg5",
+  "touch-and-go/li-tg6",
+  "touch-and-go/li-tg7",
+  "after-landing-roll",
+  "after-landing-roll/ar-p1",
+  "after-landing-roll/ar-p2",
+  "after-landing-roll/ar-p3",
+  "after-landing-roll/ar-p4",
+  "after-landing-roll/ar-p5",
+  "after-landing-roll/ar-p6",
+  "after-landing-roll/ar-p7",
+  "after-landing-roll/ar-p8",
+  "after-landing-roll/ar-p9",
+  "pattern-interval",
+  "pattern-interval/pi-p1",
+  "pattern-interval/li-int1",
+  "pattern-interval/li-int2",
+  "pattern-interval/li-int3",
+  "departure-interval",
+  "departure-interval/di-p1",
+  "spacing",
+  "spacing/sp-p1",
+  "spacing/sp-p2",
+  "box-pattern",
+  "box-pattern/bp-p1",
+  "box-pattern/bp-p2",
+  "common-errors",
+  "common-errors/li-ce1",
+  "common-errors/li-ce2",
+  "common-errors/li-ce3",
+  "common-errors/li-ce4",
+  "common-errors/li-ce5",
+  "common-errors/li-ce6",
+  "common-errors/li-ce7",
+  "common-errors/li-ce8",
+  "common-errors/li-ce9",
+  "common-errors/li-ce10",
+  "common-errors/li-ce11",
+  "common-errors/li-ce12",
+  "common-errors/li-ce13",
+  "common-errors/li-ce14"
+ ],
+ "nife/runway-incursion-avoidance": [
+  "causes",
+  "causes/cs-p1",
+  "causes/cs-1",
+  "causes/cs-2",
+  "causes/cs-3",
+  "communication",
+  "communication/cm-p1",
+  "taxi-operations",
+  "taxi-operations/to-p1",
+  "taxi-operations/to-p2",
+  "taxi-operations/to-p4",
+  "taxi-operations/to-p3"
+ ],
+ "nife/scan-pattern-and-sight-picture": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "division-of-attention",
+  "division-of-attention/da-p1",
+  "division-of-attention/da-li1",
+  "division-of-attention/da-li2",
+  "division-of-attention/da-li3",
+  "scan-coverage",
+  "scan-coverage/sc-p1",
+  "scan-coverage/fig:fig-01",
+  "example-pattern",
+  "example-pattern/ep-p1",
+  "example-pattern/ep-li1",
+  "example-pattern/ep-li2",
+  "example-pattern/ep-li3",
+  "sight-picture",
+  "sight-picture/sp-p1",
+  "sight-picture/sp-p2",
+  "fixation",
+  "fixation/fx-p1",
+  "fixation/fx-p2",
+  "fixation/fx-p3"
+ ],
+ "nife/see-and-avoid": [
+  "numbers/num-01",
+  "midair-collisions",
+  "midair-collisions/mc-p1",
+  "midair-collisions/mc-p2",
+  "midair-collisions/mc-p3",
+  "immediate-action",
+  "immediate-action/ia-p1",
+  "immediate-action/ia-p2"
+ ],
+ "nife/slip-to-land": [
+  "sideslip",
+  "sideslip/p1",
+  "sideslip/p2",
+  "forward-slip",
+  "forward-slip/p3",
+  "forward-slip/p4",
+  "forward-slip/fig:fig-01",
+  "recovery",
+  "recovery/p5",
+  "airspeed-indication-and-stalls",
+  "airspeed-indication-and-stalls/p6",
+  "airspeed-indication-and-stalls/p7",
+  "uses-and-limitations",
+  "uses-and-limitations/p8",
+  "uses-and-limitations/p9",
+  "uses-and-limitations/p10",
+  "unintentional-slips",
+  "unintentional-slips/p11",
+  "unintentional-slips/p12"
+ ],
+ "nife/standard-operating-procedures": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "numbers/num-07",
+  "numbers/num-08",
+  "numbers/num-09",
+  "numbers/num-10",
+  "crew-day-and-crew-rest",
+  "crew-day-and-crew-rest/cd-p1",
+  "crew-day-and-crew-rest/cd-p2",
+  "crewmember-duties",
+  "crewmember-duties/cm-p1",
+  "crewmember-duties/cm-p2",
+  "crewmember-duties/cm-p3",
+  "crewmember-duties/cm-p4",
+  "weather-criteria",
+  "weather-criteria/wx-li1",
+  "weather-criteria/wx-li2",
+  "weather-criteria/wx-li3",
+  "weather-criteria/wx-li4",
+  "weather-criteria/wx-li5",
+  "weather-criteria/wx-li6",
+  "weather-criteria/wx-li7",
+  "weather-criteria/wx-li8",
+  "convective-sigmet",
+  "convective-sigmet/cs-p1",
+  "convective-sigmet/cs-li1",
+  "convective-sigmet/cs-li2",
+  "convective-sigmet/cs-li3",
+  "personal-electronic-devices",
+  "personal-electronic-devices/pd-li1",
+  "personal-electronic-devices/pd-li2",
+  "personal-electronic-devices/pd-li3",
+  "fuel-requirements",
+  "fuel-requirements/fr-p1",
+  "airfield-and-altitude-limits",
+  "airfield-and-altitude-limits/al-li1",
+  "airfield-and-altitude-limits/al-li2",
+  "airfield-and-altitude-limits/al-li3",
+  "airfield-and-altitude-limits/al-li4"
+ ],
+ "nife/takeoff-brief": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "script",
+  "script/sc-p1",
+  "lineup",
+  "lineup/ln-p1",
+  "ground-reference-points",
+  "ground-reference-points/gr-p1"
+ ],
+ "nife/towered-operations-and-ctaf": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "non-towered-airports",
+  "non-towered-airports/nt-p1",
+  "non-towered-airports/nt-p2",
+  "non-towered-airports/nt-p3",
+  "ctaf-calls",
+  "ctaf-calls/cc-p1",
+  "ctaf-calls/cc-p2",
+  "preflight-and-taxi",
+  "preflight-and-taxi/pt-p1",
+  "preflight-and-taxi/pt-p2",
+  "preflight-and-taxi/pt-p3",
+  "preflight-and-taxi/pt-p4",
+  "takeoff",
+  "takeoff/tk-p1",
+  "takeoff/tk-p2",
+  "takeoff/tk-p3",
+  "arrival-and-departure",
+  "arrival-and-departure/ad-p1",
+  "arrival-and-departure/ad-p2",
+  "arrival-and-departure/ad-p3",
+  "arrival-and-departure/ad-p4",
+  "arrival-and-departure/ad-p5",
+  "pattern-calls",
+  "pattern-calls/pc-p1",
+  "pattern-calls/pc-p2"
+ ],
+ "nife/traffic-pattern": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "towered-and-non-towered",
+  "towered-and-non-towered/p1",
+  "towered-and-non-towered/p2",
+  "military-racetrack",
+  "military-racetrack/p3",
+  "right-of-way",
+  "right-of-way/p4",
+  "course-training-standards",
+  "course-training-standards/li-cts-1",
+  "course-training-standards/li-cts-2",
+  "course-training-standards/li-cts-3"
+ ],
+ "nife/turn-pattern": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "numbers/num-07",
+  "numbers/num-08",
+  "execution",
+  "execution/p1",
+  "execution/p2",
+  "execution/p3",
+  "execution/p4",
+  "execution/p5",
+  "execution/fig:fig-01",
+  "procedure",
+  "procedure/li-1",
+  "procedure/li-2",
+  "procedure/li-3",
+  "procedure/li-4",
+  "procedure/li-5",
+  "procedure/li-6",
+  "procedure/li-7",
+  "course-training-standards",
+  "course-training-standards/li-cts-1",
+  "course-training-standards/li-cts-2",
+  "common-errors",
+  "common-errors/li-ce-1",
+  "common-errors/li-ce-2",
+  "common-errors/li-ce-3",
+  "common-errors/li-ce-4",
+  "common-errors/li-ce-5",
+  "common-errors/li-ce-6"
+ ],
+ "nife/wake-turbulence-and-wind-shear": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "vortex-behavior",
+  "vortex-behavior/vb-p1",
+  "vortex-behavior/vb-p2",
+  "vortex-behavior/vb-p3",
+  "vortex-behavior/vb-p4",
+  "conditions-to-watch",
+  "conditions-to-watch/cw-p1",
+  "conditions-to-watch/cw-li1",
+  "conditions-to-watch/cw-li2",
+  "conditions-to-watch/cw-li3",
+  "conditions-to-watch/cw-li4",
+  "conditions-to-watch/cw-li5",
+  "vortex-avoidance-procedures",
+  "vortex-avoidance-procedures/va-p1",
+  "vortex-avoidance-procedures/va-li1",
+  "vortex-avoidance-procedures/va-li2",
+  "vortex-avoidance-procedures/va-li3",
+  "vortex-avoidance-procedures/va-li4",
+  "vortex-avoidance-procedures/va-li5",
+  "vortex-avoidance-procedures/va-li6",
+  "vortex-avoidance-procedures/va-li7",
+  "vortex-avoidance-procedures/va-li8",
+  "vortex-avoidance-procedures/va-li9",
+  "wind-shear",
+  "wind-shear/ws-p1",
+  "wind-shear/ws-p2",
+  "wind-shear/ws-p3",
+  "wind-shear/ws-p4"
+ ],
+ "nife/waveoff": [
+  "unsatisfactory-landing-conditions",
+  "unsatisfactory-landing-conditions/uc-p1",
+  "unsatisfactory-landing-conditions/uc-p2",
+  "delay",
+  "delay/dl-p1",
+  "delay/dl-p2",
+  "procedure",
+  "procedure/pr-p1",
+  "procedure/fig:fig-01",
+  "procedure/li-pr1",
+  "procedure/li-pr2",
+  "procedure/li-pr3",
+  "procedure/li-pr4",
+  "procedure/li-pr5",
+  "cardinal-principles",
+  "power",
+  "power/pw-p1",
+  "power/pw-p2",
+  "attitude",
+  "attitude/at-p1",
+  "attitude/at-p2",
+  "configuration",
+  "configuration/cf-p1",
+  "configuration/cf-p2",
+  "control-pressures",
+  "control-pressures/cp-p1",
+  "control-pressures/cp-p2",
+  "control-pressures/cp-p3",
+  "ground-effect",
+  "ground-effect/ge-p1",
+  "ground-effect/ge-p2",
+  "common-errors",
+  "common-errors/li-ce1",
+  "common-errors/li-ce2",
+  "common-errors/li-ce3",
+  "common-errors/li-ce4",
+  "common-errors/li-ce5",
+  "common-errors/li-ce6",
+  "common-errors/li-ce7",
+  "common-errors/li-ce8"
+ ],
+ "primary/abnormal-starts": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -42,7 +1182,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "aborted-takeoff": [
+ "primary/aborted-takeoff": [
   "numbers/num-01",
   "numbers/num-01b",
   "numbers/num-02",
@@ -75,7 +1215,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "accelerated-stall": [
+ "primary/accelerated-stall": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -89,7 +1229,7 @@
   "the-limit",
   "the-limit/tl-p1"
  ],
- "acceleration-limitations": [
+ "primary/acceleration-limitations": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -108,7 +1248,7 @@
   "time-limits/tl-p2",
   "time-limits/tbl:tbl-g-time-limits"
  ],
- "aerobatic-maneuvers": [
+ "primary/aerobatic-maneuvers": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -131,7 +1271,7 @@
   "vt-28-sop/v28-p1",
   "vt-28-sop/v28-p2"
  ],
- "aileron-roll": [
+ "primary/aileron-roll": [
   "numbers/num-01",
   "numbers/num-02",
   "setting-it-up",
@@ -146,7 +1286,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "airborne-damaged-aircraft": [
+ "primary/airborne-damaged-aircraft": [
   "numbers/num-04",
   "numbers/num-01",
   "numbers/num-01b",
@@ -177,7 +1317,7 @@
   "the-landing",
   "the-landing/tl-p4"
  ],
- "aircraft-and-cockpit-lighting": [
+ "primary/aircraft-and-cockpit-lighting": [
   "numbers/num-01",
   "exterior",
   "exterior/ex-p1",
@@ -196,13 +1336,13 @@
   "use/us-p2",
   "use/us-p3"
  ],
- "aircraft-departs-prepared-surface": [
+ "primary/aircraft-departs-prepared-surface": [
   "the-decision",
   "the-decision/td-p1",
   "the-decision/td-p2",
   "the-decision/td-p3"
  ],
- "aircraft-discrepancy-reporting": [
+ "primary/aircraft-discrepancy-reporting": [
   "vt-27-sop",
   "vt-27-sop/v27-p1",
   "vt-27-sop/v27-p2",
@@ -213,7 +1353,7 @@
   "vt-28-sop/v28-p5",
   "vt-28-sop/v28-p4"
  ],
- "aircraft-issue": [
+ "primary/aircraft-issue": [
   "vt-28-sop",
   "the-right-aircraft",
   "the-right-aircraft/ra-p1",
@@ -225,7 +1365,7 @@
   "cnaf-3710",
   "cnaf-3710/cn-p1"
  ],
- "airfield-and-runway-lighting": [
+ "primary/airfield-and-runway-lighting": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -263,7 +1403,7 @@
   "wave-off/wo-p2",
   "wave-off/wo-p3"
  ],
- "airspace-classification": [
+ "primary/airspace-classification": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -297,7 +1437,7 @@
   "trsa/tr-p1",
   "trsa/tr-p2"
  ],
- "airspeed-changes": [
+ "primary/airspeed-changes": [
   "numbers/num-01",
   "numbers/num-02",
   "accelerating",
@@ -309,7 +1449,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "airway-navigation": [
+ "primary/airway-navigation": [
   "numbers/num-01",
   "numbers/num-02",
   "changeover-points",
@@ -320,7 +1460,7 @@
   "voice-capable-vors",
   "voice-capable-vors/vc-p1"
  ],
- "aldis-lamp-signals": [
+ "primary/aldis-lamp-signals": [
   "signals",
   "signals/tbl:tbl-light-gun",
   "using-them",
@@ -328,7 +1468,7 @@
   "using-them/ut-p2",
   "using-them/ut-p3"
  ],
- "alternate-filing-minimums": [
+ "primary/alternate-filing-minimums": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -343,7 +1483,7 @@
   "flyable-without-radios/fw-p1",
   "flyable-without-radios/fw-p2"
  ],
- "anti-spin-recovery-procedures": [
+ "primary/anti-spin-recovery-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -373,9 +1513,9 @@
   "after-rotation-stops/ar-p1",
   "after-rotation-stops/ar-p2"
  ],
- "any-item-discussed-in-this-block": [],
- "any-maneuver-in-this-block": [],
- "aoa-approach": [
+ "primary/any-item-discussed-in-this-block": [],
+ "primary/any-maneuver-in-this-block": [],
+ "primary/aoa-approach": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-09",
@@ -415,7 +1555,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "approach-maneuver": [
+ "primary/approach-maneuver": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -445,7 +1585,7 @@
   "where-it-ends",
   "where-it-ends/we-p1"
  ],
- "arc-radial-intercepts": [
+ "primary/arc-radial-intercepts": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -460,26 +1600,7 @@
   "when-the-numbers-are-not-there",
   "when-the-numbers-are-not-there/wn-p1"
  ],
- "arcing-approach": [
-  "numbers/num-01",
-  "numbers/num-02",
-  "numbers/num-03",
-  "numbers/num-04",
-  "numbers/num-05",
-  "procedure",
-  "procedure/pr-01",
-  "procedure/pr-02",
-  "procedure/pr-03",
-  "procedure/pr-04",
-  "the-charted-lead-radial",
-  "the-charted-lead-radial/cl-p1",
-  "the-charted-lead-radial/cl-p2",
-  "the-charted-lead-radial/fig:fig-01",
-  "common-errors",
-  "common-errors/ce-01",
-  "common-errors/ce-02"
- ],
- "arcing": [
+ "primary/arcing": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -498,7 +1619,26 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "area-sun-management": [
+ "primary/arcing-approach": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "procedure",
+  "procedure/pr-01",
+  "procedure/pr-02",
+  "procedure/pr-03",
+  "procedure/pr-04",
+  "the-charted-lead-radial",
+  "the-charted-lead-radial/cl-p1",
+  "the-charted-lead-radial/cl-p2",
+  "the-charted-lead-radial/fig:fig-01",
+  "common-errors",
+  "common-errors/ce-01",
+  "common-errors/ce-02"
+ ],
+ "primary/area-sun-management": [
   "lead-responsibility",
   "lead-responsibility/lr-p3",
   "sun-management",
@@ -507,7 +1647,7 @@
   "when-it-happens",
   "when-it-happens/wh-p1"
  ],
- "asr-approach": [
+ "primary/asr-approach": [
   "what-is-different",
   "what-is-different/wd-p2",
   "what-is-different/wd-p1",
@@ -521,7 +1661,7 @@
   "final-approach-abnormalities/fa-03",
   "final-approach-abnormalities/fa-04"
  ],
- "avionics-malfunctions": [
+ "primary/avionics-malfunctions": [
   "numbers/num-01",
   "iac",
   "iac-failure",
@@ -579,7 +1719,7 @@
   "xpdr-failure/xp-02",
   "xpdr-failure/xp-02/xp-02a"
  ],
- "barrel-roll": [
+ "primary/barrel-roll": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -604,7 +1744,7 @@
   "common-errors/ce-05",
   "common-errors/ce-06"
  ],
- "bash": [
+ "primary/bash": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -638,7 +1778,7 @@
   "formation-operations/fo-mod",
   "formation-operations/fo-sev"
  ],
- "basic-air-work": [
+ "primary/basic-air-work": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -651,7 +1791,7 @@
   "general-standards",
   "general-standards/gs-p1"
  ],
- "basic-transitions": [
+ "primary/basic-transitions": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-10",
@@ -700,7 +1840,7 @@
   "common-errors/ce-10",
   "common-errors/ce-11"
  ],
- "battery-and-generator-failure": [
+ "primary/battery-and-generator-failure": [
   "numbers/num-01",
   "numbers/num-06",
   "battery-and-generator-failure",
@@ -729,7 +1869,7 @@
   "flaps-and-gear/fg-02/fg-02a",
   "flaps-and-gear/fg-03"
  ],
- "battery-bus-light-during-start": [
+ "primary/battery-bus-light-during-start": [
   "numbers/num-01",
   "recognition",
   "recognition/rc-p1",
@@ -737,14 +1877,7 @@
   "procedure/pr-01",
   "procedure/pr-02"
  ],
- "bfi-approach": [
-  "stabilise-first",
-  "stabilise-first/pr-01",
-  "stabilise-first/pr-02",
-  "common-errors",
-  "common-errors/ce-01"
- ],
- "bfi": [
+ "primary/bfi": [
   "what-it-shows",
   "what-it-shows/ws-p2",
   "what-it-shows/ws-p1",
@@ -766,7 +1899,14 @@
   "common-errors",
   "common-errors/ce-01"
  ],
- "blind-procedures": [
+ "primary/bfi-approach": [
+  "stabilise-first",
+  "stabilise-first/pr-01",
+  "stabilise-first/pr-02",
+  "common-errors",
+  "common-errors/ce-01"
+ ],
+ "primary/blind-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -783,7 +1923,7 @@
   "blind-sun/bs-p1",
   "blind-sun/bs-p2"
  ],
- "blindfold-cockpit-check": [
+ "primary/blindfold-cockpit-check": [
   "numbers/num-01",
   "the-list",
   "the-list/bc-01",
@@ -800,7 +1940,7 @@
   "conduct",
   "conduct/cd-p2"
  ],
- "brake-failure": [
+ "primary/brake-failure": [
   "procedure",
   "one-brake",
   "one-brake/ob-p1",
@@ -814,7 +1954,7 @@
   "brake-fade/bf-p1",
   "brake-fade/bf-p2"
  ],
- "brief-and-debrief": [
+ "primary/brief-and-debrief": [
   "who-briefs",
   "who-briefs/wb-p1",
   "what-the-brief-covers",
@@ -842,7 +1982,7 @@
   "vt-28-sop/v28-p3",
   "vt-28-sop/v28-p4"
  ],
- "cdi-reverse-sensing-precautions": [
+ "primary/cdi-reverse-sensing-precautions": [
   "the-rule",
   "the-rule/tr-p1",
   "the-rule/tr-p2",
@@ -850,7 +1990,7 @@
   "back-course-approaches/bc-p1",
   "back-course-approaches/bc-p2"
  ],
- "cfs-and-ejection-crm": [
+ "primary/cfs-and-ejection-crm": [
   "crew-coordination",
   "crew-coordination/cc-p3",
   "one-actuation",
@@ -862,7 +2002,7 @@
   "the-system/bg-p4",
   "the-system/bg-p5"
  ],
- "change-of-route-or-destination": [
+ "primary/change-of-route-or-destination": [
   "atc-request",
   "atc-request/ar-p1",
   "atc-request/ar-p2",
@@ -888,7 +2028,7 @@
   "the-thirteen-items/ti-12",
   "the-thirteen-items/ti-13"
  ],
- "checklist-challenge-action-response": [
+ "primary/checklist-challenge-action-response": [
   "the-format",
   "the-format/tf-p0",
   "the-format/tf-p1",
@@ -901,13 +2041,13 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "chip-detector-warning": [
+ "primary/chip-detector-warning": [
   "flying-it",
   "flying-it/fi-01",
   "flying-it/fi-01/fi-01a",
   "flying-it/fi-02"
  ],
- "circling-maneuver": [
+ "primary/circling-maneuver": [
   "numbers/num-01",
   "numbers/num-05",
   "numbers/num-03",
@@ -952,7 +2092,7 @@
   "missed-approach-from-a-circle/ma-p1",
   "missed-approach-from-a-circle/ma-p2"
  ],
- "clearance-and-departure-procedures": [
+ "primary/clearance-and-departure-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -995,7 +2135,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "cloud-clearances": [
+ "primary/cloud-clearances": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1009,7 +2149,7 @@
   "reading-it/ri-p1",
   "reading-it/ri-p2"
  ],
- "combination-maneuvers": [
+ "primary/combination-maneuvers": [
   "numbers/num-01",
   "energy-is-the-plan",
   "energy-is-the-plan/ep-p1",
@@ -1018,7 +2158,7 @@
   "solo-restriction",
   "solo-restriction/sr-p1"
  ],
- "constant-airspeed-climbs-and-descents": [
+ "primary/constant-airspeed-climbs-and-descents": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1043,7 +2183,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "contact-unusual-attitudes": [
+ "primary/contact-unusual-attitudes": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1091,7 +2231,7 @@
   "common-errors/ce-06",
   "common-errors/ce-07"
  ],
- "controlled-ejection": [
+ "primary/controlled-ejection": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1134,7 +2274,7 @@
   "getting-there/gt-p1",
   "getting-there/gt-p2"
  ],
- "crm": [
+ "primary/crm": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1160,7 +2300,7 @@
   "tem/te-p3",
   "tem/te-p2"
  ],
- "crosswind-computations": [
+ "primary/crosswind-computations": [
   "the-chart",
   "the-chart/tc-p1",
   "the-chart/tc-p2",
@@ -1171,7 +2311,7 @@
   "what-it-feeds/wf-p1",
   "what-it-feeds/wf-p2"
  ],
- "crosswind-full-stops": [
+ "primary/crosswind-full-stops": [
   "numbers/num-01",
   "numbers/num-02",
   "the-rollout",
@@ -1187,7 +2327,7 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "crosswind-limits": [
+ "primary/crosswind-limits": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1206,7 +2346,7 @@
   "solo-limits/sl-p1",
   "solo-limits/sl-p2"
  ],
- "crosswind-takeoff-and-landings": [
+ "primary/crosswind-takeoff-and-landings": [
   "takeoff",
   "takeoff/to-p1",
   "takeoff/to-p2",
@@ -1237,7 +2377,7 @@
   "common-errors/ce-07",
   "common-errors/ce-08"
  ],
- "crosswind-touch-and-goes": [
+ "primary/crosswind-touch-and-goes": [
   "numbers/num-01",
   "on-the-deck",
   "on-the-deck/pr-01",
@@ -1249,7 +2389,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "cruise-maneuvering": [
+ "primary/cruise-maneuvering": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1286,7 +2426,7 @@
   "common-errors/ce-wing/ce-wing-03",
   "common-errors/ce-wing/ce-wing-04"
  ],
- "day-emergencies": [
+ "primary/day-emergencies": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1312,7 +2452,7 @@
   "pel/pe-p1",
   "pel/pe-p2"
  ],
- "dd-175-1-weather-brief": [
+ "primary/dd-175-1-weather-brief": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-04",
@@ -1330,7 +2470,7 @@
   "vt-27-sop",
   "vt-27-sop/wr-p1"
  ],
- "dd-1801": [
+ "primary/dd-1801": [
   "cnaf-3710",
   "filing-away-from-a-military-field",
   "filing-away-from-a-military-field/fa-p3",
@@ -1358,7 +2498,7 @@
   "vt-28-sop",
   "vt-28-sop/v28-p1"
  ],
- "destination-maintenance-facilities": [
+ "primary/destination-maintenance-facilities": [
   "tw-4-sop",
   "gripes",
   "gripes/gr-p1",
@@ -1372,7 +2512,7 @@
   "dropped-seat-pin/dp-p1",
   "dropped-seat-pin/dp-p2"
  ],
- "direct-to-a-vor": [
+ "primary/direct-to-a-vor": [
   "direct-to-a-vor",
   "direct-to-a-vor/dv-01",
   "direct-to-a-vor/dv-02",
@@ -1388,7 +2528,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "discontinued-entry": [
+ "primary/discontinued-entry": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1407,7 +2547,7 @@
   "the-ppel-case/pc-p1",
   "the-ppel-case/pc-p3"
  ],
- "divert-to-alternate": [
+ "primary/divert-to-alternate": [
   "before-you-commit",
   "before-you-commit/bc-p1",
   "draft",
@@ -1419,7 +2559,7 @@
   "with-an-fss",
   "with-an-fss/wf-p1"
  ],
- "dor-tto-policy": [
+ "primary/dor-tto-policy": [
   "training-time-out",
   "training-time-out/tt-p1",
   "training-time-out/tt-p2",
@@ -1428,7 +2568,7 @@
   "tw-4-briefing-guide",
   "tw-4-briefing-guide/tb-p1"
  ],
- "dual-concurrence-response-crm": [
+ "primary/dual-concurrence-response-crm": [
   "why",
   "why/wh-p1",
   "why/wh-p2",
@@ -1436,88 +2576,7 @@
   "worked-example/we-p1",
   "worked-example/we-p2"
  ],
- "ejection-seat-and-cfs": [
-  "numbers/num-08",
-  "numbers/num-09",
-  "numbers/num-10",
-  "numbers/num-11",
-  "numbers/num-04",
-  "numbers/num-12",
-  "numbers/num-05",
-  "numbers/num-06",
-  "what-happens",
-  "what-happens/wh-p1",
-  "what-happens/wh-p2",
-  "what-happens/wh-p3",
-  "ejection-sequence",
-  "ejection-sequence/fig:fig-01",
-  "ejection-sequence/tbl:sq-t1",
-  "handles",
-  "handles/ha-p1",
-  "handles/ha-p2",
-  "handles/ha-p3",
-  "dual",
-  "dual/du-p1",
-  "dual/du-p2",
-  "dual/du-p3",
-  "dual/du-01",
-  "dual/du-02",
-  "dual/du-03",
-  "dual/du-04",
-  "dual/du-05",
-  "cfs",
-  "cfs/ts-p1",
-  "cfs/ts-p2",
-  "cfs/ts-p3",
-  "cfs/cf-p7",
-  "cfs/oa-p1",
-  "cfs/oa-p2",
-  "cfs/cc-p2",
-  "strapped-in",
-  "si-legs",
-  "si-legs/si-lg1",
-  "si-legs/si-lg2",
-  "si-oxygen",
-  "si-oxygen/si-ox1",
-  "si-oxygen/si-ox2",
-  "si-oxygen/si-ox3",
-  "si-harness",
-  "si-harness/si-sh1",
-  "si-seawars",
-  "si-seawars/si-sw1",
-  "si-seawars/si-sw2",
-  "si-parachute",
-  "si-parachute/si-pc1",
-  "si-ssk",
-  "si-ssk/si-sk1",
-  "si-ssk/si-sk2",
-  "si-ssk/si-sk4",
-  "si-ssk/si-sk3",
-  "si-ssk/si-sk-01",
-  "si-ssk/si-sk-02",
-  "si-ssk/si-sk-03",
-  "si-ssk/si-sk-04",
-  "si-ssk/si-sk-05",
-  "si-ssk/si-sk-06",
-  "si-ssk/si-sk-07",
-  "si-ssk/si-sk-08",
-  "si-ssk/si-sk-09",
-  "si-ssk/si-sk-10",
-  "hookup",
-  "hookup/hu-01",
-  "hookup/hu-02",
-  "hookup/hu-03",
-  "hookup/hu-04",
-  "hookup/hu-05",
-  "hookup/hu-06",
-  "hookup/hu-07",
-  "hookup/hu-08",
-  "hookup/hu-09",
-  "on-the-ground",
-  "on-the-ground/og-p1",
-  "on-the-ground/og-p2"
- ],
- "ejection": [
+ "primary/ejection": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1614,7 +2673,112 @@
   "rescue-strop/rs-09",
   "rescue-strop/rs-10"
  ],
- "electrical-system-malfunctions": [
+ "primary/ejection-seat-and-cfs": [
+  "numbers/num-08",
+  "numbers/num-09",
+  "numbers/num-10",
+  "numbers/num-11",
+  "numbers/num-04",
+  "numbers/num-12",
+  "numbers/num-05",
+  "numbers/num-06",
+  "what-happens",
+  "what-happens/wh-p1",
+  "what-happens/wh-p2",
+  "what-happens/wh-p3",
+  "ejection-sequence",
+  "ejection-sequence/fig:fig-01",
+  "ejection-sequence/tbl:sq-t1",
+  "handles",
+  "handles/ha-p1",
+  "handles/ha-p2",
+  "handles/ha-p3",
+  "dual",
+  "dual/du-p1",
+  "dual/du-p2",
+  "dual/du-p3",
+  "dual/du-01",
+  "dual/du-02",
+  "dual/du-03",
+  "dual/du-04",
+  "dual/du-05",
+  "cfs",
+  "cfs/ts-p1",
+  "cfs/ts-p2",
+  "cfs/ts-p3",
+  "cfs/cf-p7",
+  "cfs/oa-p1",
+  "cfs/oa-p2",
+  "cfs/cc-p2",
+  "strapped-in",
+  "si-legs",
+  "si-legs/si-lg1",
+  "si-legs/si-lg2",
+  "si-oxygen",
+  "si-oxygen/si-ox1",
+  "si-oxygen/si-ox2",
+  "si-oxygen/si-ox3",
+  "si-harness",
+  "si-harness/si-sh1",
+  "si-seawars",
+  "si-seawars/si-sw1",
+  "si-seawars/si-sw2",
+  "si-parachute",
+  "si-parachute/si-pc1",
+  "si-ssk",
+  "si-ssk/si-sk1",
+  "si-ssk/si-sk2",
+  "si-ssk/si-sk4",
+  "si-ssk/si-sk3",
+  "si-ssk/si-sk-01",
+  "si-ssk/si-sk-02",
+  "si-ssk/si-sk-03",
+  "si-ssk/si-sk-04",
+  "si-ssk/si-sk-05",
+  "si-ssk/si-sk-06",
+  "si-ssk/si-sk-07",
+  "si-ssk/si-sk-08",
+  "si-ssk/si-sk-09",
+  "si-ssk/si-sk-10",
+  "hookup",
+  "hookup/hu-01",
+  "hookup/hu-02",
+  "hookup/hu-03",
+  "hookup/hu-04",
+  "hookup/hu-05",
+  "hookup/hu-06",
+  "hookup/hu-07",
+  "hookup/hu-08",
+  "hookup/hu-09",
+  "on-the-ground",
+  "on-the-ground/og-p1",
+  "on-the-ground/og-p2"
+ ],
+ "primary/electrical-system": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-07",
+  "numbers/num-05",
+  "numbers/num-06",
+  "generator",
+  "generator/ge-p1",
+  "generator/ge-p2",
+  "generator/ge-p3",
+  "batteries",
+  "batteries/ba-p1",
+  "batteries/ba-p2",
+  "batteries/ba-p4",
+  "batteries/ba-p3",
+  "bus-tie",
+  "bus-tie/bt-p1",
+  "bus-tie/bt-p2",
+  "bus-tie/bt-p3",
+  "breakers",
+  "breakers/cb-p1"
+ ],
+ "primary/electrical-system-malfunctions": [
   "numbers/num-03",
   "numbers/num-04",
   "numbers/num-05",
@@ -1673,31 +2837,7 @@
   "both-batteries/bg-02/bg-02a",
   "both-batteries/bg-03"
  ],
- "electrical-system": [
-  "numbers/num-01",
-  "numbers/num-02",
-  "numbers/num-03",
-  "numbers/num-04",
-  "numbers/num-07",
-  "numbers/num-05",
-  "numbers/num-06",
-  "generator",
-  "generator/ge-p1",
-  "generator/ge-p2",
-  "generator/ge-p3",
-  "batteries",
-  "batteries/ba-p1",
-  "batteries/ba-p2",
-  "batteries/ba-p4",
-  "batteries/ba-p3",
-  "bus-tie",
-  "bus-tie/bt-p1",
-  "bus-tie/bt-p2",
-  "bus-tie/bt-p3",
-  "breakers",
-  "breakers/cb-p1"
- ],
- "emergency-engine-shutdown-on-the-ground": [
+ "primary/emergency-engine-shutdown-on-the-ground": [
   "procedure",
   "procedure/pr-01",
   "procedure/pr-02",
@@ -1705,7 +2845,7 @@
   "egress",
   "egress/eg-p1"
  ],
- "emergency-field-selection": [
+ "primary/emergency-field-selection": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-04",
@@ -1740,7 +2880,7 @@
   "vt-28-sop",
   "vt-28-sop/if-p2"
  ],
- "emergency-ground-egress": [
+ "primary/emergency-ground-egress": [
   "if-the-canopy-will-not-open",
   "if-the-canopy-will-not-open/ic-p5",
   "if-the-canopy-will-not-open/ic-p6",
@@ -1763,7 +2903,7 @@
   "making-the-seat-safe/pr-08",
   "making-the-seat-safe/pr-09"
  ],
- "emergency-landing-pattern": [
+ "primary/emergency-landing-pattern": [
   "numbers/num-01",
   "numbers/num-01b",
   "numbers/num-09",
@@ -1867,7 +3007,7 @@
   "common-errors/ce-11",
   "common-errors/ce-08"
  ],
- "emergency-orbit-pattern": [
+ "primary/emergency-orbit-pattern": [
   "numbers/num-01",
   "numbers/num-06",
   "numbers/num-07",
@@ -1887,7 +3027,7 @@
   "in-an-emergency",
   "in-an-emergency/ie-p1"
  ],
- "en-route-descent": [
+ "primary/en-route-descent": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1911,7 +3051,7 @@
   "common-errors/ce-02",
   "common-errors/ce-03"
  ],
- "en-route-fuel-management": [
+ "primary/en-route-fuel-management": [
   "numbers/num-01",
   "numbers/num-03",
   "numbers/num-04",
@@ -1923,7 +3063,7 @@
   "endurance",
   "endurance/en-p2"
  ],
- "en-route-procedures": [
+ "primary/en-route-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -1991,7 +3131,7 @@
   "changeover-points/co-03",
   "changeover-points/co-04"
  ],
- "en-route-weather-sources": [
+ "primary/en-route-weather-sources": [
   "sources",
   "sources/so-p1",
   "sources/so-01",
@@ -2002,7 +3142,7 @@
   "adverse-weather/aw-p1",
   "adverse-weather/aw-p2"
  ],
- "energy-management": [
+ "primary/energy-management": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2020,7 +3160,7 @@
   "planning",
   "planning/pl-p1"
  ],
- "engine-air-starts": [
+ "primary/engine-air-starts": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-10",
@@ -2053,7 +3193,7 @@
   "after/af-p4",
   "after/af-p2"
  ],
- "engine-failure-during-flight": [
+ "primary/engine-failure-during-flight": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2101,7 +3241,7 @@
   "procedure/pr-05",
   "procedure/lr-p4"
  ],
- "engine-failure-immediately-after-takeoff": [
+ "primary/engine-failure-immediately-after-takeoff": [
   "numbers/num-01",
   "numbers/num-02",
   "recognition",
@@ -2118,7 +3258,7 @@
   "pcl-and-configuration/ef-03/pc-p2",
   "pcl-and-configuration/ef-04"
  ],
- "engine-failure-indications": [
+ "primary/engine-failure-indications": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2131,7 +3271,7 @@
   "configuration",
   "configuration/cf-p1"
  ],
- "engine-malfunctions": [
+ "primary/engine-malfunctions": [
   "indications",
   "indications/in-01",
   "indications/in-02",
@@ -2141,7 +3281,7 @@
   "the-common-decision/in-05",
   "the-common-decision/in-06"
  ],
- "engine-system": [
+ "primary/engine-system": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-05",
@@ -2160,7 +3300,7 @@
   "control/co-p4",
   "control/co-p5"
  ],
- "faf-to-map-timing-adjustments": [
+ "primary/faf-to-map-timing-adjustments": [
   "numbers/num-01",
   "numbers/num-02",
   "interpolating",
@@ -2168,7 +3308,7 @@
   "interpolating/in-p2",
   "interpolating/fig:fig-01"
  ],
- "fan-break": [
+ "primary/fan-break": [
   "numbers/num-01",
   "numbers/num-02",
   "fan",
@@ -2177,15 +3317,15 @@
   "pattern",
   "pattern/pa-p1"
  ],
- "feeder-fixes": [
+ "primary/feeder-fixes": [
   "as-a-transition",
   "as-a-transition/at-p1"
  ],
- "feeder-routes": [
+ "primary/feeder-routes": [
   "what-they-are-for",
   "what-they-are-for/wf-p1"
  ],
- "feet-to-rudder-placement": [
+ "primary/feet-to-rudder-placement": [
   "pedal-pressure",
   "pedal-pressure/pp-p1",
   "ground-operations",
@@ -2193,13 +3333,13 @@
   "ground-operations/go-p2",
   "ground-operations/go-p3"
  ],
- "fire-on-ground": [
+ "primary/fire-on-ground": [
   "indications",
   "indications/in-p1",
   "indications/in-p2",
   "response"
  ],
- "fire-warning-in-flight": [
+ "primary/fire-warning-in-flight": [
   "fire-warning-system",
   "fire-warning-system/fw-p1",
   "fire-warning-system/fw-p2",
@@ -2217,7 +3357,7 @@
   "confirmed-or-not/cn-05/cn-05b",
   "confirmed-or-not/cn-05/cn-05c"
  ],
- "flap-failures": [
+ "primary/flap-failures": [
   "asymmetric",
   "asymmetric/as-p1",
   "asymmetric/as-01",
@@ -2233,7 +3373,7 @@
   "flaps-and-other-failures/fo-p1",
   "flaps-and-other-failures/fo-p2"
  ],
- "flight-gear-check": [
+ "primary/flight-gear-check": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2264,7 +3404,7 @@
   "seat-survival-kit/sk-09",
   "seat-survival-kit/sk-10"
  ],
- "flight-service-station": [
+ "primary/flight-service-station": [
   "numbers/num-01",
   "numbers/num-03",
   "numbers/num-05",
@@ -2281,7 +3421,7 @@
   "vor-test-signal",
   "vor-test-signal/wn-p2"
  ],
- "flight-split": [
+ "primary/flight-split": [
   "numbers/num-01",
   "numbers/num-02",
   "tw-4-formation-supplement",
@@ -2304,7 +3444,7 @@
   "joining/jo-p1",
   "joining/jo-p2"
  ],
- "fms-arrivals": [
+ "primary/fms-arrivals": [
   "numbers/num-01",
   "the-star-on-the-box",
   "the-star-on-the-box/sb-p1",
@@ -2320,7 +3460,7 @@
   "into-the-approach/ia-p1",
   "into-the-approach/ia-p2"
  ],
- "fms-flight-plan-usage": [
+ "primary/fms-flight-plan-usage": [
   "retrieved-by-name",
   "retrieved-by-name/rn-p1",
   "retrieved-by-name/rn-p2",
@@ -2333,7 +3473,7 @@
   "holding-and-discontinuities/hd-p1",
   "holding-and-discontinuities/hd-p2"
  ],
- "fms-procedures": [
+ "primary/fms-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2358,7 +3498,7 @@
   "capabilities",
   "capabilities/cp-p1"
  ],
- "forced-landing": [
+ "primary/forced-landing": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2391,7 +3531,7 @@
   "touchdown",
   "touchdown/to-p3"
  ],
- "formation-arrival-and-departure-procedures": [
+ "primary/formation-arrival-and-departure-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2433,7 +3573,7 @@
   "common-errors/ce-wing/ce-wing-03",
   "common-errors/ce-wing/ce-wing-04"
  ],
- "formation-communications": [
+ "primary/formation-communications": [
   "numbers/num-01",
   "numbers/num-02",
   "call-signs",
@@ -2455,7 +3595,7 @@
   "common-errors/ce-02",
   "common-errors/ce-03"
  ],
- "formation-emergency-procedures": [
+ "primary/formation-emergency-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "bleeder",
@@ -2470,7 +3610,7 @@
   "atc",
   "atc/at-p1"
  ],
- "formation-maneuvers": [
+ "primary/formation-maneuvers": [
   "numbers/num-01",
   "numbers/num-04",
   "numbers/num-05",
@@ -2562,7 +3702,7 @@
   "common-errors/ce-un-wing/ce-un-wing-02",
   "common-errors/ce-un-wing/ce-un-wing-03"
  ],
- "formation-position-corrections": [
+ "primary/formation-position-corrections": [
   "correction-method",
   "abcs",
   "abcs/ab-p1",
@@ -2583,7 +3723,7 @@
   "anticipating",
   "anticipating/an-p1"
  ],
- "formation-preflight-planning": [
+ "primary/formation-preflight-planning": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2644,7 +3784,7 @@
   "flight-lead-terminology/fl-p1",
   "flight-lead-terminology/fl-p2"
  ],
- "formation-squadron-sop": [
+ "primary/formation-squadron-sop": [
   "numbers/num-01",
   "numbers/num-02",
   "tw-4-sop",
@@ -2670,12 +3810,12 @@
   "vt-28-sop/v28-p4",
   "vt-28-sop/v28-p5"
  ],
- "fuel-cutoff-gate-finger-lift-guard": [
+ "primary/fuel-cutoff-gate-finger-lift-guard": [
   "what-it-adds",
   "what-it-adds/wa-p1",
   "what-it-adds/wa-p2"
  ],
- "fuel-planning": [
+ "primary/fuel-planning": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2699,7 +3839,7 @@
   "updates/fs-p3",
   "updates/fs-p4"
  ],
- "fuel-system": [
+ "primary/fuel-system": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2731,7 +3871,7 @@
   "probes/pb-p2",
   "probes/pb-p3"
  ],
- "full-stop-landings": [
+ "primary/full-stop-landings": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2775,7 +3915,7 @@
   "common-errors/ce-06",
   "common-errors/ce-07"
  ],
- "gca-pattern": [
+ "primary/gca-pattern": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2809,7 +3949,7 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "gear-emergencies": [
+ "primary/gear-emergencies": [
   "numbers/num-01",
   "numbers/num-07",
   "numbers/num-02",
@@ -2895,7 +4035,7 @@
   "cocked-nose-wheel/cn-p1",
   "cocked-nose-wheel/cn-p2"
  ],
- "gps-allowable-operations": [
+ "primary/gps-allowable-operations": [
   "permitted-uses",
   "permitted-uses/pu-p1",
   "permitted-uses/pu-01",
@@ -2913,7 +4053,7 @@
   "terminology",
   "terminology/tm-p1"
  ],
- "gps-approaches": [
+ "primary/gps-approaches": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2980,7 +4120,7 @@
   "common-errors/ce-05",
   "common-errors/ce-06"
  ],
- "gps-flight-modes": [
+ "primary/gps-flight-modes": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -2999,7 +4139,7 @@
   "leaving-approach-mode/la-p1",
   "leaving-approach-mode/la-p2"
  ],
- "gps-holding": [
+ "primary/gps-holding": [
   "what-you-may-hold-at",
   "what-you-may-hold-at/wh-p1",
   "the-abeam-position",
@@ -3008,14 +4148,14 @@
   "holding-in-lieu/hl-p1",
   "holding-in-lieu/hl-p2"
  ],
- "gps-procedures": [
+ "primary/gps-procedures": [
   "retrieved-by-name",
   "retrieved-by-name/rn-p1",
   "retrieved-by-name/rn-p2",
   "what-the-t-6b-may-fly",
   "what-the-t-6b-may-fly/wt-p1"
  ],
- "grading-and-standards": [
+ "primary/grading-and-standards": [
   "the-four",
   "the-four/tf-01",
   "the-four/tf-02",
@@ -3029,14 +4169,14 @@
   "who-decides/wd-p1",
   "who-decides/wd-p2"
  ],
- "ground-handling-signals": [
+ "primary/ground-handling-signals": [
   "doctrine",
   "doctrine/dc-p1",
   "doctrine/dc-p2",
   "common",
   "common/fig:fig-01"
  ],
- "ground-speed-calculations": [
+ "primary/ground-speed-calculations": [
   "numbers/num-04",
   "numbers/num-01",
   "numbers/num-02",
@@ -3047,7 +4187,7 @@
   "enroute-indication",
   "enroute-indication/ei-p1"
  ],
- "half-cuban-eight": [
+ "primary/half-cuban-eight": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3068,7 +4208,7 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "hand-signals": [
+ "primary/hand-signals": [
   "in-procedures",
   "in-procedures/ip-01",
   "in-procedures/ip-02",
@@ -3079,7 +4219,7 @@
   "in-procedures/ip-07",
   "in-procedures/ip-09"
  ],
- "hard-landings": [
+ "primary/hard-landings": [
   "numbers/num-03",
   "numbers/num-01",
   "numbers/num-04",
@@ -3093,7 +4233,7 @@
   "afterwards",
   "afterwards/af-p1"
  ],
- "headwork": [
+ "primary/headwork": [
   "the-four-parts",
   "the-four-parts/fp-01",
   "the-four-parts/fp-02",
@@ -3103,7 +4243,7 @@
   "what-is-being-graded/wg-p1",
   "what-is-being-graded/wg-p2"
  ],
- "heavy-weight-landing-considerations": [
+ "primary/heavy-weight-landing-considerations": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3113,7 +4253,7 @@
   "flying-it/fi-p4",
   "flying-it/fi-p5"
  ],
- "hefoe": [
+ "primary/hefoe": [
   "the-code",
   "the-code/tc-p1",
   "the-code/fig:fig-01",
@@ -3126,7 +4266,7 @@
   "passing-it/pi-p2",
   "passing-it/pi-p3"
  ],
- "high-altitude-approach": [
+ "primary/high-altitude-approach": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3154,7 +4294,7 @@
   "procedure/pr-03/pr-05",
   "procedure/pr-06"
  ],
- "hilo-approach": [
+ "primary/hilo-approach": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3169,86 +4309,7 @@
   "procedure/pr-04",
   "procedure/pr-05"
  ],
- "holding-corrections": [
-  "numbers/num-01",
-  "numbers/num-02",
-  "numbers/num-03",
-  "numbers/num-04",
-  "triple-drift",
-  "triple-drift/td-p1",
-  "triple-drift/td-p2",
-  "triple-drift/td-p3",
-  "triple-drift/td-p4",
-  "triple-drift/fig:fig-01",
-  "timing",
-  "timing/ti-p1",
-  "timing/ti-p2",
-  "timing/fig:fig-02",
-  "the-outbound-six-ts",
-  "the-outbound-six-ts/ot-01",
-  "the-outbound-six-ts/ot-02",
-  "the-outbound-six-ts/ot-03",
-  "the-outbound-six-ts/ot-04",
-  "the-outbound-six-ts/ot-05",
-  "the-outbound-six-ts/ot-06",
-  "the-outbound-six-ts/ot-07",
-  "the-outbound-six-ts/ot-08",
-  "the-outbound-six-ts/ot-09",
-  "the-outbound-six-ts/ot-10",
-  "the-outbound-six-ts/ot-11",
-  "the-outbound-six-ts/ot-12",
-  "departing-holding",
-  "departing-holding/dh-01",
-  "departing-holding/dh-02",
-  "departing-holding/dh-03",
-  "departing-holding/dh-04",
-  "departing-holding/dh-05",
-  "departing-holding/dh-06"
- ],
- "holding-entry": [
-  "numbers/num-01",
-  "numbers/num-02",
-  "numbers/num-03",
-  "numbers/num-04",
-  "numbers/num-05",
-  "numbers/num-06",
-  "numbers/num-07",
-  "standard-pattern-entries",
-  "standard-pattern-entries/fig:fig-01",
-  "standard-pattern-entries/fig:fig-03",
-  "standard-pattern-entries/sp-01",
-  "standard-pattern-entries/sp-02",
-  "standard-pattern-entries/sp-03",
-  "non-standard-pattern-entries",
-  "non-standard-pattern-entries/fig:fig-02",
-  "non-standard-pattern-entries/fig:fig-04",
-  "non-standard-pattern-entries/ns-01",
-  "non-standard-pattern-entries/ns-02",
-  "non-standard-pattern-entries/ns-03",
-  "boundary-and-teardrop-notes",
-  "boundary-and-teardrop-notes/bt-p1",
-  "boundary-and-teardrop-notes/bt-p2",
-  "boundary-and-teardrop-notes/fig:fig-05",
-  "the-turn-inbound",
-  "the-turn-inbound/ti-p1",
-  "the-turn-inbound/ti-p2",
-  "the-turn-inbound/fig:fig-06",
-  "the-entry-orbit",
-  "the-entry-orbit/eo-01",
-  "the-entry-orbit/eo-02",
-  "the-entry-orbit/eo-03",
-  "the-entry-orbit/eo-04",
-  "the-entry-orbit/eo-05",
-  "the-entry-orbit/eo-06",
-  "the-entry-orbit/eo-07",
-  "the-entry-orbit/eo-08",
-  "the-entry-orbit/eo-09",
-  "the-entry-orbit/eo-10",
-  "the-entry-orbit/eo-11",
-  "the-entry-orbit/eo-12",
-  "the-entry-orbit/eo-13"
- ],
- "holding": [
+ "primary/holding": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3312,7 +4373,86 @@
   "common-errors/ce-07",
   "common-errors/ce-08"
  ],
- "home-field-arrival": [
+ "primary/holding-corrections": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "triple-drift",
+  "triple-drift/td-p1",
+  "triple-drift/td-p2",
+  "triple-drift/td-p3",
+  "triple-drift/td-p4",
+  "triple-drift/fig:fig-01",
+  "timing",
+  "timing/ti-p1",
+  "timing/ti-p2",
+  "timing/fig:fig-02",
+  "the-outbound-six-ts",
+  "the-outbound-six-ts/ot-01",
+  "the-outbound-six-ts/ot-02",
+  "the-outbound-six-ts/ot-03",
+  "the-outbound-six-ts/ot-04",
+  "the-outbound-six-ts/ot-05",
+  "the-outbound-six-ts/ot-06",
+  "the-outbound-six-ts/ot-07",
+  "the-outbound-six-ts/ot-08",
+  "the-outbound-six-ts/ot-09",
+  "the-outbound-six-ts/ot-10",
+  "the-outbound-six-ts/ot-11",
+  "the-outbound-six-ts/ot-12",
+  "departing-holding",
+  "departing-holding/dh-01",
+  "departing-holding/dh-02",
+  "departing-holding/dh-03",
+  "departing-holding/dh-04",
+  "departing-holding/dh-05",
+  "departing-holding/dh-06"
+ ],
+ "primary/holding-entry": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "numbers/num-07",
+  "standard-pattern-entries",
+  "standard-pattern-entries/fig:fig-01",
+  "standard-pattern-entries/fig:fig-03",
+  "standard-pattern-entries/sp-01",
+  "standard-pattern-entries/sp-02",
+  "standard-pattern-entries/sp-03",
+  "non-standard-pattern-entries",
+  "non-standard-pattern-entries/fig:fig-02",
+  "non-standard-pattern-entries/fig:fig-04",
+  "non-standard-pattern-entries/ns-01",
+  "non-standard-pattern-entries/ns-02",
+  "non-standard-pattern-entries/ns-03",
+  "boundary-and-teardrop-notes",
+  "boundary-and-teardrop-notes/bt-p1",
+  "boundary-and-teardrop-notes/bt-p2",
+  "boundary-and-teardrop-notes/fig:fig-05",
+  "the-turn-inbound",
+  "the-turn-inbound/ti-p1",
+  "the-turn-inbound/ti-p2",
+  "the-turn-inbound/fig:fig-06",
+  "the-entry-orbit",
+  "the-entry-orbit/eo-01",
+  "the-entry-orbit/eo-02",
+  "the-entry-orbit/eo-03",
+  "the-entry-orbit/eo-04",
+  "the-entry-orbit/eo-05",
+  "the-entry-orbit/eo-06",
+  "the-entry-orbit/eo-07",
+  "the-entry-orbit/eo-08",
+  "the-entry-orbit/eo-09",
+  "the-entry-orbit/eo-10",
+  "the-entry-orbit/eo-11",
+  "the-entry-orbit/eo-12",
+  "the-entry-orbit/eo-13"
+ ],
+ "primary/home-field-arrival": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3350,7 +4490,7 @@
   "break-modifiers/bm-p2",
   "break-modifiers/bm-p3"
  ],
- "hot-start": [
+ "primary/hot-start": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3363,7 +4503,7 @@
   "afterwards/af-01",
   "afterwards/af-02"
  ],
- "hsi-orientation": [
+ "primary/hsi-orientation": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3379,7 +4519,7 @@
   "sensitivity",
   "sensitivity/se-p1"
  ],
- "hud": [
+ "primary/hud": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3407,7 +4547,7 @@
   "formats/fm-p1",
   "formats/fm-p2"
  ],
- "hung-start": [
+ "primary/hung-start": [
   "numbers/num-01",
   "recognition",
   "recognition/rc-p1",
@@ -3416,26 +4556,7 @@
   "afterwards/af-01",
   "afterwards/af-02"
  ],
- "hydraulic-system-malfunctions": [
-  "numbers/num-01",
-  "numbers/num-02",
-  "reading-the-indications",
-  "reading-the-indications/ri-p2",
-  "get-the-gear-down",
-  "get-the-gear-down/ri-p1",
-  "get-the-gear-down/gg-01",
-  "get-the-gear-down/gg-01/gg-01a",
-  "get-the-gear-down/gg-01/gg-01b",
-  "get-the-gear-down/gg-01/gg-01c",
-  "get-the-gear-down/gg-02",
-  "get-the-gear-down/gg-03",
-  "get-the-gear-down/gg-03/gg-03a",
-  "get-the-gear-down/gg-04",
-  "get-the-gear-down/gg-04/gg-04a",
-  "get-the-gear-down/gg-04/gg-04b",
-  "get-the-gear-down/gg-05"
- ],
- "hydraulic-system": [
+ "primary/hydraulic-system": [
   "numbers/num-08",
   "numbers/num-01",
   "numbers/num-02",
@@ -3506,7 +4627,26 @@
   "nose-wheel-steering/nw-p4",
   "nose-wheel-steering/nw-p5"
  ],
- "hyperventilation-and-hypoxia": [
+ "primary/hydraulic-system-malfunctions": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "reading-the-indications",
+  "reading-the-indications/ri-p2",
+  "get-the-gear-down",
+  "get-the-gear-down/ri-p1",
+  "get-the-gear-down/gg-01",
+  "get-the-gear-down/gg-01/gg-01a",
+  "get-the-gear-down/gg-01/gg-01b",
+  "get-the-gear-down/gg-01/gg-01c",
+  "get-the-gear-down/gg-02",
+  "get-the-gear-down/gg-03",
+  "get-the-gear-down/gg-03/gg-03a",
+  "get-the-gear-down/gg-04",
+  "get-the-gear-down/gg-04/gg-04a",
+  "get-the-gear-down/gg-04/gg-04b",
+  "get-the-gear-down/gg-05"
+ ],
+ "primary/hyperventilation-and-hypoxia": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3522,7 +4662,7 @@
   "what-you-do/wd-p1",
   "what-you-do/wd-p2"
  ],
- "iac-failure": [
+ "primary/iac-failure": [
   "numbers/num-01",
   "dual-failure",
   "dual-failure/df-p1",
@@ -3543,7 +4683,7 @@
   "the-repeat-trap/rt-04/rt-04a",
   "the-repeat-trap/rt-05"
  ],
- "icing": [
+ "primary/icing": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3563,7 +4703,7 @@
   "landing",
   "landing/la-p1"
  ],
- "ifr-clearance-from-uncontrolled-airports": [
+ "primary/ifr-clearance-from-uncontrolled-airports": [
   "options",
   "options/op-01",
   "options/op-02",
@@ -3573,7 +4713,7 @@
   "options/op-06",
   "options/op-07"
  ],
- "ifr-flight-planning": [
+ "primary/ifr-flight-planning": [
   "preflight-planning",
   "preflight-planning/pp-p2",
   "preflight-planning/pp-p1",
@@ -3615,14 +4755,14 @@
   "vt-28-sop/v28-p1",
   "vt-28-sop/v28-p2"
  ],
- "ifr-pickup": [
+ "primary/ifr-pickup": [
   "planning",
   "planning/pl-p1",
   "airborne",
   "airborne/ai-p1",
   "airborne/ai-p2"
  ],
- "ifr-supplement": [
+ "primary/ifr-supplement": [
   "the-three-sections",
   "the-three-sections/ts-p1",
   "the-three-sections/ts-01",
@@ -3639,7 +4779,7 @@
   "what-it-does-not-cover/wn-p1",
   "what-it-does-not-cover/wn-p2"
  ],
- "ifr-to-vfr-transition": [
+ "primary/ifr-to-vfr-transition": [
   "closing",
   "closing/cl-p1",
   "closing/cl-p2",
@@ -3647,7 +4787,7 @@
   "cancelling/ca-p1",
   "cancelling/ca-p2"
  ],
- "ifr-unusual-attitudes": [
+ "primary/ifr-unusual-attitudes": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3673,7 +4813,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "ils-approach": [
+ "primary/ils-approach": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3721,7 +4861,7 @@
   "common-errors/ce-06",
   "common-errors/ce-07"
  ],
- "ils-full-procedure-turn": [
+ "primary/ils-full-procedure-turn": [
   "what-changes",
   "what-changes/wc-p1",
   "what-changes/wc-p3",
@@ -3730,7 +4870,7 @@
   "front-course/wc-p2",
   "front-course/fc-p1"
  ],
- "imc-emergencies": [
+ "primary/imc-emergencies": [
   "basic-rules",
   "basic-rules/br-p1",
   "basic-rules/br-01",
@@ -3748,7 +4888,7 @@
   "atc/at-p1",
   "atc/at-p2"
  ],
- "immediate-air-start": [
+ "primary/immediate-air-start": [
   "numbers/num-01",
   "numbers/num-01b",
   "numbers/num-02",
@@ -3797,7 +4937,7 @@
   "watching-it-start",
   "watching-it-start/ws-p4"
  ],
- "immelmann": [
+ "primary/immelmann": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -3820,7 +4960,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "impending-engine-failure-indications": [
+ "primary/impending-engine-failure-indications": [
   "what-to-look-for",
   "what-to-look-for/wl-01",
   "what-to-look-for/wl-02",
@@ -3833,7 +4973,7 @@
   "the-systematic-check/sc-p1",
   "the-systematic-check/sc-p2"
  ],
- "imsafe-checklist": [
+ "primary/imsafe-checklist": [
   "the-checklist",
   "the-checklist/is-01",
   "the-checklist/is-02",
@@ -3862,7 +5002,7 @@
   "cnaf-3710/cn-04",
   "cnaf-3710/cn-05"
  ],
- "inadvertent-instrument-flight": [
+ "primary/inadvertent-instrument-flight": [
   "procedure",
   "procedure/pr-p1",
   "procedure/pr-p2",
@@ -3871,7 +5011,7 @@
   "vt-28-sop",
   "vt-28-sop/v28-p1"
  ],
- "inadvertent-thunderstorm-penetration": [
+ "primary/inadvertent-thunderstorm-penetration": [
   "numbers/num-01",
   "numbers/num-02",
   "procedure",
@@ -3896,7 +5036,7 @@
   "vt-28-sop",
   "vt-28-sop/vt-p1"
  ],
- "inadvertent-trim-actuation": [
+ "primary/inadvertent-trim-actuation": [
   "airspeed",
   "airspeed/as-p3",
   "airspeed/as-p4",
@@ -3906,7 +5046,7 @@
   "tad-failure",
   "tad-failure/td-p2"
  ],
- "incipient-spin-recovery": [
+ "primary/incipient-spin-recovery": [
   "numbers/num-01",
   "numbers/num-02",
   "recognition",
@@ -3923,7 +5063,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "instrument-scan-patterns": [
+ "primary/instrument-scan-patterns": [
   "numbers/num-01",
   "pat",
   "pat/pa-p1",
@@ -3953,7 +5093,7 @@
   "which-instruments/wi-p2",
   "which-instruments/tbl:tbl-crosscheck-instruments"
  ],
- "integrated-vmc-scan": [
+ "primary/integrated-vmc-scan": [
   "numbers/num-01",
   "why-both",
   "why-both/wb-p1",
@@ -3975,7 +5115,7 @@
   "the-pattern/tp-08/tp-10",
   "the-pattern/tp-08/tp-11"
  ],
- "intentional-spin-entry": [
+ "primary/intentional-spin-entry": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4001,7 +5141,7 @@
   "common-errors",
   "common-errors/ce-01"
  ],
- "intersections": [
+ "primary/intersections": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4064,7 +5204,7 @@
   "not-hitting-the-fix",
   "not-hitting-the-fix/nh-p1"
  ],
- "inverted-spin": [
+ "primary/inverted-spin": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4083,7 +5223,7 @@
   "afterwards",
   "afterwards/af-p1"
  ],
- "jet-log": [
+ "primary/jet-log": [
   "procedure",
   "procedure/pr-p1",
   "procedure/pr-p2",
@@ -4102,7 +5242,7 @@
   "at-the-brief",
   "at-the-brief/ab-p2"
  ],
- "knock-it-off": [
+ "primary/knock-it-off": [
   "when",
   "when/wn-p1",
   "when/wn-p2",
@@ -4110,7 +5250,7 @@
   "the-call/tc-p1",
   "the-call/tc-p2"
  ],
- "landing-flap-landings": [
+ "primary/landing-flap-landings": [
   "numbers/num-01",
   "numbers/num-05",
   "numbers/num-02",
@@ -4121,7 +5261,7 @@
   "sight-picture",
   "sight-picture/sp-p1"
  ],
- "landing-gear-emergency-extension": [
+ "primary/landing-gear-emergency-extension": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4144,7 +5284,7 @@
   "pulling-the-handle/ph-05/ph-05b",
   "pulling-the-handle/ph-06"
  ],
- "landing-gear-inspection": [
+ "primary/landing-gear-inspection": [
   "numbers/num-01",
   "unsafe-indication",
   "unsafe-indication/ui-p1",
@@ -4161,7 +5301,7 @@
   "vt-28-sop",
   "vt-28-sop/v28-p1"
  ],
- "landing-irregularities": [
+ "primary/landing-irregularities": [
   "general",
   "general/gn-p1",
   "errors",
@@ -4201,42 +5341,7 @@
   "errors/er-09/er-09b",
   "errors/er-09/er-09c"
  ],
- "landing-pattern-stalls": [
-  "numbers/num-01",
-  "numbers/num-02",
-  "numbers/num-03",
-  "numbers/num-04",
-  "numbers/num-05",
-  "numbers/num-06",
-  "approach-turn-stall",
-  "approach-turn-stall/at-01",
-  "approach-turn-stall/at-02",
-  "approach-turn-stall/at-03",
-  "approach-turn-stall/at-04",
-  "approach-turn-stall/at-05",
-  "approach-turn-stall/at-06",
-  "landing-attitude-stall",
-  "landing-attitude-stall/la-01",
-  "landing-attitude-stall/la-02",
-  "landing-attitude-stall/la-03",
-  "landing-attitude-stall/la-04",
-  "recovery",
-  "recovery/rc-p1",
-  "recovery/rc-p2",
-  "recovery/rc-p4",
-  "recovery/rc-p5",
-  "recovery/rc-p3",
-  "in-the-real-pattern",
-  "in-the-real-pattern/ir-p1",
-  "common-errors",
-  "common-errors/ce-01",
-  "common-errors/ce-02",
-  "common-errors/ce-03",
-  "common-errors/ce-04",
-  "common-errors/ce-05",
-  "common-errors/ce-06"
- ],
- "landing-pattern": [
+ "primary/landing-pattern": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4287,7 +5392,42 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "lead-lag-and-pure-pursuit": [
+ "primary/landing-pattern-stalls": [
+  "numbers/num-01",
+  "numbers/num-02",
+  "numbers/num-03",
+  "numbers/num-04",
+  "numbers/num-05",
+  "numbers/num-06",
+  "approach-turn-stall",
+  "approach-turn-stall/at-01",
+  "approach-turn-stall/at-02",
+  "approach-turn-stall/at-03",
+  "approach-turn-stall/at-04",
+  "approach-turn-stall/at-05",
+  "approach-turn-stall/at-06",
+  "landing-attitude-stall",
+  "landing-attitude-stall/la-01",
+  "landing-attitude-stall/la-02",
+  "landing-attitude-stall/la-03",
+  "landing-attitude-stall/la-04",
+  "recovery",
+  "recovery/rc-p1",
+  "recovery/rc-p2",
+  "recovery/rc-p4",
+  "recovery/rc-p5",
+  "recovery/rc-p3",
+  "in-the-real-pattern",
+  "in-the-real-pattern/ir-p1",
+  "common-errors",
+  "common-errors/ce-01",
+  "common-errors/ce-02",
+  "common-errors/ce-03",
+  "common-errors/ce-04",
+  "common-errors/ce-05",
+  "common-errors/ce-06"
+ ],
+ "primary/lead-lag-and-pure-pursuit": [
   "three-types",
   "lead-pursuit",
   "lead-pursuit/tt-01",
@@ -4303,7 +5443,7 @@
   "radius-of-turn/rt-p2",
   "radius-of-turn/fig:fig-04"
  ],
- "level-speed-change": [
+ "primary/level-speed-change": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4329,7 +5469,7 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "local-area-departure": [
+ "primary/local-area-departure": [
   "numbers/num-06",
   "numbers/num-07",
   "numbers/num-02",
@@ -4346,7 +5486,7 @@
   "transitions",
   "transitions/tr-p1"
  ],
- "local-area-flight-procedures-sop": [
+ "primary/local-area-flight-procedures-sop": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4425,7 +5565,7 @@
   "cold-water/li-v284",
   "cold-water/li-v285"
  ],
- "local-cross-country-sop": [
+ "primary/local-cross-country-sop": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4462,7 +5602,7 @@
   "vt-28-sop/v28-p2",
   "vt-28-sop/v28-p3"
  ],
- "local-night-vnav-sop": [
+ "primary/local-night-vnav-sop": [
   "numbers/num-02",
   "numbers/num-03",
   "numbers/num-08",
@@ -4487,7 +5627,7 @@
   "vt-28-night-routes/nr-03",
   "vt-28-night-routes/nr-04"
  ],
- "local-vfr-sectional-review": [
+ "primary/local-vfr-sectional-review": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4522,7 +5662,7 @@
   "reviewing/rv-p6",
   "reviewing/rv-p7"
  ],
- "localizer-approach": [
+ "primary/localizer-approach": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4548,7 +5688,7 @@
   "common-errors/ce-06",
   "common-errors/ce-07"
  ],
- "loop": [
+ "primary/loop": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4572,7 +5712,7 @@
   "common-errors/ce-05",
   "common-errors/ce-06"
  ],
- "loss-of-start-ready-light-during-start-sequence": [
+ "primary/loss-of-start-ready-light-during-start-sequence": [
   "numbers/num-01",
   "numbers/num-02",
   "what-the-light-protects",
@@ -4585,7 +5725,7 @@
   "aborting-manually/am-01",
   "aborting-manually/am-02"
  ],
- "lost-aircraft-procedures": [
+ "primary/lost-aircraft-procedures": [
   "numbers/num-01",
   "numbers/num-01b",
   "five-cs",
@@ -4598,7 +5738,7 @@
   "if-that-fails/if-p1",
   "if-that-fails/if-p2"
  ],
- "lost-communication-procedures": [
+ "primary/lost-communication-procedures": [
   "numbers/num-01",
   "signalling",
   "signalling/sg-p1",
@@ -4616,7 +5756,7 @@
   "nordo-approach/na-p2",
   "nordo-approach/na-p3"
  ],
- "lost-communications": [
+ "primary/lost-communications": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4673,7 +5813,7 @@
   "on-gca-final/gf-03",
   "on-gca-final/gf-04"
  ],
- "lost-sight-procedures": [
+ "primary/lost-sight-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4695,7 +5835,7 @@
   "inside-faf/ff-p2",
   "inside-faf/ff-p3"
  ],
- "low-fuel-pressure": [
+ "primary/low-fuel-pressure": [
   "numbers/num-01",
   "numbers/num-02",
   "causes",
@@ -4707,7 +5847,7 @@
   "the-order-of-the-steps/os-02",
   "the-order-of-the-steps/os-02/os-02a"
  ],
- "maneuvering-speeds": [
+ "primary/maneuvering-speeds": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-09",
@@ -4724,7 +5864,7 @@
   "what-vo-actually-limits/wv-p2",
   "what-vo-actually-limits/fig:fig-01"
  ],
- "memorized-checklists": [
+ "primary/memorized-checklists": [
   "numbers/num-01",
   "the-four",
   "the-four/mc-01",
@@ -4739,7 +5879,7 @@
   "vt-28-sop",
   "vt-28-sop/bf-p2"
  ],
- "minimum-fuel-requirements": [
+ "primary/minimum-fuel-requirements": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4759,7 +5899,7 @@
   "vt-28-sop",
   "vt-28-sop/v28-p1"
  ],
- "missed-approach": [
+ "primary/missed-approach": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-04",
@@ -4815,7 +5955,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "natops-limitations": [
+ "primary/natops-limitations": [
   "numbers/num-03",
   "numbers/num-13",
   "numbers/num-14",
@@ -4859,7 +5999,7 @@
   "ejection-seat",
   "ejection-seat/es-p1"
  ],
- "night-cockpit-setup": [
+ "primary/night-cockpit-setup": [
   "numbers/num-01",
   "night-mode",
   "night-mode/nm-p1",
@@ -4875,13 +6015,13 @@
   "exterior-lights/el-p2",
   "exterior-lights/el-p3"
  ],
- "night-emergency-procedures": [
+ "primary/night-emergency-procedures": [
   "numbers/num-05",
   "engine-failure",
   "engine-failure/ef-p1",
   "engine-failure/ef-p2"
  ],
- "night-flying-considerations": [
+ "primary/night-flying-considerations": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -4906,7 +6046,7 @@
   "vt-28-sop/v28-p1",
   "vt-28-sop/v28-p2"
  ],
- "night-vfr-chart-interpretation": [
+ "primary/night-vfr-chart-interpretation": [
   "numbers/num-03",
   "annotation",
   "annotation/an-p1",
@@ -4915,7 +6055,7 @@
   "what-shows/ws-p3",
   "what-shows/ws-p4"
  ],
- "night-vnav-timing-and-course-corrections": [
+ "primary/night-vnav-timing-and-course-corrections": [
   "numbers/num-01",
   "numbers/num-04",
   "numbers/num-05",
@@ -4935,7 +6075,7 @@
   "wingtip-method/wi-p2",
   "wingtip-method/fig:fig-01"
  ],
- "no-flap-landings": [
+ "primary/no-flap-landings": [
   "numbers/num-01",
   "numbers/num-05",
   "numbers/num-02",
@@ -4948,7 +6088,7 @@
   "when-to-use-it",
   "when-to-use-it/wu-p1"
  ],
- "no-gyro-approach": [
+ "primary/no-gyro-approach": [
   "numbers/num-01",
   "numbers/num-02",
   "when-and-what-for",
@@ -4973,7 +6113,7 @@
   "common-errors/ce-05",
   "common-errors/ce-06"
  ],
- "no-start": [
+ "primary/no-start": [
   "numbers/num-01",
   "numbers/num-02",
   "recognition",
@@ -4984,7 +6124,7 @@
   "afterwards/af-01",
   "afterwards/af-02"
  ],
- "no-wind-orbit": [
+ "primary/no-wind-orbit": [
   "numbers/num-01",
   "numbers/num-02",
   "procedure",
@@ -4998,7 +6138,7 @@
   "reading-the-turn-inbound",
   "reading-the-turn-inbound/rt-p1"
  ],
- "non-radar-environment-communications": [
+ "primary/non-radar-environment-communications": [
   "numbers/num-01",
   "initial-contact",
   "initial-contact/ic-p1",
@@ -5021,7 +6161,7 @@
   "terminal-and-approach/ta-p2",
   "terminal-and-approach/ta-p3"
  ],
- "normal-takeoff": [
+ "primary/normal-takeoff": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5059,7 +6199,7 @@
   "common-errors/ce-07",
   "common-errors/ce-08"
  ],
- "notams": [
+ "primary/notams": [
   "categories",
   "categories/ca-01",
   "categories/ca-02",
@@ -5079,7 +6219,7 @@
   "cnaf-3710/cn-p1",
   "cnaf-3710/cn-p2"
  ],
- "obogs-and-pressurization-system": [
+ "primary/obogs-and-pressurization-system": [
   "numbers/num-01",
   "numbers/num-08",
   "numbers/num-09",
@@ -5120,7 +6260,7 @@
   "pressurization/pz-p3",
   "pressurization/pz-p4"
  ],
- "obogs-fail-message": [
+ "primary/obogs-fail-message": [
   "what-it-can-mean",
   "what-it-can-mean/wc-p1",
   "the-two-innocent-explanations",
@@ -5141,7 +6281,7 @@
   "symptoms-override-the-checklist/so-04",
   "symptoms-override-the-checklist/so-05"
  ],
- "obogs-malfunctions": [
+ "primary/obogs-malfunctions": [
   "numbers/num-01",
   "numbers/num-02",
   "what-obogs-fail-indicates",
@@ -5174,7 +6314,7 @@
   "descent-rates",
   "descent-rates/tbl:dr-t1"
  ],
- "obstacle-departure-procedures": [
+ "primary/obstacle-departure-procedures": [
   "numbers/num-01",
   "numbers/num-03",
   "numbers/num-02",
@@ -5185,7 +6325,7 @@
   "the-gradient/tg-p1",
   "the-gradient/tg-p2"
  ],
- "oil-and-propeller-systems": [
+ "primary/oil-and-propeller-systems": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5221,7 +6361,7 @@
   "feathering/fe-p2",
   "feathering/fe-p3"
  ],
- "oil-system-malfunction-or-low-oil-pressure": [
+ "primary/oil-system-malfunction-or-low-oil-pressure": [
   "numbers/num-03",
   "numbers/num-04",
   "numbers/num-05",
@@ -5240,7 +6380,7 @@
   "amber-alone/aa-03/aa-03a",
   "amber-alone/aa-04"
  ],
- "olf-arrival-and-departure": [
+ "primary/olf-arrival-and-departure": [
   "numbers/num-10",
   "numbers/num-11",
   "numbers/num-12",
@@ -5285,7 +6425,7 @@
   "common-errors/ce-07",
   "common-errors/ce-08"
  ],
- "olf-course-rules": [
+ "primary/olf-course-rules": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5313,7 +6453,7 @@
   "lost-communications",
   "lost-communications/lc-p1"
  ],
- "olf-rdo-communication": [
+ "primary/olf-rdo-communication": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5339,7 +6479,7 @@
   "delta-calls",
   "delta-calls/dc-p1"
  ],
- "on-speed-crosscheck-in-crosswind-conditions": [
+ "primary/on-speed-crosscheck-in-crosswind-conditions": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5353,7 +6493,7 @@
   "gusts",
   "gusts/gu-p1"
  ],
- "out-of-control-flight": [
+ "primary/out-of-control-flight": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5390,7 +6530,7 @@
   "spirals",
   "spirals/sp-p1"
  ],
- "over-the-station-intercepts": [
+ "primary/over-the-station-intercepts": [
   "numbers/num-01",
   "numbers/num-02",
   "the-six-ts",
@@ -5408,7 +6548,7 @@
   "common-errors/ce-02",
   "common-errors/ce-03"
  ],
- "par-approach": [
+ "primary/par-approach": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5463,7 +6603,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "par-without-glideslope": [
+ "primary/par-without-glideslope": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5495,7 +6635,7 @@
   "common-errors/ce-05",
   "common-errors/ce-06"
  ],
- "parade-sequence-checkpoints": [
+ "primary/parade-sequence-checkpoints": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5535,7 +6675,7 @@
   "tw-4-formation-supplement",
   "tw-4-formation-supplement/fs-p1"
  ],
- "pattern-adjustments-for-crosswinds": [
+ "primary/pattern-adjustments-for-crosswinds": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5562,7 +6702,7 @@
   "common-errors/ce-02",
   "common-errors/ce-03"
  ],
- "pcl-cutoff-and-inadvertent-engine-shutdown": [
+ "primary/pcl-cutoff-and-inadvertent-engine-shutdown": [
   "how-the-gate-works",
   "how-the-gate-works/hg-p1",
   "how-the-gate-works/hg-p2",
@@ -5571,7 +6711,7 @@
   "the-levers-share-a-rod",
   "the-levers-share-a-rod/ls-p1"
  ],
- "pel-from-the-pattern": [
+ "primary/pel-from-the-pattern": [
   "numbers/num-01",
   "numbers/num-02",
   "what-is-different",
@@ -5599,7 +6739,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "pmu-norm-air-start": [
+ "primary/pmu-norm-air-start": [
   "numbers/num-01",
   "numbers/num-01b",
   "numbers/num-02",
@@ -5651,7 +6791,7 @@
   "what-it-costs",
   "what-it-costs/wc-p4"
  ],
- "pmu-off-air-start": [
+ "primary/pmu-off-air-start": [
   "numbers/num-01",
   "numbers/num-01b",
   "numbers/num-02",
@@ -5707,7 +6847,7 @@
   "if-it-does-not-light",
   "if-it-does-not-light/il-p3"
  ],
- "point-to-point": [
+ "primary/point-to-point": [
   "the-hsi-as-a-chart",
   "the-hsi-as-a-chart/hc-p1",
   "the-hsi-as-a-chart/hc-p2",
@@ -5751,7 +6891,7 @@
   "common-errors/ce-06",
   "common-errors/ce-07"
  ],
- "power-off-stall": [
+ "primary/power-off-stall": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5774,7 +6914,7 @@
   "common-errors/ce-02",
   "common-errors/ce-03"
  ],
- "power-on-stalls": [
+ "primary/power-on-stalls": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5798,7 +6938,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "precautionary-emergency-landing": [
+ "primary/precautionary-emergency-landing": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5883,10 +7023,10 @@
   "common-errors/ce-10",
   "common-errors/ce-11"
  ],
- "previously-discussed-familiarization-items": [],
- "previously-discussed-items": [],
- "previously-discussed-maneuvers": [],
- "procedure-turn-approach": [
+ "primary/previously-discussed-familiarization-items": [],
+ "primary/previously-discussed-items": [],
+ "primary/previously-discussed-maneuvers": [],
+ "primary/procedure-turn-approach": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5915,7 +7055,7 @@
   "established-on-course",
   "established-on-course/ec-p1"
  ],
- "progressive-spin": [
+ "primary/progressive-spin": [
   "numbers/num-01",
   "numbers/num-02",
   "recognition",
@@ -5923,7 +7063,7 @@
   "recovery",
   "recovery/re-p1"
  ],
- "radial-arc-intercepts": [
+ "primary/radial-arc-intercepts": [
   "numbers/num-01",
   "numbers/num-02",
   "the-lead-point",
@@ -5932,7 +7072,7 @@
   "variations",
   "variations/lp-p2"
  ],
- "radial-intercept-procedures": [
+ "primary/radial-intercept-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5952,7 +7092,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "radial-rendezvous": [
+ "primary/radial-rendezvous": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -5974,7 +7114,7 @@
   "post/po-p1",
   "post/po-p2"
  ],
- "rate-of-descent-calculation": [
+ "primary/rate-of-descent-calculation": [
   "numbers/num-01",
   "numbers/num-02",
   "formulas",
@@ -5986,7 +7126,7 @@
   "i-fti-final-approach/fa-p1",
   "i-fti-final-approach/fa-p2"
  ],
- "recommended-altitudes": [
+ "primary/recommended-altitudes": [
   "numbers/num-01",
   "numbers/num-02",
   "why-ask-for-them",
@@ -5994,7 +7134,7 @@
   "descent-to-mda",
   "descent-to-mda/dm-p1"
  ],
- "route-management": [
+ "primary/route-management": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6022,7 +7162,7 @@
   "weather-deviations/wd-p2",
   "weather-deviations/wd-p3"
  ],
- "runaway-trim": [
+ "primary/runaway-trim": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6052,17 +7192,7 @@
   "tad-failure/td-02",
   "tad-failure/td-03"
  ],
- "rvfac-for-rnav-approaches": [
-  "converting-to-a-straight-in",
-  "converting-to-a-straight-in/cs-p2",
-  "converting-to-a-straight-in/cs-p1",
-  "converting-to-a-straight-in/cs-01",
-  "converting-to-a-straight-in/cs-02",
-  "converting-to-a-straight-in/cs-03",
-  "setting-it-up-in-advance",
-  "setting-it-up-in-advance/sa-p1"
- ],
- "rvfac": [
+ "primary/rvfac": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6084,7 +7214,17 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "s-1-pattern": [
+ "primary/rvfac-for-rnav-approaches": [
+  "converting-to-a-straight-in",
+  "converting-to-a-straight-in/cs-p2",
+  "converting-to-a-straight-in/cs-p1",
+  "converting-to-a-straight-in/cs-01",
+  "converting-to-a-straight-in/cs-02",
+  "converting-to-a-straight-in/cs-03",
+  "setting-it-up-in-advance",
+  "setting-it-up-in-advance/sa-p1"
+ ],
+ "primary/s-1-pattern": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6114,7 +7254,7 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "safety-check-call": [
+ "primary/safety-check-call": [
   "before-entry",
   "before-entry/be-p2",
   "before-entry/be-p1",
@@ -6126,7 +7266,7 @@
   "postflight/pf-p2",
   "postflight/pf-p1"
  ],
- "scatsafe": [
+ "primary/scatsafe": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6152,7 +7292,7 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "scheduling": [
+ "primary/scheduling": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6177,7 +7317,7 @@
   "vt-28-sop/v28-p8",
   "vt-28-sop/v28-p7"
  ],
- "seat-height-and-rudder-pedal-adjustment": [
+ "primary/seat-height-and-rudder-pedal-adjustment": [
   "numbers/num-01",
   "numbers/num-02",
   "seat-height",
@@ -6188,7 +7328,7 @@
   "rudder-pedals/rp-p1",
   "rudder-pedals/rp-p2"
  ],
- "section-approach-procedures": [
+ "primary/section-approach-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6205,7 +7345,7 @@
   "imc/im-p1",
   "imc/im-p2"
  ],
- "section-pel": [
+ "primary/section-pel": [
   "numbers/num-01",
   "lead-change",
   "lead-change/lc-p2",
@@ -6217,7 +7357,7 @@
   "detaching/dt-p1",
   "detaching/dt-p2"
  ],
- "section-takeoff": [
+ "primary/section-takeoff": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6257,7 +7397,7 @@
   "common-errors/ce-05",
   "common-errors/ce-06"
  ],
- "securing-rear-cockpit-for-solo": [
+ "primary/securing-rear-cockpit-for-solo": [
   "the-four-that-matter",
   "the-four-that-matter/fm-p5",
   "the-four-that-matter/fm-p6",
@@ -6288,7 +7428,7 @@
   "the-rest/tr-10",
   "the-rest/tr-11"
  ],
- "see-and-avoid": [
+ "primary/see-and-avoid": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6312,7 +7452,7 @@
   "no-time/nt-p1",
   "no-time/nt-p2"
  ],
- "shuttle-descent": [
+ "primary/shuttle-descent": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6331,7 +7471,7 @@
   "common-errors/ce-02",
   "common-errors/ce-03"
  ],
- "slip": [
+ "primary/slip": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6353,7 +7493,7 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "slow-flight": [
+ "primary/slow-flight": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6372,7 +7512,7 @@
   "stick-shaker",
   "stick-shaker/ss-p1"
  ],
- "smoke-and-fume-elimination": [
+ "primary/smoke-and-fume-elimination": [
   "numbers/num-01",
   "numbers/num-02",
   "breathing-first",
@@ -6397,7 +7537,7 @@
   "breathing-first/bf-10",
   "breathing-first/bf-10/bf-10a"
  ],
- "snivels": [
+ "primary/snivels": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6406,7 +7546,7 @@
   "vt-28-sop/dl-p1",
   "vt-28-sop/ns-p1"
  ],
- "speed-brake-use-as-a-section": [
+ "primary/speed-brake-use-as-a-section": [
   "procedure",
   "procedure/pr-p1",
   "procedure/pr-p2",
@@ -6415,7 +7555,7 @@
   "wing-use/wu-p2",
   "wing-use/wu-p3"
  ],
- "spin": [
+ "primary/spin": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-10",
@@ -6454,7 +7594,7 @@
   "common-errors/ce-07",
   "common-errors/ce-08"
  ],
- "split-s": [
+ "primary/split-s": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6481,7 +7621,7 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "stabilized-approach-criteria": [
+ "primary/stabilized-approach-criteria": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6514,7 +7654,7 @@
   "maximum-descent-rate",
   "maximum-descent-rate/md-p1"
  ],
- "standard-course-corrections": [
+ "primary/standard-course-corrections": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6534,7 +7674,7 @@
   "afterwards",
   "afterwards/af-p1"
  ],
- "standard-instrument-departure": [
+ "primary/standard-instrument-departure": [
   "what-it-is",
   "what-it-is/wi-p1",
   "flying-one",
@@ -6546,7 +7686,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "standard-time-corrections": [
+ "primary/standard-time-corrections": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6564,7 +7704,7 @@
   "fuel",
   "fuel/fu-p1"
  ],
- "star": [
+ "primary/star": [
   "what-it-is",
   "what-it-is/wi-p1",
   "what-it-is/wi-p2",
@@ -6574,12 +7714,12 @@
   "accepting-or-refusing",
   "accepting-or-refusing/ar-p1"
  ],
- "station-passage": [
+ "primary/station-passage": [
   "recognising-it",
   "recognising-it/ri-p1",
   "recognising-it/ri-p2"
  ],
- "steady-state-spin-recovery": [
+ "primary/steady-state-spin-recovery": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6603,7 +7743,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "steep-turns": [
+ "primary/steep-turns": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-06",
@@ -6620,7 +7760,7 @@
   "common-errors/ce-02",
   "common-errors/ce-03"
  ],
- "stereo-routes": [
+ "primary/stereo-routes": [
   "coded-departures",
   "coded-departures/cd-p1",
   "cnaf-3710",
@@ -6630,7 +7770,7 @@
   "what-they-buy-you/cr-p1",
   "what-they-buy-you/wb-p1"
  ],
- "strange-field-operations": [
+ "primary/strange-field-operations": [
   "numbers/num-04",
   "numbers/num-03",
   "numbers/num-05",
@@ -6679,7 +7819,7 @@
   "vt-28-sop/v28-p1",
   "vt-28-sop/v28-p2"
  ],
- "strike-of-ground-object": [
+ "primary/strike-of-ground-object": [
   "the-trigger",
   "the-trigger/tt-p1",
   "avoiding-it",
@@ -6690,7 +7830,7 @@
   "common-errors/ce-01",
   "common-errors/ce-02"
  ],
- "tail-chase": [
+ "primary/tail-chase": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6733,7 +7873,7 @@
   "vt-28-sop",
   "vt-28-sop/v28-p1"
  ],
- "takeoff-and-approach-minimums": [
+ "primary/takeoff-and-approach-minimums": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6748,7 +7888,7 @@
   "continuing-below-minimums/cb-p2",
   "continuing-below-minimums/cb-p3"
  ],
- "takeoff-flap-landings": [
+ "primary/takeoff-flap-landings": [
   "numbers/num-01",
   "numbers/num-04",
   "numbers/num-05",
@@ -6759,7 +7899,7 @@
   "when-to-use-it",
   "when-to-use-it/wu-p1"
  ],
- "teardrop-approach": [
+ "primary/teardrop-approach": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6777,14 +7917,14 @@
   "training-substitution",
   "training-substitution/rw-p2"
  ],
- "terminate": [
+ "primary/terminate": [
   "when",
   "when/wn-p1",
   "the-call",
   "the-call/tc-p1",
   "the-call/tc-p2"
  ],
- "three-cs": [
+ "primary/three-cs": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6801,7 +7941,7 @@
   "when-they-are-required",
   "when-they-are-required/wr-p1"
  ],
- "time-on-target": [
+ "primary/time-on-target": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6820,7 +7960,7 @@
   "making-the-time",
   "making-the-time/mt-p1"
  ],
- "timed-turns": [
+ "primary/timed-turns": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6851,7 +7991,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "tire-failures": [
+ "primary/tire-failures": [
   "procedures",
   "on-takeoff",
   "on-takeoff/ot-01",
@@ -6867,7 +8007,7 @@
   "braking/br-p1",
   "braking/br-p2"
  ],
- "tracking": [
+ "primary/tracking": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6887,7 +8027,7 @@
   "close-to-the-navaid/cn-p1",
   "close-to-the-navaid/cn-p2"
  ],
- "trim": [
+ "primary/trim": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6916,11 +8056,11 @@
   "tad/td-p2",
   "tad/td-p3"
  ],
- "trouble-t": [
+ "primary/trouble-t": [
   "what-to-do-with-it",
   "what-to-do-with-it/wd-p1"
  ],
- "turn-pattern": [
+ "primary/turn-pattern": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -6948,7 +8088,7 @@
   "common-errors/ce-05",
   "common-errors/ce-06"
  ],
- "ufcp-failure": [
+ "primary/ufcp-failure": [
   "indications",
   "indications/id-p1",
   "what-the-failed-cockpit-loses",
@@ -6962,7 +8102,7 @@
   "why-it-is-a-land-as-soon-as-practical/wp-01",
   "why-it-is-a-land-as-soon-as-practical/wp-02"
  ],
- "unauthorized-solo-maneuvers": [
+ "primary/unauthorized-solo-maneuvers": [
   "prohibited",
   "prohibited/pr-01",
   "prohibited/pr-02",
@@ -6976,7 +8116,7 @@
   "vt-28-sop/sr-p2",
   "vt-28-sop/sr-p3"
  ],
- "uncommanded-power-changes-lop": [
+ "primary/uncommanded-power-changes-lop": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-07",
@@ -7020,7 +8160,7 @@
   "procedure/pr-08",
   "procedure/pr-09"
  ],
- "uncommanded-prop-feather": [
+ "primary/uncommanded-prop-feather": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -7059,7 +8199,7 @@
   "the-procedure/pr-08",
   "the-procedure/pr-09"
  ],
- "uncontrolled-field-instrument-communications": [
+ "primary/uncontrolled-field-instrument-communications": [
   "numbers/num-01",
   "advisory-frequency",
   "advisory-frequency/af-p1",
@@ -7075,7 +8215,7 @@
   "ifr-cancellation/ic-p2",
   "ifr-cancellation/ic-p3"
  ],
- "unintentional-instrument-flight": [
+ "primary/unintentional-instrument-flight": [
   "numbers/num-01",
   "numbers/num-02",
   "procedure",
@@ -7087,7 +8227,7 @@
   "solo-flight",
   "solo-flight/sf-p1"
  ],
- "vfr-chart-preparation": [
+ "primary/vfr-chart-preparation": [
   "numbers/num-01",
   "numbers/num-03",
   "numbers/num-04",
@@ -7130,7 +8270,7 @@
   "landmarks/lm-02",
   "landmarks/lm-03"
  ],
- "vfr-field-entry-departure": [
+ "primary/vfr-field-entry-departure": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -7176,7 +8316,7 @@
   "light-signals/ls-06",
   "light-signals/ls-07"
  ],
- "visual-descent-point": [
+ "primary/visual-descent-point": [
   "numbers/num-01",
   "numbers/num-02",
   "when-none-is-published",
@@ -7187,13 +8327,13 @@
   "use",
   "use/co-p2"
  ],
- "visual-signals": [
+ "primary/visual-signals": [
   "execution",
   "execution/ex-p1",
   "the-set",
   "the-set/fig:fig-01"
  ],
- "visual-straight-in": [
+ "primary/visual-straight-in": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -7228,7 +8368,7 @@
   "common-errors/ce-04",
   "common-errors/ce-05"
  ],
- "vn-diagram": [
+ "primary/vn-diagram": [
   "numbers/num-08",
   "numbers/num-01",
   "numbers/num-06",
@@ -7248,7 +8388,7 @@
   "limit-speeds/ls-p1",
   "limit-speeds/ls-p2"
  ],
- "vor-approach-procedures": [
+ "primary/vor-approach-procedures": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -7283,7 +8423,7 @@
   "common-errors/ce-03",
   "common-errors/ce-04"
  ],
- "wave-off": [
+ "primary/wave-off": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -7312,7 +8452,7 @@
   "common-errors/ce-06",
   "common-errors/ce-07"
  ],
- "weight-and-balance": [
+ "primary/weight-and-balance": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",
@@ -7345,7 +8485,7 @@
   "cg-limitations/cg-02",
   "cg-limitations/cg-03"
  ],
- "wind-shear-recovery": [
+ "primary/wind-shear-recovery": [
   "numbers/num-01",
   "numbers/num-01b",
   "numbers/num-02",
@@ -7367,7 +8507,7 @@
   "wind-gradient-on-landing/wg-p1",
   "wind-gradient-on-landing/wg-p2"
  ],
- "wingman-flight-leader-responsibilities": [
+ "primary/wingman-flight-leader-responsibilities": [
   "formation-lead",
   "formation-lead/fl-01",
   "formation-lead/fl-02",
@@ -7382,7 +8522,7 @@
   "thinking-ahead",
   "thinking-ahead/ta-p1"
  ],
- "wingover": [
+ "primary/wingover": [
   "numbers/num-01",
   "numbers/num-02",
   "numbers/num-03",

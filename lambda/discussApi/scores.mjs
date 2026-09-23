@@ -3,7 +3,7 @@ import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { getDynamo, CONFIG } from './clients.mjs';
 import { HttpError, cleanText, parseBody, reply } from './http.mjs';
 
-// The EPs/Limits leaderboard both schools share: arcade nicknames, no accounts, ranked on time.
+// The EPs/Limits leaderboard every school shares: arcade nicknames, no accounts, ranked on time.
 //
 // Every finished run is its own row and nothing is ever deleted. A board shows each player's
 // best inside a window (this calendar month, this calendar year, all time, all UTC), and a
@@ -15,7 +15,7 @@ import { HttpError, cleanText, parseBody, reply } from './http.mjs';
 // boards are small, so the window and the best-per-player are worked out here rather than in a
 // FilterExpression.
 
-const SCHOOLS = ['NIFE', 'Primary'];
+const SCHOOLS = ['NIFE', 'Primary', 'Advanced'];
 const MODES = ['EPs', 'Limits', 'EPs_and_Limits'];
 const PERIODS = ['month', 'year', 'all'];
 const MIN_MS = 1000;

@@ -333,7 +333,9 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
               value={program.id}
               onChange={(e) => setSchool(PROGRAMS.find((p) => p.id === e.target.value).label)}
             >
-              {PROGRAMS.map((p) => <option key={p.id} value={p.id}>{programName(p)}</option>)}
+              {/* Only the schools with a Briefs tab: a brief filed under one without is a
+                  brief nobody can reach. See `briefs` in programs.js. */}
+              {PROGRAMS.filter((p) => p.briefs).map((p) => <option key={p.id} value={p.id}>{programName(p)}</option>)}
             </select>
           </div>
         </div>

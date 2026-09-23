@@ -21,7 +21,7 @@ export const DRAFT = process.env.NODE_ENV !== 'production';
 export const PROGRAMS = [
   { id: 'nife', label: 'NIFE', aircraft: 'C172', home: '/nife/about', base: '/nife', briefs: true, discuss: 'draft' },
   { id: 'tw4', label: 'Primary', aircraft: 'T-6B', home: '/tw4/about', base: '/tw4', briefs: true, discuss: true },
-  { id: 't44c', label: 'Advanced', aircraft: 'T-44C', home: '/t44c/eps-limits', base: '/t44c', draft: true },
+  { id: 't44c', label: 'Advanced', aircraft: 'T-44C', home: '/t44c/about', base: '/t44c', draft: true },
 ];
 
 // Whether a thing flagged `true`, `'draft'` or falsy is shown here. A draft is shown on a dev
@@ -32,6 +32,42 @@ export const shown = (flag) => (flag === 'draft' ? DRAFT : !!flag);
 export const navPrograms = () => PROGRAMS.filter((p) => !p.draft || DRAFT);
 
 export const programName = (p) => `${p.label} - ${p.aircraft}`;
+
+// The pages each program has, in the order they are offered. This is the one list: the top
+// bar's page menu renders it, and an About page's index is built from it (about/tabs.js), so
+// the two can never disagree about what a program has or what order it comes in.
+//
+// A tab marked `draft` is shown on a dev server and left out of a production build, the way a
+// draft program is. The page it points at is unrouted there too.
+export const PROGRAM_TABS = {
+  nife: [
+    { to: '/nife/about', label: 'About' },
+    { to: '/nife/questions', label: 'Questions' },
+    { to: '/nife/nav', label: 'Problem Generator' },
+    { to: '/nife/docs', label: 'Docs' },
+    { to: '/nife/eps-limits', label: 'EPs/Limits' },
+    { to: '/nife/discuss', label: 'Discussion Items', draft: true },
+    { to: '/nife/briefs', label: 'Briefs/TOLD' },
+  ],
+  tw4: [
+    { to: '/tw4/about', label: 'About' },
+    { to: '/tw4/eps-limits', label: 'EPs/Limits' },
+    { to: '/tw4/docs', label: 'Docs' },
+    { to: '/tw4/discuss', label: 'Discussion Items' },
+    { to: '/tw4/briefs', label: 'Briefs/TOLD' },
+    { to: '/tw4/courserules', label: 'Course Rules' },
+    { to: '/tw4/systems', label: 'Systems' },
+    { to: '/tw4/jetlog', label: 'Jet Log' },
+  ],
+  t44c: [
+    { to: '/t44c/about', label: 'About' },
+    { to: '/t44c/eps-limits', label: 'EPs/Limits' },
+  ],
+};
+
+// The tabs of a program that are shown here: everything but a draft one on the live site.
+export const shownTabs = (tabs) => (tabs || []).filter((t) => !t.draft || DRAFT);
+
 
 const norm = (text) => (text || '').trim().toLowerCase();
 

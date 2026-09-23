@@ -11,6 +11,7 @@ import Docs from './components/Docs.js';
 import TW4About from './components/TW4About.js';
 import TW4EPsLimits from './components/TW4EPsLimits.js';
 import T44CEPsLimits from './components/T44CEPsLimits.js';
+import T44CAbout from './components/T44CAbout.js';
 import BriefsPage from './components/briefs/BriefsPage';
 import NIFEAbout from './components/NIFEAbout.js';
 import LandingPage from './components/LandingPage.js';
@@ -65,7 +66,8 @@ function App() {
         <Route path="/tw4/systems/:tab" element={<Systems />} />
         <Route path="/tw4/discuss/*" element={<Discuss />} />
         <Route path="/tw4/jetlog" element={<TW4JetLog />} />
-        {DRAFT && <Route path="/t44c" element={<Navigate to="/t44c/eps-limits" replace />} />}
+        {DRAFT && <Route path="/t44c" element={<Navigate to="/t44c/about" replace />} />}
+        {DRAFT && <Route path="/t44c/about" element={<T44CAbout />} />}
         {DRAFT && <Route path="/t44c/eps-limits" element={<T44CEPsLimits />} />}
         {DRAFT && <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />}
       </Routes>

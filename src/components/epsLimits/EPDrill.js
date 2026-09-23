@@ -11,7 +11,9 @@ import { gradeAnswer } from '../../utils/answerUtils';
 // together.
 //
 // A step is one box, answered as the checklist prints it ("Mixture - IDLE CUTOFF"), the way
-// Primary's are.
+// Primary's are. It carries the markers its publication prints beside the step number, and
+// nothing about them is one school's: `critical` is the asterisk (a memory item) and `concur`
+// the dagger (NATOPS §12.1, "requires concurrence of both pilots").
 //
 // The controls come in through `left` and `right`, render functions given
 // `{ fill, hint, resetKey }`:
@@ -71,7 +73,133 @@ function ScaleToFit({ width, children }) {
   );
 }
 
-function Instructions({ hasPanel, onClose }) {
+// Within one step, warnings come first, then cautions, then notes. That is the order of
+// severity rather than the order the page prints them in, and it is the order Primary's modal
+// has always used.
+const NWC_KINDS = [
+  ['warnings', 'warning', 'Warning'],
+  ['cautions', 'caution', 'Caution'],
+  ['notes', 'note', 'Note'],
+];
+
+// Every NWC in one procedure, numbered straight through: the ones printed before the steps
+// first (keyed by the EP's own id), then each step's in order. The numbering is the point — a
+// student learns that Aborting Takeoff has four, not that this step has two — so it counts the
+// whole procedure even when one step was clicked.
+function nwcItems(group, nwc, hints) {
+  const items = [];
+  let seq = 0;
+  for (const { key } of group) {
+    const data = nwc[key];
+    if (!data) continue;
+    for (const [field, category] of NWC_KINDS) {
+      const texts = data[field] || [];
+      for (let i = 0; i < texts.length; i += 1) {
+        seq += 1;
+        items.push({ seq, key, category, text: texts[i], hint: hints && hints[key] && (hints[key][field] || [])[i] });
+      }
+    }
+  }
+  return items;
+}
+
+function nwcCounts(keys, nwc) {
+  const out = { notes: 0, warnings: 0, cautions: 0 };
+  for (const key of keys) {
+    const data = nwc[key];
+    if (!data) continue;
+    out.notes += (data.notes || []).length;
+    out.warnings += (data.warnings || []).length;
+    out.cautions += (data.cautions || []).length;
+  }
+  return out;
+}
+
+// The whole procedure's NWCs, collapsed to their number and category. Opening one is the recall
+// exercise: you are told there are three and which kind each is, and you say what it says before
+// you look. The ones belonging to the step you clicked are ringed so you can find them again.
+function NWCModal({ group, current, nwc, hints, onClose }) {
+  const [open, setOpen] = useState({});
+  const [shown, setShown] = useState({});
+  const [allHints, setAllHints] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const items = nwcItems(group, nwc, hints);
+  const epCounts = nwcCounts(group.map((g) => g.key), nwc);
+  const stepCounts = nwcCounts([current], nwc);
+  const heading = (group.find((g) => g.key === current) || {}).heading || '';
+  // The toggle only appears once there is a hint to reveal, so it is never a control that can
+  // do nothing. Write hints and it shows up on its own.
+  const anyHints = items.some((i) => i.hint);
+
+  return createPortal(
+    <div className="epl-modal-overlay" onClick={onClose}>
+      <div className="epl-modal epl-nwc-modal" role="dialog" aria-label={`Notes, warnings and cautions for ${heading}`}
+        onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="epl-modal-close" onClick={onClose} aria-label="Close">&times;</button>
+
+        <div className="epl-nwc-counts">
+          {[['N', 'notes'], ['W', 'warnings'], ['C', 'cautions']].map(([letter, cat]) => (
+            <div key={cat} className="epl-nwc-count">
+              <div className="epl-nwc-count-letter">{letter}</div>
+              <div className="epl-nwc-count-ep">{epCounts[cat]}</div>
+              <div className="epl-nwc-count-step">{stepCounts[cat]}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="epl-nwc-head">
+          <h2 className="epl-nwc-heading">{heading}</h2>
+          {anyHints && (
+            <button type="button" className={`epl-nwc-allhints${allHints ? ' active' : ''}`}
+              aria-pressed={allHints} onClick={() => setAllHints((v) => !v)}>
+              All Hints
+            </button>
+          )}
+        </div>
+
+        <div className="epl-nwc-list">
+          {items.map((item) => {
+            const ring = item.key === current ? ' epl-nwc--current' : '';
+            const toggle = () => setOpen((p) => ({ ...p, [item.seq]: !p[item.seq] }));
+            const label = NWC_KINDS.find(([, c]) => c === item.category)[2];
+            if (open[item.seq]) {
+              return (
+                <button type="button" key={item.seq} onClick={toggle}
+                  className={`epl-nwc epl-nwc--${item.category}${ring} epl-nwc-item epl-nwc-item--open`}>
+                  <strong>{item.seq}. {label.toUpperCase()}:</strong> {item.text}
+                </button>
+              );
+            }
+            return (
+              <button type="button" key={item.seq} onClick={toggle}
+                className={`epl-nwc epl-nwc--${item.category}${ring} epl-nwc-item`}>
+                <span>{item.seq}. {label}</span>
+                {item.hint && (allHints || shown[item.seq]
+                  ? <span className="epl-nwc-hint">{item.hint}</span>
+                  : (
+                    <span className="epl-nwc-hint-link" role="button" tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); setShown((p) => ({ ...p, [item.seq]: true })); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setShown((p) => ({ ...p, [item.seq]: true })); } }}>
+                      Hint
+                    </span>
+                  ))}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function Instructions({ hasPanel, hasNWC, onClose }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -90,6 +218,7 @@ function Instructions({ hasPanel, onClose }) {
           <li>A <span className="epl-swatch epl-swatch--red">red</span> box is wrong</li>
           <li>A <span className="epl-swatch epl-swatch--yellow">yellow</span> box has only part of the answer</li>
           <li>A <span className="epl-swatch epl-swatch--green">green</span> box is correct</li>
+          {hasNWC && <li>An <strong>NWC</strong> button beside a step or the EP title opens the notes, warnings and cautions the publication prints there. A step with nothing printed against it has no button</li>}
         </ul>
         <h3>Buttons &amp; Controls</h3>
         <ul>
@@ -100,6 +229,7 @@ function Instructions({ hasPanel, onClose }) {
           <li><strong>Check:</strong> Validates your answers. Enter in any box does the same</li>
           <li><strong>Reset:</strong> Clears all answers and feedback</li>
           <li><strong>Random/Sequential Order:</strong> Toggle between a shuffled order and the checklist's own</li>
+          {hasNWC && <li><strong>Auto NWC:</strong> Opens a step's notes, warnings and cautions as soon as you get that step right</li>}
         </ul>
         <h3>Navigation</h3>
         <ul>
@@ -114,7 +244,7 @@ function Instructions({ hasPanel, onClose }) {
 
 function EPDrill({
   eps, title, subtitle, footnote, left, right, panelWidth = 300, sideWidth = 200,
-  isGameActive = false, onGameComplete,
+  nwc, nwcHints, isGameActive = false, onGameComplete,
 }) {
   const hasPanel = !!(left || right);
   const [full, setFull] = useState(() => hasPanel && window.innerWidth >= 750);
@@ -127,14 +257,34 @@ function EPDrill({
   const [resetKey, setResetKey] = useState(0);
   const [hint, setHint] = useState(null);
   const [showList, setShowList] = useState(false);
+  const [autoNWC, setAutoNWC] = useState(false);
+  const [openNWC, setOpenNWC] = useState(null);
   const listRef = useRef(null);
   const pageRef = useRef(null);
+  const wasCorrect = useRef({});
 
   const ep = eps[order[pos]];
   const steps = useMemo(() => ep.rows.filter((r) => r.id), [ep]);
   const answers = useMemo(() => Object.fromEntries(steps.map((s) => [s.id, s.text])), [steps]);
   const fields = Object.keys(answers);
   const showTools = !isGameActive;
+
+  // The NWCs for a step or, keyed by the EP's own id, the ones the publication prints before
+  // the procedure. A record with nothing in it opens nothing.
+  const nwcAt = (key) => {
+    const found = nwc && nwc[key];
+    if (!found) return null;
+    const { warnings = [], cautions = [], notes = [] } = found;
+    return warnings.length + cautions.length + notes.length ? found : null;
+  };
+  const hasNWC = !!nwc;
+
+  // The procedure's NWC anchors in publication order: what is printed before the steps, then
+  // each step that has something. This is derived rather than listed, because the EP already
+  // knows its own order — Primary keeps a hand-written EP_NWC_GROUPS only because its data is
+  // not shaped this way.
+  const nwcGroup = [{ key: ep.id, heading: ep.title }, ...steps.map((s2) => ({ key: s2.id, heading: s2.text }))]
+    .filter((g) => nwcAt(g.key));
 
   useEffect(() => {
     if (!showList) return undefined;
@@ -152,11 +302,29 @@ function EPDrill({
     if (r.top < 0 || r.bottom > window.innerHeight) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [hint]);
 
+  // Auto NWC: when a step turns out right, show what the publication prints beside it. It
+  // follows the marking rather than the typing, so the NWC arrives with the green box.
+  //
+  // It is the first newly-correct step *that has something to show* rather than simply the first
+  // newly-correct one: a check marks several steps at once and All Answers marks the lot, and
+  // most steps carry no NWC, so keying on the first of them shows nothing almost every time.
+  useEffect(() => {
+    if (!autoNWC) return undefined;
+    const opened = steps.find((s2) => results[s2.id] === 'correct' && !wasCorrect.current[s2.id] && nwcAt(s2.id));
+    wasCorrect.current = Object.fromEntries(steps.map((s2) => [s2.id, results[s2.id] === 'correct']));
+    if (!opened) return undefined;
+    const at = setTimeout(() => setOpenNWC(opened.id), 600);
+    return () => clearTimeout(at);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results, autoNWC, steps]);
+
   const go = (nextPos) => {
     setPos(nextPos);
     setResults({});
     setHint(null);
     setShowList(false);
+    setOpenNWC(null);
+    wasCorrect.current = {};
     setResetKey((k) => k + 1);
   };
 
@@ -225,6 +393,8 @@ function EPDrill({
     setData(next);
     setResults({});
     setHint(null);
+    setOpenNWC(null);
+    wasCorrect.current = {};
     setResetKey((k) => k + 1);
   };
 
@@ -251,19 +421,35 @@ function EPDrill({
   const onKeyDown = (e) => { if (e.key === 'Enter') check(); };
   const api = { fill, hint, resetKey };
 
+  // The NWC affordance: a step or a title only grows one when the publication prints something
+  // against it, so its presence is itself information.
+  const nwcButton = (key, className = 'epl-nwc-btn') => {
+    if (!nwcAt(key)) return null;
+    return (
+      <button type="button" className={className} title="Notes, warnings and cautions"
+        onClick={() => setOpenNWC(key)}>
+        NWC
+      </button>
+    );
+  };
+
   let n = 0;
   const card = (
     <div className="epl-card">
-      <div className="epl-card-title">{ep.title}</div>
+      <div className="epl-card-title">
+        {ep.title}
+        {nwcButton(ep.id, 'epl-nwc-btn epl-nwc-btn--title')}
+      </div>
       {ep.rows.map((row, i) => {
         if (row.decision) return <div key={i} className="epl-decision">{row.decision}</div>;
         if (row.note) return <div key={i} className="epl-note">{row.note}</div>;
         n += 1;
         return (
           <div key={row.id} className="epl-step">
-            <span className="epl-num">{row.critical ? '*' : ''}{n}.</span>
+            <span className="epl-num">{row.concur ? '†' : ''}{row.critical ? '*' : ''}{n}.</span>
             <input type="text" aria-label={`Step ${n}`} className={cls(row.id)}
               value={data[row.id] || ''} onChange={(e) => change(row.id, e.target.value)} onKeyDown={onKeyDown} />
+            {nwcButton(row.id)}
           </div>
         );
       })}
@@ -282,7 +468,11 @@ function EPDrill({
         ) : <span className="epl-mode-spacer" />}
       </div>
       {subtitle && <p className="page-subtitle">{subtitle}</p>}
-      {showHelp && <Instructions hasPanel={hasPanel} onClose={() => setShowHelp(false)} />}
+      {showHelp && <Instructions hasPanel={hasPanel} hasNWC={hasNWC} onClose={() => setShowHelp(false)} />}
+      {openNWC && (
+        <NWCModal key={openNWC} group={nwcGroup} current={openNWC} nwc={nwc} hints={nwcHints}
+          onClose={() => setOpenNWC(null)} />
+      )}
 
       <div className="eps-page">
         <div className="epl-row">
@@ -347,6 +537,12 @@ function EPDrill({
         {showTools && <button type="button" onClick={allAnswers}>All Answers</button>}
         <button type="button" onClick={() => check()}>Check</button>
         {showTools && <button type="button" onClick={reset}>Reset</button>}
+        {showTools && hasNWC && (
+          <button type="button" className={`epl-auto-nwc${autoNWC ? ' active' : ''}`} aria-pressed={autoNWC}
+            onClick={() => setAutoNWC((v) => !v)}>
+            Auto NWC
+          </button>
+        )}
       </div>
       {footnote && <p className="epl-footnote">{footnote}</p>}
     </div>

@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useMenuDismiss from './useMenuDismiss';
-import { navPrograms, programName, DRAFT } from './programs';
+import { navPrograms, programName, PROGRAM_TABS, shownTabs } from './programs';
 
 // The top bar: which program you are in, and which page of it you are on. Both are dropdowns
 // rather than rows of tabs, because the row stopped fitting — TW4 has eight pages now, and the
@@ -9,35 +9,6 @@ import { navPrograms, programName, DRAFT } from './programs';
 // names where you are, so the bar still answers "what am I looking at" without being opened.
 
 // The program list is shared with everything else that names a school: see programs.js.
-
-// A tab marked `draft` is shown on a dev server and left out of a production build, the way
-// programs.js gates a draft program. The page it points at is unrouted there too.
-const TABS = {
-  nife: [
-    { to: '/nife/about', label: 'About' },
-    { to: '/nife/questions', label: 'Questions' },
-    { to: '/nife/docs', label: 'Docs' },
-    { to: '/nife/discuss', label: 'Discussion Items', draft: true },
-    { to: '/nife/nav', label: 'Problem Generator' },
-    { to: '/nife/eps-limits', label: 'EPs/Limits' },
-    { to: '/nife/briefs', label: 'Briefs/TOLD' },
-  ],
-  tw4: [
-    { to: '/tw4/about', label: 'About' },
-    { to: '/tw4/eps-limits', label: 'EPs/Limits' },
-    { to: '/tw4/docs', label: 'Docs' },
-    { to: '/tw4/discuss', label: 'Discussion Items' },
-    { to: '/tw4/briefs', label: 'Briefs/TOLD' },
-    { to: '/tw4/courserules', label: 'Course Rules' },
-    { to: '/tw4/systems', label: 'Systems' },
-    { to: '/tw4/jetlog', label: 'Jet Log' },
-  ],
-  t44c: [
-    { to: '/t44c/eps-limits', label: 'EPs/Limits' },
-  ],
-};
-
-const shownTabs = (tabs) => tabs.filter((t) => !t.draft || DRAFT);
 
 // The tab you are on: the longest `to` the path starts with, so /tw4/discuss/hud is still
 // Discussion Items and /tw4/systems/fuel is still Systems.
@@ -127,7 +98,7 @@ function TopNav() {
   // announcing a program whose pages render nothing.
   const offered = navPrograms();
   const program = offered.find((p) => pathname.startsWith(p.base)) || offered[0];
-  const tabs = shownTabs(TABS[program.id] || []);
+  const tabs = shownTabs(PROGRAM_TABS[program.id]);
   const tab = currentTab(tabs, pathname);
   useBrandFit(bar, brand, [program.id, tab && tab.to]);
 

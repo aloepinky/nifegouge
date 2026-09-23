@@ -12,12 +12,23 @@ const ABBREVS = {
   'decr': 'decrease',
   'gnd':  'ground',
   'lbs':  'pounds',
+  // A time limit is written as a word on the sheets ("5 MINUTES", "40 SECONDS"), so the
+  // singular and the usual shorthands all have to land on one spelling.
+  'min':     'minutes',
+  'mins':    'minutes',
+  'minute':  'minutes',
+  'sec':     'seconds',
+  'secs':    'seconds',
+  'second':  'seconds',
 };
 
 export function normalizeAnswer(str) {
   let s = str.toString().toLowerCase();
   // Strip zero-width/soft-hyphen invisible Unicode that appears in answer keys
   s = s.replace(/[​‌‍﻿­]/g, '');
+  // The degree sign drops out rather than becoming a space, so "790°C" is "790C" and nobody has
+  // to find the symbol on a keyboard to answer a temperature limit.
+  s = s.replace(/°/g, '');
   s = s.replace(/[,\-–;()./]/g, ' ');
   s = s.replace(/\s+/g, ' ').trim();
   if (!s) return '';
@@ -73,5 +84,7 @@ function numbersIn(s) {
     .replace(/[–—]/g, '-')
     .replace(/(\d),(?=\d)/g, '$1')
     .replace(/(\d)\s*-\s*(\d)/g, '$1 to $2');
-  return (text.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+  // A number written without its leading zero is still that number: the sheets print ".48 Mach"
+  // and "±.8 VDC", and a student typing 0.48 has not got it wrong.
+  return (text.match(/-?(?:\d+(?:\.\d+)?|\.\d+)/g) || []).map(Number);
 }

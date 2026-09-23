@@ -7088,6 +7088,7 @@ textarea.incorrect-answer {
 }
 
 .epl-card-title {
+  position: relative;
   background-color: #ef5350;
   color: #fff;
   padding: 6px 12px;
@@ -7274,14 +7275,18 @@ button.epl-modal-close:hover {
   font-weight: bold;
 }
 
-.limits-eps-container .button-row button.epl-random {
+/* The lit toggles: Random Mode on a limits table and Auto NWC on an EPs page. Primary styles
+   the two identically (TW4Cockpit.js), so they share the rule rather than repeating it. */
+.limits-eps-container .button-row button.epl-random,
+.limits-eps-container .button-row button.epl-auto-nwc {
   background-color: #f0f0f0;
   color: #000;
   font-weight: normal;
   border: 1px solid #ccc;
 }
 
-.limits-eps-container .button-row button.epl-random.active {
+.limits-eps-container .button-row button.epl-random.active,
+.limits-eps-container .button-row button.epl-auto-nwc.active {
   font-weight: bold;
   background-color: #4CAF50;
   color: #fff;
@@ -7344,26 +7349,24 @@ button.epl-modal-close:hover {
    `input.correct-answer` rules, so nothing here sets them.
 
    The sheet never reflows. An EPs/Limits exam is remembered spatially — which column a limit is
-   in and how far down — so a narrow screen scrolls the whole sheet sideways rather than
-   stacking its two columns, which would teach a shape the exam does not have. Everything below
+   in and how far down — so its two columns never stack, which would teach a shape the exam does
+   not have. It shrinks instead, the way Primary's sheet does: everything is fluid (no fixed or
+   minimum widths anywhere below), and `.limits-eps-container`'s own scale() takes it down a
+   step at a time. Nothing here may introduce a horizontal scrollbar. Everything below
    that sets an alignment is measured off the publication: the airspeed block is right-aligned,
    the general block is centred, the right-hand column is left-aligned, and the fuel line
    centres across both. The columns are 56.5/43.5, which is where the sheet's own divider
    falls. */
 
-/* The container's 900px cap is sized for NIFE's narrower table. This sheet is wider, so the
-   page keeps the full width at every viewport and `.t44c-sheet-scroll` handles the rest. */
+/* The container's 900px cap is sized for NIFE's narrower table; this sheet is denser, so the
+   page keeps the full width at every viewport. It only ever widens the room available — the
+   sheet inside is fluid, so this can never cause a scrollbar. */
 .limits-eps-container.t44c-page,
 .t44c-page.t44c-page { max-width: 1125px; }
 
-.t44c-sheet-scroll {
-  overflow-x: auto;
-}
-
-/* A fixed layout width, not a range: the sheet is the same shape on every screen, and the
-   container's own scale() shrinks it to fit. SHEET_PX in T44CLimits.js is this number. */
 .t44c-sheet {
-  width: 1085px;
+  width: 100%;
+  max-width: 1085px;
   margin: 0 auto 10px;
   border: 2px solid #01202C;
   font-size: 0.86em;
@@ -7413,7 +7416,6 @@ button.epl-modal-close:hover {
   background: #fff;
   text-align: left;
   font-weight: normal;
-  white-space: nowrap;
 }
 
 .t44c-grid th:first-child,
@@ -7441,6 +7443,8 @@ button.epl-modal-close:hover {
   font: inherit;
   color: #01202C;
   min-width: 0;
+  /* Never wider than the cell it sits in: the em widths below are a preference, not a floor. */
+  max-width: 100%;
 }
 
 .t44c-blank:focus {
@@ -7524,3 +7528,168 @@ button.epl-modal-close:hover {
   padding: 6px 10px;
   text-align: center;
 }
+
+/* The sheet shrinks by type rather than by reflowing. Everything inside it is sized in em, so
+   stepping the sheet's own font-size takes the whole thing down together and the columns keep
+   their proportions exactly. This is what stops the long labels in the right-hand column from
+   clipping on a narrow screen; it lands the sheet at about Primary's 10px cells, which is the
+   size that page has always used. `.limits-eps-container` scales on top of this. */
+@media (max-width: 1140px) { .t44c-sheet { font-size: 0.80em; } }
+@media (max-width: 960px)  { .t44c-sheet { font-size: 0.72em; } }
+@media (max-width: 800px)  { .t44c-sheet { font-size: 0.62em; } }
+@media (max-width: 680px)  { .t44c-sheet { font-size: 0.54em; } }
+
+/* ── NWC boxes on an EPs page (epsLimits/EPDrill.js) ────────────────────────────────
+   Primary's NWC modal, class for class: the counts header, the whole procedure collapsed to
+   numbered chips, and the hint under each. The three boxes are its NWC_BUBBLE_STYLES
+   (TW4Cockpit.js) value for value, and `.discuss-nwc--*` is a third copy — change all three
+   together. A warning is filled and shadowed, a caution dashed, a note a heavy rule; the weights
+   carry the severity, so nothing here restates it in colour. */
+
+/* The modal is portalled to document.body, so nothing inside it can be scoped to
+   `.limits-eps-container`; its rules hang off `.epl-nwc-modal`, which still outranks the
+   site-wide `.button-row button`. The two buttons that live on the page itself — the chip
+   beside a step and the Auto NWC toggle — are scoped to the container as usual. */
+
+/* The button beside a step. Primary's nwcButtonStyle (EPDivsData.js): a solid red chip. */
+.limits-eps-container button.epl-nwc-btn {
+  flex: none;
+  margin-left: 2px;
+  padding: 0;
+  min-width: 20px;
+  height: 20px;
+  font-size: 8px;
+  font-weight: bold;
+  color: white;
+  background-color: #ef5350;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.limits-eps-container button.epl-nwc-btn:hover {
+  background-color: #e53935;
+}
+
+/* On the red title bar the chip is taken out of flow, so the title stays centred on the card
+   rather than being pushed off-centre by the width of the button. It inverts to read against
+   the bar. */
+.limits-eps-container button.epl-nwc-btn--title {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  margin-left: 0;
+  color: #ef5350;
+  background-color: white;
+}
+
+.limits-eps-container button.epl-nwc-btn--title:hover {
+  background-color: #ffe9e9;
+}
+
+/* Always at its full width, never sized to its content. `.epl-modal` caps the width but sets
+   none, so as a flex item it shrinks to fit — which made the box lurch wider the moment a long
+   warning was opened. Primary's modal has always been width 100% under the same 600px cap. */
+.epl-nwc-modal {
+  /* `.epl-modal` is content-box with 30px of padding, so a plain width: 100% overflows the
+     overlay on anything narrower than about 660px. */
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 660px;
+}
+
+/* N / W / C over the whole procedure's count in black, the clicked step's under it in grey. */
+.epl-nwc-counts {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.epl-nwc-count { text-align: center; }
+.epl-nwc-count-letter { font-size: 11px; font-weight: bold; color: black; line-height: 1.2; }
+.epl-nwc-count-ep { font-size: 22px; font-weight: bold; color: black; line-height: 1.1; }
+.epl-nwc-count-step { font-size: 13px; color: #aaa; }
+
+/* The clicked step's own text, with All Hints sitting on its last line. */
+.epl-nwc-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.epl-nwc-heading {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  color: #01202C;
+}
+
+.epl-nwc-modal button.epl-nwc-allhints {
+  flex: none;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+  color: #003B4F;
+  background-color: white;
+  border: 1px solid #003B4F;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.epl-nwc-modal button.epl-nwc-allhints.active {
+  color: white;
+  background-color: #003B4F;
+}
+
+.epl-nwc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* A chip: its number and what kind it is, and nothing else until it is opened. */
+.epl-nwc-modal button.epl-nwc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: left;
+  color: black;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.epl-nwc-modal button.epl-nwc-item--open {
+  display: block;
+  padding: 10px;
+  font-weight: normal;
+  line-height: 1.5;
+}
+
+.epl-nwc-modal button.epl-nwc--warning {
+  background: #e6d4d4;
+  border: 2px solid #ef5350;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.epl-nwc-modal button.epl-nwc--caution { border: 3px dashed #ef5350; }
+.epl-nwc-modal button.epl-nwc--note { border: 4px solid #ef5350; }
+
+/* The ones belonging to the step that was clicked, so they can be found in the procedure. */
+.epl-nwc-modal button.epl-nwc--current { box-shadow: 0 0 0 3px #ffc107; }
+.epl-nwc-modal button.epl-nwc--warning.epl-nwc--current {
+  box-shadow: 0 0 0 3px #ffc107, 4px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.epl-nwc-hint { font-weight: normal; font-style: italic; color: #555; }
+.epl-nwc-hint-link { font-weight: normal; font-style: italic; color: #888; text-decoration: underline; cursor: pointer; }

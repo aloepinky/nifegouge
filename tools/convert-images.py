@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
 """
-Re-encode the site's PNG photos as WebP and archive the originals.
+Re-encode the site's PNG and JPEG photos as WebP and archive the originals.
 
 Every photo under public/ was saved as lossless PNG, and the systems diagram photos
 additionally carry a fully-opaque alpha channel they never use — together that is ~32 MB
 of assets, all of which Netlify copies into every deploy. WebP at native resolution cuts
 that by ~92% with no visible difference.
 
-Deliberately does NOT resize. TW4Cockpit.js and WhizWheel.js position overlays and
+Deliberately does NOT resize a PNG. TW4Cockpit.js and WhizWheel.js position overlays and
 rotations against these images' natural dimensions, and native-resolution WebP already
 captures almost all of the saving.
 
+A JPEG is a different case and IS capped on its long edge. The JPEGs are the aircraft
+photographs the About pages draw as a CSS background: nothing is positioned against them,
+the band they fill is about 1000 px wide, and one of them arrived at 6637 px — which
+Netlify would copy into every deploy so a browser could throw nine tenths of it away.
+
 Usage:
     python tools/convert-images.py --dry-run     # report only, touch nothing
-    python tools/convert-images.py               # convert, then archive the PNGs
+    python tools/convert-images.py               # convert, then archive the originals
 
 Requires Pillow.
 """
@@ -40,6 +45,12 @@ ARCHIVE = os.path.join(REPO, "_original-images")
 # label a student cannot read is the whole value of the figure gone.
 QUALITY = {"systems": 82, "images": 90, "discuss": 90}
 
+# A photograph is judged by eye rather than by the legibility of printed text on it, so it
+# takes its own quality and the long-edge cap the docstring explains.
+PHOTO_EXTS = (".jpg", ".jpeg")
+PHOTO_QUALITY = 80
+PHOTO_MAX_EDGE = 1600
+
 # PWA manifest icons and the CTAF chart are referenced by manifest.json / index.html and
 # are already small; leaving them as PNG keeps those references valid.
 SKIP = {"logo192.png", "logo512.png", "ctaf.png"}
@@ -51,11 +62,15 @@ SKIP = {"logo192.png", "logo512.png", "ctaf.png"}
 MIN_BYTES = 40_000
 
 
+def is_photo(name):
+    return name.lower().endswith(PHOTO_EXTS)
+
+
 def targets():
-    """PNGs under public/ worth converting, as (abs_path, rel_path_from_public)."""
+    """PNGs and JPEGs under public/ worth converting, as (abs_path, rel_path_from_public)."""
     for root, _dirs, files in os.walk(PUBLIC):
         for name in sorted(files):
-            if not name.lower().endswith(".png") or name in SKIP:
+            if not (name.lower().endswith(".png") or is_photo(name)) or name in SKIP:
                 continue
             src = os.path.join(root, name)
             if os.path.getsize(src) < MIN_BYTES:
@@ -64,6 +79,8 @@ def targets():
 
 
 def quality_for(rel):
+    if is_photo(rel):
+        return PHOTO_QUALITY
     top = rel.replace("\\", "/").split("/")[0]
     return QUALITY.get(top, 82)
 
@@ -80,6 +97,11 @@ def convert(src, quality, dry_run):
     """
     im = Image.open(src)
     old = os.path.getsize(src)
+
+    # A photograph is capped on its long edge; a PNG is left at its natural size. See the
+    # docstring: the cockpit and whiz-wheel art is positioned against its own dimensions.
+    if is_photo(src):
+        im.thumbnail((PHOTO_MAX_EDGE, PHOTO_MAX_EDGE), Image.LANCZOS)
 
     # Keep alpha only where it actually does something. The systems photos are RGBA with a
     # fully-opaque alpha channel — dropping it is free. The cockpit and whiz-wheel art has
@@ -110,7 +132,7 @@ def archive(src, rel):
 
 
 def still_referenced(rel):
-    """True if any file under src/ still points at this PNG.
+    """True if any file under src/ still points at this original.
 
     Archiving moves the original into a gitignored directory, so archiving one that src/
     still references would leave a 404 in production with no copy left in git. The script
@@ -134,7 +156,7 @@ def main():
 
     files = list(targets())
     if not files:
-        sys.exit("No PNGs found under public/ — already converted?")
+        sys.exit("No PNGs or JPEGs found under public/ — already converted?")
 
     print(f"{'file':44} {'quality':>7} {'alpha':>5} {'before':>9} {'after':>9} {'saved':>7}")
     print("-" * 88)
@@ -173,7 +195,7 @@ def main():
     print(f"\n{len(files) - len(held)} originals moved to "
           f"{os.path.relpath(ARCHIVE, REPO)}/ (gitignored)")
     if held:
-        print(f"\n{len(held)} original(s) KEPT in public/ — src/ still references the .png:")
+        print(f"\n{len(held)} original(s) KEPT in public/ — src/ still references the original:")
         for rel in held:
             print("   " + rel.replace(os.sep, "/"))
         print("Update those references to .webp, then re-run to archive them.")

@@ -6,8 +6,8 @@ function LandingPage() {
   // Preload images to prevent mobile display issues
   useEffect(() => {
     const imagesToPreload = [
-      '/images/c172.jpg',
-      '/images/t6b.jpg'
+      '/images/c172.webp',
+      '/images/t6b.webp'
     ];
 
     imagesToPreload.forEach((src) => {
@@ -32,7 +32,7 @@ function LandingPage() {
           onClick={() => navigate('/nife/about')}
         >
           <div className="landing-button-fallback">NIFE</div>
-          <img src="/images/c172.jpg" alt="NIFE - Cessna 172" />
+          <img src="/images/c172.webp" alt="NIFE - Cessna 172" />
           <div className="landing-button-label">NIFE</div>
         </div>
 
@@ -41,7 +41,7 @@ function LandingPage() {
           onClick={() => navigate('/tw4/about')}
         >
           <div className="landing-button-fallback">Primary</div>
-          <img src="/images/t6b.jpg" alt="Primary - T-6B Texan II" />
+          <img src="/images/t6b.webp" alt="Primary - T-6B Texan II" />
           <div className="landing-button-label">Primary</div>
         </div>
       </div>

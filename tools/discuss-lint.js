@@ -12,6 +12,7 @@
 //   node tools/discuss-lint.js --prose-only     # only the prose checks
 //   node tools/discuss-lint.js --list           # print the item slugs in scope and stop
 //   node tools/discuss-lint.js --snapshot       # (re)write the id baseline, lint nothing
+//   node tools/discuss-lint.js --school=nife --snapshot   # rewrite one school's, keep the rest
 //   node tools/discuss-lint.js --from=<dir>     # read a local mirror folder, not the server
 //
 // WHY A HEADING LINTER. A section title is an index entry, not a sentence: it labels a body of
@@ -39,7 +40,7 @@
 const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
-const { loadCorpus } = require('./lib/discussCorpus');
+const { loadCorpus, schoolNs } = require('./lib/discussCorpus');
 
 const ROOT = path.resolve(__dirname, '..');
 const IDS_FILE = path.join(__dirname, 'discuss-ids.json');
@@ -53,6 +54,7 @@ const value = (name) => {
 
 const OPT = {
   stage: value('stage'),
+  school: value('school'),
   slug: value('slug'),
   from: value('from'),
   headingsOnly: flag('headings-only'),
@@ -75,9 +77,19 @@ function inScope(entry, ftiOf) {
 // however the title above it changed. A paragraph or list-element id inside a section is
 // finer-grained, and rewriting a prose section into numbered steps genuinely retires its
 // paragraphs — that is reported for review rather than failed.
+// A page's key in the baseline. Two schools may both have a `turn-pattern`, and checking one
+// against the other's ids reports every id on both as lost. A baseline written before the
+// corpus was school-namespaced is keyed by bare slug; that is read as the default school's, so
+// an old file keeps working for Primary until the next snapshot rewrites it.
+const baselineKey = (item) => {
+  const ns = schoolNs(item.school);
+  return ns ? `${ns}/${item.slug}` : item.slug;
+};
+
 function idViolations(entry, baseline, idsOf) {
   if (!baseline) return [];
-  const before = baseline[entry.data.slug];
+  const before = baseline[baselineKey(entry.data)]
+    ?? (schoolNs(entry.data.school) === 'primary' ? baseline[entry.data.slug] : undefined);
   if (!before) return [];
   const now = new Set(idsOf(entry.data));
   return before
@@ -90,14 +102,34 @@ async function main() {
     idsOf, headingsOf, headingViolations, proseViolations, structureViolations, ftiOf,
   } = await import(pathToFileURL(path.join(__dirname, 'lib', 'discussRules.mjs')).href);
 
-  const ALL = (await loadCorpus({ from: OPT.from })).items;
+  const ALL = (await loadCorpus({ from: OPT.from, school: OPT.school })).items;
 
   if (OPT.snapshot) {
-    const snap = {};
-    for (const { data } of ALL) snap[data.slug] = idsOf(data);
-    fs.writeFileSync(IDS_FILE, `${JSON.stringify(snap, null, 1)}\n`);
-    const total = Object.values(snap).reduce((n, v) => n + v.length, 0);
-    console.log(`snapshot: ${Object.keys(snap).length} items, ${total} ids -> ${path.relative(ROOT, IDS_FILE)}`);
+    // A SCOPED SNAPSHOT MERGES. `--school=nife --snapshot` loads only NIFE's 37 pages, and
+    // writing that object out on its own silently drops Primary's 305 — the baseline for a
+    // corpus this file is the only record of. So a scoped run rewrites the schools it read and
+    // leaves every other key alone. A run with no `--school=` reads the whole corpus and is a
+    // full rewrite, which is what retires a key for a page that no longer exists.
+    const scoped = !!schoolNs(OPT.school);
+    const kept = scoped && fs.existsSync(IDS_FILE)
+      ? JSON.parse(fs.readFileSync(IDS_FILE, 'utf8'))
+      : {};
+    const snap = { ...kept };
+    const mine = new Set();
+    for (const { data } of ALL) {
+      const key = baselineKey(data);
+      snap[key] = idsOf(data);
+      mine.add(key);
+      // A page keyed by bare slug from before the corpus was namespaced is the same page.
+      if (key !== data.slug) delete snap[data.slug];
+    }
+    const ordered = Object.fromEntries(Object.keys(snap).sort().map((k) => [k, snap[k]]));
+    fs.writeFileSync(IDS_FILE, `${JSON.stringify(ordered, null, 1)}\n`);
+    const keys = Object.keys(ordered);
+    const count = (ks) => ks.reduce((n, k) => n + ordered[k].length, 0);
+    console.log(`snapshot: ${mine.size} items, ${count([...mine])} ids`
+      + `${scoped ? `, ${keys.length - mine.size} items left untouched` : ''}`
+      + ` -> ${path.relative(ROOT, IDS_FILE)} (${keys.length} items, ${count(keys)} ids)`);
     return 0;
   }
 

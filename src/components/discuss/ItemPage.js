@@ -188,7 +188,15 @@ function Gallery({ images }) {
 // One figure. A single image is sized by its own shape (see `.discuss-figure` in style.css),
 // which CSS cannot read off an <img>, so its natural width and aspect ratio are handed to the
 // stylesheet as custom properties once it loads. Until then the figure takes the 75% cap.
-function Figure({ f, showCite }) {
+// Whether a block inside a collapsed section still shows a marker of its own. The collapse says
+// every part of this section traces to one reference, and a figure or table lifted from another
+// section of the publication makes that untrue — the AIM's airspace diagram is printed in §3-2-1
+// and sits on a page whose prose is §3-2-4's. A block carrying no refs of its own is covered by
+// the SOURCE line, as it always was, so the nine figures that rely on that are unaffected.
+const ownCite = (block, showCite, collapsed) => showCite
+  || ((block.refs || []).length > 0 && (block.refs || []).join(',') !== (collapsed || []).join(','));
+
+function Figure({ f, showCite, collapsed }) {
   const [size, setSize] = useState(null);
   const images = figureImages(f);
   const gallery = images.length > 1;
@@ -210,16 +218,18 @@ function Figure({ f, showCite }) {
       {f.caption && (
         <figcaption>
           {f.caption}
-          {showCite && <Cite refs={f.refs} />}
+          {ownCite(f, showCite, collapsed) && <Cite refs={f.refs} />}
         </figcaption>
       )}
     </figure>
   );
 }
 
-function Figures({ figures, showCite }) {
+function Figures({ figures, showCite, collapsed }) {
   if (!figures || !figures.length) return null;
-  return figures.map((f) => <Figure key={f.id} f={f} showCite={showCite} />);
+  return figures.map((f) => (
+    <Figure key={f.id} f={f} showCite={showCite} collapsed={collapsed} />
+  ));
 }
 
 // Tables. A section carries `tables: [{ id, caption, cols, rows, refs, numeric }]`.
@@ -237,7 +247,7 @@ function Figures({ figures, showCite }) {
 //
 // It scrolls inside its own container, like the Numbers infobox: the page body never
 // scrolls horizontally and the airspace matrix is seven columns wide on a phone.
-function Tables({ tables, showCite }) {
+function Tables({ tables, showCite, collapsed }) {
   if (!tables || !tables.length) return null;
   return (
     <>
@@ -247,7 +257,7 @@ function Tables({ tables, showCite }) {
             {t.caption && (
               <caption>
                 {t.caption}
-                {showCite && <Cite refs={t.refs} />}
+                {ownCite(t, showCite, collapsed) && <Cite refs={t.refs} />}
               </caption>
             )}
             <thead>
@@ -280,13 +290,13 @@ function Tables({ tables, showCite }) {
 // The prose-and-list body of a section or of one of its subsections. Identical either side of
 // the heading level, which is the point: a subsection is a section that happens to sit inside
 // another one, not a different kind of thing.
-function SectionBody({ block, showCite }) {
+function SectionBody({ block, showCite, collapsed }) {
   return (
     <>
       <Hatnote slugs={block.main} label="Main page" />
       <Hatnote slugs={block.further} label="Further information" />
-      <Figures figures={block.figures} showCite={showCite} />
-      <Tables tables={block.tables} showCite={showCite} />
+      <Figures figures={block.figures} showCite={showCite} collapsed={collapsed} />
+      <Tables tables={block.tables} showCite={showCite} collapsed={collapsed} />
       {(block.paras || []).map((para) => (
         <p className="discuss-para" key={para.id}>
           {inline(para.text)}
@@ -910,7 +920,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                       check={(next, added) => check(withRefs(replaceBlock(view, section.id, next), added))}
                     />
                   ) : (
-                    <SectionBody block={section} showCite={!collapsed} />
+                    <SectionBody block={section} showCite={!collapsed} collapsed={collapsed} />
                   )}
 
                   {(section.subsections || []).map((sub) => {
@@ -945,7 +955,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                           />
                         ) : (
                           <>
-                            <SectionBody block={sub} showCite={!collapsed && !subCite} />
+                            <SectionBody block={sub} showCite={!collapsed && !subCite} collapsed={collapsed || subCite} />
                             {subCite && (
                               <p className="discuss-section-cite">
                                 Source
