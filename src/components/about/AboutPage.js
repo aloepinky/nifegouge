@@ -15,7 +15,6 @@ import AboutIcon from './aboutIcons.js';
  */
 function AboutPage({ title, intro, photo, photoAlt, photoCrop = 'center 45%', tabs, explainer }) {
   const [selected, setSelected] = useState(0);
-  const tab = tabs[selected];
 
   return (
     <div className="about-page">
@@ -51,17 +50,33 @@ function AboutPage({ title, intro, photo, photoAlt, photoCrop = 'center 45%', ta
           ))}
         </ul>
 
-        <aside className="about-preview" aria-live="polite">
-          <p className="about-preview-kicker">
-            <span className="about-preview-icon"><AboutIcon name={tab.icon} size={18} /></span>
-            About this tab
-          </p>
-          <h2>{tab.name}</h2>
-          {tab.more.map((para, i) => (
-            <p key={i}>{para}</p>
+        {/* Every tab's panel is rendered, all into the same grid cell, and all but the selected
+            one is hidden rather than removed. The slot is therefore always as tall as the
+            longest panel and never resizes: a panel that grew as the pointer moved down the
+            index moved the index itself, which selected the next tab down, which resized the
+            panel again. */}
+        <div className="about-preview-slot" aria-live="polite">
+          {tabs.map((t, i) => (
+            <aside
+              key={t.path}
+              className="about-preview"
+              data-shown={i === selected ? 'true' : 'false'}
+              aria-hidden={i === selected ? undefined : 'true'}
+            >
+              <p className="about-preview-kicker">
+                <span className="about-preview-icon"><AboutIcon name={t.icon} size={18} /></span>
+                About this tab
+              </p>
+              <h2>{t.name}</h2>
+              {t.more.map((para, n) => (
+                <p key={n}>{para}</p>
+              ))}
+              <Link className="about-open" to={t.path} tabIndex={i === selected ? undefined : -1}>
+                Open {t.name} →
+              </Link>
+            </aside>
           ))}
-          <Link className="about-open" to={tab.path}>Open {tab.name} →</Link>
-        </aside>
+        </div>
       </div>
 
       <details className="about-explainer">

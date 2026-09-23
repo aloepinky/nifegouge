@@ -66,10 +66,10 @@ function App() {
         <Route path="/tw4/systems/:tab" element={<Systems />} />
         <Route path="/tw4/discuss/*" element={<Discuss />} />
         <Route path="/tw4/jetlog" element={<TW4JetLog />} />
-        {DRAFT && <Route path="/t44c" element={<Navigate to="/t44c/about" replace />} />}
-        {DRAFT && <Route path="/t44c/about" element={<T44CAbout />} />}
-        {DRAFT && <Route path="/t44c/eps-limits" element={<T44CEPsLimits />} />}
-        {DRAFT && <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />}
+        <Route path="/t44c" element={<Navigate to="/t44c/about" replace />} />
+        <Route path="/t44c/about" element={<T44CAbout />} />
+        <Route path="/t44c/eps-limits" element={<T44CEPsLimits />} />
+        <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />
       </Routes>
 
       {!isLanding && <Footer />}

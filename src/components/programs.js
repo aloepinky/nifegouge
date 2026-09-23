@@ -21,7 +21,7 @@ export const DRAFT = process.env.NODE_ENV !== 'production';
 export const PROGRAMS = [
   { id: 'nife', label: 'NIFE', aircraft: 'C172', home: '/nife/about', base: '/nife', briefs: true, discuss: 'draft' },
   { id: 'tw4', label: 'Primary', aircraft: 'T-6B', home: '/tw4/about', base: '/tw4', briefs: true, discuss: true },
-  { id: 't44c', label: 'Advanced', aircraft: 'T-44C', home: '/t44c/about', base: '/t44c', draft: true },
+  { id: 't44c', label: 'Advanced', aircraft: 'T-44C', home: '/t44c/about', base: '/t44c' },
 ];
 
 // Whether a thing flagged `true`, `'draft'` or falsy is shown here. A draft is shown on a dev

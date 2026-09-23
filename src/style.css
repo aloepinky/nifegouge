@@ -792,14 +792,33 @@ td.xcell::after {
   display: none;
 }
 
-.about-preview {
+/* Every tab's panel occupies this one grid cell, so the cell is as tall as the tallest of them
+   and the page never grows or shrinks as the pointer runs down the index. The panels themselves
+   still size to their own text. Hidden ones keep `visibility`, not `display`, or they would stop
+   contributing their height and the resizing would come straight back. */
+.about-preview-slot {
+  display: grid;
   position: sticky;
   top: 16px;
+}
+
+.about-preview-slot > .about-preview {
+  grid-area: 1 / 1;
+  /* Each panel is its own height rather than stretched to the cell, so the white box still
+     hugs its text. The cell keeps the tallest panel's height either way, which is the part
+     that has to stay still. */
+  align-self: start;
+}
+
+.about-preview[data-shown="false"] {
+  visibility: hidden;
+}
+
+.about-preview {
   background: #ffffff;
   border: 1px solid #cfdbe0;
   border-radius: 10px;
   padding: 22px 24px 24px;
-  min-height: 320px;
 }
 
 .about-preview-kicker {
@@ -898,7 +917,7 @@ td.xcell::after {
     gap: 0;
   }
 
-  .about-preview {
+  .about-preview-slot {
     display: none;
   }
 
