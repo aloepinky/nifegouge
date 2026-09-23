@@ -31,16 +31,22 @@ export function checkDoc(doc) {
   } catch (error) {
     return error.message;
   }
+  // A syllabus need not have a course-flow chart. Every JPPT prints one, which is why this
+  // used to be required; a syllabus small enough to read as a list does not — NIFE's flight
+  // stage is six blocks — and CourseFlow already renders nothing for one. A flow that IS
+  // carried still has to be whole, because a half-drawn chart is worse than none.
   const flow = doc.flow;
-  if (!flow || !Array.isArray(flow.NODES) || !Array.isArray(flow.EDGES)) return 'doc.flow needs NODES and EDGES';
-  if (typeof flow.VIEWBOX !== 'string') return 'doc.flow.VIEWBOX must be a string';
+  if (flow) {
+    if (!Array.isArray(flow.NODES) || !Array.isArray(flow.EDGES)) return 'doc.flow needs NODES and EDGES';
+    if (typeof flow.VIEWBOX !== 'string') return 'doc.flow.VIEWBOX must be a string';
+    for (const n of flow.NODES) {
+      if (!n || typeof n.id !== 'string' || !['x', 'y', 'w', 'h'].every((k) => Number.isFinite(n[k]))) {
+        return 'every flow node needs an id and a numeric x, y, w and h';
+      }
+    }
+  }
   for (const key of ['stages', 'blocks', 'events']) {
     if (!Array.isArray(doc[key])) return `doc.${key} must be an array`;
-  }
-  for (const n of flow.NODES) {
-    if (!n || typeof n.id !== 'string' || !['x', 'y', 'w', 'h'].every((k) => Number.isFinite(n[k]))) {
-      return 'every flow node needs an id and a numeric x, y, w and h';
-    }
   }
   for (const b of doc.blocks) {
     if (!b || typeof b.id !== 'string' || !Array.isArray(b.events)) return 'every block needs an id and events';

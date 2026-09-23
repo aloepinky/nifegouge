@@ -23,6 +23,7 @@ import {
 import { listItemMetas, newestItem } from './store.mjs';
 import { leaderboardHandler, submitScoreHandler, importScoresHandler } from './scores.mjs';
 import { tagProgramHandler } from './program.mjs';
+import { namespaceItemsHandler } from './namespaceOp.mjs';
 
 // The Discuss tab's API: item pages, syllabus documents, figure uploads, the jet log and
 // brief corpora, and the admin operations behind X-Admin-Token. One API Gateway resource,
@@ -121,6 +122,7 @@ const ROUTES = {
   'import-syllabus': { method: 'POST', admin: true, run: importSyllabusHandler },
   'hide-item': { method: 'POST', admin: true, run: hideItemHandler },
   'set-author': { method: 'POST', admin: true, run: setAuthorHandler },
+  'namespace-items': { method: 'POST', admin: true, run: namespaceItemsHandler },
   'hide-syllabus': { method: 'POST', admin: true, run: hideSyllabusHandler },
   'rename-syllabus': { method: 'POST', admin: true, run: renameSyllabusHandler },
   'get-jetlog': { method: 'GET', run: getJetLogHandler },

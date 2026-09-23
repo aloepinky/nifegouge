@@ -219,6 +219,44 @@ export async function itemHistory(slug) {
   return out;
 }
 
+// Copies every row of an item to another key, preserving `rev`, `author`, `summary`, `baseRev`
+// and `createdAt` — a page's history has to read the same under its new key as under its old
+// one, and `restore` publishes an old document as a new revision, so the documents must come
+// across too. This is what moves the corpus onto school-namespaced keys (see namespace.mjs).
+//
+// Its own query rather than `itemHistory`, whose projection drops `docJson`.
+//
+// The meta row is written last, so a run that dies half way leaves a destination with no meta
+// row, which reads as absent and is simply redone. Refusing a destination that already has one
+// is what makes the migration resumable and safe to run twice.
+export async function copyItemRows(fromKey, toKey) {
+  const meta = await itemMeta(fromKey);
+  if (!meta) return null;
+  if (await itemMeta(toKey)) return { copied: 0, already: true };
+
+  let copied = 0;
+  let lastKey;
+  do {
+    const result = await db().send(new QueryCommand({
+      TableName: CONFIG.itemsTable,
+      KeyConditionExpression: 'slug = :slug AND rev >= :one',
+      ExpressionAttributeValues: { ':slug': fromKey, ':one': 1 },
+      ExclusiveStartKey: lastKey,
+    }));
+    for (const row of (result.Items || [])) {
+      await db().send(new PutCommand({
+        TableName: CONFIG.itemsTable,
+        Item: { ...row, slug: toKey },
+      }));
+      copied += 1;
+    }
+    lastKey = result.LastEvaluatedKey;
+  } while (lastKey);
+
+  await db().send(new PutCommand({ TableName: CONFIG.itemsTable, Item: { ...meta, slug: toKey } }));
+  return { copied, already: false };
+}
+
 // Every meta row. The filter runs after the read, so this scans every revision row; trivial
 // at this table's size, and the place to add a GSI if history ever grows into thousands.
 export async function listItemMetas() {

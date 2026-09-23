@@ -1,6 +1,7 @@
 import { gzipSync } from 'node:zlib';
 import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getS3, presignPut, CONFIG } from './clients.mjs';
+import { itemId, splitItemId, isNamespaced } from './namespace.mjs';
 import {
   listItemMetas, listSyllabi, newestSyllabus, listJetLogMetas, newestJetLog, listBriefMetas,
   newestBrief,
@@ -50,9 +51,12 @@ export const syllabusKey = (id) => `syllabi/${id}.json`;
 export const jetLogKey = (id) => `jetlogs/${id}.json`;
 export const briefKey = (id) => `briefs/${id}.json`;
 
+// `meta.slug` is the stored key, which carries the school. What the record and the index print
+// is the bare slug, because that is what the document carries and what a URL shows; the school
+// rides beside it in the flags, which is all a reader needs to compose the key again.
 export function itemRecord(meta, row) {
   return {
-    slug: meta.slug,
+    slug: splitItemId(meta.slug).slug,
     rev: row.rev,
     updatedAt: row.createdAt,
     author: row.author || '',
@@ -88,7 +92,7 @@ export function syllabusEntry(row) {
 
 export function indexEntry(meta) {
   return {
-    slug: meta.slug,
+    slug: splitItemId(meta.slug).slug,
     title: meta.title,
     rev: meta.latestRev,
     updatedAt: meta.updatedAt,
@@ -105,7 +109,14 @@ export async function mirrorSyllabus(row) {
 }
 
 export async function rebuildItemsIndex() {
-  const metas = (await listItemMetas()).filter((m) => !m.hidden);
+  const all = (await listItemMetas()).filter((m) => !m.hidden);
+  // Through the migration a page exists at both its namespaced key and the bare one it had
+  // before schools were part of the identity. The namespaced row is the page; its legacy twin
+  // is dropped so the index does not list the same page twice.
+  const taken = new Set(all.filter((m) => isNamespaced(m.slug)).map((m) => m.slug));
+  const metas = all.filter((m) => (
+    isNamespaced(m.slug) || !taken.has(itemId((m.flags || {}).school, m.slug))
+  ));
   await putJson('items/index.json', {
     generatedAt: new Date().toISOString(),
     items: metas.map(indexEntry),
