@@ -9,3 +9,9 @@ export function firstLetters(text) {
   if (!text) return text;
   return text.replace(WORD, (word) => word[0] + '-'.repeat(word.length - 1));
 }
+
+// How many words first-letter mode would hide in `text`: the About pages count what there is
+// to memorize with the same idea of a word the mode itself uses.
+export function countWords(text) {
+  return text ? (text.match(WORD) || []).length : 0;
+}

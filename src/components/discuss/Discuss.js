@@ -5,6 +5,7 @@ import ItemPage from './ItemPage';
 import EventHub from './EventHub';
 import BlockPage from './BlockPage';
 import CourseFlow from './CourseFlow';
+import CourseSummary from './CourseSummary';
 import StageNav from './StageNav';
 import SearchBox from './SearchBox';
 import HistoryPage from './HistoryPage';
@@ -132,6 +133,8 @@ function Index() {
           )}
           {s.rev ? ` Revision ${s.rev}.` : ''}
         </p>
+
+        <CourseSummary />
 
         <CourseFlow />
 

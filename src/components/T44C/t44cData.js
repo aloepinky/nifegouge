@@ -88,7 +88,11 @@ export const T44C_EPS = [
     title: 'Windmilling Airstart',
     rows: [
       concur('wa1', 'Power Lever (Failed Engine)', 'IDLE'),
-      concur('wa2', 'Prop Lever (Failed Engine)', 'Pull Forward'),
+      // The exam sheet prints "Pull Forward"; NATOPS §15.4.2 prints "Full Forward", which is
+      // also the only thing a prop lever can be asked to do. Corrected to the publication, as
+      // the sheet's "Firewall Value" is corrected to "Firewall Valve" in the Emergency Shutdown
+      // Checklist below.
+      concur('wa2', 'Prop Lever (Failed Engine)', 'Full Forward'),
       concur('wa3', 'Condition Lever (Failed Engine)', 'FUEL CUTOFF'),
       step('wa4', 'Firewall Valve', 'OPEN'),
       step('wa5', 'Autoignition', 'ARMED'),

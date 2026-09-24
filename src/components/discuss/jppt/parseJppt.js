@@ -2,6 +2,7 @@ import { loadPageContents } from './pdfSource';
 import { loadTextPages } from './pdfText';
 import { extractFlow } from './flowExtract';
 import { extractSyllabus } from './syllabusExtract';
+import { extractCourseLength } from './courseLength';
 import { guessProgram } from '../program';
 
 // An uploaded JPPT, start to finish: the PDF in, a syllabus document out.
@@ -142,11 +143,15 @@ export async function parseJppt(data, onProgress = () => {}, { matcher = null, p
     date && `(${date})`,
   ].filter(Boolean).join(' ') + (flowPage ? `, p. ${flowPage}` : '');
 
+  const courseLength = extractCourseLength(textPages);
+  if (!courseLength) warnings.push('No course length table was found (Course Data, Course Length).');
+
   const opening = textPages.slice(0, 3).flat().map((l) => l.text).join(' ');
   const doc = {
     version: DOC_VERSION,
     ...guessProgram(opening),
     source: { instruction, date, flowPage, citation: citation || null },
+    ...(courseLength ? { courseLength } : {}),
     stages: syllabus.stages,
     blocks: orderBlocks(syllabus.blocks, flow),
     events,

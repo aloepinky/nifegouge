@@ -1,6 +1,11 @@
 import React from 'react';
 import AboutPage from './about/AboutPage.js';
 import { aboutTabs } from './about/tabs.js';
+import { EpStats, BriefStats, SyllabusStats } from './about/SchoolStats.js';
+import { epListStats } from './about/stats.js';
+import { C172_EPS, C172_LIMITS } from './Flight/c172Data.js';
+
+const PLATFORMS = [{ aircraft: 'C172', eps: epListStats(C172_EPS), limits: Object.keys(C172_LIMITS).length }];
 
 // What this page says about each NIFE tab. The order and the names come from the program's tab
 // list in programs.js, which the top bar reads too — see about/tabs.js.
@@ -28,6 +33,7 @@ const CONTENT = {
     ],
   },
   '/nife/eps-limits': {
+    stats: <EpStats platforms={PLATFORMS} />,
     icon: 'eps',
     blurb: 'C172 emergency procedures one at a time, and the limits table.',
     more: [
@@ -36,6 +42,7 @@ const CONTENT = {
     ],
   },
   '/nife/discuss': {
+    stats: <SyllabusStats school="NIFE" />,
     icon: 'discuss',
     blurb: 'The NIFE flight-stage items, cited to the pubs and editable by anyone.',
     more: [
@@ -44,6 +51,7 @@ const CONTENT = {
     ],
   },
   '/nife/briefs': {
+    stats: <BriefStats school="NIFE" />,
     icon: 'brief',
     blurb: 'The NIFE briefs, and a TOLD card that fills itself in.',
     more: [

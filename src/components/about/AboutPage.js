@@ -7,7 +7,10 @@ import AboutIcon from './aboutIcons.js';
  * and a preview panel holding the tab's own explanation. The preview is hidden on a
  * phone, where each row carries its blurb instead.
  *
- * tabs: [{ name, path, icon, blurb, more: [paragraph, ...] }]
+ * tabs: [{ name, path, icon, blurb, more: [paragraph, ...], stats? }]
+ *
+ * stats is what the tab asks a student to learn (SchoolStats.js), in the panel after the
+ * paragraphs. A phone hides the panel, so it is drawn under the blurb there too.
  *
  * photoCrop is a CSS background-position. Every photo sits its subject somewhere different,
  * so a page sets its own to keep the aircraft clear of the title; the default suits a
@@ -46,6 +49,7 @@ function AboutPage({ title, intro, photo, photoAlt, photoCrop = 'center 45%', ta
                 </span>
               </Link>
               <p className="about-nav-blurb">{t.blurb}</p>
+              {t.stats && <div className="about-nav-stats">{t.stats}</div>}
             </li>
           ))}
         </ul>
@@ -71,6 +75,7 @@ function AboutPage({ title, intro, photo, photoAlt, photoCrop = 'center 45%', ta
               {t.more.map((para, n) => (
                 <p key={n}>{para}</p>
               ))}
+              {t.stats}
               <Link className="about-open" to={t.path} tabIndex={i === selected ? undefined : -1}>
                 Open {t.name} →
               </Link>

@@ -1,12 +1,22 @@
 import React from 'react';
 import AboutPage from './about/AboutPage.js';
 import { aboutTabs } from './about/tabs.js';
+import { EpStats } from './about/SchoolStats.js';
+import { epListStats } from './about/stats.js';
+import { T44C_EPS, T44C_LIMITS, T44C_EP_NWC } from './T44C/t44cData.js';
+
+// One row per aircraft Advanced trains in: each has its own EPs, limits and briefs, and its
+// numbers are titled with the aircraft so a second platform has somewhere to go.
+const PLATFORMS = [
+  { aircraft: 'T-44C', eps: epListStats(T44C_EPS, T44C_EP_NWC), limits: Object.keys(T44C_LIMITS).length },
+];
 
 // Advanced's About page. The program is being built: EPs/Limits is the one page so far, and a
 // tab joins this index as soon as it is added to the program's tab list in programs.js, which
 // the top bar reads too — see about/tabs.js.
 const CONTENT = {
   '/t44c/eps-limits': {
+    stats: <EpStats platforms={PLATFORMS} byAircraft />,
     icon: 'eps',
     blurb: 'The T-44C critical action memory items, and the operating limits sheet.',
     more: [

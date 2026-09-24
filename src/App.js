@@ -1,26 +1,37 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import './style.css';
-import Questions from './components/Questions';
-import Nav from './components/Nav';
-import NIFEEPsLimits from './components/NIFEEPsLimits.js';
-import NIFEBriefs from './components/NIFEBriefs.js';
-import NIFEDiscuss from './components/NIFEDiscuss.js';
-import Docs from './components/Docs.js';
-import TW4About from './components/TW4About.js';
-import TW4EPsLimits from './components/TW4EPsLimits.js';
-import T44CEPsLimits from './components/T44CEPsLimits.js';
-import T44CAbout from './components/T44CAbout.js';
-import BriefsPage from './components/briefs/BriefsPage';
-import NIFEAbout from './components/NIFEAbout.js';
 import LandingPage from './components/LandingPage.js';
-import CourseRules from './components/TW4CourseRules.js';
-import Systems from './components/systems/Systems.js';
-import Discuss from './components/discuss/Discuss.js';
-import TW4JetLog from './components/TW4JetLog.js';
-import TW4Docs from './components/TW4Docs.js';
 import Footer from './components/Footer.js';
 import TopNav from './components/TopNav.js';
+import { warmDiscuss } from './components/discuss/warm';
+
+const Questions = lazy(() => import('./components/Questions'));
+const Nav = lazy(() => import('./components/Nav'));
+const NIFEEPsLimits = lazy(() => import('./components/NIFEEPsLimits.js'));
+const NIFEBriefs = lazy(() => import('./components/NIFEBriefs.js'));
+const NIFEDiscuss = lazy(() => import('./components/NIFEDiscuss.js'));
+const Docs = lazy(() => import('./components/Docs.js'));
+const TW4About = lazy(() => import('./components/TW4About.js'));
+const TW4EPsLimits = lazy(() => import('./components/TW4EPsLimits.js'));
+const T44CEPsLimits = lazy(() => import('./components/T44CEPsLimits.js'));
+const T44CAbout = lazy(() => import('./components/T44CAbout.js'));
+const BriefsPage = lazy(() => import('./components/briefs/BriefsPage'));
+const NIFEAbout = lazy(() => import('./components/NIFEAbout.js'));
+const CourseRules = lazy(() => import('./components/TW4CourseRules.js'));
+const Systems = lazy(() => import('./components/systems/Systems.js'));
+const Discuss = lazy(() => import('./components/discuss/Discuss.js'));
+const TW4JetLog = lazy(() => import('./components/TW4JetLog.js'));
+const TW4Docs = lazy(() => import('./components/TW4Docs.js'));
+
+// Every page but the landing page is its own chunk, so opening one downloads that page and not
+// the other sixteen: the entry bundle used to carry Leaflet, the course-rules map, the jet log
+// and all six systems diagrams to someone who asked for a discussion item.
+//
+// A Discussion Items deep link also starts its mirror reads here, before its chunk arrives.
+// Only on the first load: the reads are claimed by the first matching fetch, and on a later
+// navigation the tab may already hold what they would return and never claim them.
+warmDiscuss(window.location.pathname);
 
 // /nife/flight/told is now on the Briefs/TOLD page; its other tabs are on EPs/Limits.
 function FlightTabRedirect() {
@@ -37,6 +48,7 @@ function App() {
     <div>
       {!isLanding && <TopNav />}
 
+      <Suspense fallback={<div className="route-loading" />}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/nife" element={<Navigate to="/nife/about" replace />} />
@@ -70,6 +82,7 @@ function App() {
         <Route path="/t44c/eps-limits" element={<T44CEPsLimits />} />
         <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />
       </Routes>
+      </Suspense>
 
       {!isLanding && <Footer />}
     </div>

@@ -1,16 +1,27 @@
 import React, { useEffect } from 'react';
 import AboutPage from './about/AboutPage.js';
 import { aboutTabs } from './about/tabs.js';
+import { EpStats, BriefStats, SyllabusStats } from './about/SchoolStats.js';
+import { primaryEpStats } from './about/stats.js';
+import { EP_TITLES, EP_ANSWERS, EP_NWC, EP_NWC_GROUPS } from './EPDivsData.js';
+import { T6B_LIMITS } from './TW4Limits.js';
+
+const PLATFORMS = [{
+  aircraft: 'T-6B',
+  eps: primaryEpStats({ titles: EP_TITLES, answers: EP_ANSWERS, nwc: EP_NWC, nwcGroups: EP_NWC_GROUPS }),
+  limits: Object.keys(T6B_LIMITS).length,
+}];
 
 // What this page says about each Primary tab. The order and the names come from the program's
 // tab list in programs.js, which the top bar reads too — see about/tabs.js.
 const CONTENT = {
   '/tw4/eps-limits': {
+    stats: <EpStats platforms={PLATFORMS} />,
     icon: 'eps',
     blurb: 'Fly the EPs and Quadfold through a clickable T-6 cockpit, then run all 106 limits.',
     more: [
-      'The EPs/Cockpit tab features a virtual interactive T-6 cockpit poster that serves as a comprehensive training tool for Emergency Procedures (EPs) and Quadfold checklists. By clicking through actual cockpit controls and following procedural flows, you can gain spatial awareness for where the controls are and start developing flow. Integrated Notes Warnings Cautions, expanded checklist items, and non-memory items allow for easy access to supplementary material. Or use Simple Mode to just review EPs and NWCs without the cockpit.',
-      'The Limits tab provides a virtual T-6B Operating Limitations table. You can quickly test yourself or learn the limits by revealing the answers when stuck. See if you can correctly answer all 106 limits in a random order!',
+      'The EPs/Cockpit tab is an interactive T-6 cockpit poster for Emergency Procedures and Quadfold checklists. Clicking through the actual controls builds spatial awareness for where they are and starts developing flow. Integrated Notes Warnings Cautions, expanded checklist items and non-memory items are a click away, or use Simple Mode to review EPs and NWCs without the cockpit.',
+      'The Limits tab is a virtual T-6B Operating Limitations table. Test yourself or learn the limits by revealing the answers when stuck. See if you can answer all 106 in a random order!',
     ],
   },
   '/tw4/docs': {
@@ -21,6 +32,7 @@ const CONTENT = {
     ],
   },
   '/tw4/discuss': {
+    stats: <SyllabusStats school="Primary" />,
     icon: 'discuss',
     blurb: 'Every JPPT discuss item, cited to the pubs and editable by anyone.',
     more: [
@@ -29,6 +41,7 @@ const CONTENT = {
     ],
   },
   '/tw4/briefs': {
+    stats: <BriefStats school="Primary" />,
     icon: 'brief',
     blurb: 'Practice the Fam and Form NATOPS brief; the TOLD card fills itself.',
     more: [

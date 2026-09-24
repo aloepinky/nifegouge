@@ -14,8 +14,13 @@ import { ItemForm, SectionForm, keyOf, newSection } from './BriefEditor';
 // lines the card keeps under a name whose words open behind it — Mission planning's NOTAMS,
 // airfields, flight plan, Joker/Bingo — and is the only other thing drawn while closed.
 //
-// First-letter mode hides the words a student says and nothing else: names, fixed text and
-// headings are the prompts and stay readable, and what is open stays open.
+// First-letter mode hides the words a student says and nothing else, which is the text that
+// opens and closes: an item's `text` behind its name. Everything always on screen stays
+// readable in it: names and headings, subtext, a fixed item's or section's text (Review ATJ,
+// the Debriefing guide) and a section's own text above its items (DOR/TTO policy). Those are
+// the prompts, or are read off the card rather than said. What is open stays open.
+
+const ASIS = (t) => t;
 //
 // `edit`, when given, is `{ openKey, open, close, update, doc }` — the page's working copy and
 // a way to change it. It puts an edit link beside every heading and every item, and swaps a
@@ -111,8 +116,8 @@ function Item({ item, number, open, onToggle, shown, edit, mark }) {
           </span>
           <Tag mark={mark} />
           {edit && <EditLink what="item" onClick={(e) => { e.stopPropagation(); edit(); }} />}
-          <TextBlock text={item.subtext} shown={(t) => t} className="brief-fixed" states={lines.subtext} />
-          {item.fixed && <TextBlock text={item.text} shown={shown} className="brief-fixed" states={lines.text} />}
+          <TextBlock text={item.subtext} shown={ASIS} className="brief-fixed" states={lines.subtext} />
+          {item.fixed && <TextBlock text={item.text} shown={ASIS} className="brief-fixed" states={lines.text} />}
         </div>
       </div>
       {open && expandable && (
@@ -165,11 +170,11 @@ function Section({ section, expanded, onToggle, shown, edit, diff }) {
       </h2>
       {section.fixed ? (
         <div className="brief-fixed-body">
-          <TextBlock text={section.text} shown={shown} states={lines.text} />
+          <TextBlock text={section.text} shown={ASIS} states={lines.text} />
         </div>
       ) : (
         <>
-          <TextBlock text={section.text} shown={shown} className="brief-section-text" states={lines.text} />
+          <TextBlock text={section.text} shown={ASIS} className="brief-section-text" states={lines.text} />
           {section.items.map((item, i) => (
             edit && edit.openKey === keyOf('item', item.id) ? (
               <ItemForm
@@ -260,7 +265,7 @@ function BriefView({ brief, expanded, onToggle, firstLetter, edit, diff }) {
       )}
       {brief.note && (
         <div className="brief-note">
-          <TextBlock text={brief.note} shown={(t) => t} />
+          <TextBlock text={brief.note} shown={ASIS} />
         </div>
       )}
       {sourceLine(brief.source) && <p className="brief-source">{sourceLine(brief.source)}</p>}

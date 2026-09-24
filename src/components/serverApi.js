@@ -46,8 +46,30 @@ export const post = (path, body) => call(path, {
   body: JSON.stringify(body),
 });
 
+// Reads started before the code that wants them has loaded. The entry bundle calls warmMirror
+// for the records a deep link is about to ask for, so the mirror round trip runs alongside the
+// route's chunk download instead of after it. Each is handed to the first readMirror of its key
+// and then forgotten, so every later read still revalidates as usual.
+const warmed = new Map();
+
+export function warmMirror(key) {
+  if (warmed.has(key)) return;
+  const p = fetchMirror(key);
+  p.catch(() => {}); // Unclaimed, a failure is nobody's; claimed, readMirror rethrows it.
+  warmed.set(key, p);
+}
+
 // null on a 404, which is how a missing record or a hidden one reads from the mirror.
-export async function readMirror(key) {
+export function readMirror(key) {
+  const early = warmed.get(key);
+  if (early) {
+    warmed.delete(key);
+    return early;
+  }
+  return fetchMirror(key);
+}
+
+async function fetchMirror(key) {
   let response;
   try {
     response = await fetch(`${MIRROR_BASE_URL}/${key}`, { cache: 'no-cache' });

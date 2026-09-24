@@ -721,6 +721,71 @@ td.xcell::after {
   max-width: 40ch;
 }
 
+/* What a tab asks a student to learn, in its About panel (and under its blurb on a phone). */
+.about-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 14px 0 16px;
+  padding: 12px 0 0;
+  border-top: 1px solid #cfdbe0;
+}
+
+.about-stats-title {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #708995;
+}
+
+.about-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0;
+}
+
+/* Number over label: the dd is printed first. */
+.about-stat {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.about-stat dd {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: #01202C;
+  font-variant-numeric: tabular-nums;
+}
+
+.about-stat dt {
+  font-size: 13px;
+  color: #4a6674;
+}
+
+.about-stats-caption {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #708995;
+}
+
+/* Several syllabi (Delta, Echo) side by side rather than stacked. */
+.about-stats--across {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px 36px;
+}
+
+/* The phone's copy, under the blurb; the panel carries it on a wider screen. */
+.about-nav-stats {
+  display: none;
+}
+
 /* The index of tabs, and the preview of whichever one is pointed at. */
 .about-index {
   display: grid;
@@ -937,6 +1002,19 @@ td.xcell::after {
   .about-nav-icon,
   .about-nav a[aria-current="true"] .about-nav-icon {
     color: #003B4F;
+  }
+
+  .about-nav-stats {
+    display: block;
+    padding: 0 4px 12px;
+  }
+
+  .about-nav-stats .about-stats {
+    margin: 0;
+  }
+
+  .about-stat dd {
+    font-size: 20px;
   }
 
   .about-nav-blurb {
@@ -7085,6 +7163,7 @@ textarea.incorrect-answer {
 }
 
 .epl-center {
+  position: relative;   /* the card sizer below is absolutely positioned inside it */
   flex: 0 1 650px;
   width: 650px;
   max-width: 650px;
@@ -7097,12 +7176,286 @@ textarea.incorrect-answer {
   max-width: 1200px;
 }
 
+/* Every EP's card, rendered once and hidden, only so the page can find the tallest. The card
+   below it then carries that as a min-height on every EP, so the Previous/Next row — and the
+   action buttons under it — sit at the same place whichever procedure is showing, instead of
+   walking up and down as you move between a four-step one and an eleven-step one.
+
+   Absolutely positioned so it takes no space, and the full width of the column so each card
+   inside it is capped and centred exactly as the real one is: measure it at a different width
+   and a decision line wraps differently and the number is wrong. */
+.epl-card-sizer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The card's reservation. The CARD hugs its steps — a four-step EP is a four-step box — and this
+   is what holds the height, so Previous/Next and the control row under it sit at the same place
+   whichever procedure is showing. The minimum comes from the sizer above, measured. */
+.epl-card-slot {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The control row in its new home under Previous/Next. It wraps rather than forcing the middle
+   column wider: at 445px the five buttons take two lines and that is fine. */
+.epl-controls {
+  flex-wrap: wrap;
+}
+
+/* The cockpit poster band, above the three-column row. See CockpitPoster.js: one region at a
+   time, contained in a box of fixed height so every region occupies the same space whatever its
+   aspect ratio and the page does not jump when the region changes.
+
+   --epl-band-h is PRE-SCALE. `.limits-eps-container` transforms the whole page by 0.8, stepping
+   down to 0.6 at the narrow breakpoints, so 500 here paints at 400 on a wide screen. Anyone
+   tuning this against a screenshot and wondering why it is short has found the reason. */
+.epl-band {
+  --epl-band-h: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto 14px;
+}
+
+/* inline-block so the frame shrink-wraps the image: the spots are positioned in percentages and
+   have to land on the painted pixels, not on letterboxing beside them. No width and no
+   min-width anywhere in here — the image's own max-width is what keeps the page off a
+   horizontal scrollbar. */
+.epl-band-frame {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  max-width: 100%;
+  border: 1px solid #cfd8dc;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+.epl-band-frame img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: var(--epl-band-h);
+}
+
+/* A frame that fills the space it is given instead of being capped to the band height. This is
+   what a bespoke layout uses: Advanced draws its main instrument panel at the full width of the
+   page and its three console panels at the width of their column, and each one's height then
+   follows from its own aspect ratio. No width and no min-width here either — the column's width
+   is what sizes it, so the page still shrinks rather than growing a scrollbar. */
+.epl-band-frame--fluid {
+  display: block;
+  width: 100%;
+}
+
+.epl-band-frame--fluid img {
+  width: 100%;
+  max-height: none;
+}
+
+/* Advanced's centre console: the power quadrant, then the fuel control panel, then the start,
+   electrical and radio stack, which is the order they run front to back down the pedestal. It is
+   one column rather than three tabs because every panel a step touches should be on screen at
+   once — knowing where a control is only counts if the neighbours are there to place it among. */
+.t44c-console {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Invisible until pointed at, as Primary's targets are. The ring class a hinted spot also takes
+   is `.epl-hint`, not a local one: EPDrill scrolls a hinted control into view by querying for
+   exactly that class.
+
+   Addressed as `.limits-eps-container button.epl-spot` and not as `.epl-spot`, for the reason
+   the search dropdown is addressed with two classes: the page-wide
+   `.limits-eps-container button` rule is one class plus an element and outranks one class on
+   its own, so a bare `.epl-spot` loses and every target paints as a solid #01202C rectangle
+   over the photograph. */
+.limits-eps-container button.epl-spot {
+  position: absolute;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.limits-eps-container button.epl-spot:hover {
+  background-color: rgba(0, 59, 79, 0.35);
+}
+
+.limits-eps-container button.epl-spot:focus-visible {
+  outline: 2px solid #003b4f;
+  outline-offset: 1px;
+}
+
+/* ?boxes, development builds only: show where every click target sits, while leaving them
+   clickable. Addressed through the frame so nothing leaks into the normal page. */
+.limits-eps-container .epl-band-frame--boxes button.epl-spot {
+  background-color: rgba(255, 64, 0, 0.32);
+  outline: 1px solid #ffeb3b;
+}
+
+.epl-band-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  line-height: normal;
+}
+
+.limits-eps-container button.epl-band-tab {
+  padding: 5px 12px;
+  font-size: 13px;
+  background-color: #fff;
+  color: #01202c;
+  border: 1px solid #01202c;
+  border-radius: 4px;
+}
+
+.limits-eps-container button.epl-band-tab:hover {
+  background-color: #eceff1;
+}
+
+.limits-eps-container button.epl-band-tab.active {
+  background-color: #003b4f;
+  color: #fff;
+  border-color: #003b4f;
+}
+
+/* Whose photograph this is. It travels with the image. */
+.epl-credit {
+  font-size: 11px;
+  color: #546e7a;
+  margin: 0;
+  align-self: flex-end;
+}
+
+/* The steps no control performs — Declare MAYDAY, Evacuate Aircraft, Land As Soon As Possible.
+   Primary renders these as `.action-button` beside its poster and so does every school here, so
+   the two pages look like one site. This overrides only what a 200px side column forces. */
+.epl-actions {
+  display: grid;
+  grid-template-columns: repeat(var(--epl-action-cols, 1), minmax(0, 1fr));
+  gap: 6px;
+}
+
+.limits-eps-container button.epl-action {
+  /* Primary clips its captions to one line with an ellipsis, which it can afford in a wide
+     centre column. Here "Fire Extinguisher" would lose half itself, so it wraps instead. */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  font-size: 12px;
+  line-height: 1.25;
+  padding: 7px 4px;
+}
+
+
+/* The ?spots hotspot editor. Development builds only — SpotEditor.js is lazy-imported, so none
+   of this is reachable on the live site. Styled to be usable rather than to match the page. */
+.epl-spots-edit {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+}
+
+.epl-spot-box {
+  position: absolute;
+  border: 1px solid rgba(0, 59, 79, 0.9);
+  background-color: rgba(0, 59, 79, 0.18);
+}
+
+.epl-spot-box.unnamed {
+  border-color: #c62828;
+  background-color: rgba(198, 40, 40, 0.22);
+}
+
+.epl-spot-box.sel {
+  border: 2px solid #ffb300;
+  background-color: rgba(255, 179, 0, 0.28);
+}
+
+.epl-spot-box span {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  font-size: 9px;
+  line-height: 1.3;
+  white-space: nowrap;
+  background-color: #01202c;
+  color: #fff;
+  padding: 0 3px;
+}
+
+.epl-spot-form {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 9000;
+  width: 320px;
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: 12px 14px;
+  background-color: #fff;
+  border: 1px solid #01202c;
+  border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+}
+
+.epl-spot-form h4 { margin: 0 0 8px; font-size: 13px; color: #01202c; }
+.epl-spot-form h4 small { font-weight: normal; color: #78909c; }
+.epl-spot-form label { display: block; margin-bottom: 8px; color: #37474f; }
+.epl-spot-form label.row { display: flex; gap: 6px; align-items: flex-start; }
+.epl-spot-form input[type="text"],
+.epl-spot-form input:not([type]),
+.epl-spot-form textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 2px;
+  padding: 4px;
+  font: inherit;
+  border: 1px solid #b0bec5;
+  border-radius: 3px;
+}
+.epl-spot-form label.row input { width: auto; margin: 2px 0 0; }
+.epl-spot-form .box { font-family: monospace; font-size: 11px; color: #546e7a; }
+.epl-spot-form .said { color: #2e7d32; margin: 6px 0 0; }
+.epl-spot-form button {
+  padding: 5px 10px;
+  font: inherit;
+  background-color: #fff;
+  color: #01202c;
+  border: 1px solid #01202c;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* A fixed 350px, as Primary's EP sections are (epSectionStyle in EPDivsData.js). The box does not
+   grow or shrink to suit the answer — the answer's font size gives way instead, measured in
+   EPDrill — because a card that changed width per EP would move every step box on the page. The
+   max-width is only so a column narrower than 350 cannot push the page into a sideways scroll. */
 .epl-card {
   border: 1px solid #ddd;
   border-radius: 6px;
   overflow: hidden;
   background-color: #f9f9f9;
-  max-width: 350px;
+  width: 350px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -7135,6 +7488,10 @@ textarea.incorrect-answer {
 .epl-input {
   padding: 2px;
   font-size: 11px;
+  /* In px, not a ratio: a long step's text is shrunk to fit the fixed-width box, and a line box
+     that followed the font would make that row shorter than its neighbours and throw off the
+     measured card height. */
+  line-height: 14px;
   border: 1px solid #ccc;
   border-radius: 3px;
   font-family: inherit;
@@ -7712,3 +8069,37 @@ button.epl-modal-close:hover {
 
 .epl-nwc-hint { font-weight: normal; font-style: italic; color: #555; }
 .epl-nwc-hint-link { font-weight: normal; font-style: italic; color: #888; text-decoration: underline; cursor: pointer; }
+
+/* All Events: the syllabus's course length, flights and sims, above the course-flow chart. */
+.discuss-course {
+  margin: 4px 0 22px;
+  padding: 14px 0;
+  border-top: 1px solid #cfdbe0;
+  border-bottom: 1px solid #cfdbe0;
+}
+
+.discuss-course-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 26px;
+  margin: 0;
+}
+
+.discuss-course-figure {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.discuss-course-figure dd {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.1;
+  color: #01202C;
+  font-variant-numeric: tabular-nums;
+}
+
+.discuss-course-figure dt {
+  font-size: 13px;
+  color: #4a6674;
+}

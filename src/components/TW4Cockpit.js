@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef} from 'react';
 import {getEPDivs, EP_LENGTHS, EP_ANSWERS, EP_NWC, EP_NWC_GROUPS, EP_NWC_HINTS, EP_FULL_LENGTHS, EP_FULL_ANSWERS, EP_TITLES, EP_FULL_TITLES} from './EPDivsData';
 import {getQuadDivs, QUAD_LENGTHS, QUAD_ANSWERS, QUAD_ACTIONS, QUAD_TITLES, QUAD_NWC} from './QuadfoldData';
 import { gradeAnswer } from '../utils/answerUtils';
+// The two rules this page and the shared drill (epsLimits/EPDrill.js) must agree on: which step
+// is the current question, and what a click does to it. They were written twice and drifted.
+import { openStep, clickOutcome, FILL, PARTIAL } from './epsLimits/stepFlow';
 
 // stepKey -> ordered list of every NWC key in the same procedure
 const NWC_GROUP_BY_KEY = {};
@@ -375,23 +378,16 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
 
   const findNextEmpty = (nextKey = null) =>{
     if(nextKey){return{nextEmptyField: nextKey, emptyNum: null};}
-    const results = checkResults;
     let currentKey = divMap[currentDivKey][0][currentIndexArray[currentIndex]].key;
-    console.log(currentKey)
     const allFields = Object.keys(inputAnswers).filter(key => key.startsWith(currentKey));
-    // Find the first non-empty field
-    let nextEmptyField = null;
-    let emptyNum = 0;
-    for (let i = 0; i < allFields.length; i++) {
-      const field = allFields[i];
-      console.log(inputAnswers[field])
-      if((inputData[field] === undefined || inputData[field] === ''||results[field] === 'partial') && inputAnswers[field] != "") {
-        nextEmptyField = field;
-        emptyNum = i;
-        break;
-      }
-    }
-    return{nextEmptyField, emptyNum};
+    // The open step, from stepFlow.js. `emptyNum` is its position in this EP, which is only used
+    // to tell whether the step just filled was the last one.
+    const nextEmptyField = openStep(allFields, {
+      value: (f) => inputData[f],
+      result: (f) => checkResults[f],
+      answer: (f) => inputAnswers[f],
+    });
+    return{nextEmptyField, emptyNum: nextEmptyField ? allFields.indexOf(nextEmptyField) : 0};
   }
 
   // Find next appropriate input and try it
@@ -414,7 +410,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
     // A click marks the step it filled and leaves every other step's marking alone, so what
     // Check told you stays on the page until you retype the box or check again. Every school's
     // EPs and limits work this way.
-    if(matchingAnswers.length === correctAnswers.length){
+    const outcome = clickOutcome(matchingAnswers.length, correctAnswers.length);
+    if(outcome === FILL){
       inputData[nextEmptyField] = matchingAnswers.join('');
       const results = {...checkResults};
       results[nextEmptyField] = 'checked';
@@ -422,12 +419,13 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       if(emptyNum + 1 === inputLengths[currentIndexArray[currentIndex]]){
         checkAnswers();
       }
-    }else if (matchingAnswers.length > 0){
+    }else if (outcome === PARTIAL){
       inputData[nextEmptyField] = matchingAnswers.join('');
       const results = {...checkResults};
       results[nextEmptyField] = 'partial';
       setCheckResults(results);
     }else{
+      // Writes NOTHING, so the box stays empty and stays the open step.
       const results = {...checkResults};
       results[nextEmptyField] = 'incorrect';
       setCheckResults(results);
