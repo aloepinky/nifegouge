@@ -21,6 +21,9 @@
 # but out of git and out of the Netlify deploy.
 /_reference-docs
 
+# DynamoDB tables exported before they were deleted. TW4Users holds password hashes.
+/_aws-archive
+
 # misc
 .DS_Store
 .env.local
@@ -42,11 +45,9 @@ CLAUDE.md
 __pycache__/
 *.py[cod]
 
-# AWS lambda: vendored dependencies. Each of these three has a package.json, so the folder is
+# AWS lambda: vendored dependencies. submitDoc has a package.json, so the folder is
 # rebuilt with `npm install` in it; what gets zipped up to the console is the local copy.
 lambda/submitDoc/node_modules/
-lambda/tw4RegisterUser/node_modules/
-lambda/tw4VerifyUser/node_modules/
 
 # discussApi: the lint rules are copied in from tools/lib at deploy time; a build artefact
 lambda/discussApi/discussRules.mjs

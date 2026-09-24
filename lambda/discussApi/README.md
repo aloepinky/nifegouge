@@ -8,13 +8,16 @@ a public S3 bucket; the site reads only the bucket.
 Jet logs share this function rather than having their own because they share everything that
 matters: the revision model, the bucket, the admin token and the deploy.
 
-The deploy workflow (`.github/workflows/deploy-lambda.yml`) only updates code. Everything
+The deploy workflow (`.github/workflows/deploy-lambda.yml`) only updates code, as the IAM
+user `github-lambda-deploy`. Its one permission is the inline policy
+`deploy-pinksheetmafia-lambdas`: `lambda:UpdateFunctionCode` on `discussApi`, `submitDoc` and
+`submitQuestion`, by ARN. A new function's ARN has to be added there before its deploy step
+can run; keep the grant that narrow rather than attaching `AWSLambda_FullAccess`. Everything
 below is created once, by hand, in the AWS console for `us-east-2`.
 
 ## 1. DynamoDB
 
-Five tables, on-demand capacity, everything else default. Create whichever does not exist yet
-(the older `discussSyllabi` function referenced `DiscussSyllabi`, but check that it was ever made):
+Five tables, on-demand capacity, everything else default. Create whichever does not exist yet:
 
 | Table | Partition key | Sort key |
 |---|---|---|
@@ -143,11 +146,8 @@ on, name `proxy`, path `{proxy+}`, CORS on. On its `ANY` method: integration typ
 **Lambda proxy integration on**, function `discussApi`, accept the permission prompt.
 Actions → Deploy API → stage `prod`.
 
-If the four older resources (`list-syllabi`, `get-syllabus`, `publish-syllabus`,
-`save-syllabus`) exist under `/discuss`, they take precedence over the proxy while they do, so
-the old `discussSyllabi` function keeps serving them until you delete them. After the new site
-is live: delete those four resources, deploy `prod` again, and delete the `discussSyllabi`
-function. If they were never created, there is nothing to remove.
+`/discuss/{proxy+}` is the only resource under `/discuss`. A static resource beside it would
+take precedence over the proxy for its own path.
 
 ## 6. First run
 
@@ -172,11 +172,9 @@ new edition goes in, as a new revision of each brief.
 
 ## Operations
 
-- Carry the old EPs/Limits leaderboards over (once, after the first deploy with `scores.mjs`):
-  `DISCUSS_ADMIN_TOKEN=... node tools/leaderboard-migrate.js --dry-run`, then without it. It
-  reads `FlightTestLeaderboard`, `TW4TimeLeaderboard` and `TW4Users` with the AWS CLI and is
-  safe to rerun. The old `getLeaderboard`, `submitScore` and `tw4*` functions and their tables
-  are unused after that and can be deleted by hand.
+- The old EPs/Limits leaderboards were carried over by `tools/leaderboard-migrate.js` and
+  their functions, routes and tables deleted on 2026-09-24. The tables were exported first to
+  the gitignored `_aws-archive/` as plain JSON; `TW4Users.json` holds password hashes.
 
 - Hide a page: `POST hide-item {"slug":"...","hidden":true}` with the admin header.
   Unhide with `hidden:false`.
