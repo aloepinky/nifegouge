@@ -23,6 +23,10 @@ import {
 import { listItemMetas, newestItem } from './store.mjs';
 import { leaderboardHandler, submitScoreHandler, importScoresHandler } from './scores.mjs';
 import { tagProgramHandler } from './program.mjs';
+import {
+  submitQuestionHandler, editQuestionHandler, voteQuestionHandler, votePendingHandler,
+  moderateQuestionHandler, rebuildQuestionsMirror,
+} from './questions.mjs';
 import { namespaceItemsHandler } from './namespaceOp.mjs';
 
 // The Discuss tab's API: item pages, syllabus documents, figure uploads, the jet log and
@@ -74,7 +78,12 @@ import { namespaceItemsHandler } from './namespaceOp.mjs';
 //   GET  leaderboard?school=&mode=&period=month|year|all&player= -> { entries, you, players }
 //   POST submit-score                      { school, mode, elapsedTime, epsTime?, limitsTime?, playerName, country, branch, designator, trainingClass } -> { board, createdAt }
 //   POST import-scores       (admin)       { runs: [{ school, mode, elapsedTime, createdAt, playerName, ... }] } -> { imported, skipped, refused }
-//   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs }
+//   POST submit-question                   { topic, lecture?, question, correctAnswer, incorrectAnswer1-3 } -> { questionId }
+//   POST edit-question                     { originalQuestionId, ...submit-question's fields } -> { questionId }; 409
+//   POST vote-question                     { questionId, vote: 'good'|'bad'|null, previous } -> { upvotes, downvotes }
+//   POST vote-pending-question             { questionId, vote: 'approve'|'reject' }   -> { approveCount, rejectCount, netScore, outcome }; 409
+//   POST moderate-question   (admin)       { questionId, action: 'approve'|'reject' } -> { approved, pending }
+//   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'questions'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs, questions }
 //   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
 
 async function rebuildIndexHandler(event) {
@@ -102,6 +111,9 @@ async function rebuildIndexHandler(event) {
   if (what === 'briefs' || what === 'all') {
     if (body.remirror) await remirrorBriefs();
     out.briefs = await rebuildBriefsIndex();
+  }
+  if (what === 'questions' || what === 'all') {
+    out.questions = await rebuildQuestionsMirror();
   }
   return reply(200, { success: true, ...out });
 }
@@ -143,6 +155,11 @@ const ROUTES = {
   'leaderboard': { method: 'GET', run: leaderboardHandler },
   'submit-score': { method: 'POST', run: submitScoreHandler },
   'import-scores': { method: 'POST', admin: true, run: importScoresHandler },
+  'submit-question': { method: 'POST', run: submitQuestionHandler },
+  'edit-question': { method: 'POST', run: editQuestionHandler },
+  'vote-question': { method: 'POST', run: voteQuestionHandler },
+  'vote-pending-question': { method: 'POST', run: votePendingHandler },
+  'moderate-question': { method: 'POST', admin: true, run: moderateQuestionHandler },
   'rebuild-index': { method: 'POST', admin: true, run: rebuildIndexHandler },
   'tag-program': { method: 'POST', admin: true, run: tagProgramHandler },
 };

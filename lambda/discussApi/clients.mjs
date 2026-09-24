@@ -41,6 +41,7 @@ export const CONFIG = {
   jetLogsTable: process.env.JETLOGS_TABLE || 'JetLogs',
   briefsTable: process.env.BRIEFS_TABLE || 'Briefs',
   scoresTable: process.env.SCORES_TABLE || 'EPsLimitsScores',
+  questionsTable: process.env.QUESTIONS_TABLE || 'NIFEQuestions',
   bucket: process.env.DISCUSS_BUCKET || 'pinksheetmafia-discuss',
   // Where the browser reads the mirror. Overridable so a dev server can point at itself.
   mirrorUrl: process.env.DISCUSS_MIRROR_URL

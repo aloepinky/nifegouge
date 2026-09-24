@@ -95,7 +95,8 @@ of that page (`arn:aws:iam::ACCOUNT_ID:role/...`), and the bucket name if you ch
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/DiscussSyllabi",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/JetLogs",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/Briefs",
-        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/EPsLimitsScores"
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/EPsLimitsScores",
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/NIFEQuestions"
       ]
     },
     {
@@ -130,6 +131,7 @@ Configuration → Environment variables:
 | `JETLOGS_TABLE` | `JetLogs` |
 | `BRIEFS_TABLE` | `Briefs` (optional; this is the default) |
 | `SCORES_TABLE` | `EPsLimitsScores` (optional; this is the default) |
+| `QUESTIONS_TABLE` | `NIFEQuestions` (optional; this is the default) |
 | `DISCUSS_BUCKET` | `pinksheetmafia-discuss` |
 | `DISCUSS_ADMIN_TOKEN` | a long random string (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`) |
 
@@ -184,7 +186,12 @@ new edition goes in, as a new revision of each brief.
   comes back with `hidden:false`; only the mirror copy is removed.
 - Take a brief down: `POST hide-brief {"id":"...","hidden":true}`, the same as a jet log.
 - A stale `items/index.json` (two saves raced): `POST rebuild-index {"what":"items"}`.
-  `"jetlogs"`, `"briefs"` and `"all"` work the same way.
+  `"jetlogs"`, `"briefs"`, `"questions"` and `"all"` work the same way.
+- The NIFE questions (`questions.mjs`) live in `NIFEQuestions`, the table the retired
+  `submitQuestion` function wrote. Its mirror, `questions/nife/approved.json` and
+  `questions/nife/pending.json`, is first built by `POST rebuild-index {"what":"questions"}`
+  and rebuilt by every write after that. Approving or rejecting from the page's admin panel
+  (`/nife/questions?admin`) asks for the admin token once and keeps it in that browser.
 - Roll back a bad jet log: open its **history** from the Preset Jet Logs list on the jet log
   page and restore the revision before it. Nothing is deleted from the table, so the admin
   token is not needed for this.
