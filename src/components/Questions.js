@@ -1,7 +1,30 @@
 import React, { useState, useEffect, useCallback} from 'react';
+import { call, post, readMirror } from './serverApi';
+
+// The questions are read from the mirror lambda/discussApi keeps (questions.mjs), and every
+// write goes to that function, which rebuilds the mirror before it answers.
+const APPROVED_KEY = 'questions/nife/approved.json';
+const PENDING_KEY = 'questions/nife/pending.json';
+const ADMIN_TOKEN_KEY = 'qAdminToken';
+const VOTER_KEY = 'qVoterId';
+
+// This browser's voter id for community review: one vote per browser per pending question.
+function voterId() {
+  try {
+    let id = localStorage.getItem(VOTER_KEY);
+    if (!id) {
+      id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem(VOTER_KEY, id);
+    }
+    return id;
+  } catch {
+    return '';
+  }
+}
 
 function Questions() {
   const [allQuestions, setAllQuestions] = useState([]);
+  const [loadState, setLoadState] = useState('loading'); // 'loading' | 'error' | 'ready'
   const [filteredQuestions, setFilteredQuestions] = useState([]);
   const [selectedQuestionIndices, setSelectedQuestionIndices] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -14,7 +37,6 @@ function Questions() {
   const [pendingQuestionType, setPendingQuestionType] = useState(null); // 'new' or 'edit'
   
   // Edit pair tracking
-  const [isShowingEditPair, setIsShowingEditPair] = useState(false);
   const [editPairOriginal, setEditPairOriginal] = useState(null);
   const [justCompletedOriginal, setJustCompletedOriginal] = useState(false);
   
@@ -48,10 +70,25 @@ function Questions() {
     const saved = localStorage.getItem('votedPendingQuestions');
     return saved ? JSON.parse(saved) : {};
   });
-  
+
+  // Owner-written question explanations (keyed by questionId)
+  const [explanations, setExplanations] = useState({});
+
+  // Admin panel state
+  const [isAdminEnabled, setIsAdminEnabled] = useState(false);
+  const [adminMode, setAdminMode] = useState(false);
+  const [adminPendingQuestions, setAdminPendingQuestions] = useState([]);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminToken, setAdminToken] = useState(() => {
+    try { return localStorage.getItem(ADMIN_TOKEN_KEY) || ''; } catch { return ''; }
+  });
+  const [adminTokenDraft, setAdminTokenDraft] = useState('');
+  const [adminError, setAdminError] = useState('');
+
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('new');
+  const [editingQuestion, setEditingQuestion] = useState(null);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [modalData, setModalData] = useState({
     topic: 'aero',
@@ -62,8 +99,6 @@ function Questions() {
     incorrectAnswer2: '',
     incorrectAnswer3: ''
   });
-
-  const API_BASE_URL = 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod';
 
   const prepareAnswerOptions = useCallback((answers) => {
     const specialOptions = ['all of the above', 'none of the above'];
@@ -126,7 +161,6 @@ function Questions() {
         setCurrentQuestion(editQuestion);
         setIsPendingQuestion(true);
         setPendingQuestionType('edit');
-        setIsShowingEditPair(true);
         setJustCompletedOriginal(false);
         
         const question = editQuestion.question;
@@ -147,38 +181,38 @@ function Questions() {
     }
     
     // Reset edit pair state
-    setIsShowingEditPair(false);
     setEditPairOriginal(null);
     
-    // Check if we should show a pending question instead (e.g., every 5th question)
-    const shouldShowPending = pendingQuestions.length > 0 && (index + 1) % 5 === 0;
-    
-    if (shouldShowPending) {
-      // Prioritize edit pairs first
-      const editQuestions = pendingQuestions.filter(q => 
-        q.type === 'edit' && 
+    // Every 5th question alternates: odd multiples = edit pair, even multiples = new question
+    // e.g. Q5=edit, Q10=new, Q15=edit, Q20=new ...
+    const slot = pendingQuestions.length > 0 ? Math.floor((index + 1) / 5) : 0;
+    const isEvery5th = (index + 1) % 5 === 0 && slot > 0;
+    const isEditSlot = isEvery5th && slot % 2 === 1;
+    const isNewSlot  = isEvery5th && slot % 2 === 0;
+
+    if (isEditSlot) {
+      const editQuestions = pendingQuestions.filter(q =>
+        q.type === 'edit' &&
         !votedPendingQuestions[q.questionId]
       );
-      
+
       if (editQuestions.length > 0) {
-        // Find the original question for this edit
         const editToShow = editQuestions[0];
-        const originalQuestion = questions.find(q => 
-          q.questionId === editToShow.originalQuestionId
-        );
-        
+        const originalQuestion =
+          allQuestions.find(q => q.questionId === editToShow.originalQuestionId) ||
+          allQuestions.find(q => q.originalQuestionId === editToShow.originalQuestionId);
+
         if (originalQuestion) {
-          // Load the original question first
           setCurrentQuestion(originalQuestion);
           setEditPairOriginal(originalQuestion);
           setIsPendingQuestion(false);
           setPendingQuestionType(null);
-          
+
           const question = originalQuestion.question;
           const correct = originalQuestion.correctAnswer;
           const incorrect = [originalQuestion.incorrectAnswer1, originalQuestion.incorrectAnswer2, originalQuestion.incorrectAnswer3].filter(Boolean);
           const allAnswers = prepareAnswerOptions([correct, ...incorrect]);
-          
+
           setQuestionText(question);
           setAnswerChoices(allAnswers);
           setSelectedAnswer('');
@@ -186,24 +220,25 @@ function Questions() {
           return;
         }
       }
-      
-      // If no edit pairs, try new questions
-      const newQuestions = pendingQuestions.filter(q => 
-        q.type === 'new' && 
+    }
+
+    if (isNewSlot) {
+      const newQuestions = pendingQuestions.filter(q =>
+        q.type === 'new' &&
         !votedPendingQuestions[q.questionId]
       );
-      
+
       if (newQuestions.length > 0) {
         const pendingQ = newQuestions[0];
         setCurrentQuestion(pendingQ);
         setIsPendingQuestion(true);
         setPendingQuestionType('new');
-        
+
         const question = pendingQ.question;
         const correct = pendingQ.correctAnswer;
         const incorrect = [pendingQ.incorrectAnswer1, pendingQ.incorrectAnswer2, pendingQ.incorrectAnswer3].filter(Boolean);
         const allAnswers = prepareAnswerOptions([correct, ...incorrect]);
-        
+
         setQuestionText(question);
         setAnswerChoices(allAnswers);
         setSelectedAnswer('');
@@ -214,7 +249,7 @@ function Questions() {
     
     // Load a normal question
     loadNormalQuestion(index, indices, questions);
-  }, [prepareAnswerOptions, selectedQuestionIndices, filteredQuestions, pendingQuestions, votedPendingQuestions, justCompletedOriginal, editPairOriginal]);
+  }, [prepareAnswerOptions, selectedQuestionIndices, filteredQuestions, allQuestions, pendingQuestions, votedPendingQuestions, justCompletedOriginal, editPairOriginal]);
 
   const loadNormalQuestion = (index, indices, questions) => {
     const qData = questions[indices[index]];
@@ -262,7 +297,6 @@ function Questions() {
     setShowReview(false);
     setIsPendingQuestion(false);
     setPendingQuestionType(null);
-    setIsShowingEditPair(false);
     setEditPairOriginal(null);
     setJustCompletedOriginal(false);
     
@@ -280,16 +314,30 @@ function Questions() {
   // Initial load
   useEffect(() => {
     let isMounted = true;
-    
+
+    // Check for admin URL param and persist to localStorage
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('admin')) {
+      localStorage.setItem('qAdmin', 'true');
+    }
+    if (localStorage.getItem('qAdmin') === 'true') {
+      setIsAdminEnabled(true);
+    }
+
+    fetch('/explanations.json')
+      .then(r => r.json())
+      .then(data => { if (isMounted) setExplanations(data); })
+      .catch(() => {});
+
     const initialLoad = async () => {
       if (isMounted) {
         await fetchQuestionsFromDB();
         // Initial pending questions fetch will happen in generateQuestions
       }
     };
-    
+
     initialLoad();
-    
+
     return () => {
       isMounted = false;
     };
@@ -394,11 +442,11 @@ function Questions() {
 
   const fetchQuestionsFromDB = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/get-questions`);
-      const data = await response.json();
-      
-      if (data.success && data.questions) {
+      const data = await readMirror(APPROVED_KEY);
+
+      if (data && data.questions) {
         setAllQuestions(data.questions);
+        setLoadState('ready');
         
         // Get unique topics
         const topics = [...new Set(
@@ -415,94 +463,86 @@ function Questions() {
           generateQuestions(selectedTopic, 'All', data.questions.length, data.questions);
         }
       } else {
-        console.error('Failed to load questions from database');
+        setLoadState('error');
       }
     } catch (err) {
       console.error('Error loading questions:', err);
+      setLoadState('error');
     }
+  };
+
+  // Raw pending queue straight off the API. The quiz flow and the admin panel both read
+  // it, but want different slices of it, so the filtering stays with each caller.
+  const getPendingQuestions = async () => {
+    const data = await readMirror(PENDING_KEY);
+    return data && data.questions ? data.questions : null;
   };
 
   const fetchPendingQuestions = async (topicFilter = null) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/get-pending-questions`);
-      const data = await response.json();
-      
-      if (data.success && data.questions) {
-        // Filter pending questions to only show those matching the current topic
-        // AND that the user hasn't voted on
-        const filteredPending = topicFilter 
-          ? data.questions.filter(q => 
-              q.topic?.toString().toLowerCase() === topicFilter.toLowerCase() &&
-              !votedPendingQuestions[q.questionId]
-            )
-          : data.questions.filter(q => 
-              q.topic?.toString().toLowerCase() === topic.toLowerCase() &&
-              !votedPendingQuestions[q.questionId]
-            );
-        
-        setPendingQuestions(filteredPending);
+      const questions = await getPendingQuestions();
+      if (questions) {
+        // Only show pending questions matching the current topic AND that the user
+        // hasn't already voted on.
+        const forTopic = (topicFilter || topic).toLowerCase();
+        setPendingQuestions(questions.filter(q =>
+          q.topic?.toString().toLowerCase() === forTopic &&
+          !votedPendingQuestions[q.questionId]
+        ));
       }
     } catch (err) {
       console.error('Error loading pending questions:', err);
     }
   };
 
-  const checkAndHandleThreshold = async (questionId, approveCount, rejectCount) => {
-    const netScore = approveCount - rejectCount;
-    
-    if (netScore >= 3) {
-      // Question approved - handle locally
-      try {
-        const response = await fetch(`${API_BASE_URL}/moderate-question`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            questionId: questionId,
-            action: 'approve',
-            moderator: 'community-threshold'
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          console.log('Question approved by community!');
-          // Refresh questions to include the newly approved one
-          await fetchQuestionsFromDB();
-          return 'approved';
-        }
-      } catch (error) {
-        console.error('Error approving question:', error);
-      }
-    } else if (netScore <= -3) {
-      // Question rejected - handle locally
-      try {
-        const response = await fetch(`${API_BASE_URL}/moderate-question`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            questionId: questionId,
-            action: 'reject',
-            moderator: 'community-threshold'
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          console.log('Question rejected by community.');
-          return 'rejected';
-        }
-      } catch (error) {
-        console.error('Error rejecting question:', error);
+  const fetchAdminPendingQuestions = async () => {
+    setAdminLoading(true);
+    try {
+      const questions = await getPendingQuestions();
+      if (questions) setAdminPendingQuestions(questions);
+    } catch (err) {
+      console.error('Error loading admin pending questions:', err);
+    }
+    setAdminLoading(false);
+  };
+
+  // Approve or reject from the admin panel. The server refuses without the admin token, which
+  // is typed once into the panel and kept in this browser.
+  const adminModerate = async (questionId, action) => {
+    setAdminError('');
+    try {
+      await call('moderate-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken },
+        body: JSON.stringify({ questionId, action })
+      });
+      await fetchAdminPendingQuestions();
+      if (action === 'approve') await fetchQuestionsFromDB();
+    } catch (err) {
+      if (err.status === 401) {
+        try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch { /* private mode */ }
+        setAdminToken('');
+        setAdminError('That admin token was not accepted.');
+      } else {
+        setAdminError(err.message);
+        await fetchAdminPendingQuestions();
       }
     }
-    
-    return null;
+  };
+
+  const saveAdminToken = () => {
+    const token = adminTokenDraft.trim();
+    if (!token) return;
+    try { localStorage.setItem(ADMIN_TOKEN_KEY, token); } catch { /* private mode */ }
+    setAdminToken(token);
+    setAdminTokenDraft('');
+    setAdminError('');
+  };
+
+  const toggleAdminMode = () => {
+    const entering = !adminMode;
+    setAdminMode(entering);
+    if (entering) fetchAdminPendingQuestions();
   };
 
   const voteOnPendingQuestion = async (questionId, voteType, isEditImprovement = false) => {
@@ -537,35 +577,23 @@ function Questions() {
           : q
       ));
       
-      // Send vote to server
-      await fetch(`${API_BASE_URL}/vote-pending-question`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          questionId: questionId,
-          voteType: voteType === 'better' ? 'approve' : voteType === 'worse' ? 'reject' : voteType,
-          isEdit: isEditImprovement
-        })
-      });
-      
-      // Check if threshold is met and handle accordingly
-      const result = await checkAndHandleThreshold(questionId, newApproveCount, newRejectCount);
-      
-      if (result === 'approved') {
-        alert(isEditImprovement ? 'Edit approved and applied!' : 'Question approved and added to the database!');
-      } else if (result === 'rejected') {
-        alert(isEditImprovement ? 'Edit rejected by the community.' : 'Question rejected by the community.');
-      } else {
-        // Show current vote count to user
-        const netScore = newApproveCount - newRejectCount;
-        const message = netScore > 0 
-          ? `Vote recorded! Net score: +${netScore} (needs +3 for approval)`
-          : `Vote recorded! Net score: ${netScore}`;
-        console.log(message);
+      // The server counts the vote and, at the threshold, approves or rejects the question
+      // before it answers. A 409 means this one was already voted on from here, or already
+      // decided; either way there is nothing left to do but move on.
+      let result = null;
+      try {
+        result = await post('vote-pending-question', { questionId, vote: voteType, voter: voterId() });
+      } catch (err) {
+        if (err.status !== 409) throw err;
       }
-      
+
+      if (result && result.outcome === 'approved') {
+        await fetchQuestionsFromDB();
+        alert(isEditImprovement ? 'Edit approved and applied!' : 'Question approved and added to the database!');
+      } else if (result && result.outcome === 'rejected') {
+        alert(isEditImprovement ? 'Edit rejected by the community.' : 'Question rejected by the community.');
+      }
+
       // Remove from pending questions list
       setPendingQuestions(prev => prev.filter(q => q.questionId !== questionId));
       
@@ -615,22 +643,48 @@ function Questions() {
     setModalData({...modalData, [field]: e.target.value});
   };
 
-  const openSubmitModal = (mode = 'new') => {
-    setModalMode(mode);
-    
-    if (mode === 'edit' && currentQuestion && !isPendingQuestion) {
-      // Pre-fill with current question data
+  const openSubmitModal = (mode = 'new', questionOverride = null) => {
+    const q = questionOverride || currentQuestion;
+
+    if (mode === 'edit' && q) {
+      // If there's already a pending edit for this question, show it for voting instead
+      const existingEdit = pendingQuestions.find(p =>
+        p.type === 'edit' &&
+        p.originalQuestionId === q.questionId &&
+        !votedPendingQuestions[p.questionId]
+      );
+
+      if (existingEdit) {
+        setReviewMode(false);
+        setCurrentQuestion(existingEdit);
+        setEditPairOriginal(q);
+        setIsPendingQuestion(true);
+        setPendingQuestionType('edit');
+        setQuestionText(existingEdit.question);
+        setAnswerChoices(prepareAnswerOptions(
+          [existingEdit.correctAnswer, existingEdit.incorrectAnswer1,
+           existingEdit.incorrectAnswer2, existingEdit.incorrectAnswer3].filter(Boolean)
+        ));
+        setSelectedAnswer('');
+        setIsAnswered(false);
+        return;
+      }
+
+      // No pending edit — open the submit modal pre-filled
+      setModalMode(mode);
+      setEditingQuestion(q);
       setModalData({
-        topic: currentQuestion.topic?.toString().toLowerCase() || topic,
-        lecture: currentQuestion.lecture || '',
-        question: questionText,
-        correctAnswer: currentQuestion.correctAnswer || '',
-        incorrectAnswer1: currentQuestion.incorrectAnswer1 || '',
-        incorrectAnswer2: currentQuestion.incorrectAnswer2 || '',
-        incorrectAnswer3: currentQuestion.incorrectAnswer3 || ''
+        topic: q.topic?.toString().toLowerCase() || topic,
+        lecture: q.lecture || '',
+        question: q.question || questionText,
+        correctAnswer: q.correctAnswer || '',
+        incorrectAnswer1: q.incorrectAnswer1 || '',
+        incorrectAnswer2: q.incorrectAnswer2 || '',
+        incorrectAnswer3: q.incorrectAnswer3 || ''
       });
     } else {
-      // Clear for new question
+      setModalMode(mode);
+      setEditingQuestion(null);
       setModalData({
         topic: topic,
         lecture: '',
@@ -641,13 +695,11 @@ function Questions() {
         incorrectAnswer3: ''
       });
     }
-    
+
     setShowModal(true);
-  
     setTimeout(() => {
-      const textareas = document.querySelectorAll('.modal textarea');
-      textareas.forEach(textarea => {
-        textarea.style.height = textarea.scrollHeight + 'px';
+      document.querySelectorAll('.modal textarea').forEach(t => {
+        t.style.height = t.scrollHeight + 'px';
       });
     }, 0);
   };
@@ -671,31 +723,23 @@ function Questions() {
         type: modalMode === 'edit' ? 'edit' : 'new'
       };
       
-      if (modalMode === 'edit' && currentQuestion) {
-        payload.originalQuestionId = currentQuestion.questionId;
+      if (modalMode === 'edit' && editingQuestion) {
+        payload.originalQuestionId = editingQuestion.questionId;
       }
       
-      const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        alert(modalMode === 'edit' ? 'Question edit submitted for review!' : 'Question submitted for review!');
-        setShowModal(false);
-        // Refresh to get any new pending questions
-        fetchPendingQuestions();
-      } else {
-        alert('Failed to submit question: ' + (data.error || 'Unknown error'));
-      }
+      await post(endpoint, payload);
+      alert(modalMode === 'edit' ? 'Question edit submitted for review!' : 'Question submitted for review!');
+      setShowModal(false);
+      fetchPendingQuestions();
     } catch (error) {
-      console.error('Error submitting question:', error);
-      alert('Failed to submit question. Please try again.');
+      if (error.status === 409) {
+        alert(error.message);
+        setShowModal(false);
+      } else if (error.status === 400) {
+        alert(error.message);
+      } else {
+        alert('Failed to submit question: ' + error.message);
+      }
     }
   };
 
@@ -791,13 +835,11 @@ function Questions() {
     });
     
     // Send to server quietly in the background (no await)
-    fetch(`${API_BASE_URL}/vote-question`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        questionId: questionId,
-        voteType: voteType
-      })
+    // `previous` lets the server move a changed or withdrawn vote rather than add another.
+    post('vote-question', {
+      questionId,
+      vote: isUnvoting ? null : voteType,
+      previous: currentVote || null
     }).catch(error => {
       console.error('Error recording vote:', error);
     });
@@ -838,6 +880,83 @@ function Questions() {
     );
   };
 
+  // Submit / Edit question modal — shared by the review-mode and main returns
+  const submitModal = showModal && (
+    <div className="modal" onClick={(e) => e.target.className === 'modal' && setShowModal(false)}>
+      <div className="modal-content">
+        <span className="close-button" onClick={() => setShowModal(false)}>&times;</span>
+        <h2>{modalMode === 'edit' ? 'Edit Question' : 'Submit a New Question'}</h2>
+
+        <div className="dropdown-row">
+          <select
+            value={modalData.topic}
+            onChange={(e) => setModalData({...modalData, topic: e.target.value})}
+          >
+            <option value="aero">Aero</option>
+            <option value="engines">Engines</option>
+            <option value="frr">FR&R</option>
+            <option value="nav">Nav</option>
+            <option value="weather">Weather</option>
+            <option value="ground">Ground School</option>
+          </select>
+          <input
+            type="text"
+            placeholder="Enter Lecture Number (optional)"
+            value={modalData.lecture}
+            onChange={(e) => setModalData({...modalData, lecture: e.target.value})}
+          />
+        </div>
+
+        <div className="qa-box question-area">
+          <label>
+            <textarea
+              placeholder="Enter your question here..."
+              value={modalData.question}
+              onChange={(e) => handleTextareaChange(e, 'question')}
+            />
+          </label>
+        </div>
+
+        <div className="qa-box">
+          <form id="submitAnswerForm" className="radio-list">
+            <label>
+              <textarea
+                placeholder="Correct Answer"
+                value={modalData.correctAnswer}
+                onChange={(e) => handleTextareaChange(e, 'correctAnswer')}
+              />
+            </label>
+            <label>
+              <textarea
+                placeholder="Incorrect Answer 1"
+                value={modalData.incorrectAnswer1}
+                onChange={(e) => handleTextareaChange(e, 'incorrectAnswer1')}
+              />
+            </label>
+            <label>
+              <textarea
+                placeholder="Incorrect Answer 2"
+                value={modalData.incorrectAnswer2}
+                onChange={(e) => handleTextareaChange(e, 'incorrectAnswer2')}
+              />
+            </label>
+            <label>
+              <textarea
+                placeholder="Incorrect Answer 3"
+                value={modalData.incorrectAnswer3}
+                onChange={(e) => handleTextareaChange(e, 'incorrectAnswer3')}
+              />
+            </label>
+          </form>
+        </div>
+
+        <button className="submitBtn" onClick={submitModalQuestion}>
+          {modalMode === 'edit' ? 'Submit Edit' : 'Submit Question'}
+        </button>
+      </div>
+    </div>
+  );
+
   if (showReview) {
     return (
       <>
@@ -851,6 +970,7 @@ function Questions() {
   // Review Mode UI
   if (reviewMode) {
     return (
+      <>
       <div className="questions-container review-mode-container">
         {/* Review Mode Header */}
         <div className="review-mode-header">
@@ -1011,7 +1131,7 @@ function Questions() {
                     const isSelected = reviewAnswers[question.questionId] === answer;
                     const isCorrect = answer === question.correctAnswer;
                     const showResult = isSelected;
-                    
+
                     return (
                       <div
                         key={ansIdx}
@@ -1020,8 +1140,8 @@ function Questions() {
                           padding: '10px 15px',
                           margin: '8px 0',
                           border: '2px solid',
-                          borderColor: showResult && isCorrect ? '#4CAF50' : 
-                                      showResult && !isCorrect ? '#f44336' : 
+                          borderColor: showResult && isCorrect ? '#4CAF50' :
+                                      showResult && !isCorrect ? '#f44336' :
                                       '#ddd',
                           borderRadius: '8px',
                           cursor: 'pointer',
@@ -1048,8 +1168,8 @@ function Questions() {
                             {answer}
                           </span>
                           {showResult && isCorrect && (
-                            <span style={{ 
-                              color: '#4CAF50', 
+                            <span style={{
+                              color: '#4CAF50',
                               fontWeight: 'bold',
                               marginLeft: '10px'
                             }}>
@@ -1057,8 +1177,8 @@ function Questions() {
                             </span>
                           )}
                           {showResult && !isCorrect && (
-                            <span style={{ 
-                              color: '#f44336', 
+                            <span style={{
+                              color: '#f44336',
                               fontWeight: 'bold',
                               marginLeft: '10px'
                             }}>
@@ -1069,6 +1189,22 @@ function Questions() {
                       </div>
                     );
                   })}
+
+                  <button
+                    onClick={() => openSubmitModal('edit', question)}
+                    style={{
+                      marginTop: '12px',
+                      padding: '8px 18px',
+                      backgroundColor: '#01202C',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Edit Question
+                  </button>
                 </div>
               )}
             </div>
@@ -1085,14 +1221,139 @@ function Questions() {
           )}
         </div>
       </div>
+
+      {submitModal}
+      </>
+    );
+  }
+
+  // Admin panel
+  if (adminMode) {
+    // Group pending questions by originalQuestionId; standalone new questions get their own group
+    const groups = {};
+    adminPendingQuestions.forEach(q => {
+      const key = q.originalQuestionId || q.questionId;
+      if (!groups[key]) groups[key] = { originalId: q.originalQuestionId || null, edits: [] };
+      groups[key].edits.push(q);
+    });
+
+    // Sort each group by net votes descending
+    Object.values(groups).forEach(g => {
+      g.edits.sort((a, b) =>
+        ((b.approveCount || 0) - (b.rejectCount || 0)) - ((a.approveCount || 0) - (a.rejectCount || 0))
+      );
+    });
+
+    const groupList = Object.entries(groups).sort((a, b) => b[1].edits.length - a[1].edits.length);
+
+    return (
+      <div className="questions-container review-mode-container">
+        <button
+          className="review-mode-toggle"
+          onClick={toggleAdminMode}
+          style={{ marginBottom: '15px', padding: '10px 20px', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%', backgroundColor: '#5a0000' }}
+        >
+          Exit Admin Panel
+        </button>
+
+        <h3 style={{ marginBottom: '10px', color: '#333' }}>
+          Admin Panel — {adminLoading ? 'Loading...' : `${adminPendingQuestions.length} pending questions`}
+        </h3>
+
+        {!adminToken && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '12px', color: '#555', fontSize: '13px' }}>
+            <input
+              type="password"
+              placeholder="Admin token"
+              value={adminTokenDraft}
+              onChange={(e) => setAdminTokenDraft(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && saveAdminToken()}
+            />
+            <button onClick={saveAdminToken}>Save</button>
+            <span>Approve and Reject need the admin token. It is kept in this browser.</span>
+          </div>
+        )}
+        {adminError && <div style={{ marginBottom: '12px', color: '#c62828', fontSize: '14px' }}>{adminError}</div>}
+
+        <div style={{ maxHeight: 'calc(100vh - 180px)', overflowY: 'auto', paddingRight: '8px' }}>
+          {groupList.map(([groupKey, group]) => {
+            // Find the current approved/replaced original for context
+            const originalApproved = allQuestions.find(q => q.questionId === groupKey);
+            const groupLabel = originalApproved
+              ? originalApproved.question
+              : `Original ID: ${groupKey}`;
+
+            return (
+              <div key={groupKey} style={{ marginBottom: '28px', border: '2px solid #ccc', borderRadius: '10px', overflow: 'hidden' }}>
+                {/* Group header: the original question */}
+                <div style={{ padding: '12px 15px', backgroundColor: '#f0f4f8', borderBottom: '1px solid #ccc' }}>
+                  <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                    {group.edits.length} competing edit{group.edits.length !== 1 ? 's' : ''} •{' '}
+                    {group.originalId ? `Editing original ${group.originalId}` : 'New question submission'}
+                  </div>
+                  <div style={{ fontWeight: 'bold', color: '#01202C', fontSize: '14px' }}>
+                    {originalApproved ? `ORIGINAL: ${groupLabel}` : group.edits[0]?.type === 'new' ? 'NEW QUESTION' : `(original no longer approved — may be replaced)`}
+                  </div>
+                  {originalApproved && (
+                    <div style={{ fontSize: '13px', color: '#333', marginTop: '4px' }}>
+                      ✓ Correct: {originalApproved.correctAnswer}
+                    </div>
+                  )}
+                </div>
+
+                {/* Each pending edit */}
+                {group.edits.map(q => {
+                  const net = (q.approveCount || 0) - (q.rejectCount || 0);
+                  return (
+                    <div key={q.questionId} style={{ padding: '12px 15px', borderBottom: '1px solid #eee', backgroundColor: net >= 2 ? '#f0fff4' : net <= -2 ? '#fff0f0' : 'white' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '14px', color: '#222', marginBottom: '6px' }}>{q.question}</div>
+                          <div style={{ fontSize: '13px', color: '#2e7d32', marginBottom: '3px' }}>✓ {q.correctAnswer}</div>
+                          <div style={{ fontSize: '12px', color: '#999' }}>
+                            {new Date(q.submittedAt).toLocaleDateString()} •{' '}
+                            <span style={{ color: net > 0 ? '#2e7d32' : net < 0 ? '#c62828' : '#666', fontWeight: 'bold' }}>
+                              {net > 0 ? '+' : ''}{net} net ({q.approveCount || 0}✓ / {q.rejectCount || 0}✗)
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '80px' }}>
+                          <button
+                            onClick={() => adminModerate(q.questionId, 'approve')}
+                            style={{ padding: '6px 12px', backgroundColor: '#2e7d32', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => adminModerate(q.questionId, 'reject')}
+                            style={{ padding: '6px 12px', backgroundColor: '#c62828', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+
+          {!adminLoading && adminPendingQuestions.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '50px', color: '#999' }}>
+              No pending questions — queue is clear!
+            </div>
+          )}
+        </div>
+      </div>
     );
   }
 
   return (
-    <>      
+    <>
       <div className={`questions-container ${isPendingQuestion ? 'pending-question-mode' : ''} ${editPairOriginal ? 'edit-pair-mode' : ''}`}>
         {/* Review Mode Toggle Button */}
-        <button 
+        <button
           className="review-mode-toggle"
           onClick={toggleReviewMode}
           style={{
@@ -1110,7 +1371,16 @@ function Questions() {
         >
           Enter Review Mode
         </button>
-        
+
+        {isAdminEnabled && (
+          <button
+            onClick={toggleAdminMode}
+            style={{ marginBottom: '10px', padding: '7px 16px', backgroundColor: '#5a0000', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', width: '100%' }}
+          >
+            Admin Panel ({adminLoading ? '…' : adminPendingQuestions.length} pending)
+          </button>
+        )}
+
         <div className="dropdown-row">
           <select 
             value={topic} 
@@ -1156,7 +1426,22 @@ function Questions() {
             <option value="10000">All</option>
           </select>
         </div>
-        
+
+        {loadState === 'loading' && (
+          <div style={{ textAlign: 'center', padding: '40px 10px', color: '#003B4F' }}>Loading questions…</div>
+        )}
+        {loadState === 'error' && (
+          <div style={{ textAlign: 'center', padding: '40px 10px', color: '#003B4F' }}>
+            Could not load the questions. Check your connection.
+            <button
+              className="submitBtn"
+              onClick={() => { setLoadState('loading'); fetchQuestionsFromDB(); }}
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
         {questionText && (
           <>
             <div className="qa-container">
@@ -1192,7 +1477,7 @@ function Questions() {
                   {currentQuestion && currentQuestion.approveCount !== undefined && (
                     <div style={{ fontSize: '0.9em', marginTop: '5px' }}>
                       Current: {currentQuestion.approveCount || 0} approvals, {currentQuestion.rejectCount || 0} rejections
-                      (needs net +3 for approval)
+                      (needs net +5 for approval)
                     </div>
                   )}
                 </div>
@@ -1214,7 +1499,7 @@ function Questions() {
                   {currentQuestion && currentQuestion.approveCount !== undefined && (
                     <div style={{ fontSize: '0.9em', marginTop: '5px' }}>
                       Current: {currentQuestion.approveCount || 0} say better, {currentQuestion.rejectCount || 0} say worse
-                      (needs net +3 for approval)
+                      (needs net +5 for approval)
                     </div>
                   )}
                 </div>
@@ -1252,6 +1537,13 @@ function Questions() {
                   ))}
                 </div>
                 
+                {isAnswered && !isPendingQuestion && explanations[currentQuestion?.questionId] && (
+                  <div className="explanation-text" style={{ marginTop: '16px' }}>
+                    <strong className="explanation-heading">Explanation</strong>
+                    {explanations[currentQuestion.questionId]}
+                  </div>
+                )}
+
                 {!isAnswered ? (
                   <button className="submitBtn" onClick={handleSubmitAnswer}>
                     Submit
@@ -1341,11 +1633,37 @@ function Questions() {
                     </span>
                   )}
                 </button>
+
+              </div>
+            )}
+
+            {isPendingQuestion && pendingQuestionType === 'edit' && !votedPendingQuestions[currentQuestion?.questionId] && isAnswered && (
+              <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                <button
+                  onClick={() => {
+                    const newVoted = { ...votedPendingQuestions, [currentQuestion.questionId]: 'skip' };
+                    setVotedPendingQuestions(newVoted);
+                    localStorage.setItem('votedPendingQuestions', JSON.stringify(newVoted));
+                    setPendingQuestions(prev => prev.filter(q => q.questionId !== currentQuestion.questionId));
+                    handleNextQuestion();
+                  }}
+                  style={{
+                    padding: '6px 16px',
+                    backgroundColor: 'transparent',
+                    color: '#888',
+                    border: '1px solid #888',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '13px'
+                  }}
+                >
+                  Skip
+                </button>
               </div>
             )}
           </>
         )}
-        
+
         {/* Edit Current Question Button - only for non-pending questions */}
         {currentQuestion && !isPendingQuestion && !editPairOriginal && (
           <button className="submitBtn" onClick={() => openSubmitModal('edit')}>
@@ -1359,82 +1677,7 @@ function Questions() {
         </button>
       </div>
       
-      {/* Modals remain the same */}
-      {showModal && (
-        <div className="modal" onClick={(e) => e.target.className === 'modal' && setShowModal(false)}>
-          <div className="modal-content">
-            <span className="close-button" onClick={() => setShowModal(false)}>&times;</span>
-            <h2>{modalMode === 'edit' ? 'Edit Question' : 'Submit a New Question'}</h2>
-            
-            <div className="dropdown-row">
-              <select 
-                value={modalData.topic}
-                onChange={(e) => setModalData({...modalData, topic: e.target.value})}
-              >
-                <option value="aero">Aero</option>
-                <option value="engines">Engines</option>
-                <option value="frr">FR&R</option>
-                <option value="nav">Nav</option>
-                <option value="weather">Weather</option>
-                <option value="ground">Ground School</option>
-              </select>
-              <input 
-                type="text" 
-                placeholder="Enter Lecture Number (optional)"
-                value={modalData.lecture}
-                onChange={(e) => setModalData({...modalData, lecture: e.target.value})}
-              />
-            </div>
-            
-            <div className="qa-box question-area">
-              <label>
-                <textarea 
-                  placeholder="Enter your question here..."
-                  value={modalData.question}
-                  onChange={(e) => handleTextareaChange(e, 'question')}
-                />
-              </label>
-            </div>
-            
-            <div className="qa-box">
-              <form id="submitAnswerForm" className="radio-list">
-                <label>
-                  <textarea 
-                    placeholder="Correct Answer"
-                    value={modalData.correctAnswer}
-                    onChange={(e) => handleTextareaChange(e, 'correctAnswer')}
-                  />
-                </label>
-                <label>
-                  <textarea 
-                    placeholder="Incorrect Answer 1"
-                    value={modalData.incorrectAnswer1}
-                    onChange={(e) => handleTextareaChange(e, 'incorrectAnswer1')}
-                  />
-                </label>
-                <label>
-                  <textarea 
-                    placeholder="Incorrect Answer 2"
-                    value={modalData.incorrectAnswer2}
-                    onChange={(e) => handleTextareaChange(e, 'incorrectAnswer2')}
-                  />
-                </label>
-                <label>
-                  <textarea 
-                    placeholder="Incorrect Answer 3"
-                    value={modalData.incorrectAnswer3}
-                    onChange={(e) => handleTextareaChange(e, 'incorrectAnswer3')}
-                  />
-                </label>
-              </form>
-            </div>
-            
-            <button className="submitBtn" onClick={submitModalQuestion}>
-              {modalMode === 'edit' ? 'Submit Edit' : 'Submit Question'}
-            </button>
-          </div>
-        </div>
-      )}
+      {submitModal}
 
       {/* Weather Figure PDF Modal */}
       {showPdfModal && (
