@@ -10,8 +10,8 @@ matters: the revision model, the bucket, the admin token and the deploy.
 
 The deploy workflow (`.github/workflows/deploy-lambda.yml`) only updates code, as the IAM
 user `github-lambda-deploy`. Its one permission is the inline policy
-`deploy-pinksheetmafia-lambdas`: `lambda:UpdateFunctionCode` on `discussApi`, `submitDoc` and
-`submitQuestion`, by ARN. A new function's ARN has to be added there before its deploy step
+`deploy-pinksheetmafia-lambdas`: `lambda:UpdateFunctionCode` on `discussApi` and `submitDoc`,
+by ARN. A new function's ARN has to be added there before its deploy step
 can run; keep the grant that narrow rather than attaching `AWSLambda_FullAccess`. Everything
 below is created once, by hand, in the AWS console for `us-east-2`.
 
@@ -188,7 +188,7 @@ new edition goes in, as a new revision of each brief.
 - A stale `items/index.json` (two saves raced): `POST rebuild-index {"what":"items"}`.
   `"jetlogs"`, `"briefs"`, `"questions"` and `"all"` work the same way.
 - The NIFE questions (`questions.mjs`) live in `NIFEQuestions`, the table the retired
-  `submitQuestion` function wrote. Its mirror, `questions/nife/approved.json` and
+  `submitQuestion` function wrote (deleted 2026-09-24). Its mirror, `questions/nife/approved.json` and
   `questions/nife/pending.json`, is first built by `POST rebuild-index {"what":"questions"}`
   and rebuilt by every write after that. Approving or rejecting from the page's admin panel
   (`/nife/questions?admin`) asks for the admin token once and keeps it in that browser.

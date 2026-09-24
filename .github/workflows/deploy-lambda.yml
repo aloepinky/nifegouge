@@ -29,14 +29,6 @@ jobs:
             --function-name submitDoc \
             --zip-file fileb://function.zip
 
-      - name: Deploy submitQuestion
-        run: |
-          cd lambda/submitQuestion
-          zip -r function.zip .
-          aws lambda update-function-code \
-            --function-name submitQuestion \
-            --zip-file fileb://function.zip
-
       # The lint rules live in tools/lib and are shared with the CLI; the copy inside the
       # function directory is gitignored and made here so the two can never drift.
       - name: Deploy discussApi
