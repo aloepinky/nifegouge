@@ -172,8 +172,9 @@ new edition goes in, as a new revision of each brief.
 
 ## Operations
 
-- The old EPs/Limits leaderboards were carried over by `tools/leaderboard-migrate.js` and
-  their functions, routes and tables deleted on 2026-09-24. The tables were exported first to
+- The old EPs/Limits leaderboards were carried over through the admin `import-scores` op (by
+  `tools/leaderboard-migrate.js`, since removed) and their functions, routes and tables deleted
+  on 2026-09-24. The tables were exported first to
   the gitignored `_aws-archive/` as plain JSON; `TW4Users.json` holds password hashes.
 
 - Hide a page: `POST hide-item {"slug":"...","hidden":true}` with the admin header.
