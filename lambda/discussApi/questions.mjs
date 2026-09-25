@@ -129,6 +129,8 @@ export async function rebuildQuestionsMirror() {
   return { approved: approved.length, pending: pending.length };
 }
 
+const norm = (s) => (s || '').trim().toLowerCase();
+
 function readFields(body) {
   const fields = {
     topic: clip(body.topic, MAX_TOPIC).toLowerCase(),
@@ -142,6 +144,12 @@ function readFields(body) {
   if (!fields.topic || !fields.question || !fields.correctAnswer) {
     throw new HttpError(400, 'A question needs a topic, the question and its correct answer.');
   }
+  const answers = [fields.correctAnswer, fields.incorrectAnswer1, fields.incorrectAnswer2, fields.incorrectAnswer3]
+    .map(norm).filter(Boolean);
+  if (answers.length < 2) throw new HttpError(400, 'A question needs at least one wrong answer.');
+  // The quiz marks an answer correct by its text, so two choices reading the same would both
+  // light up green.
+  if (new Set(answers).size !== answers.length) throw new HttpError(400, 'Two of the answers are the same.');
   return fields;
 }
 
@@ -180,7 +188,6 @@ export async function submitQuestionHandler(event) {
   return reply(200, { success: true, questionId: row.questionId });
 }
 
-const norm = (s) => (s || '').trim().toLowerCase();
 const answerSet = (r) => new Set(
   [r.correctAnswer, r.incorrectAnswer1, r.incorrectAnswer2, r.incorrectAnswer3].map(norm).filter(Boolean),
 );
@@ -309,8 +316,10 @@ async function reject(questionId, by) {
 // approved, at -THRESHOLD rejected, before the response goes back.
 export async function votePendingHandler(event) {
   const body = parseBody(event);
-  const up = body.vote === 'approve' || body.vote === 'better';
-  const down = body.vote === 'reject' || body.vote === 'worse';
+  // 'good' and 'bad' are what the quiz's thumbs sent on a new submission until 2026-09-25;
+  // a page loaded before then still sends them.
+  const up = ['approve', 'better', 'good'].includes(body.vote);
+  const down = ['reject', 'worse', 'bad'].includes(body.vote);
   if (!up && !down) throw new HttpError(400, 'A vote is approve or reject');
   const voter = voterOf(body);
 
