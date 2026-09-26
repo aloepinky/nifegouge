@@ -26,10 +26,38 @@ export async function loadApproved() {
   return data.questions;
 }
 
+// The review queue, oldest first, and the net vote that decides an item. The threshold comes
+// from the server; 5 is only what a mirror written before it carried the number means.
 export async function loadPending() {
   const data = await readMirror(PENDING_KEY);
-  return data && data.questions ? data.questions : [];
+  return {
+    questions: data && data.questions ? data.questions : [],
+    threshold: data && data.threshold ? data.threshold : 5,
+  };
 }
+
+// What this browser has done with each pending question: 'approve' / 'reject' / 'better' /
+// 'worse' for a vote, 'skip' for passed over. Either way it is not offered again here.
+const SEEN_KEY = 'votedPendingQuestions';
+
+export function pendingSeen() {
+  try {
+    const saved = localStorage.getItem(SEEN_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function markPendingSeen(questionId, what) {
+  const seen = { ...pendingSeen(), [questionId]: what };
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch { /* private mode */ }
+  return seen;
+}
+
+// A live question at or below this net score asks, once answered, for someone to suggest an
+// edit. Downvotes never remove a question; they point people at fixing it.
+export const DISPUTED_AT = -10;
 
 // 'submit-question' or 'edit-question'. Throws with `.status` 400/409 on a refusal.
 export const sendQuestion = (endpoint, payload) => post(endpoint, payload);

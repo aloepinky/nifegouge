@@ -15,7 +15,7 @@ export default function AdminPanel({ questions, onExit, onApproved }) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      setPending(await loadPending());
+      setPending((await loadPending()).questions);
     } catch (err) {
       setError(err.message);
     }

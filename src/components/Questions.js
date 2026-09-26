@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  TOPICS, answerChoices, inFilter, lecturesIn, loadApproved, loadPending, netScore,
-  voteOnPending, voteOnQuestion,
+  TOPICS, DISPUTED_AT, answerChoices, inFilter, lecturesIn, loadApproved, loadPending, netScore,
+  pendingSeen, shuffle, voteOnQuestion,
 } from './questions/questionsApi';
 import { useNotice } from './questions/Notice';
 import QuestionForm from './questions/QuestionForm';
@@ -10,11 +10,18 @@ import AdminPanel from './questions/AdminPanel';
 import ScoreScreen from './questions/ScoreScreen';
 import WeatherFigures from './questions/WeatherFigures';
 import Explanation from './questions/Explanation';
-import EditDiff from './questions/EditDiff';
+import PendingCard from './questions/PendingCard';
+import PendingQueue from './questions/PendingQueue';
 
-// The NIFE Questions tab: the quiz, and the route shell for Review Mode, the admin panel and
-// the submit/edit form, which live in ./questions/. The quiz's question selection, pending
-// slots included, is still here; the plan's Phase 2 replaces it.
+// The NIFE Questions tab: the quiz, and the shell for Review Mode, Review pending, the admin
+// panel and the submit/edit form, which live in ./questions/.
+//
+// A quiz is the N live questions drawn when it starts, and only those are numbered and scored.
+// After every BONUS_EVERY of them, one question waiting on community review may be slipped in
+// as a bonus: it is answered and voted on (or skipped), never counted, and never takes the
+// place of a question that was drawn.
+
+const BONUS_EVERY = 5;
 
 function readStored(key) {
   try {
@@ -32,218 +39,160 @@ function writeStored(key, value) {
 function Questions() {
   const [allQuestions, setAllQuestions] = useState([]);
   const [loadState, setLoadState] = useState('loading'); // 'loading' | 'error' | 'ready'
-  const [filteredQuestions, setFilteredQuestions] = useState([]);
-  const [selectedQuestionIndices, setSelectedQuestionIndices] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState(null);
-  const [attempts, setAttempts] = useState([]);
-
-  // Pending questions shown in the quiz
-  const [pendingQuestions, setPendingQuestions] = useState([]);
-  const [isPendingQuestion, setIsPendingQuestion] = useState(false);
-  const [pendingQuestionType, setPendingQuestionType] = useState(null); // 'new' or 'edit'
+  const [pending, setPending] = useState([]);
+  const [threshold, setThreshold] = useState(5);
+  const [seen, setSeen] = useState(pendingSeen);
 
   const [topic, setTopic] = useState('aero');
   const [lecture, setLecture] = useState('All');
   const [numQuestions, setNumQuestions] = useState('');
-  const [questionText, setQuestionText] = useState('');
+
+  // The quiz in progress
+  const [quiz, setQuiz] = useState([]);
+  const [index, setIndex] = useState(0);
   const [choices, setChoices] = useState([]);
-  const [selectedAnswer, setSelectedAnswer] = useState('');
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [showReview, setShowReview] = useState(false);
+  const [selected, setSelected] = useState('');
+  const [answered, setAnswered] = useState(false);
+  const [attempts, setAttempts] = useState([]);
+  const [showScore, setShowScore] = useState(false);
+  const [bonus, setBonus] = useState(null); // { item, then: 'advance' | 'resume' }
 
-  const [reviewMode, setReviewMode] = useState(false);
+  const [view, setView] = useState('quiz'); // 'quiz' | 'review' | 'pending' | 'admin'
   const [votedQuestions, setVotedQuestions] = useState(() => readStored('votedQuestions'));
-  const [votedPendingQuestions, setVotedPendingQuestions] = useState(() => readStored('votedPendingQuestions'));
-
   const [isAdminEnabled, setIsAdminEnabled] = useState(false);
-  const [adminMode, setAdminMode] = useState(false);
   const [form, setForm] = useState(null); // null | { mode: 'new' | 'edit', question }
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [notice, showNotice] = useNotice();
 
   const availableLectures = useMemo(() => lecturesIn(allQuestions, topic), [allQuestions, topic]);
+  const unseen = useMemo(() => pending.filter((q) => !seen[q.questionId]), [pending, seen]);
 
-  const show = useCallback((q) => {
-    setCurrentQuestion(q);
-    setQuestionText(q.question);
-    setChoices(answerChoices(q));
-    setSelectedAnswer('');
-    setIsAnswered(false);
+  // The drawn question as it is now: votes change `allQuestions`, not the drawn copy.
+  const drawn = quiz[index];
+  const current = drawn && (allQuestions.find((q) => q.questionId === drawn.questionId) || drawn);
+
+  const prepare = useCallback((q) => {
+    setChoices(q ? answerChoices(q) : []);
+    setSelected('');
+    setAnswered(false);
   }, []);
 
-  const loadQuestion = useCallback((index, indices = selectedQuestionIndices, questions = filteredQuestions) => {
-    if (index >= indices.length) {
-      setShowReview(true);
-      return;
-    }
+  const startQuiz = useCallback((topicVal, lectureVal, n, questions) => {
+    const pool = questions.filter(inFilter(topicVal, lectureVal));
+    const count = !n || n > pool.length ? pool.length : n;
+    const picked = shuffle(pool).slice(0, count);
+    setQuiz(picked);
+    setIndex(0);
+    setAttempts([]);
+    setShowScore(false);
+    setBonus(null);
+    prepare(picked[0]);
+  }, [prepare]);
 
-    // Every 5th question alternates: odd multiples = a proposed edit, even multiples = a new
-    // question, e.g. Q5=edit, Q10=new, Q15=edit, Q20=new ...
-    const slot = pendingQuestions.length > 0 ? Math.floor((index + 1) / 5) : 0;
-    const isEvery5th = (index + 1) % 5 === 0 && slot > 0;
-    const isEditSlot = isEvery5th && slot % 2 === 1;
-    const isNewSlot = isEvery5th && slot % 2 === 0;
-
-    if (isEditSlot) {
-      // The edit itself is asked; once answered, the page shows what it changes.
-      const edit = pendingQuestions.find((q) => q.type === 'edit' && !votedPendingQuestions[q.questionId]);
-      if (edit) {
-        setIsPendingQuestion(true);
-        setPendingQuestionType('edit');
-        show(edit);
-        return;
-      }
-    }
-
-    if (isNewSlot) {
-      const fresh = pendingQuestions.find((q) => q.type === 'new' && !votedPendingQuestions[q.questionId]);
-      if (fresh) {
-        setIsPendingQuestion(true);
-        setPendingQuestionType('new');
-        show(fresh);
-        return;
-      }
-    }
-
-    setIsPendingQuestion(false);
-    setPendingQuestionType(null);
-    show(questions[indices[index]]);
-  }, [selectedQuestionIndices, filteredQuestions, pendingQuestions, votedPendingQuestions, show]);
-
-  const fetchPendingQuestions = useCallback(async (forTopic) => {
+  const refreshPending = useCallback(async () => {
     try {
-      const pending = await loadPending();
-      // Only pending questions in this topic that this browser hasn't voted on.
-      setPendingQuestions(pending.filter((q) => (
-        (q.topic || '').toLowerCase() === forTopic && !votedPendingQuestions[q.questionId]
-      )));
+      const data = await loadPending();
+      setPending(data.questions);
+      setThreshold(data.threshold);
     } catch (err) {
       console.error('Error loading pending questions:', err);
     }
-  }, [votedPendingQuestions]);
+  }, []);
 
-  const generateQuestions = useCallback((topicVal, lectureVal, n, questionsArray = allQuestions) => {
-    const filtered = questionsArray.filter(inFilter(topicVal, lectureVal));
-    setFilteredQuestions(filtered);
-    const total = filtered.length;
-    const count = !n || n === 'All' || n > total ? total : n;
-
-    const indices = [];
-    while (indices.length < count) {
-      const rand = Math.floor(Math.random() * total);
-      if (!indices.includes(rand)) indices.push(rand);
-    }
-
-    setSelectedQuestionIndices(indices);
-    setCurrentIndex(0);
-    setAttempts([]);
-    setShowReview(false);
-    setIsPendingQuestion(false);
-    setPendingQuestionType(null);
-
-    fetchPendingQuestions(topicVal);
-
-    if (indices.length > 0) loadQuestion(0, indices, filtered);
-  }, [allQuestions, loadQuestion, fetchPendingQuestions]);
-
-  const fetchQuestionsFromDB = async () => {
+  const loadAll = useCallback(async ({ restart }) => {
     try {
       const questions = await loadApproved();
       setAllQuestions(questions);
       setLoadState('ready');
-
-      const topics = [...new Set(questions
-        .map((q) => q.topic)
-        .filter((t) => typeof t === 'string' && t.trim() !== '')
-        .map((t) => t.toLowerCase().trim()))];
-      if (topics.length > 0) {
-        const selected = topics[Math.floor(topics.length * Math.random())];
-        setTopic(selected);
-        generateQuestions(selected, 'All', questions.length, questions);
+      if (restart) {
+        const topics = [...new Set(questions.map((q) => (q.topic || '').toLowerCase().trim()).filter(Boolean))];
+        if (topics.length > 0) {
+          const chosen = topics[Math.floor(topics.length * Math.random())];
+          setTopic(chosen);
+          startQuiz(chosen, 'All', 0, questions);
+        }
       }
     } catch (err) {
       console.error('Error loading questions:', err);
       setLoadState('error');
     }
-  };
+  }, [startQuiz]);
 
-  // Initial load
   useEffect(() => {
-
     // ?admin shows the admin panel button in this browser from now on; the server still
     // refuses its buttons without the token.
     try {
       if (new URLSearchParams(window.location.search).has('admin')) localStorage.setItem('qAdmin', 'true');
       if (localStorage.getItem('qAdmin') === 'true') setIsAdminEnabled(true);
     } catch { /* private mode */ }
+    loadAll({ restart: true });
+    refreshPending();
+  }, [loadAll, refreshPending]);
 
-    fetchQuestionsFromDB();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const exitReviewMode = () => {
-    setReviewMode(false);
-    generateQuestions(topic, lecture, numQuestions || allQuestions.length);
+  const restart = (topicVal = topic, lectureVal = lecture, n = parseInt(numQuestions, 10) || 0) => {
+    startQuiz(topicVal, lectureVal, n, allQuestions);
   };
 
-  const voteOnPendingQuestion = async (questionId, voteType, isEditImprovement) => {
-    const newVoted = { ...votedPendingQuestions, [questionId]: voteType };
-    setVotedPendingQuestions(newVoted);
-    writeStored('votedPendingQuestions', newVoted);
-
-    try {
-      // The server counts the vote and, at the threshold, approves or rejects the question
-      // before it answers. null means this one was already voted on from here, or already
-      // decided; either way there is nothing left to do but move on.
-      const result = await voteOnPending(questionId, voteType);
-      if (result && result.outcome === 'approved') {
-        await fetchQuestionsFromDB();
-        showNotice(isEditImprovement ? 'That edit has been approved and applied.' : 'That question has been approved and added to the quiz.');
-      } else if (result && result.outcome === 'rejected') {
-        showNotice(isEditImprovement ? 'That edit was turned down by the community.' : 'That question was turned down by the community.');
-      }
-    } catch (error) {
-      console.error('Error voting on pending question:', error);
-      showNotice('Your vote did not go through. Check your connection.', 'error');
-    }
-
-    setPendingQuestions((prev) => prev.filter((q) => q.questionId !== questionId));
-    if (isAnswered) handleNextQuestion();
+  // The oldest pending item in this topic this browser has not dealt with, preferring the
+  // lecture being quizzed.
+  const pickBonus = () => {
+    const inTopic = unseen.filter((q) => (q.topic || '').toLowerCase() === topic);
+    return inTopic.find((q) => lecture !== 'All' && String(q.lecture) === lecture) || inTopic[0] || null;
   };
 
-  const handleSubmitAnswer = () => {
-    setIsAnswered(true);
-    if (isPendingQuestion) return;
+  const submitAnswer = () => {
+    setAnswered(true);
     setAttempts((prev) => [...prev, {
-      question: currentQuestion.question,
-      chosen: selectedAnswer,
-      correct: currentQuestion.correctAnswer,
-      explanation: currentQuestion.explanation,
+      question: current.question,
+      chosen: selected,
+      correct: current.correctAnswer,
+      explanation: current.explanation,
     }]);
   };
 
-  const handleNextQuestion = () => {
-    setCurrentIndex((prev) => prev + 1);
-    loadQuestion(currentIndex + 1);
+  const advance = () => {
+    if (index + 1 >= quiz.length) {
+      setShowScore(true);
+      return;
+    }
+    setIndex(index + 1);
+    prepare(quiz[index + 1]);
   };
 
-  const handleReset = () => {
-    setShowReview(false);
-    setAttempts([]);
-    generateQuestions(topic, lecture, numQuestions || allQuestions.length);
+  const next = () => {
+    const item = (index + 1) % BONUS_EVERY === 0 ? pickBonus() : null;
+    if (item) setBonus({ item, then: 'advance' });
+    else advance();
+  };
+
+  // A vote or skip on a pending item, from a bonus in the quiz or from Review pending.
+  const pendingDone = async ({ vote, result, error }) => {
+    setSeen(pendingSeen());
+    const isEdit = vote === 'better' || vote === 'worse';
+    if (error) {
+      showNotice('Your vote did not go through. Check your connection.', 'error');
+    } else if (result && result.outcome === 'approved') {
+      showNotice(isEdit ? 'That edit has been approved and applied.' : 'That question has been approved and added to the quiz.');
+      loadAll({ restart: false });
+    } else if (result && result.outcome === 'rejected') {
+      showNotice(isEdit ? 'That edit was turned down by the community.' : 'That question was turned down by the community.');
+    }
+    if (vote !== 'skip') refreshPending();
+    if (bonus) {
+      const { then } = bonus;
+      setBonus(null);
+      if (then === 'advance') advance();
+    }
   };
 
   const openForm = (mode, question = null) => {
     if (mode === 'edit' && question) {
-      // If there's already a pending edit for this question, show it for voting instead
-      const existingEdit = pendingQuestions.find((p) => (
-        p.type === 'edit' && p.originalQuestionId === question.questionId && !votedPendingQuestions[p.questionId]
-      ));
-      if (existingEdit) {
-        setReviewMode(false);
-        setIsPendingQuestion(true);
-        setPendingQuestionType('edit');
-        show(existingEdit);
+      // Someone has already proposed an edit to this question: vote on that one first.
+      const existing = unseen.find((p) => p.type === 'edit' && p.originalQuestionId === question.questionId);
+      if (existing) {
+        setView('quiz');
+        setBonus({ item: existing, then: 'resume' });
+        showNotice('Someone has already proposed an edit to this question. Have a look at it first.');
         return;
       }
     }
@@ -252,50 +201,34 @@ function Questions() {
 
   const formDone = (message, kind) => {
     showNotice(message, kind);
-    fetchPendingQuestions(topic);
+    refreshPending();
   };
 
+  // A thumbs vote on a live question: the screen moves at once, the server is told after.
   const handleVote = (voteType) => {
-    if (!currentQuestion || !currentQuestion.questionId) return;
-
-    if (isPendingQuestion) {
-      if (!isAnswered) return;
-      voteOnPendingQuestion(currentQuestion.questionId, voteType, pendingQuestionType === 'edit');
-      return;
-    }
-
-    // A live question: the screen moves at once, the server is told in the background.
-    const questionId = currentQuestion.questionId;
+    if (!current) return;
+    const questionId = current.questionId;
     const previous = votedQuestions[questionId] || null;
-    const next = previous === voteType ? null : voteType;
+    const nextVote = previous === voteType ? null : voteType;
 
     const newVoted = { ...votedQuestions };
-    if (next) newVoted[questionId] = next;
+    if (nextVote) newVoted[questionId] = nextVote;
     else delete newVoted[questionId];
     setVotedQuestions(newVoted);
     writeStored('votedQuestions', newVoted);
 
     const counter = { good: 'upvotes', bad: 'downvotes' };
-    const moved = (q) => {
+    setAllQuestions((prev) => prev.map((q) => {
+      if (q.questionId !== questionId) return q;
       const out = { ...q };
       if (previous) out[counter[previous]] = Math.max(0, (out[counter[previous]] || 0) - 1);
-      if (next) out[counter[next]] = (out[counter[next]] || 0) + 1;
+      if (nextVote) out[counter[nextVote]] = (out[counter[nextVote]] || 0) + 1;
       return out;
-    };
-    setAllQuestions((prev) => prev.map((q) => (q.questionId === questionId ? moved(q) : q)));
-    setCurrentQuestion((prev) => (prev && prev.questionId === questionId ? moved(prev) : prev));
+    }));
 
-    voteOnQuestion(questionId, next, previous).catch((error) => {
+    voteOnQuestion(questionId, nextVote, previous).catch((error) => {
       console.error('Error recording vote:', error);
     });
-  };
-
-  const skipPending = () => {
-    const newVoted = { ...votedPendingQuestions, [currentQuestion.questionId]: 'skip' };
-    setVotedPendingQuestions(newVoted);
-    writeStored('votedPendingQuestions', newVoted);
-    setPendingQuestions((prev) => prev.filter((q) => q.questionId !== currentQuestion.questionId));
-    handleNextQuestion();
   };
 
   const formModal = form && (
@@ -308,11 +241,16 @@ function Questions() {
     />
   );
 
-  if (showReview) {
-    return <ScoreScreen attempts={attempts} topic={topic} onReset={handleReset} />;
+  const toQuiz = () => {
+    setView('quiz');
+    restart();
+  };
+
+  if (showScore) {
+    return <ScoreScreen attempts={attempts} topic={topic} onReset={() => restart()} />;
   }
 
-  if (reviewMode) {
+  if (view === 'review') {
     return (
       <>
         {notice && <div className="questions-container" style={{ paddingBottom: 0 }}>{notice}</div>}
@@ -322,7 +260,7 @@ function Questions() {
           lecture={lecture}
           onTopicChange={(t) => { setTopic(t); setLecture('All'); }}
           onLectureChange={setLecture}
-          onExit={exitReviewMode}
+          onExit={toQuiz}
           onEdit={(q) => openForm('edit', q)}
         />
         {formModal}
@@ -330,29 +268,63 @@ function Questions() {
     );
   }
 
-  if (adminMode) {
-    return <AdminPanel questions={allQuestions} onExit={() => setAdminMode(false)} onApproved={fetchQuestionsFromDB} />;
+  if (view === 'pending') {
+    return (
+      <>
+        {notice && <div className="questions-container" style={{ paddingBottom: 0 }}>{notice}</div>}
+        <PendingQueue
+          pending={pending}
+          threshold={threshold}
+          seen={seen}
+          questions={allQuestions}
+          onVoted={pendingDone}
+          onExit={() => setView('quiz')}
+        />
+      </>
+    );
   }
 
-  const score = currentQuestion ? netScore(currentQuestion) : 0;
-  const pendingVote = votedPendingQuestions[currentQuestion?.questionId];
+  if (view === 'admin') {
+    return (
+      <AdminPanel
+        questions={allQuestions}
+        onExit={() => { setView('quiz'); refreshPending(); }}
+        onApproved={() => loadAll({ restart: false })}
+      />
+    );
+  }
+
+  const score = current ? netScore(current) : 0;
+  const disputed = answered && current && score <= DISPUTED_AT;
+  const bonusOriginal = bonus && bonus.item.type === 'edit'
+    ? allQuestions.find((q) => q.questionId === bonus.item.originalQuestionId)
+    : null;
 
   return (
     <>
-      <div className={`questions-container ${isPendingQuestion ? 'pending-question-mode' : ''}`}>
+      <div className={`questions-container ${bonus ? 'pending-question-mode' : ''}`}>
         {notice}
 
         <button
           className="review-mode-toggle"
-          onClick={() => setReviewMode(true)}
-          style={{ marginBottom: '15px', padding: '10px 20px', backgroundColor: '#01202C', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%' }}
+          onClick={() => setView('review')}
+          style={{ marginBottom: '10px', padding: '10px 20px', backgroundColor: '#01202C', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%' }}
         >
           Enter Review Mode
         </button>
 
+        {unseen.length > 0 && (
+          <button
+            onClick={() => setView('pending')}
+            style={{ marginBottom: '15px', padding: '8px 20px', backgroundColor: 'white', color: '#01202C', border: '2px solid #01202C', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', width: '100%' }}
+          >
+            Review pending questions ({unseen.length})
+          </button>
+        )}
+
         {isAdminEnabled && (
           <button
-            onClick={() => setAdminMode(true)}
+            onClick={() => setView('admin')}
             style={{ marginBottom: '10px', padding: '7px 16px', backgroundColor: '#5a0000', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', width: '100%' }}
           >
             Admin Panel
@@ -365,7 +337,7 @@ function Questions() {
             onChange={(e) => {
               setTopic(e.target.value);
               setLecture('All');
-              generateQuestions(e.target.value, 'All', numQuestions);
+              restart(e.target.value, 'All');
             }}
           >
             {TOPICS.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -375,7 +347,7 @@ function Questions() {
             value={lecture}
             onChange={(e) => {
               setLecture(e.target.value);
-              generateQuestions(topic, e.target.value, numQuestions);
+              restart(topic, e.target.value);
             }}
           >
             <option value="All">All Lectures</option>
@@ -386,7 +358,7 @@ function Questions() {
             value={numQuestions}
             onChange={(e) => {
               setNumQuestions(e.target.value);
-              generateQuestions(topic, lecture, parseInt(e.target.value, 10));
+              restart(topic, lecture, parseInt(e.target.value, 10));
             }}
           >
             <option value="" disabled>No. of Questions</option>
@@ -404,43 +376,31 @@ function Questions() {
         {loadState === 'error' && (
           <div style={{ textAlign: 'center', padding: '40px 10px', color: '#003B4F' }}>
             Could not load the questions. Check your connection.
-            <button className="submitBtn" onClick={() => { setLoadState('loading'); fetchQuestionsFromDB(); }}>
+            <button className="submitBtn" onClick={() => { setLoadState('loading'); loadAll({ restart: true }); }}>
               Try again
             </button>
           </div>
         )}
+        {loadState === 'ready' && quiz.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px 10px', color: '#003B4F' }}>No questions in this topic yet.</div>
+        )}
 
-        {questionText && (
+        {bonus && (
+          <PendingCard
+            key={bonus.item.questionId}
+            item={bonus.item}
+            original={bonusOriginal}
+            threshold={threshold}
+            badge="Bonus review"
+            onDone={pendingDone}
+          />
+        )}
+
+        {!bonus && current && (
           <>
             <div className="qa-container">
-              {isPendingQuestion && pendingQuestionType === 'new' && (
-                <div style={{ padding: '10px', marginBottom: '15px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '5px', color: '#856404', textAlign: 'center', fontWeight: 'bold' }}>
-                  Community Review: New Question - Please vote after answering
-                  {currentQuestion && currentQuestion.approveCount !== undefined && (
-                    <div style={{ fontSize: '0.9em', marginTop: '5px' }}>
-                      Current: {currentQuestion.approveCount || 0} approvals, {currentQuestion.rejectCount || 0} rejections
-                      (needs net +5 for approval)
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {isPendingQuestion && pendingQuestionType === 'edit' && (
-                <div style={{ padding: '10px', marginBottom: '15px', backgroundColor: '#e8f5e9', border: '1px solid #4caf50', borderRadius: '5px', color: '#2e7d32', textAlign: 'center', fontWeight: 'bold' }}>
-                  Proposed Edit - Answer it, then say whether it is better than the current version
-                  {currentQuestion && currentQuestion.approveCount !== undefined && (
-                    <div style={{ fontSize: '0.9em', marginTop: '5px' }}>
-                      Current: {currentQuestion.approveCount || 0} say better, {currentQuestion.rejectCount || 0} say worse
-                      (needs net +5 for approval)
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <span className="q-badge">
-                Q {currentIndex + 1}/{selectedQuestionIndices.length}
-              </span>
-              <div className="qa-box question-area">{questionText}</div>
+              <span className="q-badge">Q {index + 1}/{quiz.length}</span>
+              <div className="qa-box question-area">{current.question}</div>
 
               <div className="qa-box">
                 <div className="radio-list">
@@ -448,33 +408,39 @@ function Questions() {
                     <label
                       key={idx}
                       className={
-                        isAnswered && choice === currentQuestion.correctAnswer ? 'correct'
-                          : isAnswered && selectedAnswer === choice ? 'wrong'
-                            : !isAnswered && selectedAnswer === choice ? 'selected' : ''
+                        answered && choice === current.correctAnswer ? 'correct'
+                          : answered && selected === choice ? 'wrong'
+                            : !answered && selected === choice ? 'selected' : ''
                       }
-                      onClick={() => !isAnswered && setSelectedAnswer(choice)}
+                      onClick={() => !answered && setSelected(choice)}
                     >
-                      <input type="radio" name="answer" value={choice} checked={selectedAnswer === choice} onChange={() => {}} disabled={isAnswered} />
+                      <input type="radio" name="answer" value={choice} checked={selected === choice} onChange={() => {}} disabled={answered} />
                       {choice}
                     </label>
                   ))}
                 </div>
 
-                {isAnswered && pendingQuestionType !== 'edit' && <Explanation text={currentQuestion.explanation} />}
-                {isAnswered && pendingQuestionType === 'edit' && (
-                  <EditDiff
-                    original={allQuestions.find((q) => q.questionId === currentQuestion.originalQuestionId)}
-                    edit={currentQuestion}
-                  />
+                {answered && <Explanation text={current.explanation} />}
+
+                {disputed && (
+                  <div style={{ marginTop: '14px', padding: '10px 12px', background: '#f3f7f8', border: '1px solid #cfdde2', borderRadius: '6px', fontSize: '14px', color: '#003B4F' }}>
+                    Many students have marked this question down. If something in it is wrong or unclear, suggest an edit.
+                    <button
+                      onClick={() => openForm('edit', current)}
+                      style={{ marginLeft: '10px', padding: '4px 12px', background: '#01202C', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                    >
+                      Suggest an edit
+                    </button>
+                  </div>
                 )}
 
-                {!isAnswered ? (
-                  <button className="submitBtn" onClick={handleSubmitAnswer}>Submit</button>
-                ) : !isPendingQuestion ? (
-                  <button className="submitBtn" onClick={handleNextQuestion}>
-                    {currentIndex + 1 >= selectedQuestionIndices.length ? 'Review' : 'Next Question'}
+                {!answered ? (
+                  <button className="submitBtn" onClick={submitAnswer}>Submit</button>
+                ) : (
+                  <button className="submitBtn" onClick={next}>
+                    {index + 1 >= quiz.length ? 'Review' : 'Next Question'}
                   </button>
-                ) : null}
+                )}
               </div>
             </div>
 
@@ -486,68 +452,30 @@ function Questions() {
               </div>
             )}
 
-            {/* Vote buttons: required for pending questions, once answered */}
-            {(!isPendingQuestion || isAnswered) && (
-              <div className="feedback-row">
-                <button
-                  className={`thumb-btn up ${
-                    isPendingQuestion
-                      ? (pendingVote === 'approve' || pendingVote === 'better' ? 'active' : '')
-                      : (votedQuestions[currentQuestion?.questionId] === 'good' ? 'active' : '')
-                  }`}
-                  onClick={() => handleVote(isPendingQuestion ? (pendingQuestionType === 'edit' ? 'better' : 'approve') : 'good')}
-                  title={isPendingQuestion ? (pendingQuestionType === 'edit' ? 'Better than original' : 'Approve question') : 'Good question'}
-                  disabled={Boolean(isPendingQuestion && pendingVote)}
-                >
-                  <img src="/images/thumb.png" alt="Thumbs up" />
-                  {isPendingQuestion && (
-                    <span style={{ display: 'block', fontSize: '12px', marginTop: '5px', color: 'white' }}>
-                      {pendingQuestionType === 'edit' ? 'Better' : 'Approve'}
-                    </span>
-                  )}
-                </button>
-                {!isPendingQuestion && currentQuestion && (
-                  <span className={`vote-score ${score >= 0 ? 'positive' : 'negative'}`}>
-                    {score >= 0 ? '+' : ''}{score}
-                  </span>
-                )}
-                <button
-                  className={`thumb-btn down ${
-                    isPendingQuestion
-                      ? (pendingVote === 'reject' || pendingVote === 'worse' ? 'active' : '')
-                      : (votedQuestions[currentQuestion?.questionId] === 'bad' ? 'active' : '')
-                  }`}
-                  onClick={() => handleVote(isPendingQuestion ? (pendingQuestionType === 'edit' ? 'worse' : 'reject') : 'bad')}
-                  title={isPendingQuestion ? (pendingQuestionType === 'edit' ? 'Worse than original' : 'Reject question') : 'Bad question'}
-                  disabled={Boolean(isPendingQuestion && pendingVote)}
-                >
-                  <img src="/images/thumb-down.png" alt="Thumbs down" />
-                  {isPendingQuestion && (
-                    <span style={{ display: 'block', fontSize: '12px', marginTop: '5px', color: 'white' }}>
-                      {pendingQuestionType === 'edit' ? 'Worse' : 'Reject'}
-                    </span>
-                  )}
-                </button>
-              </div>
-            )}
+            <div className="feedback-row">
+              <button
+                className={`thumb-btn up ${votedQuestions[current.questionId] === 'good' ? 'active' : ''}`}
+                onClick={() => handleVote('good')}
+                title="Good question"
+              >
+                <img src="/images/thumb.png" alt="Thumbs up" />
+              </button>
+              <span className={`vote-score ${score >= 0 ? 'positive' : 'negative'}`}>
+                {score >= 0 ? '+' : ''}{score}
+              </span>
+              <button
+                className={`thumb-btn down ${votedQuestions[current.questionId] === 'bad' ? 'active' : ''}`}
+                onClick={() => handleVote('bad')}
+                title="Bad question"
+              >
+                <img src="/images/thumb-down.png" alt="Thumbs down" />
+              </button>
+            </div>
 
-            {isPendingQuestion && pendingQuestionType === 'edit' && !pendingVote && isAnswered && (
-              <div style={{ textAlign: 'center', marginTop: '8px' }}>
-                <button
-                  onClick={skipPending}
-                  style={{ padding: '6px 16px', backgroundColor: 'transparent', color: '#888', border: '1px solid #888', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Skip
-                </button>
-              </div>
-            )}
+            <button className="submitBtn" onClick={() => openForm('edit', current)}>
+              Edit Current Question
+            </button>
           </>
-        )}
-
-        {currentQuestion && !isPendingQuestion && (
-          <button className="submitBtn" onClick={() => openForm('edit', currentQuestion)}>
-            Edit Current Question
-          </button>
         )}
 
         <button className="submitBtn" onClick={() => openForm('new')}>
