@@ -30,7 +30,7 @@ import { putJson } from './mirror.mjs';
 // Reads never come here: every write rebuilds the two mirror files, and the page fetches them.
 //
 //   questions/nife/approved.json   { generatedAt, questions: [...] }  what the quiz draws from
-//   questions/nife/pending.json    { generatedAt, questions: [...] }  what the community votes on
+//   questions/nife/pending.json    { generatedAt, threshold, questions: [...] }  what the community votes on
 //
 // Every row changes through `change()`: read, edit, put back conditional on the `ver` the read
 // saw, retry on a clash. That is what makes a vote count and a threshold decision server-side
@@ -140,7 +140,9 @@ export async function rebuildQuestionsMirror() {
   pending.sort((a, b) => String(a.submittedAt).localeCompare(String(b.submittedAt)));
   const generatedAt = now();
   await putJson(APPROVED_KEY, { generatedAt, questions: approved.map(publicRow) });
-  await putJson(PENDING_KEY, { generatedAt, questions: pending.map(publicRow) });
+  // The threshold rides with the queue, so the page says how many votes decide without a copy
+  // of the number of its own.
+  await putJson(PENDING_KEY, { generatedAt, threshold: THRESHOLD, questions: pending.map(publicRow) });
   return { approved: approved.length, pending: pending.length };
 }
 

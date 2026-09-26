@@ -103,6 +103,8 @@ ok(r.questions && r.questions.approved === 5 && r.questions.pending === 1, `rebu
 const approved = mirror('approved');
 ok(approved[0].questionId === 'q_seed_5', 'approved mirror is best-voted first');
 ok(!('submittedBy' in approved[0]) && !('voters' in approved[0]), 'mirror carries no private fields');
+const pendingFile = JSON.parse(fs.readFileSync(path.join(mirrorDir, 'questions', 'nife', 'pending.json'), 'utf8'));
+ok(pendingFile.threshold === 5, 'the pending mirror carries the approval threshold');
 
 // The admin token
 r = await op('moderate-question', { body: { questionId: 'q_seed_edit', action: 'reject' } });
