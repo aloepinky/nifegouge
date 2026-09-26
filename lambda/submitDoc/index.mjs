@@ -8,6 +8,30 @@ const dynamodb = DynamoDBDocumentClient.from(new DynamoDBClient({ region: 'us-ea
 
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'nife-gouge-docs';
 
+// An entry anyone has called outdated carries two counts: outdated but still useful, and
+// obsolete. A still-useful vote cancels an obsolete one, and the entry drops off the page once
+// the obsolete votes lead by REMOVE_AT. The row is kept, so tools/docs-status.js can undo it.
+// outdatedAt is when the last outdated vote was cast; the page stops badging an entry 45 days
+// after it (OUTDATED_FOR_DAYS in src/components/docs/Outdated.js).
+const REMOVE_AT = 3;
+const OUTDATED_CHOICES = ['useful', 'obsolete'];
+const OUTDATED_NOTE_MAX = 200;
+
+const isRemoved = (item) =>
+    Math.max(0, item.outdatedObsolete || 0) - Math.max(0, item.outdatedUseful || 0) >= REMOVE_AT;
+
+// Scan every page: a single Scan stops at 1 MB and would silently drop the rest.
+async function scanAll(params) {
+    const items = [];
+    let ExclusiveStartKey;
+    do {
+        const result = await dynamodb.send(new ScanCommand({ ...params, ExclusiveStartKey }));
+        items.push(...(result.Items || []));
+        ExclusiveStartKey = result.LastEvaluatedKey;
+    } while (ExclusiveStartKey);
+    return items;
+}
+
 export const handler = async (event) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
@@ -234,10 +258,8 @@ async function handleGetDocuments(event, headers) {
             scanParams.ExpressionAttributeValues = { ':prog': program };
         }
 
-        const scanCommand = new ScanCommand(scanParams);
-        const result = await dynamodb.send(scanCommand);
-        const documents = result.Items || [];
-        
+        const documents = (await scanAll(scanParams)).filter(item => !isRemoved(item));
+
         // Sort by upload date (newest first)
         documents.sort((a, b) => 
             new Date(b.uploadedAt) - new Date(a.uploadedAt)
@@ -426,9 +448,8 @@ async function handleGetLinks(event, headers) {
             scanParams.ExpressionAttributeValues = { ':prog': program };
         }
 
-        const scanCommand = new ScanCommand(scanParams);
-        const result = await dynamodb.send(scanCommand);
-        const sortedLinks = (result.Items || []).sort((a, b) =>
+        const links = (await scanAll(scanParams)).filter(item => !isRemoved(item));
+        const sortedLinks = links.sort((a, b) =>
             new Date(b.submittedAt) - new Date(a.submittedAt)
         );
         
@@ -463,13 +484,17 @@ async function handleDocumentVote(event, headers) {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     success: false,
-                    error: 'Missing required fields' 
+                    error: 'Missing required fields'
                 })
             };
         }
-        
+
+        if (body.voteType === 'outdated') {
+            return await handleOutdatedVote('NIFEDocuments', { docId: body.docId }, body, headers);
+        }
+
         const updateExpression = body.voteType === 'good' 
             ? 'SET upvotes = if_not_exists(upvotes, :zero) + :one'
             : 'SET downvotes = if_not_exists(downvotes, :zero) + :one';
@@ -520,13 +545,17 @@ async function handleLinkVote(event, headers) {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     success: false,
-                    error: 'Missing required fields' 
+                    error: 'Missing required fields'
                 })
             };
         }
-        
+
+        if (body.voteType === 'outdated') {
+            return await handleOutdatedVote('NIFELinks', { linkId: body.linkId }, body, headers);
+        }
+
         const updateExpression = body.voteType === 'good' 
             ? 'SET upvotes = if_not_exists(upvotes, :zero) + :one'
             : 'SET downvotes = if_not_exists(downvotes, :zero) + :one';
@@ -566,5 +595,85 @@ async function handleLinkVote(event, headers) {
                 message: error.message
             })
         };
+    }
+}
+const outdatedBody = (item) => JSON.stringify({
+    success: true,
+    outdatedUseful: Math.max(0, item.outdatedUseful || 0),
+    outdatedObsolete: Math.max(0, item.outdatedObsolete || 0),
+    outdatedNote: item.outdatedNote || '',
+    outdatedAt: item.outdatedAt || null,
+    removed: isRemoved(item)
+});
+
+// { choice, previous, note }: choice is this browser's new outdated vote, previous the one it
+// had (either may be null, so a vote can be cast, switched or taken back). A note replaces the
+// last one only when it says something.
+async function handleOutdatedVote(TableName, Key, body, headers) {
+    const choice = body.choice ?? null;
+    const previous = body.previous ?? null;
+    const valid = (v) => v === null || OUTDATED_CHOICES.includes(v);
+    const note = typeof body.note === 'string' ? body.note.trim() : '';
+
+    if (!valid(choice) || !valid(previous) || note.length > OUTDATED_NOTE_MAX) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ success: false, error: 'Invalid outdated vote' })
+        };
+    }
+
+    // A browser can remember a vote the table no longer counts (a count set by hand, say), and
+    // taking that back must not drive the count below zero.
+    const current = (await dynamodb.send(new GetCommand({ TableName, Key }))).Item;
+    if (!current) {
+        return {
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ success: false, error: 'Not found' })
+        };
+    }
+    const count = { useful: current.outdatedUseful || 0, obsolete: current.outdatedObsolete || 0 };
+
+    const delta = { useful: 0, obsolete: 0 };
+    if (choice) delta[choice] += 1;
+    if (previous && count[previous] > 0) delta[previous] -= 1;
+
+    const adds = [];
+    const sets = [];
+    const values = {};
+    if (delta.useful) { adds.push('outdatedUseful :du'); values[':du'] = delta.useful; }
+    if (delta.obsolete) { adds.push('outdatedObsolete :do'); values[':do'] = delta.obsolete; }
+    if (choice && note) { sets.push('outdatedNote = :note'); values[':note'] = note; }
+    if (choice) { sets.push('outdatedAt = :at'); values[':at'] = new Date().toISOString(); }
+    // Taking back a vote the table never counted leaves nothing to write; the browser still
+    // forgets it.
+    if (!adds.length && !sets.length) {
+        return { statusCode: 200, headers, body: outdatedBody(current) };
+    }
+
+    const keyName = Object.keys(Key)[0];
+    const expression = [sets.length && `SET ${sets.join(', ')}`, adds.length && `ADD ${adds.join(', ')}`]
+        .filter(Boolean).join(' ');
+
+    try {
+        const result = await dynamodb.send(new UpdateCommand({
+            TableName,
+            Key,
+            UpdateExpression: expression,
+            ConditionExpression: `attribute_exists(${keyName})`,
+            ExpressionAttributeValues: values,
+            ReturnValues: 'ALL_NEW'
+        }));
+        return { statusCode: 200, headers, body: outdatedBody(result.Attributes || {}) };
+    } catch (error) {
+        if (error.name === 'ConditionalCheckFailedException') {
+            return {
+                statusCode: 404,
+                headers,
+                body: JSON.stringify({ success: false, error: 'Not found' })
+            };
+        }
+        throw error;
     }
 }

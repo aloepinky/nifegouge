@@ -60,3 +60,6 @@ lambda/**/function.zip
 tools/discuss-audit.js
 tools/discuss-audit.md
 tools/discuss-audit.json
+
+# Local state for tools/docs-dev-server.mjs
+/_docs-dev
