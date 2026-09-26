@@ -107,6 +107,15 @@ async function mirror(row) {
   });
 }
 
+// Writes the newest revision to the mirror again; rebuild-index 'questions' calls it, so a mirror
+// that has lost the file (or a dev server started from a copy of the table) gets it back.
+export async function remirrorSections() {
+  const found = await newestQuestionSections(LIST_ID);
+  if (!found) return null;
+  await mirror(found.row);
+  return found.row.rev;
+}
+
 // ---------------------------------------------------------------------------------------
 
 // POST save-question-sections { baseRev, doc, author?, summary }   -> { rev }; 400; 409

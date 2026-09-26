@@ -56,6 +56,7 @@ const PUBLIC = [
   'questionId', 'topic', 'lecture', 'question', 'correctAnswer', 'incorrectAnswer1',
   'incorrectAnswer2', 'incorrectAnswer3', 'upvotes', 'downvotes', 'createdAt', 'submittedAt',
   'type', 'originalQuestionId', 'approveCount', 'rejectCount', 'explanation', 'rev', 'editedAt',
+  'batchId',
 ];
 
 // The words of a question, as an edit replaces them and as history keeps them.
@@ -225,6 +226,36 @@ export async function submitQuestionHandler(event) {
 const answerSet = (r) => new Set(
   [r.correctAnswer, r.incorrectAnswer1, r.incorrectAnswer2, r.incorrectAnswer3].map(norm).filter(Boolean),
 );
+
+// POST submit-questions { questions: [...up to 100], author? }
+//   -> { batchId, submitted: [{ index, questionId }], refused: [{ index, error }] }
+// A bulk upload. Every row is checked as submit-question checks one and goes to pending on its
+// own, for the community to vote on like any other; a refused row does not stop the rest. The
+// rows share a batchId, so the admin panel can select a whole batch at once.
+const MAX_BATCH = 100;
+
+export async function submitQuestionsHandler(event) {
+  const body = parseBody(event);
+  const list = Array.isArray(body.questions) ? body.questions : [];
+  if (!list.length || list.length > MAX_BATCH) throw new HttpError(400, `Send 1 to ${MAX_BATCH} questions`);
+  const batchId = `b_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const submitted = [];
+  const refused = [];
+  for (const [index, item] of list.entries()) {
+    try {
+      const fields = readFields(item || {});
+      await checkFiling(fields);
+      const row = pendingRow(fields, { submittedBy: body.author }, { type: 'new', editHistory: [], batchId });
+      await putNew(row);
+      submitted.push({ index, questionId: row.questionId });
+    } catch (error) {
+      if (!(error instanceof HttpError)) throw error;
+      refused.push({ index, error: error.message });
+    }
+  }
+  if (submitted.length) await rebuildQuestionsMirror();
+  return reply(200, { success: true, batchId, submitted, refused });
+}
 
 // POST edit-question { originalQuestionId, ...the fields of submit-question }
 // One pending edit per question at a time, and an edit that changes nothing is refused.

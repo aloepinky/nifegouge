@@ -24,13 +24,13 @@ import { listItemMetas, newestItem } from './store.mjs';
 import { leaderboardHandler, submitScoreHandler, importScoresHandler } from './scores.mjs';
 import { tagProgramHandler } from './program.mjs';
 import {
-  submitQuestionHandler, editQuestionHandler, voteQuestionHandler, votePendingHandler,
+  submitQuestionHandler, submitQuestionsHandler, editQuestionHandler, voteQuestionHandler, votePendingHandler,
   moderateQuestionHandler, rebuildQuestionsMirror, questionHistoryHandler, foldReplacedHandler,
   adminQuestionsHandler, setQuestionStatusHandler, restoreVersionHandler, bulkModerateHandler,
 } from './questions.mjs';
 import {
   saveSectionsHandler, sectionsHistoryHandler, sectionsRevisionHandler, restoreSectionsHandler,
-  importSectionsHandler,
+  importSectionsHandler, remirrorSections,
 } from './questionSections.mjs';
 import { namespaceItemsHandler } from './namespaceOp.mjs';
 
@@ -84,6 +84,7 @@ import { namespaceItemsHandler } from './namespaceOp.mjs';
 //   POST submit-score                      { school, mode, elapsedTime, epsTime?, limitsTime?, playerName, country, branch, designator, trainingClass } -> { board, createdAt }
 //   POST import-scores       (admin)       { runs: [{ school, mode, elapsedTime, createdAt, playerName, ... }] } -> { imported, skipped, refused }
 //   POST submit-question                   { topic, lecture?, question, correctAnswer, incorrectAnswer1-3 } -> { questionId }
+//   POST submit-questions                  { questions: [...<=100], author? }               -> { batchId, submitted, refused }
 //   POST edit-question                     { originalQuestionId, ...submit-question's fields } -> { questionId }; 409
 //   POST vote-question                     { questionId, vote: 'good'|'bad'|null, previous } -> { upvotes, downvotes }
 //   POST vote-pending-question             { questionId, vote: 'approve'|'reject' }   -> { approveCount, rejectCount, netScore, outcome }; 409
@@ -129,7 +130,7 @@ async function rebuildIndexHandler(event) {
     out.briefs = await rebuildBriefsIndex();
   }
   if (what === 'questions' || what === 'all') {
-    out.questions = await rebuildQuestionsMirror();
+    out.questions = { ...(await rebuildQuestionsMirror()), sectionsRev: await remirrorSections() };
   }
   return reply(200, { success: true, ...out });
 }
@@ -172,6 +173,7 @@ const ROUTES = {
   'submit-score': { method: 'POST', run: submitScoreHandler },
   'import-scores': { method: 'POST', admin: true, run: importScoresHandler },
   'submit-question': { method: 'POST', run: submitQuestionHandler },
+  'submit-questions': { method: 'POST', run: submitQuestionsHandler },
   'edit-question': { method: 'POST', run: editQuestionHandler },
   'vote-question': { method: 'POST', run: voteQuestionHandler },
   'vote-pending-question': { method: 'POST', run: votePendingHandler },

@@ -346,6 +346,26 @@ ok(r.rev === 4 && restoredDoc.sections[0].id === 'aero' && restoredDoc.sections.
 const systems = restoredDoc.sections.find((s) => s.id === 'systems');
 ok(systems && systems.retired === true && !restoredDoc.sections.find((s) => s.id === 'nav').retired, 'a section added since comes back retired rather than lost');
 
+// A lost sections.json comes back with the questions mirror
+fs.rmSync(path.join(mirrorDir, 'questions', 'nife', 'sections.json'));
+r = await op('rebuild-index', { body: { what: 'questions' }, headers: admin });
+ok(r.questions.sectionsRev === 4 && sectionsFile().rev === 4, 'rebuilding the questions mirror rewrites sections.json');
+
+// Bulk upload
+const good = (n, extra = {}) => ({ topic: 'aero', lecture: '2', question: `Bulk ${n}?`, correctAnswer: 'yes', incorrectAnswer1: 'no', ...extra });
+r = await op('submit-questions', { body: { author: 'Uploader', questions: [
+  good(1), good(2, { explanation: 'Because.' }), { ...good(3), topic: 'systems' }, good(4, { incorrectAnswer1: 'YES ' }), good(5, { lecture: '' }),
+] } });
+ok(r.submitted.length === 3 && r.refused.length === 2, `a batch submits the good rows and refuses the rest (${r.submitted.length}/${r.refused.length})`);
+ok(r.refused.map((x) => x.index).join() === '2,3' && /topics in the list/.test(r.refused[0].error) && /same/.test(r.refused[1].error), 'refusals come back by row with the reason');
+const batch = mirror('pending').filter((q) => q.batchId === r.batchId);
+ok(batch.length === 3 && batch.every((q) => q.type === 'new'), 'the batch is pending, carrying its batchId');
+ok(row(r.submitted[0].questionId).submittedBy === 'Uploader', 'the uploader\'s name is kept');
+r = await op('submit-questions', { body: { questions: [] } });
+ok(r.status === 400, `an empty batch is refused (${r.status})`);
+r = await op('submit-questions', { body: { questions: Array.from({ length: 101 }, (_, i) => good(i)) } });
+ok(r.status === 400, `a batch over 100 is refused (${r.status})`);
+
 fs.rmSync(mirrorDir, { recursive: true, force: true });
 console.log(failures ? `${failures} FAILED` : 'ALL PASS');
 process.exit(failures ? 1 : 0);
