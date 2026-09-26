@@ -28,6 +28,10 @@ import {
   moderateQuestionHandler, rebuildQuestionsMirror, questionHistoryHandler, foldReplacedHandler,
   adminQuestionsHandler, setQuestionStatusHandler, restoreVersionHandler, bulkModerateHandler,
 } from './questions.mjs';
+import {
+  saveSectionsHandler, sectionsHistoryHandler, sectionsRevisionHandler, restoreSectionsHandler,
+  importSectionsHandler,
+} from './questionSections.mjs';
 import { namespaceItemsHandler } from './namespaceOp.mjs';
 
 // The Discuss tab's API: item pages, syllabus documents, figure uploads, the jet log and
@@ -90,6 +94,11 @@ import { namespaceItemsHandler } from './namespaceOp.mjs';
 //   POST set-question-status   (admin)    { questionId, status: 'approved'|'hidden'|'pending' } -> { approved, pending }
 //   POST restore-question-version (admin) { questionId, rev }                              -> { approved, pending }
 //   POST bulk-moderate         (admin)    { questionIds, action: 'approve'|'reject' }       -> { done, skipped }
+//   POST save-question-sections            { baseRev, doc, author?, summary }            -> { rev }; 400; 409
+//   GET  question-sections-history                                                   -> { latestRev, revisions }
+//   GET  question-sections-revision?rev=                                             -> { revision }
+//   POST restore-question-sections         { rev, author?, summary? }                    -> { rev }
+//   POST import-question-sections (admin)  { doc }                                       -> { rev: 1 }; 409
 //   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'questions'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs, questions }
 //   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
 
@@ -173,6 +182,11 @@ const ROUTES = {
   'set-question-status': { method: 'POST', admin: true, run: setQuestionStatusHandler },
   'restore-question-version': { method: 'POST', admin: true, run: restoreVersionHandler },
   'bulk-moderate': { method: 'POST', admin: true, run: bulkModerateHandler },
+  'save-question-sections': { method: 'POST', run: saveSectionsHandler },
+  'question-sections-history': { method: 'GET', run: sectionsHistoryHandler },
+  'question-sections-revision': { method: 'GET', run: sectionsRevisionHandler },
+  'restore-question-sections': { method: 'POST', run: restoreSectionsHandler },
+  'import-question-sections': { method: 'POST', admin: true, run: importSectionsHandler },
   'rebuild-index': { method: 'POST', admin: true, run: rebuildIndexHandler },
   'tag-program': { method: 'POST', admin: true, run: tagProgramHandler },
 };

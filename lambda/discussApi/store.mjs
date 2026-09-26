@@ -575,3 +575,17 @@ export const saveBrief = briefs.save;
 export const setBriefHidden = briefs.setHidden;
 export const briefHistory = briefs.history;
 export const listBriefMetas = briefs.listMetas;
+
+// The NIFE Questions tab's section list: one document (listId 'nife'), revisioned like a jet
+// log. See questionSections.mjs.
+const questionSections = revisionStore({
+  table: 'questionSectionsTable', key: 'listId', noun: 'section list',
+  titleOf: (doc) => `${doc.school || 'NIFE'} sections`, flagsOf: () => ({}),
+});
+
+export const questionSectionsMeta = questionSections.meta;
+export const questionSectionsRevision = questionSections.revision;
+export const newestQuestionSections = questionSections.newest;
+export const createQuestionSections = questionSections.create;
+export const saveQuestionSections = questionSections.save;
+export const questionSectionsHistory = questionSections.history;

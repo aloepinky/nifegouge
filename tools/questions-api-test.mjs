@@ -279,6 +279,73 @@ ok(r.status === 400, `a question with two identical answers is refused (${r.stat
 r = await op('edit-question', { body: editBody({ originalQuestionId: 'q_seed_3', question: 'Seed question 3?', correctAnswer: 'Right 3', incorrectAnswer1: 'right 3' }) });
 ok(r.status === 400, `an edit with two identical answers is refused (${r.status})`);
 
+// Sections: before the list exists, any topic goes (as it always did)
+r = await op('submit-question', { body: { topic: 'brand-new-topic', question: 'Before sections?', correctAnswer: 'a', incorrectAnswer1: 'b' } });
+ok(Boolean(r.questionId), 'before the section list exists, any topic is accepted');
+
+const seedDoc = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'question-sections-seed.json'), 'utf8'));
+r = await op('import-question-sections', { body: { doc: seedDoc } });
+ok(r.status === 401, `importing sections needs the admin token (${r.status})`);
+r = await op('import-question-sections', { body: { doc: seedDoc }, headers: admin });
+ok(r.rev === 1, 'the seed imports as revision 1');
+const sectionsFile = () => JSON.parse(fs.readFileSync(path.join(mirrorDir, 'questions', 'nife', 'sections.json'), 'utf8'));
+ok(sectionsFile().rev === 1 && sectionsFile().doc.sections.length === 6, 'sections.json is on the mirror');
+r = await op('import-question-sections', { body: { doc: seedDoc }, headers: admin });
+ok(r.status === 409, `a second import is refused (${r.status})`);
+
+// Sections: a submission has to use them
+r = await op('submit-question', { body: { topic: 'brand-new-topic', question: 'After sections?', correctAnswer: 'a', incorrectAnswer1: 'b' } });
+ok(r.status === 400, `a topic not in the list is refused (${r.status})`);
+r = await op('submit-question', { body: { topic: 'aero', lecture: '7', question: 'Lecture 7?', correctAnswer: 'a', incorrectAnswer1: 'b' } });
+ok(r.status === 400 && /Aero/.test(r.error), `a lecture not in the topic is refused (${r.status}: ${r.error})`);
+r = await op('submit-question', { body: { topic: 'nav', question: 'No lecture?', correctAnswer: 'a', incorrectAnswer1: 'b' } });
+ok(Boolean(r.questionId), 'no lecture is fine');
+
+// Sections: saving
+const docNow = () => sectionsFile().doc;
+const withRetired = JSON.parse(JSON.stringify(docNow()));
+withRetired.sections.find((s) => s.id === 'nav').retired = true;
+withRetired.sections.push({ id: 'systems', name: 'Systems', lectures: [{ id: '1', name: 'Lecture 1: Electrical' }] });
+r = await op('save-question-sections', { body: { baseRev: 1, doc: withRetired, author: 'Tester' } });
+ok(r.status === 400, `a save needs a summary (${r.status})`);
+r = await op('save-question-sections', { body: { baseRev: 1, doc: withRetired, summary: 'Retire Nav, add Systems', author: 'Tester' } });
+ok(r.rev === 2 && sectionsFile().rev === 2, 'anyone can save a new revision');
+r = await op('save-question-sections', { body: { baseRev: 1, doc: withRetired, summary: 'stale' } });
+ok(r.status === 409 && r.rev === 2, `a stale save gets a 409 carrying the newest rev (${r.status})`);
+r = await op('submit-question', { body: { topic: 'nav', question: 'Retired topic?', correctAnswer: 'a', incorrectAnswer1: 'b' } });
+ok(r.status === 400, `a retired topic takes no new questions (${r.status})`);
+r = await op('submit-question', { body: { topic: 'systems', lecture: '1', question: 'New topic?', correctAnswer: 'a', incorrectAnswer1: 'b' } });
+ok(Boolean(r.questionId), 'a new topic takes questions at once');
+
+const dropped = JSON.parse(JSON.stringify(docNow()));
+dropped.sections = dropped.sections.filter((s) => s.id !== 'ground');
+r = await op('save-question-sections', { body: { baseRev: 2, doc: dropped, summary: 'drop ground' } });
+ok(r.status === 400 && /Retire it instead/.test(r.error), `removing a section is refused (${r.status})`);
+const droppedLecture = JSON.parse(JSON.stringify(docNow()));
+droppedLecture.sections.find((s) => s.id === 'aero').lectures.pop();
+r = await op('save-question-sections', { body: { baseRev: 2, doc: droppedLecture, summary: 'drop a lecture' } });
+ok(r.status === 400, `removing a lecture is refused (${r.status})`);
+const renamed = JSON.parse(JSON.stringify(docNow()));
+renamed.sections.find((s) => s.id === 'aero').name = 'Aerodynamics';
+renamed.sections.reverse();
+r = await op('save-question-sections', { body: { baseRev: 2, doc: renamed, summary: 'rename and reorder' } });
+ok(r.rev === 3 && docNow().sections[0].id === 'systems' && docNow().sections.find((s) => s.id === 'aero').name === 'Aerodynamics', 'renaming and reordering are ordinary saves');
+const junk = JSON.parse(JSON.stringify(docNow()));
+junk.sections.push({ id: 'Bad Id', name: 'x', lectures: [] });
+r = await op('save-question-sections', { body: { baseRev: 3, doc: junk, summary: 'bad id' } });
+ok(r.status === 400, `a malformed id is refused (${r.status})`);
+
+// Sections: history and restore
+r = await op('question-sections-history', { method: 'GET' });
+ok(r.latestRev === 3 && r.revisions.length === 3 && r.revisions[0].summary === 'rename and reorder', 'history lists every revision, newest first');
+r = await op('question-sections-revision', { method: 'GET', query: { rev: '1' } });
+ok(r.revision.doc.sections.length === 6, 'an old revision can be read');
+r = await op('restore-question-sections', { body: { rev: 1, author: 'Tester' } });
+const restoredDoc = docNow();
+ok(r.rev === 4 && restoredDoc.sections[0].id === 'aero' && restoredDoc.sections.find((s) => s.id === 'aero').name === 'Aero', 'restoring revision 1 brings back its names and order');
+const systems = restoredDoc.sections.find((s) => s.id === 'systems');
+ok(systems && systems.retired === true && !restoredDoc.sections.find((s) => s.id === 'nav').retired, 'a section added since comes back retired rather than lost');
+
 fs.rmSync(mirrorDir, { recursive: true, force: true });
 console.log(failures ? `${failures} FAILED` : 'ALL PASS');
 process.exit(failures ? 1 : 0);

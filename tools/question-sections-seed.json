@@ -1,0 +1,26 @@
+{
+  "school": "NIFE",
+  "sections": [
+    { "id": "aero", "name": "Aero", "lectures": [
+      { "id": "1", "name": "Lecture 1" }, { "id": "2", "name": "Lecture 2" },
+      { "id": "3", "name": "Lecture 3" }, { "id": "4", "name": "Lecture 4" }
+    ] },
+    { "id": "engines", "name": "Engines", "lectures": [
+      { "id": "1", "name": "Lecture 1" }, { "id": "2", "name": "Lecture 2" },
+      { "id": "3", "name": "Lecture 3" }, { "id": "4", "name": "Lecture 4" },
+      { "id": "5", "name": "Lecture 5" }, { "id": "6", "name": "Lecture 6" },
+      { "id": "7", "name": "Lecture 7" }, { "id": "8", "name": "Lecture 8" },
+      { "id": "9", "name": "Lecture 9" }
+    ] },
+    { "id": "frr", "name": "FR&R", "lectures": [
+      { "id": "1", "name": "Lecture 1" }, { "id": "2", "name": "Lecture 2" },
+      { "id": "3", "name": "Lecture 3" }
+    ] },
+    { "id": "nav", "name": "Nav", "lectures": [] },
+    { "id": "weather", "name": "Weather", "lectures": [
+      { "id": "1", "name": "Lecture 1" }, { "id": "2", "name": "Lecture 2" },
+      { "id": "3", "name": "Lecture 3" }, { "id": "4", "name": "Lecture 4" }
+    ] },
+    { "id": "ground", "name": "Ground School", "lectures": [] }
+  ]
+}

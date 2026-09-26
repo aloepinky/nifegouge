@@ -17,7 +17,7 @@ below is created once, by hand, in the AWS console for `us-east-2`.
 
 ## 1. DynamoDB
 
-Five tables, on-demand capacity, everything else default. Create whichever does not exist yet:
+Seven tables, on-demand capacity, everything else default. Create whichever does not exist yet:
 
 | Table | Partition key | Sort key |
 |---|---|---|
@@ -26,6 +26,8 @@ Five tables, on-demand capacity, everything else default. Create whichever does 
 | `JetLogs` | `logId` (String) | `rev` (Number) |
 | `Briefs` | `briefId` (String) | `rev` (Number) |
 | `EPsLimitsScores` | `board` (String) | `runId` (String) |
+| `NIFEQuestions` | `questionId` (String) | (none) |
+| `QuestionSections` | `listId` (String) | `rev` (Number) |
 
 `EPsLimitsScores` is the EPs/Limits leaderboard (`scores.mjs`): one row per finished run, keyed
 `NIFE#EPs`, `Primary#Limits` and so on, never deleted. Its sort key is a String, unlike the
@@ -96,7 +98,8 @@ of that page (`arn:aws:iam::ACCOUNT_ID:role/...`), and the bucket name if you ch
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/JetLogs",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/Briefs",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/EPsLimitsScores",
-        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/NIFEQuestions"
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/NIFEQuestions",
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/QuestionSections"
       ]
     },
     {
@@ -132,6 +135,7 @@ Configuration → Environment variables:
 | `BRIEFS_TABLE` | `Briefs` (optional; this is the default) |
 | `SCORES_TABLE` | `EPsLimitsScores` (optional; this is the default) |
 | `QUESTIONS_TABLE` | `NIFEQuestions` (optional; this is the default) |
+| `QUESTION_SECTIONS_TABLE` | `QuestionSections` (optional; this is the default) |
 | `DISCUSS_BUCKET` | `pinksheetmafia-discuss` |
 | `DISCUSS_ADMIN_TOKEN` | a long random string (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`) |
 

@@ -3,6 +3,7 @@ import { GetCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { getDynamo, CONFIG } from './clients.mjs';
 import { HttpError, parseBody, reply } from './http.mjs';
 import { putJson } from './mirror.mjs';
+import { currentSections } from './questionSections.mjs';
 
 // The NIFE Questions tab: multiple-choice questions anyone may submit or edit, approved by the
 // community voting on them in the quiz or by the admin. Moved here from lambda/submitQuestion
@@ -172,6 +173,18 @@ function readFields(body) {
   return fields;
 }
 
+// The topic has to be a section in use and the lecture, if given, one of its lectures in use.
+// Before the section list exists (it is imported once) anything goes, as it always did.
+async function checkFiling(fields) {
+  const doc = await currentSections();
+  if (!doc) return;
+  const section = doc.sections.find((s) => s.id === fields.topic);
+  if (!section || section.retired) throw new HttpError(400, 'Choose one of the topics in the list.');
+  if (fields.lecture && !section.lectures.some((l) => l.id === fields.lecture && !l.retired)) {
+    throw new HttpError(400, `Choose one of ${section.name}'s lectures, or none.`);
+  }
+}
+
 function pendingRow(fields, body, extra) {
   const stamp = now();
   return {
@@ -201,7 +214,9 @@ async function putNew(row) {
 // POST submit-question { topic, lecture?, question, correctAnswer, incorrectAnswer1-3 }
 export async function submitQuestionHandler(event) {
   const body = parseBody(event);
-  const row = pendingRow(readFields(body), body, { type: 'new', editHistory: [] });
+  const fields = readFields(body);
+  await checkFiling(fields);
+  const row = pendingRow(fields, body, { type: 'new', editHistory: [] });
   await putNew(row);
   await rebuildQuestionsMirror();
   return reply(200, { success: true, questionId: row.questionId });
@@ -216,6 +231,7 @@ const answerSet = (r) => new Set(
 export async function editQuestionHandler(event) {
   const body = parseBody(event);
   const fields = readFields(body);
+  await checkFiling(fields);
   const original = await getRow(body.originalQuestionId);
   if (!original) throw new HttpError(404, 'Original question not found');
   if (original.status !== 'approved') {
