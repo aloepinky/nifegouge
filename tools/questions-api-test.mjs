@@ -223,6 +223,52 @@ ok(row('q_seed_3').latestEditId === undefined, 'the fold clears the stale flags'
 r = await op('fold-replaced-questions', { body: { dryRun: false }, headers: admin });
 ok(r.folded.length === 0 && row('q_seed_5').history.length === 1, 'running the fold twice changes nothing');
 
+// Admin: hide and unhide
+r = await op('set-question-status', { body: { questionId: 'q_seed_3', status: 'hidden' } });
+ok(r.status === 401, `hiding needs the admin token (${r.status})`);
+r = await op('set-question-status', { body: { questionId: 'q_seed_3', status: 'hidden' }, headers: admin });
+ok(r.success && !mirror('approved').some((q) => q.questionId === 'q_seed_3') && row('q_seed_3').status === 'hidden', 'a hidden question leaves the quiz and is kept');
+r = await op('admin-questions', { method: 'GET', query: { status: 'hidden' }, headers: admin });
+ok(r.questions.length === 1 && r.questions[0].questionId === 'q_seed_3' && r.questions[0].hiddenAt, 'admin-questions lists the hidden question');
+r = await op('admin-questions', { method: 'GET', query: { status: 'hidden' } });
+ok(r.status === 401, `admin-questions needs the token (${r.status})`);
+r = await op('vote-question', { body: { questionId: 'q_seed_3', vote: 'good', previous: null } });
+ok(r.status === 409, `a hidden question takes no thumbs votes (${r.status})`);
+r = await op('set-question-status', { body: { questionId: 'q_seed_3', status: 'approved' }, headers: admin });
+ok(mirror('approved').some((q) => q.questionId === 'q_seed_3') && row('q_seed_3').hiddenAt === undefined, 'unhiding puts it back');
+r = await op('set-question-status', { body: { questionId: edit, status: 'approved' }, headers: admin });
+ok(r.status === 409, `a merged edit cannot be made approved (${r.status})`);
+r = await op('set-question-status', { body: { questionId: 'q_seed_1', status: 'deleted' }, headers: admin });
+ok(r.status === 400, `an unknown status is refused (${r.status})`);
+
+// Admin: send a rejected question back for another vote
+r = await op('set-question-status', { body: { questionId: bad, status: 'pending' }, headers: admin });
+const back = mirror('pending').find((q) => q.questionId === bad);
+ok(back && back.approveCount === 0 && back.rejectCount === 0 && row(bad).voters.length === 0, 'a rejected question goes back to pending with its count cleared');
+r = await op('vote-pending-question', { body: { questionId: bad, vote: 'approve', voter: voter(11) } });
+ok(r.netScore === 1, 'someone who voted before can vote on it again');
+
+// Admin: restore an earlier version
+r = await op('restore-question-version', { body: { questionId: 'q_seed_2', rev: 1 }, headers: admin });
+const restored = mirror('approved').find((q) => q.questionId === 'q_seed_2');
+ok(restored.question === orig.question && restored.upvotes === 20 && restored.downvotes === 2 && restored.rev === 3,
+  'restoring version 1 brings back its words and its score, as rev 3');
+const after = row('q_seed_2').history;
+ok(after.length === 1 && after[0].rev === 2 && after[0].question === `${orig.question} (edited)`, 'the version it replaced is kept in history');
+r = await op('restore-question-version', { body: { questionId: 'q_seed_2', rev: 2 }, headers: admin });
+ok(mirror('approved').find((q) => q.questionId === 'q_seed_2').question === `${orig.question} (edited)`, 'a restore is undone by restoring the other version');
+r = await op('restore-question-version', { body: { questionId: 'q_seed_2', rev: 9 }, headers: admin });
+ok(r.status === 404, `restoring a version that does not exist is refused (${r.status})`);
+
+// Admin: bulk moderation
+const spam = [];
+for (const n of [1, 2, 3]) spam.push((await op('submit-question', { body: { topic: 'nav', question: `Spam ${n}?`, correctAnswer: 'a', incorrectAnswer1: 'b' } })).questionId);
+r = await op('bulk-moderate', { body: { questionIds: [...spam, 'q_seed_1', 'q_nothing'], action: 'reject' }, headers: admin });
+ok(r.done.length === 3 && spam.every((id) => row(id).status === 'rejected'), 'bulk reject rejects every pending item');
+ok(r.skipped.length === 2 && r.skipped.some((s) => s.why === 'already approved') && r.skipped.some((s) => s.why === 'not found'), 'and skips what is not pending');
+r = await op('bulk-moderate', { body: { questionIds: [], action: 'reject' }, headers: admin });
+ok(r.status === 400, `an empty batch is refused (${r.status})`);
+
 // Validation
 r = await op('submit-question', { body: { topic: '', question: 'x', correctAnswer: 'y' } });
 ok(r.status === 400, `a question with no topic is refused (${r.status})`);

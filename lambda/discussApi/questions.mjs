@@ -15,6 +15,7 @@ import { putJson } from './mirror.mjs';
 //   pending   a submission or an edit waiting on votes
 //   approved  in the quiz
 //   rejected  voted down, turned down by the admin, or superseded by a competing edit
+//   hidden    taken out of the quiz by the admin; put back by the admin
 //   merged    an approved edit, whose words now live on the question it edited (`mergedInto`)
 //   replaced  before 2026-09-25, an approved edit became a new question and the original was
 //             kept under this status; `fold-replaced-questions` moves those into history
@@ -465,4 +466,123 @@ export async function foldReplacedHandler(event) {
     await rebuildQuestionsMirror();
   }
   return reply(200, { success: true, dryRun, folded, skipped, flagsCleared: flagged.length });
+}
+
+// ---------------------------------------------------------------------------------------
+// Admin tools. Every one changes a status or a version and deletes nothing, so each is undone
+// by another: hide by unhide, a restored version by restoring the one it replaced.
+
+const MAX_BULK = 100;
+
+// What the admin panel shows of a row the mirror does not carry: the public fields, plus how
+// it came to be where it is.
+function adminRow(row) {
+  return {
+    ...publicRow(row),
+    status: row.status,
+    submittedBy: row.submittedBy || '',
+    moderatedAt: row.moderatedAt || '',
+    moderatedBy: row.moderatedBy || '',
+    rejectedReason: row.rejectedReason || '',
+    mergedInto: row.mergedInto || '',
+    hiddenAt: row.hiddenAt || '',
+  };
+}
+
+// GET admin-questions?status=hidden|rejected|merged|replaced (admin)   -> { questions }
+// The rows that are in neither mirror file, newest decision first.
+export async function adminQuestionsHandler(event) {
+  const status = (event.queryStringParameters || {}).status;
+  if (!['hidden', 'rejected', 'merged', 'replaced'].includes(status)) throw new HttpError(400, 'Unknown status');
+  const rows = (await scanAll()).filter((r) => r.status === status);
+  const when = (r) => r.hiddenAt || r.moderatedAt || r.replacedAt || r.submittedAt || '';
+  rows.sort((a, b) => String(when(b)).localeCompare(String(when(a))));
+  return reply(200, { success: true, questions: rows.map(adminRow) });
+}
+
+// POST set-question-status (admin) { questionId, status }
+//   approved -> hidden     take a question out of the quiz
+//   hidden   -> approved   put it back
+//   rejected -> pending    send a turned-down submission or edit back for another vote, with
+//                          its count and voters cleared, since a count at the rejection line
+//                          would reject it again on the next vote
+const MOVES = { hidden: ['approved'], approved: ['hidden'], pending: ['rejected'] };
+
+export async function setQuestionStatusHandler(event) {
+  const body = parseBody(event);
+  const to = body.status;
+  if (!MOVES[to]) throw new HttpError(400, 'A status is approved, hidden or pending');
+  await change(body.questionId, (q) => {
+    if (!MOVES[to].includes(q.status)) throw new HttpError(409, `A question that is ${q.status} cannot be made ${to}.`);
+    const at = now();
+    q.status = to;
+    if (to === 'hidden') q.hiddenAt = at;
+    if (to === 'approved') delete q.hiddenAt;
+    if (to === 'pending') {
+      q.approveCount = 0;
+      q.rejectCount = 0;
+      q.voters = [];
+      delete q.rejectedReason;
+      q.submittedAt = at;
+    }
+    q.moderatedAt = at;
+    q.moderatedBy = 'admin';
+  });
+  const out = await rebuildQuestionsMirror();
+  return reply(200, { success: true, ...out });
+}
+
+// POST restore-question-version (admin) { questionId, rev }
+// The chosen earlier version becomes current, with the score it had, since those are the votes
+// cast on exactly those words. The version it replaces goes onto history with its own score,
+// so a restore is undone by restoring that one.
+export async function restoreVersionHandler(event) {
+  const body = parseBody(event);
+  const rev = Number(body.rev);
+  const at = now();
+  await change(body.questionId, (q) => {
+    if (q.status !== 'approved') throw new HttpError(409, 'Only a question in the quiz can have a version restored.');
+    const history = q.history || [];
+    const index = history.findIndex((h) => h.rev === rev);
+    if (index < 0) throw new HttpError(404, `No version ${rev} in this question's history.`);
+    const chosen = history[index];
+    const current = {
+      rev: q.rev || 1,
+      ...wordingOf(q),
+      upvotes: q.upvotes || 0,
+      downvotes: q.downvotes || 0,
+      until: at,
+      replacedByRestore: rev,
+    };
+    q.history = [...history.slice(0, index), ...history.slice(index + 1), current];
+    Object.assign(q, wordingOf(chosen));
+    q.upvotes = chosen.upvotes || 0;
+    q.downvotes = chosen.downvotes || 0;
+    q.rev = Math.max(q.rev || 1, ...history.map((h) => h.rev || 1)) + 1;
+    q.editedAt = at;
+  });
+  const out = await rebuildQuestionsMirror();
+  return reply(200, { success: true, ...out });
+}
+
+// POST bulk-moderate (admin) { questionIds: [...up to 100], action: 'approve'|'reject' }
+//   -> { done, skipped: [{ questionId, why }] }
+// Pending items only; anything already decided is skipped rather than failing the batch.
+export async function bulkModerateHandler(event) {
+  const body = parseBody(event);
+  const ids = Array.isArray(body.questionIds) ? [...new Set(body.questionIds)] : [];
+  if (!ids.length || ids.length > MAX_BULK) throw new HttpError(400, `Send 1 to ${MAX_BULK} questions`);
+  if (!['approve', 'reject'].includes(body.action)) throw new HttpError(400, 'An action is approve or reject');
+  const done = [];
+  const skipped = [];
+  for (const id of ids) {
+    const row = await getRow(id).catch(() => null);
+    if (!row) { skipped.push({ questionId: id, why: 'not found' }); continue; }
+    if (row.status !== 'pending') { skipped.push({ questionId: id, why: `already ${row.status}` }); continue; }
+    if (body.action === 'approve') await approve(id, 'admin');
+    else await reject(id, 'admin');
+    done.push(id);
+  }
+  const out = await rebuildQuestionsMirror();
+  return reply(200, { success: true, done, skipped, ...out });
 }

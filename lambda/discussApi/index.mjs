@@ -26,6 +26,7 @@ import { tagProgramHandler } from './program.mjs';
 import {
   submitQuestionHandler, editQuestionHandler, voteQuestionHandler, votePendingHandler,
   moderateQuestionHandler, rebuildQuestionsMirror, questionHistoryHandler, foldReplacedHandler,
+  adminQuestionsHandler, setQuestionStatusHandler, restoreVersionHandler, bulkModerateHandler,
 } from './questions.mjs';
 import { namespaceItemsHandler } from './namespaceOp.mjs';
 
@@ -85,6 +86,10 @@ import { namespaceItemsHandler } from './namespaceOp.mjs';
 //   POST moderate-question   (admin)       { questionId, action: 'approve'|'reject' } -> { approved, pending }
 //   GET  question-history?id=              -> { questionId, rev, history }
 //   POST fold-replaced-questions (admin)   { dryRun? }                                -> { folded, skipped, flagsCleared }
+//   GET  admin-questions?status=  (admin)  hidden|rejected|merged|replaced                  -> { questions }
+//   POST set-question-status   (admin)    { questionId, status: 'approved'|'hidden'|'pending' } -> { approved, pending }
+//   POST restore-question-version (admin) { questionId, rev }                              -> { approved, pending }
+//   POST bulk-moderate         (admin)    { questionIds, action: 'approve'|'reject' }       -> { done, skipped }
 //   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'questions'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs, questions }
 //   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
 
@@ -164,6 +169,10 @@ const ROUTES = {
   'moderate-question': { method: 'POST', admin: true, run: moderateQuestionHandler },
   'question-history': { method: 'GET', run: questionHistoryHandler },
   'fold-replaced-questions': { method: 'POST', admin: true, run: foldReplacedHandler },
+  'admin-questions': { method: 'GET', admin: true, run: adminQuestionsHandler },
+  'set-question-status': { method: 'POST', admin: true, run: setQuestionStatusHandler },
+  'restore-question-version': { method: 'POST', admin: true, run: restoreVersionHandler },
+  'bulk-moderate': { method: 'POST', admin: true, run: bulkModerateHandler },
   'rebuild-index': { method: 'POST', admin: true, run: rebuildIndexHandler },
   'tag-program': { method: 'POST', admin: true, run: tagProgramHandler },
 };
