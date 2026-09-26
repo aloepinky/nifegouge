@@ -81,10 +81,23 @@ export async function voteOnPending(questionId, vote) {
 // mirror, since it is rarely wanted.
 export const questionHistory = (questionId) => call(`question-history?id=${encodeURIComponent(questionId)}`);
 
-export const moderate = (token, questionId, action) => call('moderate-question', {
+// The admin operations. Each carries the token; the server refuses all of them without it.
+const adminPost = (token, op, body) => call(op, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', 'X-Admin-Token': token },
-  body: JSON.stringify({ questionId, action }),
+  body: JSON.stringify(body),
+});
+
+export const moderate = (token, questionId, action) => adminPost(token, 'moderate-question', { questionId, action });
+export const bulkModerate = (token, questionIds, action) => adminPost(token, 'bulk-moderate', { questionIds, action });
+// 'hidden' takes a question out of the quiz, 'approved' puts it back, 'pending' sends a
+// rejected one back for another vote.
+export const setQuestionStatus = (token, questionId, status) => adminPost(token, 'set-question-status', { questionId, status });
+export const restoreVersion = (token, questionId, rev) => adminPost(token, 'restore-question-version', { questionId, rev });
+
+// Rows in neither mirror file: 'hidden', 'rejected', 'merged' or 'replaced'.
+export const adminQuestions = (token, status) => call(`admin-questions?status=${encodeURIComponent(status)}`, {
+  headers: { 'X-Admin-Token': token },
 });
 
 export function getAdminToken() {

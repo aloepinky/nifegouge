@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { questionHistory } from './questionsApi';
+import Confirm, { smallButton } from './Confirm';
 
 // Earlier versions of one question, newest first, each with the score it had when an edit
-// replaced it. Fetched when opened; most questions have none.
-export default function QuestionHistory({ questionId, onClose }) {
+// replaced it. Fetched when opened; most questions have none. `onRestore(rev)`, passed only by
+// the admin panel, puts a Restore button on each version.
+export default function QuestionHistory({ questionId, onClose, onRestore }) {
   const [state, setState] = useState({ loading: true });
 
   useEffect(() => {
@@ -37,6 +39,17 @@ export default function QuestionHistory({ questionId, onClose }) {
             <div>{h.question}</div>
             <div style={{ color: '#2e7d32' }}>✓ {h.correctAnswer}</div>
             {h.explanation && <div style={{ fontStyle: 'italic', color: '#555', whiteSpace: 'pre-wrap' }}>{h.explanation}</div>}
+            {onRestore && (
+              <div style={{ marginTop: '6px' }}>
+                <Confirm
+                  label="Restore this version"
+                  question="Make this the current version? The current one moves into history."
+                  confirmLabel="Restore"
+                  onConfirm={() => onRestore(h.rev)}
+                  style={smallButton('#01202C')}
+                />
+              </div>
+            )}
           </div>
         );
       })}

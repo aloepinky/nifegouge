@@ -289,7 +289,7 @@ function Questions() {
       <AdminPanel
         questions={allQuestions}
         onExit={() => { setView('quiz'); refreshPending(); }}
-        onApproved={() => loadAll({ restart: false })}
+        onChanged={() => loadAll({ restart: false })}
       />
     );
   }
