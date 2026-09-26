@@ -2566,6 +2566,107 @@ textarea.incorrect-answer {
   font-size: 12px;
 }
 
+.link-meta {
+  flex-wrap: wrap;
+}
+
+.link-date {
+  font-size: 12px;
+}
+
+/* Outdated votes (docs/Outdated.js), shared by both Docs pages. Orange is the caution colour;
+   the badge takes the topic badge's shape with an orange fill. */
+.outdated-badge {
+  padding: 3px 10px;
+  background: #e06c00;
+  color: white;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.outdated-badge.confirmed {
+  background: #c62828;
+}
+
+.outdated {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #666;
+}
+
+.outdated-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-bottom: 4px;
+}
+
+.outdated-note {
+  color: #01202C;
+  font-style: italic;
+}
+
+.outdated-toggle,
+.outdated-cancel {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  color: #003B4F;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.outdated-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 420px;
+}
+
+.outdated-reason {
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.outdated-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.outdated-choice {
+  padding: 4px 10px;
+  border: 1px solid #003B4F;
+  border-radius: 4px;
+  background: white;
+  color: #003B4F;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.outdated-choice.selected {
+  background: #003B4F;
+  color: white;
+}
+
+.outdated-choice:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.outdated-hint {
+  color: #888;
+}
+
+.outdated-message {
+  color: #b00020;
+}
+
 .link-actions {
   display: flex;
   gap: 8px;
@@ -2765,8 +2866,14 @@ textarea.incorrect-answer {
   }
   
   .doc-meta,
-  .link-meta {
+  .link-meta,
+  .outdated-summary,
+  .outdated-choices {
     justify-content: center;
+  }
+
+  .outdated-panel {
+    margin: 0 auto;
   }
   
   .doc-actions,

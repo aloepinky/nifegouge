@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutdatedVotes, OutdatedBadge, OutdatedControl } from './docs/Outdated';
 
 function TW4Docs() {
   // Document states
@@ -39,7 +40,18 @@ function TW4Docs() {
     return saved ? JSON.parse(saved) : {};
   });
 
-  const API_BASE_URL = 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod';
+  // REACT_APP_DOCS_API points the page at tools/docs-dev-server.mjs for local work.
+  const API_BASE_URL = process.env.REACT_APP_DOCS_API || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod';
+
+  const outdatedDocs = useOutdatedVotes({
+    apiBase: API_BASE_URL, endpoint: 'vote-document', idField: 'docId',
+    storageKey: 'tw4OutdatedDocs', setItems: setDocs,
+  });
+  const outdatedLinks = useOutdatedVotes({
+    apiBase: API_BASE_URL, endpoint: 'vote-link', idField: 'linkId',
+    storageKey: 'tw4OutdatedLinks', setItems: setUsefulLinks,
+  });
+
   const PROGRAM = 'tw4primary';
 
   const topics = [
@@ -487,7 +499,13 @@ function TW4Docs() {
                     </span>
                     <span className="doc-size">{formatFileSize(doc.fileSize)}</span>
                     <span className="doc-date">{formatDate(doc.uploadedAt)}</span>
+                    <OutdatedBadge item={doc} />
                   </div>
+                  <OutdatedControl
+                    item={doc}
+                    vote={outdatedDocs.votes[doc.docId]}
+                    onVote={(choice, note) => outdatedDocs.cast(doc.docId, choice, note)}
+                  />
                 </div>
 
                 <div className="doc-actions" onClick={(e) => e.stopPropagation()}>
@@ -624,7 +642,14 @@ function TW4Docs() {
                         {topics.find(t => t.value === link.topic)?.label || 'All Topics'}
                       </span>
                       <span className="link-url">{new URL(link.url).hostname}</span>
+                      <span className="link-date">{formatDate(link.submittedAt)}</span>
+                      <OutdatedBadge item={link} />
                     </div>
+                    <OutdatedControl
+                      item={link}
+                      vote={outdatedLinks.votes[link.linkId]}
+                      onVote={(choice, note) => outdatedLinks.cast(link.linkId, choice, note)}
+                    />
                   </div>
                   <div className="link-actions">
                     <button
