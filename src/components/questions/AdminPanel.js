@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  TOPICS, adminQuestions, bulkModerate, getAdminToken, loadPending, moderate, netScore,
+  adminQuestions, bulkModerate, getAdminToken, loadPending, moderate, netScore,
   restoreVersion, setAdminToken, setQuestionStatus,
 } from './questionsApi';
 import Confirm, { smallButton } from './Confirm';
 import EditDiff from './EditDiff';
 import Explanation from './Explanation';
 import QuestionHistory from './QuestionHistory';
+import { sectionName } from './sections';
 
 // The admin panel, for whoever holds the admin token. Three tabs:
 //
@@ -18,7 +19,6 @@ import QuestionHistory from './QuestionHistory';
 // vote, a restored version is undone by restoring the one it replaced. The token is typed once
 // and kept in this browser; the server refuses every button without it.
 
-const topicName = (id) => (TOPICS.find((t) => t.id === id) || { name: id }).name;
 const LIVE_LIMIT = 50;
 
 const tabStyle = (active) => ({
@@ -46,7 +46,7 @@ function Answers({ q }) {
   );
 }
 
-export default function AdminPanel({ questions, onExit, onChanged }) {
+export default function AdminPanel({ questions, sections, onExit, onChanged }) {
   const [tab, setTab] = useState('pending');
   const [token, setToken] = useState(getAdminToken);
   const [draft, setDraft] = useState('');
@@ -117,9 +117,9 @@ export default function AdminPanel({ questions, onExit, onChanged }) {
       {done && <div style={{ marginBottom: '12px', color: '#003B4F', fontSize: '14px' }}>{done}</div>}
 
       <div style={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', paddingRight: '8px' }}>
-        {tab === 'pending' && <PendingTab questions={questions} run={run} />}
-        {tab === 'live' && <LiveTab questions={questions} run={run} />}
-        {tab === 'removed' && <RemovedTab token={token} run={run} />}
+        {tab === 'pending' && <PendingTab questions={questions} sections={sections} run={run} />}
+        {tab === 'live' && <LiveTab questions={questions} sections={sections} run={run} />}
+        {tab === 'removed' && <RemovedTab token={token} sections={sections} run={run} />}
       </div>
     </div>
   );
@@ -127,7 +127,7 @@ export default function AdminPanel({ questions, onExit, onChanged }) {
 
 // ---------------------------------------------------------------------------------------
 
-function PendingTab({ questions, run }) {
+function PendingTab({ questions, sections, run }) {
   const [pending, setPending] = useState(null);
   const [picked, setPicked] = useState(() => new Set());
 
@@ -190,7 +190,7 @@ function PendingTab({ questions, run }) {
               <input type="checkbox" checked={picked.has(q.questionId)} onChange={() => toggle(q.questionId)} style={{ marginTop: '4px', width: '18px', minWidth: '18px', flex: '0 0 18px', padding: 0 }} aria-label="Select" />
               <div style={{ flex: 1 }}>
                 <div style={meta}>
-                  {q.type === 'edit' ? 'Proposed edit' : 'New question'} • {topicName(q.topic)}{q.lecture ? ` L${q.lecture}` : ''} •{' '}
+                  {q.type === 'edit' ? 'Proposed edit' : 'New question'} • {sectionName(sections, q.topic)}{q.lecture ? ` L${q.lecture}` : ''} •{' '}
                   {new Date(q.submittedAt).toLocaleDateString()} •{' '}
                   <span style={{ fontWeight: 'bold', color: net > 0 ? '#2e7d32' : net < 0 ? '#c62828' : '#666' }}>
                     {net > 0 ? '+' : ''}{net} ({q.approveCount || 0} for / {q.rejectCount || 0} against)
@@ -225,7 +225,7 @@ function PendingTab({ questions, run }) {
 
 // ---------------------------------------------------------------------------------------
 
-function LiveTab({ questions, run }) {
+function LiveTab({ questions, sections, run }) {
   const [search, setSearch] = useState('');
   const [historyOf, setHistoryOf] = useState(null);
   const [historyKey, setHistoryKey] = useState(0);
@@ -258,7 +258,7 @@ function LiveTab({ questions, run }) {
         return (
           <div key={q.questionId} style={card}>
             <div style={meta}>
-              {topicName(q.topic)}{q.lecture ? ` L${q.lecture}` : ''} • {q.questionId} •{' '}
+              {sectionName(sections, q.topic)}{q.lecture ? ` L${q.lecture}` : ''} • {q.questionId} •{' '}
               <span style={{ fontWeight: 'bold', color: score >= 0 ? '#2e7d32' : '#c62828' }}>{score >= 0 ? '+' : ''}{score}</span>
               {(q.rev || 1) > 1 && ` • version ${q.rev}`}
             </div>
@@ -304,7 +304,7 @@ const REMOVED = [
   { status: 'rejected', label: 'Rejected', back: 'pending', action: 'Send back for review', says: 'Sent back to pending with its votes cleared.' },
 ];
 
-function RemovedTab({ token, run }) {
+function RemovedTab({ token, sections, run }) {
   const [which, setWhich] = useState('hidden');
   const [rows, setRows] = useState(null);
   const [failed, setFailed] = useState('');
@@ -339,7 +339,7 @@ function RemovedTab({ token, run }) {
       {rows && rows.map((q) => (
         <div key={q.questionId} style={card}>
           <div style={meta}>
-            {q.type === 'edit' ? 'Edit' : 'Question'} • {topicName(q.topic)}{q.lecture ? ` L${q.lecture}` : ''} • {q.questionId}
+            {q.type === 'edit' ? 'Edit' : 'Question'} • {sectionName(sections, q.topic)}{q.lecture ? ` L${q.lecture}` : ''} • {q.questionId}
             {q.hiddenAt && ` • hidden ${new Date(q.hiddenAt).toLocaleDateString()}`}
             {!q.hiddenAt && q.moderatedAt && ` • ${new Date(q.moderatedAt).toLocaleDateString()} by ${q.moderatedBy === 'community-threshold' ? 'community vote' : q.moderatedBy || 'unknown'}`}
             {q.rejectedReason === 'superseded' && ' • another edit of the same question was approved'}

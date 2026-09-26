@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { TOPICS } from './questionsApi';
+import { activeSections, sectionName } from './sections';
 import PendingCard from './PendingCard';
 
 // Review pending: the questions and edits waiting on the community, one at a time, oldest
 // first, for anyone who would rather clear the queue than wait for them to turn up in a quiz.
 // Every topic unless one is picked. What this browser has voted on or skipped is not shown.
 
-export default function PendingQueue({ pending, threshold, seen, questions, onVoted, onExit }) {
+export default function PendingQueue({ pending, sections, threshold, seen, questions, onVoted, onExit }) {
   const [topic, setTopic] = useState('all');
   const waiting = pending.filter((q) => !seen[q.questionId] && (topic === 'all' || (q.topic || '').toLowerCase() === topic));
   const item = waiting[0];
   const original = item && item.type === 'edit' ? questions.find((q) => q.questionId === item.originalQuestionId) : null;
-  const name = (id) => (TOPICS.find((t) => t.id === id) || { name: id }).name;
+  const name = (id) => sectionName(sections, id);
 
   return (
     <div className="questions-container pending-question-mode">
@@ -26,7 +26,7 @@ export default function PendingQueue({ pending, threshold, seen, questions, onVo
       <div className="dropdown-row" style={{ alignItems: 'center' }}>
         <select value={topic} onChange={(e) => setTopic(e.target.value)}>
           <option value="all">All Topics</option>
-          {TOPICS.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          {activeSections(sections).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
         <span style={{ fontSize: '15px', color: '#003B4F' }}>
           {waiting.length === 0 ? 'Nothing waiting' : `${waiting.length} waiting for review`}

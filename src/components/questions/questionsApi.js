@@ -9,8 +9,8 @@ const PENDING_KEY = 'questions/nife/pending.json';
 const ADMIN_TOKEN_KEY = 'qAdminToken';
 const VOTER_KEY = 'qVoterId';
 
-// The topics a question can be filed under, in dropdown order. Phase 4 of the plan replaces
-// this with a document anyone can edit; until then it is written once, here.
+// The six topics the page had before the section list (./sections.js) became an editable
+// document. Only a stand-in now, for a mirror that does not have the list yet.
 export const TOPICS = [
   { id: 'aero', name: 'Aero' },
   { id: 'engines', name: 'Engines' },

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { TOPICS, sendQuestion } from './questionsApi';
+import { sendQuestion } from './questionsApi';
+import { activeSections, formLectures } from './sections';
 
 const ANSWER_FIELDS = [
   ['correctAnswer', 'Correct Answer'],
@@ -50,7 +51,7 @@ const grow = (el) => {
 
 // The submit / edit modal. `onDone(message)` is called once the server has the question;
 // the modal then closes itself through `onClose`.
-export default function QuestionForm({ mode, question, defaultTopic, onClose, onDone }) {
+export default function QuestionForm({ mode, question, sections, defaultTopic, onClose, onDone }) {
   const [data, setData] = useState(() => initialData(mode, question, defaultTopic));
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
@@ -65,6 +66,10 @@ export default function QuestionForm({ mode, question, defaultTopic, onClose, on
     setData((d) => ({ ...d, [field]: e.target.value }));
   };
 
+  const topics = activeSections(sections);
+  const section = sections.find((s) => s.id === data.topic);
+  const lectures = formLectures(section);
+
   const submit = async () => {
     const problem = problemWith(data);
     if (problem) {
@@ -74,7 +79,8 @@ export default function QuestionForm({ mode, question, defaultTopic, onClose, on
     setSending(true);
     setError('');
     try {
-      const payload = { ...data, type: mode === 'edit' ? 'edit' : 'new' };
+      const lecture = section && !section.fallback && !lectures.some((l) => l.id === data.lecture) ? '' : data.lecture;
+      const payload = { ...data, lecture, type: mode === 'edit' ? 'edit' : 'new' };
       if (mode === 'edit') payload.originalQuestionId = question.questionId;
       await sendQuestion(mode === 'edit' ? 'edit-question' : 'submit-question', payload);
       onDone(mode === 'edit' ? 'Edit submitted for review.' : 'Question submitted for review.');
@@ -97,15 +103,23 @@ export default function QuestionForm({ mode, question, defaultTopic, onClose, on
         <h2>{mode === 'edit' ? 'Edit Question' : 'Submit a New Question'}</h2>
 
         <div className="dropdown-row">
-          <select value={data.topic} onChange={(e) => setData((d) => ({ ...d, topic: e.target.value }))}>
-            {TOPICS.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          <select aria-label="Topic" value={data.topic} onChange={(e) => setData((d) => ({ ...d, topic: e.target.value, lecture: '' }))}>
+            {!topics.some((t) => t.id === data.topic) && <option value={data.topic} disabled>Choose a topic</option>}
+            {topics.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
-          <input
-            type="text"
-            placeholder="Enter Lecture Number (optional)"
-            value={data.lecture}
-            onChange={(e) => setData((d) => ({ ...d, lecture: e.target.value }))}
-          />
+          {section && section.fallback ? (
+            <input
+              type="text"
+              placeholder="Enter Lecture Number (optional)"
+              value={data.lecture}
+              onChange={(e) => setData((d) => ({ ...d, lecture: e.target.value }))}
+            />
+          ) : lectures.length > 0 && (
+            <select aria-label="Lecture" value={lectures.some((l) => l.id === data.lecture) ? data.lecture : ''} onChange={(e) => setData((d) => ({ ...d, lecture: e.target.value }))}>
+              <option value="">No lecture</option>
+              {lectures.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          )}
         </div>
 
         <div className="qa-box question-area">

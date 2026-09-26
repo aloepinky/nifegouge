@@ -1,12 +1,12 @@
 import React from 'react';
-import { TOPICS } from './questionsApi';
+import { sectionName } from './sections';
 import Explanation from './Explanation';
 
 // The end of a quiz: the score, and every question with the answer given and, where it was
 // wrong, the right one.
-export default function ScoreScreen({ attempts, topic, onReset }) {
+export default function ScoreScreen({ attempts, topic, sections, onReset }) {
   const correct = attempts.filter((a) => a.chosen === a.correct).length;
-  const name = (TOPICS.find((t) => t.id === topic) || { name: topic }).name;
+  const name = sectionName(sections, topic);
 
   return (
     <div className="page-container">

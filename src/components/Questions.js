@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  TOPICS, DISPUTED_AT, answerChoices, inFilter, lecturesIn, loadApproved, loadPending, netScore,
+  DISPUTED_AT, answerChoices, inFilter, loadApproved, loadPending, netScore,
   pendingSeen, shuffle, voteOnQuestion,
 } from './questions/questionsApi';
 import { useNotice } from './questions/Notice';
@@ -12,6 +13,7 @@ import WeatherFigures from './questions/WeatherFigures';
 import Explanation from './questions/Explanation';
 import PendingCard from './questions/PendingCard';
 import PendingQueue from './questions/PendingQueue';
+import { activeSections, inUse, quizLectures, useSections } from './questions/sections';
 
 // The NIFE Questions tab: the quiz, and the shell for Review Mode, Review pending, the admin
 // panel and the submit/edit form, which live in ./questions/.
@@ -64,8 +66,18 @@ function Questions() {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [notice, showNotice] = useNotice();
 
-  const availableLectures = useMemo(() => lecturesIn(allQuestions, topic), [allQuestions, topic]);
-  const unseen = useMemo(() => pending.filter((q) => !seen[q.questionId]), [pending, seen]);
+  const { sections, loaded: sectionsLoaded } = useSections();
+  // The questions the section list has in use: a retired topic or lecture drops out of the
+  // quiz, the review list and the review queue, and comes back if it is unretired.
+  const usable = useMemo(() => allQuestions.filter(inUse(sections)), [allQuestions, sections]);
+  const availableLectures = useMemo(() => quizLectures(sections, usable, topic), [sections, usable, topic]);
+  const topicOptions = useMemo(() => activeSections(sections).filter((s) => (
+    s.id === topic || usable.some((q) => (q.topic || '').toLowerCase() === s.id)
+  )), [sections, usable, topic]);
+  const unseen = useMemo(
+    () => pending.filter((q) => !seen[q.questionId]).filter(inUse(sections)),
+    [pending, seen, sections],
+  );
 
   // The drawn question as it is now: votes change `allQuestions`, not the drawn copy.
   const drawn = quiz[index];
@@ -99,24 +111,29 @@ function Questions() {
     }
   }, []);
 
-  const loadAll = useCallback(async ({ restart }) => {
+  const loadAll = useCallback(async () => {
     try {
-      const questions = await loadApproved();
-      setAllQuestions(questions);
+      setAllQuestions(await loadApproved());
       setLoadState('ready');
-      if (restart) {
-        const topics = [...new Set(questions.map((q) => (q.topic || '').toLowerCase().trim()).filter(Boolean))];
-        if (topics.length > 0) {
-          const chosen = topics[Math.floor(topics.length * Math.random())];
-          setTopic(chosen);
-          startQuiz(chosen, 'All', 0, questions);
-        }
-      }
     } catch (err) {
       console.error('Error loading questions:', err);
       setLoadState('error');
     }
-  }, [startQuiz]);
+  }, []);
+
+  // The first quiz waits for both the questions and the section list, so it never starts on a
+  // retired topic: a topic in use, with questions, at random.
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current || loadState !== 'ready' || !sectionsLoaded) return;
+    started.current = true;
+    const topics = activeSections(sections).map((s) => s.id)
+      .filter((id) => usable.some((q) => (q.topic || '').toLowerCase() === id));
+    if (!topics.length) return;
+    const chosen = topics[Math.floor(topics.length * Math.random())];
+    setTopic(chosen);
+    startQuiz(chosen, 'All', 0, usable);
+  }, [loadState, sectionsLoaded, sections, usable, startQuiz]);
 
   useEffect(() => {
     // ?admin shows the admin panel button in this browser from now on; the server still
@@ -125,12 +142,12 @@ function Questions() {
       if (new URLSearchParams(window.location.search).has('admin')) localStorage.setItem('qAdmin', 'true');
       if (localStorage.getItem('qAdmin') === 'true') setIsAdminEnabled(true);
     } catch { /* private mode */ }
-    loadAll({ restart: true });
+    loadAll();
     refreshPending();
   }, [loadAll, refreshPending]);
 
   const restart = (topicVal = topic, lectureVal = lecture, n = parseInt(numQuestions, 10) || 0) => {
-    startQuiz(topicVal, lectureVal, n, allQuestions);
+    startQuiz(topicVal, lectureVal, n, usable);
   };
 
   // The oldest pending item in this topic this browser has not dealt with, preferring the
@@ -173,7 +190,7 @@ function Questions() {
       showNotice('Your vote did not go through. Check your connection.', 'error');
     } else if (result && result.outcome === 'approved') {
       showNotice(isEdit ? 'That edit has been approved and applied.' : 'That question has been approved and added to the quiz.');
-      loadAll({ restart: false });
+      loadAll();
     } else if (result && result.outcome === 'rejected') {
       showNotice(isEdit ? 'That edit was turned down by the community.' : 'That question was turned down by the community.');
     }
@@ -234,6 +251,7 @@ function Questions() {
   const formModal = form && (
     <QuestionForm
       mode={form.mode}
+      sections={sections}
       question={form.question}
       defaultTopic={topic}
       onClose={() => setForm(null)}
@@ -247,7 +265,7 @@ function Questions() {
   };
 
   if (showScore) {
-    return <ScoreScreen attempts={attempts} topic={topic} onReset={() => restart()} />;
+    return <ScoreScreen attempts={attempts} topic={topic} sections={sections} onReset={() => restart()} />;
   }
 
   if (view === 'review') {
@@ -255,7 +273,8 @@ function Questions() {
       <>
         {notice && <div className="questions-container" style={{ paddingBottom: 0 }}>{notice}</div>}
         <ReviewList
-          questions={allQuestions}
+          questions={usable}
+          sections={sections}
           topic={topic}
           lecture={lecture}
           onTopicChange={(t) => { setTopic(t); setLecture('All'); }}
@@ -273,7 +292,8 @@ function Questions() {
       <>
         {notice && <div className="questions-container" style={{ paddingBottom: 0 }}>{notice}</div>}
         <PendingQueue
-          pending={pending}
+          pending={pending.filter(inUse(sections))}
+          sections={sections}
           threshold={threshold}
           seen={seen}
           questions={allQuestions}
@@ -288,8 +308,9 @@ function Questions() {
     return (
       <AdminPanel
         questions={allQuestions}
+        sections={sections}
         onExit={() => { setView('quiz'); refreshPending(); }}
-        onChanged={() => loadAll({ restart: false })}
+        onChanged={() => loadAll()}
       />
     );
   }
@@ -340,7 +361,7 @@ function Questions() {
               restart(e.target.value, 'All');
             }}
           >
-            {TOPICS.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            {topicOptions.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
 
           <select
@@ -351,7 +372,7 @@ function Questions() {
             }}
           >
             <option value="All">All Lectures</option>
-            {availableLectures.map((lec) => <option key={lec} value={lec}>Lecture {lec}</option>)}
+            {availableLectures.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
           </select>
 
           <select
@@ -370,13 +391,17 @@ function Questions() {
           </select>
         </div>
 
+        <div style={{ textAlign: 'right', fontSize: '13px', margin: '-4px 0 10px' }}>
+          <Link to="/nife/questions/sections" style={{ color: '#003B4F' }}>Topics or lectures out of date? Edit them</Link>
+        </div>
+
         {loadState === 'loading' && (
           <div style={{ textAlign: 'center', padding: '40px 10px', color: '#003B4F' }}>Loading questions…</div>
         )}
         {loadState === 'error' && (
           <div style={{ textAlign: 'center', padding: '40px 10px', color: '#003B4F' }}>
             Could not load the questions. Check your connection.
-            <button className="submitBtn" onClick={() => { setLoadState('loading'); loadAll({ restart: true }); }}>
+            <button className="submitBtn" onClick={() => { setLoadState('loading'); loadAll(); }}>
               Try again
             </button>
           </div>

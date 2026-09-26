@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { TOPICS, answerChoices, inFilter, lecturesIn, netScore } from './questionsApi';
+import { answerChoices, inFilter, netScore } from './questionsApi';
+import { activeSections, lectureName, quizLectures } from './sections';
 import Explanation from './Explanation';
 import QuestionHistory from './QuestionHistory';
 
@@ -14,12 +15,12 @@ function byLectureThenScore(a, b) {
   return netScore(b) - netScore(a);
 }
 
-export default function ReviewList({ questions, topic, lecture, onTopicChange, onLectureChange, onExit, onEdit }) {
+export default function ReviewList({ questions, sections, topic, lecture, onTopicChange, onLectureChange, onExit, onEdit }) {
   const [expanded, setExpanded] = useState(() => new Set());
   const [chosen, setChosen] = useState({});
   const [historyOf, setHistoryOf] = useState(null);
 
-  const lectures = useMemo(() => lecturesIn(questions, topic), [questions, topic]);
+  const lectures = useMemo(() => quizLectures(sections, questions, topic), [sections, questions, topic]);
   const listed = useMemo(() => questions
     .filter(inFilter(topic, lecture))
     .map((q) => ({ ...q, choices: answerChoices(q) }))
@@ -45,11 +46,11 @@ export default function ReviewList({ questions, topic, lecture, onTopicChange, o
 
         <div className="review-mode-controls" style={{ marginBottom: '20px' }}>
           <select value={topic} onChange={(e) => onTopicChange(e.target.value)} style={selectStyle}>
-            {TOPICS.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            {activeSections(sections).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
           <select value={lecture} onChange={(e) => onLectureChange(e.target.value)} style={{ ...selectStyle, marginLeft: '10px' }}>
             <option value="All">All Lectures</option>
-            {lectures.map((l) => <option key={l} value={l}>Lecture {l}</option>)}
+            {lectures.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
           </select>
           <span style={{ marginLeft: '20px', fontSize: '16px', color: '#666' }}>
             {listed.length} questions available
@@ -83,7 +84,7 @@ export default function ReviewList({ questions, topic, lecture, onTopicChange, o
                 <div style={{ flex: 1 }}>
                   <span style={{ fontWeight: 'bold', marginRight: '10px', color: '#01202C' }}>
                     Q{idx + 1}
-                    {q.lecture && ` (Lecture ${q.lecture})`}
+                    {q.lecture && ` (${lectureName(sections, q.topic, q.lecture)})`}
                   </span>
                   <div style={{ marginTop: '8px', fontSize: '16px', lineHeight: '1.5' }}>{q.question}</div>
                 </div>
