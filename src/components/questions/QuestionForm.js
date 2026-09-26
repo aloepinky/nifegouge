@@ -18,6 +18,7 @@ function initialData(mode, question, defaultTopic) {
       incorrectAnswer1: question.incorrectAnswer1 || '',
       incorrectAnswer2: question.incorrectAnswer2 || '',
       incorrectAnswer3: question.incorrectAnswer3 || '',
+      explanation: question.explanation || '',
     };
   }
   return {
@@ -28,6 +29,7 @@ function initialData(mode, question, defaultTopic) {
     incorrectAnswer1: '',
     incorrectAnswer2: '',
     incorrectAnswer3: '',
+    explanation: '',
   };
 }
 
@@ -120,6 +122,23 @@ export default function QuestionForm({ mode, question, defaultTopic, onClose, on
               </label>
             ))}
           </div>
+        </div>
+
+        <div className="qa-box">
+          <label style={{ display: 'block', fontSize: '14px', color: '#01202C', fontWeight: 600, marginBottom: '4px' }} htmlFor="question-why">
+            Why is this the answer? <span style={{ fontWeight: 400, color: '#666' }}>(optional)</span>
+          </label>
+          <div style={{ fontSize: '13px', color: '#666', marginBottom: '6px' }}>
+            Students see this after they answer. Say where the answer comes from if you can.
+          </div>
+          <textarea
+            id="question-why"
+            placeholder="Explain the answer"
+            value={data.explanation}
+            onChange={set('explanation')}
+            maxLength={1500}
+            style={{ width: '100%', boxSizing: 'border-box' }}
+          />
         </div>
 
         {error && <div style={{ color: '#c62828', fontSize: '14px', margin: '8px 0' }}>{error}</div>}

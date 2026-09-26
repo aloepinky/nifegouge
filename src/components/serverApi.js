@@ -76,13 +76,63 @@ async function fetchMirror(key) {
   } catch (err) {
     throw new Error('Could not reach the server. Check your connection and try again.');
   }
-  if (response.status === 404 || response.status === 403) return null;
+  if (response.status === 404 || response.status === 403) {
+    forgetSaved(key);
+    return null;
+  }
   if (!response.ok) {
     const error = new Error(`The server answered ${response.status}.`);
     error.status = response.status;
     throw error;
   }
-  return response.json();
+  const data = await response.json();
+  keepSaved(key, data);
+  return data;
+}
+
+// The last copy of a mirror record this browser read, kept in localStorage so a page opened in
+// a new visit can draw at once from it while the read above checks for a newer one. Only the
+// discussion items are kept: they are what a student opens again and again, and the tab could
+// show nothing until the round trip came back. Whoever draws from a saved copy must still
+// revalidate, because it may be any number of revisions old.
+const SAVED_PREFIX = 'mirror:';
+const SAVED_KEYS = ['items/', 'syllabi/'];
+const isKept = (key) => SAVED_KEYS.some((k) => key.startsWith(k));
+
+export function savedMirror(key) {
+  try {
+    const raw = window.localStorage.getItem(SAVED_PREFIX + key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function keepSaved(key, data) {
+  if (!isKept(key)) return;
+  const raw = JSON.stringify(data);
+  try {
+    window.localStorage.setItem(SAVED_PREFIX + key, raw);
+  } catch (err) {
+    // Full, or refused in a private window. Drop every saved copy and try once more: they are
+    // only a head start, and the reads refill them.
+    try {
+      Object.keys(window.localStorage)
+        .filter((k) => k.startsWith(SAVED_PREFIX))
+        .forEach((k) => window.localStorage.removeItem(k));
+      window.localStorage.setItem(SAVED_PREFIX + key, raw);
+    } catch (again) {
+      // Storage is unavailable; every visit reads the mirror, as before.
+    }
+  }
+}
+
+function forgetSaved(key) {
+  try {
+    window.localStorage.removeItem(SAVED_PREFIX + key);
+  } catch (err) {
+    // Nothing was saved.
+  }
 }
 
 // A tiny store: one Map per kind, and subscribers so a write re-renders whoever is showing
@@ -96,6 +146,10 @@ export function makeStore() {
     set: (key, value) => {
       map.set(key, value);
       subs.forEach((fn) => fn(key));
+    },
+    // Fills an empty entry without telling subscribers, so it can be called while rendering.
+    seed: (key, value) => {
+      if (!map.has(key)) map.set(key, value);
     },
     delete: (key) => {
       map.delete(key);

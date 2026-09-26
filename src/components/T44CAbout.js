@@ -1,15 +1,12 @@
 import React from 'react';
 import AboutPage from './about/AboutPage.js';
 import { aboutTabs } from './about/tabs.js';
-import { EpStats } from './about/SchoolStats.js';
-import { epListStats } from './about/stats.js';
-import { T44C_EPS, T44C_LIMITS, T44C_EP_NWC } from './T44C/t44cData.js';
+import { EpStats, SyllabusStats } from './about/SchoolStats.js';
+import { PLATFORMS as ALL_PLATFORMS } from './about/platforms.js';
 
-// One row per aircraft Advanced trains in: each has its own EPs, limits and briefs, and its
-// numbers are titled with the aircraft so a second platform has somewhere to go.
-const PLATFORMS = [
-  { aircraft: 'T-44C', eps: epListStats(T44C_EPS, T44C_EP_NWC), limits: Object.keys(T44C_LIMITS).length },
-];
+// Advanced will train in several aircraft, each with its own EPs, limits and briefs, so its
+// numbers are titled with the aircraft and a second platform has somewhere to go.
+const PLATFORMS = ALL_PLATFORMS.t44c;
 
 // Advanced's About page. The program is being built: EPs/Limits is the one page so far, and a
 // tab joins this index as soon as it is added to the program's tab list in programs.js, which
@@ -22,6 +19,15 @@ const CONTENT = {
     more: [
       'The EPs tests you on each of the T-44C EPs and NWCs. Critical action memory items are marked, as are the steps requiring the concurrence of both pilots.',
       'The Limits tab is the T-44C operating limits sheet to fill in from memory, with the answers a click away when you are stuck.',
+    ],
+  },
+  '/t44c/discuss': {
+    stats: <SyllabusStats school="Advanced" />,
+    icon: 'discuss',
+    blurb: 'What to say at the brief table, for every discuss item the syllabus names.',
+    more: [
+      'Two syllabi are flown in the T-44C: the multi-service Advanced syllabus and the E-2D Intermediate one. Pick yours from the dropdown; the pages themselves are shared, because the aircraft is.',
+      'The Advanced syllabus splits after I4601, so its course flow carries a chart for each community — P-8, E-6, C-130, Coast Guard and tilt-rotor.',
     ],
   },
 };

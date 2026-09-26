@@ -61,6 +61,21 @@ maybe('Delta JPPT', () => {
       expect(syl.blocks.map((b) => b.id).sort()).toEqual(BLOCKS.map((b) => b.id).sort());
     });
 
+    // Every block in Delta names its media in one token, so a second word in that cell means
+    // the header reader has taken the first word of the title. It used to, wherever a title was
+    // long enough to start left of the midpoint between the two headers: "Crew Resource
+    // Management" came out as media "Class Crew". (A two-word media is legitimate in general —
+    // the T-44C E-2D syllabus has a "Flight Line" block — which is why this is pinned on Delta
+    // rather than asserted everywhere.) The fixture's own titles are the hand-built registry's
+    // wording, "FAM Aerobatics" where the JPPT prints "Familiarization Aerobatics", so the
+    // shape is what is checked here and not the strings.
+    test('keeps a title out of the media column', () => {
+      syl.blocks.forEach((b) => {
+        expect([b.id, b.media]).toEqual([b.id, expect.stringMatching(/^\S+$/)]);
+        expect([b.id, !!b.title]).toEqual([b.id, true]);
+      });
+    });
+
     test('finds each block\'s events', () => {
       const got = Object.fromEntries(syl.blocks.map((b) => [b.id, b.events.map((e) => e.id).sort()]));
       const want = Object.fromEntries(BLOCKS.map((b) => [b.id, b.events.map((e) => e.id).sort()]));

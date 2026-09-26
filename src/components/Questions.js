@@ -9,6 +9,8 @@ import ReviewList from './questions/ReviewList';
 import AdminPanel from './questions/AdminPanel';
 import ScoreScreen from './questions/ScoreScreen';
 import WeatherFigures from './questions/WeatherFigures';
+import Explanation from './questions/Explanation';
+import EditDiff from './questions/EditDiff';
 
 // The NIFE Questions tab: the quiz, and the route shell for Review Mode, the admin panel and
 // the submit/edit form, which live in ./questions/. The quiz's question selection, pending
@@ -41,10 +43,6 @@ function Questions() {
   const [isPendingQuestion, setIsPendingQuestion] = useState(false);
   const [pendingQuestionType, setPendingQuestionType] = useState(null); // 'new' or 'edit'
 
-  // Edit pair tracking
-  const [editPairOriginal, setEditPairOriginal] = useState(null);
-  const [justCompletedOriginal, setJustCompletedOriginal] = useState(false);
-
   const [topic, setTopic] = useState('aero');
   const [lecture, setLecture] = useState('All');
   const [numQuestions, setNumQuestions] = useState('');
@@ -57,9 +55,6 @@ function Questions() {
   const [reviewMode, setReviewMode] = useState(false);
   const [votedQuestions, setVotedQuestions] = useState(() => readStored('votedQuestions'));
   const [votedPendingQuestions, setVotedPendingQuestions] = useState(() => readStored('votedPendingQuestions'));
-
-  // Owner-written question explanations (keyed by questionId)
-  const [explanations, setExplanations] = useState({});
 
   const [isAdminEnabled, setIsAdminEnabled] = useState(false);
   const [adminMode, setAdminMode] = useState(false);
@@ -83,41 +78,20 @@ function Questions() {
       return;
     }
 
-    // If we just completed an original question and have an edit pair to show
-    if (justCompletedOriginal && editPairOriginal) {
-      const editQuestion = pendingQuestions.find((q) => (
-        q.originalQuestionId === editPairOriginal.questionId && q.type === 'edit' && !votedPendingQuestions[q.questionId]
-      ));
-      setJustCompletedOriginal(false);
-      if (editQuestion) {
-        setIsPendingQuestion(true);
-        setPendingQuestionType('edit');
-        show(editQuestion);
-        return;
-      }
-      setEditPairOriginal(null);
-    }
-
-    setEditPairOriginal(null);
-
-    // Every 5th question alternates: odd multiples = edit pair, even multiples = new question
-    // e.g. Q5=edit, Q10=new, Q15=edit, Q20=new ...
+    // Every 5th question alternates: odd multiples = a proposed edit, even multiples = a new
+    // question, e.g. Q5=edit, Q10=new, Q15=edit, Q20=new ...
     const slot = pendingQuestions.length > 0 ? Math.floor((index + 1) / 5) : 0;
     const isEvery5th = (index + 1) % 5 === 0 && slot > 0;
     const isEditSlot = isEvery5th && slot % 2 === 1;
     const isNewSlot = isEvery5th && slot % 2 === 0;
 
     if (isEditSlot) {
+      // The edit itself is asked; once answered, the page shows what it changes.
       const edit = pendingQuestions.find((q) => q.type === 'edit' && !votedPendingQuestions[q.questionId]);
-      const original = edit && (
-        allQuestions.find((q) => q.questionId === edit.originalQuestionId)
-        || allQuestions.find((q) => q.originalQuestionId === edit.originalQuestionId)
-      );
-      if (original) {
-        setEditPairOriginal(original);
-        setIsPendingQuestion(false);
-        setPendingQuestionType(null);
-        show(original);
+      if (edit) {
+        setIsPendingQuestion(true);
+        setPendingQuestionType('edit');
+        show(edit);
         return;
       }
     }
@@ -135,7 +109,7 @@ function Questions() {
     setIsPendingQuestion(false);
     setPendingQuestionType(null);
     show(questions[indices[index]]);
-  }, [selectedQuestionIndices, filteredQuestions, allQuestions, pendingQuestions, votedPendingQuestions, justCompletedOriginal, editPairOriginal, show]);
+  }, [selectedQuestionIndices, filteredQuestions, pendingQuestions, votedPendingQuestions, show]);
 
   const fetchPendingQuestions = useCallback(async (forTopic) => {
     try {
@@ -167,8 +141,6 @@ function Questions() {
     setShowReview(false);
     setIsPendingQuestion(false);
     setPendingQuestionType(null);
-    setEditPairOriginal(null);
-    setJustCompletedOriginal(false);
 
     fetchPendingQuestions(topicVal);
 
@@ -198,7 +170,6 @@ function Questions() {
 
   // Initial load
   useEffect(() => {
-    let isMounted = true;
 
     // ?admin shows the admin panel button in this browser from now on; the server still
     // refuses its buttons without the token.
@@ -207,13 +178,7 @@ function Questions() {
       if (localStorage.getItem('qAdmin') === 'true') setIsAdminEnabled(true);
     } catch { /* private mode */ }
 
-    fetch('/explanations.json')
-      .then((r) => r.json())
-      .then((data) => { if (isMounted) setExplanations(data); })
-      .catch(() => {});
-
     fetchQuestionsFromDB();
-    return () => { isMounted = false; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const exitReviewMode = () => {
@@ -253,11 +218,8 @@ function Questions() {
       question: currentQuestion.question,
       chosen: selectedAnswer,
       correct: currentQuestion.correctAnswer,
+      explanation: currentQuestion.explanation,
     }]);
-    // If this was the original in an edit pair, load the edit next
-    if (editPairOriginal && currentQuestion.questionId === editPairOriginal.questionId) {
-      setJustCompletedOriginal(true);
-    }
   };
 
   const handleNextQuestion = () => {
@@ -279,7 +241,6 @@ function Questions() {
       ));
       if (existingEdit) {
         setReviewMode(false);
-        setEditPairOriginal(question);
         setIsPendingQuestion(true);
         setPendingQuestionType('edit');
         show(existingEdit);
@@ -378,7 +339,7 @@ function Questions() {
 
   return (
     <>
-      <div className={`questions-container ${isPendingQuestion ? 'pending-question-mode' : ''} ${editPairOriginal ? 'edit-pair-mode' : ''}`}>
+      <div className={`questions-container ${isPendingQuestion ? 'pending-question-mode' : ''}`}>
         {notice}
 
         <button
@@ -452,12 +413,6 @@ function Questions() {
         {questionText && (
           <>
             <div className="qa-container">
-              {editPairOriginal && !isPendingQuestion && (
-                <div style={{ padding: '10px', marginBottom: '15px', backgroundColor: '#e3f2fd', border: '1px solid #2196f3', borderRadius: '5px', color: '#1565c0', textAlign: 'center', fontWeight: 'bold' }}>
-                  Original Question - An edited version will follow
-                </div>
-              )}
-
               {isPendingQuestion && pendingQuestionType === 'new' && (
                 <div style={{ padding: '10px', marginBottom: '15px', backgroundColor: '#fff3cd', border: '1px solid #ffc107', borderRadius: '5px', color: '#856404', textAlign: 'center', fontWeight: 'bold' }}>
                   Community Review: New Question - Please vote after answering
@@ -472,7 +427,7 @@ function Questions() {
 
               {isPendingQuestion && pendingQuestionType === 'edit' && (
                 <div style={{ padding: '10px', marginBottom: '15px', backgroundColor: '#e8f5e9', border: '1px solid #4caf50', borderRadius: '5px', color: '#2e7d32', textAlign: 'center', fontWeight: 'bold' }}>
-                  Edited Version - Is this an improvement?
+                  Proposed Edit - Answer it, then say whether it is better than the current version
                   {currentQuestion && currentQuestion.approveCount !== undefined && (
                     <div style={{ fontSize: '0.9em', marginTop: '5px' }}>
                       Current: {currentQuestion.approveCount || 0} say better, {currentQuestion.rejectCount || 0} say worse
@@ -505,11 +460,12 @@ function Questions() {
                   ))}
                 </div>
 
-                {isAnswered && !isPendingQuestion && explanations[currentQuestion?.questionId] && (
-                  <div className="explanation-text" style={{ marginTop: '16px' }}>
-                    <strong className="explanation-heading">Explanation</strong>
-                    {explanations[currentQuestion.questionId]}
-                  </div>
+                {isAnswered && pendingQuestionType !== 'edit' && <Explanation text={currentQuestion.explanation} />}
+                {isAnswered && pendingQuestionType === 'edit' && (
+                  <EditDiff
+                    original={allQuestions.find((q) => q.questionId === currentQuestion.originalQuestionId)}
+                    edit={currentQuestion}
+                  />
                 )}
 
                 {!isAnswered ? (
@@ -588,7 +544,7 @@ function Questions() {
           </>
         )}
 
-        {currentQuestion && !isPendingQuestion && !editPairOriginal && (
+        {currentQuestion && !isPendingQuestion && (
           <button className="submitBtn" onClick={() => openForm('edit', currentQuestion)}>
             Edit Current Question
           </button>

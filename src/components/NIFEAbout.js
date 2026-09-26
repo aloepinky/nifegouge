@@ -2,10 +2,9 @@ import React from 'react';
 import AboutPage from './about/AboutPage.js';
 import { aboutTabs } from './about/tabs.js';
 import { EpStats, BriefStats, SyllabusStats } from './about/SchoolStats.js';
-import { epListStats } from './about/stats.js';
-import { C172_EPS, C172_LIMITS } from './Flight/c172Data.js';
+import { PLATFORMS as ALL_PLATFORMS } from './about/platforms.js';
 
-const PLATFORMS = [{ aircraft: 'C172', eps: epListStats(C172_EPS), limits: Object.keys(C172_LIMITS).length }];
+const PLATFORMS = ALL_PLATFORMS.nife;
 
 // What this page says about each NIFE tab. The order and the names come from the program's tab
 // list in programs.js, which the top bar reads too — see about/tabs.js.

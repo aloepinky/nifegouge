@@ -1,6 +1,6 @@
 import { loadPageContents } from './pdfSource';
 import { loadTextPages } from './pdfText';
-import { extractFlow } from './flowExtract';
+import { extractFlow, extractPostFlows } from './flowExtract';
 import { extractSyllabus } from './syllabusExtract';
 import { extractCourseLength } from './courseLength';
 import { guessProgram } from '../program';
@@ -13,7 +13,12 @@ import { guessProgram } from '../program';
 //     stages: [{ id, label, weight, graded }],
 //     blocks: [{ id, stage, media, title, hours, hx?, blkName?, prereqs?, briefed, events: [{ id, title? }] }],
 //     events: [{ id, title, block, media, hours, prereqs, syllabusNotes, items: [{ label, slug? | href? }] }],
-//     flow:   { VIEWBOX, NODES, LEGEND, EDGES } }
+//     flow:   { VIEWBOX, NODES, LEGEND, EDGES },
+//     postFlows?: [{ id, label, VIEWBOX, NODES, LEGEND, EDGES }] }
+//
+// `flow` is the course flow. `postFlows` is one chart per community for a syllabus that
+// splits, and is absent for one that does not; `flow` is the chart everything else reads,
+// block ordering included.
 //
 // `aircraft` and `school` are guessed from the title page and confirmed by whoever uploads;
 // the server refuses a document without both.
@@ -119,16 +124,34 @@ export async function parseJppt(data, onProgress = () => {}, { matcher = null, p
   const known = new Set(syllabus.blocks.flatMap((b) => b.events.map((e) => e.id)));
   let flow = null;
   let flowPage = null;
+  let categories = null;
+  let corePage = null;
   try {
     const traced = extractFlow(contents, { knownEventIds: known });
     warnings.push(...traced.warnings);
     const { VIEWBOX, NODES, LEGEND, EDGES } = traced;
     flow = { VIEWBOX, NODES, LEGEND, EDGES };
+    categories = traced.categories;
+    corePage = traced.page;
     const footer = (textPages[traced.page - 1] || []).map((l) => l.text).find((t) => /^[IVX]+-\d+$/.test(t));
     flowPage = footer || null;
   } catch (err) {
     warnings.push(`${err.message} The boxes below are laid out from the syllabus text instead; arrange and connect them to match the publication.`);
     flow = scaffoldFlow(syllabus.stages, syllabus.blocks);
+  }
+
+  // A syllabus several communities fly prints a chart each for the part of the course after
+  // they part company. It is one chart per community rather than one document per community:
+  // they share every block up to that point, so they share the syllabus. A document without
+  // such a page simply carries none, and the reader is offered no choice.
+  onProgress('Tracing the per-community course flows');
+  let postFlows = [];
+  try {
+    const traced = extractPostFlows(contents, { knownEventIds: known, categories, corePage });
+    warnings.push(...traced.warnings);
+    postFlows = traced.postFlows;
+  } catch (err) {
+    warnings.push(`The per-community course flows could not be traced (${err.message}). Draw them in the editor.`);
   }
 
   onProgress('Matching discuss items to existing pages');
@@ -156,6 +179,7 @@ export async function parseJppt(data, onProgress = () => {}, { matcher = null, p
     blocks: orderBlocks(syllabus.blocks, flow),
     events,
     flow,
+    ...(postFlows.length ? { postFlows } : {}),
   };
   return { doc, warnings };
 }

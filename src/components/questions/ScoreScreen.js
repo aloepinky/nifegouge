@@ -1,5 +1,6 @@
 import React from 'react';
 import { TOPICS } from './questionsApi';
+import Explanation from './Explanation';
 
 // The end of a quiz: the score, and every question with the answer given and, where it was
 // wrong, the right one.
@@ -22,6 +23,7 @@ export default function ScoreScreen({ attempts, topic, onReset }) {
               Your answer: {a.chosen || '(no selection)'}
             </div>
             {a.chosen !== a.correct && <div className="review-correct">Correct: {a.correct}</div>}
+            <Explanation text={a.explanation} style={{ marginTop: '6px' }} />
           </div>
         ))}
 

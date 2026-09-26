@@ -107,8 +107,7 @@ function EditFlowPage({ record: initialRecord }) {
           <p className="discuss-crumb"><Link to={base}>{record.name}</Link></p>
           <h1>Edit the course flow</h1>
           <p className="discuss-lede">
-            Revision {record.rev}. Fix the chart to match the publication; saving publishes it
-            for everyone.
+            Fix the chart to match the publication; saving publishes it for everyone.
           </p>
         </header>
 

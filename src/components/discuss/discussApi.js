@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { upsertItemMeta } from './registry';
 import { DELTA_ID } from './SyllabusContext';
-import { call, post, readMirror, makeStore } from '../serverApi';
+import { call, post, readMirror, savedMirror, makeStore } from '../serverApi';
 import { schoolNs } from '../programs';
 import { DEFAULT_PROGRAM } from './program';
 
@@ -91,6 +91,16 @@ export function getCachedItem(slug) {
   return items.get(keyOf(slug)) || null;
 }
 
+// The copy of a page this browser saved on an earlier visit, put in the store so the page draws
+// at once. useItem revalidates it straight after, as it does any cached record.
+function seedItem(key) {
+  if (!items.has(key)) {
+    const saved = savedMirror(`items/${key}.json`);
+    if (saved) items.seed(key, saved);
+  }
+  return items.get(key);
+}
+
 // A mirror read that never moves the cache backwards: a fetch that started before a publish
 // can land after it, and its older revision must not replace the newer one.
 async function revalidateItem(slug) {
@@ -127,7 +137,7 @@ export function useItem(slug) {
   const [tick, setTick] = useState(0);
   const [state, setState] = useState(() => {
     if (!key) return { status: 'none' };
-    const cached = items.get(key);
+    const cached = seedItem(key);
     return cached ? { status: 'ready', record: cached } : { status: 'loading' };
   });
 
@@ -137,7 +147,7 @@ export function useItem(slug) {
       return undefined;
     }
     let live = true;
-    const cached = items.get(key);
+    const cached = seedItem(key);
     setState(cached ? { status: 'ready', record: cached } : { status: 'loading' });
 
     revalidateItem(slug)
@@ -223,10 +233,23 @@ export function saveSyllabus(id, baseRev, doc, name, { author, summary } = {}) {
   return post('save-syllabus', { id, baseRev, doc, name, author, summary });
 }
 
+// Syllabi drawn from a copy saved on an earlier visit, not yet checked against the mirror.
+const unchecked = new Set();
+
+function seedSyllabus(id) {
+  if (!id || syllabi.has(id)) return;
+  const saved = savedMirror(`syllabi/${id}.json`);
+  if (!saved) return;
+  syllabi.seed(id, saved);
+  unchecked.add(id);
+}
+
 // Fetched once per session per syllabus and then served from the store, so moving between a
 // syllabus's chart, block pages and event pages does not refetch it. A save or a refresh
-// updates the store and every mounted reader.
+// updates the store and every mounted reader. A copy saved on an earlier visit is shown at once
+// and re-read once in the background.
 export function useRemoteSyllabus(id) {
+  seedSyllabus(id);
   const record = useSyncExternalStore(
     syllabi.subscribe,
     () => (id ? syllabi.get(id) : undefined),
@@ -239,11 +262,27 @@ export function useRemoteSyllabus(id) {
       setState({ status: 'none' });
       return undefined;
     }
+    let live = true;
     if (syllabi.has(id)) {
       setState({ status: 'ready' });
-      return undefined;
+      if (unchecked.has(id)) {
+        unchecked.delete(id);
+        fetchSyllabus(id)
+          .then((found) => {
+            if (!found) {
+              syllabi.delete(id);
+              if (live) setState({ status: 'missing' });
+              return;
+            }
+            // Replaced only when it has moved on, so an unchanged syllabus is not rebuilt.
+            const current = syllabi.get(id);
+            if (!current || current.rev !== found.rev) syllabi.set(id, found);
+          })
+          // Offline: the saved copy stands, and the next visit tries again.
+          .catch(() => {});
+      }
+      return () => { live = false; };
     }
-    let live = true;
     setState({ status: 'loading' });
     fetchSyllabus(id)
       .then((found) => {

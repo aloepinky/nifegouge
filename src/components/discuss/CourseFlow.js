@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSyllabus } from './SyllabusContext';
+import { fitLines } from './flowText';
 
 // The JPPT course-flow chart, clickable. Geometry comes from the syllabus being shown —
 // FLOW.js for Delta, traced from the publication, or a generated syllabus's own flow; this
@@ -19,6 +20,7 @@ export const SHAPE = {
   flight: 'rect',
   check: 'rect',
   sim: 'roundrect',
+  simcheck: 'roundrect',
   ground: 'ellipse',
   cai: 'oct8',
   support: 'hex6',
@@ -154,9 +156,8 @@ function buildChrome(s, flow) {
               says the event id twice. */}
           <title>{text}</title>
           <Shape kind={n.kind} x={n.x} y={n.y} w={n.w} h={n.h} className={cls} />
-          <text className="discuss-flow-label" x={round(n.x + n.w / 2)} y={round(n.y + n.h / 2)}>
-            {n.label}
-          </text>
+          <Label text={n.label} w={n.w} shape={SHAPE[n.kind]}
+                 x={round(n.x + n.w / 2)} y={round(n.y + n.h / 2)} />
         </>
       );
       return to ? (
@@ -174,8 +175,65 @@ function buildChrome(s, flow) {
   };
 }
 
+// The legend's captions are laid out here, not by the tracer, so a traced VIEWBOX covers the
+// key shapes and knows nothing about how far right the words beside them reach.
+const LEGEND_GAP = 6;
+const LEGEND_CAPTION = 62;
+
+// A legend may be laid out in more than one column: Delta prints one, both T-44C charts print
+// two. Each column's captions sit beside that column's own keys, because one caption x for the
+// whole legend stacks every caption of the narrower column on top of the wider one's.
+const LEGEND_COLUMN = 24;
+
+function legendColumns(legend) {
+  const columns = [];
+  [...legend].sort((a, b) => a.x - b.x).forEach((k) => {
+    const open = columns[columns.length - 1];
+    if (open && k.x - open.x <= LEGEND_COLUMN) open.keys.push(k);
+    else columns.push({ x: k.x, keys: [k] });
+  });
+  return columns.map((c) => ({
+    keys: c.keys,
+    captionX: round(Math.max(...c.keys.map((k) => k.x + k.w)) + LEGEND_GAP),
+  }));
+}
+
+// How far right the legend reaches. A column whose captions are printed inside the keys needs
+// no room beside them, which is what keeps the frame off the rest of the chart.
+const legendRight = (legend) => Math.max(...legendColumns(legend).map((c) => (
+  c.keys.some((k) => !k.inside) ? c.captionX + LEGEND_CAPTION : Math.max(...c.keys.map((k) => k.x + k.w))
+)));
+
+// A label centred in its shape, on as many lines as it takes (`fitLines` decides where it
+// breaks). The first line is lifted by half the block's height so the whole of it is centred
+// rather than hanging below the middle.
+export function Label({ text, x, y, w, shape }) {
+  const lines = fitLines(text, w, shape);
+  if (lines.length === 1) return <text className="discuss-flow-label" x={x} y={y}>{lines[0]}</text>;
+  return (
+    <text className="discuss-flow-label" x={x} y={y}>
+      {lines.map((line, i) => (
+        <tspan key={`${i}:${line}`} x={x} dy={i === 0 ? `${-((lines.length - 1) / 2)}em` : '1em'}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
+}
+
+// Widen a viewBox to fit its legend's captions. A chart whose legend sits at its own right
+// edge loses them otherwise — both T-44C charts put it there, where Delta's sits well inside
+// the boxes and is unaffected.
+function fitLegend(viewBox, legend) {
+  if (!viewBox || !legend || !legend.length) return viewBox;
+  const box = viewBox.split(/\s+/).map(Number);
+  if (box.length !== 4 || !box.every(Number.isFinite)) return viewBox;
+  const [x, y, w, h] = box;
+  const need = legendRight(legend);
+  return need > x + w ? [x, y, round(need - x), h].join(' ') : viewBox;
+}
+
 export function Legend({ legend }) {
-  const captionX = round(Math.max(...legend.map((k) => k.x + k.w)) + 6);
   const pad = 7;
   const x = Math.min(...legend.map((k) => k.x)) - pad;
   const y = Math.min(...legend.map((k) => k.y)) - pad;
@@ -183,15 +241,21 @@ export function Legend({ legend }) {
   return (
     <g className="discuss-flow-legend">
       <rect className="discuss-flow-legend-frame"
-            x={round(x)} y={round(y)} width={round(captionX + 62 - x)} height={round(bottom - y)} />
-      {legend.map((k) => (
+            x={round(x)} y={round(y)} width={round(legendRight(legend) - x)} height={round(bottom - y)} />
+      {legendColumns(legend).flatMap((c) => c.keys.map((k) => (
         <g key={k.kind}>
           <Shape kind={k.kind} x={k.x} y={k.y} w={k.w} h={k.h}
                  className={`discuss-flow-node discuss-flow-node--${k.kind}`} />
-          <text className="discuss-flow-legend-label" x={captionX} y={round(k.y + k.h / 2)}>
-            {k.label}
-          </text>
+          {k.inside ? (
+            <Label text={k.label} w={k.w} shape={k.shape}
+                   x={round(k.x + k.w / 2)} y={round(k.y + k.h / 2)} />
+          ) : (
+            <text className="discuss-flow-legend-label" x={c.captionX} y={round(k.y + k.h / 2)}>
+              {k.label}
+            </text>
+          )}
         </g>
+      )))}
       ))}
     </g>
   );
@@ -216,9 +280,14 @@ export function ArrowDefs() {
   );
 }
 
-function CourseFlow() {
+// `flow` defaults to the syllabus's course flow. A syllabus that splits also draws one chart
+// per community, and passes that chart here with the community's name as `label`; the two
+// render through the same component because they are the same figure, differing only in which
+// part of the course they cover. `titleId` keeps the accessible title unique when a page shows
+// both.
+function CourseFlow({ flow: flowProp = null, label = null, titleId = 'discuss-flow-title' }) {
   const s = useSyllabus();
-  const flow = s.flow;
+  const flow = flowProp || s.flow;
   const [letter, setLetter] = useState(null);
   const chrome = useMemo(() => buildChrome(s, flow || {}), [s, flow]);
 
@@ -237,16 +306,26 @@ function CourseFlow() {
 
   if (!flow || !flow.NODES || !flow.NODES.length) return null;
 
+  const viewBox = fitLegend(flow.VIEWBOX, flow.LEGEND);
+  // A community chart is a smaller figure than the course flow, and is drawn to the same scale
+  // so the two read as two figures of one publication rather than the small one blown up to
+  // fill the column.
+  const wide = Number((s.flow && s.flow.VIEWBOX ? s.flow.VIEWBOX : viewBox).split(/\s+/)[2]);
+  const mine = Number(viewBox.split(/\s+/)[2]);
+  const scaled = label && wide > 0 && mine > 0 && mine < wide;
+
   return (
     <div className="discuss-flow">
       <svg
-        className="discuss-flow-svg"
-        viewBox={flow.VIEWBOX}
-        aria-labelledby="discuss-flow-title"
+        className={`discuss-flow-svg${scaled ? ' discuss-flow-svg--community' : ''}`}
+        style={scaled ? { '--flow-scale': round(mine / wide) } : undefined}
+        viewBox={viewBox}
+        aria-labelledby={titleId}
       >
-        <title id="discuss-flow-title">
-          {s.name} course flow: every training block in sequence, with its ground training
-          prerequisites. Each box opens that block’s discuss items.
+        <title id={titleId}>
+          {label
+            ? `${s.name} course flow for ${label}: the training blocks this community flies after the course splits. Each box opens that block’s discuss items.`
+            : `${s.name} course flow: every training block in sequence, with its ground training prerequisites. Each box opens that block’s discuss items.`}
         </title>
         <ArrowDefs />
 
@@ -281,10 +360,10 @@ function CourseFlow() {
         {chrome.legendEls}
       </svg>
 
-      <p className="discuss-flow-source">
-        {s.source ? `${s.source}. ` : ''}Only blocks the JPPT gives discuss items are links; the
-        rest are drawn for sequence. Tinted blocks have no page yet.
-      </p>
+      {/* The publication the chart was traced from, and nothing else. A legend explaining that
+          links are links and faded boxes are not told the reader what the chart had already
+          shown them. A community chart is captioned by its own picker, so it carries none. */}
+      {!label && s.source && <p className="discuss-flow-source">{s.source}.</p>}
     </div>
   );
 }

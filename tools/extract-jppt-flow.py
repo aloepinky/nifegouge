@@ -38,7 +38,12 @@ PDF = os.path.join(ROOT, '_reference-docs', 'T6b Primary', 'Fundamental Referenc
 OUT = os.path.join(ROOT, 'src', 'components', 'discuss', 'jppt', '__fixtures__', 'delta', 'FLOW.js')
 SYLLABUS = os.path.join(ROOT, 'src', 'components', 'discuss', 'jppt', '__fixtures__', 'delta', 'SYLLABUS.js')
 
-TITLE = 'COMPLETE COURSE FLOW'
+# What the figure is called. A publication titles its chart what it likes, so these are tried
+# in order and the first that matches any page wins. This tool only ever reads a T-6B JPPT,
+# which prints the first; the rest keep it the same program as flowExtract.js, whose band
+# splitting for a syllabus that prints a chart per community has no counterpart here.
+TITLES = ['COMPLETE COURSE FLOW', 'CORE COURSE FLOW', 'COURSE FLOW']
+TITLE = TITLES[0]
 PAGE_HEIGHT = 792.0
 
 # Tolerances, all in PDF points. The endpoint tolerance is generous because a connector stops
@@ -464,8 +469,17 @@ SHAPE_SIG = {
 }
 
 
+# `s` and `b` close the subpath before painting it - they are `h S` and `h B` written as one
+# operator - so a writer using them leaves the `h` out and the shape matches no signature.
+# Put it back. The Delta and Echo JPPTs stroke with `S` and write their own `h`; the T-44C
+# syllabi close with `s`, and without this every ellipse, rounded box and hexagon is dropped.
+CLOSING_PAINT = {'s', 'b', 'b*'}
+
+
 def shape_of(path):
     name = SHAPE_SIG.get(path.sig)
+    if name is None and path.paint in CLOSING_PAINT:
+        name = SHAPE_SIG.get(path.sig + ' h')
     if name is None:
         return None
     if name == 'ellipse':
@@ -549,16 +563,28 @@ def key_of(shape, lw):
 # Labels, legend, categories
 # ---------------------------------------------------------------------------------------
 
+# Every caption a legend has been seen to print, and the kind it keys. A publication spells
+# these its own way - the T-6B JPPTs write "Flt Support" where the T-44C ones write "Flight
+# Support" - and a caption not listed here is not read as a legend caption at all.
+#
+# "Alternate Flow" is deliberately absent: the T-44C legends key it to a dashed LINE, not to
+# a box, so there is no shape for it to name.
 CATEGORY_SLUG = {
     'Flight': 'flight',
     'Check Flight': 'check',
     'Simulator': 'sim',
+    'Simulator Check': 'simcheck',
+    'Check Sim': 'simcheck',
     'Ground Training': 'ground',
     'CAI Test': 'cai',
     'Flt Support': 'support',
+    'Flight Support': 'support',
     'P/P Exam': 'exam',
     'Flow Connector': 'jump',
 }
+# The same, with the spaces taken out and folded to lower case, which is the shape a label
+# reaches us in: attach_labels joins a box's text runs without spaces.
+CAPTION_INSIDE = {t.replace(' ', '').lower(): t for t in CATEGORY_SLUG}
 LEGEND_TEXTS = set(CATEGORY_SLUG)
 
 
@@ -611,6 +637,22 @@ def derive_categories(labelled, leftover):
             used.add(j)
     keys = [n for n in labelled if not n['label']]
     mapping, pairs = {}, []
+
+    # A legend may print its caption INSIDE the key instead of beside it - the T-44C E-2D
+    # chart does, while Delta and the T-44C Advanced chart set theirs alongside. Such a key
+    # arrives as an ordinary labelled box, so it is keyed here and flagged, because it is a
+    # legend entry and must not also be drawn as a box of the chart.
+    for n in labelled:
+        if not n['label']:
+            continue
+        text = CAPTION_INSIDE.get(n['label'].lower())
+        if text is None:
+            continue
+        n['is_legend_key'] = True
+        kind = CATEGORY_SLUG[text]
+        mapping[key_of(n['shape'], n['path'].lw)] = kind
+        pairs.append((text, kind, n))
+
     for y, text, x in captions:
         best, bestd = None, 1e9
         for k in keys:
@@ -814,6 +856,20 @@ def chain(segs, node_mids):
     return segs, joins
 
 
+def ring(pts):
+    """A path that closes by drawing back to its first point records that point twice, which
+    pulls the centroid towards it - far enough that a base corner of an arrowhead can sit
+    farther from the centroid than its tip does, and the head is then read as pointing the
+    other way. Delta and Echo write their heads `m l c h`, where `h` closes without repeating
+    a point; the T-44C syllabi write `m l c l`, closing by hand.
+    """
+    if (len(pts) > 2
+            and abs(pts[0][0] - pts[-1][0]) < 0.01
+            and abs(pts[0][1] - pts[-1][1]) < 0.01):
+        return pts[:-1]
+    return pts
+
+
 def resolve_edges(nodes, connectors, arrows):
     """Each polyline is one candidate edge; the arrowhead near an end names the head.
 
@@ -821,8 +877,9 @@ def resolve_edges(nodes, connectors, arrows):
     single point, so eight sources arrive as eight coincident heads.
     """
     node_mids = {n['id']: edge_midpoints(n['bbox']) for n in nodes}
-    heads = [(sum(p[0] for p in a.pts) / len(a.pts),
-              sum(p[1] for p in a.pts) / len(a.pts)) for a in arrows]
+    head_pts = [ring(a.pts) for a in arrows]
+    heads = [(sum(p[0] for p in pts) / len(pts),
+              sum(p[1] for p in pts) / len(pts)) for pts in head_pts]
 
     # The arrowhead at an end, if one sits there: its apex, the vertex farthest from the
     # centroid, and which way it points. A head pointing on along the line's direction of
@@ -838,7 +895,7 @@ def resolve_edges(nodes, connectors, arrows):
             d = dist(c, p)
             if d > ARROW_SNAP or (best is not None and d >= best['d']):
                 continue
-            pts = arrows[i].pts
+            pts = head_pts[i]
             apex = pts[0]
             for q in pts:
                 if dist(q, c) > dist(apex, c):
@@ -1172,7 +1229,7 @@ def main():
     kind_for = category_mapper(mapping, pairs, labelled)
     nodes, jump_seen, tally, missing = [], {}, {}, []
     for n in labelled:
-        if not n['label']:
+        if not n['label'] or n.get('is_legend_key'):
             continue                                    # a legend key, handled above
         kind = kind_for(n['shape'], n['path'].lw)
         if kind is None:
@@ -1188,7 +1245,9 @@ def main():
             rec['letter'] = letter
         else:
             rec['id'] = n['label']
-            events = expand(n['label'])
+            # A box may carry a footnote marker the publication prints beside it, as the T-44C
+        # Advanced chart's `T0101-2*` does. The label keeps it; the ids are read without it.
+        events = expand(n['label'].rstrip('*†‡'))
             if not events:
                 print('  WARNING: cannot expand label %r' % n['label'], file=sys.stderr)
             rec['events'] = events

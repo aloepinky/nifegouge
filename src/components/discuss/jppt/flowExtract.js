@@ -9,7 +9,17 @@
 // Input is each page's decoded content stream as a byte string (see pdfSource.js). Output is
 // the FLOW.js shape — { VIEWBOX, NODES, LEGEND, EDGES } — plus `warnings` for the flow editor.
 
-const TITLE = 'COMPLETE COURSE FLOW';
+// What the figure is called. A publication titles its chart what it likes, so these are tried
+// in order and the first that matches any page wins: Delta and Echo print "COMPLETE COURSE
+// FLOW", the T-44C Advanced syllabus "T-44C CORE COURSE FLOW", and the T-44C E-2D one
+// "INTERMEDIATE E-2D MPTS COURSE FLOW". The loose title is last because both of the T-44C
+// Advanced chart pages carry it and only the specific titles tell them apart.
+const TITLES = ['COMPLETE COURSE FLOW', 'CORE COURSE FLOW', 'COURSE FLOW'];
+const TITLE = TITLES[0];
+// A syllabus flown by several communities prints a chart per community after the point they
+// part company. The T-44C Advanced syllabus's is "T-44C POST - I4601 COURSE FLOW"; the dash
+// between the two words is the publication's, so match on the two words alone.
+const POST_TITLE = ['POST', 'COURSE FLOW'];
 const PAGE_HEIGHT = 792.0;
 
 const EDGE_SNAP = 6.0;
@@ -310,8 +320,14 @@ function interpret(buf) {
       }
       const text = parts.join('');
       if (pyStrip(text)) {
-        const [ox, oy] = apply(mul(tm, ctm), 0.0, 0.0);
-        runs.push({ x: ox, y: oy, text, order });
+        const m = mul(tm, ctm);
+        const [ox, oy] = apply(m, 0.0, 0.0);
+        // `turned` is text set down the page rather than across it. Nothing the Python port
+        // does reads it; it is here for the band splitting below, which the Python has no
+        // need of. Every other field is as it was.
+        runs.push({
+          x: ox, y: oy, text, order, turned: Math.abs(m[1]) > Math.abs(m[0]),
+        });
         order += 1;
       }
     }
@@ -334,8 +350,17 @@ const SHAPE_SIG = {
   'm l l l l l l l l h': 'oct8',
 };
 
+// `s` and `b` close the subpath before painting it — they are `h S` and `h B` written as one
+// operator — so a writer using them leaves the `h` out and the shape matches no signature.
+// Put it back. The Delta and Echo JPPTs stroke with `S` and write their own `h`; the T-44C
+// syllabi close with `s`, and without this every ellipse, rounded box and hexagon on their
+// charts is dropped.
+const CLOSING_PAINT = new Set(['s', 'b', 'b*']);
+
 function shapeOf(path) {
-  const name = SHAPE_SIG[sigOf(path)];
+  const sig = sigOf(path);
+  const name = SHAPE_SIG[sig]
+    || (CLOSING_PAINT.has(path.paint) ? SHAPE_SIG[`${sig} h`] : undefined);
   if (!name) return null;
   if (name === 'ellipse') {
     const [, , w, h] = bboxOf(path);
@@ -412,16 +437,34 @@ function keyOf(shape, lw) {
 // Labels, legend, categories
 // ---------------------------------------------------------------------------------------
 
+// Every caption a legend has been seen to print, and the kind it keys. A publication spells
+// these its own way — the T-6B JPPTs write "Flt Support" where the T-44C ones write "Flight
+// Support" — and a caption not listed here is not read as a legend caption at all, so the
+// shapes it keys fall through to `categoryMapper`'s ordering. Add the spelling rather than
+// leave a chart to guess.
+//
+// "Alternate Flow" is deliberately absent: the T-44C legends key it to a dashed LINE, not to
+// a box, so there is no shape for it to name.
 export const CATEGORY_SLUG = {
   Flight: 'flight',
   'Check Flight': 'check',
   Simulator: 'sim',
+  'Simulator Check': 'simcheck',
+  'Check Sim': 'simcheck',
   'Ground Training': 'ground',
   'CAI Test': 'cai',
   'Flt Support': 'support',
+  'Flight Support': 'support',
   'P/P Exam': 'exam',
   'Flow Connector': 'jump',
 };
+
+// The same, with the spaces taken out and folded to lower case, which is the shape a label
+// reaches us in: `attachLabels` joins a box's text runs without spaces.
+const CAPTION_INSIDE = {};
+Object.keys(CATEGORY_SLUG).forEach((text) => {
+  CAPTION_INSIDE[text.replace(/ /g, '').toLowerCase()] = text;
+});
 
 function inside(bbox, x, y, pad = 0.0) {
   const [bx, by, bw, bh] = bbox;
@@ -474,6 +517,21 @@ function deriveCategories(labelled, leftover, warn) {
   const keys = labelled.filter((n) => !n.label);
   const mapping = {};
   const pairs = [];
+
+  // A legend may print its caption INSIDE the key instead of beside it — the T-44C E-2D chart
+  // does, while Delta and the T-44C Advanced chart set theirs alongside. Such a key arrives as
+  // an ordinary labelled box, so it is keyed here and flagged, because it is a legend entry
+  // and must not also be drawn as a box of the chart.
+  labelled.forEach((n) => {
+    if (!n.label) return;
+    const text = CAPTION_INSIDE[n.label.toLowerCase()];
+    if (!text) return;
+    n.isLegendKey = true;
+    const kind = CATEGORY_SLUG[text];
+    mapping[keyOf(n.shape, n.path.lw)] = kind;
+    pairs.push([text, kind, n]);
+  });
+
   captions.forEach(([y, text, x]) => {
     let best = null;
     let bestd = 1e9;
@@ -672,11 +730,25 @@ function chain(segsIn, nodeMids) {
   return [segs, joins];
 }
 
+// A path that closes by drawing back to its first point records that point twice, which pulls
+// the centroid towards it — far enough that a base corner of an arrowhead can sit farther from
+// the centroid than its tip does, and the head is then read as pointing the other way. Delta
+// and Echo write their heads `m l c h`, where `h` closes without repeating a point; the T-44C
+// syllabi write `m l c l`, closing by hand. Dropping the repeat makes the two the same figure.
+const ring = (pts) => (
+  pts.length > 2
+    && Math.abs(pts[0][0] - pts[pts.length - 1][0]) < 0.01
+    && Math.abs(pts[0][1] - pts[pts.length - 1][1]) < 0.01
+    ? pts.slice(0, -1)
+    : pts
+);
+
 function resolveEdges(nodes, connectors, arrows) {
   const nodeMids = nodes.map((n) => [n.id, edgeMidpoints(n.bbox)]);
-  const heads = arrows.map((a) => [
-    a.pts.reduce((s, p) => s + p[0], 0) / a.pts.length,
-    a.pts.reduce((s, p) => s + p[1], 0) / a.pts.length,
+  const headPts = arrows.map((a) => ring(a.pts));
+  const heads = headPts.map((pts) => [
+    pts.reduce((s, p) => s + p[0], 0) / pts.length,
+    pts.reduce((s, p) => s + p[1], 0) / pts.length,
   ]);
   // The arrowhead at an end, if one sits there: its apex, the vertex farthest from the
   // centroid, and which way it points. A head pointing on along the line's direction of
@@ -692,7 +764,7 @@ function resolveEdges(nodes, connectors, arrows) {
     heads.forEach((c, i) => {
       const d = dist(c, p);
       if (d > ARROW_SNAP || (best && d >= best.d)) return;
-      const { pts } = arrows[i];
+      const pts = headPts[i];
       let apex = pts[0];
       pts.forEach((q) => { if (dist(q, c) > dist(apex, c)) apex = q; });
       const ax = apex[0] - c[0];
@@ -896,8 +968,29 @@ function resolveEdges(nodes, connectors, arrows) {
       unresolved.push([r, src, dst]);
       return;
     }
-    if (srcSide) order[0] = onSide(order[0], src, srcSide);
-    if (dstSide) order[order.length - 1] = onSide(order[order.length - 1], dst, dstSide);
+    // Moving an end onto its box side is a straight extension only when the segment beside it
+    // runs INTO that side. Where it runs across — the line passes the box and turns to meet it
+    // — moving the point would bend that segment into a diagonal, so the point stays where it
+    // is as a corner and the move adds one orthogonal step to the box. The T-44C Advanced
+    // chart's dashed I3201-4 branch and its return into I3401-2 are both drawn this way.
+    const bends = (pt, moved, next) => {
+      if (!next) return false;
+      const near = (u, v) => Math.abs(u - v) <= 0.05;
+      if (!near(moved[1], pt[1]) && near(next[1], pt[1])) return true;
+      if (!near(moved[0], pt[0]) && near(next[0], pt[0])) return true;
+      return false;
+    };
+    if (srcSide) {
+      const moved = onSide(order[0], src, srcSide);
+      order = bends(order[0], moved, order[1]) ? [moved, ...order] : [moved, ...order.slice(1)];
+    }
+    if (dstSide) {
+      const last = order.length - 1;
+      const moved = onSide(order[last], dst, dstSide);
+      order = bends(order[last], moved, order[last - 1])
+        ? [...order, moved]
+        : [...order.slice(0, last), moved];
+    }
     // Joining a host lands on a point the host already has; keep each corner once.
     order = order.filter((q, k) => k === 0 || dist(q, order[k - 1]) > 0.05);
     // A trunk that feeds a bus resolves to the same pair as the bus's own branch, and the
@@ -934,32 +1027,59 @@ function numStr(v) {
   return String(num(v));
 }
 
-// -> { VIEWBOX, NODES, LEGEND, EDGES, warnings, page } or throws with a reason to show.
-export function extractFlow(pageContents, { knownEventIds = null } = {}) {
-  const warnings = [];
-  const warn = (msg) => warnings.push(msg);
+const squash = (s) => s.replace(/ /g, '');
 
-  let target = null;
-  pageContents.forEach((buf, index) => {
+// Every page interpreted once, so several titles can be tried without re-reading the document.
+function readPages(pageContents) {
+  return pageContents.map((buf, index) => {
     const [paths, runs] = interpret(buf);
-    const text = runs.map((r) => r.text).join('');
-    if (!text.replace(/ /g, '').includes(TITLE.replace(/ /g, ''))) return;
-    if (target === null || paths.length > target.paths.length) target = { page: index + 1, paths, runs };
+    return { page: index + 1, paths, runs, text: runs.map((r) => r.text).join('') };
   });
-  if (!target) throw new Error(`No page titled "${TITLE}" was found in this PDF.`);
-  if (target.paths.length < 50) {
-    throw new Error(`"${TITLE}" appears on page ${target.page}, but nothing is drawn there. The chart may be a scanned image, which cannot be traced.`);
+}
+
+// The matching page with the most drawn on it, so a table-of-contents line loses to the figure.
+// The comparison is `>`, so the first of equals wins, as it did when this was inline.
+function pickPage(pages, test) {
+  let target = null;
+  pages.forEach((p) => {
+    if (!test(p)) return;
+    if (target === null || p.paths.length > target.paths.length) target = p;
+  });
+  return target;
+}
+
+function findChartPage(pages, titles) {
+  const holds = (p, title) => squash(p.text).includes(squash(title));
+  for (const title of titles) {
+    const hit = pickPage(pages, (p) => holds(p, title));
+    if (hit) return hit;
+  }
+  return null;
+}
+
+// One chart, from the paths and text runs of a page or of one region of a page.
+//
+// `categories` is the { mapping, pairs } another chart derived from its legend. A chart drawn
+// without a legend of its own — the per-community charts share the core chart's — cannot key
+// its own shapes, so it borrows them and reports no legend of its own to draw.
+function traceChart(paths, runs, { knownEventIds = null, categories = null, warn }) {
+  const [nodesRaw, arrows, connectors] = classify(paths);
+  const [labelled, leftover] = attachLabels(nodesRaw, runs);
+  let mapping;
+  let pairs;
+  if (categories) {
+    ({ mapping, pairs } = categories);
+  } else {
+    // A caption that found no key already warns for itself in deriveCategories, and the
+    // legends differ in how many captions they print, so there is no count to check here.
+    [mapping, pairs] = deriveCategories(labelled, leftover, warn);
   }
 
-  const [nodesRaw, arrows, connectors] = classify(target.paths);
-  const [labelled, leftover] = attachLabels(nodesRaw, target.runs);
-  const [mapping, pairs] = deriveCategories(labelled, leftover, warn);
-  if (pairs.length < Object.keys(CATEGORY_SLUG).length) {
-    warn(`The legend keyed ${pairs.length} of ${Object.keys(CATEGORY_SLUG).length} box categories.`);
-  }
-
-  const legend = pairs.map(([text, kind, key]) => ({
-    kind, label: text, shape: key.shape, bbox: bboxOf(key.path),
+  // `inside` marks a key whose caption the publication prints INSIDE the shape rather than
+  // beside it. The renderer has to know: a caption drawn beside a key of a legend laid out in
+  // two columns lands on top of the next column's shapes.
+  const legend = categories ? [] : pairs.map(([text, kind, key]) => ({
+    kind, label: text, shape: key.shape, bbox: bboxOf(key.path), inside: !!key.isLegendKey,
   }));
 
   const kindFor = categoryMapper(mapping, pairs, labelled, warn);
@@ -967,7 +1087,7 @@ export function extractFlow(pageContents, { knownEventIds = null } = {}) {
   const jumpSeen = {};
   const missing = [];
   labelled.forEach((n) => {
-    if (!n.label) return;
+    if (!n.label || n.isLegendKey) return;
     let kind = kindFor(n.shape, n.path.lw);
     if (kind === undefined) {
       warn(`${n.label} matches no legend key.`);
@@ -981,11 +1101,21 @@ export function extractFlow(pageContents, { knownEventIds = null } = {}) {
       rec.letter = letter;
     } else {
       rec.id = n.label;
-      const events = expand(n.label);
-      if (!events.length) warn(`Cannot read box label "${n.label}" as event ids.`);
+      // A box may carry a footnote marker the publication prints beside it, as the T-44C
+      // Advanced chart's `T0101-2*` does. The label keeps it, because that is what the figure
+      // prints; the event ids are read from the label without it.
+      const spanned = expand(n.label.replace(/[*†‡]+$/, ''));
+      if (!spanned.length) warn(`Cannot read box label "${n.label}" as event ids.`);
+      // A label spans the block's NUMBERING, not a run of events that all exist. The T-44C
+      // chart's `G1001-90` covers G1001 to G1090, where the block holds seven — G1001 to G1006
+      // and the exam, G1090 — so the other 83 numbers are not events and must not be carried
+      // as if they were. Keep the ones the syllabus lists; a label that matches none of them is
+      // kept whole, because then the mismatch is real and the warning below has to name it.
+      const listed = knownEventIds ? spanned.filter((e) => knownEventIds.has(e)) : spanned;
+      const events = listed.length ? listed : spanned;
       rec.events = events;
       if (events.length) rec.block = blockOf(events[0]);
-      if (knownEventIds) events.forEach((e) => { if (!knownEventIds.has(e)) missing.push([n.label, e]); });
+      if (knownEventIds && !listed.length) events.forEach((e) => missing.push([n.label, e]));
     }
     nodes.push(rec);
   });
@@ -1030,7 +1160,9 @@ export function extractFlow(pageContents, { knownEventIds = null } = {}) {
   });
   const LEGEND = legend.map((k) => {
     const [x, y, w, h] = k.bbox;
-    return { kind: k.kind, label: k.label, shape: k.shape, x: num(x), y: num(flip(y, h)), w: num(w), h: num(h) };
+    const row = { kind: k.kind, label: k.label, shape: k.shape, x: num(x), y: num(flip(y, h)), w: num(w), h: num(h) };
+    if (k.inside) row.inside = true;
+    return row;
   });
   const EDGES = edges.map((e) => ({
     from: e.from,
@@ -1038,5 +1170,149 @@ export function extractFlow(pageContents, { knownEventIds = null } = {}) {
     points: e.points.map(([px, py]) => [num(px), num(flip(py, 0))]),
   }));
 
-  return { VIEWBOX, NODES, LEGEND, EDGES, warnings, page: target.page };
+  return { VIEWBOX, NODES, LEGEND, EDGES, categories: { mapping, pairs } };
+}
+
+// -> { VIEWBOX, NODES, LEGEND, EDGES, warnings, page, categories } or throws with a reason
+// to show.
+export function extractFlow(pageContents, { knownEventIds = null } = {}) {
+  const warnings = [];
+  const warn = (msg) => warnings.push(msg);
+
+  const target = findChartPage(readPages(pageContents), TITLES);
+  if (!target) throw new Error(`No page titled "${TITLE}" was found in this PDF.`);
+  if (target.paths.length < 50) {
+    throw new Error(`"${TITLE}" appears on page ${target.page}, but nothing is drawn there. The chart may be a scanned image, which cannot be traced.`);
+  }
+
+  const chart = traceChart(target.paths, target.runs, { knownEventIds, warn });
+  return { ...chart, warnings, page: target.page };
+}
+
+// ---------------------------------------------------------------------------------------
+// Per-community charts
+//
+// A syllabus several communities fly prints one chart each for the part of the course after
+// they part company, and prints them all on one page, stacked in bands ruled off from each
+// other and headed with the community's name. The T-44C Advanced syllabus's page I-7 draws
+// five: USN P-8 and E-6 side by side in the top band, then USMC C-130, USCG and TILT-ROTOR.
+//
+// None of this is in tools/extract-jppt-flow.py. That tool regenerates Delta's FLOW.js and no
+// T-6B JPPT prints a per-community chart, so the band splitting lives here alone; the passes
+// the two share are still line for line.
+// ---------------------------------------------------------------------------------------
+
+// The rules between the bands are not drawn: they are TYPED. Whoever made the figure ruled one
+// community's chart off from the next with a row of hyphens, and turned one on its side to
+// divide the two communities that share the top band. So a separator is a text run of nothing
+// but dashes, and `turned` says which way it cuts. Nothing is drawn there at all, which is why
+// looking for a long stroke finds none.
+//
+// The T-44C Advanced page types three across (127 and 86 characters, in two runs each, because
+// the row spans two table cells) and one down (60 characters, at the foot of the top band).
+const SEPARATOR = /^[\s\-‐-―_]{6,}$/;
+// Below this a region is a stray mark or a heading, not a chart.
+const MIN_REGION_BOXES = 3;
+const MIN_REGION_PATHS = 8;
+
+// Running heads, the page number and the figure's own title: text that sits at the top of a
+// band without naming it.
+const NOT_A_LABEL = [/^CNATRAINST/i, /^\d{1,2}\s+\S+\s+\d{4}$/, /^[IVX]+-\d+$/, /COURSE\s*FLOW/i];
+
+const midOf = (p) => {
+  const [x, y, w, h] = bboxOf(p);
+  return [x + w / 2.0, y + h / 2.0];
+};
+
+const within = (v, lo, hi) => v > lo && v <= hi;
+
+const isSeparator = (r) => SEPARATOR.test(r.text);
+
+// Where the typed rules cut, deduplicated: a rule spanning two table cells is two runs at one
+// position. Ascending.
+function separatorCuts(runs, turned) {
+  const at = runs.filter((r) => isSeparator(r) && !!r.turned === turned).map((r) => num(turned ? r.x : r.y));
+  return [...new Set(at)].sort((a, b) => a - b);
+}
+
+// The boxes a chart is built from: the shapes `classify` would take as nodes, by size alone,
+// since a region is being found rather than read.
+function boxesOf(paths) {
+  return paths.filter((p) => {
+    if (p.clip || p.paint === 'n' || !STROKE_OPS.has(p.paint)) return false;
+    const [, , w, h] = bboxOf(p);
+    return w >= 10.0 && w <= 60.0 && h >= 10.0 && h <= 25.0;
+  });
+}
+
+// The community a band is headed with: its topmost text, once the page's own furniture and
+// anything that reads as a list of event ids are set aside.
+function regionLabel(runs) {
+  const named = runs
+    .map((r) => ({ r, text: pyStrip(r.text.replace(PY_SPACE, ' ')) }))
+    .filter(({ text }) => text.length > 1 && text.length <= 30)
+    .filter(({ text }) => !expand(text).length)
+    .filter(({ text }) => !NOT_A_LABEL.some((re) => re.test(text)));
+  if (!named.length) return null;
+  named.sort((a, b) => (b.r.y - a.r.y) || (a.r.x - b.r.x));
+  return named[0].text;
+}
+
+const slugOf = (text) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// -> [{ id, label, VIEWBOX, NODES, LEGEND, EDGES }], and the warnings each band raised.
+// `categories` is the core chart's, since this page draws no legend of its own.
+export function extractPostFlows(pageContents, { knownEventIds = null, categories = null, corePage = null } = {}) {
+  const warnings = [];
+  const warn = (msg) => warnings.push(msg);
+
+  const pages = readPages(pageContents);
+  const target = pickPage(
+    pages,
+    (p) => p.page !== corePage && POST_TITLE.every((t) => squash(p.text).includes(squash(t))),
+  );
+  if (!target || target.paths.length < 50) return { postFlows: [], warnings, page: null };
+
+  const boxes = boxesOf(target.paths);
+  const bandEdges = [-Infinity, ...separatorCuts(target.runs, false), Infinity];
+  const regions = [];
+  let band = 0;
+  // Top of the page down, so the communities come out in the order the figure prints them.
+  for (let i = bandEdges.length - 1; i > 0; i -= 1) {
+    const hi = bandEdges[i];
+    const lo = bandEdges[i - 1];
+    const inBand = (p) => within(midOf(p)[1], lo, hi);
+    if (boxes.filter(inBand).length < MIN_REGION_BOXES) continue;
+    const bandPaths = target.paths.filter(inBand);
+    const bandRuns = target.runs.filter((r) => within(r.y, lo, hi));
+    const colEdges = [-Infinity, ...separatorCuts(bandRuns, true), Infinity];
+    band += 1;
+    for (let k = 0; k < colEdges.length - 1; k += 1) {
+      const left = colEdges[k];
+      const right = colEdges[k + 1];
+      const inCell = (p) => within(midOf(p)[0], left, right);
+      if (boxes.filter(inBand).filter(inCell).length < MIN_REGION_BOXES) continue;
+      const cell = bandPaths.filter(inCell);
+      if (cell.length < MIN_REGION_PATHS) continue;
+      const runs = bandRuns.filter((r) => within(r.x, left, right) && !isSeparator(r));
+      // Which band it came from. Two communities drawn in one band are drawn together because
+      // the publication treats them together, and that is worth keeping: it is the only thing
+      // that relates one community's chart to another's.
+      regions.push({ paths: cell, runs, band });
+    }
+  }
+
+  const seen = {};
+  const postFlows = [];
+  regions.forEach((region, i) => {
+    const label = regionLabel(region.runs) || `Chart ${i + 1}`;
+    const chart = traceChart(region.paths, region.runs, { knownEventIds, categories, warn });
+    if (chart.NODES.length < 2) return;
+    let id = slugOf(label) || `chart-${i + 1}`;
+    seen[id] = (seen[id] || 0) + 1;
+    if (seen[id] > 1) id = `${id}-${seen[id]}`;
+    const { VIEWBOX, NODES, LEGEND, EDGES } = chart;
+    postFlows.push({ id, label, band: region.band, VIEWBOX, NODES, LEGEND, EDGES });
+  });
+  return { postFlows, warnings, page: target.page };
 }

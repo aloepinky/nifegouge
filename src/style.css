@@ -1009,12 +1009,42 @@ td.xcell::after {
     padding: 0 4px 12px;
   }
 
+  /* In the link column the figures are a footnote to the link, not a headline: one quiet line
+     of "64 EPs  312 steps", number beside its label, in the caption grey. */
   .about-nav-stats .about-stats {
     margin: 0;
+    padding: 0;
+    border-top: 0;
+    gap: 4px 20px;
   }
 
-  .about-stat dd {
-    font-size: 20px;
+  .about-nav-stats .about-stats-title {
+    margin: 0 0 1px;
+    font-size: 10.5px;
+    color: #8fa3ad;
+  }
+
+  .about-nav-stats .about-stats-row {
+    gap: 2px 12px;
+  }
+
+  .about-nav-stats .about-stat {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .about-nav-stats .about-stat dd {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: #708995;
+  }
+
+  .about-nav-stats .about-stat dt {
+    font-size: 12px;
+    color: #8fa3ad;
   }
 
   .about-nav-blurb {
@@ -3347,8 +3377,90 @@ textarea.incorrect-answer {
     display: flex;
     gap: 60px;
     justify-content: center;
-    align-items: center;
+    /* Top, not centre: a tile with a line fewer of highlights must not sit lower than the rest. */
+    align-items: flex-start;
     flex-wrap: wrap;
+  }
+
+  /* A school's tile with its highlights under it. */
+  .landing-school {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .landing-stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 20px;
+    max-width: 400px;
+    margin: 0;
+  }
+
+  /* The course lengths of a school whose syllabi differ get a row of their own: they are
+     labelled with the communities they cover, and those names are long enough to push the
+     exam figures out of line if they share one. The gap is the stats' own row gap, so the two
+     rows read as one block rather than as two lists. */
+  .landing-stats-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+  }
+
+  /* The course-length row of a school whose syllabi differ: "weeks," once at the left, then
+     each figure over the communities it covers, separated by a rule. The unit sits on the
+     label line rather than the figures', which is what flex-end buys. */
+  .landing-weeks {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    /* A word space, so "weeks, E-2D" reads as one phrase; the rule after it does the parting. */
+    gap: 4px;
+    max-width: 400px;
+  }
+
+  .landing-weeks-unit {
+    font-size: 11.5px;
+    color: #8a9bb0;
+  }
+
+  /* The two groups never split across rows: the rule below belongs BETWEEN them, and on a new
+     row it would read as a stray tick at the left margin. Squeezed, the names wrap inside their
+     own cell instead, which keeps the rule where it means something. */
+  .landing-weeks-list {
+    flex-wrap: nowrap;
+    gap: 4px 11px;
+  }
+
+  .landing-weeks-list .landing-stat + .landing-stat {
+    border-left: 1px solid rgba(138, 155, 176, 0.35);
+    padding-left: 11px;
+  }
+
+  /* Number over label: the dd is printed first. */
+  .landing-stat {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    text-align: center;
+  }
+
+  .landing-stat dd {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.1;
+    color: #d7e1ea;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .landing-stat dt {
+    font-size: 11.5px;
+    color: #8a9bb0;
   }
 
   .landing-button {
@@ -3450,6 +3562,11 @@ textarea.incorrect-answer {
     }
 
     .landing-button {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .landing-school {
       width: 100%;
       max-width: 400px;
     }
@@ -5245,6 +5362,7 @@ textarea.incorrect-answer {
 }
 
 .discuss-flow-node--check,
+.discuss-flow-node--simcheck,
 .discuss-flow-node--cai,
 .discuss-flow-node--exam { stroke-width: 1.3; }
 
@@ -5337,6 +5455,31 @@ textarea.incorrect-answer {
   font-size: 12px;
   color: #708995;
   text-align: center;
+}
+
+/* A community chart is drawn to the same scale as the course flow above it, so the two read as
+   two figures of one publication. The cap is the course flow's own max-width times the ratio of
+   the two figures' widths; the floor goes, since a chart a third the width has no use for it. */
+.discuss-flow-svg--community {
+  min-width: 0;
+  max-width: calc(820px * var(--flow-scale, 1));
+}
+
+/* The community chart below the course flow, for a syllabus that splits. Its picker is a
+   second row under the syllabus picker and reuses that menu's styling; only the row is new. */
+.discuss-syllabus--platform {
+  margin-top: 4px;
+}
+
+.discuss-flow-caption {
+  margin: 18px 0 6px;
+  font-size: 13px;
+  color: #003B4F;
+  text-align: center;
+}
+
+.discuss-flow-caption strong {
+  color: #01202C;
 }
 
 /* ---- stage / block / event disclosures ---- */
@@ -6342,6 +6485,10 @@ textarea.incorrect-answer {
 
 .discuss-floweditor-tools { display: flex; flex-wrap: wrap; gap: 6px; }
 .discuss-floweditor-tools .discuss-editor-add:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Drawing an arrow takes two clicks and the button says which one is next, so its wording
+   changes twice mid-gesture. Without a width to grow into, the toolbar reflows under the
+   pointer and the next click lands on whatever slid into its place. */
+.discuss-floweditor-connect { min-width: 16rem; }
 .discuss-editor-add.is-on { background: #003B4F; border-color: #003B4F; border-style: solid; color: #ffffff; }
 
 .discuss-floweditor-body {
@@ -6392,6 +6539,29 @@ textarea.incorrect-answer {
   fill: #ffffff;
   stroke: #003B4F;
   stroke-width: 0.5;
+}
+
+/* The corner in hand, which is the one Remove corner takes out. */
+.discuss-floweditor-point.is-held {
+  fill: #003B4F;
+  stroke: #ffffff;
+  stroke-width: 0.6;
+}
+
+/* The add-a-corner handle, at the middle of each length: quieter than a corner, because it is
+   a place a corner could go rather than one that is there. */
+.discuss-floweditor-midpoint {
+  fill: #ffffff;
+  stroke: #7d97a3;
+  stroke-width: 0.4;
+  stroke-dasharray: 1 0.8;
+  cursor: copy;
+}
+
+.discuss-floweditor-midpoint:hover {
+  fill: #d8eaf1;
+  stroke: #003B4F;
+  stroke-dasharray: none;
 }
 
 .discuss-floweditor-handle--nw,

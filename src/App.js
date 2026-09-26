@@ -1,32 +1,67 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import './style.css';
 import LandingPage from './components/LandingPage.js';
 import Footer from './components/Footer.js';
 import TopNav from './components/TopNav.js';
 import { warmDiscuss } from './components/discuss/warm';
+import { DRAFT } from './components/programs';
 
-const Questions = lazy(() => import('./components/Questions'));
-const Nav = lazy(() => import('./components/Nav'));
-const NIFEEPsLimits = lazy(() => import('./components/NIFEEPsLimits.js'));
-const NIFEBriefs = lazy(() => import('./components/NIFEBriefs.js'));
-const NIFEDiscuss = lazy(() => import('./components/NIFEDiscuss.js'));
-const Docs = lazy(() => import('./components/Docs.js'));
-const TW4About = lazy(() => import('./components/TW4About.js'));
-const TW4EPsLimits = lazy(() => import('./components/TW4EPsLimits.js'));
-const T44CEPsLimits = lazy(() => import('./components/T44CEPsLimits.js'));
-const T44CAbout = lazy(() => import('./components/T44CAbout.js'));
-const BriefsPage = lazy(() => import('./components/briefs/BriefsPage'));
-const NIFEAbout = lazy(() => import('./components/NIFEAbout.js'));
-const CourseRules = lazy(() => import('./components/TW4CourseRules.js'));
-const Systems = lazy(() => import('./components/systems/Systems.js'));
-const Discuss = lazy(() => import('./components/discuss/Discuss.js'));
-const TW4JetLog = lazy(() => import('./components/TW4JetLog.js'));
-const TW4Docs = lazy(() => import('./components/TW4Docs.js'));
+const loaders = [];
+
+// React.lazy over a loader that is also kept for preloadPages. The import is memoized so the
+// preload and the route share one promise.
+function page(load) {
+  let promise = null;
+  const once = () => {
+    if (!promise) {
+      promise = load().catch((err) => {
+        promise = null;
+        throw err;
+      });
+    }
+    return promise;
+  };
+  loaders.push(once);
+  return lazy(once);
+}
+
+// Waits for the browser to be idle after the first page has loaded, then fetches every page
+// chunk. A failed fetch is forgotten, so a click retries it.
+function preloadPages() {
+  const run = () => loaders.forEach((load) => load().catch(() => {}));
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));
+  const start = () => idle(run, { timeout: 4000 });
+  if (document.readyState === 'complete') start();
+  else window.addEventListener('load', start, { once: true });
+}
+
+const Questions = page(() => import('./components/Questions'));
+const Nav = page(() => import('./components/Nav'));
+const NIFEEPsLimits = page(() => import('./components/NIFEEPsLimits.js'));
+const NIFEBriefs = page(() => import('./components/NIFEBriefs.js'));
+const NIFEDiscuss = page(() => import('./components/NIFEDiscuss.js'));
+const Docs = page(() => import('./components/Docs.js'));
+const TW4About = page(() => import('./components/TW4About.js'));
+const TW4EPsLimits = page(() => import('./components/TW4EPsLimits.js'));
+const T44CEPsLimits = page(() => import('./components/T44CEPsLimits.js'));
+const T44CAbout = page(() => import('./components/T44CAbout.js'));
+const T44CDiscuss = page(() => import('./components/T44CDiscuss.js'));
+const BriefsPage = page(() => import('./components/briefs/BriefsPage'));
+const NIFEAbout = page(() => import('./components/NIFEAbout.js'));
+const CourseRules = page(() => import('./components/TW4CourseRules.js'));
+const Systems = page(() => import('./components/systems/Systems.js'));
+const Discuss = page(() => import('./components/discuss/Discuss.js'));
+const TW4JetLog = page(() => import('./components/TW4JetLog.js'));
+const TW4Docs = page(() => import('./components/TW4Docs.js'));
 
 // Every page but the landing page is its own chunk, so opening one downloads that page and not
 // the other sixteen: the entry bundle used to carry Leaflet, the course-rules map, the jet log
 // and all six systems diagrams to someone who asked for a discussion item.
+//
+// But a chunk fetched only on click makes every first click wait on the network, which is worse
+// than the slow first load it replaced. So once the first page is up, the rest are downloaded in
+// the background (preloadPages), and a click finds its page already here.
 //
 // A Discussion Items deep link also starts its mirror reads here, before its chunk arrives.
 // Only on the first load: the reads are claimed by the first matching fetch, and on a later
@@ -44,6 +79,8 @@ function App() {
 
   const isLanding = location.pathname === '/';
 
+  useEffect(preloadPages, []);
+
   return (
     <div>
       {!isLanding && <TopNav />}
@@ -60,8 +97,6 @@ function App() {
         <Route path="/nife/eps-limits" element={<NIFEEPsLimits />} />
         <Route path="/nife/eps-limits/:tab" element={<NIFEEPsLimits />} />
         <Route path="/nife/briefs/*" element={<NIFEBriefs />} />
-        {/* Draft: shown on a dev server, absent from the live site — nav AND route, so a
-            deep link cannot reach a half-written tab. See programs.js. */}
         <Route path="/nife/discuss/*" element={<NIFEDiscuss />} />
         {/* The Flight page was split into those two; its addresses are in the wild. */}
         <Route path="/nife/flight" element={<Navigate to="/nife/eps-limits" replace />} />
@@ -81,6 +116,9 @@ function App() {
         <Route path="/t44c/about" element={<T44CAbout />} />
         <Route path="/t44c/eps-limits" element={<T44CEPsLimits />} />
         <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />
+        {/* Draft: shown on a dev server, absent from the live site — nav AND route, so a
+            deep link cannot reach a half-written tab. See programs.js. */}
+        {DRAFT && <Route path="/t44c/discuss/*" element={<T44CDiscuss />} />}
       </Routes>
       </Suspense>
 

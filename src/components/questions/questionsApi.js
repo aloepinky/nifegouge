@@ -49,6 +49,10 @@ export async function voteOnPending(questionId, vote) {
   }
 }
 
+// Earlier versions of a question: { questionId, rev, history }. Read from the Lambda, not the
+// mirror, since it is rarely wanted.
+export const questionHistory = (questionId) => call(`question-history?id=${encodeURIComponent(questionId)}`);
+
 export const moderate = (token, questionId, action) => call('moderate-question', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', 'X-Admin-Token': token },

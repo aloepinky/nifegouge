@@ -2,15 +2,11 @@ import React, { useEffect } from 'react';
 import AboutPage from './about/AboutPage.js';
 import { aboutTabs } from './about/tabs.js';
 import { EpStats, BriefStats, SyllabusStats } from './about/SchoolStats.js';
-import { primaryEpStats } from './about/stats.js';
-import { EP_TITLES, EP_ANSWERS, EP_NWC, EP_NWC_GROUPS } from './EPDivsData.js';
-import { T6B_LIMITS } from './TW4Limits.js';
+import { PLATFORMS as ALL_PLATFORMS } from './about/platforms.js';
 
-const PLATFORMS = [{
-  aircraft: 'T-6B',
-  eps: primaryEpStats({ titles: EP_TITLES, answers: EP_ANSWERS, nwc: EP_NWC, nwcGroups: EP_NWC_GROUPS }),
-  limits: Object.keys(T6B_LIMITS).length,
-}];
+const PLATFORMS = ALL_PLATFORMS.tw4;
+// Counted from the limits sheet (TW4Limits.js), so the sentences below follow it.
+const LIMITS = PLATFORMS[0].limits;
 
 // What this page says about each Primary tab. The order and the names come from the program's
 // tab list in programs.js, which the top bar reads too — see about/tabs.js.
@@ -18,10 +14,10 @@ const CONTENT = {
   '/tw4/eps-limits': {
     stats: <EpStats platforms={PLATFORMS} />,
     icon: 'eps',
-    blurb: 'Fly the EPs and Quadfold through a clickable T-6 cockpit, then run all 106 limits.',
+    blurb: `Fly the EPs and Quadfold through a clickable T-6 cockpit, then run all ${LIMITS} limits.`,
     more: [
       'The EPs/Cockpit tab is an interactive T-6 cockpit poster for Emergency Procedures and Quadfold checklists. Clicking through the actual controls builds spatial awareness for where they are and starts developing flow. Integrated Notes Warnings Cautions, expanded checklist items and non-memory items are a click away, or use Simple Mode to review EPs and NWCs without the cockpit.',
-      'The Limits tab is a virtual T-6B Operating Limitations table. Test yourself or learn the limits by revealing the answers when stuck. See if you can answer all 106 in a random order!',
+      `The Limits tab is a virtual T-6B Operating Limitations table. Test yourself or learn the limits by revealing the answers when stuck. See if you can answer all ${LIMITS} in a random order!`,
     ],
   },
   '/tw4/docs': {

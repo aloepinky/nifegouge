@@ -9,14 +9,20 @@ import { syllabusStats } from '../about/stats';
 //
 // A figure the document does not carry is left out: a syllabus uploaded before the parser read
 // Course Data has no course length until one is added.
+//
+// `platform` is the community chosen above, for a syllabus that splits. The figures are then
+// that community's: they genuinely differ, and the publication says so itself — 1542.168C
+// prints a flight-training table per community, and a P-8 student flies 32 of the syllabus's
+// 40 flights. The E-6 is the case to keep in mind: it has a chart and a CIN but no row in
+// Course Data, so it shows no weeks and no training days rather than somebody else's.
 
 const fmt = (n) => n.toLocaleString('en-US');
 
-function CourseSummary() {
+function CourseSummary({ platform = null }) {
   const s = useSyllabus();
   const doc = s && s.record && s.record.doc;
   if (!doc) return null;
-  const st = syllabusStats(doc);
+  const st = syllabusStats(doc, platform);
 
   const figures = [
     st.weeks != null && { label: st.weeksLabel.toLowerCase(), value: st.weeks },

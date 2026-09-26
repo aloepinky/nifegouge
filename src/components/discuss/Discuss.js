@@ -104,12 +104,114 @@ function SyllabusPicker() {
   );
 }
 
+// The community whose chart the reader last chose, remembered per syllabus so a P-8 student is
+// not asked again every visit. This is a CHART choice and nothing more: the communities share
+// every block and every discuss item up to the split, so the stage nav, the block pages and the
+// event hubs are the same whichever is picked, and the syllabus body says so itself by listing
+// the events of all of them.
+const PLATFORM_KEY = (id) => `discuss.selectedPlatform.${id}`;
+
+function recallPlatform(id) {
+  try {
+    return window.localStorage.getItem(PLATFORM_KEY(id)) || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function rememberPlatform(id, platform) {
+  try {
+    window.localStorage.setItem(PLATFORM_KEY(id), platform);
+  } catch (err) {
+    // A private window refuses storage; the choice simply lasts the session.
+  }
+}
+
+// The communities a syllabus splits into, and the one on screen. Held by All Events and handed
+// to both the picker and the chart, because they sit in different parts of the page and have to
+// agree. A syllabus that does not split has no post flows and neither is rendered, so no tab
+// gains a control that can do nothing.
+function usePlatform() {
+  const s = useSyllabus();
+  const flows = s.postFlows || [];
+  const [chosen, setChosen] = useState(() => recallPlatform(s.id));
+  // The remembered community belongs to the syllabus that was open when it was chosen.
+  useEffect(() => { setChosen(recallPlatform(s.id)); }, [s.id]);
+  const choose = (id) => {
+    setChosen(id);
+    rememberPlatform(s.id, id);
+  };
+  return { flows, current: flows.find((f) => f.id === chosen) || flows[0] || null, choose };
+}
+
+function PlatformPicker({ flows, current, choose }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef(null);
+  const trigger = useRef(null);
+  useMenuDismiss(open, setOpen, wrap, trigger);
+  if (!current) return null;
+
+  const pick = (id) => {
+    setOpen(false);
+    choose(id);
+  };
+
+  return (
+    <div className="discuss-syllabus discuss-syllabus--platform">
+      <div className="discuss-syllabus-menu" ref={wrap}>
+        <button
+          type="button"
+          ref={trigger}
+          className="discuss-syllabus-select"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-label={`Community: ${current.label}`}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <SyllabusName name={current.label} school="after the split" />
+          <span className="discuss-syllabus-caret" aria-hidden="true">&#9662;</span>
+        </button>
+        {open && (
+          <ul className="discuss-syllabus-panel" role="listbox" aria-label="Community">
+            {flows.map((f) => (
+              <li key={f.id} role="presentation">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={f.id === current.id}
+                  className="discuss-syllabus-option"
+                  onClick={() => pick(f.id)}
+                >
+                  {f.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PostFlowChart({ current }) {
+  if (!current) return null;
+  return (
+    <>
+      <p className="discuss-flow-caption">
+        After the course splits: <strong>{current.label}</strong>
+      </p>
+      <CourseFlow flow={current} label={current.label} titleId="discuss-postflow-title" />
+    </>
+  );
+}
+
 // All Events: the JPPT's own course-flow chart, then the syllabus as stage, block and event.
 // There is no flat index of items — an item is reached through the event that briefs it, or
 // through the search box, both of which carry the context an alphabetical list throws away.
 function Index() {
   const s = useSyllabus();
   const base = useDiscussBase();
+  const platform = usePlatform();
   // A syllabus small enough not to need the JPPT's course-flow chart carries no `flow`, and
   // CourseFlow renders nothing for it. The sentence about correcting the chart would then be
   // pointing at something that is not on the page.
@@ -120,6 +222,7 @@ function Index() {
         <header className="discuss-head">
           <h1>Discussion Items</h1>
           <SyllabusPicker />
+          <PlatformPicker {...platform} />
         </header>
 
         <p className="discuss-syllabus-note">
@@ -131,12 +234,13 @@ function Index() {
               <Link to={`${s.base}/edit`}>edit the flow</Link>.
             </>
           )}
-          {s.rev ? ` Revision ${s.rev}.` : ''}
         </p>
 
-        <CourseSummary />
+        <CourseSummary platform={platform.current} />
 
         <CourseFlow />
+
+        <PostFlowChart current={platform.current} />
 
         <section className="discuss-section">
           <h2>Stages</h2>

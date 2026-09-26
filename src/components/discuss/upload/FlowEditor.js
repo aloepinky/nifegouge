@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import CourseFlow, { Shape, ArrowDefs, Legend, poly, round } from '../CourseFlow';
+import CourseFlow, { Shape, SHAPE, ArrowDefs, Label, Legend, poly, round } from '../CourseFlow';
 import { SyllabusContext, fromDoc } from '../SyllabusContext';
 import { ConfirmButton, Line } from '../edit/fields';
 import LinkReview from './LinkReview';
 import { expand, blockOf } from '../jppt/flowExtract';
 import {
-  KINDS, addBlockFor, addNode, checks, connect, fit, moveNode, movePoint, relabelNode,
-  removeEdge, removeNode, resizeNode, reverseEdge, setBriefed, updateBlock, updateNode,
+  KINDS, addBlockFor, addNode, addPoint, branchEdge, checks, connect, fit, moveNode, movePoint, relabelNode,
+  removePoint, joinEdge, removeEdge, removeNode, resizeNode, reverseEdge, setBriefed, updateBlock, updateNode,
 } from './flowOps';
 
 // The course-flow editor: the chart as the tracer produced it, with handles.
@@ -191,7 +191,7 @@ function NodePanel({ doc, node, commit, onRemove }) {
   );
 }
 
-function EdgePanel({ doc, index, commit, onRemove }) {
+function EdgePanel({ doc, index, corner, commit, onRemove, onRemoveCorner }) {
   const edge = doc.flow.EDGES[index];
   const name = (id) => {
     const n = doc.flow.NODES.find((x) => x.id === id);
@@ -200,10 +200,31 @@ function EdgePanel({ doc, index, commit, onRemove }) {
   return (
     <div className="discuss-floweditor-panel">
       <h3>Arrow</h3>
-      <p className="discuss-editor-hint">{name(edge.from)} to {name(edge.to)}. Drag a corner handle to reroute it.</p>
+      <p className="discuss-editor-hint">
+        {name(edge.from)} to {name(edge.to)}. Drag a corner to reroute it — the lines either side stay
+        straight. The small hollow handle in the middle of a length adds a corner. The two ends slide
+        around their own boxes and settle in the middle of a side.
+      </p>
+      {(edge.joinFrom || edge.joinTo) && (
+        <p className="discuss-editor-hint">
+          {edge.joinTo
+            ? `Its head sits on another arrow rather than on ${name(edge.to)}, so the flow carries on down that arrow.`
+            : `It leaves another arrow rather than ${name(edge.from)}, which is where that arrow starts.`}
+          {' '}That end is not held to a box: drag it back onto the arrow if either of them moves.
+        </p>
+      )}
       <div className="discuss-editor-buttons">
         <button type="button" className="discuss-editor-add" onClick={() => commit(reverseEdge(doc, index))}>
           Reverse
+        </button>
+        <button
+          type="button"
+          className="discuss-editor-add"
+          disabled={corner === null}
+          title={corner === null ? 'Click a corner of the arrow first. The two ends belong to their boxes, and a last corner stays where its boxes have no square line between them.' : ''}
+          onClick={onRemoveCorner}
+        >
+          Remove corner
         </button>
         <button type="button" className="discuss-editor-cancel" onClick={onRemove}>Delete arrow</button>
       </div>
@@ -228,6 +249,17 @@ function FlowEditor({
 
   const selectedNode = selection && selection.type === 'node' ? doc.flow.NODES.find((n) => n.id === selection.id) : null;
   const selectedEdge = selection && selection.type === 'edge' && doc.flow.EDGES[selection.index] ? selection.index : null;
+  // Which corner of that arrow is in hand. An end belongs to its box and cannot be taken out,
+  // so only a middle one counts as removable.
+  const edgePoints = selectedEdge !== null ? doc.flow.EDGES[selectedEdge].points : null;
+  const selectedCorner = edgePoints && selection.point > 0 && selection.point < edgePoints.length - 1
+    ? selection.point
+    : null;
+  // Asked of the operation itself rather than judged here, so the control is grey in exactly
+  // the cases the removal would refuse — a last corner between two boxes set on the diagonal,
+  // which has no square line to fall back to.
+  const canRemoveCorner = selectedCorner !== null
+    && removePoint(doc, selectedEdge, selectedCorner) !== doc;
 
   const problems = useMemo(() => checks(doc), [doc]);
   const preview = useMemo(() => fromDoc({ id: 'preview', name: 'Preview', doc }), [doc]);
@@ -277,6 +309,11 @@ function FlowEditor({
         setSelection(null);
         setMode('select');
         setConnectFrom(null);
+      } else if (selectedCorner !== null && (e.key === 'Delete' || e.key === 'Backspace')) {
+        // A corner in hand is what Delete takes; the arrow itself goes from its own button.
+        e.preventDefault();
+        commit(removePoint(doc, selectedEdge, selectedCorner));
+        setSelection({ type: 'edge', index: selectedEdge });
       } else if (selectedEdge !== null && (e.key === 'Delete' || e.key === 'Backspace')) {
         e.preventDefault();
         removeSelected();
@@ -289,7 +326,7 @@ function FlowEditor({
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [commit, doc, redo, removeSelected, selectedEdge, selectedNode, undo]);
+  }, [commit, doc, redo, removeSelected, selectedCorner, selectedEdge, selectedNode, undo]);
 
   const startDrag = (event, payload) => {
     if (event.button !== 0) return;
@@ -328,20 +365,27 @@ function FlowEditor({
     setDrag(null);
   };
 
+  // In connect mode either end may be a box or an existing arrow, so what is in hand is
+  // `{ node }` or `{ edge, at }` rather than a bare id.
   const clickNode = (node) => {
-    if (mode === 'connect') {
-      if (!connectFrom) {
-        setConnectFrom(node.id);
-      } else if (connectFrom !== node.id) {
-        const next = connect(doc, connectFrom, node.id);
-        commit(next);
-        setSelection({ type: 'edge', index: next.flow.EDGES.length - 1 });
-        setConnectFrom(null);
-        setMode('select');
-      }
+    if (mode !== 'connect') {
+      setSelection({ type: 'node', id: node.id });
       return;
     }
-    setSelection({ type: 'node', id: node.id });
+    if (!connectFrom) {
+      setConnectFrom({ node: node.id });
+      return;
+    }
+    if (connectFrom.node === node.id) return;
+    const next = connectFrom.node
+      ? connect(doc, connectFrom.node, node.id)
+      : branchEdge(doc, connectFrom.edge, connectFrom.at, node.id);
+    if (next !== doc) {
+      commit(next);
+      setSelection({ type: 'edge', index: next.flow.EDGES.length - 1 });
+    }
+    setConnectFrom(null);
+    setMode('select');
   };
 
   const add = (kind) => {
@@ -353,7 +397,7 @@ function FlowEditor({
 
   const nodeClass = (n) => {
     const on = selection && selection.type === 'node' && selection.id === n.id;
-    const from = connectFrom === n.id;
+    const from = !!connectFrom && connectFrom.node === n.id;
     // The published chart's rule: faded unless the block is briefed and one of the box's events
     // has items of its own.
     const faded = n.kind !== 'jump' && (
@@ -396,11 +440,14 @@ function FlowEditor({
             <button type="button" className="discuss-editor-add" onClick={() => add('jump')}>Add connector</button>
             <button
               type="button"
-              className={`discuss-editor-add${mode === 'connect' ? ' is-on' : ''}`}
+              className={`discuss-editor-add discuss-floweditor-connect${mode === 'connect' ? ' is-on' : ''}`}
               aria-pressed={mode === 'connect'}
               onClick={() => { setMode(mode === 'connect' ? 'select' : 'connect'); setConnectFrom(null); }}
             >
-              {mode === 'connect' ? (connectFrom ? 'Click the arrow’s target' : 'Click the arrow’s source') : 'Draw arrow'}
+              {mode !== 'connect' ? 'Draw arrow'
+                : !connectFrom ? 'Click where it starts — a box, or an arrow'
+                  : connectFrom.node ? 'Click where it goes — a box, or an arrow'
+                    : 'Click the box it runs to'}
             </button>
             <button type="button" className="discuss-editor-add" onClick={() => commit(fit(doc))}>Fit chart</button>
             <button type="button" className="discuss-editor-add" onClick={undo} disabled={!canUndo}
@@ -435,7 +482,7 @@ function FlowEditor({
               <ArrowDefs />
               <g>
                 {flow.EDGES.map((e, i) => {
-                  const on = selectedEdge === i;
+                  const on = selectedEdge === i || (connectFrom && connectFrom.edge === i);
                   return (
                     // eslint-disable-next-line react/no-array-index-key
                     <g key={`${e.from}>${e.to}>${i}`}>
@@ -447,7 +494,30 @@ function FlowEditor({
                       <polyline
                         className="discuss-floweditor-edgehit"
                         points={poly(e.points)}
-                        onPointerDown={(ev) => { ev.stopPropagation(); setSelection({ type: 'edge', index: i }); }}
+                        onPointerDown={(ev) => {
+                          ev.stopPropagation();
+                          // An arrow can be either end of a new one, the way the publication
+                          // draws a branch onto a trunk and a stub out of one.
+                          if (mode === 'connect') {
+                            const p = svgPoint(svgRef.current, ev);
+                            if (!connectFrom) {
+                              setConnectFrom({ edge: i, at: [p.x, p.y] });
+                              return;
+                            }
+                            // Arrow to arrow says nothing, so only a box in hand draws here.
+                            if (connectFrom.node) {
+                              const next = joinEdge(doc, connectFrom.node, i, [p.x, p.y]);
+                              if (next !== doc) {
+                                commit(next);
+                                setSelection({ type: 'edge', index: next.flow.EDGES.length - 1 });
+                              }
+                              setConnectFrom(null);
+                              setMode('select');
+                            }
+                            return;
+                          }
+                          setSelection({ type: 'edge', index: i });
+                        }}
                       />
                     </g>
                   );
@@ -466,13 +536,15 @@ function FlowEditor({
                   >
                     <title>{n.label}{n.block ? ` (${n.block})` : ''}</title>
                     <Shape kind={n.kind} x={n.x} y={n.y} w={n.w} h={n.h} className={nodeClass(n)} />
-                    <text
-                      className={n.kind === 'jump' ? 'discuss-flow-letter' : 'discuss-flow-label'}
-                      x={round(n.x + n.w / 2)}
-                      y={round(n.y + n.h / 2)}
-                    >
-                      {n.kind === 'jump' ? n.letter : n.label}
-                    </text>
+                    {n.kind === 'jump' ? (
+                      <text className="discuss-flow-letter"
+                            x={round(n.x + n.w / 2)} y={round(n.y + n.h / 2)}>
+                        {n.letter}
+                      </text>
+                    ) : (
+                      <Label text={n.label} w={n.w} shape={SHAPE[n.kind]}
+                             x={round(n.x + n.w / 2)} y={round(n.y + n.h / 2)} />
+                    )}
                   </g>
                 ))}
               </g>
@@ -496,17 +568,48 @@ function FlowEditor({
               )}
               {selEdge && (
                 <g className="discuss-floweditor-handles">
-                  {selEdge.points.map(([x, y], j) => (
-                    <circle
-                      // eslint-disable-next-line react/no-array-index-key
-                      key={j}
-                      className="discuss-floweditor-point"
-                      cx={x}
-                      cy={y}
-                      r={HANDLE / 1.6}
-                      onPointerDown={(ev) => startDrag(ev, { kind: 'point', edge: selectedEdge, point: j })}
-                    />
-                  ))}
+                  {/* A hollow handle at the middle of each segment adds a corner there; the
+                      solid ones are the corners, dragged to reroute and double-clicked to take
+                      out. An end is its box's and neither adds nor removes. */}
+                  {selEdge.points.slice(0, -1).map(([x, y], j) => {
+                    const [nx, ny] = selEdge.points[j + 1];
+                    return (
+                      <circle
+                        // eslint-disable-next-line react/no-array-index-key
+                        key={`mid-${j}`}
+                        className="discuss-floweditor-midpoint"
+                        cx={round((x + nx) / 2)}
+                        cy={round((y + ny) / 2)}
+                        r={HANDLE / 2}
+                        onPointerDown={(ev) => {
+                          ev.stopPropagation();
+                          commit(addPoint(doc, selectedEdge, j));
+                        }}
+                      >
+                        <title>Add a corner here</title>
+                      </circle>
+                    );
+                  })}
+                  {selEdge.points.map(([x, y], j) => {
+                    const corner = j > 0 && j < selEdge.points.length - 1;
+                    const held = selectedCorner === j;
+                    return (
+                      <circle
+                        // eslint-disable-next-line react/no-array-index-key
+                        key={j}
+                        className={`discuss-floweditor-point${held ? ' is-held' : ''}`}
+                        cx={x}
+                        cy={y}
+                        r={HANDLE / 1.6}
+                        onPointerDown={(ev) => {
+                          setSelection({ type: 'edge', index: selectedEdge, point: j });
+                          startDrag(ev, { kind: 'point', edge: selectedEdge, point: j });
+                        }}
+                      >
+                        <title>{corner ? 'Corner — drag to move, or Remove corner' : 'End — drag it around its box'}</title>
+                      </circle>
+                    );
+                  })}
                 </g>
               )}
             </svg>
@@ -529,7 +632,17 @@ function FlowEditor({
               />
             )}
             {selectedEdge !== null && (
-              <EdgePanel doc={doc} index={selectedEdge} commit={commit} onRemove={removeSelected} />
+              <EdgePanel
+                doc={doc}
+                index={selectedEdge}
+                corner={canRemoveCorner ? selectedCorner : null}
+                commit={commit}
+                onRemove={removeSelected}
+                onRemoveCorner={() => {
+                  commit(removePoint(doc, selectedEdge, selectedCorner));
+                  setSelection({ type: 'edge', index: selectedEdge });
+                }}
+              />
             )}
             {!selection && (
               <div className="discuss-floweditor-panel">

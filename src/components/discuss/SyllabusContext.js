@@ -17,6 +17,11 @@ export { DISCUSS_BASE };
 export const DELTA_ID = 'delta-primary';
 // NIFE's flight stage, the built-in syllabus of the /nife/discuss mount.
 export const NIFE_SYLLABUS_ID = 'nife-flight';
+// The T-44C Advanced syllabus (CNATRAINST 1542.168C), the built-in syllabus of the
+// /t44c/discuss mount. The E-2D syllabus is a second document of the same school and is
+// reached from the picker; this one opens by default because it is the larger course and by
+// far the larger community.
+export const T44C_P8_ID = 't44c-p8';
 
 // The style guide is a draft, and it is hidden everywhere while it is being edited — the dev
 // server included, so a half-written page of rules is not what a reader finds. One flag, read
@@ -68,7 +73,7 @@ export function buildSyllabus({
   // canonical URL at the root however many syllabi brief it.
   id, name, base, root = DISCUSS_BASE, source, sourceDate = '', rev = null, builtIn = false, record = null,
   aircraft = '', school = '',
-  stages, blocks, events, flow, isBriefed,
+  stages, blocks, events, flow, postFlows = [], isBriefed,
 }) {
   const blockIndex = index(blocks);
   const stageIndex = index(stages);
@@ -136,6 +141,9 @@ export function buildSyllabus({
     aircraft,
     school,
     flow,
+    // One chart per community, for a syllabus that splits. Empty for one that does not, and
+    // the reader is then offered no choice.
+    postFlows,
     stages,
     blocks,
     events,
@@ -204,6 +212,7 @@ export function fromDoc(record, { builtIn = false, matcher = null, root = DISCUS
     blocks: doc.blocks || [],
     events,
     flow: doc.flow,
+    postFlows: doc.postFlows || [],
     isBriefed: (block) => !!block.briefed,
   });
 }

@@ -156,24 +156,41 @@ export function splitItems(sentence) {
     .filter(Boolean);
 }
 
-function eventIdsIn(text, blockId) {
+// The event ids a block's own text names. `tableIds` are the ids its "2. Events" table lists,
+// which is the authority on what the block actually holds.
+//
+// A range in prose spans the block's NUMBERING rather than its event list, and the two are not
+// the same: the T-44C syllabi write prerequisites as "G0301 prior to G0401-90 (in order)",
+// where 90 is an exam event and the block holds four events, not ninety. So an id that only a
+// range produced has to be one the table names; an id written out on its own is kept as it was.
+// A block whose table would not parse keeps everything, which is what this did before.
+function eventIdsIn(text, blockId, tableIds = null) {
   const ids = [];
-  const add = (id) => {
-    if (blockOf(id) === blockId && !ids.includes(id)) ids.push(id);
+  const ranged = new Set();
+  const add = (id, fromRange) => {
+    if (blockOf(id) !== blockId) return;
+    if (!ids.includes(id)) {
+      ids.push(id);
+      if (fromRange) ranged.add(id);
+    } else if (!fromRange) {
+      ranged.delete(id);
+    }
   };
   let m;
   THROUGH.lastIndex = 0;
   while ((m = THROUGH.exec(text)) !== null) {
     const start = parseInt(m[2], 10);
     const stop = parseInt(m[3], 10);
-    for (let n = start; n <= stop && n - start < 100; n += 1) add(`${m[1]}${String(n).padStart(4, '0')}`);
+    for (let n = start; n <= stop && n - start < 100; n += 1) add(`${m[1]}${String(n).padStart(4, '0')}`, true);
   }
   EVENT_TOKEN.lastIndex = 0;
   while ((m = EVENT_TOKEN.exec(text)) !== null) {
     const label = m[2] ? `${m[1]}-${m[2]}` : m[1];
-    expand(label).forEach(add);
+    const spanned = expand(label);
+    spanned.forEach((id) => add(id, spanned.length > 1));
   }
-  return ids;
+  if (!tableIds || !tableIds.size) return ids;
+  return ids.filter((id) => !ranged.has(id) || tableIds.has(id));
 }
 
 const center = (w) => (w.x + w.x2) / 2;
@@ -202,8 +219,16 @@ function readHeader(headerLine, rows) {
       return;
     }
     const c = center(w);
+    // The media cell is one short token naming a device (Class, OFT, T-44C, Sqdn/Lect), set
+    // under its own header. The title is long and left-aligned in a wide column, so its first
+    // word can start well left of the centred word "Title" — which is why the boundary is the
+    // media column's own span rather than the midpoint between the two headers. At the
+    // midpoint, "Crew Resource Management" came out as media "Class Crew", and "Search and
+    // Rescue Fundamentals" as media "OFT Search". The tolerance is a header word's width, so
+    // it scales with the type rather than being a number in points.
+    const reach = media ? Math.max(media.x2 - media.x, 12) : 0;
     if (name && c >= (hrs ? (hrs.x2 + name.x) / 2 : name.x - 20)) out.blkName.push(w.text);
-    else if (media && title && c < (media.x2 + title.x) / 2) out.media.push(w.text);
+    else if (media && title && c < (media.x2 + title.x) / 2 && c <= media.x2 + reach) out.media.push(w.text);
     else out.title.push(w.text);
   });
 
@@ -395,7 +420,7 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
       const bodyText = body.map((l) => l.text).join('\n');
 
       const titles = eventTitles(sections.events);
-      let ids = eventIdsIn(bodyText, head.id);
+      let ids = eventIdsIn(bodyText, head.id, new Set(Object.keys(titles)));
       const tableOrder = Object.keys(titles).filter((id) => ids.includes(id));
       ids = [...tableOrder, ...ids.filter((id) => !tableOrder.includes(id)).sort()];
       if (head.events != null && ids.length !== head.events) {

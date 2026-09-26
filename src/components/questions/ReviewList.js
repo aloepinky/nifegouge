@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { TOPICS, answerChoices, inFilter, lecturesIn, netScore } from './questionsApi';
+import Explanation from './Explanation';
+import QuestionHistory from './QuestionHistory';
 
 // Review Mode: every question in a topic (and lecture) as a list, each opened to try it.
 
@@ -15,6 +17,7 @@ function byLectureThenScore(a, b) {
 export default function ReviewList({ questions, topic, lecture, onTopicChange, onLectureChange, onExit, onEdit }) {
   const [expanded, setExpanded] = useState(() => new Set());
   const [chosen, setChosen] = useState({});
+  const [historyOf, setHistoryOf] = useState(null);
 
   const lectures = useMemo(() => lecturesIn(questions, topic), [questions, topic]);
   const listed = useMemo(() => questions
@@ -127,12 +130,25 @@ export default function ReviewList({ questions, topic, lecture, onTopicChange, o
                     );
                   })}
 
-                  <button
-                    onClick={() => onEdit(q)}
-                    style={{ marginTop: '12px', padding: '8px 18px', backgroundColor: '#01202C', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
-                  >
-                    Edit Question
-                  </button>
+                  {chosen[q.questionId] && <Explanation text={q.explanation} style={{ maxWidth: 'none' }} />}
+
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => onEdit(q)}
+                      style={{ marginTop: '12px', padding: '8px 18px', backgroundColor: '#01202C', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
+                    >
+                      Edit Question
+                    </button>
+                    {(q.rev || 1) > 1 && (
+                      <button
+                        onClick={() => setHistoryOf(historyOf === q.questionId ? null : q.questionId)}
+                        style={{ marginTop: '12px', padding: '8px 18px', backgroundColor: 'white', color: '#01202C', border: '1px solid #01202C', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
+                      >
+                        History
+                      </button>
+                    )}
+                  </div>
+                  {historyOf === q.questionId && <QuestionHistory questionId={q.questionId} onClose={() => setHistoryOf(null)} />}
                 </div>
               )}
             </div>

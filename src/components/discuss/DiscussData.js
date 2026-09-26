@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { fetchItemIndex, useRemoteSyllabus, setCorpusSchool } from './discussApi';
+import { savedMirror } from '../serverApi';
 import { setItemIndex, itemList, useItemIndexVersion } from './registry';
 import { fromDoc, DELTA_ID } from './SyllabusContext';
 import { buildMatcher } from './jppt/matchItems';
@@ -23,6 +24,15 @@ const Ctx = createContext(null);
 let indexPromise = null;
 // The whole corpus index, every school's. Filtered per mount below.
 let allItems = null;
+
+// The index this browser saved on an earlier visit, taken once so the tab can draw before the
+// mirror answers. loadIndex still runs and replaces it.
+function savedIndex() {
+  if (allItems) return allItems;
+  const saved = savedMirror('items/index.json');
+  if (saved && Array.isArray(saved.items)) allItems = saved.items;
+  return allItems;
+}
 
 function loadIndex() {
   if (!indexPromise) {
@@ -54,21 +64,29 @@ export function DiscussDataProvider({
 
   const root = useDiscussBase();
 
-  const [indexState, setIndexState] = useState({ status: 'loading' });
+  const [indexState, setIndexState] = useState(() => {
+    const ready = savedIndex();
+    if (ready) setItemIndex(ready.filter((entry) => isSchool(entry, school)));
+    return { status: ready ? 'ready' : 'loading' };
+  });
   const [tick, setTick] = useState(0);
   const remote = useRemoteSyllabus(syllabusId);
   const version = useItemIndexVersion();
 
   useEffect(() => {
     let live = true;
-    setIndexState({ status: 'loading' });
+    // With a saved index on screen, the read below only freshens it, and a failure leaves the
+    // saved one standing rather than replacing the tab with an error.
+    const shown = savedIndex();
+    if (shown) setItemIndex(shown.filter((entry) => isSchool(entry, school)));
+    else setIndexState({ status: 'loading' });
     loadIndex().then(
       () => {
         if (!live) return;
         setItemIndex(allItems.filter((entry) => isSchool(entry, school)));
         setIndexState({ status: 'ready' });
       },
-      (error) => { if (live) setIndexState({ status: 'error', error }); },
+      (error) => { if (live && !shown) setIndexState({ status: 'error', error }); },
     );
     return () => { live = false; };
   }, [tick, school]);

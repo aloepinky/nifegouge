@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { fetchBriefIndex, fetchBrief, rememberBrief } from '../briefs/briefApi';
 import { fetchSyllabusIndex, fetchSyllabus, rememberSyllabus } from '../discuss/discussApi';
 import { isSchool } from '../programs';
-import { briefWords, syllabusStats } from './stats';
+import { briefRows, syllabusRows, weekGroups } from './stats';
+import { SERVER_STATS } from './serverStats';
 
 /*
  * What a tab asks a student to learn, counted from its own data and shown in that tab's panel
@@ -15,8 +16,14 @@ import { briefWords, syllabusStats } from './stats';
  *   per aircraft, titled with it.
  *
  * The briefs and syllabi are on the mirror. Each is fetched once per school per session and
- * put in the caches their own tabs read, so opening one afterwards costs nothing. Until they
- * arrive their numbers show as a dash, so the panel keeps its size.
+ * put in the caches their own tabs read, so opening one afterwards costs nothing.
+ *
+ * These numbers change only when somebody publishes, which is rare, and waiting on a fetch of
+ * every syllabus document to show six of them made the page look broken on arrival. So they are
+ * SEEDED from a snapshot in the repo (serverStats.js, written by tools/about-stats.js) and
+ * painted at once, and the read still happens behind them and corrects anything a publish has
+ * changed since. A school the snapshot does not know still shows a dash until its read lands,
+ * which is what a newly added one does.
  */
 
 const format = (n) => (n == null ? '–' : n.toLocaleString('en-US'));
@@ -26,7 +33,7 @@ async function loadBriefs(school) {
   const rows = ((index && index.briefs) || []).filter((b) => isSchool(b, school));
   const records = (await Promise.all(rows.map((b) => fetchBrief(b.id)))).filter(Boolean);
   records.forEach(rememberBrief);
-  return records.map((r) => ({ aircraft: r.brief.aircraft, words: briefWords(r.brief) }));
+  return records;
 }
 
 async function loadSyllabi(school) {
@@ -41,15 +48,24 @@ async function loadSyllabi(school) {
 // under the blurb a phone shows instead of it. A failed read settles on an empty list, since
 // the page is still worth drawing without them.
 const loads = new Map();
-function useRemote(kind, load, school) {
-  const key = `${kind}:${school}`;
-  const [state, setState] = useState(null);
+
+// `derive` turns the records into the figures a panel shows, and is the same function the
+// snapshot was written with, so a seeded number and a fetched one are computed one way.
+//
+// `source` is what gets read and `kind` is what gets shown, and they are separate because the
+// syllabi are read once and shown two ways — as course lengths on the landing page and as
+// discuss-item counts on the About page. Keying the read by `kind` would fetch every syllabus
+// document twice.
+function useFigures(source, kind, load, derive, school) {
+  const key = `${source}:${school}`;
+  const [state, setState] = useState(() => (SERVER_STATS[school] || {})[kind]);
   useEffect(() => {
+    setState((SERVER_STATS[school] || {})[kind]);
     if (!loads.has(key)) loads.set(key, load(school).catch(() => { loads.delete(key); return []; }));
     let live = true;
-    loads.get(key).then((v) => { if (live) setState(v); });
+    loads.get(key).then((records) => { if (live) setState(derive(records)); });
     return () => { live = false; };
-  }, [key, load, school]);
+  }, [key, load, derive, school, kind]);
   return state;
 }
 
@@ -98,7 +114,7 @@ export function EpStats({ platforms, byAircraft = false }) {
 }
 
 export function BriefStats({ school, platforms = [], byAircraft = false }) {
-  const briefs = useRemote('briefs', loadBriefs, school);
+  const briefs = useFigures('briefs', 'briefs', loadBriefs, briefRows, school);
   const titled = perAircraft(platforms, byAircraft);
   const planes = titled ? platforms.map((p) => p.aircraft) : [null];
   return (
@@ -124,16 +140,22 @@ export function BriefStats({ school, platforms = [], byAircraft = false }) {
 // Each of the school's syllabi side by side (Primary has Delta and Echo), titled with its name.
 // The course length, hours and events by type are on the syllabus's own All Events page.
 export function SyllabusStats({ school }) {
-  const syllabi = useRemote('syllabi', loadSyllabi, school);
+  const syllabi = useFigures('syllabi', 'syllabi', loadSyllabi, syllabusRows, school);
   return (
     <div className="about-stats about-stats--across">
-      {(syllabi || [null]).map((record) => (
+      {(syllabi || [null]).map((row) => (
         <Group
-          key={record ? record.id : 'loading'}
-          title={record ? record.name : 'Syllabus'}
-          stats={[{ label: 'discuss items', value: record ? syllabusStats(record.doc).discussItems : null }]}
+          key={row ? row.id : 'loading'}
+          title={row ? row.name : 'Syllabus'}
+          stats={[{ label: 'discuss items', value: row ? row.discussItems : null }]}
         />
       ))}
     </div>
   );
 }
+
+export function useCourseWeeks(school, wanted = true) {
+  return useFigures('syllabi', 'weeks', wanted ? loadSyllabi : NONE, weekGroups, wanted ? school : `-${school}`);
+}
+
+const NONE = () => Promise.resolve([]);
