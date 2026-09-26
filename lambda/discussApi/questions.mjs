@@ -10,16 +10,22 @@ import { putJson } from './mirror.mjs';
 // function wrote, unchanged in shape.
 //
 // A row is `{ questionId, status, topic, lecture, question, correctAnswer, incorrectAnswer1-3,
-// upvotes, downvotes, ... }`, and `status` is its whole lifecycle:
+// explanation, upvotes, downvotes, rev, history, ... }`, and `status` is its whole lifecycle:
 //
 //   pending   a submission or an edit waiting on votes
 //   approved  in the quiz
 //   rejected  voted down, turned down by the admin, or superseded by a competing edit
-//   replaced  an approved question an approved edit took the place of (`replacedBy`)
+//   merged    an approved edit, whose words now live on the question it edited (`mergedInto`)
+//   replaced  before 2026-09-25, an approved edit became a new question and the original was
+//             kept under this status; `fold-replaced-questions` moves those into history
+//
+// A question keeps one id for life. Approving an edit copies its words onto the question it
+// edits, pushes the words and the score they had onto that question's `history`, and starts
+// the score again at zero, because the votes were cast on words that are no longer there.
 //
 // Nothing is deleted. The function this replaced deleted a rejected submission, and deleted the
-// original when an edit was approved, so a bad approval could not be undone and the original's
-// explanation was orphaned. A row that leaves the quiz now keeps its words and says why.
+// original when an edit was approved, so a bad approval could not be undone and anything keyed
+// to the original's id was orphaned.
 //
 // Reads never come here: every write rebuilds the two mirror files, and the page fetches them.
 //
@@ -40,14 +46,23 @@ const MAX_QUESTION = 1000;
 const MAX_ANSWER = 500;
 const MAX_TOPIC = 40;
 const MAX_LECTURE = 40;
+const MAX_EXPLANATION = 1500;
 
 // What the mirror carries. Voter hashes, submitter names and moderation bookkeeping stay in the
 // table: the page never reads them, and the hashes are nobody's business.
 const PUBLIC = [
   'questionId', 'topic', 'lecture', 'question', 'correctAnswer', 'incorrectAnswer1',
   'incorrectAnswer2', 'incorrectAnswer3', 'upvotes', 'downvotes', 'createdAt', 'submittedAt',
-  'type', 'originalQuestionId', 'approveCount', 'rejectCount',
+  'type', 'originalQuestionId', 'approveCount', 'rejectCount', 'explanation', 'rev', 'editedAt',
 ];
+
+// The words of a question, as an edit replaces them and as history keeps them.
+const WORDING = [
+  'topic', 'lecture', 'question', 'correctAnswer', 'incorrectAnswer1', 'incorrectAnswer2',
+  'incorrectAnswer3', 'explanation',
+];
+
+const wordingOf = (r) => Object.fromEntries(WORDING.map((k) => [k, r[k] || '']));
 
 const db = () => getDynamo();
 const table = () => CONFIG.questionsTable;
@@ -140,6 +155,7 @@ function readFields(body) {
     incorrectAnswer1: clip(body.incorrectAnswer1, MAX_ANSWER),
     incorrectAnswer2: clip(body.incorrectAnswer2, MAX_ANSWER),
     incorrectAnswer3: clip(body.incorrectAnswer3, MAX_ANSWER),
+    explanation: clip(body.explanation, MAX_EXPLANATION),
   };
   if (!fields.topic || !fields.question || !fields.correctAnswer) {
     throw new HttpError(400, 'A question needs a topic, the question and its correct answer.');
@@ -211,7 +227,8 @@ export async function editQuestionHandler(event) {
   const a = answerSet(original);
   const b = answerSet(fields);
   const sameAnswers = a.size === b.size && [...a].every((x) => b.has(x));
-  if (norm(original.question) === norm(fields.question) && sameAnswers) {
+  const sameRest = ['explanation', 'lecture', 'topic'].every((k) => norm(original[k]) === norm(fields[k]));
+  if (norm(original.question) === norm(fields.question) && sameAnswers && sameRest) {
     throw new HttpError(400, 'This edit is identical to the existing question. Make a meaningful change before submitting.');
   }
 
@@ -221,10 +238,6 @@ export async function editQuestionHandler(event) {
     editHistory: [...(original.editHistory || []), original.questionId],
   });
   await putNew(row);
-  await change(original.questionId, (o) => {
-    o.hasPendingEdit = true;
-    o.latestEditId = row.questionId;
-  });
   await rebuildQuestionsMirror();
   return reply(200, { success: true, questionId: row.questionId });
 }
@@ -262,26 +275,55 @@ function voterOf(body) {
   return createHash('sha256').update(`${body.questionId}|${id}`).digest('hex').slice(0, 16);
 }
 
-// Approve a pending row: it enters the quiz, and if it is an edit, the question it edits leaves
-// it as `replaced` and any competing edit of that question is rejected as superseded.
+// Approve a pending row. A new submission enters the quiz as itself. An edit is merged into the
+// question it edits (see the top of this file), and any competing edit of that question is
+// rejected as superseded. An edit whose question is no longer in the quiz has nothing to merge
+// into, so it enters the quiz as a question of its own.
 async function approve(questionId, by) {
+  const at = now();
   let decided = false;
   const row = await change(questionId, (q) => {
     decided = false;
     if (q.status !== 'pending') return false;
     q.status = 'approved';
-    q.moderatedAt = now();
+    q.moderatedAt = at;
     q.moderatedBy = by;
     decided = true;
   });
   if (!decided || row.type !== 'edit' || !row.originalQuestionId) return;
+
   const originalId = row.originalQuestionId;
-  await change(originalId, (o) => {
-    o.status = 'replaced';
-    o.replacedBy = questionId;
-    o.replacedAt = now();
-    o.hasPendingEdit = false;
-  }).catch((error) => { if (!(error instanceof HttpError && error.status === 404)) throw error; });
+  let merged = false;
+  try {
+    await change(originalId, (o) => {
+      merged = false;
+      if (o.status !== 'approved') return false;
+      o.history = [...(o.history || []), {
+        rev: o.rev || 1,
+        ...wordingOf(o),
+        upvotes: o.upvotes || 0,
+        downvotes: o.downvotes || 0,
+        until: at,
+        replacedByEdit: questionId,
+      }];
+      Object.assign(o, wordingOf(row));
+      o.rev = (o.rev || 1) + 1;
+      o.editedAt = at;
+      o.upvotes = 0;
+      o.downvotes = 0;
+      delete o.hasPendingEdit;
+      delete o.latestEditId;
+      merged = true;
+    });
+  } catch (error) {
+    if (!(error instanceof HttpError && error.status === 404)) throw error;
+  }
+  if (!merged) return; // Nothing to merge into: the edit stays in the quiz as its own question.
+
+  await change(questionId, (q) => {
+    q.status = 'merged';
+    q.mergedInto = originalId;
+  });
   const rivals = (await scanAll()).filter((r) => (
     r.status === 'pending' && r.originalQuestionId === originalId && r.questionId !== questionId
   ));
@@ -290,25 +332,19 @@ async function approve(questionId, by) {
       if (q.status !== 'pending') return false;
       q.status = 'rejected';
       q.rejectedReason = 'superseded';
-      q.moderatedAt = now();
+      q.moderatedAt = at;
       q.moderatedBy = by;
     });
   }
 }
 
 async function reject(questionId, by) {
-  const row = await change(questionId, (q) => {
+  await change(questionId, (q) => {
     if (q.status !== 'pending') return false;
     q.status = 'rejected';
     q.moderatedAt = now();
     q.moderatedBy = by;
   });
-  if (row.type !== 'edit' || !row.originalQuestionId) return;
-  await change(row.originalQuestionId, (o) => {
-    if (o.latestEditId !== questionId) return false;
-    o.hasPendingEdit = false;
-    delete o.latestEditId;
-  }).catch((error) => { if (!(error instanceof HttpError && error.status === 404)) throw error; });
 }
 
 // POST vote-pending-question { questionId, vote: 'approve'|'reject' }
@@ -358,4 +394,73 @@ export async function moderateQuestionHandler(event) {
   else throw new HttpError(400, 'An action is approve or reject');
   const out = await rebuildQuestionsMirror();
   return reply(200, { success: true, ...out });
+}
+
+// GET question-history?id=   -> { questionId, rev, history: [{ rev, ...words, upvotes, downvotes, until }] }
+// Earlier versions of a question in the quiz, oldest first. Off the mirror because it is read
+// rarely and grows with every edit.
+export async function questionHistoryHandler(event) {
+  const id = (event.queryStringParameters || {}).id;
+  const row = await getRow(id);
+  if (!row || row.status !== 'approved') throw new HttpError(404, 'Question not found');
+  const history = (row.history || []).map((h) => ({
+    rev: h.rev,
+    ...wordingOf(h),
+    upvotes: h.upvotes || 0,
+    downvotes: h.downvotes || 0,
+    until: h.until,
+  }));
+  return reply(200, { success: true, questionId: row.questionId, rev: row.rev || 1, history });
+}
+
+// POST fold-replaced-questions (admin) { dryRun? }   -> { folded, skipped, flagsCleared }
+// A one-off tidy-up for rows from before merge-in-place. Each `replaced` original goes onto the
+// history of the question that replaced it, which keeps its own id, since links and votes have
+// used that id since; the original is then marked `merged` into it. Also clears the
+// hasPendingEdit / latestEditId flags nothing reads any more. A dry run (the default) reports
+// what it would do and writes nothing.
+export async function foldReplacedHandler(event) {
+  const body = parseBody(event);
+  const dryRun = body.dryRun !== false;
+  const rows = await scanAll();
+  const byId = new Map(rows.map((r) => [r.questionId, r]));
+  const folded = [];
+  const skipped = [];
+  for (const old of rows.filter((r) => r.status === 'replaced')) {
+    const into = byId.get(old.replacedBy);
+    if (!into || into.status !== 'approved') {
+      skipped.push({ questionId: old.questionId, replacedBy: old.replacedBy, why: 'the replacement is not in the quiz' });
+      continue;
+    }
+    folded.push({ questionId: old.questionId, into: into.questionId, question: old.question });
+    if (dryRun) continue;
+    await change(into.questionId, (q) => {
+      if ((q.history || []).some((h) => h.foldedFrom === old.questionId)) return false;
+      q.history = [...(q.history || []), {
+        rev: 1,
+        ...wordingOf(old),
+        upvotes: old.upvotes || 0,
+        downvotes: old.downvotes || 0,
+        until: old.replacedAt || now(),
+        foldedFrom: old.questionId,
+      }];
+      q.rev = Math.max(q.rev || 1, 2);
+    });
+    await change(old.questionId, (o) => {
+      o.status = 'merged';
+      o.mergedInto = into.questionId;
+    });
+  }
+  const flagged = rows.filter((r) => r.hasPendingEdit !== undefined || r.latestEditId !== undefined);
+  if (!dryRun) {
+    for (const r of flagged) {
+      await change(r.questionId, (q) => {
+        if (q.hasPendingEdit === undefined && q.latestEditId === undefined) return false;
+        delete q.hasPendingEdit;
+        delete q.latestEditId;
+      });
+    }
+    await rebuildQuestionsMirror();
+  }
+  return reply(200, { success: true, dryRun, folded, skipped, flagsCleared: flagged.length });
 }

@@ -25,7 +25,7 @@ import { leaderboardHandler, submitScoreHandler, importScoresHandler } from './s
 import { tagProgramHandler } from './program.mjs';
 import {
   submitQuestionHandler, editQuestionHandler, voteQuestionHandler, votePendingHandler,
-  moderateQuestionHandler, rebuildQuestionsMirror,
+  moderateQuestionHandler, rebuildQuestionsMirror, questionHistoryHandler, foldReplacedHandler,
 } from './questions.mjs';
 import { namespaceItemsHandler } from './namespaceOp.mjs';
 
@@ -83,6 +83,8 @@ import { namespaceItemsHandler } from './namespaceOp.mjs';
 //   POST vote-question                     { questionId, vote: 'good'|'bad'|null, previous } -> { upvotes, downvotes }
 //   POST vote-pending-question             { questionId, vote: 'approve'|'reject' }   -> { approveCount, rejectCount, netScore, outcome }; 409
 //   POST moderate-question   (admin)       { questionId, action: 'approve'|'reject' } -> { approved, pending }
+//   GET  question-history?id=              -> { questionId, rev, history }
+//   POST fold-replaced-questions (admin)   { dryRun? }                                -> { folded, skipped, flagsCleared }
 //   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'questions'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs, questions }
 //   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
 
@@ -160,6 +162,8 @@ const ROUTES = {
   'vote-question': { method: 'POST', run: voteQuestionHandler },
   'vote-pending-question': { method: 'POST', run: votePendingHandler },
   'moderate-question': { method: 'POST', admin: true, run: moderateQuestionHandler },
+  'question-history': { method: 'GET', run: questionHistoryHandler },
+  'fold-replaced-questions': { method: 'POST', admin: true, run: foldReplacedHandler },
   'rebuild-index': { method: 'POST', admin: true, run: rebuildIndexHandler },
   'tag-program': { method: 'POST', admin: true, run: tagProgramHandler },
 };

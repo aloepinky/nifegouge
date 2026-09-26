@@ -35,14 +35,32 @@ export function checkDoc(doc) {
   // used to be required; a syllabus small enough to read as a list does not — NIFE's flight
   // stage is six blocks — and CourseFlow already renders nothing for one. A flow that IS
   // carried still has to be whole, because a half-drawn chart is worse than none.
-  const flow = doc.flow;
-  if (flow) {
-    if (!Array.isArray(flow.NODES) || !Array.isArray(flow.EDGES)) return 'doc.flow needs NODES and EDGES';
-    if (typeof flow.VIEWBOX !== 'string') return 'doc.flow.VIEWBOX must be a string';
+  const checkFlow = (flow, where) => {
+    if (!Array.isArray(flow.NODES) || !Array.isArray(flow.EDGES)) return `${where} needs NODES and EDGES`;
+    if (typeof flow.VIEWBOX !== 'string') return `${where}.VIEWBOX must be a string`;
     for (const n of flow.NODES) {
       if (!n || typeof n.id !== 'string' || !['x', 'y', 'w', 'h'].every((k) => Number.isFinite(n[k]))) {
-        return 'every flow node needs an id and a numeric x, y, w and h';
+        return `every node on ${where} needs an id and a numeric x, y, w and h`;
       }
+    }
+    return null;
+  };
+  if (doc.flow) {
+    const bad = checkFlow(doc.flow, 'doc.flow');
+    if (bad) return bad;
+  }
+  // A multi-community syllabus draws one chart per community beside the course flow. They are
+  // rendered by the same component, so they are held to the same shape — a half-drawn community
+  // chart is the same problem as a half-drawn course flow, and it reaches the reader by the same
+  // path. Each also names itself, because the picker lists them by `label`.
+  if (doc.postFlows !== undefined) {
+    if (!Array.isArray(doc.postFlows)) return 'doc.postFlows must be an array';
+    for (const p of doc.postFlows) {
+      if (!p || typeof p.id !== 'string' || typeof p.label !== 'string') {
+        return 'every post flow needs an id and a label';
+      }
+      const bad = checkFlow(p, `post flow ${p.id}`);
+      if (bad) return bad;
     }
   }
   for (const key of ['stages', 'blocks', 'events']) {

@@ -178,8 +178,48 @@ ok(r.status === 409, `a second pending edit is refused (${r.status})`);
 r = await op('moderate-question', { body: { questionId: edit, action: 'approve' }, headers: admin });
 ok(r.success, 'the admin approves the edit');
 const live = mirror('approved');
-ok(live.some((q) => q.questionId === edit) && !live.some((q) => q.questionId === 'q_seed_2'), 'the edit is live and the original is out of the quiz');
-ok(row('q_seed_2').status === 'replaced' && row('q_seed_2').replacedBy === edit, 'the original is kept as replaced');
+const merged = live.find((q) => q.questionId === 'q_seed_2');
+ok(merged && merged.question === `${orig.question} (edited)`, 'the question keeps its id and takes the edit\'s words');
+ok(!live.some((q) => q.questionId === edit), 'the edit is not a second question in the quiz');
+ok(merged.upvotes === 0 && merged.downvotes === 0 && merged.rev === 2, 'the score starts again at zero, at rev 2');
+ok(row(edit).status === 'merged' && row(edit).mergedInto === 'q_seed_2', 'the edit row is kept, marked merged');
+const kept = row('q_seed_2').history;
+ok(kept.length === 1 && kept[0].question === orig.question && kept[0].upvotes === 20 && kept[0].downvotes === 2,
+  'history keeps the old words and the old score');
+ok(!('history' in merged), 'history stays off the mirror');
+
+// Competing edits: approving one supersedes the other
+r = await op('edit-question', { body: { ...editBody({}), originalQuestionId: 'q_seed_4', topic: 'weather', question: 'Seed question 4?', correctAnswer: 'Right 4', incorrectAnswer1: 'Wrong 4a', incorrectAnswer2: 'Wrong 4b', incorrectAnswer3: 'Wrong 4c', explanation: 'Because the figure says so.' } });
+const why = r.questionId;
+ok(Boolean(why), 'an edit that only adds an explanation is accepted');
+table[`q_rival`] = { ...row(why), questionId: 'q_rival', explanation: 'A rival reason.' };
+r = await op('moderate-question', { body: { questionId: why, action: 'approve' }, headers: admin });
+ok(mirror('approved').find((q) => q.questionId === 'q_seed_4').explanation === 'Because the figure says so.', 'the explanation is on the mirror');
+ok(row('q_rival').status === 'rejected' && row('q_rival').rejectedReason === 'superseded', 'a competing edit is rejected as superseded');
+
+// History
+r = await op('question-history', { method: 'GET', query: { id: 'q_seed_2' } });
+ok(r.rev === 2 && r.history.length === 1 && r.history[0].question === orig.question, 'question-history returns the earlier version');
+r = await op('question-history', { method: 'GET', query: { id: edit } });
+ok(r.status === 404, `a merged edit has no history of its own (${r.status})`);
+
+// An edit whose question has left the quiz becomes a question of its own
+table.q_orphan = { ...row(why), questionId: 'q_orphan', status: 'pending', originalQuestionId: 'q_gone', question: 'Orphan edit?' };
+r = await op('moderate-question', { body: { questionId: 'q_orphan', action: 'approve' }, headers: admin });
+ok(row('q_orphan').status === 'approved' && mirror('approved').some((q) => q.questionId === 'q_orphan'), 'an orphaned edit is approved as its own question');
+
+// Folding the pre-merge `replaced` rows into history
+table.q_old = { ...approvedRow(7, 'aero'), questionId: 'q_old', status: 'replaced', replacedBy: 'q_seed_5', replacedAt: '2026-09-24T12:00:00.000Z', hasPendingEdit: false };
+table.q_seed_3.latestEditId = 'stale';
+r = await op('fold-replaced-questions', { body: {} });
+ok(r.status === 401, `the fold needs the admin token (${r.status})`);
+r = await op('fold-replaced-questions', { body: {}, headers: admin });
+ok(r.dryRun && r.folded.length === 1 && r.flagsCleared === 2 && row('q_old').status === 'replaced', 'a dry run reports and writes nothing');
+r = await op('fold-replaced-questions', { body: { dryRun: false }, headers: admin });
+ok(row('q_old').status === 'merged' && row('q_seed_5').history.some((h) => h.foldedFrom === 'q_old'), 'the fold moves a replaced row onto its replacement\'s history');
+ok(row('q_seed_3').latestEditId === undefined, 'the fold clears the stale flags');
+r = await op('fold-replaced-questions', { body: { dryRun: false }, headers: admin });
+ok(r.folded.length === 0 && row('q_seed_5').history.length === 1, 'running the fold twice changes nothing');
 
 // Validation
 r = await op('submit-question', { body: { topic: '', question: 'x', correctAnswer: 'y' } });
