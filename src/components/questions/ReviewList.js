@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { answerChoices, inFilter, netScore } from './questionsApi';
 import { activeSections, lectureName, quizLectures } from './sections';
 import Explanation from './Explanation';
@@ -15,8 +15,24 @@ function byLectureThenScore(a, b) {
   return netScore(b) - netScore(a);
 }
 
-export default function ReviewList({ questions, sections, topic, lecture, onTopicChange, onLectureChange, onExit, onEdit }) {
-  const [expanded, setExpanded] = useState(() => new Set());
+export default function ReviewList({ questions, sections, topic, lecture, onTopicChange, onLectureChange, onExit, onEdit, focusId, onCopied }) {
+  const [expanded, setExpanded] = useState(() => new Set(focusId ? [focusId] : []));
+
+  // Opened from a link: that question, open and scrolled to.
+  useEffect(() => {
+    if (!focusId) return;
+    setExpanded((prev) => new Set(prev).add(focusId));
+    const el = document.getElementById(`question-${focusId}`);
+    if (el) el.scrollIntoView({ block: 'start' });
+  }, [focusId]);
+
+  const copyLink = (id) => {
+    const url = `${window.location.origin}/nife/questions/q/${id}`;
+    // `onCopied(null)` once it is on the clipboard; `onCopied(url)` where the browser would not
+    // allow that, so the page can show the link to copy by hand.
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => onCopied(null), () => onCopied(url));
+    else onCopied(url);
+  };
   const [chosen, setChosen] = useState({});
   const [historyOf, setHistoryOf] = useState(null);
 
@@ -65,6 +81,7 @@ export default function ReviewList({ questions, sections, topic, lecture, onTopi
           return (
             <div
               key={q.questionId}
+              id={`question-${q.questionId}`}
               className="review-question-item"
               style={{ marginBottom: '20px', border: '2px solid #ddd', borderRadius: '12px', overflow: 'hidden', transition: 'all 0.3s ease' }}
             >
@@ -148,6 +165,12 @@ export default function ReviewList({ questions, sections, topic, lecture, onTopi
                         History
                       </button>
                     )}
+                    <button
+                      onClick={() => copyLink(q.questionId)}
+                      style={{ marginTop: '12px', padding: '8px 18px', backgroundColor: 'white', color: '#01202C', border: '1px solid #01202C', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
+                    >
+                      Copy link
+                    </button>
                   </div>
                   {historyOf === q.questionId && <QuestionHistory questionId={q.questionId} onClose={() => setHistoryOf(null)} />}
                 </div>

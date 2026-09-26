@@ -38,6 +38,7 @@ function preloadPages() {
 
 const Questions = page(() => import('./components/Questions'));
 const QuestionSections = page(() => import('./components/questions/SectionsPage'));
+const QuestionUpload = page(() => import('./components/questions/UploadPage'));
 const Nav = page(() => import('./components/Nav'));
 const NIFEEPsLimits = page(() => import('./components/NIFEEPsLimits.js'));
 const NIFEBriefs = page(() => import('./components/NIFEBriefs.js'));
@@ -93,6 +94,8 @@ function App() {
         <Route path="/nife/about" element={<NIFEAbout />} />
         <Route path="/nife/questions" element={<Questions />} />
         <Route path="/nife/questions/sections" element={<QuestionSections />} />
+        <Route path="/nife/questions/upload" element={<QuestionUpload />} />
+        <Route path="/nife/questions/q/:questionId" element={<Questions />} />
         <Route path="/nife/docs" element={<Docs />} />
         <Route path="/nife/nav" element={<Nav />} />
         <Route path="/nife/nav/:tab" element={<Nav />} />

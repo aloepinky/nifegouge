@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   DISPUTED_AT, answerChoices, inFilter, loadApproved, loadPending, netScore,
   pendingSeen, shuffle, voteOnQuestion,
@@ -124,6 +124,9 @@ function Questions() {
   // The first quiz waits for both the questions and the section list, so it never starts on a
   // retired topic: a topic in use, with questions, at random.
   const started = useRef(false);
+  const { questionId: linkedId } = useParams();
+  const navigate = useNavigate();
+  const [focusId, setFocusId] = useState(null);
   useEffect(() => {
     if (started.current || loadState !== 'ready' || !sectionsLoaded) return;
     started.current = true;
@@ -134,6 +137,24 @@ function Questions() {
     setTopic(chosen);
     startQuiz(chosen, 'All', 0, usable);
   }, [loadState, sectionsLoaded, sections, usable, startQuiz]);
+
+  // /nife/questions/q/<id>: a link to one question, shared in a group chat, opens Review Mode on
+  // it, open. A question that has since been hidden or retired says so rather than showing
+  // nothing.
+  const linkHandled = useRef(false);
+  useEffect(() => {
+    if (!linkedId || linkHandled.current || loadState !== 'ready' || !sectionsLoaded) return;
+    linkHandled.current = true;
+    const q = usable.find((x) => x.questionId === linkedId);
+    if (!q) {
+      showNotice('That question is no longer in the quiz.', 'error');
+      return;
+    }
+    setTopic((q.topic || '').toLowerCase());
+    setLecture('All');
+    setFocusId(q.questionId);
+    setView('review');
+  }, [linkedId, loadState, sectionsLoaded, usable, navigate, showNotice]);
 
   useEffect(() => {
     // ?admin shows the admin panel button in this browser from now on; the server still
@@ -261,6 +282,8 @@ function Questions() {
 
   const toQuiz = () => {
     setView('quiz');
+    setFocusId(null);
+    if (linkedId) navigate('/nife/questions', { replace: true });
     restart();
   };
 
@@ -281,6 +304,8 @@ function Questions() {
           onLectureChange={setLecture}
           onExit={toQuiz}
           onEdit={(q) => openForm('edit', q)}
+          focusId={focusId}
+          onCopied={(url) => showNotice(url ? `Copy this link: ${url}` : 'Link copied. Anyone who opens it lands on this question.')}
         />
         {formModal}
       </>
@@ -506,6 +531,9 @@ function Questions() {
         <button className="submitBtn" onClick={() => openForm('new')}>
           Submit a Question
         </button>
+        <div style={{ textAlign: 'center', fontSize: '13px', marginTop: '6px' }}>
+          <Link to="/nife/questions/upload" style={{ color: '#003B4F' }}>Have a spreadsheet or a Quizlet set? Upload many at once</Link>
+        </div>
       </div>
 
       {formModal}

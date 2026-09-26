@@ -553,6 +553,9 @@ select,
 .dropdown-row select,
 .dropdown-row input {
   flex: 1;
+  /* A select will not shrink below its longest option unless told to, and on a phone that
+     pushed the third one off the edge of the page. */
+  min-width: 0;
 }
 
 select:hover {

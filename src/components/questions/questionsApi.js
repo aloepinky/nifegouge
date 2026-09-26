@@ -62,6 +62,10 @@ export const DISPUTED_AT = -10;
 // 'submit-question' or 'edit-question'. Throws with `.status` 400/409 on a refusal.
 export const sendQuestion = (endpoint, payload) => post(endpoint, payload);
 
+// A bulk upload, up to 100 at a time: { batchId, submitted: [{ index, questionId }],
+// refused: [{ index, error }] }, indexes into `questions`.
+export const sendQuestions = (questions, author) => post('submit-questions', { questions, author });
+
 // A thumbs vote on a live question. `previous` is what this browser voted before, so a changed
 // or withdrawn vote moves the count rather than adding to it.
 export const voteOnQuestion = (questionId, vote, previous) => post('vote-question', { questionId, vote, previous });

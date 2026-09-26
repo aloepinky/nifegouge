@@ -153,6 +153,12 @@ function PendingTab({ questions, sections, run }) {
     return next;
   });
   const ids = [...picked];
+  const batchSize = (id) => pending.filter((p) => p.batchId === id).length;
+  const pickBatch = (id) => setPicked((prev) => {
+    const next = new Set(prev);
+    pending.filter((p) => p.batchId === id).forEach((p) => next.add(p.questionId));
+    return next;
+  });
 
   return (
     <>
@@ -186,11 +192,11 @@ function PendingTab({ questions, sections, run }) {
         const original = q.type === 'edit' ? questions.find((o) => o.questionId === q.originalQuestionId) : null;
         return (
           <div key={q.questionId} style={card}>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-start' }}>
               <input type="checkbox" checked={picked.has(q.questionId)} onChange={() => toggle(q.questionId)} style={{ marginTop: '4px', width: '18px', minWidth: '18px', flex: '0 0 18px', padding: 0 }} aria-label="Select" />
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: '1 1 240px', minWidth: 0 }}>
                 <div style={meta}>
-                  {q.type === 'edit' ? 'Proposed edit' : 'New question'} • {sectionName(sections, q.topic)}{q.lecture ? ` L${q.lecture}` : ''} •{' '}
+                  {q.type === 'edit' ? 'Proposed edit' : 'New question'}{q.batchId ? ` from an upload of ${batchSize(q.batchId)}` : ''} • {sectionName(sections, q.topic)}{q.lecture ? ` L${q.lecture}` : ''} •{' '}
                   {new Date(q.submittedAt).toLocaleDateString()} •{' '}
                   <span style={{ fontWeight: 'bold', color: net > 0 ? '#2e7d32' : net < 0 ? '#c62828' : '#666' }}>
                     {net > 0 ? '+' : ''}{net} ({q.approveCount || 0} for / {q.rejectCount || 0} against)
@@ -211,9 +217,13 @@ function PendingTab({ questions, sections, run }) {
                   </>
                 )}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '80px' }}>
+              {/* Beside the question on a wide screen, underneath it on a phone. */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', flex: '0 1 auto', alignContent: 'flex-start', maxWidth: '100%' }}>
                 <button style={smallButton('#2e7d32')} onClick={() => decide((t) => moderate(t, q.questionId, 'approve'), 'Approved.')}>Approve</button>
                 <button style={smallButton('#c62828')} onClick={() => decide((t) => moderate(t, q.questionId, 'reject'), 'Rejected. It can be sent back for review from Removed.')}>Reject</button>
+                {q.batchId && batchSize(q.batchId) > 1 && (
+                  <button style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => pickBatch(q.batchId)}>Select the upload</button>
+                )}
               </div>
             </div>
           </div>
