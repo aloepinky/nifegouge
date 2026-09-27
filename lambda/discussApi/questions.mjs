@@ -305,7 +305,7 @@ export async function voteQuestionHandler(event) {
   const previous = VOTES.includes(body.previous) ? body.previous : null;
   if (vote === previous) throw new HttpError(400, 'Nothing to change');
   const row = await change(body.questionId, (q) => {
-    if (q.status !== 'approved') throw new HttpError(409, 'That question has been removed from the questions.');
+    if (q.status !== 'approved') throw new HttpError(409, 'That question has been removed.');
     if (previous) q[COUNTER[previous]] = Math.max(0, (q[COUNTER[previous]] || 0) - 1);
     if (vote) q[COUNTER[vote]] = (q[COUNTER[vote]] || 0) + 1;
   });
