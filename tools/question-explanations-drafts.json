@@ -1,0 +1,231 @@
+[
+  {
+    "n": 1,
+    "id": "q_1758428275260_0glvwianb",
+    "verdict": "supported",
+    "explanation": "L/Dmax AOA is located at the bottom of the total drag curve, where total drag is at its minimum. Increasing velocity below L/Dmax decreases total drag, and above it increases total drag.",
+    "source": "NIFE Aero Student Guide, Lift to Drag Ratio"
+  },
+  {
+    "n": 2,
+    "id": "q_1758428268292_jvetoi6e5",
+    "verdict": "supported",
+    "explanation": "Velocity and area at any point in a streamtube are inversely related. Over the wing the cross sectional area decreases then increases, so the velocity increases then decreases.",
+    "source": "NIFE Aero Student Guide, The Continuity Equation"
+  },
+  {
+    "n": 3,
+    "id": "q_1759960375737_ra0vtk1fk",
+    "verdict": "supported",
+    "explanation": "Mode C is required above the ceiling and lateral boundaries of Class C, up to 10,000' MSL. That is Class E over Class C below 10,000' MSL.",
+    "source": "NIFE FR&R Student Guide, Mode C Requirements",
+    "note": "Last round I flagged this against the FAR. NIFE requires Mode C only above Class B extensions beyond 30 nm, so under a shelf is not always required and the key holds."
+  },
+  {
+    "n": 4,
+    "id": "q_1762467968377_17aj1a6dw",
+    "verdict": "supported",
+    "explanation": "Sea level pressure is calculated from station pressure using the standard pressure lapse rate of 1 inch of mercury per 1,000 feet. The altimeter setting given to you for the local area is SLP.",
+    "source": "ACA0501 Aviation Weather Theory, Sea Level Pressure / Station Pressure",
+    "note": "Last round this was your call. The NIFE slide says the altimeter setting is SLP, so the key holds."
+  },
+  {
+    "n": 5,
+    "id": "q_1758428278884_40kqmahc1",
+    "verdict": "supported",
+    "explanation": "Velocity and angle of attack are inversely related in level flight, so speeding up always takes a lower AOA. In the region of reverse command, velocity and throttle setting are also inversely related, so a faster airspeed takes a lower throttle setting too.",
+    "source": "NIFE Aero Student Guide, Airfoils and Wing Properties. NIFE Aero Student Guide, Performance from Takeoff to the Landing Rollout"
+  },
+  {
+    "n": 6,
+    "id": "q_1758428285236_73yvn6sd9",
+    "verdict": "supported",
+    "explanation": "The accelerated stall lines are Vs = √(2Wn / ρSCLmax), so more weight raises the stall speed at every load factor. Load factor is n = L / W, so at high gross weights the limit and ultimate load factors are reduced.",
+    "source": "NIFE Aero Student Guide, Stalls and V-N Diagram. Aerodynamics for Naval Aviators, Operating Strength Limitations",
+    "note": "The equations are NIFE's. NIFE doesn't say the load factor limits drop with weight, so that conclusion is backed by NAVWEPS."
+  },
+  {
+    "n": 7,
+    "id": "q_1758428336162_v5toxaby0",
+    "verdict": "supported",
+    "explanation": "If the air is colder than the standard atmosphere, the aircraft will be lower than the altimeter indicates. At 30° C below zero, indicated altitude is higher than true altitude.",
+    "source": "NIFE Weather Student Guide, Altimeter Errors"
+  },
+  {
+    "n": 8,
+    "id": "q_1783467146602_8de6cdd3s",
+    "verdict": "supported",
+    "explanation": "In the region of reverse command, a faster airspeed needs a lower throttle setting. Lowering AOA and adding power gives more power than level flight needs, so the airplane climbs.",
+    "source": "NIFE Aero Student Guide, Performance from Takeoff to the Landing Rollout"
+  },
+  {
+    "n": 9,
+    "id": "q_1782916822514_k86t60cvq",
+    "verdict": "flag",
+    "explanation": "The average or standard lapse rate is 2° Celsius per 1,000 feet, and the dew point stays about constant. A 12° C spread closes 6,000 feet above the 1,000' surface, at 7,000' MSL.",
+    "source": "NIFE Weather Student Guide, Lapse Rates",
+    "problem": "At NIFE's 2° C per 1,000 feet, with the dew point constant, the base is 7,000' MSL, which isn't a choice.",
+    "fix": "Change the answer \"6,000' MSL\" to \"7,000' MSL\" and the wrong answer \"5,000' MSL\" to \"6,000' MSL\".",
+    "note": "The guide gives the 2° C lapse rate. Holding the dew point constant is taught in class, not in the guide."
+  },
+  {
+    "n": 10,
+    "id": "q_1780113009007_rlv5e31ol",
+    "verdict": "supported",
+    "explanation": "BECMG indicates forecast elements are going to change permanently. BECMG 1815/1816 forecasts light rain showers, and nothing changes that until BECMG 1902/1903.",
+    "source": "NIFE Weather Student Guide, Change Group Terminology"
+  },
+  {
+    "n": 11,
+    "id": "q_1763587285902_g6qf7wpef",
+    "verdict": "supported",
+    "explanation": "Maximum range is the maximum distance traveled over the ground for a given amount of fuel. Over a fixed distance, max range cruise burns the least fuel.",
+    "source": "NIFE Aero Student Guide, Performance from Takeoff to the Landing Rollout"
+  },
+  {
+    "n": 12,
+    "id": "q_1776123020441_e7n1nin99",
+    "verdict": "supported",
+    "explanation": "Takeoff distance is S = W² / gρSCLmax(T − D − Fr), so it shrinks with greater CLmax and thrust. Landing distance is S = W² / gρSCLmax(Fr + D − T), so it shrinks with greater CLmax, drag, and rolling friction.",
+    "source": "NIFE Aero Student Guide, Performance from Takeoff to the Landing Rollout, Figure 18. ACA0103 Performance Characteristics, Performance (Landing)"
+  },
+  {
+    "n": 13,
+    "id": "q_1785372114975_nz1mpd383",
+    "verdict": "flag",
+    "explanation": "Class B requires clear of clouds, and Class E above 10,000' MSL requires 1 SM horizontal. These are the shortest and farthest cloud clearances.",
+    "source": "NIFE FR&R Student Guide, VFR Weather Minimums",
+    "problem": "The keyed \"1 SM, 500 ft\" is wrong. The shortest clearance is clear of clouds.",
+    "fix": "Approve the pending edit that changes the answer to \"1 SM, clear\"."
+  },
+  {
+    "n": 14,
+    "id": "q_1781654965552_ik3y87p6e",
+    "verdict": "supported",
+    "explanation": "In a turn, only the vertical component of the lift vector opposes weight. To hold altitude it stays equal to weight while total lift increases.",
+    "source": "NIFE Aero Student Guide, Load Factor"
+  },
+  {
+    "n": 15,
+    "id": "q_1765192932369_0g94m1iyh",
+    "verdict": "supported",
+    "explanation": "Vortices are generated from the moment an airplane rotates for takeoff until the nosewheel touches down for landing. Take off before its rotation point and land beyond its touchdown point.",
+    "source": "NIFE Aero Student Guide, Wake Turbulence"
+  },
+  {
+    "n": 16,
+    "id": "q_1771775117064_ecbv1od6m",
+    "verdict": "flag",
+    "explanation": "Unlike gradient winds, which flow parallel to the isobars above 2,000' AGL, surface winds blow across the isobars at a 45° angle toward the low. With the wind at your back the low will be slightly forward or directly left, so at 1,883' AGL a left crosswind puts the low ahead and to your right.",
+    "source": "NIFE Weather Student Guide, Surface Winds and Buys Ballot's Law",
+    "problem": "At 2,200' MSL over a 317' field you are 1,883' AGL, where surface winds apply. That moves the low ahead and to the right, which is one of the wrong choices.",
+    "fix": "Change the key to \"Ahead and to the right of you\"."
+  },
+  {
+    "n": 17,
+    "id": "q_1785280158147_n3wbzfbye",
+    "verdict": "flag",
+    "explanation": "",
+    "source": "NIFE FR&R Student Guide, Aerobatic Flight",
+    "problem": "The live answer reads \"Below 1500' AGL with  sm visibility\". The number is missing.",
+    "fix": "Approve the pending edit that fills in 3 SM. No explanation."
+  },
+  {
+    "n": 18,
+    "id": "q_1761182985434_2br293qst",
+    "verdict": "supported",
+    "explanation": "The slower an airplane flies in the region of reverse command, the more throttle needed, because the slower the airspeed, the higher the AOA and induced drag. As airspeed increases, induced drag and power both decrease.",
+    "source": "NIFE Aero Student Guide, Performance from Takeoff to the Landing Rollout"
+  },
+  {
+    "n": 19,
+    "id": "q_1785299423919_ajar9si33",
+    "verdict": "supported",
+    "explanation": "Mode C is required within 30 nm of a Class B airport from the surface to 10,000' MSL. Below a Class B shelf beyond 30 nm, it is not.",
+    "source": "NIFE FR&R Student Guide, Mode C Requirements",
+    "note": "Last round I flagged this against the FAR. NIFE's Mode C list has no exception below 2,500' AGL, so the key holds."
+  },
+  {
+    "n": 20,
+    "id": "q_1788879755322_vu8tldlrz",
+    "verdict": "flag",
+    "explanation": "If IAS remains constant while climbing, TAS must increase. An increasing TAS in a climb does not tell you what IAS does.",
+    "source": "NIFE Aero Student Guide, Airspeed Measurement",
+    "problem": "By the guide's own example, \"stays the same\" fits as well as the keyed \"Decreases\". Your one explanation was written for this question before an edit changed its key.",
+    "fix": "Change the key back to \"Not enough information\", with your original explanation."
+  },
+  {
+    "n": 21,
+    "id": "q_1782585731664_j0vnnr946",
+    "verdict": "supported",
+    "explanation": "Dynamic pressure is ½ρV², so the same change in velocity makes a greater change in dynamic pressure in denser air. With total pressure constant, static pressure changes by the same amount.",
+    "source": "NIFE Aero Student Guide, Bernoulli's Equation"
+  },
+  {
+    "n": 22,
+    "id": "q_1763044945022_qddkk64u0",
+    "verdict": "supported",
+    "explanation": "Stall speed is the minimum true airspeed required to maintain level flight at CLmax AOA.",
+    "source": "NIFE Aero Student Guide, Stalls"
+  },
+  {
+    "n": 23,
+    "id": "q_1782348326743_7p43b4pv4",
+    "verdict": "supported",
+    "explanation": "Anticollision lights are bright strobes or rotating beacons, colored red or white, and can be seen from any direction. The green position light is on the right wing, so a solid green on your left means it is flying your direction beside you.",
+    "source": "NIFE FR&R Student Guide, Aircraft Lighting",
+    "note": "NIFE doesn't say the anticollision lights can be seen from any direction. That part is yours."
+  },
+  {
+    "n": 24,
+    "id": "q_1784507047820_gu2ljo4y3",
+    "verdict": "supported",
+    "explanation": "A headwind reduces landing distance because it reduces ground speed at the same airspeed.",
+    "source": "NIFE Aero Student Guide, Performance from Takeoff to the Landing Rollout"
+  },
+  {
+    "n": 25,
+    "id": "q_1782942487379_5thyo28qj",
+    "verdict": "flag",
+    "explanation": "The jet stream generally flows west to east and can exceed 250 kts.",
+    "source": "ACA0502 Aviation Weather Mechanics, Jet Stream",
+    "problem": "Two choices are false. \"Max speed 250 kts\" is false too, since the winds can exceed 250 kts.",
+    "fix": "Edit \"Max speed 250 kts\" into \"Averages 100 to 150 kts, can exceed 250 kts\"."
+  },
+  {
+    "n": 26,
+    "id": "q_1758428355051_d2ovc9ea9",
+    "verdict": "supported",
+    "explanation": "BECMG 0522/0524 changes the sky to OVC020, overcast at 2,000 feet, between 2200Z and 2400Z.",
+    "source": "NIFE Weather Student Guide, Change Group Terminology"
+  },
+  {
+    "n": 27,
+    "id": "q_1758428337446_3dk9th3i8",
+    "verdict": "supported",
+    "explanation": "The dew point is a direct indication of the amount of moisture present in the air. The highest dew point is the most humid, whatever the relative humidity.",
+    "source": "NIFE Weather Student Guide, Atmospheric Moisture"
+  },
+  {
+    "n": 28,
+    "id": "q_1758428338089_5eb9h4v54",
+    "verdict": "supported",
+    "explanation": "Clouds are classified by the altitude of their bases into four groups: low, middle, high, and special.",
+    "source": "NIFE Weather Student Guide, Types of Clouds"
+  },
+  {
+    "n": 29,
+    "id": "q_1758428334004_toup5d0qg",
+    "verdict": "supported",
+    "explanation": "Low to high, plenty of sky. Flying from lower to higher pressure, you are higher than the altimeter reads.",
+    "source": "ACA0501 Aviation Weather Theory, Effects of Pressure Changes on Altimeters"
+  },
+  {
+    "n": 30,
+    "id": "q_1780262391850_d6r1zo9g0",
+    "verdict": "supported",
+    "explanation": "The dewpoint temperature is plotted in whole degrees Fahrenheit at the lower left of the station model. At KJKA it is 61° F.",
+    "source": "Aviation Weather Handbook, Station Plot Models",
+    "note": "The NIFE slide doesn't say where the dew point sits, so this keeps the FAA source."
+  }
+]
