@@ -81,7 +81,7 @@ function ItemFields({ item, onChange }) {
             checked={!!item.fixed}
             onChange={(e) => set({ fixed: e.target.checked })}
           />{' '}
-          Always open
+          Always Expanded
         </label>
         {!item.fixed && (
           <label className="brief-switch-small" title="A few lines kept under the title, above what opens">
@@ -133,15 +133,42 @@ export function ItemForm({ item, onSave, onCancel, onRemove }) {
   );
 }
 
+const indent = (text) => text.split('\n').map((line) => (line.trim() ? `  ${line}` : '')).join('\n');
+
+// A section's items as the one block of text an Always Expanded section carries: each item's
+// title numbered, with whatever it says indented beneath it, as the upload writes a card list.
+function itemsAsText(items) {
+  return items.map((it, i) => {
+    const body = [it.subtext, it.text].filter((t) => (t || '').trim()).map((t) => indent(t.trim()));
+    return [`${i + 1}. ${(it.label || '').trim()}`, ...body].join('\n');
+  }).join('\n');
+}
+
 // A section, and the items in it. Each item's name is on screen to be edited or moved; opening
 // one shows its two text boxes, so a whole section can be gone through without leaving the
 // form. A fixed section has one box instead, and no items.
 export function SectionForm({ section, doc, onSave, onCancel, onRemove }) {
   const [draft, setDraft] = useState(section);
   const [openItem, setOpenItem] = useState(null);
+  // The subheading as it stood before Always Expanded wrote the items into the text box, so
+  // unticking it again puts the section back as it was. The items themselves are kept in the
+  // draft until Done, which is what drops them from a fixed section.
+  const [unfixedText, setUnfixedText] = useState(null);
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
   const items = draft.items || [];
   const setItem = (i, item) => set({ items: items.map((it, j) => (j === i ? item : it)) });
+
+  const setFixed = (on) => {
+    if (on && items.length) {
+      setUnfixedText(draft.text || '');
+      set({ fixed: true, text: [draft.text, itemsAsText(items)].filter((t) => (t || '').trim()).join('\n\n') });
+    } else if (!on && unfixedText !== null) {
+      set({ fixed: false, text: unfixedText });
+      setUnfixedText(null);
+    } else {
+      set({ fixed: on });
+    }
+  };
 
   const save = () => {
     const next = {
@@ -180,13 +207,13 @@ export function SectionForm({ section, doc, onSave, onCancel, onRemove }) {
           />{' '}
           New Page
         </label>
-        <label title="One block of text that nobody opens or closes">
+        <label title="One block of text that nobody opens or closes. The items are written into it.">
           <input
             type="checkbox"
             checked={!!draft.fixed}
-            onChange={(e) => set({ fixed: e.target.checked })}
+            onChange={(e) => setFixed(e.target.checked)}
           />{' '}
-          Always open
+          Always Expanded
         </label>
       </div>
 

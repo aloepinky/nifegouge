@@ -1,7 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { loadTextItems } from '../discuss/jppt/pdfText';
-import { parseBriefGuide, splitName, shortName, programFor, unitFrom } from './parseBriefGuide';
+import {
+  parseBriefGuide, splitName, shortName, programFor, unitFrom, unitOfTitle, pageList,
+} from './parseBriefGuide';
 // No Worker in jsdom: this puts pdf.js's worker in-process.
 import 'pdfjs-dist/legacy/build/pdf.worker.entry';
 
@@ -30,8 +32,9 @@ test('a guide names its own school, and the aircraft follows', () => {
   expect(programFor('T-6B MISSION/NATOPS BRIEFING GUIDE FOR FAM, VNAV, AND INAV STAGES'))
     .toEqual({ school: 'Primary', aircraft: 'T-6B' });
   expect(programFor('NIFE Expanded Briefing Guide')).toEqual({ school: 'NIFE', aircraft: 'C172' });
-  // Nothing it recognises: Primary, which is the corpus the page was written for.
-  expect(programFor('BRIEFING GUIDE')).toEqual({ school: 'Primary', aircraft: 'T-6B' });
+  // Nothing it recognises: no school, so the upload keeps the one of the tab it is on.
+  expect(programFor('BRIEFING GUIDE')).toEqual({});
+  expect(programFor('AME BRIEFING GUIDE')).toEqual({});
 });
 
 test('the wing follows from the instruction that publishes the guide', () => {
@@ -306,5 +309,60 @@ maybeNife('NIFE Expanded Briefing Guide', () => {
 
   test('the guide names no instruction, so only its date is carried', () => {
     expect(nife.source).toEqual({ date: '13 March 2026' });
+  });
+});
+
+test('a guide titled with its wing names its unit', () => {
+  expect(unitOfTitle('TW-4 Flight Briefing Guide (Blue Card Script)')).toBe('TW-4');
+  expect(unitOfTitle('AME BRIEFING GUIDE')).toBe('');
+});
+
+test('pageList reads the pages box', () => {
+  expect(pageList('', 30)).toEqual({ pages: null });
+  expect(pageList('6-8', 30)).toEqual({ pages: [5, 6, 7] });
+  expect(pageList('6, 7, 8', 30)).toEqual({ pages: [5, 6, 7] });
+  expect(pageList('8, 6-7', 30)).toEqual({ pages: [5, 6, 7] });
+  expect(pageList('29-31', 30).error).toMatch(/not a page/);
+  expect(pageList('six', 30).error).toMatch(/not a page/);
+});
+
+// The T-44C's guide: pages 6 to 8 of the TW-4 On-Wing Gouge Packet. The card (AME BRIEFING
+// GUIDE, lettered headings in two columns) comes first under its own title, and the Blue Card
+// Script follows under another, lettered `A.` / `1.`.
+const T44C_PDF = path.join(__dirname, '..', '..', '..', '_reference-docs', 'T44C Advanced', 'Fundamental References', '_TW-4 On-Wing Gouge Packet - Mar 25.pdf');
+const maybeT44c = fs.existsSync(T44C_PDF) ? describe : describe.skip;
+
+maybeT44c('the T-44C Blue Card Script', () => {
+  let out;
+  beforeAll(async () => {
+    const pages = await loadTextItems(new Uint8Array(fs.readFileSync(T44C_PDF)));
+    out = parseBriefGuide(pageList('6-8', pages.length).pages.map((n) => pages[n]));
+  });
+
+  test('the card and the guide are one brief, named by the card', () => {
+    expect(out.warnings).toEqual([]);
+    expect(out.briefs).toHaveLength(1);
+    const [b] = out.briefs;
+    expect(b).toMatchObject({ id: 'ame', short: 'AME', note: '', source: { unit: 'TW-4' } });
+    expect(b.school).toBeUndefined();
+  });
+
+  test("sections are the card's lettered headings, in its columns", () => {
+    const [b] = out.briefs;
+    expect(b.sections.map((s) => [s.title, s.column])).toEqual([
+      ['Product Inventory', 1], ['Mission Overview', 1], ['Communications', 1],
+      ['Weather / NOTAMS / BASH', 1], ['Flight Planning', 1], ['Emergencies', 2],
+      ['Observer Duties', 2], ['Standarization Board Minutes / Read and Initial', 2],
+      ['ORM Worksheet', 2], ['Discuss Items (Per MCG)', 2], ['Questions?', 2],
+    ]);
+  });
+
+  test("each card item opens the guide's words for it", () => {
+    const items = Object.fromEntries(out.briefs[0].sections.flatMap((s) => s.items.map((it) => [it.label, it.text])));
+    expect(items['SNA 1 / SNA 2']).toBe('SNA 1 Event / SNA 2 Event');
+    expect(items['System Failures (Actual / Simulated)']).toMatch(/^“Any simulated malfunction/);
+    // Page 8 carries on page 7's section.
+    expect(items['Emergency Egress']).toMatch(/The IP will be the last out of the aircraft\.”$/);
+    expect(out.briefs[0].sections.find((s) => s.title === 'Observer Duties').fixed).toBe(true);
   });
 });

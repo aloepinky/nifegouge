@@ -208,7 +208,7 @@ function PendingTab({ questions, sections, run }) {
                   <>
                     {q.type === 'edit' && (
                       <div style={{ ...meta, color: '#8a5a00', marginTop: '4px' }}>
-                        The question this edits is no longer in the quiz. Approving it adds it as a question of its own.
+                        The question this edits has been removed from the questions. Approving it adds it as a question of its own.
                       </div>
                     )}
                     <div style={{ fontSize: '14px', color: '#222', marginTop: '6px' }}>{q.question}</div>
@@ -254,13 +254,13 @@ function LiveTab({ questions, sections, run }) {
     <>
       <input
         type="search"
-        placeholder="Search the quiz by words or question id"
+        placeholder="Search the questions by words or question id"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', fontSize: '15px', marginBottom: '12px' }}
       />
-      {!search.trim() && <div style={meta}>{questions.length} questions in the quiz. Search to find one.</div>}
-      {search.trim() && found.length === 0 && <div style={meta}>Nothing in the quiz matches.</div>}
+      {!search.trim() && <div style={meta}>{questions.length} questions. Search to find one.</div>}
+      {search.trim() && found.length === 0 && <div style={meta}>No question matches.</div>}
       {found.length > LIVE_LIMIT && <div style={{ ...meta, marginBottom: '8px' }}>Showing {LIVE_LIMIT} of {found.length}. Search for more words to narrow it.</div>}
 
       {found.slice(0, LIVE_LIMIT).map((q) => {
@@ -277,8 +277,8 @@ function LiveTab({ questions, sections, run }) {
             <Explanation text={q.explanation} style={{ maxWidth: 'none' }} />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
               <Confirm
-                label="Hide from the quiz"
-                question="Take this question out of the quiz? It can be put back from Removed."
+                label="Hide"
+                question="Hide this question? It can be put back from Removed."
                 confirmLabel="Hide"
                 style={smallButton('#5a0000')}
                 onConfirm={() => run((t) => setQuestionStatus(t, q.questionId, 'hidden'), 'Hidden. It is listed under Removed.')}
@@ -310,7 +310,7 @@ function LiveTab({ questions, sections, run }) {
 // ---------------------------------------------------------------------------------------
 
 const REMOVED = [
-  { status: 'hidden', label: 'Hidden', back: 'approved', action: 'Put back in the quiz', says: 'Put back in the quiz.' },
+  { status: 'hidden', label: 'Hidden', back: 'approved', action: 'Put back', says: 'Put back in the questions.' },
   { status: 'rejected', label: 'Rejected', back: 'pending', action: 'Send back for review', says: 'Sent back to pending with its votes cleared.' },
 ];
 
@@ -359,7 +359,7 @@ function RemovedTab({ token, sections, run }) {
           <div style={{ marginTop: '10px' }}>
             <Confirm
               label={kind.action}
-              question={`${kind.action}?`}
+              question={kind.status === 'hidden' ? 'Put this question back?' : 'Send back for review?'}
               confirmLabel={kind.status === 'hidden' ? 'Put back' : 'Send back'}
               style={smallButton('#01202C')}
               onConfirm={async () => {

@@ -108,7 +108,7 @@ export default function SectionsPage() {
       const out = await saveSections(saved.rev, { school: 'NIFE', sections: strip(draft) }, { author: author.trim(), summary: summary.trim() });
       setSummary('');
       await load();
-      setMessage({ text: `Saved as revision ${out.rev}. The quiz uses it from the next page load.`, kind: 'info' });
+      setMessage({ text: `Saved as revision ${out.rev}.`, kind: 'info' });
     } catch (err) {
       if (err.status === 409) {
         setMessage({ text: 'Someone saved the topics while you were editing. Load theirs, then make your change again.', kind: 'error', conflict: true });
@@ -136,7 +136,7 @@ export default function SectionsPage() {
       const out = await restoreSections(rev, { author: author.trim() });
       await load();
       setShowHistory(false);
-      setMessage({ text: `Revision ${rev} restored as revision ${out.rev}. Anything added since it is kept, retired.`, kind: 'info' });
+      setMessage({ text: `Revision ${rev} restored as revision ${out.rev}.`, kind: 'info' });
     } catch (err) {
       setMessage({ text: err.message, kind: 'error' });
     }
@@ -154,10 +154,8 @@ export default function SectionsPage() {
       <Link to="/nife/questions" style={{ color: '#003B4F', fontSize: '14px' }}>← Back to the questions</Link>
       <h2 style={{ color: '#01202C', margin: '10px 0 6px' }}>Topics and lectures</h2>
       <p style={{ fontSize: '14px', color: '#333', marginTop: 0 }}>
-        The topics and lectures the quiz is sorted into. Anyone can change them when the syllabus
-        changes, and every change is kept in History, where it can be undone. A topic or lecture
-        that has been saved can't be deleted, because questions are filed under it: retire it to
-        take it out of the quiz, and bring it back the same way.
+        The topics and lectures the questions are sorted into. Anyone can change them when the
+        syllabus changes, and every change is kept in History, where it can be undone.
       </p>
 
       {message && (
@@ -183,7 +181,7 @@ export default function SectionsPage() {
               <Arrows index={i} count={draft.length} onMove={(from, to) => setDraft((d) => moved(d, from, to))} />
               <input aria-label="Topic name" style={{ ...input, flex: '1 1 160px', fontWeight: 'bold', color: s.retired ? '#888' : '#01202C' }} value={s.name} maxLength={40} onChange={(e) => renameSection(i, e.target.value)} />
               <span style={faint}>
-                {c.total} question{c.total === 1 ? '' : 's'}{s.retired ? ' • retired, not in the quiz' : ''}{s.isNew ? ' • new' : ''}
+                {c.total} question{c.total === 1 ? '' : 's'}{s.retired ? ' • retired, hidden from the questions' : ''}{s.isNew ? ' • new' : ''}
               </span>
               <button type="button" style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => toggle(i)}>
                 {isOpen ? 'Hide lectures' : `Lectures (${s.lectures.length})`}
@@ -192,7 +190,7 @@ export default function SectionsPage() {
                 <button type="button" style={smallButton('white', '#8e1c12', '1px solid #8e1c12')} onClick={() => setDraft((d) => d.filter((_, j) => j !== i))}>Remove</button>
               ) : (
                 <button type="button" style={smallButton(s.retired ? '#01202C' : 'white', s.retired ? 'white' : '#5a0000', '1px solid #5a0000')} onClick={() => setSection(i, { retired: s.retired ? undefined : true })}>
-                  {s.retired ? 'Bring back' : 'Retire'}
+                  {s.retired ? 'Restore' : 'Retire'}
                 </button>
               )}
             </div>
@@ -209,7 +207,7 @@ export default function SectionsPage() {
                       <button type="button" style={smallButton('white', '#8e1c12', '1px solid #8e1c12')} onClick={() => setSection(i, { lectures: s.lectures.filter((_, m) => m !== k) })}>Remove</button>
                     ) : (
                       <button type="button" style={smallButton('white', '#5a0000', '1px solid #5a0000')} onClick={() => setLecture(i, k, { retired: l.retired ? undefined : true })}>
-                        {l.retired ? 'Bring back' : 'Retire'}
+                        {l.retired ? 'Restore' : 'Retire'}
                       </button>
                     )}
                   </div>
@@ -256,7 +254,7 @@ export default function SectionsPage() {
                       <div style={{ marginTop: '4px' }}>
                         <Confirm
                           label="Restore this revision"
-                          question={`Make revision ${h.rev} current? Anything added since is kept, retired.`}
+                          question={`Make revision ${h.rev} current?`}
                           confirmLabel="Restore"
                           style={smallButton('#01202C')}
                           onConfirm={() => restore(h.rev)}

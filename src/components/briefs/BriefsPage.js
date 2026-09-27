@@ -73,8 +73,8 @@ function QuickLinks() {
   );
 }
 
-// The big buttons: one per brief, then TOLD.
-function Chooser({ briefs, active }) {
+// The big buttons: one per brief, then TOLD where the school has a card.
+function Chooser({ briefs, active, told }) {
   const base = useBriefsBase();
   return (
     <nav className="brief-chooser" aria-label="Briefs">
@@ -89,13 +89,15 @@ function Chooser({ briefs, active }) {
           {b.short || b.title}
         </Link>
       ))}
-      <Link
-        to={`${base}/told`}
-        className={`brief-choice brief-choice--told${active === 'told' ? ' is-active' : ''}`}
-        aria-current={active === 'told' ? 'page' : undefined}
-      >
-        TOLD
-      </Link>
+      {told && (
+        <Link
+          to={`${base}/told`}
+          className={`brief-choice brief-choice--told${active === 'told' ? ' is-active' : ''}`}
+          aria-current={active === 'told' ? 'page' : undefined}
+        >
+          TOLD
+        </Link>
+      )}
     </nav>
   );
 }
@@ -104,7 +106,7 @@ function Frame({ index, active, title, children }) {
   return (
     <div className="page-container brief-page">
       <h1 className="brief-title">{title}</h1>
-      <Chooser briefs={index.briefs} active={active} />
+      <Chooser briefs={index.briefs} active={active} told={index.hasTold} />
       {index.status === 'error' && index.briefs.length === 0 && (
         <p className="discuss-editor-warn">The briefs could not be loaded. {index.error && index.error.message}</p>
       )}
@@ -262,7 +264,8 @@ function DefaultRoute({ index, ...rest }) {
 }
 
 // `base`, `school` and `told` are how another school mounts this page: NIFE's briefs are at
-// /nife/briefs with the C172 TOLD card, and everything else is the same page.
+// /nife/briefs with the C172 TOLD card, and everything else is the same page. A school with no
+// TOLD card passes `told={null}`, and the TOLD button and its address go away.
 //
 // A brief names the school it is for, and each tab shows only its own. The corpus is one list
 // on the server — the guides are uploaded to whichever tab the person is on — so this is what
@@ -272,8 +275,8 @@ function BriefsPage({
 }) {
   const all = useBriefIndex();
   const index = useMemo(
-    () => ({ ...all, briefs: all.briefs.filter((b) => isSchool(b, school)) }),
-    [all, school],
+    () => ({ ...all, briefs: all.briefs.filter((b) => isSchool(b, school)), hasTold: !!told }),
+    [all, school, told],
   );
   const [firstLetter, setFirstLetterState] = useState(() => readFlag(FIRST_LETTER_KEY));
   const setFirstLetter = (on) => {
@@ -285,7 +288,7 @@ function BriefsPage({
   return (
     <BriefsBaseProvider value={base}>
     <Routes>
-      <Route path="told" element={<Frame index={index} active="told" title={toldTitle}>{told}</Frame>} />
+      {told && <Route path="told" element={<Frame index={index} active="told" title={toldTitle}>{told}</Frame>} />}
       <Route
         path="upload"
         element={(

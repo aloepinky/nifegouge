@@ -28,6 +28,7 @@ const FURNITURE = [
   /^\d{1,2} [A-Z][a-z]{2} \d{4}$/, // 10 Mar 2025
   /^(\d+\s+)?Enclosure \(\s*\d+\s*\)$/, // 11 Enclosure (2)
   /^Version\s+[\d.]+\s+\d{1,2}\s+[A-Za-z]+\s+\d{4}$/, // Version 2.0 13 March 2026
+  /^\(Updated\s+[A-Za-z]+\s+\d{4}\)$/i, // (Updated MAR 2025), under the TW-4 Blue Card Script's title
   /^\d+$/,
 ];
 
@@ -150,10 +151,16 @@ const L2 = /^([a-z])\.\s+(.*)$/;
 const L2_NO_STOP = /^([a-z])\s+([A-Z].*)$/; // the OCR dropped the stop: `b Profile/Sequence`
 const L3 = /^\((\d{1,2})\)\s*(.*)$/;
 const L4 = /^\(([a-z])\)\s*(.*)$/;
+const L0 = /^([A-Z])\.\s+(.*)$/;
 
 // -> { note, nodes: [{ level, marker, parts, children }] } from single-column lines.
+//
+// The TW-4 Blue Card Script (the T-44C's guide) letters its sections on the margin, `A.` /
+// `1.`, a rung above the Primary guide's `1.` / `a.`. A guide that does is read one rung down:
+// its `1.` is an item wherever it is indented to, and `a.` below that.
 function readOutline(lines) {
   const margin = Math.min(...lines.map((l) => l.x));
+  const lettered = lines.some(({ x, text }) => x < margin + 8 && L0.test(text));
   const root = { level: 0, children: [] };
   const stack = [root];
   const note = [];
@@ -165,7 +172,12 @@ function readOutline(lines) {
     // A section number sits on the margin, where a wrapped line also starts; the lower
     // markers are never how a sentence begins, so they are taken wherever they fall (the Solo
     // guide prints its `a.` on the margin).
-    if ((m = text.match(L1)) && x < margin + 8) level = 1;
+    if (lettered) {
+      if ((m = text.match(L0)) && x < margin + 8) level = 1;
+      else if ((m = text.match(L1))) level = 2;
+      else if ((m = text.match(L2))) level = 3;
+      else if ((m = text.match(L3))) level = 4;
+    } else if ((m = text.match(L1)) && x < margin + 8) level = 1;
     else if ((m = text.match(L2))) level = 2;
     else if (x >= margin + 8 && (m = text.match(L2_NO_STOP))) level = 2;
     else if ((m = text.match(L3))) level = 3;
@@ -289,7 +301,9 @@ function isTitleCase(text) {
 // A name ended by a full stop has to read as one (title case); one ended by a colon need not.
 export function splitName(text) {
   const m = text.match(/^(.{2,90}?)(:|\.(?=\s|$))\s*(.*)$/s);
-  if (m && words(m[1]) <= 10 && !/\d$/.test(m[1]) && (m[2] === ':' || isTitleCase(m[1]))) {
+  // A name may end in a digit before a colon (`SNA1 / SNA2: SNA 1 Event…`); before a full stop
+  // the digit is a number closing a sentence.
+  if (m && words(m[1]) <= 10 && (m[2] === ':' || (!/\d$/.test(m[1]) && isTitleCase(m[1])))) {
     return [m[1].trim(), m[3].trim()];
   }
   return [text.replace(/[.:]$/, '').trim(), ''];
@@ -357,11 +371,16 @@ function toGuideSection(node) {
 
 const CARD_ITEM = /^(\d{1,2})\.\s*(.*)$/;
 const CARD_SUB = /^(?:[a-z]\.|\(\d{1,2}\)|\([a-z]\))\s*/;
+// The T-44C card letters its headings in bold title case, `A. Product Inventory`, where the
+// Primary card sets them in capitals with no marker. A lettered heading can wrap
+// (`H. Standarization Board Minutes /` over `Read and Initial`), so the lines between it and
+// its first item are the rest of its name.
+const CARD_HEAD = /^[A-Z]\.\s+(.+)$/;
 
 // `**12. OCF procedures**` -> `12. **OCF procedures**`, so a bold line still reads as a
 // numbered one. The card sets a whole item bold; the number is not part of what it says.
 function hoistMarker(text) {
-  return text.replace(/^\*\*((?:\d{1,2}\.|[a-z]\.|\([0-9a-z]{1,2}\))\s*)/, '$1**');
+  return text.replace(/^\*\*((?:\d{1,2}\.|[a-zA-Z]\.|\([0-9a-z]{1,2}\))\s*)/, '$1**');
 }
 
 // Card pages -> [{ title, column, page, items: [{ label, card: [text] }] }], in reading order:
@@ -382,8 +401,15 @@ function readCard(cardPages) {
       let lastParts = null;
       texts.forEach((text) => {
         let m;
-        // A heading is capitals with no closing stop; `WAVE OFF.` is a sentence wrapping.
-        if (isCaps(text) && !/[.,;:]$/.test(plain(text)) && !CARD_ITEM.test(text) && !CARD_SUB.test(text)) {
+        if ((m = text.match(CARD_HEAD))) {
+          section = { title: plain(m[1]), column: col + 1, page: pageIndex + 1, items: [], wraps: true };
+          sections.push(section);
+          item = null;
+          lastParts = null;
+        } else if (section && section.wraps && !section.items.length && !CARD_ITEM.test(text)) {
+          section.title = `${section.title} ${plain(text)}`;
+        } else if (isCaps(text) && !/[.,;:]$/.test(plain(text)) && !CARD_ITEM.test(text) && !CARD_SUB.test(text)) {
+          // A heading is capitals with no closing stop; `WAVE OFF.` is a sentence wrapping.
           // A heading is already set bold by the page; the card's own bold says nothing more.
           section = { title: plain(text), column: col + 1, page: pageIndex + 1, items: [] };
           sections.push(section);
@@ -403,7 +429,7 @@ function readCard(cardPages) {
       });
     });
   });
-  return sections.map((s) => ({
+  return sections.map(({ wraps, ...s }) => ({
     ...s,
     items: s.items.map((it) => {
       const label = joinText(it.parts);
@@ -595,8 +621,16 @@ export function programFor(title) {
     || new RegExp(`\\b${p.aircraft.replace(/-/g, '-?')}\\b`, 'i').test(title)
   ));
   if (known) return { aircraft: known.aircraft, school: known.label };
-  const airframe = (title.match(/\bT-\d+[A-Z]?\b/) || [])[0];
-  return { aircraft: airframe === 'T-6' ? 'T-6B' : (airframe || 'T-6B'), school: 'Primary' };
+  if (/\bT-6\b/.test(title)) return { aircraft: 'T-6B', school: 'Primary' };
+  // Nothing recognised (`AME BRIEFING GUIDE`): no school, so the upload keeps the tab's own.
+  return {};
+}
+
+// `TW-4 Flight Briefing Guide (Blue Card Script)` names its wing in its title, where the Primary
+// guide names it through its instruction.
+export function unitOfTitle(title) {
+  const m = /^(TW|VT)-?\s*(\d+)\b/.exec(plain(title || ''));
+  return m ? `${m[1]}-${m[2]}` : '';
 }
 
 // Training Air Wing Four publishes the Primary guide as COMTRAWINGFOURINST 1552.1, and that
@@ -698,6 +732,26 @@ function readSource(pages) {
   return Object.keys(source).length ? source : null;
 }
 
+// `6-8` or `6, 7, 8` -> [5, 6, 7], the page indexes to read; blank -> null, every page. A guide
+// can be three pages of a longer packet (the T-44C's is pages 6 to 8 of the TW-4 On-Wing Gouge
+// Packet), and read whole the pages after it would run on as the guide's last section.
+// -> { pages } or { error }.
+export function pageList(text, total) {
+  if (!text.trim()) return { pages: null };
+  const pages = new Set();
+  const parts = text.split(',').map((t) => t.trim()).filter(Boolean);
+  for (let i = 0; i < parts.length; i += 1) {
+    const m = parts[i].match(/^(\d+)\s*(?:[-–]\s*(\d+))?$/);
+    const from = m && Number(m[1]);
+    const to = m && Number(m[2] || m[1]);
+    if (!m || from < 1 || to < from || to > total) {
+      return { error: `"${parts[i]}" is not a page of this PDF, which has ${total}.` };
+    }
+    for (let n = from; n <= to; n += 1) pages.add(n - 1);
+  }
+  return { pages: [...pages].sort((a, b) => a - b) };
+}
+
 // pages: pdf.js text items, one array per page. -> { briefs, warnings }
 export function parseBriefGuide(pages) {
   const warnings = [];
@@ -723,7 +777,7 @@ export function parseBriefGuide(pages) {
   });
   const isRunningHead = (text) => titles.has(norm(text)) && isBriefTitle(text);
 
-  const briefs = found.map((start, n) => {
+  const gathered = found.map((start, n) => {
     const next = found[n + 1];
     const guideLines = [];
     const cardPages = [];
@@ -739,11 +793,30 @@ export function parseBriefGuide(pages) {
         }));
       }
     }
-    if (!guideLines.length) {
-      warnings.push(`${shortName(start.title)}: no guide text was found under the title.`);
+    return { title: start.title, guideLines, cardPages };
+  });
+
+  // The T-44C prints its card under one title (`AME BRIEFING GUIDE`) and the guide after it
+  // under another (`TW-4 Flight Briefing Guide (Blue Card Script)`). A card with no guide of
+  // its own, followed by a guide with no card of its own, is one brief, named by the card.
+  const merged = [];
+  gathered.forEach((g) => {
+    const prev = merged[merged.length - 1];
+    if (prev && !prev.guideLines.length && prev.cardPages.length && g.guideLines.length && !g.cardPages.length) {
+      merged[merged.length - 1] = { ...prev, guideTitle: g.title, guideLines: g.guideLines };
+    } else merged.push(g);
+  });
+
+  const briefs = merged.map((g, n) => {
+    if (!g.guideLines.length) {
+      warnings.push(`${shortName(g.title)}: no guide text was found under the title.`);
       return null;
     }
-    return buildBrief({ title: start.title, source, guideLines, cardPages }, n + 1, warnings);
+    const unit = (source && source.unit) || unitOfTitle(g.guideTitle || g.title);
+    const own = unit ? { ...source, unit } : source;
+    return buildBrief({
+      title: g.title, source: own, guideLines: g.guideLines, cardPages: g.cardPages,
+    }, n + 1, warnings);
   }).filter(Boolean);
 
   if (!briefs.length) warnings.push('No page of this PDF carries a title that names a briefing guide.');

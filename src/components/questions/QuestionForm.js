@@ -143,11 +143,11 @@ export default function QuestionForm({ mode, question, sections, defaultTopic, o
             Why is this the answer? <span style={{ fontWeight: 400, color: '#666' }}>(optional)</span>
           </label>
           <div style={{ fontSize: '13px', color: '#666', marginBottom: '6px' }}>
-            Students see this after they answer. Say where the answer comes from if you can.
+            Provide a source if you can.
           </div>
           <textarea
             id="question-why"
-            placeholder="Explain the answer"
+            placeholder="Explanation"
             value={data.explanation}
             onChange={set('explanation')}
             maxLength={1500}

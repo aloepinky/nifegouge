@@ -54,10 +54,10 @@ export default function PendingCard({ item, original, threshold, badge, onDone }
       <div className="qa-container">
         <div style={bannerStyle}>
           {isEdit
-            ? 'Community review: a proposed edit. Answer it, then say whether it is better than the current version.'
-            : 'Community review: a new question. Answer it, then decide whether it belongs in the quiz.'}
+            ? 'Community review: Proposed edit. Answer it and decide if it is better than the current version.'
+            : 'Community review: New question. Answer and decide if it should stay.'}
           <div style={{ fontSize: '0.9em', marginTop: '5px', fontWeight: 'normal' }}>
-            {item.approveCount || 0} for, {item.rejectCount || 0} against. It is decided at {threshold} net either way.
+            {item.approveCount || 0} for, {item.rejectCount || 0} against.
           </div>
         </div>
 
@@ -93,11 +93,11 @@ export default function PendingCard({ item, original, threshold, badge, onDone }
 
       {answered && (
         <div className="feedback-row">
-          <button className="thumb-btn up" onClick={() => vote(up)} disabled={busy} title={isEdit ? 'Better than the current version' : 'Add it to the quiz'}>
+          <button className="thumb-btn up" onClick={() => vote(up)} disabled={busy} title={isEdit ? 'Better than the current version' : 'Add'}>
             <img src="/images/thumb.png" alt="" />
             <span style={{ display: 'block', fontSize: '12px', marginTop: '5px', color: 'white' }}>{isEdit ? 'Better' : 'Approve'}</span>
           </button>
-          <button className="thumb-btn down" onClick={() => vote(down)} disabled={busy} title={isEdit ? 'Worse than the current version' : 'Keep it out of the quiz'}>
+          <button className="thumb-btn down" onClick={() => vote(down)} disabled={busy} title={isEdit ? 'Worse than the current version' : 'Keep out'}>
             <img src="/images/thumb-down.png" alt="" />
             <span style={{ display: 'block', fontSize: '12px', marginTop: '5px', color: 'white' }}>{isEdit ? 'Worse' : 'Reject'}</span>
           </button>

@@ -77,7 +77,7 @@ export default function EditDiff({ original, edit }) {
   if (!original) {
     return (
       <div style={{ fontSize: '14px', color: '#555', margin: '12px 0' }}>
-        The question this edit changes is no longer in the quiz, so there is nothing to compare it with.
+        The question this edit changes has been removed from the questions, so there is nothing to compare it with.
       </div>
     );
   }
@@ -91,8 +91,8 @@ export default function EditDiff({ original, edit }) {
 
   return (
     <div style={{ margin: '16px 0', padding: '10px 14px', border: '1px solid #cfdde2', borderRadius: '8px', background: '#fff', textAlign: 'left' }}>
-      <div style={{ fontWeight: 700, color: '#01202C', marginBottom: '4px' }}>What this edit changes</div>
-      {nothing && <div style={{ fontSize: '14px', color: '#555' }}>Only spacing or capitals.</div>}
+      <div style={{ fontWeight: 700, color: '#01202C', marginBottom: '4px' }}>What changed</div>
+      {nothing && <div style={{ fontSize: '14px', color: '#555' }}>Only the spacing changed.</div>}
       <Row label="Question" changed={q.changed}><Diffed before={q.before} after={q.after} /></Row>
       <Row label="Correct answer" changed={right.changed}><Diffed before={right.before} after={right.after} /></Row>
       <Row label="Wrong answers" changed={wrong.changed}>

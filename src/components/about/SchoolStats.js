@@ -70,7 +70,7 @@ function useFigures(source, kind, load, derive, school) {
 }
 
 // A stat whose value is `undefined` is one this school does not have and is left out; `null`
-// is one still loading and shows a dash.
+// is one still loading and shows a dash. `one` is the label for a count of exactly one.
 function Group({ title, stats, caption }) {
   const shown = stats.filter((s) => s.value !== undefined);
   return (
@@ -79,7 +79,7 @@ function Group({ title, stats, caption }) {
       <dl className="about-stats-row">
         {shown.map((s) => (
           <div key={s.label} className="about-stat">
-            <dt>{s.label}</dt>
+            <dt>{s.value === 1 && s.one ? s.one : s.label}</dt>
             <dd>{format(s.value)}</dd>
           </div>
         ))}
@@ -100,12 +100,12 @@ export function EpStats({ platforms, byAircraft = false }) {
           key={aircraft}
           title={titled ? aircraft : null}
           stats={[
-            { label: 'EPs', value: eps.eps },
-            { label: 'steps', value: eps.steps },
-            { label: 'words', value: eps.words },
+            { label: 'EPs', one: 'EP', value: eps.eps },
+            { label: 'steps', one: 'step', value: eps.steps },
+            { label: 'words', one: 'word', value: eps.words },
             // A sheet with no NWCs (NIFE's) shows no NWC count, rather than a zero.
-            { label: 'NWCs', value: eps.nwcs || undefined },
-            { label: 'limits', value: limits },
+            { label: 'NWCs', one: 'NWC', value: eps.nwcs || undefined },
+            { label: 'limits', one: 'limit', value: limits },
           ]}
         />
       ))}
@@ -127,8 +127,8 @@ export function BriefStats({ school, platforms = [], byAircraft = false }) {
             key={aircraft || 'all'}
             title={aircraft}
             stats={[
-              { label: 'briefs', value: mine && mine.length },
-              { label: 'words to memorize', value: mine && mine.reduce((n, b) => n + b.words, 0) },
+              { label: 'briefs', one: 'brief', value: mine && mine.length },
+              { label: 'words to memorize', one: 'word to memorize', value: mine && mine.reduce((n, b) => n + b.words, 0) },
             ]}
           />
         );
@@ -147,7 +147,7 @@ export function SyllabusStats({ school }) {
         <Group
           key={row ? row.id : 'loading'}
           title={row ? row.name : 'Syllabus'}
-          stats={[{ label: 'discuss items', value: row ? row.discussItems : null }]}
+          stats={[{ label: 'discuss items', one: 'discuss item', value: row ? row.discussItems : null }]}
         />
       ))}
     </div>

@@ -49,6 +49,7 @@ const TW4EPsLimits = page(() => import('./components/TW4EPsLimits.js'));
 const T44CEPsLimits = page(() => import('./components/T44CEPsLimits.js'));
 const T44CAbout = page(() => import('./components/T44CAbout.js'));
 const T44CDiscuss = page(() => import('./components/T44CDiscuss.js'));
+const T44CBriefs = page(() => import('./components/T44CBriefs.js'));
 const BriefsPage = page(() => import('./components/briefs/BriefsPage'));
 const NIFEAbout = page(() => import('./components/NIFEAbout.js'));
 const CourseRules = page(() => import('./components/TW4CourseRules.js'));
@@ -124,6 +125,7 @@ function App() {
         {/* Draft: shown on a dev server, absent from the live site — nav AND route, so a
             deep link cannot reach a half-written tab. See programs.js. */}
         {DRAFT && <Route path="/t44c/discuss/*" element={<T44CDiscuss />} />}
+        {DRAFT && <Route path="/t44c/briefs/*" element={<T44CBriefs />} />}
       </Routes>
       </Suspense>
 

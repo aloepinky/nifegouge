@@ -27,10 +27,8 @@ export default function UploadPage() {
   const { sections } = useSections();
   const [live, setLive] = useState([]);
   const [text, setText] = useState('');
-  const [format, setFormat] = useState('auto');
   const [rows, setRows] = useState([]);
   const [include, setInclude] = useState([]);
-  const [detected, setDetected] = useState('');
   const [topic, setTopic] = useState('');
   const [lecture, setLecture] = useState('');
   const [author, setAuthorName] = useState(getAuthor);
@@ -70,11 +68,11 @@ export default function UploadPage() {
     };
   }), [rows, sections, section, lecture, liveInUse]);
 
-  const read = (value, fmt = format) => {
+  // Which shape a paste is (spreadsheet, CSV or Quizlet) is always worked out from the paste.
+  const read = (value) => {
     setText(value);
     setResult(null);
-    const out = parseUpload(value, fmt === 'auto' ? {} : { format: fmt });
-    setDetected(out.format);
+    const out = parseUpload(value);
     setRows(out.rows);
     // A row is ticked unless something is wrong with it or it looks like one already in the quiz.
     setInclude(out.rows.map((r) => problemsWith(r).length === 0 && !likelyDuplicate(r, liveInUse)));
@@ -126,10 +124,9 @@ export default function UploadPage() {
       <Link to="/nife/questions" style={{ color: '#003B4F', fontSize: '14px' }}>← Back to the questions</Link>
       <h2 style={{ color: '#01202C', margin: '10px 0 6px' }}>Upload questions</h2>
       <p style={{ fontSize: '14px', color: '#333', marginTop: 0 }}>
-        Paste rows copied from a spreadsheet, paste a Quizlet export, or choose a CSV file. A
-        spreadsheet's columns are Question, Correct answer, Wrong answer 1 to 3, Lecture and
-        Explanation, in that order unless the first row names them. Check every question below
-        before sending: each one goes to community review like any other.
+        Paste rows copied from a spreadsheet, Quizlet export, or CSV file. A spreadsheet's columns
+        are Question, Correct answer, Wrong answer 1 to 3, Lecture and Explanation, in that order
+        unless the first row has column names. Check every question below before submitting.
       </p>
 
       <textarea
@@ -143,20 +140,12 @@ export default function UploadPage() {
         <label>
           Or a file: <input type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" onChange={(e) => readFile(e.target.files[0])} style={{ width: 'auto' }} />
         </label>
-        <label>
-          Read it as{' '}
-          <select value={format} onChange={(e) => { setFormat(e.target.value); if (text) read(text, e.target.value); }}>
-            <option value="auto">{detected ? `Automatic (${detected === 'quizlet' ? 'Quizlet' : 'spreadsheet'})` : 'Automatic'}</option>
-            <option value="table">Spreadsheet or CSV</option>
-            <option value="quizlet">Quizlet export</option>
-          </select>
-        </label>
       </div>
 
       {result && (
         <div style={{ marginTop: '14px', padding: '10px 12px', borderRadius: '6px', background: result.refused || result.failed ? '#fdecea' : '#e6f2f5', color: result.refused || result.failed ? '#8e1c12' : '#003B4F', fontSize: '14px' }}>
           {result.sent} question{result.sent === 1 ? '' : 's'} sent for community review.
-          {result.refused > 0 && <div>{result.refused} could not be sent. They are still above, each marked with the reason.</div>}
+          {result.refused > 0 && <div>{result.refused} could not be sent. They are still above, with the reason.</div>}
           {result.failed && <div>Sending stopped: {result.failed} Anything not sent is still above.</div>}
         </div>
       )}
@@ -221,12 +210,12 @@ export default function UploadPage() {
                 {r.serverError && <div style={{ color: '#c62828', fontSize: '13px', marginTop: '6px' }}>Not sent: {r.serverError}</div>}
                 {r.borrowed && (
                   <div style={{ color: '#8a5a00', fontSize: '13px', marginTop: '6px' }}>
-                    Quizlet has no wrong answers, so these were taken from other cards. Check they are really wrong for this question.
+                    Quizlet has no wrong answers, so these were taken from other cards. Check them.
                   </div>
                 )}
                 {r.duplicate && (
                   <div style={{ color: '#003B4F', fontSize: '13px', marginTop: '6px' }}>
-                    Looks like a question already in the quiz: “{r.duplicate.question.question}” (✓ {r.duplicate.question.correctAnswer}). Left unticked; tick it if it is different.
+                    Looks like an existing question: “{r.duplicate.question.question}” (✓ {r.duplicate.question.correctAnswer}). Left unticked; tick it if it is different.
                   </div>
                 )}
               </div>

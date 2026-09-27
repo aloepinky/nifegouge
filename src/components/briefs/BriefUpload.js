@@ -4,11 +4,11 @@ import { getAuthor, setAuthor } from '../serverApi';
 import { Line } from '../discuss/edit/fields';
 import { preparePdfWorker } from '../discuss/jppt/pdfWorker';
 import { loadTextItems } from '../discuss/jppt/pdfText';
-import { parseBriefGuide } from './parseBriefGuide';
+import { pageList, parseBriefGuide } from './parseBriefGuide';
 import { publishBrief, saveBrief, fetchBrief, rememberBrief } from './briefApi';
 import BriefView from './BriefView';
 import { diffBriefs, diffSummary } from './briefDiff';
-import { PROGRAMS, programName, programOf } from '../programs';
+import { PROGRAMS, programName, programOf, shown } from '../programs';
 import { useBriefsBase } from './paths';
 
 // Upload a briefing guide and publish the briefs it prints. The PDF is read in this browser
@@ -108,6 +108,7 @@ function Preview({ brief, against }) {
 function BriefUpload({ index, school: startingSchool, onPublished }) {
   const base = useBriefsBase();
   const [file, setFile] = useState(null);
+  const [pageText, setPageText] = useState('');
   const [progress, setProgress] = useState(null);
   const [error, setError] = useState('');
   const [found, setFound] = useState(null); // { briefs, warnings }
@@ -133,8 +134,13 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
     try {
       setProgress('Opening the PDF');
       stop = await preparePdfWorker();
-      const pages = await loadTextItems(await file.arrayBuffer(), (p, total) => setProgress(`Reading page ${p} of ${total}`));
-      const out = parseBriefGuide(pages);
+      const all = await loadTextItems(await file.arrayBuffer(), (p, total) => setProgress(`Reading page ${p} of ${total}`));
+      const wanted = pageList(pageText, all.length);
+      if (wanted.error) {
+        setError(wanted.error);
+        return;
+      }
+      const out = parseBriefGuide(wanted.pages ? wanted.pages.map((n) => all[n]) : all);
       if (!out.briefs.length) {
         setError(out.warnings.join(' ') || 'No brief was found in this PDF.');
         return;
@@ -252,6 +258,10 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
             <span className="brief-file-name">{file ? file.name : 'No file uploaded'}</span>
           </div>
         </div>
+        <div className="discuss-editor-field">
+          <label className="discuss-editor-label" htmlFor="brief-pages">Pages</label>
+          <Line id="brief-pages" value={pageText} onChange={setPageText} placeholder="All, or e.g. 6-8 if the guide is part of a longer PDF" maxLength={40} />
+        </div>
         <div className="discuss-editor-buttons">
           <button type="button" className="discuss-editor-save" disabled={!file || !!progress} onClick={read}>
             {progress ? 'Reading…' : 'Upload'}
@@ -335,7 +345,7 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
             >
               {/* Only the schools with a Briefs tab: a brief filed under one without is a
                   brief nobody can reach. See `briefs` in programs.js. */}
-              {PROGRAMS.filter((p) => p.briefs).map((p) => <option key={p.id} value={p.id}>{programName(p)}</option>)}
+              {PROGRAMS.filter((p) => shown(p.briefs)).map((p) => <option key={p.id} value={p.id}>{programName(p)}</option>)}
             </select>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import AboutPage from './about/AboutPage.js';
 import { aboutTabs } from './about/tabs.js';
-import { EpStats, SyllabusStats } from './about/SchoolStats.js';
+import { BriefStats, EpStats, SyllabusStats } from './about/SchoolStats.js';
 import { PLATFORMS as ALL_PLATFORMS } from './about/platforms.js';
 
 // Advanced will train in several aircraft, each with its own EPs, limits and briefs, so its
@@ -28,6 +28,14 @@ const CONTENT = {
     more: [
       'Two syllabi are flown in the T-44C: the multi-service Advanced syllabus and the E-2D Intermediate one. Pick yours from the dropdown; the pages themselves are shared, because the aircraft is.',
       'The Advanced syllabus splits after I4601, so its course flow carries a chart for each community — P-8, E-6, C-130, Coast Guard and tilt-rotor.',
+    ],
+  },
+  '/t44c/briefs': {
+    stats: <BriefStats school="Advanced" />,
+    icon: 'brief',
+    blurb: 'The T-44C briefs, for quick reference.',
+    more: [
+      'The Briefs page holds the T-44C briefs for quick reference.',
     ],
   },
 };

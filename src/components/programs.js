@@ -13,15 +13,15 @@
 export const DRAFT = process.env.NODE_ENV !== 'production';
 
 // `briefs` and `discuss` say the program has that tab. The brief upload's School box offers only
-// those, because a brief filed under a school with no tab is a brief nobody can reach. Set it
-// on Advanced when the T-44C briefing guide goes up.
+// those, because a brief filed under a school with no tab is a brief nobody can reach.
 //
 // `draft` hides the program from the navigation and unroutes it on the live site.
-// `discuss: 'draft'` does the same for that one tab of an otherwise live program.
+// `discuss: 'draft'` / `briefs: 'draft'` do the same for that one tab of an otherwise live
+// program — read them through `shown()`, since `'draft'` is truthy.
 export const PROGRAMS = [
   { id: 'nife', label: 'NIFE', aircraft: 'C172', home: '/nife/about', base: '/nife', briefs: true, discuss: true },
   { id: 'tw4', label: 'Primary', aircraft: 'T-6B', home: '/tw4/about', base: '/tw4', briefs: true, discuss: true },
-  { id: 't44c', label: 'Advanced', aircraft: 'T-44C', home: '/t44c/about', base: '/t44c', discuss: 'draft' },
+  { id: 't44c', label: 'Advanced', aircraft: 'T-44C', home: '/t44c/about', base: '/t44c', briefs: 'draft', discuss: 'draft' },
 ];
 
 // Whether a thing flagged `true`, `'draft'` or falsy is shown here. A draft is shown on a dev
@@ -63,6 +63,7 @@ export const PROGRAM_TABS = {
     { to: '/t44c/about', label: 'About' },
     { to: '/t44c/eps-limits', label: 'EPs/Limits' },
     { to: '/t44c/discuss', label: 'Discussion Items', draft: true },
+    { to: '/t44c/briefs', label: 'Briefs/TOLD', draft: true },
   ],
 };
 

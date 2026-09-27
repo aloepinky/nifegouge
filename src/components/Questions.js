@@ -147,7 +147,7 @@ function Questions() {
     linkHandled.current = true;
     const q = usable.find((x) => x.questionId === linkedId);
     if (!q) {
-      showNotice('That question is no longer in the quiz.', 'error');
+      showNotice('That question has been removed from the questions.', 'error');
       return;
     }
     setTopic((q.topic || '').toLowerCase());
@@ -210,7 +210,7 @@ function Questions() {
     if (error) {
       showNotice('Your vote did not go through. Check your connection.', 'error');
     } else if (result && result.outcome === 'approved') {
-      showNotice(isEdit ? 'That edit has been approved and applied.' : 'That question has been approved and added to the quiz.');
+      showNotice(isEdit ? 'That edit has been approved and applied.' : 'That question has been approved and added to the questions.');
       loadAll();
     } else if (result && result.outcome === 'rejected') {
       showNotice(isEdit ? 'That edit was turned down by the community.' : 'That question was turned down by the community.');
@@ -305,7 +305,7 @@ function Questions() {
           onExit={toQuiz}
           onEdit={(q) => openForm('edit', q)}
           focusId={focusId}
-          onCopied={(url) => showNotice(url ? `Copy this link: ${url}` : 'Link copied. Anyone who opens it lands on this question.')}
+          onCopied={(url) => showNotice(url ? `Copy this link: ${url}` : 'Question link copied.')}
         />
         {formModal}
       </>
@@ -474,13 +474,13 @@ function Questions() {
 
                 {disputed && (
                   <div style={{ marginTop: '14px', padding: '10px 12px', background: '#f3f7f8', border: '1px solid #cfdde2', borderRadius: '6px', fontSize: '14px', color: '#003B4F' }}>
-                    Many students have marked this question down. If something in it is wrong or unclear, suggest an edit.
+                    Controversial question. If something in it is wrong or unclear,{' '}
                     <button
                       onClick={() => openForm('edit', current)}
-                      style={{ marginLeft: '10px', padding: '4px 12px', background: '#01202C', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                      style={{ padding: 0, background: 'none', color: '#003B4F', border: 'none', borderBottom: '1px solid #003B4F', cursor: 'pointer', font: 'inherit', fontWeight: 600 }}
                     >
                       Suggest an edit
-                    </button>
+                    </button>.
                   </div>
                 )}
 
@@ -532,7 +532,7 @@ function Questions() {
           Submit a Question
         </button>
         <div style={{ textAlign: 'center', fontSize: '13px', marginTop: '6px' }}>
-          <Link to="/nife/questions/upload" style={{ color: '#003B4F' }}>Have a spreadsheet or a Quizlet set? Upload many at once</Link>
+          <Link to="/nife/questions/upload" style={{ color: '#003B4F' }}>Upload a spreadsheet or a Quizlet set</Link>
         </div>
       </div>
 
