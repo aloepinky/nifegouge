@@ -147,7 +147,7 @@ function Questions() {
     linkHandled.current = true;
     const q = usable.find((x) => x.questionId === linkedId);
     if (!q) {
-      showNotice('That question has been removed from the questions.', 'error');
+      showNotice('That question has been removed.', 'error');
       return;
     }
     setTopic((q.topic || '').toLowerCase());
@@ -210,7 +210,7 @@ function Questions() {
     if (error) {
       showNotice('Your vote did not go through. Check your connection.', 'error');
     } else if (result && result.outcome === 'approved') {
-      showNotice(isEdit ? 'That edit has been approved and applied.' : 'That question has been approved and added to the questions.');
+      showNotice(isEdit ? 'That edit has been approved and applied.' : 'That question has been approved and added.');
       loadAll();
     } else if (result && result.outcome === 'rejected') {
       showNotice(isEdit ? 'That edit was turned down by the community.' : 'That question was turned down by the community.');

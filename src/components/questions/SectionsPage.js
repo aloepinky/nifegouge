@@ -181,7 +181,7 @@ export default function SectionsPage() {
               <Arrows index={i} count={draft.length} onMove={(from, to) => setDraft((d) => moved(d, from, to))} />
               <input aria-label="Topic name" style={{ ...input, flex: '1 1 160px', fontWeight: 'bold', color: s.retired ? '#888' : '#01202C' }} value={s.name} maxLength={40} onChange={(e) => renameSection(i, e.target.value)} />
               <span style={faint}>
-                {c.total} question{c.total === 1 ? '' : 's'}{s.retired ? ' • retired, hidden from the questions' : ''}{s.isNew ? ' • new' : ''}
+                {c.total} question{c.total === 1 ? '' : 's'}{s.retired ? ' • retired, hidden from view' : ''}{s.isNew ? ' • new' : ''}
               </span>
               <button type="button" style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => toggle(i)}>
                 {isOpen ? 'Hide lectures' : `Lectures (${s.lectures.length})`}

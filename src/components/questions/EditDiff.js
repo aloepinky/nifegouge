@@ -77,7 +77,7 @@ export default function EditDiff({ original, edit }) {
   if (!original) {
     return (
       <div style={{ fontSize: '14px', color: '#555', margin: '12px 0' }}>
-        The question this edit changes has been removed from the questions, so there is nothing to compare it with.
+        The question this edit changes has been removed, so there is nothing to compare it with.
       </div>
     );
   }

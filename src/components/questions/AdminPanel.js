@@ -208,7 +208,7 @@ function PendingTab({ questions, sections, run }) {
                   <>
                     {q.type === 'edit' && (
                       <div style={{ ...meta, color: '#8a5a00', marginTop: '4px' }}>
-                        The question this edits has been removed from the questions. Approving it adds it as a question of its own.
+                        The question this edits has been removed. Approving it adds it as a question of its own.
                       </div>
                     )}
                     <div style={{ fontSize: '14px', color: '#222', marginTop: '6px' }}>{q.question}</div>
