@@ -128,7 +128,7 @@
     "explanation": "",
     "source": "NIFE FR&R Student Guide, Aerobatic Flight",
     "problem": "The live answer reads \"Below 1500' AGL with  sm visibility\". The number is missing.",
-    "fix": "Approve the pending edit that fills in 3 SM. No explanation."
+    "fix": "Answer changed to: Below 1,500' AGL or when visibility is less than 3 SM. No explanation."
   },
   {
     "n": 18,
@@ -149,7 +149,7 @@
     "n": 20,
     "id": "q_1788879755322_vu8tldlrz",
     "verdict": "flag",
-    "explanation": "If IAS remains constant while climbing, TAS must increase. An increasing TAS in a climb does not tell you what IAS does.",
+    "explanation": "TAS is IAS corrected for density, TAS = IAS × √(ρ0 / ρ), and air density decreases as you climb. If IAS remains constant while climbing, TAS must increase. TAS also increases if IAS increases, or if IAS decreases only slightly, so an increasing TAS alone does not tell you what IAS does.",
     "source": "NIFE Aero Student Guide, Airspeed Measurement",
     "problem": "By the guide's own example, \"stays the same\" fits as well as the keyed \"Decreases\". Your one explanation was written for this question before an edit changed its key.",
     "fix": "Change the key back to \"Not enough information\", with your original explanation."
