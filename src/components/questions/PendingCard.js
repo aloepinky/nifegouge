@@ -12,12 +12,9 @@ import EditDiff from './EditDiff';
 // `onDone({ vote, result, error })` once the student votes or skips; the card has already
 // recorded it in this browser, so it will not be offered again here.
 
+// No box of its own: it sits on the yellow the whole review section already has.
 const bannerStyle = {
-  padding: '10px',
-  marginBottom: '15px',
-  backgroundColor: '#fff3cd',
-  border: '1px solid #e0c36b',
-  borderRadius: '5px',
+  marginBottom: '10px',
   color: '#6b5200',
   textAlign: 'center',
   fontWeight: 'bold',
