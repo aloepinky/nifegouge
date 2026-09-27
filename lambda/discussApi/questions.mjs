@@ -305,7 +305,7 @@ export async function voteQuestionHandler(event) {
   const previous = VOTES.includes(body.previous) ? body.previous : null;
   if (vote === previous) throw new HttpError(400, 'Nothing to change');
   const row = await change(body.questionId, (q) => {
-    if (q.status !== 'approved') throw new HttpError(409, 'That question is no longer in the quiz.');
+    if (q.status !== 'approved') throw new HttpError(409, 'That question has been removed from the questions.');
     if (previous) q[COUNTER[previous]] = Math.max(0, (q[COUNTER[previous]] || 0) - 1);
     if (vote) q[COUNTER[vote]] = (q[COUNTER[vote]] || 0) + 1;
   });
@@ -479,7 +479,7 @@ export async function foldReplacedHandler(event) {
   for (const old of rows.filter((r) => r.status === 'replaced')) {
     const into = byId.get(old.replacedBy);
     if (!into || into.status !== 'approved') {
-      skipped.push({ questionId: old.questionId, replacedBy: old.replacedBy, why: 'the replacement is not in the quiz' });
+      skipped.push({ questionId: old.questionId, replacedBy: old.replacedBy, why: 'the replacement is no longer live' });
       continue;
     }
     folded.push({ questionId: old.questionId, into: into.questionId, question: old.question });
@@ -588,7 +588,7 @@ export async function restoreVersionHandler(event) {
   const rev = Number(body.rev);
   const at = now();
   await change(body.questionId, (q) => {
-    if (q.status !== 'approved') throw new HttpError(409, 'Only a question in the quiz can have a version restored.');
+    if (q.status !== 'approved') throw new HttpError(409, 'Only a live question can have a version restored.');
     const history = q.history || [];
     const index = history.findIndex((h) => h.rev === rev);
     if (index < 0) throw new HttpError(404, `No version ${rev} in this question's history.`);

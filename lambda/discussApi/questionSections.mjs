@@ -124,7 +124,7 @@ export async function saveSectionsHandler(event) {
   const baseRev = body.baseRev;
   if (!Number.isInteger(baseRev) || baseRev < 1) throw new HttpError(400, 'baseRev is required');
   const summary = cleanSummary(body.summary);
-  if (!summary) throw new HttpError(400, 'Say what you changed: a summary is required');
+  if (!summary) throw new HttpError(400, 'Say what you changed (required)');
   const found = await newestQuestionSections(LIST_ID);
   if (!found) throw new HttpError(404, 'There is no sections list yet');
   if (found.meta.latestRev !== baseRev) throw new HttpError(409, 'Someone saved the sections since you opened them', { rev: found.meta.latestRev });
