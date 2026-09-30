@@ -223,6 +223,19 @@ function ToldCard() {
     ...c, airports: c.airports.map((a, j) => (j === i ? { ...a, [field]: e.target.value } : a)),
   }));
 
+  // A landing wind left blank is the takeoff's, direction included; picking a direction for
+  // it takes the takeoff's figure along, so the box never shows one thing and sums another.
+  const inherits = (k) => k === 'landing' && String(card.landing.wind).trim() === '';
+  const pickWind = (k, windDir) => setCard((c) => ({
+    ...c,
+    [k]: { ...c[k], windDir, ...(inherits(k) ? { wind: c.takeoff.wind } : {}) },
+  }));
+
+  const typeWind = (k, wind) => setCard((c) => ({
+    ...c,
+    [k]: { ...c[k], wind, ...(inherits(k) ? { windDir: c.takeoff.windDir } : {}) },
+  }));
+
   const toCond = card.takeoff;
   const ldgCond = landingCond(card.takeoff, card.landing);
   const toDist = takeoffDistances(w.takeoff.weight, condOf(toCond));
@@ -310,23 +323,25 @@ function ToldCard() {
           <tr>
             <td>Wind <span className="told-unit">kts</span></td>
             {['takeoff', 'landing'].map((k) => (
-              <td key={k} className="told-wind">
-                <select
-                  value={card[k].windDir}
-                  onChange={(e) => set(k, 'windDir')(e.target.value)}
-                  aria-label={`${k} headwind or tailwind`}
-                >
-                  <option value="head">Head</option>
-                  <option value="tail">Tail</option>
-                </select>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  value={card[k].wind}
-                  placeholder={k === 'landing' ? card.takeoff.wind : undefined}
-                  onChange={(e) => set(k, 'wind')(e.target.value.replace('-', ''))}
-                  aria-label={`${k} wind component`}
-                />
+              <td key={k}>
+                <div className="told-wind">
+                  <select
+                    value={inherits(k) ? card.takeoff.windDir : card[k].windDir}
+                    onChange={(e) => pickWind(k, e.target.value)}
+                    aria-label={`${k} headwind or tailwind`}
+                  >
+                    <option value="head">Head</option>
+                    <option value="tail">Tail</option>
+                  </select>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={card[k].wind}
+                    placeholder={k === 'landing' ? card.takeoff.wind : undefined}
+                    onChange={(e) => typeWind(k, e.target.value.replace('-', ''))}
+                    aria-label={`${k} wind component`}
+                  />
+                </div>
               </td>
             ))}
           </tr>

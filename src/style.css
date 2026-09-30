@@ -2272,6 +2272,14 @@ textarea.incorrect-answer {
   font-size: 14px;
 }
 
+.told-table input[type=number] { -moz-appearance: textfield; }
+
+.told-table input::-webkit-outer-spin-button,
+.told-table input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .told-table input:focus {
   outline: 2px solid #4CAF50;
   background: white;
@@ -2286,11 +2294,14 @@ textarea.incorrect-answer {
 }
 
 .told-minus {
-  white-space: normal;
+  white-space: nowrap;
 }
 
-.told-minus input {
-  width: calc(100% - 0.8em);
+/* The minus is drawn before the number, so the input is only as wide as the figure. */
+.told-table .told-minus input {
+  width: 4.5ch;
+  text-align: left;
+  padding-left: 1px;
 }
 
 .told-minus::before {
