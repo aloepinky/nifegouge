@@ -4,12 +4,14 @@
 // syllabus as one ordinary revision. The parser has read them since 2026-09-30; the syllabi
 // published before that carry none.
 //
-//   node tools/discuss-add-ssrs.js                       dry run: prints what would change
-//   DISCUSS_ADMIN_TOKEN=... node tools/discuss-add-ssrs.js --write --author=Loevinger
+//   node tools/discuss-add-ssrs.js --dry-run             prints what would change, sends nothing
+//   node tools/discuss-add-ssrs.js --write --author=Loevinger
 //
-//   --only=<id>      one syllabus (delta-primary, t44c-p8, t44c-e2d)
+//   --only=<id>      one syllabus (delta-primary, echo-syllabus-primary-76ae, nife-flight,
+//                    t44c-p8, t44c-e2d)
 //   --api=<url>      the API base (default: the production API Gateway stage)
 //   --mirror=<url>   where the current document is read from (default: the bucket)
+//   --dry-run        the default, said out loud; can't be combined with --write
 //   --write          send the revisions; without it nothing is sent
 //
 // Against the local dev server: --api=http://localhost:8787/discuss --mirror=http://localhost:8787/mirror
@@ -37,11 +39,29 @@ const API = value('api') || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.
 const MIRROR = value('mirror') || 'https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com';
 const AUTHOR = value('author');
 const WRITE = flag('write');
+if (WRITE && flag('dry-run')) {
+  console.error('--write and --dry-run together: pick one');
+  process.exit(1);
+}
 const ONLY = value('only');
 
 const REFS = path.join(__dirname, '..', '_reference-docs');
 const SYLLABI = [
   { id: 'delta-primary', pdf: path.join(REFS, 'T6b Primary', 'Fundamental References', 'Delta JPPT.pdf') },
+  { id: 'echo-syllabus-primary-76ae', pdf: path.join(REFS, 'T6b Primary', 'Fundamental References', 'Echo JPPT.pdf') },
+  // NIFE's syllabus was built by hand from the MCG (tools/nife-syllabus.js), whose layout the
+  // JPPT parser doesn't read. The MCG prints two SSRs, both in C41 (NASCINST 1542.1B, Ch. 4,
+  // block C41, c. Special Syllabus Requirements); every other flight block says None.
+  {
+    id: 'nife-flight',
+    fixed: {
+      events: {
+        C4101: 'CFI shall demonstrate the civilian box pattern.',
+        C4102: 'Power off and power on stall shall be taken to a full stall for experience purposes.',
+      },
+      blocks: {},
+    },
+  },
   { id: 't44c-p8', pdf: path.join(REFS, 'T44C Advanced', 'Fundamental References', '1542.168C CH-2.pdf') },
   { id: 't44c-e2d', pdf: path.join(REFS, 'T44C Advanced', 'Fundamental References', '1542.175D CH-1.pdf') },
 ];
@@ -133,7 +153,7 @@ async function main() {
   if (!list.length) throw new Error(`${ONLY}: not one of ${SYLLABI.map((s) => s.id).join(', ')}`);
   for (const s of list) {
     // eslint-disable-next-line no-await-in-loop
-    const [record, parsed] = await Promise.all([readMirror(`syllabi/${s.id}.json`), parse(s.pdf)]);
+    const [record, parsed] = await Promise.all([readMirror(`syllabi/${s.id}.json`), s.fixed || parse(s.pdf)]);
     const lines = [];
     const next = apply(record.doc, parsed, (l) => lines.push(l));
     const count = next.events.filter((e) => e.ssr).length;

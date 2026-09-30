@@ -305,6 +305,7 @@ function eventTitles(section) {
 }
 
 const EVENT_LABEL = /^[A-Z]{1,3}\d{4}[A-Z]?(-\d{1,2})?$/;
+const SSR_LABEL = /^[A-Z]{1,3}\d{4}[A-Z]?(-\d{1,4})?$/;
 const idsOf = (tokens) => tokens.flatMap((t) => expand(t.replace(/^([A-Z]{1,3}\d{4})[A-Z]/, '$1')));
 
 // A section's lines sorted by event: a line of nothing but event ids starts those events'
@@ -313,17 +314,23 @@ const idsOf = (tokens) => tokens.flatMap((t) => expand(t.replace(/^([A-Z]{1,3}\d
 // "FAM4202 IP demonstrates spin with steady state spin recovery." on one line.
 function linesByEvent(section, { leading = false } = {}) {
   const byEvent = {};
-  const blockWide = section.inline ? [section.inline] : [];
+  // With `leading`, text on the heading's own line is read like any other line: Echo prints
+  // "3. Special Syllabus Requirements. F4101-F4104 Section approach, ...".
+  const blockWide = section.inline && !leading ? [section.inline] : [];
+  const lines = leading && section.inline ? [{ text: section.inline }, ...section.lines] : section.lines;
   let current = null;
   const start = (ids) => {
     current = ids;
     ids.forEach((id) => { byEvent[id] = byEvent[id] || []; });
   };
-  section.lines.forEach((line) => {
-    // The SSRs also set ids off on a line of their own as "F4103/F4104" or "FAM4101.".
-    const text = leading ? line.text.replace(/\/(?=[A-Z])/g, ' ').replace(/\.$/, '') : line.text;
+  lines.forEach((line) => {
+    // The SSRs write a range out in full, "F4101-F4104", which `expand` reads as F4101-4104.
+    const full = leading ? line.text.replace(/\b([A-Z]{1,3})(\d{4})-\1(\d{4})\b/g, '$1$2-$3') : line.text;
+    // They also set ids off on a line of their own as "F4103/F4104" or "FAM4101.".
+    const text = leading ? full.replace(/\/(?=[A-Z])/g, ' ').replace(/\.$/, '') : full;
     const tokens = text.split(/[\s,]+/).filter((t) => t && !/^and$/i.test(t));
-    if (tokens.length && tokens.every((t) => EVENT_LABEL.test(t))) {
+    const label = leading ? SSR_LABEL : EVENT_LABEL;
+    if (tokens.length && tokens.every((t) => label.test(t))) {
       const ids = idsOf(tokens);
       if (ids.length) {
         start(ids);
@@ -332,7 +339,7 @@ function linesByEvent(section, { leading = false } = {}) {
     }
     if (leading) {
       // "F4103/F4104 Section approach, ..." names two events at once.
-      const m = /^([A-Z]{1,3}\d{4}[A-Z]?(?:-\d{1,2})?(?:\/[A-Z]{1,3}\d{4}[A-Z]?)*)\s+(.+)$/.exec(line.text);
+      const m = /^([A-Z]{1,3}\d{4}[A-Z]?(?:-\d{1,4})?(?:\/[A-Z]{1,3}\d{4}[A-Z]?)*)\s+(.+)$/.exec(full);
       const ids = m ? idsOf(m[1].split('/')) : [];
       if (ids.length) {
         start(ids);
