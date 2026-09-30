@@ -95,6 +95,23 @@ body {
   border-radius: 4px;
 }
 
+/* A sub-navbar tab that is a real link (NIFE Problem Generator). */
+.sub-navbar a.sub-navbar-link {
+  color: #ffffff;
+  padding: 8px 12px;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.sub-navbar a.sub-navbar-link:hover,
+.sub-navbar a.sub-navbar-link.active {
+  background-color: #01202C;
+}
+
 /* Common Button Styles */
 button,
 .button,
@@ -1358,6 +1375,40 @@ td.xcell::after {
   transform-origin: center center;
   transition: transform 0.5s ease-in-out;
 }
+
+/* Nav whiz wheel faces and overlays, centred by .Wheel-Container img */
+.Wheel-Container .whiz-img-500 { width: 500px; }
+.Wheel-Container .whiz-img-442 { width: 442px; }
+.Wheel-Container .whiz-img-430 { width: 430px; }
+.Wheel-Container .whiz-img-376 { width: 376px; }
+
+/* Time conversion hat: a shorter box, the drawing centred at (300, 100) */
+.Wheel-Container.whiz-hat-box {
+  height: 210px;
+}
+
+.Wheel-Container .whiz-hat {
+  top: 100px;
+  left: 300px;
+  width: 500px;
+  z-index: 1;
+}
+
+.whiz-hat-field {
+  position: absolute;
+  width: 90px;
+  padding: 4px;
+  text-align: center;
+  z-index: 2;
+}
+
+.whiz-hat-field--depLocal { top: 10px; left: 75px; }
+.whiz-hat-field--depZD { top: 40px; left: 100px; }
+.whiz-hat-field--depZulu { top: 165px; left: 75px; }
+.whiz-hat-field--ete { top: 165px; left: 250px; }
+.whiz-hat-field--destLocal { top: 10px; left: 425px; }
+.whiz-hat-field--destZD { top: 40px; left: 400px; }
+.whiz-hat-field--destZulu { top: 165px; left: 425px; }
 
 /* Jet Log: why a solve or check stopped (bad wind, ATA or direction format). */
 .jetlog-message {

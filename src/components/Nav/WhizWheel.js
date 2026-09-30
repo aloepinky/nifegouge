@@ -1,12 +1,43 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useVarRowsScale } from '../useVarRowsScale';
 
+// The faces and overlays of each wheel, centred in the box. `rest` is how each one sits
+// before a solve turns or moves it; the wind overlays start shrunk out of sight.
+const WHEELS = {
+  dst: [
+    { name: 'back', src: '/images/Back Wheel.webp', alt: 'Whiz wheel outer scale', className: 'whiz-img-500', rest: 'rotate(-0.1deg)' },
+    { name: 'front', src: '/images/Front Wheel.webp', alt: 'Whiz wheel inner scale', className: 'whiz-img-430', rest: 'rotate(-0.5deg)' },
+  ],
+  wind: [
+    { name: 'back', src: '/images/Back Wind Wheel.webp', alt: 'Wind side outer scale', className: 'whiz-img-500', rest: 'rotate(0.1deg)' },
+    { name: 'middle', src: '/images/Middle Wind Wheel.webp', alt: 'Wind side middle scale', className: 'whiz-img-442', rest: '' },
+    { name: 'front', src: '/images/Front Wind Wheel.webp', alt: 'Wind side compass rose', className: 'whiz-img-376', rest: '' },
+    { name: 'arrow', src: '/images/arrow.png', alt: 'Wind vector', className: 'whiz-img-500', rest: 'scale(0.01)' },
+    { name: 'hori', src: '/images/hori.png', alt: 'Crosswind component', className: 'whiz-img-500', rest: 'scale(0.01)' },
+    { name: 'verti', src: '/images/verti.png', alt: 'Headwind or tailwind component', className: 'whiz-img-500', rest: 'scale(0.01)' },
+    { name: 'dot', src: '/images/dot.png', alt: 'Your position', className: 'whiz-img-500', rest: 'scale(0.01)' },
+    { name: 'target', src: '/images/target.png', alt: 'Target position', className: 'whiz-img-500', rest: 'scale(0.01)' },
+  ],
+};
+
+// The boxes written onto the time conversion hat, each placed by its own class.
+const HAT_FIELDS = ['depLocal', 'depZD', 'depZulu', 'ete', 'destLocal', 'destZD', 'destZulu'];
+
+const WHEEL_FOR = {
+  'Preflight Winds': 'wind',
+  'In Flight Winds': 'wind',
+  'Lollipop': 'wind',
+  'Time Conversion': 'hat',
+};
+
 function WhizWheel() {
   const [questionType, setQuestionType] = useState('Distance');
   const [tableData, setTableData] = useState([]);
   const [explanationText, setExplanationText] = useState('');
   const [noteOpen, setNoteOpen] = useState(false);
-  const wheelContainerRef = useRef(null);
+  // Which wheel is drawn, where a solve has turned or moved its parts, and the hat's text.
+  const [wheel, setWheel] = useState({ kind: 'dst', turns: {}, hat: {} });
+const wheelContainerRef = useRef(null);
   const wrapperRef = useRef(null);
   const { wrapperRef: varRowsWrapperRef, innerRef: varRowsInnerRef, updateScale } = useVarRowsScale();
 
@@ -21,20 +52,24 @@ function WhizWheel() {
   }, [questionType]);
 
   // Scale the wheel container to fit narrow viewports
+  const fitWheel = useRef(() => {
+    const wrapper = wrapperRef.current;
+    const container = wheelContainerRef.current;
+    if (!wrapper || !container) return;
+    const scale = Math.min(1, wrapper.offsetWidth / 600);
+    container.style.transform = `scale(${scale})`;
+    container.style.transformOrigin = 'top left';
+    wrapper.style.height = `${container.offsetHeight * scale}px`;
+  }).current;
+
   useEffect(() => {
-    const update = () => {
-      const wrapper = wrapperRef.current;
-      const container = wheelContainerRef.current;
-      if (!wrapper || !container) return;
-      const scale = Math.min(1, wrapper.offsetWidth / 600);
-      container.style.transform = `scale(${scale})`;
-      container.style.transformOrigin = 'top left';
-      wrapper.style.height = `${600 * scale}px`;
-    };
-    const obs = new ResizeObserver(() => requestAnimationFrame(update));
+    const obs = new ResizeObserver(() => requestAnimationFrame(fitWheel));
     if (wrapperRef.current) obs.observe(wrapperRef.current);
     return () => obs.disconnect();
-  }, []);
+  }, [fitWheel]);
+
+  // The hat is a shorter box than the wheels.
+  useLayoutEffect(fitWheel, [wheel.kind, fitWheel]);
 
   useLayoutEffect(() => {
     updateScale();
@@ -103,134 +138,56 @@ function WhizWheel() {
     });
   };
 
-  const insertDSTWheel = () => {
-    const container = wheelContainerRef.current;
-    if (!container) return;
-    container.innerHTML = '';
-
-    const backImg = document.createElement('img');
-    backImg.src = '/images/Back Wheel.webp';
-    backImg.alt = 'Back Wheel';
-    backImg.style.cssText = 'width: 500px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-0.1deg);';
-
-    const frontImg = document.createElement('img');
-    frontImg.src = '/images/Front Wheel.webp';
-    frontImg.alt = 'Front Wheel';
-    frontImg.style.cssText = 'width: 430px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-0.5deg);';
-
-    container.appendChild(backImg);
-    container.appendChild(frontImg);
+  const setTurns = (turns) => {
+    setWheel(prev => ({ ...prev, turns: { ...prev.turns, ...turns } }));
   };
 
-  const insertWindWheel = () => {
-    const container = wheelContainerRef.current;
-    if (!container) return;
-    container.innerHTML = '';
-
-    const images = [
-      { src: '/images/Back Wind Wheel.webp', alt: 'Back Wind Wheel', width: '500px', transform: 'rotate(0.1deg)' },
-      { src: '/images/Middle Wind Wheel.webp', alt: 'Middle Wind Wheel', width: '442px' },
-      { src: '/images/Front Wind Wheel.webp', alt: 'Front Wind Wheel', width: '376px' },
-      { src: '/images/arrow.png', alt: 'Arrow', width: '500px', transform: 'scale(0.01)' },
-      { src: '/images/hori.png', alt: 'Hori', width: '500px', transform: 'scale(0.01)' },
-      { src: '/images/verti.png', alt: 'Verti', width: '500px', transform: 'scale(0.01)' },
-      { src: '/images/dot.png', alt: 'Dot', width: '500px', transform: 'scale(0.01)' },
-      { src: '/images/target.png', alt: 'Target', width: '500px', transform: 'scale(0.01)' }
-    ];
-
-    images.forEach(({ src, alt, width, transform = '' }) => {
-      const img = document.createElement('img');
-      img.src = src;
-      img.alt = alt;
-      img.style.cssText = `width: ${width}; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) ${transform};`;
-      container.appendChild(img);
-    });
+  const showWheel = (kind) => {
+    setWheel({ kind, turns: {}, hat: {} });
   };
 
-  const insertHat = () => {
-    const container = wheelContainerRef.current;
-    if (!container) return;
-    container.innerHTML = '';
-
-    const hatImg = document.createElement('img');
-    hatImg.src = '/images/bottomhat.png';
-    hatImg.style.cssText = 'position: absolute; top: 100px; left: 300px; width: 500px; z-index: 1;';
-    container.appendChild(hatImg);
-
-    // Add text fields for hat display
-    const fields = [
-      { id: 'depLocal', top: '10px', left: '75px' },
-      { id: 'depZD', top: '40px', left: '100px' },
-      { id: 'depZulu', top: '165px', left: '75px' },
-      { id: 'ete', top: '165px', left: '250px' },
-      { id: 'destLocal', top: '10px', left: '425px' },
-      { id: 'destZD', top: '40px', left: '400px' },
-      { id: 'destZulu', top: '165px', left: '425px' }
-    ];
-
-    fields.forEach(({ id, top, left }) => {
-      const div = document.createElement('div');
-      div.id = id;
-      div.style.cssText = `position: absolute; top: ${top}; left: ${left}; width: 90px; padding: 4px; text-align: center; z-index: 2;`;
-      container.appendChild(div);
-    });
-  };
-  
-  const insertDot = (r, t, tref, alt, scale) => {
-    const container = wheelContainerRef.current;
-    if (!container) return;
-    
+  // Where a TACAN position sits on the wind side, as a transform for its marker.
+  const dotAt = (r, t, tref, scale) => {
     let t2 = (t + 270 - tref) % 360;
     if (t2 < 0) t2 += 360;
     t2 = 360 - t2;
-    
+
     const x = r * Math.cos(t2 * Math.PI / 180) * 2.2 * scale;
     const y = -r * Math.sin(t2 * Math.PI / 180) * 2.2 * scale;
-    
-    const img = container.querySelector(`img[alt="${alt}"]`);
-    if (img) {
-      img.style.transform = `translate(-50%, -50%) translateX(${x}px) translateY(${y}px)`;
-    }
+    return `translate(-50%, -50%) translateX(${x}px) translateY(${y}px)`;
   };
 
   // Generate functions
   const generate = () => {
     clearInputFields();
+    showWheel(WHEEL_FOR[questionType] || 'dst');
 
     switch (questionType) {
       case "Distance":
       case "Speed":
       case "Time":
         generateDST(questionType);
-        insertDSTWheel();
         break;
       case "Fuel Consumption":
         generateFuelConsume();
-        insertDSTWheel();
         break;
       case "Fuel Conversions":
         generateFuelConvert();
-        insertDSTWheel();
         break;
       case "Airspeed":
         generateAirspeed();
-        insertDSTWheel();
         break;
       case "Preflight Winds":
         generatePreflight();
-        insertWindWheel();
         break;
       case "In Flight Winds":
         generateInflight();
-        insertWindWheel();
         break;
       case "Lollipop":
         generateLollipop();
-        insertWindWheel();
         break;
       case "Time Conversion":
         generateTime();
-        insertHat();
         break;
       default:
     }
@@ -313,8 +270,8 @@ function WhizWheel() {
     const vrand = Math.ceil(2 * Math.random());
 
     updateRow(0, { variable: 'Fuel Weight', value: fweight, unit: 'lbs per gal', solved: true, display: true });
-    updateRow(1, { variable: 'Fuel', value: flbs, unit: 'lbs', solved: true, display: true });
-    updateRow(2, { variable: 'Fuel', value: fgal, unit: 'gals', solved: true, display: true });
+    updateRow(1, { variable: 'Fuel (lbs)', value: flbs, unit: 'lbs', solved: true, display: true });
+    updateRow(2, { variable: 'Fuel (gal)', value: fgal, unit: 'gals', solved: true, display: true });
 
     updateRow(vrand, { value: '', solved: false });
   };
@@ -461,10 +418,8 @@ function WhizWheel() {
     updateRow(5, { variable: 'Arrival Time UTC', value: zulutime2.toString().padStart(4, "0"), unit: 'UTC', solved: true });
     updateRow(6, { variable: 'Arrival Time LT', value: time2.toString().padStart(4, "0"), unit: 'LT', solved: true });
 
-    const nums = [3, 4, 5, 6];
-    const shuffled = nums.sort(() => 0.5 - Math.random());
-    const indices = shuffled.slice(0, 3);
-    indices.forEach(i => updateRow(i, { value: '', solved: false }));
+    const given = randBetween(3, 6);
+    [3, 4, 5, 6].filter(i => i !== given).forEach(i => updateRow(i, { value: '', solved: false }));
   };
 
    // Solve functions
@@ -539,13 +494,10 @@ function WhizWheel() {
     // Update wheel rotation
     const outerDeg = turnToDegrees(dist);
     const innerDeg = turnToDegrees(time1);
-    const container = wheelContainerRef.current;
-    if (container) {
-      const frontImg = container.querySelector('img[alt="Front Wheel"]');
-      const backImg = container.querySelector('img[alt="Back Wheel"]');
-      if (frontImg) frontImg.style.transform = `translate(-50%, -50%) rotate(${innerDeg}deg)`;
-      if (backImg) backImg.style.transform = `translate(-50%, -50%) rotate(${outerDeg}deg)`;
-    }
+    setTurns({
+      front: `translate(-50%, -50%) rotate(${innerDeg}deg)`,
+      back: `translate(-50%, -50%) rotate(${outerDeg}deg)`,
+    });
     
     return [[dist, 0, dist]];
   };
@@ -579,13 +531,10 @@ function WhizWheel() {
     
     const outerDeg = turnToDegrees(speed);
     const innerDeg = turnToDegrees(inner);
-    const container = wheelContainerRef.current;
-    if (container) {
-      const frontImg = container.querySelector('img[alt="Front Wheel"]');
-      const backImg = container.querySelector('img[alt="Back Wheel"]');
-      if (frontImg) frontImg.style.transform = `translate(-50%, -50%) rotate(${innerDeg}deg)`;
-      if (backImg) backImg.style.transform = `translate(-50%, -50%) rotate(${outerDeg}deg)`;
-    }
+    setTurns({
+      front: `translate(-50%, -50%) rotate(${innerDeg}deg)`,
+      back: `translate(-50%, -50%) rotate(${outerDeg}deg)`,
+    });
     
     return [[speed, 1, speed]];
   };
@@ -624,13 +573,10 @@ function WhizWheel() {
     
     const outerDeg = turnToDegrees(dist);
     const innerDeg = turnToDegrees(time);
-    const container = wheelContainerRef.current;
-    if (container) {
-      const frontImg = container.querySelector('img[alt="Front Wheel"]');
-      const backImg = container.querySelector('img[alt="Back Wheel"]');
-      if (frontImg) frontImg.style.transform = `translate(-50%, -50%) rotate(${innerDeg}deg)`;
-      if (backImg) backImg.style.transform = `translate(-50%, -50%) rotate(${outerDeg}deg)`;
-    }
+    setTurns({
+      front: `translate(-50%, -50%) rotate(${innerDeg}deg)`,
+      back: `translate(-50%, -50%) rotate(${outerDeg}deg)`,
+    });
     
     return [[time, 2, time]];
   };
@@ -743,13 +689,10 @@ function WhizWheel() {
     
     setExplanationText(explainTxt);
     
-    const container = wheelContainerRef.current;
-    if (container) {
-      const frontImg = container.querySelector('img[alt="Front Wheel"]');
-      const backImg = container.querySelector('img[alt="Back Wheel"]');
-      if (frontImg) frontImg.style.transform = `translate(-50%, -50%) rotate(${innerDeg}deg)`;
-      if (backImg) backImg.style.transform = `translate(-50%, -50%) rotate(${outerDeg}deg)`;
-    }
+    setTurns({
+      front: `translate(-50%, -50%) rotate(${innerDeg}deg)`,
+      back: `translate(-50%, -50%) rotate(${outerDeg}deg)`,
+    });
   };
 
   const solveFConvert = (visualize = true) => {
@@ -788,13 +731,10 @@ function WhizWheel() {
         if(!visualize){return}
         setExplanationText("Nothing's blank, nothing to solve");
     }
-    const container = wheelContainerRef.current;
-    if (container) {
-      const frontImg = container.querySelector('img[alt="Front Wheel"]');
-      const backImg = container.querySelector('img[alt="Back Wheel"]');
-      if (frontImg) frontImg.style.transform = `translate(-50%, -50%) rotate(${innerDeg}deg)`;
-      if (backImg) backImg.style.transform = `translate(-50%, -50%) rotate(${outerDeg}deg)`;
-    }
+    setTurns({
+      front: `translate(-50%, -50%) rotate(${innerDeg}deg)`,
+      back: `translate(-50%, -50%) rotate(${outerDeg}deg)`,
+    });
   };
 
   const solveAirspeed = (visualize = true) => {
@@ -848,13 +788,10 @@ function WhizWheel() {
         innerDeg = 0;
     }
 
-    const container = wheelContainerRef.current;
-    if (container) {
-      const frontImg = container.querySelector('img[alt="Front Wheel"]');
-      const backImg = container.querySelector('img[alt="Back Wheel"]');
-      if (frontImg) frontImg.style.transform = `translate(-50%, -50%) rotate(${innerDeg}deg)`;
-      if (backImg) backImg.style.transform = `translate(-50%, -50%) rotate(${outerDeg}deg)`;
-    }
+    setTurns({
+      front: `translate(-50%, -50%) rotate(${innerDeg}deg)`,
+      back: `translate(-50%, -50%) rotate(${outerDeg}deg)`,
+    });
   };
 
   const solvePreflight = (visualize = true) => {
@@ -883,8 +820,7 @@ function WhizWheel() {
     updateRow(8, { value: gs, solved: true });
     
     // Update wind wheel visualization
-    const container = wheelContainerRef.current;
-    if (container) {
+    {
       const innerDeg = 360 - tc;
       const outerDeg = turnToDegrees(tas);
       const arrowDeg = (dir - tc + 360) % 360;
@@ -898,16 +834,13 @@ function WhizWheel() {
       }
       const scale = kts1 / 50;
       
-      const frontImg = container.querySelector('img[alt="Front Wind Wheel"]');
-      const backImg = container.querySelector('img[alt="Back Wind Wheel"]');
-      const arrowImg = container.querySelector('img[alt="Arrow"]');
-      const horiImg = container.querySelector('img[alt="Hori"]');
-      const vertiImg = container.querySelector('img[alt="Verti"]');
-      if (frontImg) frontImg.style.transform = `translate(-50%, -50%) rotate(${innerDeg}deg)`;
-      if (backImg) backImg.style.transform = `translate(-50%, -50%) rotate(${outerDeg}deg)`;
-      if (arrowImg) arrowImg.style.transform = `translate(-50%, -50%) rotate(${arrowDeg+1}deg) scale(${scale})`;
-      if (horiImg) horiImg.style.transform = `translate(-50%, -50%) translateY(${2.2*hwtw1}px) scale(${xw1/50})`;
-      if (vertiImg) vertiImg.style.transform = `translate(-50%, -50%) translateX(${2.2*xw1}px) scale(${-hwtw1/50})`;
+      setTurns({
+        front: `translate(-50%, -50%) rotate(${innerDeg}deg)`,
+        back: `translate(-50%, -50%) rotate(${outerDeg}deg)`,
+        arrow: `translate(-50%, -50%) rotate(${arrowDeg+1}deg) scale(${scale})`,
+        hori: `translate(-50%, -50%) translateY(${2.2*hwtw1}px) scale(${xw1/50})`,
+        verti: `translate(-50%, -50%) translateX(${2.2*xw1}px) scale(${-hwtw1/50})`,
+      });
     }
   };
 
@@ -950,8 +883,7 @@ function WhizWheel() {
     updateRow(7, { value: dir, solved: true });
     updateRow(8, { value: vel, solved: true });
 
-    const container = wheelContainerRef.current;
-    if (container) {
+    {
         const innerDeg = 360 - trk;
         const outerDeg = turnToDegrees(tas);
         let arrowDeg = (dir - trk + 360) % 360;
@@ -967,31 +899,18 @@ function WhizWheel() {
         }
         const scale = vel1 / 50;
         
-        const frontImg = container.querySelector('img[alt="Front Wind Wheel"]');
-        const backImg = container.querySelector('img[alt="Back Wind Wheel"]');
-        const arrowImg = container.querySelector('img[alt="Arrow"]');
-        const horiImg = container.querySelector('img[alt="Hori"]');
-        const vertiImg = container.querySelector('img[alt="Verti"]');
-        
-        if (frontImg) frontImg.style.transform = `translate(-50%, -50%) rotate(${innerDeg}deg)`;
-        if (backImg) backImg.style.transform = `translate(-50%, -50%) rotate(${outerDeg}deg)`;
-        if (arrowImg) arrowImg.style.transform = `translate(-50%, -50%) rotate(${arrowDeg+1}deg) scale(${scale})`;
-        if (horiImg) horiImg.style.transform = `translate(-50%, -50%) translateY(${2.2*hwtw1}px) scale(${xw1/50})`;
-        if (vertiImg) vertiImg.style.transform = `translate(-50%, -50%) translateX(${2.2*xw1}px) scale(${-hwtw1/50})`;
+        setTurns({
+            front: `translate(-50%, -50%) rotate(${innerDeg}deg)`,
+            back: `translate(-50%, -50%) rotate(${outerDeg}deg)`,
+            arrow: `translate(-50%, -50%) rotate(${arrowDeg+1}deg) scale(${scale})`,
+            hori: `translate(-50%, -50%) translateY(${2.2*hwtw1}px) scale(${xw1/50})`,
+            verti: `translate(-50%, -50%) translateX(${2.2*xw1}px) scale(${-hwtw1/50})`,
+        });
     }
   };
 
   const solveLollipop = (visualize = true) => {
-    // First hide all vector visualizations
-    const container = wheelContainerRef.current;
-    if (container) {
-      // Hide arrow and vector components
-      ['Arrow', 'Hori', 'Verti'].forEach(alt => {
-        const img = container.querySelector(`img[alt="${alt}"]`);
-        if (img) img.style.transform = 'translate(-50%, -50%) scale(0.01)';
-      });
-    }
-    let t1Raw = tableData[0].value.toString();
+let t1Raw = tableData[0].value.toString();
     let r1 = parseFloat(tableData[1].value);
     let t2 = parseFloat(tableData[2].value);
     let r2 = parseFloat(tableData[3].value);
@@ -1019,21 +938,17 @@ function WhizWheel() {
     updateRow(4, { value: t3, solved: true });
     updateRow(5, { value: r3, solved: true });
 
-    // Update wheel visualization
-    if (container) {
-      const innerDeg = 360 - t3;
-      const frontImg = container.querySelector('img[alt="Front Wind Wheel"]');
-      if (frontImg) {
-        frontImg.style.transform = `translate(-50%, -50%) rotate(${innerDeg}deg)`;
-      }
-      
-      // Scale factor for dots
-      const scale = (r1 > 70 || r2 > 70) ? 0.5 : 1;
-      
-      // Insert the TACAN position dots
-      insertDot(r2, t2, t3, "Target", scale);
-      insertDot(r1, t1, t3, "Dot", scale);
-    }
+    // Turn the rose to the course and place the two TACAN positions; no wind vector here.
+    const scale = (r1 > 70 || r2 > 70) ? 0.5 : 1;
+    const hidden = 'translate(-50%, -50%) scale(0.01)';
+    setTurns({
+      front: `translate(-50%, -50%) rotate(${360 - t3}deg)`,
+      arrow: hidden,
+      hori: hidden,
+      verti: hidden,
+      target: dotAt(r2, t2, t3, scale),
+      dot: dotAt(r1, t1, t3, scale),
+    });
   };
 
   const solveTime = (visualize = true) => {
@@ -1096,24 +1011,18 @@ function WhizWheel() {
     updateRow(6, { value: time2.toString().padStart(4, "0"), solved: true });
     
     // Update hat display
-    const container = wheelContainerRef.current;
-    if (container) {
-      const depLocal = container.querySelector('#depLocal');
-      const depZD = container.querySelector('#depZD');
-      const depZulu = container.querySelector('#depZulu');
-      const ete = container.querySelector('#ete');
-      const destLocal = container.querySelector('#destLocal');
-      const destZD = container.querySelector('#destZD');
-      const destZulu = container.querySelector('#destZulu');
-      
-      if (depLocal) depLocal.textContent = time1.toString().padStart(4, "0") + " LT";
-      if (depZD) depZD.textContent = "(" + tableData[1].value + ")";
-      if (depZulu) depZulu.textContent = zulutime.toString().padStart(4, "0") + " UTC";
-      if (ete) ete.textContent = tableData[0].value;
-      if (destLocal) destLocal.textContent = time2.toString().padStart(4, "0") + " LT";
-      if (destZD) destZD.textContent = "(" + tableData[2].value + ")";
-      if (destZulu) destZulu.textContent = zulutime2.toString().padStart(4, "0") + " UTC";
-    }
+    setWheel(prev => ({
+      ...prev,
+      hat: {
+        depLocal: time1.toString().padStart(4, "0") + " LT",
+        depZD: "(" + tableData[1].value + ")",
+        depZulu: zulutime.toString().padStart(4, "0") + " UTC",
+        ete: tableData[0].value,
+        destLocal: time2.toString().padStart(4, "0") + " LT",
+        destZD: "(" + tableData[2].value + ")",
+        destZulu: zulutime2.toString().padStart(4, "0") + " UTC",
+      },
+    }));
   };
 
   // How far an answer is from the solution: headings wrap at 360, clock times at midnight.
@@ -1248,9 +1157,7 @@ function WhizWheel() {
           </div>
           {noteOpen && (
             <div className="airspeed-notice-body">
-              This is a computer estimate of the airspeed hairs on the Whiz Wheel. It is more accurate for lower CAS inputs, 
-              especially between 110–350 kts, and calibrated altitudes below ~23,000 ft. Results become less reliable
-              outside these ranges due to simplified atmospheric modeling. It's hard to make those little squiggles into equations.{' '}
+              These answers come from a computer estimate of the airspeed hairs on the whiz wheel, not from the wheel itself.{' '}
               <a href="/Airspeeds.pdf" target="_blank" rel="noopener noreferrer">
                 See Airspeeds.pdf for details →
               </a>
@@ -1260,7 +1167,29 @@ function WhizWheel() {
       )}
 
       <div ref={wrapperRef} className="wheel-scale-wrapper">
-        <div className="Wheel-Container" ref={wheelContainerRef} id="wheel-container"></div>
+        <div
+          className={`Wheel-Container${wheel.kind === 'hat' ? ' whiz-hat-box' : ''}`}
+          ref={wheelContainerRef}
+        >
+          {wheel.kind === 'hat' ? (
+            <>
+              <img src="/images/bottomhat.png" alt="" className="whiz-hat" />
+              {HAT_FIELDS.map(id => (
+                <div key={id} className={`whiz-hat-field whiz-hat-field--${id}`}>{wheel.hat[id]}</div>
+              ))}
+            </>
+          ) : (
+            WHEELS[wheel.kind].map(({ name, src, alt, className, rest }) => (
+              <img
+                key={`${wheel.kind}-${name}`}
+                src={src}
+                alt={alt}
+                className={className}
+                style={{ transform: wheel.turns[name] ?? `translate(-50%, -50%) ${rest}` }}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

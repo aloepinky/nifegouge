@@ -95,7 +95,7 @@ function JetLog() {
   };
 
   const removeGlowFromAllCells = () => {
-    document.querySelectorAll("td").forEach(cell => {
+    tableRef.current?.querySelectorAll("td").forEach(cell => {
       cell.classList.remove("glow");
     });
   };
@@ -139,7 +139,7 @@ function JetLog() {
     const tc = parseFloat(course.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
     const windMatch = winds.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
     if (!windMatch) {
-      setMessage("Invalid Wind input! Must be dir/kts format");
+      setMessage("Enter winds as direction/speed, for example 270/20.");
       return null;
     }
     const dir = parseFloat(windMatch[1]);
@@ -154,7 +154,7 @@ function JetLog() {
     const tc = parseFloat(course.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
     const windMatch = winds.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
     if (!windMatch) {
-      setMessage("Invalid Wind input! Must be dir/kts format");
+      setMessage("Enter winds as direction/speed, for example 270/20.");
       return null;
     }
     const dir = parseFloat(windMatch[1]);
@@ -169,7 +169,7 @@ function JetLog() {
     tas = parseFloat(tas.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
     const match = hwtw.match(/(-?\d+)(?:\s*\w+)?\s*([HT])/i);
     if (!match) {
-      setMessage("Invalid HWTW input! Must be 'kts T' or 'kts H' format");
+      setMessage("Enter headwind or tailwind as knots then H or T, for example 15H.");
       return null;
     }
     const value = parseFloat(match[1]);
@@ -186,7 +186,7 @@ function JetLog() {
     }
     const match = xw.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
     if (!match) {
-      setMessage("Invalid XW input! Must be 'kts L' or 'kts R' format");
+      setMessage("Enter crosswind as knots then L or R, for example 10L.");
       return null;
     }
     const value = parseFloat(match[1]);
@@ -206,7 +206,7 @@ function JetLog() {
     }
     const match = ca.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
     if (!match) {
-      setMessage("Invalid CA input! Must be 'deg L' or 'deg R' format");
+      setMessage("Enter crab angle as degrees then L or R, for example 4R.");
       return null;
     }
     const value = parseFloat(match[1]);
@@ -236,7 +236,7 @@ function JetLog() {
   const etaF = (ata, ete) => {
     const match = ata.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
     if (!match) {
-      setMessage("Invalid ATA format. Must be HH:MM or HH:MM:SS formats");
+      setMessage("Enter ATA as HH:MM or HH:MM:SS, for example 10:30.");
       return null;
     }
     const ahrs = parseInt(match[1], 10);
@@ -292,7 +292,7 @@ function JetLog() {
     tas = parseFloat(tas.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
     const match = da.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
     if (!match) {
-      setMessage("Invalid DA input! Must be 'deg L' or 'deg R' format");
+      setMessage("Enter drift angle as degrees then L or R, for example 5L.");
       return null;
     }
     const value = parseFloat(match[1]);
@@ -319,7 +319,7 @@ function JetLog() {
     }else{
         const match = xw.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
         if (!match) {
-        setMessage("Invalid XW input! Must be 'kts L' or 'kts R' format");
+        setMessage("Enter crosswind as knots then L or R, for example 10L.");
         return null;
         }
         const value = parseFloat(match[1]);
@@ -329,7 +329,7 @@ function JetLog() {
 
     const matchh = hwtw.match(/(-?\d+)(?:\s*\w+)?\s*([HT])/i);
     if (!matchh) {
-      setMessage("Invalid HWTW input! Must be 'kts T' or 'kts H' format");
+      setMessage("Enter headwind or tailwind as knots then H or T, for example 15H.");
       return null;
     }
     const valueh = parseFloat(matchh[1]);
@@ -418,15 +418,20 @@ function JetLog() {
     while (checkId && graph[checkId]) {
       const cell = graph[checkId];
       
-      if (!cell.solved && !isFilled(checkId)) break;
-      if (cell.solved || cell.denominator === null) {
+      // Grade every box the student has filled in, against their own earlier boxes; skip
+      // empty ones, and any whose inputs are still empty, rather than stopping there.
+      if (!isFilled(checkId) || cell.solved || cell.denominator === null
+          || !cell.dependsOn.every(isFilled)) {
         checkId = cell.next;
         continue;
       }
       
       const inputs = cell.dependsOn.map(getInputValue);
       const result = cell.solver(inputs);
-      if (result === null) break;
+      if (result === null) {
+        checkId = cell.next;
+        continue;
+      }
       const resultText = String(result);
       const userValue = getInputValue(checkId);
       
