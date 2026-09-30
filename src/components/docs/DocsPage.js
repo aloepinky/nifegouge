@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutdatedVotes, OutdatedBadge, OutdatedControl } from './Outdated';
 import { linkKey, isWebLink, hostOf } from './linkKey';
 
@@ -11,6 +11,10 @@ import { linkKey, isWebLink, hostOf } from './linkKey';
 //   defaultTopic  what the upload and link forms start on
 //   offerAll      whether a document or link may be filed under `all` itself
 //   storage       the localStorage keys for this browser's votes, kept as each page first wrote them
+
+// How long "Document uploaded" or "Link submitted" stays beside its button; .docs-notice fades
+// it out over the last second.
+const NOTICE_MS = 4000;
 
 function DocsPage({ school }) {
   const { program, topics, defaultTopic, offerAll, storage } = school;
@@ -43,6 +47,40 @@ function DocsPage({ school }) {
   // Links states
   const [usefulLinks, setUsefulLinks] = useState([]);
   const [filteredLinks, setFilteredLinks] = useState([]);
+
+  // Messages, shown where they happened rather than in a pop-up: a form's problem inside the
+  // form (which stays open), a row's problem on the row until that row is tried again, and a
+  // success beside the section's button for NOTICE_MS.
+  const [uploadMessage, setUploadMessage] = useState('');
+  const [linkMessage, setLinkMessage] = useState('');
+  const [rowMessages, setRowMessages] = useState({});
+  const [notice, setNotice] = useState(null);
+  const noticeTimer = useRef(null);
+
+  const rowMessage = (id, text) => setRowMessages(prev => {
+    const next = { ...prev };
+    if (text) next[id] = text;
+    else delete next[id];
+    return next;
+  });
+
+  const announce = (section, text) => {
+    clearTimeout(noticeTimer.current);
+    setNotice({ section, text });
+    noticeTimer.current = setTimeout(() => setNotice(null), NOTICE_MS);
+  };
+
+  useEffect(() => () => clearTimeout(noticeTimer.current), []);
+
+  const openUpload = () => {
+    setUploadMessage('');
+    setShowUploadModal(true);
+  };
+
+  const openLinkForm = () => {
+    setLinkMessage('');
+    setShowLinkModal(true);
+  };
 
   // Track voted items - stores 'good', 'bad', or null
   const [votedDocs, setVotedDocs] = useState(() => {
@@ -149,15 +187,16 @@ function DocsPage({ school }) {
 
   const handleFileUpload = async () => {
     if (!uploadFile) {
-      alert('Please select a file');
+      setUploadMessage('Choose a file to upload.');
       return;
     }
 
     if (uploadFile.size > 50 * 1024 * 1024) {
-      alert('File size must be less than 50MB');
+      setUploadMessage('Files must be under 50 MB.');
       return;
     }
 
+    setUploadMessage('');
     setUploading(true);
     let uploadData = null;
 
@@ -209,24 +248,25 @@ function DocsPage({ school }) {
       const confirmData = await confirmResponse.json();
 
       if (confirmData.success) {
-        alert('Document uploaded successfully!');
         setUploadFile(null);
         setUploadTopic(defaultTopic);
         setShowUploadModal(false);
-        fetchDocuments();
+        announce('docs', 'Document uploaded.');
+        fetchDocuments({ quiet: true });
       } else {
         console.error('Failed to confirm upload:', confirmData.error);
-        alert('Document uploaded but failed to save metadata. Please contact support.');
+        setUploadMessage('The file uploaded but was not added to the list. Try again.');
       }
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('Failed to upload file: ' + error.message);
+      setUploadMessage('The upload did not go through. Try again.');
     } finally {
       setUploading(false);
     }
   };
 
   const openPreview = async (doc, forceNewTab = false) => {
+    rowMessage(doc.docId, '');
     try {
       const response = await fetch(`${API_BASE_URL}/get-document-url`, {
         method: 'POST',
@@ -248,11 +288,11 @@ function DocsPage({ school }) {
           window.open(data.url, '_blank');
         }
       } else {
-        alert('Failed to open document');
+        rowMessage(doc.docId, 'That document would not open. Try again.');
       }
     } catch (error) {
       console.error('Error getting document URL:', error);
-      alert('Failed to open document');
+      rowMessage(doc.docId, 'That document would not open. Try again.');
     }
   };
 
@@ -275,12 +315,12 @@ function DocsPage({ school }) {
 
   const handleLinkSubmission = async () => {
     if (!linkUrl || !linkTitle) {
-      alert('Please fill in all fields');
+      setLinkMessage('Fill in the link and its title.');
       return;
     }
 
     if (!isWebLink(linkUrl)) {
-      alert('Please enter a link starting with http:// or https://');
+      setLinkMessage('Links start with http:// or https://');
       return;
     }
 
@@ -288,10 +328,11 @@ function DocsPage({ school }) {
     const key = linkKey(linkUrl);
     const existing = usefulLinks.find(link => linkKey(link.url) === key);
     if (existing) {
-      alert(`That link is already listed as "${existing.title}".`);
+      setLinkMessage(`Already listed as "${existing.title}".`);
       return;
     }
 
+    setLinkMessage('');
     try {
       const response = await fetch(`${API_BASE_URL}/submit-link`, {
         method: 'POST',
@@ -308,20 +349,20 @@ function DocsPage({ school }) {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        alert('Link submitted successfully!');
         setLinkUrl('');
         setLinkTitle('');
         setLinkTopic(defaultTopic);
         setShowLinkModal(false);
+        announce('links', 'Link submitted.');
         fetchLinks();
       } else if (response.status === 409) {
-        alert(`That link is already listed as ${(data.error || '').replace(/^Already listed as /, '')}.`);
+        setLinkMessage(`${data.error}.`);
       } else {
-        alert('Failed to submit link: ' + (data.error || 'Unknown error'));
+        setLinkMessage(data.error ? `${data.error}.` : 'The link did not go through. Try again.');
       }
     } catch (error) {
       console.error('Error submitting link:', error);
-      alert('Failed to submit link. Please try again.');
+      setLinkMessage('The link did not go through. Try again.');
     }
   };
 
@@ -378,6 +419,7 @@ function DocsPage({ school }) {
       })));
     };
 
+    rowMessage(key, '');
     const target = isUnvoting ? undefined : choice;
     show(currentVote, target);
 
@@ -393,28 +435,30 @@ function DocsPage({ school }) {
       // Nothing counted: the old vote stands. A move half sent took the old vote back and
       // stopped there.
       show(target, sent === 0 ? currentVote : undefined);
-      alert('That vote did not go through. Try again.');
+      rowMessage(key, 'That vote did not go through. Try again.');
     }
   };
+
+  const officeIcon = (name) => <img src={`/images/Google_${name}.svg`} alt="" />;
 
   const getFileIcon = (mimeType, fileName) => {
     if (!mimeType && fileName) {
       const ext = fileName.split('.').pop().toLowerCase();
       if (ext === 'pdf') return '📄';
-      if (['doc', 'docx'].includes(ext)) return <img src="/images/Google_Docs.svg" alt="" style={{ transform: 'scale(0.5)' }} />;
-      if (['xls', 'xlsx'].includes(ext)) return <img src="/images/Google_Sheets.svg" alt="" style={{ transform: 'scale(0.5)' }} />;
-      if (['ppt', 'pptx'].includes(ext)) return <img src="/images/Google_Slides.svg" alt="" style={{ transform: 'scale(0.5)' }} />;
+      if (['doc', 'docx'].includes(ext)) return officeIcon('Docs');
+      if (['xls', 'xlsx'].includes(ext)) return officeIcon('Sheets');
+      if (['ppt', 'pptx'].includes(ext)) return officeIcon('Slides');
       if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) return '🖼️';
       if (['mp4', 'avi', 'mov'].includes(ext)) return '🎥';
     }
 
     if (!mimeType) return '📄';
     if (mimeType.includes('pdf')) return '📄';
-    if (mimeType.includes('presentation')) return <img src="/images/Google_Slides.svg" alt="" style={{ transform: 'scale(0.5)' }} />;
-    if (mimeType.includes('spreadsheet')) return <img src="/images/Google_Sheets.svg" alt="" style={{ transform: 'scale(0.5)' }} />;
+    if (mimeType.includes('presentation')) return officeIcon('Slides');
+    if (mimeType.includes('spreadsheet')) return officeIcon('Sheets');
     if (mimeType.includes('image')) return '🖼️';
     if (mimeType.includes('video')) return '🎥';
-    if (mimeType.includes('document') || mimeType.includes('msword')) return <img src="/images/Google_Docs.svg" alt="" style={{ transform: 'scale(0.5)' }} />;
+    if (mimeType.includes('document') || mimeType.includes('msword')) return officeIcon('Docs');
     return '📎';
   };
 
@@ -435,7 +479,7 @@ function DocsPage({ school }) {
     return (
       <div className="docs-container">
         <h1>Documents</h1>
-        <div style={{ textAlign: 'center', padding: '50px' }}>
+        <div className="docs-status">
           <p>Loading documents...</p>
         </div>
       </div>
@@ -446,9 +490,9 @@ function DocsPage({ school }) {
     return (
       <div className="docs-container">
         <h1>Documents</h1>
-        <div style={{ textAlign: 'center', padding: '50px', color: '#d32f2f' }}>
+        <div className="docs-status docs-status--error">
           <p>Error loading documents: {error}</p>
-          <button onClick={() => { fetchDocuments(); fetchLinks(); }} style={{ marginTop: '20px' }}>
+          <button onClick={() => { fetchDocuments(); fetchLinks(); }}>
             Try Again
           </button>
         </div>
@@ -461,13 +505,16 @@ function DocsPage({ school }) {
       <div className="docs-container">
         <h1>Documents</h1>
 
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <div className="docs-actions">
           <button
-            onClick={() => setShowUploadModal(true)}
+            onClick={openUpload}
             className="submit-link-btn"
           >
             📤 Upload Document
           </button>
+          {notice?.section === 'docs' && (
+            <span key={notice.text} className="docs-notice" role="status">{notice.text}</span>
+          )}
         </div>
 
         <div className="docs-filters">
@@ -496,23 +543,16 @@ function DocsPage({ school }) {
           </button>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+        <div className="docs-toolbar">
           <div className="docs-count">
             Showing {filteredDocs.length} of {docs.length} documents
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <label style={{ fontSize: '14px', color: '#666' }}>Sort by:</label>
+          <div className="docs-sort">
+            <label htmlFor="docs-sort-select">Sort by:</label>
             <select
+              id="docs-sort-select"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              style={{
-                padding: '6px 10px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                fontSize: '14px',
-                backgroundColor: 'white',
-                cursor: 'pointer'
-              }}
             >
               <option value="votes">Votes</option>
               <option value="alphabetical">Alphabetical</option>
@@ -547,6 +587,9 @@ function DocsPage({ school }) {
                     vote={outdatedDocs.votes[doc.docId]}
                     onVote={(choice, note) => outdatedDocs.cast(doc.docId, choice, note)}
                   />
+                  {rowMessages[doc.docId] && (
+                    <div className="docs-row-message" role="status">{rowMessages[doc.docId]}</div>
+                  )}
                 </div>
 
                 <div className="doc-actions" onClick={(e) => e.stopPropagation()}>
@@ -554,13 +597,9 @@ function DocsPage({ school }) {
                     onClick={() => openPreview(doc, true)}
                     className="doc-action-btn open-btn"
                     title="Open in new tab"
-                    style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                    aria-label="Open in new tab"
                   >
-                    <img
-                      src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg=="
-                      alt=""
-                      style={{ width: '10px', height: '10px' }}
-                    />
+                    <span aria-hidden="true">↗</span>
                   </button>
                   <button
                     onClick={() => vote('docs', doc.docId, 'good')}
@@ -586,11 +625,14 @@ function DocsPage({ school }) {
         <div className="useful-links-section">
           <h2>Useful Links</h2>
           <button
-            onClick={() => setShowLinkModal(true)}
+            onClick={openLinkForm}
             className="submit-link-btn"
           >
             🔗 Submit Link
           </button>
+          {notice?.section === 'links' && (
+            <span key={notice.text} className="docs-notice" role="status">{notice.text}</span>
+          )}
 
           <div className="links-list">
             {filteredLinks.length === 0 ? (
@@ -623,6 +665,9 @@ function DocsPage({ school }) {
                       vote={outdatedLinks.votes[link.linkId]}
                       onVote={(choice, note) => outdatedLinks.cast(link.linkId, choice, note)}
                     />
+                    {rowMessages[link.linkId] && (
+                      <div className="docs-row-message" role="status">{rowMessages[link.linkId]}</div>
+                    )}
                   </div>
                   <div className="link-actions">
                     <button
@@ -655,16 +700,7 @@ function DocsPage({ school }) {
             <span className="close-button" onClick={() => setShowUploadModal(false)}>&times;</span>
             <h2>Upload Document</h2>
 
-            <div style={{
-              backgroundColor: '#f0f8ff',
-              border: '1px solid #01202C',
-              borderRadius: '6px',
-              padding: '12px',
-              margin: '15px 0',
-              fontSize: '14px',
-              lineHeight: '1.5',
-              color: '#333'
-            }}>
+            <div className="docs-form-note">
               Please double check the topic is correct and the file name is clear, descriptive, and concise.
               Preference for PDFs but all file types accepted. Strong preference for computer generated files
               that can be edited. Include a link to a Google Doc/Overleaf/etc. so others can iterate
@@ -704,6 +740,8 @@ function DocsPage({ school }) {
                 </div>
               )}
 
+              {uploadMessage && <div className="docs-form-message" role="status">{uploadMessage}</div>}
+
               <button
                 onClick={handleFileUpload}
                 className="modal-submit-btn"
@@ -723,16 +761,7 @@ function DocsPage({ school }) {
             <span className="close-button" onClick={() => setShowLinkModal(false)}>&times;</span>
             <h2>Submit Useful Link</h2>
 
-            <div style={{
-              backgroundColor: '#f0f8ff',
-              border: '1px solid #01202C',
-              borderRadius: '6px',
-              padding: '12px',
-              margin: '15px 0',
-              fontSize: '14px',
-              lineHeight: '1.5',
-              color: '#333'
-            }}>
+            <div className="docs-form-note">
               Please double check the topic is correct, the Link Title is clear, descriptive, and concise,
               and that the link is not already present.
             </div>
@@ -775,6 +804,8 @@ function DocsPage({ school }) {
                 </select>
               </label>
 
+              {linkMessage && <div className="docs-form-message" role="status">{linkMessage}</div>}
+
               <button
                 onClick={handleLinkSubmission}
                 className="modal-submit-btn"
@@ -802,17 +833,9 @@ function DocsPage({ school }) {
             </div>
             <div className="doc-preview-body">
               {previewMimeType && previewMimeType.includes('image') ? (
-                <img
-                  src={previewUrl}
-                  alt={previewFileName}
-                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                />
+                <img src={previewUrl} alt={previewFileName} />
               ) : (
-                <iframe
-                  src={previewUrl}
-                  title={previewFileName}
-                  style={{ width: '100%', height: '100%', border: 'none' }}
-                />
+                <iframe src={previewUrl} title={previewFileName} />
               )}
             </div>
           </div>

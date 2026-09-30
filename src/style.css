@@ -2377,6 +2377,94 @@ textarea.incorrect-answer {
   font-size: 14px;
 }
 
+/* Loading and load-failed screens */
+.docs-status {
+  text-align: center;
+  padding: 50px;
+}
+
+.docs-status--error {
+  color: #d32f2f;
+}
+
+.docs-status--error button {
+  margin-top: 20px;
+}
+
+/* The Upload Document button and, after an upload, its notice */
+.docs-actions {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* The document count, and Sort by */
+.docs-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.docs-sort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.docs-sort label {
+  font-size: 14px;
+  color: #666;
+}
+
+.docs-sort select {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+}
+
+/* The guidance at the top of the upload and link forms */
+.docs-form-note {
+  background-color: #f0f8ff;
+  border: 1px solid #01202C;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 15px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+}
+
+/* Messages in place of pop-ups: a form's problem above its button, a row's under the row's
+   text (the red .outdated-message uses), and a success beside the section's button, fading
+   over the last second of NOTICE_MS in docs/DocsPage.js. */
+.docs-form-message {
+  color: #b00020;
+  font-size: 14px;
+}
+
+.docs-row-message {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #b00020;
+}
+
+.docs-notice {
+  display: inline-block;
+  margin-left: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #003B4F;
+  animation: docs-notice-fade 4s forwards;
+}
+
+@keyframes docs-notice-fade {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 .docs-list {
   display: flex;
   flex-direction: column;
@@ -2406,6 +2494,13 @@ textarea.incorrect-answer {
   width: 50px;
   text-align: center;
   flex-shrink: 0;
+}
+
+/* The Word, Excel and PowerPoint icons, at the size they were drawn at when scaled by half */
+.doc-icon img {
+  height: 33px;
+  width: auto;
+  vertical-align: middle;
 }
 
 .doc-info {
@@ -2474,6 +2569,11 @@ textarea.incorrect-answer {
 .doc-action-btn:hover {
   background: #01202C;
   color: white;
+}
+
+.doc-action-btn.open-btn {
+  display: flex;
+  gap: 4px;
 }
 
 .doc-action-btn.good-btn,
@@ -2638,6 +2738,10 @@ textarea.incorrect-answer {
 .outdated-note {
   color: #01202C;
   font-style: italic;
+}
+
+.outdated-counts {
+  color: #01202C;
 }
 
 .outdated-toggle,
@@ -2873,6 +2977,12 @@ textarea.incorrect-answer {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.doc-preview-body img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 /* Responsive Design */
