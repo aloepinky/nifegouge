@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutdatedVotes, OutdatedBadge, OutdatedControl } from './Outdated';
+import { linkKey, isWebLink, hostOf } from './linkKey';
 
 // The Documents and Useful Links page, one component for every school (Docs.js is NIFE's,
 // TW4Docs.js Primary's). What differs is `school`:
@@ -72,16 +73,19 @@ function DocsPage({ school }) {
 
   useEffect(() => {
     filterDocuments();
-    filterLinks();
   }, [docs, selectedTopic, searchTerm, sortBy]);
 
   useEffect(() => {
     filterLinks();
-  }, [usefulLinks, selectedTopic, searchTerm]);
+  }, [usefulLinks, selectedTopic, searchTerm, sortBy]);
 
-  const fetchDocuments = async () => {
-    setLoading(true);
-    setError(null);
+  // The first load shows the loading screen; a refresh keeps the lists on screen until the new
+  // ones arrive, and keeps the old ones if it fails.
+  const fetchDocuments = async ({ quiet = false } = {}) => {
+    if (!quiet) {
+      setLoading(true);
+      setError(null);
+    }
 
     try {
       const response = await fetch(`${API_BASE_URL}/get-documents${query}`);
@@ -89,15 +93,22 @@ function DocsPage({ school }) {
 
       if (data.success) {
         setDocs(data.documents || []);
-      } else {
+      } else if (!quiet) {
         setError('Failed to load documents');
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
-      setError('Failed to load documents');
+      if (!quiet) setError('Failed to load documents');
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
+  };
+
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchDocuments({ quiet: true }), fetchLinks()]);
+    setRefreshing(false);
   };
 
   const fetchLinks = async () => {
@@ -113,53 +124,28 @@ function DocsPage({ school }) {
     }
   };
 
-  const filterDocuments = () => {
-    let filtered = [...docs];
-
-    if (selectedTopic !== 'all') {
-      filtered = filtered.filter(doc => doc.topic === selectedTopic || doc.topic === 'all');
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(doc =>
-        (doc.fileName || '').toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    filtered.sort((a, b) => {
-      if (a.topic === 'all' && b.topic !== 'all') return 1;
-      if (a.topic !== 'all' && b.topic === 'all') return -1;
-
-      if (sortBy === 'votes') {
-        const aVotes = (a.upvotes || 0) - (a.downvotes || 0);
-        const bVotes = (b.upvotes || 0) - (b.downvotes || 0);
-        if (aVotes !== bVotes) return bVotes - aVotes;
-        return (a.fileName || '').localeCompare(b.fileName || '');
-      } else if (sortBy === 'alphabetical') {
-        return (a.fileName || '').localeCompare(b.fileName || '');
-      }
-
-      return 0;
-    });
-
-    setFilteredDocs(filtered);
+  // Documents and links filter and sort alike: the topic picked (entries filed under All Topics
+  // show under every topic, below the topic's own), the search, then Sort by, votes breaking
+  // ties by name.
+  const filterAndSort = (items, nameOf) => {
+    const search = searchTerm.toLowerCase();
+    const score = (item) => (item.upvotes || 0) - (item.downvotes || 0);
+    return items
+      .filter(item => selectedTopic === 'all' || item.topic === selectedTopic || item.topic === 'all')
+      .filter(item => !search || (nameOf(item) || '').toLowerCase().includes(search))
+      .sort((a, b) => {
+        if (a.topic === 'all' && b.topic !== 'all') return 1;
+        if (a.topic !== 'all' && b.topic === 'all') return -1;
+        if (sortBy === 'votes' && score(a) !== score(b)) return score(b) - score(a);
+        return (nameOf(a) || '').localeCompare(nameOf(b) || '');
+      });
   };
 
-  const filterLinks = () => {
-    let filtered = [...usefulLinks];
+  const filterDocuments = () => setFilteredDocs(filterAndSort(docs, doc => doc.fileName));
 
-    if (selectedTopic !== 'all') {
-      filtered = filtered.filter(link => link.topic === selectedTopic || link.topic === 'all');
-    }
+  const filterLinks = () => setFilteredLinks(filterAndSort(usefulLinks, link => link.title));
 
-    if (searchTerm) {
-      filtered = filtered.filter(link =>
-        link.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setFilteredLinks(filtered);
-  };
+  const topicLabel = (value) => topics.find(t => t.value === value)?.label || 'Other';
 
   const handleFileUpload = async () => {
     if (!uploadFile) {
@@ -293,10 +279,16 @@ function DocsPage({ school }) {
       return;
     }
 
-    try {
-      new URL(linkUrl);
-    } catch (e) {
-      alert('Please enter a valid URL');
+    if (!isWebLink(linkUrl)) {
+      alert('Please enter a link starting with http:// or https://');
+      return;
+    }
+
+    // The server refuses a duplicate too; checking here says so before the round trip.
+    const key = linkKey(linkUrl);
+    const existing = usefulLinks.find(link => linkKey(link.url) === key);
+    if (existing) {
+      alert(`That link is already listed as "${existing.title}".`);
       return;
     }
 
@@ -322,6 +314,8 @@ function DocsPage({ school }) {
         setLinkTopic(defaultTopic);
         setShowLinkModal(false);
         fetchLinks();
+      } else if (response.status === 409) {
+        alert(`That link is already listed as ${(data.error || '').replace(/^Already listed as /, '')}.`);
       } else {
         alert('Failed to submit link: ' + (data.error || 'Unknown error'));
       }
@@ -331,71 +325,75 @@ function DocsPage({ school }) {
     }
   };
 
-  const voteOnDocument = async (docId, voteType) => {
-    try {
-      await fetch(`${API_BASE_URL}/vote-document`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ docId, voteType, program })
-      });
-    } catch (error) {
-      console.error('Error voting:', error);
-    }
-  };
-
-  const voteOnLink = async (linkId, voteType) => {
-    try {
-      await fetch(`${API_BASE_URL}/vote-link`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ linkId, voteType, program })
-      });
-    } catch (error) {
-      console.error('Error voting:', error);
-    }
+  const sendVote = async (endpoint, id, voteType) => {
+    const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...id, voteType, program })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.success) throw new Error(data.error || 'Vote failed');
   };
 
   // Good/bad gouge. A browser holds at most one vote per entry: clicking it again takes it back,
   // and clicking the other one moves it. The server only counts, so taking a vote back sends
-  // the opposite vote and moving one sends the new vote twice.
+  // the opposite vote and moving one sends the new vote twice. The page shows the vote at once
+  // and puts back whatever the server did not count.
   const vote = async (kind, key, choice) => {
     const docs = kind === 'docs';
     const voted = docs ? votedDocs : votedLinks;
     const setVoted = docs ? setVotedDocs : setVotedLinks;
     const setItems = docs ? setDocs : setUsefulLinks;
-    const idOf = docs ? (d) => d.docId : (l) => l.linkId || l.id;
-    const send = (type) => (docs ? voteOnDocument(key, type) : voteOnLink(key, type));
+    const storageKey = docs ? storage.votedDocs : storage.votedLinks;
+    const idOf = docs ? (d) => d.docId : (l) => l.linkId;
+    const send = (type) => (docs
+      ? sendVote('vote-document', { docId: key }, type)
+      : sendVote('vote-link', { linkId: key }, type));
     const opposite = choice === 'good' ? 'bad' : 'good';
-    const [mine, theirs] = choice === 'good' ? ['upvotes', 'downvotes'] : ['downvotes', 'upvotes'];
 
     const currentVote = voted[key];
     const isUnvoting = currentVote === choice;
 
-    const newVoted = { ...voted };
-    if (isUnvoting) {
-      delete newVoted[key];
-    } else {
-      newVoted[key] = choice;
-    }
-    setVoted(newVoted);
-    localStorage.setItem(docs ? storage.votedDocs : storage.votedLinks, JSON.stringify(newVoted));
+    // Moves this browser's vote for the entry from `from` to `to` (either may be none), on
+    // screen and in storage.
+    const show = (from, to) => {
+      setVoted(prev => {
+        const next = { ...prev };
+        if (to) next[key] = to;
+        else delete next[key];
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(next));
+        } catch {
+          // Only this browser's memory of the vote is lost.
+        }
+        return next;
+      });
+      const shift = { upvotes: 0, downvotes: 0 };
+      if (from) shift[from === 'good' ? 'upvotes' : 'downvotes'] -= 1;
+      if (to) shift[to === 'good' ? 'upvotes' : 'downvotes'] += 1;
+      setItems(prev => prev.map(item => (idOf(item) !== key ? item : {
+        ...item,
+        upvotes: (item.upvotes || 0) + shift.upvotes,
+        downvotes: (item.downvotes || 0) + shift.downvotes,
+      })));
+    };
 
-    setItems(prev => prev.map(item => {
-      if (idOf(item) !== key) return item;
-      if (isUnvoting) return { ...item, [mine]: (item[mine] || 0) - 1, [theirs]: (item[theirs] || 0) };
-      if (currentVote === opposite) {
-        return { ...item, [mine]: (item[mine] || 0) + 1, [theirs]: Math.max(0, (item[theirs] || 0) - 1) };
+    const target = isUnvoting ? undefined : choice;
+    show(currentVote, target);
+
+    const sends = isUnvoting ? [opposite] : currentVote === opposite ? [choice, choice] : [choice];
+    let sent = 0;
+    try {
+      for (const type of sends) {
+        await send(type);
+        sent += 1;
       }
-      return { ...item, [mine]: (item[mine] || 0) + 1 };
-    }));
-
-    if (isUnvoting) {
-      await send(opposite);
-    } else if (currentVote === opposite) {
-      await send(choice);
-      await send(choice);
-    } else {
-      await send(choice);
+    } catch (error) {
+      console.error('Error voting:', error);
+      // Nothing counted: the old vote stands. A move half sent took the old vote back and
+      // stopped there.
+      show(target, sent === 0 ? currentVote : undefined);
+      alert('That vote did not go through. Try again.');
     }
   };
 
@@ -450,7 +448,7 @@ function DocsPage({ school }) {
         <h1>Documents</h1>
         <div style={{ textAlign: 'center', padding: '50px', color: '#d32f2f' }}>
           <p>Error loading documents: {error}</p>
-          <button onClick={fetchDocuments} style={{ marginTop: '20px' }}>
+          <button onClick={() => { fetchDocuments(); fetchLinks(); }} style={{ marginTop: '20px' }}>
             Try Again
           </button>
         </div>
@@ -493,8 +491,8 @@ function DocsPage({ school }) {
             className="docs-search-input"
           />
 
-          <button onClick={fetchDocuments} className="docs-refresh-btn">
-            Refresh
+          <button onClick={refresh} className="docs-refresh-btn" disabled={refreshing}>
+            {refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
 
@@ -538,7 +536,7 @@ function DocsPage({ school }) {
                   <h3 className="doc-name">{doc.fileName}</h3>
                   <div className="doc-meta">
                     <span className="doc-topic-badge">
-                      {topics.find(t => t.value === doc.topic)?.label || 'Other'}
+                      {topicLabel(doc.topic)}
                     </span>
                     <span className="doc-size">{formatFileSize(doc.fileSize)}</span>
                     <span className="doc-date">{formatDate(doc.uploadedAt)}</span>
@@ -601,7 +599,7 @@ function DocsPage({ school }) {
               </div>
             ) : (
               filteredLinks.map(link => (
-                <div key={link.linkId || link.id} className="link-item">
+                <div key={link.linkId} className="link-item">
                   <div className="link-icon">🔗</div>
                   <div className="link-info">
                     <a
@@ -614,9 +612,9 @@ function DocsPage({ school }) {
                     </a>
                     <div className="link-meta">
                       <span className="link-topic-badge">
-                        {topics.find(t => t.value === link.topic)?.label || 'All Topics'}
+                        {topicLabel(link.topic)}
                       </span>
-                      <span className="link-url">{new URL(link.url).hostname}</span>
+                      <span className="link-url">{hostOf(link.url)}</span>
                       <span className="link-date">{formatDate(link.submittedAt)}</span>
                       <OutdatedBadge item={link} />
                     </div>
@@ -628,14 +626,14 @@ function DocsPage({ school }) {
                   </div>
                   <div className="link-actions">
                     <button
-                      onClick={() => vote('links', link.linkId || link.id, 'good')}
-                      className={`link-action-btn good-btn ${votedLinks[link.linkId || link.id] === 'good' ? 'selected' : ''}`}
+                      onClick={() => vote('links', link.linkId, 'good')}
+                      className={`link-action-btn good-btn ${votedLinks[link.linkId] === 'good' ? 'selected' : ''}`}
                     >
                       👍
                     </button>
                     <button
-                      onClick={() => vote('links', link.linkId || link.id, 'bad')}
-                      className={`link-action-btn bad-btn ${votedLinks[link.linkId || link.id] === 'bad' ? 'selected' : ''}`}
+                      onClick={() => vote('links', link.linkId, 'bad')}
+                      className={`link-action-btn bad-btn ${votedLinks[link.linkId] === 'bad' ? 'selected' : ''}`}
                     >
                       👎
                     </button>
