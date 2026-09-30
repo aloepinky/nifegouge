@@ -1366,8 +1366,7 @@ iframe {
 }
 
 /* Flight Component Styles */
-.limits-eps-container,
-.told-card-container {
+.limits-eps-container {
   max-width: 900px;
   margin: 20px auto;
   padding: 0 20px;
@@ -1420,8 +1419,7 @@ iframe {
   }
 }
 
-.limits-eps-container h1,
-.told-card-container h1 {
+.limits-eps-container h1 {
   text-align: center;
   color: #01202C;
   margin-bottom: 10px;
@@ -2192,12 +2190,6 @@ textarea.incorrect-answer {
   padding: 0;
 }
 
-.told-card-container h1 {
-  text-align: center;
-  color: #01202C;
-  margin-bottom: 20px;
-}
-
 .told-header {
   display: flex;
   gap: 20px;
@@ -2216,7 +2208,7 @@ textarea.incorrect-answer {
 
 .told-header-item select {
   padding: 6px 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #cfdbe0;
   border-radius: 4px;
   font-size: 14px;
   font-weight: normal;
@@ -2230,7 +2222,7 @@ textarea.incorrect-answer {
 
 .told-table th,
 .told-table td {
-  border: 1px solid #ccc;
+  border: 1px solid #cfdbe0;
   padding: 6px 8px;
   text-align: center;
 }
@@ -2280,17 +2272,19 @@ textarea.incorrect-answer {
   margin: 0;
 }
 
-.told-table input:focus {
-  outline: 2px solid #4CAF50;
-  background: white;
+.told-table input:focus,
+.told-table select:focus {
+  outline: 2px solid #5b8496;
+  outline-offset: -2px;
+  background: #ffffff;
 }
 
 .told-table input::placeholder {
-  color: #999;
+  color: #8ba1ab;
 }
 
 .told-calc {
-  background-color: #f5f5f5;
+  background-color: #eef3f5;
 }
 
 .told-minus {
@@ -2309,13 +2303,13 @@ textarea.incorrect-answer {
 }
 
 .told-summary-row {
-  background-color: #f0f0f0;
+  background-color: #eef3f5;
   font-weight: bold;
 }
 
 .told-unit {
   font-weight: normal;
-  color: #5a6b72;
+  color: #5a7481;
   font-size: 12px;
 }
 
@@ -2342,30 +2336,30 @@ textarea.incorrect-answer {
 .told-dist-from {
   margin: -12px 0 20px;
   font-size: 12px;
-  color: #5a6b72;
+  color: #5a7481;
 }
 
 .told-cg {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  gap: 8px 24px;
+  gap: 4px;
   margin-bottom: 20px;
 }
 
 .told-cg-chart {
-  flex: 1 1 260px;
+  width: 100%;
   max-width: 360px;
 }
 
 .told-cg-grid line {
-  stroke: #e2e8ea;
+  stroke: #dde5e9;
   stroke-width: 0.5;
 }
 
 .told-cg-grid text {
   font-size: 9px;
-  fill: #5a6b72;
+  fill: #5a7481;
 }
 
 .told-cg-envelope {
@@ -2396,8 +2390,8 @@ textarea.incorrect-answer {
 }
 
 .told-cg-verdicts {
-  flex: 1 1 200px;
   list-style: none;
+  text-align: center;
   margin: 0;
   padding: 0;
 }
@@ -2407,18 +2401,17 @@ textarea.incorrect-answer {
 .told-cg-ok { color: #01202C; }
 
 .told-cg-out {
-  color: #b00020;
+  color: #b42525;
   font-weight: bold;
 }
 
-.told-cg-none { color: #5a6b72; }
+.told-cg-none { color: #5a7481; }
 
 .told-notes {
   margin-top: 30px;
   padding: 20px;
-  background-color: #f0f8ff;
-  border-radius: 8px;
-  border: 1px solid #d0e8ff;
+  background-color: #ffffff;
+  border: 1px solid #cfdbe0;
 }
 
 .told-notes h3 {
@@ -2434,7 +2427,7 @@ textarea.incorrect-answer {
 .told-notes li {
   margin: 8px 0;
   line-height: 1.4;
-  color: #333;
+  color: #33505d;
 }
 
 @media (max-width: 480px) {
