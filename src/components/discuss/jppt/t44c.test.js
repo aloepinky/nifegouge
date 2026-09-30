@@ -41,6 +41,16 @@ const CASES = [
     briefed: 34,
     // Page I-7, top band first: USN P-8 and E-6 share it, divided by a rule turned on its side.
     postFlows: ['USN P-8', 'E-6', 'USMC C-130', 'USCG', 'TILT-ROTOR'],
+    // "FAM4101." and "FAM4501." set off with a full stop, "V mca" read apart by pdf.js, and a
+    // running head ("CNATRAINST 1542.168C CH-2") that must not run into FAM4201's.
+    ssrCount: 12,
+    ssr: {
+      FAM4101: 'Oxygen mask familiarization and utilization.',
+      FAM4102: undefined,
+      FAM4501: 'Visual approach demonstration.',
+      FAM4201: 'SSE full-stop demo.',
+      FAM2104: 'Vmca demo.',
+    },
     courseRows: ['USN P-8', 'IMT P-8', 'USMC C-130', 'USCG', 'USN/USMC Tilt-Rotor'],
     // Read off the rendered Flight Training tables (pp. x-xviii), which print OFT, UTD and
     // T-44C Dual/Solo per block and total each column. `flights` is Dual + Solo, `sims` is
@@ -75,6 +85,13 @@ const CASES = [
     // One community, so the publication prints one chart and the reader is offered no choice.
     postFlows: [],
     courseRows: ['T-44C E-2D Intermediate MPTS'],
+    // One sentence for the whole block (FAM32), and ids on lines of their own.
+    ssrCount: 12,
+    ssr: {
+      FAM3201: 'Complete manual gear extension.',
+      FAM2104: 'Vmca demo.',
+      I4101: 'Coupled approach demo.',
+    },
   },
 ];
 
@@ -120,6 +137,12 @@ CASES.forEach((c) => {
       expect(new Set(ids).size).toBe(ids.length);
       const counted = warnings.filter((w) => /the header counts/.test(w));
       expect(counted).toEqual([]);
+    });
+
+    test('reads the Special Syllabus Requirements', () => {
+      const ssr = Object.fromEntries(doc.events.filter((e) => e.ssr).map((e) => [e.id, e.ssr]));
+      expect(Object.keys(ssr).length).toBe(c.ssrCount);
+      Object.entries(c.ssr).forEach(([id, text]) => expect([id, ssr[id]]).toEqual([id, text]));
     });
 
     test('traces the course flow', () => {

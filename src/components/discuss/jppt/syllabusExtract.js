@@ -26,7 +26,7 @@ const THROUGH = /\b([A-Z]{1,3})(\d{4})[A-Z]?\s+through\s+\1(\d{4})\b/g;
 
 // Running heads and feet: the instruction number, its date, the page number, blank pages.
 const FURNITURE = [
-  /^CNATRAINST\s+\S+$/,
+  /^CNATRAINST\s+\S+(?:\s+CH-\d+)?$/,
   /^\d{1,2}\s+[A-Z][a-z]{2}\s+\d{4}$/,
   /^[IVX]+-\d+$/,
   /^BLANK PAGE$/i,
@@ -304,28 +304,78 @@ function eventTitles(section) {
   return titles;
 }
 
+const EVENT_LABEL = /^[A-Z]{1,3}\d{4}[A-Z]?(-\d{1,2})?$/;
+const idsOf = (tokens) => tokens.flatMap((t) => expand(t.replace(/^([A-Z]{1,3}\d{4})[A-Z]/, '$1')));
+
+// A section's lines sorted by event: a line of nothing but event ids starts those events'
+// paragraph, and anything before the first one is for the whole block. With `leading`, an id
+// that opens a line of text starts a paragraph too — the Special Syllabus Requirements print
+// "FAM4202 IP demonstrates spin with steady state spin recovery." on one line.
+function linesByEvent(section, { leading = false } = {}) {
+  const byEvent = {};
+  const blockWide = section.inline ? [section.inline] : [];
+  let current = null;
+  const start = (ids) => {
+    current = ids;
+    ids.forEach((id) => { byEvent[id] = byEvent[id] || []; });
+  };
+  section.lines.forEach((line) => {
+    // The SSRs also set ids off on a line of their own as "F4103/F4104" or "FAM4101.".
+    const text = leading ? line.text.replace(/\/(?=[A-Z])/g, ' ').replace(/\.$/, '') : line.text;
+    const tokens = text.split(/[\s,]+/).filter((t) => t && !/^and$/i.test(t));
+    if (tokens.length && tokens.every((t) => EVENT_LABEL.test(t))) {
+      const ids = idsOf(tokens);
+      if (ids.length) {
+        start(ids);
+        return;
+      }
+    }
+    if (leading) {
+      // "F4103/F4104 Section approach, ..." names two events at once.
+      const m = /^([A-Z]{1,3}\d{4}[A-Z]?(?:-\d{1,2})?(?:\/[A-Z]{1,3}\d{4}[A-Z]?)*)\s+(.+)$/.exec(line.text);
+      const ids = m ? idsOf(m[1].split('/')) : [];
+      if (ids.length) {
+        start(ids);
+        ids.forEach((id) => byEvent[id].push(m[2]));
+        return;
+      }
+    }
+    if (current) current.forEach((id) => byEvent[id].push(line.text));
+    else blockWide.push(line.text);
+  });
+  return { byEvent, blockWide };
+}
+
+// "3. Special Syllabus Requirements": one-time, ungraded demonstrations, kept as the JPPT words
+// them. -> { block: text for the whole block or null, byEvent: { id: text } }
+function ssrText(section, eventIds) {
+  const none = { block: null, byEvent: {} };
+  if (!section || /^none\.?$/i.test(section.inline.trim())) return none;
+  const { byEvent, blockWide } = linesByEvent(section, { leading: true });
+  // A list of one keeps no "a." (CS42 prints "a." and no "b.").
+  const text = (parts) => {
+    const t = joinLines(parts);
+    if (!t || /^none\.?$/i.test(t)) return null;
+    // pdf.js sets a subscript apart: "V mca demo."
+    const joined = t.replace(/\bV (mca|mcg|sse|xse|yse|mc|so|ref)\b/g, 'V$1');
+    return /^a\.\s/.test(joined) && !/\sb\.\s/.test(joined) ? joined.replace(/^a\.\s+/, '') : joined;
+  };
+  const block = text(blockWide);
+  const out = {};
+  eventIds.forEach((id) => {
+    const own = byEvent[id] ? text(byEvent[id]) : null;
+    if (own || block) out[id] = [block, own].filter(Boolean).join(' ');
+  });
+  return { block, byEvent: out };
+}
+
 // Per-event paragraphs under "4. Discuss Items", or one sentence for the whole block.
 function discussItems(section, eventIds) {
   if (!section) return { briefed: false, byEvent: {} };
   const inline = section.inline.trim();
   if (/^none\.?$/i.test(inline)) return { briefed: false, byEvent: {} };
 
-  const byEvent = {};
-  const blockWide = inline ? [inline] : [];
-  let current = null;
-  section.lines.forEach((line) => {
-    const tokens = line.text.split(/[\s,]+/).filter((t) => t && !/^and$/i.test(t));
-    const ids = tokens.length && tokens.every((t) => /^[A-Z]{1,3}\d{4}[A-Z]?(-\d{1,2})?$/.test(t))
-      ? tokens.flatMap((t) => expand(t.replace(/^([A-Z]{1,3}\d{4})[A-Z]/, '$1')))
-      : null;
-    if (ids && ids.length) {
-      current = ids;
-      ids.forEach((id) => { byEvent[id] = byEvent[id] || []; });
-      return;
-    }
-    if (current) current.forEach((id) => byEvent[id].push(line.text));
-    else blockWide.push(line.text);
-  });
+  const { byEvent, blockWide } = linesByEvent(section);
 
   const out = {};
   const toItems = (parts) => {
@@ -428,6 +478,7 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
       }
 
       const discuss = discussItems(sections['discuss items'], ids);
+      const ssr = ssrText(sections['special syllabus requirements'], ids);
       const row = {
         id: head.id,
         stage: null,
@@ -442,6 +493,7 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
       if (blkName) row.blkName = blkName;
       const prereqs = prereqText(sections.prerequisites);
       if (prereqs) row.prereqs = prereqs;
+      if (ssr.block) row.ssr = ssr.block;
       built.push(row);
 
       if (discuss.briefed) {
@@ -455,6 +507,7 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
             hours: row.hx != null ? row.hx : null,
             prereqs: row.prereqs || null,
             syllabusNotes: notes || null,
+            ssr: ssr.byEvent[id] || null,
             items: (discuss.byEvent[id] || []).map((label) => ({ label })),
           });
         });

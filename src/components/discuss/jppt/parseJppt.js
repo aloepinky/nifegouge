@@ -11,8 +11,8 @@ import { guessProgram } from '../program';
 //
 //   { version, aircraft?, school?, source: { instruction, date, flowPage, citation },
 //     stages: [{ id, label, weight, graded }],
-//     blocks: [{ id, stage, media, title, hours, hx?, blkName?, prereqs?, briefed, events: [{ id, title? }] }],
-//     events: [{ id, title, block, media, hours, prereqs, syllabusNotes, items: [{ label, slug? | href? }] }],
+//     blocks: [{ id, stage, media, title, hours, hx?, blkName?, prereqs?, ssr?, briefed, events: [{ id, title? }] }],
+//     events: [{ id, title, block, media, hours, prereqs, syllabusNotes, ssr, items: [{ label, slug? | href? }] }],
 //     flow:   { VIEWBOX, NODES, LEGEND, EDGES },
 //     postFlows?: [{ id, label, VIEWBOX, NODES, LEGEND, EDGES }] }
 //

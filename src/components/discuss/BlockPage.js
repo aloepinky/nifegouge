@@ -37,10 +37,10 @@ function BlockPage({ block }) {
             {block.id} <span className="discuss-head-title">{block.title}</span>
           </h1>
           <p className="discuss-meta">{meta.join(' · ')}</p>
-          {block.prereqs && (
+          {(block.prereqs || block.ssr) && (
             <dl className="discuss-eventmeta">
-              <dt>Prerequisites</dt>
-              <dd>{block.prereqs}</dd>
+              {block.prereqs && <><dt>Prerequisites</dt><dd>{block.prereqs}</dd></>}
+              {block.ssr && <><dt>Special syllabus requirements</dt><dd>{block.ssr}</dd></>}
             </dl>
           )}
         </header>

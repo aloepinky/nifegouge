@@ -88,6 +88,21 @@ maybe('Delta JPPT', () => {
       expect(got).toEqual(want);
     });
 
+    // Laid out three ways: one line per event (FAM42), one sentence for the whole block (FAM33,
+    // whose events all get it), and "F4103/F4104" set above the text it applies to.
+    test('reads the Special Syllabus Requirements', () => {
+      const ssr = Object.fromEntries(syl.events.filter((e) => e.ssr).map((e) => [e.id, e.ssr]));
+      expect(Object.keys(ssr).length).toBe(24);
+      expect(ssr.FAM4202).toBe('IP demonstrates spin with steady state spin recovery.');
+      expect(ssr.FAM4203).toBe('SNA executes visual straight-in.');
+      expect(ssr.FAM3301).toBe('Gusty wind conditions on takeoff/landing.');
+      expect(syl.blocks.find((b) => b.id === 'FAM33').ssr).toBe('Gusty wind conditions on takeoff/landing.');
+      expect(ssr.F4103).toBe('Section approach, lost sight procedures, blind rendezvous.');
+      expect(ssr.F4101).toBeUndefined();
+      expect(ssr.CS4290).toMatch(/^IP’s should select one of the following/);
+      expect(ssr.FAM6201).toBeUndefined(); // "None."
+    });
+
     // Not an exact comparison: the registry's labels were split and trimmed by hand. What must
     // hold is that an item a human tied to a page is still tied to that page, and the report
     // shows how far the automatic split is from the hand split.

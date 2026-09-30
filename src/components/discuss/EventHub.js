@@ -49,10 +49,11 @@ function EventHub({ event }) {
           {event.id} <span className="discuss-head-title">{event.title}</span>
         </h1>
         <p className="discuss-meta">{meta.join(' · ')}</p>
-        {(event.prereqs || event.syllabusNotes) && (
+        {(event.prereqs || event.syllabusNotes || event.ssr) && (
           <dl className="discuss-eventmeta">
             {event.prereqs && <><dt>Prerequisites</dt><dd>{event.prereqs}</dd></>}
             {event.syllabusNotes && <><dt>Syllabus notes</dt><dd>{event.syllabusNotes}</dd></>}
+            {event.ssr && <><dt>Special syllabus requirements</dt><dd>{event.ssr}</dd></>}
           </dl>
         )}
       </header>
