@@ -39,3 +39,12 @@ jobs:
           aws lambda update-function-code \
             --function-name discussApi \
             --zip-file fileb://function.zip
+
+      # Uses the SDK bundled with the Node.js runtime; nothing to install.
+      - name: Deploy weeklyReport
+        run: |
+          cd lambda/weeklyReport
+          zip -r function.zip .
+          aws lambda update-function-code \
+            --function-name weeklyReport \
+            --zip-file fileb://function.zip

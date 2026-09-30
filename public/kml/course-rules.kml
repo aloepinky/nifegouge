@@ -3988,27 +3988,27 @@
         VHF 15 (132.875MHz)</p>
 
         <p><b>RDO</b></br>
-        UHF 14 (307.075MHz)</p>
+        UHF 15 (307.075MHz)</p>
 
         <p><b>Traffic Rules</b><br />
         Aircraft in pattern: <font color="#cc0000"><b>5 MAX</b></font><br />
         Break: 1,300' MSL<br />
-        Pattern: 1,000' MSL <br />
+        Pattern: 1,100' MSL <br />
         Pattern Direction: Outside <br />
         PPELs: Same side and opposite direction of pattern. Practice ELPs not authorized with SNA solo flights in pattern. <br />
-        Hours: 0800-RDO deprature</p>
+        Hours: 0800-RDO departure</p>
        
         <p>Two-way communication with RDO/Crash Crew is required. If initial call is not acknowledged by the RDO prior to 2NM radius from runway, execute a discontinued entry. No clearance to land will be issued by RDO. Pattern side wave-offs at 800' MSL. Position and intentions must be provided to RDO prior to 4NM initial. Report numbers and report break thereafter with proper interval. Report 180 gear down. Report crosswind with proper interval.</p>
          
        <p><b>WARNING!</b><br />
-       If an aircraft is executing a PPEL/P and enother aircraft calls inbound at the initial, the initial traffic must visually acquire the PPEL/P traffic prior to 2NM and maintain seperation to continue inbound for the break. If seperation cannot be maintained or is in doubt, execute a discontinued entry.</p>
+       If an aircraft is executing a PPEL/P and another aircraft calls inbound at the initial, the initial traffic must visually acquire the PPEL/P traffic prior to 2NM and maintain separation to continue inbound for the break. If separation cannot be maintained or is in doubt, execute a discontinued entry.</p>
 
-       <p>Discontinued entry inside 2NM radius must immediately turn 90° away from normal traffic pattern while maintaining break altitude until clear of airfield. Inside of 2NM radius must depart when beyond the upwind numbers and clear of traffic while maintaining break altitude.</p>
+       <p>Discontinued entry outside 2NM radius must immediately turn a minimum of 90° away from normal traffic pattern while maintaining break altitude until clear of airfield. Inside of 2NM radius must depart when beyond the upwind numbers and clear of traffic while maintaining break altitude.</p>
 
       <p><b>WARNING!</b><br />
-      Due to possible traffice conflicts during practice ELPs, when a practice ELP aircraft decides to wafe-off it will execute the wave-off procedures to remain on the Low-Key side of the runway.<br />
+      Due to possible traffic conflicts during practice ELPs, when a practice ELP aircraft decides to wave-off it will execute the wave-off procedures to remain on the Low-Key side of the runway.<br />
       Aircraft at Low-Key must wave-off to the Low-Key side of the runway if unable to report Low-Key due to radio saturation.<br />
-      A possible traffice conflict exists between PPEL/P aircraft clibming to pattern Low-Key and a PPEL aircraft descending from High-Key on the ELP.</p>
+      A possible traffic conflict exists between PPEL/P aircraft climbing to pattern Low-Key and a PPEL aircraft descending from High-Key on the ELP.</p>
 
     </td>
   </tr>
@@ -5894,7 +5894,7 @@
 				</LineString>
 			</Placemark>
 			<Placemark>
-				<name>Foxtrot/Noth Mustang Transition</name>
+				<name>Foxtrot/North Mustang Transition</name>
 				<visibility>0</visibility>
 				<styleUrl>#m_ylw-pushpin10</styleUrl>
 				<LineString>

@@ -1,0 +1,31 @@
+# weeklyReport
+
+Emails the weekly community-activity report every Sunday at 1800 Central: discussion-page,
+syllabus, brief and jet log edits, NIFE questions submitted and decided, documents and links
+added, leaderboard runs, and the votes cast since the last report. Your own saves and the seed
+tools' (`REPORT_OWN`, default `Loevinger,migration`) are counted, not listed. The report itself is
+`report.mjs`, shared with `tools/weekly-report.mjs`, which prints it locally.
+
+Deployed by `.github/workflows/deploy-lambda.yml` like the others. Created by hand once
+(2026-09-28), all in us-east-2:
+
+- **Function** `weeklyReport`, nodejs22.x, handler `index.handler`, 512 MB, 120 s. Environment:
+  `REPORT_TO` (drew.loevinger@gmail.com), `REPORT_FROM` (`PSM Reports <reports@pinksheetmafia.com>`),
+  `REPORT_BUCKET`.
+- **Role** `weeklyReport-role`, inline policy `weeklyReport`: `dynamodb:Scan` on the nine tables it
+  reads, get/put on `pinksheetmafia-reports/weekly/*`, `ses:SendEmail` on the two identities below, logs.
+  It cannot write to any table.
+- **Bucket** `pinksheetmafia-reports`, private (all public access blocked). Holds
+  `weekly/votes.json`, last week's vote totals. Not the mirror bucket, which is public-read.
+- **SES** identities: the domain pinksheetmafia.com, verified by three DKIM CNAMEs
+  (`<token>._domainkey`) in Netlify DNS, and drew.loevinger@gmail.com. The report is sent from
+  the domain: sent from the Gmail address through SES, Gmail filed it as spam. The account is in
+  the SES sandbox, which is fine for sending to a verified address; another recipient would need
+  verifying too. No mailbox exists at reports@; nothing replies to it.
+- **Schedule** EventBridge Scheduler `weeklyReport-sunday`, `cron(0 18 ? * SUN *)` in
+  `America/Chicago`, invoking through role `weeklyReport-scheduler-role`.
+- **Deploy** the ARN is in `github-lambda-deploy`'s inline policy `deploy-pinksheetmafia-lambdas`.
+
+Invoke with `{"dryRun": true}` (optionally `"days": 14`) to get the report back without sending it
+or moving the vote snapshot. A plain invoke sends it and saves the totals, so it resets what the
+next Sunday's vote counts cover.

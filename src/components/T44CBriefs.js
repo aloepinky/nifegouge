@@ -1,9 +1,9 @@
 import React from 'react';
 import BriefsPage from './briefs/BriefsPage';
 
-// Advanced's Briefs/TOLD page: the same page as Primary's and NIFE's at a third address,
-// showing the briefs written for Advanced. There is no T-44C TOLD card yet, so the TOLD
-// button is left off until one is built; pass it as `told` then.
+// Advanced's Briefs page: the same page as Primary's and NIFE's at a third address,
+// showing the briefs written for Advanced. It has no TOLD card on purpose: T-44C TOLD
+// cards are done in maintenance, where students don't use PSM.
 //
 // A draft: routed and in the nav on a dev server only (see `briefs: 'draft'` in programs.js).
 

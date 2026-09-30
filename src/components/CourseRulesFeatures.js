@@ -1,5 +1,5 @@
 // Shared custom descriptions
-const MUSTANG_AREAS_1_2_3_4_DESCRIPTION = [
+const MUSTANG_NORTH_AREAS_1_2_DESCRIPTION = [
   "Working altitudes are 6500' MSL to 15,000' MSL (Up to 17,500' MSL available upon request with Corpus Approach).",
   "WARNING!  maintain a 3 NM stand-off from MUSTANG Beach Airport (KRAS) below 11,500' MSL when parajumping operations are in effect. ",
   "Solos must only use MUSTANG areas 1, 2, 3, and 4.",
@@ -7,6 +7,16 @@ const MUSTANG_AREAS_1_2_3_4_DESCRIPTION = [
   "Abeam MUSTANG Beach Airport auto-switch to Corpus Approach on CH 17 UHF. Climb to working altitude once established under the working area from an altitude of 5500' MSL.",
   "<u>Exit</u>",
   "Contact Corpus Approach on CH 17 UHF.  Advise complete in the working area and state intentions.  If returning to KNGP, contact Corpus Approach on CH 8 UHF when directed and join the Northern or Southern Arrival. Departing North MUSTANG area for northern arrival, ensure established at 1,500' MSL no later than nine-mile point."
+];
+
+const MUSTANG_SOUTH_AREAS_3_4_DESCRIPTION = [
+  "Working altitudes are 6500' MSL to 15,000' MSL (Up to 17,500' MSL available upon request with Corpus Approach).",
+  "WARNING!  maintain a 3 NM stand-off from MUSTANG Beach Airport (KRAS) below 11,500' MSL when parajumping operations are in effect. ",
+  "Solos must only use MUSTANG areas 1, 2, 3, and 4.",
+  "<u>Entry</u>",
+  "Abeam Padre Balli Park (Old Bob Hall Pier) auto-switch to Corpus Approach on CH 17 UHF. Climb to working altitude once established under the working area from an altitude of 5500' MSL.",
+  "<u>Exit</u>",
+  "Contact Corpus Approach on CH 17 UHF.  Advise complete in the working area and state intentions.  If returning to KNGP, contact Corpus Approach on CH 8 UHF when directed and join the Northern or Southern Arrival. Departing South MUSTANG to intercept southern arrival, maintain vigilant scan for KNWL course rules departure traffic."
 ];
 
 const MUSTANG_AREAS_5_6_7_8_DESCRIPTION = [
@@ -27,7 +37,7 @@ export const crFeatures = {
     customDescription : "",
     questions : [],
     answers : [],
-    dependentNode: [],
+    dependentNode: ["Airspace-default-1"],
     nextNode : ["Routes-Traffic Patterns-2", "Routes-Traffic Patterns-3", "Routes-Departures-17", "Routes-Departures-18", "Routes-Departures-19", "Routes-Departures-20"]
   },
   "Airspace-default-1" : {
@@ -322,7 +332,7 @@ export const crFeatures = {
     customDescription : "",
     questions : [],
     answers : [],
-    dependentNode: [],
+    dependentNode: ["Airspace-default-22"],
     nextNode : ["Routes-Traffic Patterns-23", "Routes-Traffic Patterns-24", "Routes-Departures-32", "Routes-Departures-33", "Routes-Departures-34", "Routes-Departures-35"]
   },
   "Airspace-default-22" : {
@@ -345,9 +355,29 @@ export const crFeatures = {
     subCategory : "Traffic Patterns",
     category : "Routes",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : [
+      "Hours for TW-4 touch and go operations are from 0800-1800 limited by ARDO watch standing hours. An ARDO must be in position prior to any touch and go operations.",
+      "A maximum of 4 aircraft are permitted in the pattern, including civilian traffic.",
+      "CTAF advisory radio calls must be made when turning crosswind and base legs.",
+      "<u>Successive Touch-and-Go(s)</u>",
+      "With interval and at a minimum altitude of 300' MSL, turn downwind and climb to pattern altitude.",
+      "<u>Wave-Offs</u>",
+      "Wave-offs must be made to the pattern side of the active runway at 500' MSL.",
+      "<u>PPEL Entry</u>",
+      "PPELs are authorized for all runways provided no more than two aircraft (including civilian) are already established in the traffic pattern. PPELs must be flown to the same side as the normal traffic pattern. Aircraft executing a PPEL must announce intentions on CTAF (CH 21 VHF) and report \"High-Key\" on KRKP common (CH 21 UHF)."
+    ],
+    questions : [
+      "A maximum of ___ aircraft are permitted in the pattern, including civilian traffic.",
+      "With interval and at a minimum altitude of _____ MSL, turn downwind and climb to pattern altitude.",
+      "Wave-offs must be made to the pattern side of the active runway at _____ MSL.",
+      "PPELs are authorized for all runways provided no more than ____ aircraft (including civilian) are already established in the traffic pattern."
+    ],
+    answers : [
+      ["4"],
+      ["300'"],
+      ["500'"],
+      ["two"]
+    ],
     dependentNode: [],
     nextNode : ["Point-default-21" ]
   },
@@ -358,9 +388,29 @@ export const crFeatures = {
     subCategory : "Traffic Patterns",
     category : "Routes",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : [
+      "Hours for TW-4 touch and go operations are from 0800-1800 limited by ARDO watch standing hours. An ARDO must be in position prior to any touch and go operations.",
+      "A maximum of 4 aircraft are permitted in the pattern, including civilian traffic.",
+      "CTAF advisory radio calls must be made when turning crosswind and base legs.",
+      "<u>Successive Touch-and-Go(s)</u>",
+      "With interval and at a minimum altitude of 300' MSL, turn downwind and climb to pattern altitude.",
+      "<u>Wave-Offs</u>",
+      "Wave-offs must be made to the pattern side of the active runway at 500' MSL.",
+      "<u>PPEL Entry</u>",
+      "PPELs are authorized for all runways provided no more than two aircraft (including civilian) are already established in the traffic pattern. PPELs must be flown to the same side as the normal traffic pattern. Aircraft executing a PPEL must announce intentions on CTAF (CH 21 VHF) and report \"High-Key\" on KRKP common (CH 21 UHF)."
+    ],
+    questions : [
+      "A maximum of ___ aircraft are permitted in the pattern, including civilian traffic.",
+      "With interval and at a minimum altitude of _____ MSL, turn downwind and climb to pattern altitude.",
+      "Wave-offs must be made to the pattern side of the active runway at _____ MSL.",
+      "PPELs are authorized for all runways provided no more than ____ aircraft (including civilian) are already established in the traffic pattern."
+    ],
+    answers : [
+      ["4"],
+      ["300'"],
+      ["500'"],
+      ["two"]
+    ],
     dependentNode: [],
     nextNode : ["Point-default-21" ]
   },
@@ -371,9 +421,24 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : [
+      "Prior to executing these procedures, obtain KRKP ASOS on 119.275 VHF.",
+      "<u>North MUSTANG/South-North Transition</u>",
+      "Execute area exit/transition procedures. Switch CH 21 VHF and self-announce over KRKP CTAF. Proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH 21 UHF, TW-4 KRKP Common, and check-in.",
+      "WARNING! T-6 arriving aircraft must exercise extreme caution descending to the initial due to the potential for traffic established on course rules at 1500' MSL over the intracoastal and inbound from bayside.",
+      "<u>GOLIAD/KINGS 4 MOA</u>",
+      "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
+    ],
+    questions : [
+      "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
+      "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
+      "Crossing ______ at _____ MSL, contact Corpus Approach (CH ___ UHF) with intentions. Fly ~_____ to ______ and self-announce on KRKP CTAF (CH ___ VHF). Descend to _____ MSL/____ KIAS going feet wet and proceed to a ___ NM initial for the runway in use/favored by winds."
+    ],
+    answers : [
+      ["119.275"],
+      ["21", "2", "21"],
+      ["Woodsboro", "2500'", "6", "145°", "Bayside", "21", "1000'", "200", "2"]
+    ],
     dependentNode: [],
     nextNode : ["Point-default-21" ]
   },
@@ -384,9 +449,24 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : [
+      "Prior to executing these procedures, obtain KRKP ASOS on 119.275 VHF.",
+      "<u>North MUSTANG/South-North Transition</u>",
+      "Execute area exit/transition procedures. Switch CH 21 VHF and self-announce over KRKP CTAF. Proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH 21 UHF, TW-4 KRKP Common, and check-in.",
+      "WARNING! T-6 arriving aircraft must exercise extreme caution descending to the initial due to the potential for traffic established on course rules at 1500' MSL over the intracoastal and inbound from bayside.",
+      "<u>GOLIAD/KINGS 4 MOA</u>",
+      "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
+    ],
+    questions : [
+      "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
+      "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
+      "Crossing ______ at _____ MSL, contact Corpus Approach (CH ___ UHF) with intentions. Fly ~_____ to ______ and self-announce on KRKP CTAF (CH ___ VHF). Descend to _____ MSL/____ KIAS going feet wet and proceed to a ___ NM initial for the runway in use/favored by winds."
+    ],
+    answers : [
+      ["119.275"],
+      ["21", "2", "21"],
+      ["Woodsboro", "2500'", "6", "145°", "Bayside", "21", "1000'", "200", "2"]
+    ],
     dependentNode: [],
     nextNode : ["Point-default-21" ]
   },
@@ -397,9 +477,24 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : [
+      "Prior to executing these procedures, obtain KRKP ASOS on 119.275 VHF.",
+      "<u>North MUSTANG/South-North Transition</u>",
+      "Execute area exit/transition procedures. Switch CH 21 VHF and self-announce over KRKP CTAF. Proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH 21 UHF, TW-4 KRKP Common, and check-in.",
+      "WARNING! T-6 arriving aircraft must exercise extreme caution descending to the initial due to the potential for traffic established on course rules at 1500' MSL over the intracoastal and inbound from bayside.",
+      "<u>GOLIAD/KINGS 4 MOA</u>",
+      "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
+    ],
+    questions : [
+      "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
+      "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
+      "Crossing ______ at _____ MSL, contact Corpus Approach (CH ___ UHF) with intentions. Fly ~_____ to ______ and self-announce on KRKP CTAF (CH ___ VHF). Descend to _____ MSL/____ KIAS going feet wet and proceed to a ___ NM initial for the runway in use/favored by winds."
+    ],
+    answers : [
+      ["119.275"],
+      ["21", "2", "21"],
+      ["Woodsboro", "2500'", "6", "145°", "Bayside", "21", "1000'", "200", "2"]
+    ],
     dependentNode: [],
     nextNode : ["Point-default-21" ]
   },
@@ -410,9 +505,24 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : [
+      "Prior to executing these procedures, obtain KRKP ASOS on 119.275 VHF.",
+      "<u>North MUSTANG/South-North Transition</u>",
+      "Execute area exit/transition procedures. Switch CH 21 VHF and self-announce over KRKP CTAF. Proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH 21 UHF, TW-4 KRKP Common, and check-in.",
+      "WARNING! T-6 arriving aircraft must exercise extreme caution descending to the initial due to the potential for traffic established on course rules at 1500' MSL over the intracoastal and inbound from bayside.",
+      "<u>GOLIAD/KINGS 4 MOA</u>",
+      "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
+    ],
+    questions : [
+      "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
+      "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
+      "Crossing ______ at _____ MSL, contact Corpus Approach (CH ___ UHF) with intentions. Fly ~_____ to ______ and self-announce on KRKP CTAF (CH ___ VHF). Descend to _____ MSL/____ KIAS going feet wet and proceed to a ___ NM initial for the runway in use/favored by winds."
+    ],
+    answers : [
+      ["119.275"],
+      ["21", "2", "21"],
+      ["Woodsboro", "2500'", "6", "145°", "Bayside", "21", "1000'", "200", "2"]
+    ],
     dependentNode: [],
     nextNode : ["Point-default-21" ]
   },
@@ -520,14 +630,14 @@ export const crFeatures = {
     dependentNode: [],
     nextNode : []
   },
-  "Routes-Transitions-37" : {
+  "Airspace-default-37" : {
     name : "KRAS Stand Off",
     parentFolder : "(KRAS) Mustang Beach Airport",
     folderPath : "(KRAS) Mustang Beach Airport",
-    subCategory : "Mustang",
+    subCategory : "Airspace",
     category : "Airspace",
     description : "Airspace",
-    customDescription : "",
+    customDescription : "WARNING! maintain a 3 NM stand-off from MUSTANG Beach Airport (KRAS) when para-jumping operations are in effect. Flight crews must ensure para-jumping operations are not in effect with ATC prior to operating within 3NM of KRAS. The 3 NM stand-off only applies to working altitudes below 11,500' MSL.",
     questions : [],
     answers : [],
     dependentNode: [],
@@ -539,11 +649,11 @@ export const crFeatures = {
     folderPath : "(KNGT) Goliad NOLF",
     subCategory : "Point",
     category : "Point",
-    description : "<table width=\"100%\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" bgcolor=\"#e8e9cb\">\n   <tr>\n    <td>\n      <center><b><font size=\"5\" color=\"#009999\">(KNGT) Goliad NOLF</font></b></center>\n    </td>\n  </tr>\n  <tr>\n    <td>\n        <p><b>Field Elevation: 324'</b><br />\n\n        <p><b>Runway 11/29</b><br />\n        Magnetic Heading: 106°/296°<br />\n        Length x Width: 8000' x 150'</p>\n\n        <p><b>Runway 17/35</b><br />\n        Magnetic Heading: 167°/357°<br />\n        Length x Width: 8000' x 150'</p>\n\n        <p><b>Houston Center</b><br />\n        UHF 22 (353.6MHz)<br />\n        VHF 22 (135.05MHz)</p>\n\n        <p><b>ASOS</b></br>\n        UHF 14 (353.675MHz)</p>\n\n        <p><b>CTAF</b></br>\n        VHF 15 (132.875MHz)</p>\n\n        <p><b>RDO</b></br>\n        UHF 14 (307.075MHz)</p>\n\n        <p><b>Traffic Rules</b><br />\n        Aircraft in pattern: <font color=\"#cc0000\"><b>5 MAX</b></font><br />\n        High-Key 3300' MSL<br />\n        Low-Key 1800' MSL<br />\n        Delta 2300' MSL<br />\n        Break: 1,300' MSL<br />\n        Pattern: 1,000' MSL <br />\n        Pattern Direction: Outside <br />\n        PPELs: Same side and opposite direction of pattern. Practice ELPs not authorized with SNA solo flights in pattern. <br />\n        Hours: 0800-RDO deprature</p>\n       \n        <p>Two-way communication with RDO/Crash Crew is required. If initial call is not acknowledged by the RDO prior to 2NM radius from runway, execute a discontinued entry. No clearance to land will be issued by RDO. Pattern side wave-offs at 800' MSL. Position and intentions must be provided to RDO prior to 4NM initial. Report numbers and report break thereafter with proper interval. Report 180 gear down. Report crosswind with proper interval.</p>\n         \n       <p><b>WARNING!</b><br />\n       If an aircraft is executing a PPEL/P and enother aircraft calls inbound at the initial, the initial traffic must visually acquire the PPEL/P traffic prior to 2NM and maintain seperation to continue inbound for the break. If seperation cannot be maintained or is in doubt, execute a discontinued entry.</p>\n\n       <p>Discontinued entry inside 2NM radius must immediately turn 90° away from normal traffic pattern while maintaining break altitude until clear of airfield. Inside of 2NM radius must depart when beyond the upwind numbers and clear of traffic while maintaining break altitude.</p>\n\n      <p><b>WARNING!</b><br />\n      Due to possible traffice conflicts during practice ELPs, when a practice ELP aircraft decides to wafe-off it will execute the wave-off procedures to remain on the Low-Key side of the runway.<br />\n      Aircraft at Low-Key must wave-off to the Low-Key side of the runway if unable to report Low-Key due to radio saturation.<br />\n      A possible traffice conflict exists between PPEL/P aircraft clibming to pattern Low-Key and a PPEL aircraft descending from High-Key on the ELP.</p>\n\n    </td>\n  </tr>\n</table>\n",
+    description : "<table width=\"100%\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" bgcolor=\"#e8e9cb\">\n   <tr>\n    <td>\n      <center><b><font size=\"5\" color=\"#009999\">(KNGT) Goliad NOLF</font></b></center>\n    </td>\n  </tr>\n  <tr>\n    <td>\n        <p><b>Field Elevation: 324'</b><br />\n\n        <p><b>Runway 11/29</b><br />\n        Magnetic Heading: 106°/296°<br />\n        Length x Width: 8000' x 150'</p>\n\n        <p><b>Runway 17/35</b><br />\n        Magnetic Heading: 167°/357°<br />\n        Length x Width: 8000' x 150'</p>\n\n        <p><b>Houston Center</b><br />\n        UHF 22 (353.6MHz)<br />\n        VHF 22 (135.05MHz)</p>\n\n        <p><b>ASOS</b></br>\n        UHF 14 (353.675MHz)</p>\n\n        <p><b>CTAF</b></br>\n        VHF 15 (132.875MHz)</p>\n\n        <p><b>RDO</b></br>\n        UHF 15 (307.075MHz)</p>\n\n        <p><b>Traffic Rules</b><br />\n        Aircraft in pattern: <font color=\"#cc0000\"><b>5 MAX</b></font><br />\n        High-Key 3300' MSL<br />\n        Low-Key 1800' MSL<br />\n        Delta 2300' MSL<br />\n        Break: 1,300' MSL<br />\n        Pattern: 1,100' MSL <br />\n        Pattern Direction: Outside <br />\n        PPELs: Same side and opposite direction of pattern. Practice ELPs not authorized with SNA solo flights in pattern. <br />\n        Hours: 0800-RDO departure</p>\n       \n        <p>Two-way communication with RDO/Crash Crew is required. If initial call is not acknowledged by the RDO prior to 2NM radius from runway, execute a discontinued entry. No clearance to land will be issued by RDO. Pattern side wave-offs at 800' MSL. Position and intentions must be provided to RDO prior to 4NM initial. Report numbers and report break thereafter with proper interval. Report 180 gear down. Report crosswind with proper interval.</p>\n         \n       <p><b>WARNING!</b><br />\n       If an aircraft is executing a PPEL/P and another aircraft calls inbound at the initial, the initial traffic must visually acquire the PPEL/P traffic prior to 2NM and maintain separation to continue inbound for the break. If separation cannot be maintained or is in doubt, execute a discontinued entry.</p>\n\n       <p>Discontinued entry outside 2NM radius must immediately turn a minimum of 90° away from normal traffic pattern while maintaining break altitude until clear of airfield. Inside of 2NM radius must depart when beyond the upwind numbers and clear of traffic while maintaining break altitude.</p>\n\n      <p><b>WARNING!</b><br />\n      Due to possible traffic conflicts during practice ELPs, when a practice ELP aircraft decides to wave-off it will execute the wave-off procedures to remain on the Low-Key side of the runway.<br />\n      Aircraft at Low-Key must wave-off to the Low-Key side of the runway if unable to report Low-Key due to radio saturation.<br />\n      A possible traffic conflict exists between PPEL/P aircraft climbing to pattern Low-Key and a PPEL aircraft descending from High-Key on the ELP.</p>\n\n    </td>\n  </tr>\n</table>\n",
     customDescription : "",
     questions : [],
     answers : [],
-    dependentNode: [],
+    dependentNode: ["Airspace-default-41"],
     nextNode : ["Routes-Traffic Patterns-39", "Routes-Traffic Patterns-40", "Routes-Departures-46", "Routes-Departures-47", "Routes-Departures-48", "Routes-Departures-49"]
   },
   "Routes-Traffic Patterns-39" : {
@@ -556,7 +666,7 @@ export const crFeatures = {
     customDescription : [
       "The pattern will be limited to a maximum of five aircraft.  The maximum number may be reduced at the discretion of the RDO.",
       "Wave-offs must be made to the pattern side of the active runway at 800' MSL, unless otherwise directed by the RDO.",
-      "Must be performed to the pattern side of the runway with proper interval. "
+      "PPEL/Ps must be performed to the pattern side of the runway with proper interval."
     ],
     questions : [
       "The pattern will be limited to a maximum of _____ aircraft.  The maximum number may be reduced at the discretion of the RDO.",
@@ -576,7 +686,7 @@ export const crFeatures = {
     customDescription : [
       "The pattern will be limited to a maximum of five aircraft.  The maximum number may be reduced at the discretion of the RDO.",
       "Wave-offs must be made to the pattern side of the active runway at 800' MSL, unless otherwise directed by the RDO.",
-      "Must be performed to the pattern side of the runway with proper interval. "
+      "PPEL/Ps must be performed to the pattern side of the runway with proper interval."
     ],
     questions : [
       "The pattern will be limited to a maximum of _____ aircraft.  The maximum number may be reduced at the discretion of the RDO.",
@@ -663,14 +773,14 @@ export const crFeatures = {
       "(b) Raise the Gear and Flaps.",
       "(c) Maintain 800' MSL.", 
       "(d) Turn approximately 45 degrees away from runway heading (opposite pattern direction).", 
-      "(e) Call the RDO: 2-36 AIRCRAFT:  \"Goliad RDO, (call sign), departing\"",
+      "(e) Call the RDO: \"Goliad RDO, (call sign), departing\"",
       "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
       "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
     ],
-    questions : ["Once #1 upwind climb to ____ MSL accelerate to ____ kts and turn _____ degrees away from runway heading opposite pattern direction until clear of the pattern. Clear of pattern climb to _____ MSL and proceed direct to _____ at a heading of about ______."],
-    answers : [["800'", "240", "45", "2500'", "Woodsboro", "140"]],
+    questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
+    answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16"]
   },
   "Routes-Departures-47" : {
     name : "17",
@@ -684,14 +794,14 @@ export const crFeatures = {
       "(b) Raise the Gear and Flaps.",
       "(c) Maintain 800' MSL.", 
       "(d) Turn approximately 45 degrees away from runway heading (opposite pattern direction).", 
-      "(e) Call the RDO: 2-36 AIRCRAFT:  \"Goliad RDO, (call sign), departing\"",
+      "(e) Call the RDO: \"Goliad RDO, (call sign), departing\"",
       "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
       "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
     ],
-    questions : ["Once #1 upwind climb to ____ MSL accelerate to ____ kts and turn _____ degrees away from runway heading opposite pattern direction until clear of the pattern. Clear of pattern climb to _____ MSL and proceed direct to _____ at a heading of about ______."],
-    answers : [["800'", "240", "45", "2500'", "Woodsboro", "140"]],
+    questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
+    answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16"]
   },
   "Routes-Departures-48" : {
     name : "29",
@@ -705,14 +815,14 @@ export const crFeatures = {
       "(b) Raise the Gear and Flaps.",
       "(c) Maintain 800' MSL.", 
       "(d) Turn approximately 45 degrees away from runway heading (opposite pattern direction).", 
-      "(e) Call the RDO: 2-36 AIRCRAFT:  \"Goliad RDO, (call sign), departing\"",
+      "(e) Call the RDO: \"Goliad RDO, (call sign), departing\"",
       "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
       "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
     ],
-    questions : ["Once #1 upwind climb to ____ MSL accelerate to ____ kts and turn _____ degrees away from runway heading opposite pattern direction until clear of the pattern. Clear of pattern climb to _____ MSL and proceed direct to _____ at a heading of about ______."],
-    answers : [["800'", "240", "45", "2500'", "Woodsboro", "140"]],
+    questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
+    answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16"]
   },
   "Routes-Departures-49" : {
     name : "35",
@@ -726,14 +836,14 @@ export const crFeatures = {
       "(b) Raise the Gear and Flaps.",
       "(c) Maintain 800' MSL.", 
       "(d) Turn approximately 45 degrees away from runway heading (opposite pattern direction).", 
-      "(e) Call the RDO: 2-36 AIRCRAFT:  \"Goliad RDO, (call sign), departing\"",
+      "(e) Call the RDO: \"Goliad RDO, (call sign), departing\"",
       "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
       "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
     ],
-    questions : ["Once #1 upwind climb to ____ MSL accelerate to ____ kts and turn _____ degrees away from runway heading opposite pattern direction until clear of the pattern. Clear of pattern climb to _____ MSL and proceed direct to _____ at a heading of about ______."],
-    answers : [["800'", "240", "45", "2500'", "Woodsboro", "140"]],
+    questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
+    answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16"]
   },
   "Point-default-50" : {
     name : "KNWL",
@@ -745,7 +855,7 @@ export const crFeatures = {
     customDescription : "",
     questions : [],
     answers : [],
-    dependentNode: [],
+    dependentNode: ["Airspace-default-51"],
     nextNode : ["Routes-Traffic Patterns-52", "Routes-Traffic Patterns-53",
       "Routes-Departures-56", "Routes-Departures-57", "Routes-Departures-58", "Routes-Departures-59",
       "Routes-Departures-74", "Routes-Departures-75", "Routes-Departures-76", "Routes-Departures-77",
@@ -772,9 +882,32 @@ export const crFeatures = {
     subCategory : "Traffic Patterns",
     category : "Routes",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : [
+      "Waldron Tower's airspace extends from the surface to 2000' MSL. Higher altitudes may be coordinated with approach. The pattern will be limited to a maximum of six aircraft. The maximum number may be reduced at the discretion of the tower supervisor.",
+      "<u>Successive Touch and Go Landings</u>",
+      "After takeoff, climb on runway heading to a maximum altitude of 500' MSL. When cleared by tower and at a minimum of 300' MSL, turn downwind and continue climb to pattern altitude.",
+      "<u>PPEL/P</u>",
+      "PPEL/Ps must be performed to the pattern side of the runway with proper interval. Instructor Pilots must request clearance from Tower prior to simulating a PPEL in the pattern and comply with Tower directions and restrictions.",
+      "<u>Delta Pattern (Emergency Orbit)</u>",
+      "The delta pattern will conform to the traffic flow for the runway in use at 2000' MSL. Climbs and descents to/from the delta pattern will be at the direction of the Tower.",
+      "<u>Wave-offs</u>",
+      "Wave-offs will be made to the pattern side of the active runway at 500' MSL, unless otherwise directed by Tower.",
+      "CAUTION: aircraft will remain south of the Flour Bluff Water Tower to avoid conflicts with NAS Corpus Christi traffic."
+    ],
+    questions : [
+      "Waldron Tower's airspace extends from the surface to _____ MSL. The pattern will be limited to a maximum of ____ aircraft.",
+      "After takeoff, climb on runway heading to a maximum altitude of _____ MSL. When cleared by tower and at a minimum of _____ MSL, turn downwind and continue climb to pattern altitude.",
+      "The delta pattern will conform to the traffic flow for the runway in use at _____ MSL.",
+      "Wave-offs will be made to the _____ side of the active runway at _____ MSL, unless otherwise directed by Tower.",
+      "Aircraft will remain _____ of the ______ to avoid conflicts with NAS Corpus Christi traffic."
+    ],
+    answers : [
+      ["2000'", "six"],
+      ["500'", "300'"],
+      ["2000'"],
+      ["pattern", "500'"],
+      ["south", "Flour Bluff Water Tower"]
+    ],
     dependentNode: [],
     nextNode : ["Point-default-50"]
   },
@@ -785,9 +918,32 @@ export const crFeatures = {
     subCategory : "Traffic Patterns",
     category : "Routes",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : [
+      "Waldron Tower's airspace extends from the surface to 2000' MSL. Higher altitudes may be coordinated with approach. The pattern will be limited to a maximum of six aircraft. The maximum number may be reduced at the discretion of the tower supervisor.",
+      "<u>Successive Touch and Go Landings</u>",
+      "After takeoff, climb on runway heading to a maximum altitude of 500' MSL. When cleared by tower and at a minimum of 300' MSL, turn downwind and continue climb to pattern altitude.",
+      "<u>PPEL/P</u>",
+      "PPEL/Ps must be performed to the pattern side of the runway with proper interval. Instructor Pilots must request clearance from Tower prior to simulating a PPEL in the pattern and comply with Tower directions and restrictions.",
+      "<u>Delta Pattern (Emergency Orbit)</u>",
+      "The delta pattern will conform to the traffic flow for the runway in use at 2000' MSL. Climbs and descents to/from the delta pattern will be at the direction of the Tower.",
+      "<u>Wave-offs</u>",
+      "Wave-offs will be made to the pattern side of the active runway at 500' MSL, unless otherwise directed by Tower.",
+      "CAUTION: aircraft will remain south of the Flour Bluff Water Tower to avoid conflicts with NAS Corpus Christi traffic."
+    ],
+    questions : [
+      "Waldron Tower's airspace extends from the surface to _____ MSL. The pattern will be limited to a maximum of ____ aircraft.",
+      "After takeoff, climb on runway heading to a maximum altitude of _____ MSL. When cleared by tower and at a minimum of _____ MSL, turn downwind and continue climb to pattern altitude.",
+      "The delta pattern will conform to the traffic flow for the runway in use at _____ MSL.",
+      "Wave-offs will be made to the _____ side of the active runway at _____ MSL, unless otherwise directed by Tower.",
+      "Aircraft will remain _____ of the ______ to avoid conflicts with NAS Corpus Christi traffic."
+    ],
+    answers : [
+      ["2000'", "six"],
+      ["500'", "300'"],
+      ["2000'"],
+      ["pattern", "500'"],
+      ["south", "Flour Bluff Water Tower"]
+    ],
     dependentNode: [],
     nextNode : ["Point-default-50"]
   },
@@ -828,7 +984,7 @@ export const crFeatures = {
     questions : ["Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to _____ MSL.  From the downwind/crosswind and when cleared.  Fly direct to ______ (~____) and accelerate to ____ KIAS. At ______ climb to _____ MSL and contact Cabaniss Tower (CH ___ UHF).  Proceed to _____ (~heading _____ degrees) and contact Navy Tower (CH ___ UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion."],
     answers : [["500'", "PT CHAPMAN", "270°", "200", "PT CHAPMAN", "1000'", "27", "PT SUNRISE", "025", "4"]],
     dependentNode: ["Point-Departures-54", "Point-Departures-55"],
-    nextNode : ["Point-Arrivals-55"]
+    nextNode : ["Point-Departures-55"]
   },
   "Routes-Departures-57" : {
     name : "18",
@@ -841,7 +997,7 @@ export const crFeatures = {
     questions : ["Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to _____ MSL.  From the downwind/crosswind and when cleared.  Fly direct to ______ (~____) and accelerate to ____ KIAS. At ______ climb to _____ MSL and contact Cabaniss Tower (CH ___ UHF).  Proceed to _____ (~heading _____ degrees) and contact Navy Tower (CH ___ UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion."],
     answers : [["500'", "PT CHAPMAN", "270°", "200", "PT CHAPMAN", "1000'", "27", "PT SUNRISE", "025", "4"]],
     dependentNode: ["Point-Departures-54", "Point-Departures-55"],
-    nextNode : ["Point-Arrivals-55"]
+    nextNode : ["Point-Departures-55"]
   },
   "Routes-Departures-58" : {
     name : "31",
@@ -854,7 +1010,7 @@ export const crFeatures = {
     questions : ["Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to _____ MSL.  When #1 upwind and cleared. Fly direct to ______ (~____) and accelerate to ____ KIAS. At ______ climb to _____ MSL and contact Cabaniss Tower (CH ___ UHF).  Proceed to _____ (~heading _____ degrees) and contact Navy Tower (CH ___ UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion."],
     answers : [["500'", "PT CHAPMAN", "270°", "200", "PT CHAPMAN", "1000'", "27", "PT SUNRISE", "025", "4"]],
     dependentNode: ["Point-Departures-54", "Point-Departures-55"],
-    nextNode : ["Point-Arrivals-55"]
+    nextNode : ["Point-Departures-55"]
   },
   "Routes-Departures-59" : {
     name : "36",
@@ -867,7 +1023,7 @@ export const crFeatures = {
     questions : ["Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to _____ MSL.  When #1 upwind and cleared. Fly direct to ______ (~____) and accelerate to ____ KIAS. At ______ climb to _____ MSL and contact Cabaniss Tower (CH ___ UHF).  Proceed to _____ (~heading _____ degrees) and contact Navy Tower (CH ___ UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion."],
     answers : [["500'", "PT CHAPMAN", "270°", "200", "PT CHAPMAN", "1000'", "27", "PT SUNRISE", "025", "4"]],
     dependentNode: ["Point-Departures-54", "Point-Departures-55"],
-    nextNode : ["Point-Arrivals-55"]
+    nextNode : ["Point-Departures-55"]
   },
   "Point-Arrivals-60" : {
     name : "Oso Bridge (West Side)",
@@ -993,8 +1149,8 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River toward the southwest comer of the Cooling Ponds.  Abeam the Cooling Ponds turn left and proceed along the southern edge of the Cooling Ponds and report the \"initial\" to Waldron Tower.",
-    questions : ["Proceed at _____ KIAS, _____ MSL from the west side of the _____ southwest, remaining ____ WTD west of the Oso River toward the southwest comer of the ______.  Abeam the ______ turn left and proceed along the southern edge of the ______ and report the \"initial\" to Waldron Tower."],
+    customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River toward the southwest corner of the Cooling Ponds.  Abeam the Cooling Ponds turn left and proceed along the southern edge of the Cooling Ponds and report the \"initial\" to Waldron Tower.",
+    questions : ["Proceed at _____ KIAS, _____ MSL from the west side of the _____ southwest, remaining ____ WTD west of the Oso River toward the southwest corner of the ______.  Abeam the ______ turn left and proceed along the southern edge of the ______ and report the \"initial\" to Waldron Tower."],
     answers : [["200", "1000'", "Oso Bridge", "1/2", "Cooling Ponds", "Cooling Ponds", "Cooling Ponds"]],
     dependentNode: ["Point-Arrivals-63", "Point-Arrivals-64", "Point-Arrivals-65", "Point-Arrivals-66"],
     nextNode : ["Point-default-50"]
@@ -1006,9 +1162,9 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River toward the southwest corner of the Cooling Ponds.  Abeam the Cooling Ponds turn left and proceed along the southern edge of the Cooling Ponds and report the \"initial\" to Waldron Tower.",
+    questions : ["Proceed at _____ KIAS, _____ MSL from the west side of the _____ southwest, remaining ____ WTD west of the Oso River toward the southwest corner of the ______.  Abeam the ______ turn left and proceed along the southern edge of the ______ and report the \"initial\" to Waldron Tower."],
+    answers : [["200", "1000'", "Oso Bridge", "1/2", "Cooling Ponds", "Cooling Ponds", "Cooling Ponds"]],
     dependentNode: ["Point-Arrivals-63", "Point-Arrivals-64", "Point-Arrivals-66"],
     nextNode : ["Point-default-50"]
   },
@@ -1370,7 +1526,7 @@ export const crFeatures = {
     customDescription : "",
     questions : [],
     answers : [],
-    dependentNode: [],
+    dependentNode: ["Airspace-default-96"],
     nextNode : [
       // Traffic Patterns (after 95, before 189)
       "Routes-Traffic Patterns-98", "Routes-Traffic Patterns-99", "Routes-Traffic Patterns-100", "Routes-Traffic Patterns-101",
@@ -1383,7 +1539,10 @@ export const crFeatures = {
       "Routes-Departures-161", "Routes-Departures-162", "Routes-Departures-163", "Routes-Departures-164",
       "Routes-Departures-165", "Routes-Departures-166", "Routes-Departures-167", "Routes-Departures-168",
       "Routes-Departures-179", "Routes-Departures-180", "Routes-Departures-181", "Routes-Departures-182",
-      "Routes-Departures-183", "Routes-Departures-184", "Routes-Departures-185", "Routes-Departures-186"
+      "Routes-Departures-183", "Routes-Departures-184", "Routes-Departures-185", "Routes-Departures-186",
+      "Routes-Arrivals-170", "Routes-Arrivals-171", "Routes-Arrivals-172", "Routes-Arrivals-173",
+      "Routes-Arrivals-174", "Routes-Arrivals-175", "Routes-Arrivals-176", "Routes-Arrivals-177",
+      "Routes-Arrivals-13", "Routes-Arrivals-14"
     ]
   },
   "Airspace-default-96" : {
@@ -1393,9 +1552,13 @@ export const crFeatures = {
     subCategory : "Airspace",
     category : "Airspace",
     description : "",
-    customDescription : "Class D airspace with altitude boundaries of SFC to 2,500' AGL and 4.3 nm from center of airport",
-    questions : ["Class __ airspace with altitude boundaries of ___ to _____ AGL and ______ nm from center of airport"],
-    answers : [["D", "SFC", "2,500'", "4.3"]],
+    customDescription : "Class D airspace (surface to 2500' and 4.3 miles from center of airport).",
+    questions : [
+      "Class __ airspace (_____ to _____ and _____ miles from center of airport)."
+    ],
+    answers : [
+      ["D", "surface", "2500'", "4.3"]
+    ],
     dependentNode: [],
     nextNode : []
   },
@@ -1688,8 +1851,8 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "Fly towards the northwest comer of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 22",
-    questions : ["Fly towards the northwest comer of ______ (~_____°).  Thence...   Report initial when crossing the ______"],
+    customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 22",
+    questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence...   Report initial when crossing the ______"],
     answers : [["TAMUCC", "255", "extended centerline of Runway 22"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
     nextNode : ["Point-default-95"]
@@ -1701,8 +1864,8 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "Fly towards the northwest comer of TAMUCC (~255°).  Thence... Report initial upon reaching extended centerline of Runway 22 (no late than 3 NM).",
-    questions : ["Fly towards the northwest comer of ______ (~_____°).  Thence... Report initial upon reaching _____ (no late than 3 NM)."],
+    customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence... Report initial upon reaching extended centerline of Runway 22 (no later than 3 NM).",
+    questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence... Report initial upon reaching _____ (no later than 3 NM)."],
     answers : [["TAMUCC", "255", "extended centerline of Runway 22"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
     nextNode : ["Point-default-95"]
@@ -1714,8 +1877,8 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "Fly towards the northwest comer of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 18.",
-    questions : ["Fly towards the northwest comer of ______ (~_____°).  Thence...   Report initial when crossing the _____."],
+    customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 18.",
+    questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence...   Report initial when crossing the _____."],
     answers : [["TAMUCC", "255", "extended centerline of Runway 18"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
     nextNode : ["Point-default-95"]
@@ -1727,8 +1890,8 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "Fly towards the northwest comer of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 18.",
-    questions : ["Fly towards the northwest comer of ______ (~_____°).  Thence...   Report initial when crossing the _____."],
+    customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 18.",
+    questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence...   Report initial when crossing the _____."],
     answers : [["TAMUCC", "255", "extended centerline of Runway 18"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
     nextNode : ["Point-default-95"]
@@ -1993,11 +2156,11 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
+    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
     questions : [],
     answers : [],
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-Arrivals-95"]
+    nextNode : ["Point-default-95"]
   },
   "Routes-Arrivals-137" : {
     name : "13L",
@@ -2006,11 +2169,11 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
+    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
     questions : [],
     answers : [],
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-Arrivals-95"]
+    nextNode : ["Point-default-95"]
   },
   "Routes-Arrivals-138" : {
     name : "13R",
@@ -2019,11 +2182,11 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
+    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
     questions : [],
     answers : [],
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-Arrivals-95"]
+    nextNode : ["Point-default-95"]
   },
   "Routes-Arrivals-139" : {
     name : "18",
@@ -2032,11 +2195,11 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
+    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
     questions : [],
     answers : [],
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-Arrivals-95"]
+    nextNode : ["Point-default-95"]
   },
   "Routes-Arrivals-140" : {
     name : "22",
@@ -2045,11 +2208,11 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
+    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
     questions : [],
     answers : [],
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-Arrivals-95"]
+    nextNode : ["Point-default-95"]
   },
   "Routes-Arrivals-141" : {
     name : "31L",
@@ -2058,11 +2221,11 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
+    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
     questions : [],
     answers : [],
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-Arrivals-95"]
+    nextNode : ["Point-default-95"]
   },
   "Routes-Arrivals-142" : {
     name : "31R",
@@ -2071,11 +2234,11 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
+    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
     questions : [],
     answers : [],
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-Arrivals-95"]
+    nextNode : ["Point-default-95"]
   },
   "Routes-Arrivals-143" : {
     name : "36",
@@ -2084,11 +2247,11 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
-    customDescription : "",
+    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
     questions : [],
     answers : [],
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-Arrivals-95"]
+    nextNode : ["Point-default-95"]
   },
   "Point-Departures-144" : {
     name : "High Bridge",
@@ -2110,11 +2273,11 @@ export const crFeatures = {
     subCategory : "Departures",
     category : "Routes",
     description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern turn HDG 105° toward the beach line and climb to 2500' MSL at 240 KIAS.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    questions : ["Climb to _____ MSL, _____ KIAS on ___ HDG. When clear of the pattern turn HDG _____° toward the beach line and climb to ____ MSL at ____ KIAS.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "RWY", "105", "2500'", "240", "8", "1000'"]],
+    customDescription : "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    questions : ["Climb to _____ MSL, _____ KIAS on ___ HDG. When clear of the pattern turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
+    answers : [["500'", "200", "RWY", "105", "2500'", "8", "1000'"]],
     dependentNode: [],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158"]
+    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-195", "Working Areas-Mustang Maintenance-196"]
   },
   "Routes-Departures-146" : {
     name : "13L",
@@ -2123,11 +2286,11 @@ export const crFeatures = {
     subCategory : "Departures",
     category : "Routes",
     description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 125° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL at 240 KIAS.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL at ____ KIAS.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "125", "High Bridge", "105", "2500'", "240", "8", "1000'"]],
+    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 125° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
+    answers : [["500'", "200", "125", "High Bridge", "105", "2500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-144"],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158"]
+    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-195", "Working Areas-Mustang Maintenance-196"]
   },
   "Routes-Departures-147" : {
     name : "13R",
@@ -2136,11 +2299,11 @@ export const crFeatures = {
     subCategory : "Departures",
     category : "Routes",
     description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 135° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL at 240 KIAS.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL at ____ KIAS.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "135", "High Bridge", "105", "2500'", "240", "8", "1000'"]],
+    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 135° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
+    answers : [["500'", "200", "135", "High Bridge", "105", "2500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-144"],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158"]
+    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-195", "Working Areas-Mustang Maintenance-196"]
   },
   "Routes-Departures-148" : {
     name : "18",
@@ -2149,11 +2312,11 @@ export const crFeatures = {
     subCategory : "Departures",
     category : "Routes",
     description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on turn left to HDG 105° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL at 240 KIAS.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    questions : ["Climb to _____ MSL, _____ KIAS on turn left to HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL at ____ KIAS.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "105", "High Bridge", "105", "2500'", "240", "8", "1000'"]],
+    customDescription : "Climb to 500' MSL, 200 KIAS on turn left to HDG 105° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    questions : ["Climb to _____ MSL, _____ KIAS on turn left to HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
+    answers : [["500'", "200", "105", "High Bridge", "105", "2500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-144"],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158"]
+    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-195", "Working Areas-Mustang Maintenance-196"]
   },
   "Routes-Departures-149" : {
     name : "22",
@@ -2162,11 +2325,11 @@ export const crFeatures = {
     subCategory : "Departures",
     category : "Routes",
     description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on turn left to HDG 105° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL at 240 KIAS.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    questions : ["Climb to _____ MSL, _____ KIAS on turn left to HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL at ____ KIAS.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "105", "High Bridge", "105", "2500'", "240", "8", "1000'"]],
+    customDescription : "Climb to 500' MSL, 200 KIAS on turn left to HDG 105° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    questions : ["Climb to _____ MSL, _____ KIAS on turn left to HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
+    answers : [["500'", "200", "105", "High Bridge", "105", "2500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-144"],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158"]
+    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-195", "Working Areas-Mustang Maintenance-196"]
   },
   "Routes-Departures-150" : {
     name : "31L",
@@ -2175,11 +2338,11 @@ export const crFeatures = {
     subCategory : "Departures",
     category : "Routes",
     description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 305°. When cleared by tower turn HDG 105° toward the beach line and climb to 2500' MSL at 240 KIAS.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____°. When cleared by tower turn HDG _____° toward the beach line and climb to ____ MSL at ____ KIAS.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "305", "105", "2500'", "240", "8", "1000'"]],
+    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 305°. When cleared by tower turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____°. When cleared by tower turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
+    answers : [["500'", "200", "305", "105", "2500'", "8", "1000'"]],
     dependentNode: [],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158"]
+    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-195", "Working Areas-Mustang Maintenance-196"]
   },
   "Routes-Departures-151" : {
     name : "31R",
@@ -2188,11 +2351,11 @@ export const crFeatures = {
     subCategory : "Departures",
     category : "Routes",
     description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 315°. When cleared by tower turn HDG 105° toward the beach line and climb to 2500' MSL at 240 KIAS.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____°. When cleared by tower turn HDG _____° toward the beach line and climb to ____ MSL at ____ KIAS.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "315", "105", "2500'", "240", "8", "1000'"]],
+    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 315°. When clear of the pattern, turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____°. When clear of the pattern, turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
+    answers : [["500'", "200", "315", "105", "2500'", "8", "1000'"]],
     dependentNode: [],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158"]
+    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-195", "Working Areas-Mustang Maintenance-196"]
   },
   "Routes-Departures-152" : {
     name : "36",
@@ -2201,14 +2364,14 @@ export const crFeatures = {
     subCategory : "Departures",
     category : "Routes",
     description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern turn HDG 105° toward the beach line and climb to 2500' MSL at 240 KIAS.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    questions : ["Climb to _____ MSL, _____ KIAS on ___ HDG. When clear of the pattern turn HDG _____° toward the beach line and climb to ____ MSL at ____ KIAS.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "RWY", "105", "2500'", "240", "8", "1000'"]],
+    customDescription : "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    questions : ["Climb to _____ MSL, _____ KIAS on ___ HDG. When clear of the pattern turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
+    answers : [["500'", "200", "RWY", "105", "2500'", "8", "1000'"]],
     dependentNode: [],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158"]
+    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-195", "Working Areas-Mustang Maintenance-196"]
   },
   "Routes-Transitions-153" : {
-    name : "Foxtrot/Noth Mustang Transition",
+    name : "Foxtrot/North Mustang Transition",
     parentFolder : "(KNGP) Corpus Christi NAS",
     folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
     subCategory : "Transition",
@@ -2451,7 +2614,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : [
-      "HDG 315°.  When cleared of pattern:",
+      "HDG 315°.  When clear of pattern:",
       "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
     ],
     questions : [
@@ -2459,7 +2622,7 @@ export const crFeatures = {
       "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
     ],
     answers : [
-      ["315°", "When cleared of pattern"],
+      ["315°", "When clear of pattern"],
       ["PT RUSTY", "2500'", "200", "240", "12", "5500'"]
     ],
     dependentNode: [],
@@ -2494,9 +2657,16 @@ export const crFeatures = {
     subCategory : "Arrivals",
     category : "Point",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : [
+      "Upon reaching PT SUNRISE, contact Cabaniss Tower (CH 27 UHF) or Corpus Christi Tower (as directed) and continue westbound. Do not fly south of SPID before the Crosstown Expressway.",
+      "Transitions will be limited to a one-in/one-out operation at 1000' MSL when directed by ATC or when weather/ceilings preclude a climb to 1500' MSL."
+    ],
+    questions : [
+      "Upon reaching PT SUNRISE, contact Cabaniss Tower (CH ___ UHF) or Corpus Christi Tower (as directed) and continue westbound. Do not fly south of ____ before the ______."
+    ],
+    answers : [
+      ["27", "SPID", "Crosstown Expressway"]
+    ],
     dependentNode: [],
     nextNode : []
   },
@@ -2511,7 +2681,7 @@ export const crFeatures = {
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'","left", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
-    nextNode : []
+    nextNode : ["Point-Arrivals-169"]
   },
   "Routes-Arrivals-171" : {
     name : "13L",
@@ -2524,7 +2694,7 @@ export const crFeatures = {
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
-    nextNode : []
+    nextNode : ["Point-Arrivals-169"]
   },
   "Routes-Arrivals-172" : {
     name : "13R",
@@ -2537,7 +2707,7 @@ export const crFeatures = {
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
-    nextNode : []
+    nextNode : ["Point-Arrivals-169"]
   },
   "Routes-Arrivals-173" : {
     name : "18",
@@ -2550,7 +2720,7 @@ export const crFeatures = {
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
-    nextNode : []
+    nextNode : ["Point-Arrivals-169"]
   },
   "Routes-Arrivals-174" : {
     name : "22",
@@ -2563,7 +2733,7 @@ export const crFeatures = {
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
-    nextNode : []
+    nextNode : ["Point-Arrivals-169"]
   },
   "Routes-Arrivals-175" : {
     name : "31L",
@@ -2576,7 +2746,7 @@ export const crFeatures = {
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'", "left", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
-    nextNode : []
+    nextNode : ["Point-Arrivals-169"]
   },
   "Routes-Arrivals-176" : {
     name : "31R",
@@ -2589,7 +2759,7 @@ export const crFeatures = {
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'", "left", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
-    nextNode : []
+    nextNode : ["Point-Arrivals-169"]
   },
   "Routes-Arrivals-177" : {
     name : "36",
@@ -2602,7 +2772,7 @@ export const crFeatures = {
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'", "left", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
-    nextNode : []
+    nextNode : ["Point-Arrivals-169"]
   },
   "Point-Departures-178" : {
     name : "PT Silver",
@@ -2773,7 +2943,7 @@ export const crFeatures = {
       ["within", "their", "outside", "Northern Arrival", "8"]
     ],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104"]
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },
   "Working Areas-Foxtrot-190" : {
     name : "Foxtrot 2",
@@ -2786,7 +2956,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104"]
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },
   "Working Areas-Mustang-191" : {
     name : "Mustang North 1",
@@ -2795,7 +2965,7 @@ export const crFeatures = {
     subCategory : "Mustang",
     category : "Working Areas",
     description : "",
-    customDescription : MUSTANG_AREAS_1_2_3_4_DESCRIPTION,
+    customDescription : MUSTANG_NORTH_AREAS_1_2_DESCRIPTION,
     questions : [
       "Working altitudes are ____ MSL to _____ MSL (Up to _____ MSL available upon request with Corpus Approach).",
       "WARNING!  maintain a ___ NM stand-off from MUSTANG Beach Airport (KRAS) below _____ MSL when parajumping operations are in effect.",
@@ -2806,10 +2976,10 @@ export const crFeatures = {
       ["6500'", "15,000'", "17,500'"],
       ["3", "11,500'"],
       ["17", "5500'"],
-      ["17", "8", "1,500'", "nine-mile point"]
+      ["17", "8", "1,500'"]
     ],
-    dependentNode: [],
-    nextNode : ["Routes-Arrivals-104"]
+    dependentNode: ["Airspace-default-37"],
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },
   "Working Areas-Mustang-192" : {
     name : "Mustang North 5",
@@ -2822,7 +2992,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104"]
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },
   "Working Areas-Mustang-193" : {
     name : "Mustang North 2",
@@ -2831,11 +3001,11 @@ export const crFeatures = {
     subCategory : "Mustang",
     category : "Working Areas",
     description : "",
-    customDescription : MUSTANG_AREAS_1_2_3_4_DESCRIPTION,
+    customDescription : MUSTANG_NORTH_AREAS_1_2_DESCRIPTION,
     questions : [],
     answers : [],
-    dependentNode: [],
-    nextNode : ["Routes-Arrivals-104"]
+    dependentNode: ["Airspace-default-37"],
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },
   "Working Areas-Mustang-194" : {
     name : "Mustang North 6",
@@ -2848,7 +3018,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104"]
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },
   "Working Areas-Mustang Maintenance-195" : {
     name : "Mustang Central",
@@ -2862,13 +3032,13 @@ export const crFeatures = {
       "At 10 DME turn to ~035° making sure to stay outside of the Central area eastern boundary.  Turn inbound to the working area 500' prior to your designated altitude and autoswitch to CH 18 UHF.  Self-announce with a \"99\" Call on CH 18 UHF. ",
       "<u>Central Altitude Assignment</u>",
       "Typically, Corpus Approach will assign working altitudes from 6,500ft to 14,500ft in 2000ft intervals (e.g. 6,500ft, 8,500ft, etc.).  Once even altitude blocks are taken, they will assign odd altitude blocks (e.g. 7,500ft, 9,500ft) resulting in 1000ft of separation.",
-      "<u>Special Entry Rules</u>",
-      "Prior to departing the area, make a \"99\" call on Central Common (CH 18 UHF) stating intentions and contact Corpus Approach on CH 8 UHF.  Advise complete in the 2-16 COMTRAWINGFOURINST 3710.14 20 Feb 2025 working area and state intentions. If joining course rules, initiate a descent after clearing the lateral boundaries of the Central area, just north of Fish Pass, remaining clear of the maintenance area and other Central area traffic. Heading east, perpendicular to the beach line ( ~ 105°), turn LEFT towards PT SHAMROCK upon reaching 14 DME or 1/2 working altitude, whichever comes first . Maintain 1000' MSL and join the Eastern Arrival to PT SHAMROCK."
+      "<u>Exit</u>",
+      "Prior to departing the area, make a \"99\" call on Central Common (CH 18 UHF) stating intentions and contact Corpus Approach on CH 8 UHF.  Advise complete in the working area and state intentions. If joining course rules, initiate a descent after clearing the lateral boundaries of the Central area, just north of Fish Pass, remaining clear of the maintenance area and other Central area traffic. Heading east, perpendicular to the beach line ( ~ 105°), turn LEFT towards PT SHAMROCK upon reaching 14 DME or 1/2 working altitude, whichever comes first . Maintain 1000' MSL and join the Eastern Arrival to PT SHAMROCK."
     ],
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : []
+    nextNode : ["Routes-Arrivals-106", "Routes-Arrivals-8", "Routes-Arrivals-9"]
   },
   "Working Areas-Mustang Maintenance-196" : {
     name : "Mustang Maintenance Area",
@@ -2877,11 +3047,16 @@ export const crFeatures = {
     subCategory : "Mustang Maintenance",
     category : "Working Areas",
     description : "",
-    customDescription : "Upon check-in, Corpus Departure will advise of any other traffic established in the area.  Continue climb on heading 105° into the area.  When directed, switch Corpus Approach CH 17 UHF.  Utilize Maintenance Area Common 136.975 VHF to de-conflict as necessary.",
+    customDescription : [
+      "<u>Entry</u>",
+      "Upon check-in, Corpus Departure will advise of any other traffic established in the area.  Continue climb on heading 105° into the area.  When directed, switch Corpus Approach CH 17 UHF.  Utilize Maintenance Area Common 136.975 VHF to de-conflict as necessary.",
+      "<u>Exit</u>",
+      "Contact Corpus Approach and request direct to PT SHAMROCK. Comply with ATC instructions for recovery via course rules."
+    ],
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : []
+    nextNode : ["Point-Arrivals-113"]
   },
   "Working Areas-Mustang-197" : {
     name : "Mustang South 3",
@@ -2890,11 +3065,11 @@ export const crFeatures = {
     subCategory : "Mustang",
     category : "Working Areas",
     description : "",
-    customDescription : MUSTANG_AREAS_1_2_3_4_DESCRIPTION,
+    customDescription : MUSTANG_SOUTH_AREAS_3_4_DESCRIPTION,
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : []
+    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9"]
   },
   "Working Areas-Mustang-198" : {
     name : "Mustang South 7",
@@ -2907,7 +3082,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : []
+    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9"]
   },
   "Working Areas-Mustang-199" : {
     name : "Mustang South 4",
@@ -2916,11 +3091,11 @@ export const crFeatures = {
     subCategory : "Mustang",
     category : "Working Areas",
     description : "",
-    customDescription : MUSTANG_AREAS_1_2_3_4_DESCRIPTION,
+    customDescription : MUSTANG_SOUTH_AREAS_3_4_DESCRIPTION,
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : []
+    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9"]
   },
   "Working Areas-Mustang-200" : {
     name : "Mustang South 8",
@@ -2933,7 +3108,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : []
+    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9"]
   },
   "Routes-Transitions-201" : {
     name : "Rusty Entry",
@@ -2942,9 +3117,18 @@ export const crFeatures = {
     subCategory : "King",
     category : "Working Areas",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : [
+      "Reaching PT RUSTY, turn right towards Bayside (~360°), climb to 14,500 MSL, and execute the area entry procedures.",
+      "When directed by Corpus Christi Approach, contact Houston Center (CH 22 VHF). Once cleared to enter the MOA by Houston Center, claim a working block on KINGS 4 MOA Common (CH 20 UHF). Enter the MOA laterally utilizing the transition layer and proceed direct to your working block. Once established above/below, descend/climb into your working block. Maintain a listening watch with Houston Center."
+    ],
+    questions : [
+      "Reaching PT RUSTY, turn right towards ______ (~_____), climb to ______ MSL, and execute the area entry procedures.",
+      "When directed by Corpus Christi Approach, contact Houston Center (CH ___ VHF). Once cleared to enter the MOA by Houston Center, claim a working block on KINGS 4 MOA Common (CH ___ UHF)."
+    ],
+    answers : [
+      ["Bayside", "360°", "14,500'"],
+      ["22", "20"]
+    ],
     dependentNode: [],
     nextNode : ["Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
   },
@@ -2955,9 +3139,13 @@ export const crFeatures = {
     subCategory : "King",
     category : "Working Areas",
     description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+    customDescription : "Descend within the lateral confines of the KINGS 4 MOA to 2500' MSL. Upon reaching 2500' MSL proceed direct to Woodsboro. Cross Woodsboro at 2500' MSL and Contact Corpus Approach CH 6 UHF with intentions. Fly ~145° to Bayside. Passing Bayside, terminate with Corpus Approach and switch KRKP CTAF CH 21 VHF and CH 21 UHF to self-announce. Execute Aransas County entry procedures.",
+    questions : [
+      "Descend within the lateral confines of the KINGS 4 MOA to _____ MSL. Upon reaching 2500' MSL proceed direct to ______. Cross Woodsboro at _____ MSL and Contact Corpus Approach CH ___ UHF with intentions. Fly ~_____ to ______."
+    ],
+    answers : [
+      ["2500'", "Woodsboro", "2500'", "6", "145°", "Bayside"]
+    ],
     dependentNode: ["Working Areas-King-211"],
     nextNode : ["Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },

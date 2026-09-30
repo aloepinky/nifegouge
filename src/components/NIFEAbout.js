@@ -1,19 +1,28 @@
 import React from 'react';
 import AboutPage from './about/AboutPage.js';
 import { aboutTabs } from './about/tabs.js';
-import { EpStats, BriefStats, SyllabusStats } from './about/SchoolStats.js';
+import { EpStats, BriefStats, SyllabusStats, useQuestionCount } from './about/SchoolStats.js';
 import { PLATFORMS as ALL_PLATFORMS } from './about/platforms.js';
 
 const PLATFORMS = ALL_PLATFORMS.nife;
+
+// The number of live questions, counted as the Questions tab counts them; left out until known.
+function QuestionTotal({ before = '', after }) {
+  const n = useQuestionCount();
+  return n ? `${before}${n.toLocaleString('en-US')} ${after}` : after.charAt(0).toUpperCase() + after.slice(1);
+}
 
 // What this page says about each NIFE tab. The order and the names come from the program's tab
 // list in programs.js, which the top bar reads too — see about/tabs.js.
 const CONTENT = {
   '/nife/questions': {
     icon: 'questions',
-    blurb: 'About 450 community-vetted practice questions across every NIFE topic.',
+    blurb: <QuestionTotal after="community-vetted practice questions across every NIFE topic." />,
     more: [
-      'A bank of ~450 community-vetted practice questions covering all major NIFE topics. Work through them in random order, filter by subject, and reveal answers when you need a hint.',
+      <>
+        <QuestionTotal before="A bank of " after="community-vetted practice questions covering all major NIFE topics." />
+        {' '}Work through them in random order, filter by subject, and reveal answers when you need a hint.
+      </>,
     ],
   },
   '/nife/nav': {
