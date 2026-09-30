@@ -124,18 +124,18 @@ function DocsPage({ school }) {
     }
   };
 
-  // Documents and links filter and sort alike: the topic picked (entries filed under All Topics
-  // show under every topic, below the topic's own), the search, then Sort by, votes breaking
-  // ties by name.
+  // Documents and links filter and sort alike: the topic picked, the search, then Sort by, votes
+  // breaking ties by name. Entries filed under All Topics show under every topic, below the
+  // topic's own; with All Topics picked, everything is one list in Sort by order.
   const filterAndSort = (items, nameOf) => {
     const search = searchTerm.toLowerCase();
     const score = (item) => (item.upvotes || 0) - (item.downvotes || 0);
+    const general = (item) => selectedTopic !== 'all' && item.topic === 'all';
     return items
       .filter(item => selectedTopic === 'all' || item.topic === selectedTopic || item.topic === 'all')
       .filter(item => !search || (nameOf(item) || '').toLowerCase().includes(search))
       .sort((a, b) => {
-        if (a.topic === 'all' && b.topic !== 'all') return 1;
-        if (a.topic !== 'all' && b.topic === 'all') return -1;
+        if (general(a) !== general(b)) return general(a) ? 1 : -1;
         if (sortBy === 'votes' && score(a) !== score(b)) return score(b) - score(a);
         return (nameOf(a) || '').localeCompare(nameOf(b) || '');
       });
