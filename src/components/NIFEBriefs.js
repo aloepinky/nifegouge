@@ -12,7 +12,7 @@ function NIFEBriefs() {
       base="/nife/briefs"
       school="NIFE"
       told={<ToldCard />}
-      toldTitle="NIFE TOLD CARD - WEIGHT AND BALANCE"
+      toldTitle="NIFE TOLD CARD"
     />
   );
 }
