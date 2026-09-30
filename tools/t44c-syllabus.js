@@ -2,8 +2,8 @@
 //
 // The two T-44C syllabus documents, published as the corpus of the /t44c/discuss mount:
 //
-//   t44c-p8    T-44C P-8 Advanced        CNATRAINST 1542.168C, 10 Sep 2024
-//   t44c-e2d   T-44C E-2D Intermediate   CNATRAINST 1542.175D, 10 Jul 2025
+//   t44c-p8    T-44C P-8     CNATRAINST 1542.168C, 10 Sep 2024
+//   t44c-e2d   T-44C E-2D    CNATRAINST 1542.175D, 10 Jul 2025
 //
 // Both are `aircraft: 'T-44C'`, `school: 'Advanced'`. They are two courses flown in one
 // aircraft and they share one page corpus, which is what the school pair decides; which

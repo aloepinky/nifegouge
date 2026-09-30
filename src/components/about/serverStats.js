@@ -88,12 +88,12 @@ export const SERVER_STATS = {
     "syllabi": [
       {
         "id": "t44c-e2d",
-        "name": "T-44C E-2D Intermediate",
+        "name": "T-44C E-2D",
         "discussItems": 481
       },
       {
         "id": "t44c-p8",
-        "name": "T-44C P-8 Advanced",
+        "name": "T-44C P-8",
         "discussItems": 621
       }
     ],

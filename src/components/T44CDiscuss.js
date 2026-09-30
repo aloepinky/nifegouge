@@ -16,13 +16,18 @@ import { T44C_P8_ID } from './discuss/SyllabusContext';
 // NIFE's and Primary's. See discuss/paths.js for the address and
 // lambda/discussApi/namespace.mjs for how the corpora are stored apart.
 
+// 1542.175D calls its own school Intermediate; the syllabus stays `school: 'Advanced'` so it
+// reads the same pages, and only the picker's tag says Intermediate.
+const TAGS = { 't44c-e2d': 'Intermediate' };
+
 function T44CDiscuss() {
   return (
     <Discuss
       base="/t44c/discuss"
       school="Advanced"
       syllabusId={T44C_P8_ID}
-      syllabusName="T-44C P-8 Advanced"
+      syllabusName="T-44C P-8"
+      syllabusTags={TAGS}
     />
   );
 }

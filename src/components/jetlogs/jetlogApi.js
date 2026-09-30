@@ -44,9 +44,13 @@ export const cachedJetLog = (id) => records.get(id.toLowerCase());
 
 // One request per id at a time, errors swallowed: a prefetch that fails costs the click a
 // second attempt and nothing else.
-export function prefetchJetLog(id) {
+// `rev`, when given, is the newest revision the index lists: a copy older than that was cached
+// before somebody published, and is fetched again rather than applied.
+const isCurrent = (record, rev) => record && (rev == null || record.rev >= rev);
+
+export function prefetchJetLog(id, rev) {
   const key = id.toLowerCase();
-  if (records.has(key) || inflight.has(key)) return;
+  if (isCurrent(records.get(key), rev) || inflight.has(key)) return;
   const run = fetchJetLog(key)
     .then((record) => { rememberJetLog(record); })
     .catch(() => {})
@@ -56,14 +60,14 @@ export function prefetchJetLog(id) {
 
 // The document behind a row, from the cache when it is there. Throws when the server cannot
 // be reached, so the caller can say so rather than doing nothing.
-export async function loadJetLog(id) {
+export async function loadJetLog(id, rev) {
   const key = id.toLowerCase();
   const cached = records.get(key);
-  if (cached) return cached;
+  if (isCurrent(cached, rev)) return cached;
   const pending = inflight.get(key);
   if (pending) {
     await pending;
-    if (records.has(key)) return records.get(key);
+    if (isCurrent(records.get(key), rev)) return records.get(key);
   }
   const record = await fetchJetLog(key);
   rememberJetLog(record);

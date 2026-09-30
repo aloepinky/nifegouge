@@ -63,6 +63,11 @@ function checkJetLog(log, id) {
     }
   }
   if (log.mode !== 'VFR' && log.mode !== 'IFR') throw new HttpError(400, 'mode must be VFR or IFR');
+  // The page draws rows by this count, and its Edit Rows stops at 20 (MAX_ROWS in TW4JetLog.js)
+  if (log.mainRowCount != null
+    && !(Number.isInteger(log.mainRowCount) && log.mainRowCount >= 1 && log.mainRowCount <= 20)) {
+    throw new HttpError(400, 'A jet log has 1 to 20 rows');
+  }
   const bytes = Buffer.byteLength(JSON.stringify(log));
   if (bytes > MAX_DOC_BYTES) throw new HttpError(400, 'That jet log is too large to store');
   return log;

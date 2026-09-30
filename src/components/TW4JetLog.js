@@ -7,6 +7,9 @@ const toHHMM = (mins) => {
   return String(Math.floor(m / 60)).padStart(2, '0') + String(m % 60).padStart(2, '0');
 };
 
+// The most row pairs the main table grows to (Edit Rows), and so the most a jet log can load.
+const MAX_ROWS = 20;
+
 // Leg fuel is rounded up to the next 5 lbs (VNAV FTI §404). The inner round only strips
 // floating-point noise, so an exact 35 stays 35 while 20.4 becomes 25.
 const roundUpTo5 = (lbs) => Math.ceil(Math.round(lbs * 1e6) / 1e6 / 5) * 5;
@@ -113,6 +116,8 @@ function TW4JetLog() {
   const [routeBadges, setRouteBadges] = useState({});
   const [holdCells, setHoldCells] = useState({});
   const [pdfUrl, setPdfUrl] = useState(null);
+  const [pdfBusy, setPdfBusy] = useState(false); // the PDF is being built (slow on some networks)
+  const [pdfError, setPdfError] = useState(null);
   const [vfrMode, setVfrMode] = useState(false);
   const [vfrTng, setVfrTng] = useState({});
   const [vfrApr, setVfrApr] = useState({});
@@ -125,7 +130,7 @@ function TW4JetLog() {
   const [loadedLog, setLoadedLog] = useState(null);
   const [jetlogScale, setJetlogScale] = useState(1);
   const [showIntClimbSelector, setShowIntClimbSelector] = useState(false);
-  const [solveNote, setSolveNote] = useState(null); // why the last Solve did nothing
+  const [solveBlocked, setSolveBlocked] = useState(false); // the last Solve refused to run
   const [intClimbs, setIntClimbs] = useState([]); // [{row: pairIdx, elev: '', alt: number}]
   const containerRef = useRef(null);
 
@@ -951,7 +956,7 @@ function TW4JetLog() {
   };
 
   const handleInsertAfter = (insertAfterPairIdx) => {
-    if (mainRowCount >= 20) return;
+    if (mainRowCount >= MAX_ROWS) return;
     setInputValues(prev => shiftKeysForInsert(prev, insertAfterPairIdx));
     setSplitCells(prev => shiftKeysForInsert(prev, insertAfterPairIdx));
     setHoldCells(prev => shiftKeysForInsert(prev, insertAfterPairIdx));
@@ -1099,14 +1104,31 @@ function TW4JetLog() {
     setInputValues(newVals);
   };
 
-  const handleSolve = (intClimbsOverride = null) => {
-    if (vfrMode) { setSolveNote(null); handleVFRSolve(); return; }
-    const climbDistTotal = parseFloat(clncFields.dist);
-    if (isNaN(climbDistTotal) || climbDistTotal <= 0) {
-      setSolveNote('Solve needs the climb Dist. Enter ΔT to fill it in, or type it.');
-      return;
+  // What Solve is missing, one message each. Without any of these the legs come out blank
+  // (or, in VFR, with 0 fuel), so Solve refuses rather than leave a jet log that looks done.
+  const solveProblems = () => {
+    const has = (v) => (v || '').trim() !== '' && !isNaN(parseFloat(v));
+    const problems = [];
+    if (vfrMode) {
+      if (!(parseFloat(clncFields.vfrGsCalc) > 0)) problems.push('Solve requires GS.');
+      if (!(parseFloat(clncFields.vfrLbsPh) > 0)) problems.push('Solve requires LBS PH. Input GS or type it in manually.');
+      return problems;
     }
-    setSolveNote(null);
+    if (!(parseFloat(clncFields.dist) > 0)) problems.push('Solve requires climb Dist. Input ΔT or type it in manually.');
+    if (!(parseFloat(clncFields.tasCruise) > 0) || !(parseFloat(clncFields.lbsPhCruise) > 0)) {
+      problems.push('Solve requires cruise TAS and LBS PH. Input OAT or type them in manually.');
+    }
+    if (!has(clncFields.climbDir) || !has(clncFields.climbVel) || !has(clncFields.cruiseDir) || !has(clncFields.cruiseVel)) {
+      problems.push('Solve requires climb and cruise winds. Input 0 for no wind.');
+    }
+    return problems;
+  };
+
+  const handleSolve = (intClimbsOverride = null) => {
+    if (solveProblems().length) { setSolveBlocked(true); return; }
+    setSolveBlocked(false);
+    if (vfrMode) { handleVFRSolve(); return; }
+    const climbDistTotal = parseFloat(clncFields.dist);
 
     const magVar = parseMagVar(clncFields.magVar);
     const climbVEL = parseFloat(clncFields.climbVel);
@@ -1539,7 +1561,9 @@ function TW4JetLog() {
     }
 
     setVfrMode(nextVfrMode);
-    setMainRowCount(preset.mainRowCount || 9);
+    // A shared jet log is anyone's document, and the rows are drawn by count: held to what
+    // Edit Rows allows, so one claiming a million rows cannot hang the page for whoever opens it.
+    setMainRowCount(Math.min(MAX_ROWS, Math.max(1, parseInt(preset.mainRowCount) || 9)));
     setInputValues(nextInputValues);
     setClncFields(prev => ({ ...prev, magVar: '3E', ...(preset.clncFields || {}) }));
     setRouteBadges(preset.routeBadges || {});
@@ -1731,6 +1755,9 @@ function TW4JetLog() {
   const mainTotalBot = mainRowCount * 2 + 1;
 
   const generateFlightPlan = async () => {
+    if (pdfBusy) return;
+    setPdfBusy(true);
+    setPdfError(null);
     try {
       const { PDFDocument, PDFName, PDFArray, PDFString, StandardFonts, rgb, degrees } = await import('pdf-lib');
       const [pdfBytes, jlBytes] = await Promise.all([
@@ -1963,14 +1990,15 @@ function TW4JetLog() {
         const badge = routeBadges[cellId];
         const topVal = (inputValues[`${cellId}_a`] || '').trim();
         const botVal = (inputValues[`${cellId}_b`] || '').trim();
-        if (holdCells[cellId] && botVal) {
+        const isApproach = typeof badge === 'number' && badge > 0;
+        // An approach row names its field in the one box it has, the top one
+        const field = topVal && topVal !== 'D→' ? topVal : botVal;
+        const holdPoint = isApproach ? field : botVal;
+        if (holdCells[cellId] && holdPoint) {
           const hMins = Math.round(parseFloat(params.holdTime) || 0);
-          dleEntries.push(`DLE/${botVal}${toHHMM(hMins)}`);
+          dleEntries.push(`DLE/${holdPoint}${toHHMM(hMins)}`);
         }
-        if (typeof badge === 'number' && badge > 0) {
-          const field = topVal && topVal !== 'D→' ? topVal : botVal;
-          if (field) apEntries.push(`${badge > 1 ? 'MULTIPLE APP' : 'APP'} ${field}`);
-        }
+        if (isApproach && field) apEntries.push(`${badge > 1 ? 'MULTIPLE APP' : 'APP'} ${field}`);
       }
       const otherParts = ['PBN/B2C2D2S1', 'SUR/260B', `DOF/${dof}`, ...dleEntries, 'REG/166000', 'OPR/DOD'];
       if (apEntries.length > 0) otherParts.push(`RMK/REQUEST ${apEntries.join(' ')}`);
@@ -2017,6 +2045,17 @@ function TW4JetLog() {
       fillText(362, 385, 15, 600, otherLine2);
       // 19a Endurance
       fillText(212, 232, 62, 138, fuelStr);
+
+      // Draw every filled box. setVal only stores a value, and the blank form ships some values
+      // (TEX2, ORANGE 2/2, 282.8…) with no drawing behind them either; Chrome draws them itself,
+      // but phone viewers and some desktop readers don't, and showed those boxes empty.
+      const form = pdfDoc.getForm();
+      const fieldByDict = new Map(form.getFields().map(f => [f.acroField.dict, f]));
+      for (const entry of fieldList) {
+        const field = fieldByDict.get(entry.annotDict);
+        if (field && entry.annotDict.get(PDFName.of('V'))) form.markFieldAsDirty(field.ref);
+      }
+      form.updateFieldAppearances(await pdfDoc.embedFont(StandardFonts.TimesRoman));
 
       // ── Jet Log page ─────────────────────────────────────────────────
       const jlTemplateDoc = await PDFDocument.load(jlBytes);
@@ -2090,20 +2129,26 @@ function TW4JetLog() {
       //   vx: 0 = left edge of landscape page, increases rightward
       //   vy: 0 = bottom edge, increases upward
       // These match the green grid labels you see in the generated PDF.
-      const draw = (vx, vy, text, size = 7) => {
+      // `maxW`, when given, is the room to the next box: the text shrinks to fit rather than
+      // run into it (a long "257.95/126.075 (44)" garbled the box beside it).
+      const draw = (vx, vy, text, size = 7, maxW = null) => {
         const str = toWinAnsi((text == null ? '' : String(text)).trim());
         const { x, y } = toP(vx, vy);
+        if (maxW) while (size > 4 && jlFont.widthOfTextAtSize(str, size) > maxW) size -= 0.25;
         if (str) jlPage.drawText(str, { x, y, size, font: jlFont, color: rgb(0, 0, 0), rotate: degrees(normalRot) });
         if (DEBUG_COORDS) jlPage.drawCircle({ x, y, size: 1.5, color: rgb(1, 0, 0) });
       };
       // drawFreq: like draw, but splits "xxx/yyy" onto two lines in VFR mode.
-      const drawFreq = (vx, vy, text, size = 7, diff = 3) => {
+      // `nextX` is where the next box's text begins, which bounds how wide this text may run.
+      // That box's border sits up to 9 pt left of its text; the form's right edge is the border.
+      const drawFreq = (vx, vy, text, size = 7, diff = 3, nextX = null) => {
+        const maxW = nextX == null ? null : nextX - vx - (nextX === C.rightX ? 3 : 11);
         if (vfrMode && text && text.includes('/')) {
           const slashIdx = text.indexOf('/');
-          draw(vx, vy + diff, text.slice(0, slashIdx).trim(), size);
-          draw(vx, vy - diff, text.slice(slashIdx + 1).trim(), size);
+          draw(vx, vy + diff, text.slice(0, slashIdx).trim(), size, maxW);
+          draw(vx, vy - diff, text.slice(slashIdx + 1).trim(), size, maxW);
         } else {
-          draw(vx, vy, text, size);
+          draw(vx, vy, text, size, maxW);
         }
       };
       // drawFlipped: upside-down text for sections printed inverted on the blank form.
@@ -2130,6 +2175,8 @@ function TW4JetLog() {
       const IFR_C = {
         //Above table text
         tabletopY: 583, altSelX: 710, routeHeaderX: 420,
+        rightX: 764, // right edge of the header boxes
+        routeMaxW: 50, altFuelMaxW: 32, // room before the IDENT column / the TIME box
         // -- Left half: header rows (departure, destination, alternate) --
         // Section y=575-475; three airport-info rows at ~31pt pitch
         row1Y: 566, row2Y: 473, row3Y: 186, altRow2Y: 165,
@@ -2156,6 +2203,8 @@ function TW4JetLog() {
 
       const VFR_C = {
         row1Y: 572, row2Y: 480, row3Y: 133, altRow2Y: 122,
+        rightX: 388, // right edge of the header boxes
+        routeMaxW: 54, altFuelMaxW: 18, // room before the IDENT column / the TIME box
         depX: 90,  clncDelX: 182, gndContX: 264, towerX: 340,
         destX: 80, destApcX: 165, destTwrX: 253, destGndX: 335,
         altX: 95,  altApcX: 180,  altTwrX: 260,  altGndX: 355,
@@ -2195,25 +2244,25 @@ function TW4JetLog() {
       const destCode = airportCodeOf(infoFields.destElev);
       const altCode = airportCodeOf(infoFields.alternate);
       draw(C.depX,     C.row1Y, infoFields.depElev);
-      drawFreq(C.clncDelX, C.row1Y, withChannel(infoFields.clncDel, depCode), freqFont);
-      drawFreq(C.gndContX, C.row1Y, withChannel(infoFields.gndCont, depCode), freqFont);
-      drawFreq(C.towerX,   C.row1Y, withChannel(infoFields.tower, depCode), freqFont);
+      drawFreq(C.clncDelX, C.row1Y, withChannel(infoFields.clncDel, depCode), freqFont, 3, C.gndContX);
+      drawFreq(C.gndContX, C.row1Y, withChannel(infoFields.gndCont, depCode), freqFont, 3, C.towerX);
+      drawFreq(C.towerX,   C.row1Y, withChannel(infoFields.tower, depCode), freqFont, 3, C.rightX);
 
       draw(C.destX,    C.row2Y, infoFields.destElev);
-      drawFreq(C.destApcX, C.row2Y, withChannel(infoFields.destApcCont, destCode), freqFont);
-      drawFreq(C.destTwrX, C.row2Y, withChannel(infoFields.destTower, destCode), freqFont);
-      drawFreq(C.destGndX, C.row2Y, withChannel(infoFields.destGndCont, destCode), freqFont);
+      drawFreq(C.destApcX, C.row2Y, withChannel(infoFields.destApcCont, destCode), freqFont, 3, C.destTwrX);
+      drawFreq(C.destTwrX, C.row2Y, withChannel(infoFields.destTower, destCode), freqFont, 3, C.destGndX);
+      drawFreq(C.destGndX, C.row2Y, withChannel(infoFields.destGndCont, destCode), freqFont, 3, C.rightX);
 
       draw(C.altX,     C.row3Y, infoFields.alternate);
-      drawFreq(C.altApcX,  C.altRow2Y, withChannel(infoFields.altApcCont, altCode), superFreqFont, 2);
-      drawFreq(C.altTwrX,  C.altRow2Y, withChannel(infoFields.altTower, altCode), superFreqFont, 2);
-      drawFreq(C.altGndX,  C.altRow2Y, withChannel(infoFields.altGndCont, altCode), superFreqFont, 2);
+      drawFreq(C.altApcX,  C.altRow2Y, withChannel(infoFields.altApcCont, altCode), superFreqFont, 2, C.altTwrX);
+      drawFreq(C.altTwrX,  C.altRow2Y, withChannel(infoFields.altTower, altCode), superFreqFont, 2, C.altGndX);
+      drawFreq(C.altGndX,  C.altRow2Y, withChannel(infoFields.altGndCont, altCode), superFreqFont, 2, C.rightX);
 
       // ── Clearance / performance block ────────────────────────────────
       if (vfrMode) {
         draw(C.gsCalcX,    C.clnc1Y + 1, clncFields.vfrGsCalc);
         draw(C.lbsPhX,     C.clnc1Y + 1, clncFields.vfrLbsPh);
-        drawFreq(C.atisX,      C.clnc1Y + 4, withChannel(clncFields.vfrAtis, depCode), freqFont);
+        drawFreq(C.atisX,      C.clnc1Y + 4, withChannel(clncFields.vfrAtis, depCode), freqFont, 3, C.windAtAltX);
         draw(C.windAtAltX, C.clnc2Y, clncFields.vfrWindAtAlt);
         draw(C.clnc1aX, C.clnc1Y - 16, clncFields.vfrClnc1a, 8);
         draw(C.clnc1bX, C.clnc1Y - 16, clncFields.vfrClnc1b, 8);
@@ -2249,6 +2298,8 @@ function TW4JetLog() {
 
       // ── Main route table ─────────────────────────────────────────────
       const drawR = (vx, vy, text, size = 8) => draw(vx, vy, text, size);
+      // A checkpoint name shrinks rather than run into the IDENT column
+      const drawRoute = (vy, text) => draw(C.routeTopX, vy, text, 8, C.routeMaxW);
       const drawAuto = (vx, vy, text, baseSize = 8) => {
         const len = (text || '').length;
         const size = len > 10 ? baseSize - 3 : len > 8 ? baseSize - 2 : len >= 6 ? baseSize - 1 : baseSize;
@@ -2274,17 +2325,17 @@ function TW4JetLog() {
           if (place.length > 10) {
             const sp = place.lastIndexOf(' ', 9);
             const cut = sp > 0 ? sp : 10;
-            drawR(C.routeTopX, cellCY + splitOff, place.slice(0, cut));
-            drawR(C.routeTopX, cellCY - splitOff, place.slice(cut).trimStart());
+            drawRoute(cellCY + splitOff, place.slice(0, cut));
+            drawRoute(cellCY - splitOff, place.slice(cut).trimStart());
           } else {
-            drawR(C.routeTopX, cellCY, place);
+            drawRoute(cellCY, place);
           }
         } else {
           if (routeTo) {
-            drawR(C.routeTopX, cellCY + splitOff, routeFrom);
-            drawR(C.routeTopX, cellCY - splitOff, routeTo);
+            drawRoute(cellCY + splitOff, routeFrom);
+            drawRoute(cellCY - splitOff, routeTo);
           } else {
-            drawR(C.routeTopX, cellCY, routeFrom);
+            drawRoute(cellCY, routeFrom);
           }
         }
 
@@ -2363,7 +2414,7 @@ function TW4JetLog() {
       const jlTotY  = vfrMode ?  C.mainFirstRowY - 14* C.mainRowPitch : C.mainFirstRowY - 9 * C.mainRowPitch;
       const jlTotCY = jlTotY - C.mainRowPitch / 2;
       const eteAdjust = vfrMode ? 0:5;
-      drawR(C.routeTopX, jlTotCY, 'Total');
+      drawRoute(jlTotCY, 'Total');
       drawR(C.distX,  jlTotCY, jlTotDist > 0 ? String(Math.round(jlTotDist)) : '');
       { const jlTotEteStr = jlTotEte > 0 ? formatEteSum(jlTotEte) : '';
         const jlTotEteHasHour = (jlTotEteStr.match(/\+/g) || []).length >= 2;
@@ -2389,17 +2440,17 @@ function TW4JetLog() {
           if (place.length > 10) {
             const sp = place.lastIndexOf(' ', 9);
             const cut = sp > 0 ? sp : 10;
-            drawR(C.routeTopX, cellCY + splitOff, place.slice(0, cut));
-            drawR(C.routeTopX, cellCY - splitOff, place.slice(cut).trimStart());
+            drawRoute(cellCY + splitOff, place.slice(0, cut));
+            drawRoute(cellCY - splitOff, place.slice(cut).trimStart());
           } else {
-            drawR(C.routeTopX, cellCY, place);
+            drawRoute(cellCY, place);
           }
         } else {
           if (routeTo) {
-            drawR(C.routeTopX, cellCY + splitOff, routeFrom);
-            drawR(C.routeTopX, cellCY - splitOff, routeTo);
+            drawRoute(cellCY + splitOff, routeFrom);
+            drawRoute(cellCY - splitOff, routeTo);
           } else {
-            drawR(C.routeTopX, cellCY, routeFrom);
+            drawRoute(cellCY, routeFrom);
           }
         }
 
@@ -2437,7 +2488,7 @@ function TW4JetLog() {
       }, 0);
       const jlAltTotY  = vfrMode ?  C.altFirstRowY - 3 * C.altRowPitch : C.altFirstRowY - 4 * C.altRowPitch;
       const jlAltTotCY = jlAltTotY - C.altRowPitch / 2;
-      drawR(C.routeTopX, jlAltTotCY, 'Total');
+      drawRoute(jlAltTotCY, 'Total');
       drawR(C.distX,  jlAltTotCY, jlAltTotDist > 0 ? String(Math.round(jlAltTotDist)) : '');
       { const jlAltTotEteStr = jlAltTotEte > 0 ? formatEteSum(jlAltTotEte) : '';
         const jlAltTotEteHasHour = (jlAltTotEteStr.match(/\+/g) || []).length >= 2;
@@ -2448,7 +2499,7 @@ function TW4JetLog() {
       draw(C.altElevX,  C.altRow2Y,      infoFields.altElev);
       if (iv('altalt'))   draw(C.altLevelX, C.row3Y, iv('altalt'));
       if (iv('altroute')) draw(C.altRouteX, C.row3Y, iv('altroute'));
-      if (fuelDisplay) draw(C.altFuelX, C.row3Y, fuelDisplay);
+      if (fuelDisplay) draw(C.altFuelX, C.row3Y, fuelDisplay, 7, C.altFuelMaxW);
       if (jlAltTotEte > 0) { const altTimeStr = formatEteSum(jlAltTotEte); draw(C.altTimeX, C.row3Y, altTimeStr, altTimeStr.length > 5 ? 6 : 7); }
 
       // ── Fuel plan (9 rows: 5 left, 4 right) ───────────────────────────
@@ -2472,7 +2523,12 @@ function TW4JetLog() {
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
     } catch (err) {
+      // Shown, not just logged: on a slow or filtered network the download of the PDF code or
+      // the blank forms can fail, and a button that silently does nothing reads as broken.
       console.error('Failed to generate flight plan:', err);
+      setPdfError("Couldn't build the PDF. Check your connection and try again.");
+    } finally {
+      setPdfBusy(false);
     }
   };
 
@@ -2565,7 +2621,9 @@ function TW4JetLog() {
           </button>
         )}
         <button onClick={() => setShowParams(true)}>Parameters</button>
-        <button onClick={generateFlightPlan}>Generate Flight Plan + Jet Log</button>
+        <button onClick={generateFlightPlan} disabled={pdfBusy}>
+          {pdfBusy ? 'Building PDF…' : 'Generate Flight Plan + Jet Log'}
+        </button>
         <div style={{display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold', cursor: 'pointer'}}
           onClick={() => { setVfrMode(m => { const next = !m; const newAlt = next ? 3000 : 1000; setSelectedAlt(newAlt); if (next) autoFillVFRCruise(clncFields.vfrGsCalc); else setVfrStart(null); return next; }); }}
         >
@@ -2576,8 +2634,12 @@ function TW4JetLog() {
           <span style={{color: vfrMode ? '#1e40af' : '#aaa', transition: 'color 0.2s'}}>VFR</span>
         </div>
       </div>
-      {solveNote && !vfrMode && !(parseFloat(clncFields.dist) > 0) && (
-        <div className="jetlog-solve-note">{solveNote}</div>
+      {/* Each line goes as soon as its box is filled in */}
+      {pdfError && <div className="jetlog-solve-note">{pdfError}</div>}
+      {solveBlocked && solveProblems().length > 0 && (
+        <div className="jetlog-solve-note">
+          {solveProblems().map(p => <div key={p}>{p}</div>)}
+        </div>
       )}
 
       <div className="jetlog-wrapper" style={jetlogScale < 1 ? {zoom: jetlogScale} : undefined}>

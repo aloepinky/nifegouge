@@ -88,7 +88,7 @@ function JetLogLibrary({
     setApplying(entry.id);
     setApplyError('');
     try {
-      const record = await loadJetLog(entry.id);
+      const record = await loadJetLog(entry.id, entry.rev);
       if (!record) {
         setApplyError(`${entry.name} could not be found on the server.`);
         setApplying('');
@@ -205,7 +205,7 @@ function JetLogLibrary({
                         key={entry.id}
                         style={{display: 'flex', alignItems: 'center', gap: '8px',
                           marginBottom: '4px', padding: '2px 0 2px 14px'}}
-                        onPointerEnter={() => prefetchJetLog(entry.id)}
+                        onPointerEnter={() => prefetchJetLog(entry.id, entry.rev)}
                       >
                         <span style={MODE_CHIP(entry.mode)}>{entry.mode}</span>
                         <span

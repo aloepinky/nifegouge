@@ -93,7 +93,7 @@ function StageNav() {
               <span className="discuss-stagenav-id">{stage.id}</span>
               <span className="discuss-stagenav-name">{stage.label}</span>
               <span className="discuss-stagenav-meta">
-                {blocks.length} blocks · {events} events{stage.weight ? ` · ${stage.weight}` : ''}
+                {blocks.length} {blocks.length === 1 ? 'block' : 'blocks'} · {events} {events === 1 ? 'event' : 'events'}{stage.weight ? ` · ${stage.weight}` : ''}
               </span>
             </summary>
 

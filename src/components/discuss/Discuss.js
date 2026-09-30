@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, createContext, lazy, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Routes, Route, useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import useMenuDismiss from '../useMenuDismiss';
 import ItemPage from './ItemPage';
@@ -28,6 +28,11 @@ const EditFlowPage = lazy(() => import('./upload/EditFlowPage'));
 // and this keeps it out of the bundle every reader downloads.
 const StyleGuide = lazy(() => import('./StyleGuide'));
 
+// The word printed after a syllabus's name where it is not the school, by syllabus id. The
+// E-2D syllabus is `school: 'Advanced'`, since it shares Advanced's pages, but 1542.175D calls
+// its own school Intermediate, and the picker says so.
+const SyllabusTags = createContext({});
+
 // A syllabus's name, then its school in quieter type: "Delta Syllabus Primary".
 function SyllabusName({ name, school }) {
   return (
@@ -53,8 +58,10 @@ function SyllabusPicker() {
   const trigger = useRef(null);
   useMenuDismiss(open, setOpen, wrap, trigger);
 
-  const options = [{ id: delta.id, name: delta.name, school: delta.school }, ...published];
-  if (!options.some((o) => o.id === s.id)) options.push({ id: s.id, name: s.name, school: s.school });
+  const tags = useContext(SyllabusTags);
+  const options = [{ id: delta.id, name: delta.name, school: delta.school }, ...published]
+    .map((o) => ({ ...o, school: tags[o.id] || o.school }));
+  if (!options.some((o) => o.id === s.id)) options.push({ id: s.id, name: s.name, school: tags[s.id] || s.school });
   const current = options.find((o) => o.id === s.id);
 
   const choose = (id) => {
@@ -469,6 +476,8 @@ function DiscussRoutes() {
   );
 }
 
+const NO_TAGS = {};
+
 // The tab. Primary's is the default, so its mount passes nothing; NIFE's names its address,
 // its school and its own syllabus. See paths.js and DiscussData.js.
 function Discuss({
@@ -476,19 +485,22 @@ function Discuss({
   school = DEFAULT_PROGRAM.school,
   syllabusId = DELTA_ID,
   syllabusName = 'Delta Syllabus',
+  syllabusTags = NO_TAGS,
 }) {
   return (
-    <DiscussBaseProvider value={base}>
-      <DiscussDataProvider
-        school={school}
-        syllabusId={syllabusId}
-        syllabusName={syllabusName}
-        renderLoading={() => <Shell><Loading /></Shell>}
-        renderError={(error, retry) => <Shell><LoadFailed error={error} retry={retry} /></Shell>}
-      >
-        <DiscussRoutes />
-      </DiscussDataProvider>
-    </DiscussBaseProvider>
+    <SyllabusTags.Provider value={syllabusTags}>
+      <DiscussBaseProvider value={base}>
+        <DiscussDataProvider
+          school={school}
+          syllabusId={syllabusId}
+          syllabusName={syllabusName}
+          renderLoading={() => <Shell><Loading /></Shell>}
+          renderError={(error, retry) => <Shell><LoadFailed error={error} retry={retry} /></Shell>}
+        >
+          <DiscussRoutes />
+        </DiscussDataProvider>
+      </DiscussBaseProvider>
+    </SyllabusTags.Provider>
   );
 }
 

@@ -221,20 +221,25 @@ export function Label({ text, x, y, w, shape }) {
   );
 }
 
-// Widen a viewBox to fit its legend's captions. A chart whose legend sits at its own right
-// edge loses them otherwise — both T-44C charts put it there, where Delta's sits well inside
-// the boxes and is unaffected.
+// The legend's frame stands this far off its keys.
+const LEGEND_PAD = 7;
+
+// Grow a viewBox to fit its legend's captions and frame. A chart whose legend sits at its own
+// right edge loses the captions otherwise, and one whose legend sits on its bottom edge loses
+// the frame's bottom line — both T-44C charts do both, where Delta's sits well inside the
+// boxes and is unaffected. The frame's stroke needs a unit beyond its edge.
 function fitLegend(viewBox, legend) {
   if (!viewBox || !legend || !legend.length) return viewBox;
   const box = viewBox.split(/\s+/).map(Number);
   if (box.length !== 4 || !box.every(Number.isFinite)) return viewBox;
   const [x, y, w, h] = box;
-  const need = legendRight(legend);
-  return need > x + w ? [x, y, round(need - x), h].join(' ') : viewBox;
+  const right = Math.max(x + w, legendRight(legend));
+  const bottom = Math.max(y + h, Math.max(...legend.map((k) => k.y + k.h)) + LEGEND_PAD + 1);
+  return right > x + w || bottom > y + h ? [x, y, round(right - x), round(bottom - y)].join(' ') : viewBox;
 }
 
 export function Legend({ legend }) {
-  const pad = 7;
+  const pad = LEGEND_PAD;
   const x = Math.min(...legend.map((k) => k.x)) - pad;
   const y = Math.min(...legend.map((k) => k.y)) - pad;
   const bottom = Math.max(...legend.map((k) => k.y + k.h)) + pad;

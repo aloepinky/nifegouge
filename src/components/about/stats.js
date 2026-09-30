@@ -196,8 +196,8 @@ export function syllabusStats(doc, platform = null) {
 
 // What a school's syllabi differ BY, which is what a label naming them should say. The
 // aircraft is the school's own and the school is the tile the label sits under, so both come
-// off the name: "T-44C P-8 Advanced" is listed as "P-8" and "T-44C E-2D Intermediate" as
-// "E-2D".
+// off the name: "T-44C P-8" is listed as "P-8", and a level in the name goes too, so
+// "T-44C E-2D Intermediate" would still be "E-2D".
 //
 // A name with nothing left but a word like "Syllabus" keeps what it had: NIFE's is called
 // "NIFE Syllabus", and "Syllabus" alone would say less than the whole name does.

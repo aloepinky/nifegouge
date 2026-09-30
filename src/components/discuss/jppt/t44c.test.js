@@ -31,7 +31,7 @@ const OUT = process.env.T44C_DOCS_OUT || null;
 const CASES = [
   {
     id: 't44c-p8',
-    name: 'T-44C P-8 Advanced',
+    name: 'T-44C P-8',
     file: '1542.168C CH-2.pdf',
     aircraft: 'T-44C',
     school: 'Advanced',
@@ -64,7 +64,7 @@ const CASES = [
   },
   {
     id: 't44c-e2d',
-    name: 'T-44C E-2D Intermediate',
+    name: 'T-44C E-2D',
     file: '1542.175D CH-1.pdf',
     aircraft: 'T-44C',
     school: 'Advanced',
