@@ -36,7 +36,8 @@ function SchoolHighlights({ id }) {
   const named = !!weeks && weeks.length > 1;
   const lengths = [];
   if (hasSyllabi && !named) {
-    lengths.push(weeks
+    // An empty list is a school whose syllabi carry no course length (or aren't published yet).
+    lengths.push(weeks && weeks.length
       ? { key: `weeks-${weeks[0].weeks}`, value: weeks[0].weeks, label: weeks[0].label.toLowerCase() }
       : { key: 'weeks', value: null, label: 'weeks' });
   }
