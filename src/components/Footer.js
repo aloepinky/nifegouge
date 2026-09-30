@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 const MAX_PHOTOS = 3;
 
 // UPDATE SUPPORTER COUNT HERE — sets the number under the heart on the button
-const SUPPORTER_COUNT = 3;
+const SUPPORTER_COUNT = 6;
 
 // The "(N)" in the text is what makes the button API render N under the heart;
 // the fetch below hides it from the visible label

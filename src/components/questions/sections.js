@@ -12,7 +12,7 @@ import { TOPICS, lecturesIn } from './questionsApi';
 
 const SECTIONS_KEY = 'questions/nife/sections.json';
 
-const FALLBACK = TOPICS.map((t) => ({ id: t.id, name: t.name, lectures: [], fallback: true }));
+export const FALLBACK = TOPICS.map((t) => ({ id: t.id, name: t.name, lectures: [], fallback: true }));
 
 export function useSections() {
   const [state, setState] = useState({ sections: FALLBACK, rev: 0, loaded: false });

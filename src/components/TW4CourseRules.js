@@ -271,11 +271,6 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
     if (!layersLoaded) return; // Wait for layers to load
 
     Object.entries(layersRef.current).forEach(([id, { layer, category, subType, folderPath }]) => {
-      // Always remove first to ensure clean state
-      if (map.hasLayer(layer)) {
-        map.removeLayer(layer);
-      }
-
       let shouldShow = false;
 
       // In Flight Path Builder mode, only show features in the flight path
@@ -311,9 +306,13 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
         shouldShow = visibleLayers[checkKey];
       }
 
-      // Then add back if visible
-      if (shouldShow) {
+      // Only touch layers whose visibility changed; re-adding all of them on
+      // every step made the quiz and path builder stall
+      const isShown = map.hasLayer(layer);
+      if (shouldShow && !isShown) {
         layer.addTo(map);
+      } else if (!shouldShow && isShown) {
+        map.removeLayer(layer);
       }
     });
   }, [visibleLayers, folderVisibility, featureVisibility, visibleFlightPath, map, layersLoaded, controlMode, currentRandomFeature]);
@@ -422,6 +421,7 @@ function TW4CourseRules() {
   const initializeRandomPool = (folderFilter = '') => {
     // Create a pool of all features that have questions
     const allFeatures = [];
+    const seenQuestions = new Set();
 
     Object.entries(crFeatures).forEach(([id, feature]) => {
       // Must have questions
@@ -434,6 +434,11 @@ function TW4CourseRules() {
           return;
         }
       }
+
+      // Runways that share a procedure share its questions; ask them once
+      const questionKey = JSON.stringify([feature.questions, feature.answers]);
+      if (seenQuestions.has(questionKey)) return;
+      seenQuestions.add(questionKey);
 
       // Add feature to pool
       allFeatures.push(id);
@@ -462,8 +467,8 @@ function TW4CourseRules() {
       return null;
     }
 
-    // Get current feature from the pool
-    let index = currentQuestionIndex;
+    // Get current feature from the pool (a fresh pool starts at the top)
+    let index = providedPool !== null ? 0 : currentQuestionIndex;
 
     // If we've reached the end, reshuffle
     if (index >= poolToUse.length) {
@@ -685,7 +690,8 @@ function TW4CourseRules() {
 
     setFlightPath(newPath);
     setCurrentNode(newCurrent);
-    setVisibleFeatures(newPath);
+    // Keep each remaining node's dependent landmarks on the map
+    setVisibleFeatures(newPath.flatMap(id => [id, ...(crFeatures[id]?.dependentNode || [])]));
 
     // Reset quiz when going back
     if (flightPathQuizMode) {
@@ -929,8 +935,15 @@ function TW4CourseRules() {
   const buildFolderOptions = () => {
     const options = [<option key="" value="">All Features</option>];
 
+    // Only offer folders that have questions in them
+    const hasQuestions = (path) => Object.values(crFeatures).some(f =>
+      f.questions && f.questions.length > 0 &&
+      (f.folderPath === path || (f.folderPath || '').startsWith(path + ' > '))
+    );
+
     const addFolderOptions = (tree, level = 0) => {
       Object.entries(tree).forEach(([folderName, folder]) => {
+        if (!hasQuestions(folder.path)) return;
         const indent = '\u00A0\u00A0\u00A0\u00A0'.repeat(level); // 4 non-breaking spaces per level
         options.push(
           <option key={folder.path} value={folder.path}>

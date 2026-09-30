@@ -7,6 +7,10 @@ const toHHMM = (mins) => {
   return String(Math.floor(m / 60)).padStart(2, '0') + String(m % 60).padStart(2, '0');
 };
 
+// Leg fuel is rounded up to the next 5 lbs (VNAV FTI §404). The inner round only strips
+// floating-point noise, so an exact 35 stays 35 while 20.4 becomes 25.
+const roundUpTo5 = (lbs) => Math.ceil(Math.round(lbs * 1e6) / 1e6 / 5) * 5;
+
 const cellFontSize = (val) => {
   const len = (val || '').length;
   if (len <= 7) return undefined;
@@ -121,6 +125,7 @@ function TW4JetLog() {
   const [loadedLog, setLoadedLog] = useState(null);
   const [jetlogScale, setJetlogScale] = useState(1);
   const [showIntClimbSelector, setShowIntClimbSelector] = useState(false);
+  const [solveNote, setSolveNote] = useState(null); // why the last Solve did nothing
   const [intClimbs, setIntClimbs] = useState([]); // [{row: pairIdx, elev: '', alt: number}]
   const containerRef = useRef(null);
 
@@ -227,16 +232,30 @@ function TW4JetLog() {
       ([cellId, badge]) => typeof badge === 'number' && /^r\d+c0$/.test(cellId)
     );
     if (!entries.length) return;
-    setInputValues(prev => {
+    // A held approach row keeps its hold: its cells stay split and the totals carry the hold
+    // fuel, or the fuel plan (which reads the totals) leaves the hold out until the next Solve.
+    const computed = entries.map(([cellId, badge]) => ({
+      row: parseInt(cellId.match(/\d+/)[0]),
+      ...approachCells(badge, !!holdCells[cellId]),
+    }));
+    setSplitCells(prev => {
       const next = { ...prev };
-      for (const [cellId, badge] of entries) {
-        const row = parseInt(cellId.match(/\d+/)[0]);
-        next[`r${row}c4`] = String(badge * (parseFloat(params.approachTime) || 0));
-        next[`r${row}c6`] = String(badge * (parseFloat(params.approachFuel) || 0));
+      for (const { row, split } of computed) {
+        if (!split) continue;
+        next[`r${row}c4`] = split.ete;
+        next[`r${row}c6`] = split.fuel;
       }
       return next;
     });
-  }, [vfrMode, routeBadges, params.approachTime, params.approachFuel]);
+    setInputValues(prev => {
+      const next = { ...prev };
+      for (const { row, ete, fuel } of computed) {
+        next[`r${row}c4`] = String(ete);
+        next[`r${row}c6`] = String(fuel);
+      }
+      return next;
+    });
+  }, [vfrMode, routeBadges, holdCells, params.approachTime, params.approachFuel, params.holdTime, clncFields.lbsPhCruise]);
 
   // Derive a stable key from alt-row distances so the effect below re-runs only when dist changes.
   // c3 is the only column this effect reads; it never writes c3, so no infinite loop.
@@ -555,7 +574,7 @@ function TW4JetLog() {
   };
 
   const calcVFRLegFuel = (eteSecs, lbsPh) =>
-    !isNaN(lbsPh) ? Math.ceil(Math.round(eteSecs / 60 * lbsPh / 60) / 5) * 5 : 0;
+    !isNaN(lbsPh) ? roundUpTo5(eteSecs / 60 * lbsPh / 60) : 0;
 
   const formatVFREte = (secs) => {
     if (secs == null || isNaN(secs)) return '';
@@ -678,50 +697,48 @@ function TW4JetLog() {
 
   const ROUTE_OPTIONS = ['Route', 'Direct To', '1 Approach', '2 Approaches', '3 Approaches', 'Hold', 'Note'];
 
+  // ETE and fuel for an approach row: `count` approaches, plus the hold when the row is held
+  // (then `split` carries the approach/hold halves for the split cells).
+  const approachCells = (count, held) => {
+    const aprEte = count * (parseFloat(params.approachTime) || 0);
+    const aprFuel = count * (parseFloat(params.approachFuel) || 0);
+    if (!held) return { ete: aprEte, fuel: aprFuel, split: null };
+    const holdMins = parseFloat(params.holdTime) || 0;
+    const lbsPh = parseFloat(clncFields.lbsPhCruise) || 0;
+    const holdFuel = lbsPh > 0 ? roundUpTo5(holdMins * lbsPh / 60) : 0;
+    const ete = aprEte + holdMins;
+    const fuel = aprFuel + holdFuel;
+    return {
+      ete, fuel,
+      split: {
+        ete: { top: `${aprEte}/${holdMins}`, bottom: String(ete) },
+        fuel: { top: `${aprFuel}/${holdFuel}`, bottom: String(fuel) },
+      },
+    };
+  };
+
+  const setApproachRow = (topRow, { ete, fuel, split }) => {
+    setSplitCells(prev => {
+      const n = {...prev};
+      if (split) { n[`r${topRow}c4`] = split.ete; n[`r${topRow}c6`] = split.fuel; }
+      else { delete n[`r${topRow}c4`]; delete n[`r${topRow}c6`]; }
+      return n;
+    });
+    setInputValues(prev => ({...prev, [`r${topRow}c4`]: String(ete), [`r${topRow}c6`]: String(fuel)}));
+  };
+
   const handleRouteOption = (cellId, opt) => {
     setOpenDropdown(null);
     const topRow = parseInt(cellId.match(/^r(\d+)c0$/)?.[1]);
     const countMatch = opt.match(/^(\d+) Approach/);
     if (countMatch) {
       const count = parseInt(countMatch[1]);
-      const aprEte = count * (parseFloat(params.approachTime) || 0);
-      const aprFuel = count * (parseFloat(params.approachFuel) || 0);
-      if (holdCells[cellId]) {
-        const holdMins = parseFloat(params.holdTime) || 0;
-        const lbsPh = parseFloat(clncFields.lbsPhCruise) || 0;
-        const holdFuel = lbsPh > 0 ? Math.ceil(Math.round(holdMins * lbsPh / 60) / 5) * 5 : 0;
-        const totalEte = aprEte + holdMins;
-        const totalFuel = aprFuel + holdFuel;
-        setSplitCells(prev => ({...prev,
-          [`r${topRow}c4`]: { top: `${aprEte}/${holdMins}`, bottom: String(totalEte) },
-          [`r${topRow}c6`]: { top: `${aprFuel}/${holdFuel}`, bottom: String(totalFuel) },
-        }));
-        setInputValues(prev => ({...prev, [`r${topRow}c4`]: String(totalEte), [`r${topRow}c6`]: String(totalFuel)}));
-      } else {
-        setInputValues(prev => ({...prev, [`r${topRow}c4`]: String(aprEte), [`r${topRow}c6`]: String(aprFuel)}));
-      }
+      setApproachRow(topRow, approachCells(count, !!holdCells[cellId]));
       setRouteBadges(prev => ({...prev, [cellId]: count}));
     } else if (opt === 'Hold') {
       const aprCount = routeBadges[cellId];
-      const wasHeld = !!holdCells[cellId];
       if (typeof aprCount === 'number') {
-        const aprEte = aprCount * (parseFloat(params.approachTime) || 0);
-        const aprFuel = aprCount * (parseFloat(params.approachFuel) || 0);
-        if (!wasHeld) {
-          const holdMins = parseFloat(params.holdTime) || 0;
-          const lbsPh = parseFloat(clncFields.lbsPhCruise) || 0;
-          const holdFuel = lbsPh > 0 ? Math.ceil(Math.round(holdMins * lbsPh / 60) / 5) * 5 : 0;
-          const totalEte = aprEte + holdMins;
-          const totalFuel = aprFuel + holdFuel;
-          setSplitCells(prev => ({...prev,
-            [`r${topRow}c4`]: { top: `${aprEte}/${holdMins}`, bottom: String(totalEte) },
-            [`r${topRow}c6`]: { top: `${aprFuel}/${holdFuel}`, bottom: String(totalFuel) },
-          }));
-          setInputValues(prev => ({...prev, [`r${topRow}c4`]: String(totalEte), [`r${topRow}c6`]: String(totalFuel)}));
-        } else {
-          setSplitCells(prev => { const n = {...prev}; delete n[`r${topRow}c4`]; delete n[`r${topRow}c6`]; return n; });
-          setInputValues(prev => ({...prev, [`r${topRow}c4`]: String(aprEte), [`r${topRow}c6`]: String(aprFuel)}));
-        }
+        setApproachRow(topRow, approachCells(aprCount, !holdCells[cellId]));
       }
       setHoldCells(prev => { const n = {...prev}; if (n[cellId]) { delete n[cellId]; } else { n[cellId] = true; } return n; });
     } else if (opt === 'Note') {
@@ -1083,9 +1100,13 @@ function TW4JetLog() {
   };
 
   const handleSolve = (intClimbsOverride = null) => {
-    if (vfrMode) { handleVFRSolve(); return; }
+    if (vfrMode) { setSolveNote(null); handleVFRSolve(); return; }
     const climbDistTotal = parseFloat(clncFields.dist);
-    if (isNaN(climbDistTotal) || climbDistTotal <= 0) return;
+    if (isNaN(climbDistTotal) || climbDistTotal <= 0) {
+      setSolveNote('Solve needs the climb Dist. Enter ΔT to fill it in, or type it.');
+      return;
+    }
+    setSolveNote(null);
 
     const magVar = parseMagVar(clncFields.magVar);
     const climbVEL = parseFloat(clncFields.climbVel);
@@ -1102,7 +1123,7 @@ function TW4JetLog() {
       return Math.round(tas + (-vel * Math.cos((dir - tc) * Math.PI / 180)));
     };
     const calcETE = (dist, gs) => (gs > 0 ? Math.round(60 * dist / gs) : null);
-    const calcFuel = (ete, lbsPh) => (ete != null && !isNaN(lbsPh) ? Math.ceil(Math.round(ete * lbsPh / 60) / 5) * 5 : null);
+    const calcFuel = (ete, lbsPh) => (ete != null && !isNaN(lbsPh) ? roundUpTo5(ete * lbsPh / 60) : null);
 
     const mainRows = Array.from({length: mainRowCount}, (_, i) => i * 2);
 
@@ -1313,7 +1334,8 @@ function TW4JetLog() {
         const row = mainRows[i];
         const fuelStr = newSplit[`r${row}c6`] ? newSplit[`r${row}c6`].bottom : newVals[`r${row}c6`];
         const legFuel = parseFloat(fuelStr || '');
-        if (isNaN(legFuel)) break;
+        // A row with no fuel (a note, a spare row) is stepped over, not the end of the route
+        if (isNaN(legFuel)) { newVals[`r${row}c7`] = ''; continue; }
         runningEFR = Math.round(runningEFR - legFuel);
         newVals[`r${row}c7`] = String(runningEFR);
         lastTopEFR = runningEFR;
@@ -2554,6 +2576,9 @@ function TW4JetLog() {
           <span style={{color: vfrMode ? '#1e40af' : '#aaa', transition: 'color 0.2s'}}>VFR</span>
         </div>
       </div>
+      {solveNote && !vfrMode && !(parseFloat(clncFields.dist) > 0) && (
+        <div className="jetlog-solve-note">{solveNote}</div>
+      )}
 
       <div className="jetlog-wrapper" style={jetlogScale < 1 ? {zoom: jetlogScale} : undefined}>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0'}}>

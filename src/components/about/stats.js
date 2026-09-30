@@ -1,4 +1,5 @@
 import { countWords } from '../briefs/firstLetters';
+import { FALLBACK, inUse } from '../questions/sections';
 
 // The numbers an About page shows at a glance, counted from the data each tab already renders
 // rather than typed in, so they cannot fall behind an edit to the EPs, a limits sheet, a brief
@@ -264,4 +265,13 @@ export function syllabusRows(records) {
 // One row per brief for the About page's Briefs panel.
 export function briefRows(records) {
   return (records || []).map((r) => ({ aircraft: r.brief.aircraft, words: briefWords(r.brief) }));
+}
+
+// The questions the Questions tab would draw from: approved, and filed under a topic and lecture
+// that are not retired, as the tab itself filters them. `sectionsDoc` is the mirrored section
+// list, or nothing before that document existed. Null when the questions could not be read.
+export function questionCount(questions, sectionsDoc) {
+  if (!questions) return null;
+  const sections = (sectionsDoc && sectionsDoc.sections) || FALLBACK;
+  return questions.filter(inUse(sections)).length;
 }

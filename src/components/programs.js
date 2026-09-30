@@ -63,7 +63,7 @@ export const PROGRAM_TABS = {
     { to: '/t44c/about', label: 'About' },
     { to: '/t44c/eps-limits', label: 'EPs/Limits' },
     { to: '/t44c/discuss', label: 'Discussion Items', draft: true },
-    { to: '/t44c/briefs', label: 'Briefs/TOLD', draft: true },
+    { to: '/t44c/briefs', label: 'Briefs', draft: true },
   ],
 };
 

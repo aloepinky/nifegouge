@@ -772,7 +772,7 @@ export default function T6BElectricalDiagram() {
           <Bus x={LX} y={LY+11} w={LW} label="HOT BAT BUS" color={C.hot} id="hotbatbus" sel={sel} onSel={pick} />
           <CBList x={LX} y={LY+25} cols={2} colW={CW} color={C.hot} live={true} id="hotbatbus" sel={sel} onSel={pick} items={[
             'RAM AIR VALVE', 'CLOCKS', 'ELT', 'BATTERY',
-            'OBOGS', 'EMERG FLAPS', 'FWD MAINT', 'SPARE',
+            'OBOGS', 'EMERG FLAPS', 'FDR MAINT', 'SPARE',
           ]} />
           <Wire d={`M 290 ${LY-102} 290 ${LY+16} L ${LX+LW} ${LY+16}`} live={true} />
 

@@ -25,7 +25,7 @@ const itemPath = (entry) => {
   const ns = schoolNs(entry.school);
   return ns ? `${ns}/${entry.slug}` : entry.slug;
 };
-const SYLLABUS_OF = { primary: DELTA_ID, nife: 'nife-flight' };
+const SYLLABUS_OF = { primary: DELTA_ID, nife: 'nife-flight', advanced: 't44c-p8' };
 const CONCURRENCY = 16;
 
 async function fetchJson(url) {

@@ -145,7 +145,7 @@ const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 // these carries its own section, headed with the publication's name, so a student at the
 // other squadron can see which part of the page is theirs. Advisory, not an error: a page
 // can be local end to end and say so in its lede, and the numbers on it are still right.
-export const LOCAL_WORKS = new Set(['TW-4 SOP', 'VT-27 SOP', 'VT-28 SOP', 'TW-4 Formation Supplement', 'TW-4 Briefing Guide']);
+export const LOCAL_WORKS = new Set(['TW-4 SOP', 'VT-27 SOP', 'VT-28 SOP', 'VT-35 SOP', 'TW-4 Formation Supplement', 'TW-4 Briefing Guide']);
 
 export function headingViolations(title, item, seen) {
   const out = [];
@@ -526,6 +526,7 @@ export function structureViolations(item) {
   out.push(...retiredContent(item));
   out.push(...ledeRepeated(item));
   out.push(...natopsCitations(item));
+  out.push(...gougeCited(item));
 
   return out;
 }
@@ -639,12 +640,29 @@ export function ledeRepeated(item) {
   return out;
 }
 
-// NATOPS CITATION. NATOPS numbers its chapters but not its sections, so a reference names the
-// chapter, the section as printed and the section's first page: `Ch. 3 — Engine Failure`.
+// NATOPS CITATION. The T-6B NATOPS numbers its chapters but not its sections, so a reference
+// names the chapter, the section as printed and the section's first page: `Ch. 3 — Engine
+// Failure`. The T-44C NATOPS is an eNATOPS that numbers every section, the way CNAF 3710
+// does, and is cited the same way: `§15.3 — Engine Fire`, with a page like `p. 15.3-1`.
+const NATOPS_LOC = {
+  NATOPS: /^Ch\. [A-Z]?\d+(-\d+)? — \S/,
+  'T-44C NATOPS': /^§\d+(\.\d+)+ — \S/,
+};
+
 export function natopsCitations(item) {
   return (item.references || [])
-    .filter((r) => r.work === 'NATOPS' && !/^Ch\. [A-Z]?\d+(-\d+)? — \S/.test(r.loc || ''))
+    .filter((r) => NATOPS_LOC[r.work] && !NATOPS_LOC[r.work].test(r.loc || ''))
     .map((r) => ['info', 'natops-citation', `ref ${r.n}: ${r.loc}`]);
+}
+
+// GOUGE CITED. The student gouge decides what a page covers and is never cited or named on
+// the site; the publication it came from is. The Advanced gouge is titled "Discussion Doc".
+const GOUGE = /gouge|discussion doc/i;
+
+export function gougeCited(item) {
+  return (item.references || [])
+    .filter((r) => GOUGE.test(`${r.work || ''} ${r.loc || ''}`))
+    .map((r) => ['error', 'gouge-cited', `ref ${r.n}: ${r.work}`]);
 }
 
 // ---------------------------------------------------------------------------------------

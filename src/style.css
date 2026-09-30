@@ -4160,6 +4160,13 @@ textarea.incorrect-answer {
   background-color: #ffd6d6;
 }
 
+.jetlog-solve-note {
+  text-align: center;
+  font-size: 0.8em;
+  color: #b3261e;
+  margin: -4px 0 6px;
+}
+
 /* Site Footer */
 .site-footer {
   display: flex;
@@ -4981,7 +4988,13 @@ textarea.incorrect-answer {
    frame takes the full 75% and each image is letterboxed inside it. On a phone every figure
    takes the full column. */
 .discuss-figure {
-  width: min(var(--fig-w, 100%), 75%, max(50%, calc(min(70vh, 640px) * var(--fig-ar, 100))));
+  /* The size cap is a max-width over an auto width, and the figure is its own formatting
+     context, so beside the floated Numbers infobox (a figure at the top of the first section)
+     it narrows into the space left of the box, as text does, instead of running underneath
+     it. A set width does not narrow for a float; clearing the box left a hole as tall as it. */
+  display: flow-root;
+  width: auto;
+  max-width: min(var(--fig-w, 100%), 75%, max(50%, calc(min(70vh, 640px) * var(--fig-ar, 100))));
   margin: 0 auto 20px;
 }
 
@@ -4993,7 +5006,7 @@ textarea.incorrect-answer {
   background: #ffffff;
 }
 
-.discuss-figure--gallery { width: 75%; }
+.discuss-figure--gallery { max-width: 75%; }
 
 .discuss-figure figcaption {
   margin-top: 6px;
@@ -5003,7 +5016,7 @@ textarea.incorrect-answer {
 
 @media (max-width: 700px) {
   .discuss-figure,
-  .discuss-figure--gallery { width: 100%; }
+  .discuss-figure--gallery { width: 100%; max-width: 100%; }
 }
 
 /* A gallery: one image shown, an arrow on each side, the image's caption over its foot. */

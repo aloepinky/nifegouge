@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { fetchBriefIndex, fetchBrief, rememberBrief } from '../briefs/briefApi';
 import { fetchSyllabusIndex, fetchSyllabus, rememberSyllabus } from '../discuss/discussApi';
 import { isSchool } from '../programs';
-import { briefRows, syllabusRows, weekGroups } from './stats';
+import { readMirror } from '../serverApi';
+import { briefRows, questionCount, syllabusRows, weekGroups } from './stats';
 import { SERVER_STATS } from './serverStats';
 
 /*
@@ -43,6 +44,17 @@ async function loadSyllabi(school) {
   records.forEach(rememberSyllabus);
   return records;
 }
+
+// Only NIFE has a question bank, so there is no school in the key.
+async function loadQuestions() {
+  const [approved, sections] = await Promise.all([
+    readMirror('questions/nife/approved.json'),
+    readMirror('questions/nife/sections.json').catch(() => null),
+  ]);
+  return { questions: approved && approved.questions, doc: sections && sections.doc };
+}
+
+const deriveQuestions = (records) => questionCount(records.questions, records.doc);
 
 // One read per school and kind, shared: the same numbers are mounted twice, in the panel and
 // under the blurb a phone shows instead of it. A failed read settles on an empty list, since
@@ -152,6 +164,13 @@ export function SyllabusStats({ school }) {
       ))}
     </div>
   );
+}
+
+// How many questions the Questions tab has live, for the About page's words about it: the
+// snapshot at once, then the mirror. Null (say no number) if neither has one.
+export function useQuestionCount(school = 'NIFE') {
+  const n = useFigures('questions', 'questions', loadQuestions, deriveQuestions, school);
+  return n == null ? null : n;
 }
 
 export function useCourseWeeks(school, wanted = true) {

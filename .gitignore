@@ -63,3 +63,4 @@ tools/discuss-audit.json
 
 # Local state for tools/docs-dev-server.mjs
 /_docs-dev
+/_weekly-report
