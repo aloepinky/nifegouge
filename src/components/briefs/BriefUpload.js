@@ -105,10 +105,45 @@ function Preview({ brief, against }) {
   );
 }
 
+// A PDF and which of its pages to read. The browser's own file control says "Choose file" and
+// "No file chosen"; this is the same control with the page's words on it.
+function PdfField({
+  id, label, hint, file, onFile, pages, onPages, disabled,
+}) {
+  return (
+    <>
+      <div className="discuss-editor-field">
+        <label className="discuss-editor-label" htmlFor={id}>{label}</label>
+        {hint && <p className="discuss-editor-hint">{hint}</p>}
+        <div className="brief-file">
+          <input
+            id={id}
+            className="brief-file-input"
+            type="file"
+            accept="application/pdf,.pdf"
+            disabled={disabled}
+            onChange={(e) => onFile(e.target.files && e.target.files[0])}
+          />
+          <label className="brief-file-button" htmlFor={id}>Upload file</label>
+          <span className="brief-file-name">{file ? file.name : 'No file uploaded'}</span>
+        </div>
+      </div>
+      <div className="discuss-editor-field">
+        <label className="discuss-editor-label" htmlFor={`${id}-pages`}>Pages</label>
+        <Line id={`${id}-pages`} value={pages} onChange={onPages} placeholder="All, or e.g. 6-8 if the guide is part of a longer PDF" maxLength={40} />
+      </div>
+    </>
+  );
+}
+
 function BriefUpload({ index, school: startingSchool, onPublished }) {
   const base = useBriefsBase();
   const [file, setFile] = useState(null);
   const [pageText, setPageText] = useState('');
+  // The abbreviated guide, optional: where a wing prints one, it is the brief's layout and the
+  // expanded guide fills it in (see parseBriefGuide).
+  const [cardFile, setCardFile] = useState(null);
+  const [cardPageText, setCardPageText] = useState('');
   const [progress, setProgress] = useState(null);
   const [error, setError] = useState('');
   const [found, setFound] = useState(null); // { briefs, warnings }
@@ -126,7 +161,7 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
   const read = async () => {
     if (!file) return;
     setError('');
-    if (file.size > MAX_BYTES) {
+    if (file.size > MAX_BYTES || (cardFile && cardFile.size > MAX_BYTES)) {
       setError('That file is over 25 MB. Check it is the right PDF.');
       return;
     }
@@ -140,7 +175,17 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
         setError(wanted.error);
         return;
       }
-      const out = parseBriefGuide(wanted.pages ? wanted.pages.map((n) => all[n]) : all);
+      let card;
+      if (cardFile) {
+        const cardAll = await loadTextItems(await cardFile.arrayBuffer(), (p, total) => setProgress(`Reading the abbreviated guide, page ${p} of ${total}`));
+        const cardWanted = pageList(cardPageText, cardAll.length);
+        if (cardWanted.error) {
+          setError(`Abbreviated guide: ${cardWanted.error}`);
+          return;
+        }
+        card = cardWanted.pages ? cardWanted.pages.map((n) => cardAll[n]) : cardAll;
+      }
+      const out = parseBriefGuide(wanted.pages ? wanted.pages.map((n) => all[n]) : all, { card });
       if (!out.briefs.length) {
         setError(out.warnings.join(' ') || 'No brief was found in this PDF.');
         return;
@@ -249,27 +294,25 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
           Upload briefing guide PDF to either create a new brief or replace an outdated one.
           The PDF stays on your computer.
         </p>
-        <div className="discuss-editor-field">
-          <label className="discuss-editor-label" htmlFor="brief-file">Briefing guide PDF</label>
-          {/* The browser's own file control says "Choose file" and "No file chosen"; this is
-              the same control with the page's words on it. */}
-          <div className="brief-file">
-            <input
-              id="brief-file"
-              className="brief-file-input"
-              type="file"
-              accept="application/pdf,.pdf"
-              disabled={!!progress}
-              onChange={(e) => setFile(e.target.files && e.target.files[0])}
-            />
-            <label className="brief-file-button" htmlFor="brief-file">Upload file</label>
-            <span className="brief-file-name">{file ? file.name : 'No file uploaded'}</span>
-          </div>
-        </div>
-        <div className="discuss-editor-field">
-          <label className="discuss-editor-label" htmlFor="brief-pages">Pages</label>
-          <Line id="brief-pages" value={pageText} onChange={setPageText} placeholder="All, or e.g. 6-8 if the guide is part of a longer PDF" maxLength={40} />
-        </div>
+        <PdfField
+          id="brief-file"
+          label="Expanded briefing guide PDF"
+          file={file}
+          onFile={setFile}
+          pages={pageText}
+          onPages={setPageText}
+          disabled={!!progress}
+        />
+        <PdfField
+          id="brief-card"
+          label="Abbreviated briefing guide PDF (optional)"
+          hint="If there is one, its sections and items are used as the brief's layout, filled in with the expanded guide's words."
+          file={cardFile}
+          onFile={setCardFile}
+          pages={cardPageText}
+          onPages={setCardPageText}
+          disabled={!!progress}
+        />
         <div className="discuss-editor-buttons">
           <button type="button" className="discuss-editor-save" disabled={!file || !!progress} onClick={read}>
             {progress ? 'Reading…' : 'Upload'}

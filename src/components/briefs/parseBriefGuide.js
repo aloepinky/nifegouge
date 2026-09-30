@@ -94,14 +94,16 @@ export function pageLines(items, keepFurniture) {
         cur = { x: r.x, parts: [] };
         segs.push(cur);
       } else if (!/^\s/.test(r.s) && !/\s$/.test(lastText(cur)) && gap > WORD_GAP) {
-        cur.parts.push({ s: ' ', bold: false });
+        cur.parts.push({ s: ' ', bold: false, x: r.x });
       }
-      cur.parts.push({ s: r.s, bold: r.bold });
+      cur.parts.push({ s: r.s, bold: r.bold, x: r.x });
       end = r.s.trim() ? r.x2 : Math.max(end, r.x2);
       cur.end = end;
     });
     const kept = segs
-      .map((s) => ({ x: s.x, x2: s.end, text: tidy(withBold(s.parts)) }))
+      .map((s) => ({
+        x: s.x, x2: s.end, text: tidy(withBold(s.parts)), parts: s.parts,
+      }))
       .filter((s) => s.text && (keepFurniture || !FURNITURE.some((re) => re.test(s.text))));
     return { y: row.y, segs: kept };
   }).filter((l) => l.segs.length);
@@ -261,6 +263,11 @@ export function readMarker(text) {
     if (rest.startsWith('**')) {
       rest = rest.slice(2).trimStart();
       boldMarker = true;
+    } else if (/^[^*\s]+\*\*\S/.test(rest)) {
+      // The bold stops inside the first word (`**ii) T**actical Frequencies`): the marker
+      // is what was set bold, and the word is one word.
+      rest = rest.replace('**', '');
+      boldMarker = true;
     } else if (rest) rest = `**${rest}`;
   }
   // `(1)` hangs as `(1)` and `1.` as `1.`; `i)` is shown bracketed, like the bracketed levels.
@@ -284,7 +291,7 @@ function boldName(rest) {
 // the line above broke (`ATC.”`).
 function isBareHeading(line, next, margin, wrapped) {
   const text = plain(line.text).trim();
-  if (wrapped || !next || !readMarker(next.text) || line.x > margin + X_SAME || next.x < line.x - X_SAME) return false;
+  if (wrapped || !next || !readMarker(next.text) || line.x > margin + X_NEAR || next.x < line.x - X_SAME) return false;
   if (NWC.test(line.text) || /[.,;!?][”"’)]*$/.test(text) || words(text) > 8) return false;
   return /^\*\*[^*]+\*\*$/.test(line.text.trim()) || isCaps(text);
 }
@@ -292,15 +299,22 @@ function isBareHeading(line, next, margin, wrapped) {
 // -> { note, nodes: [{ level, marker, label?, parts, children }] }
 function readOutline(lines) {
   const margin = Math.min(...lines.map((l) => l.x));
-  const right = Math.max(...lines.map((l) => l.x2 || 0));
-  const column = right - margin;
+  // A card's columns each have their own right edge; a guide has the one.
+  const edges = new Map();
+  lines.forEach((l) => {
+    const key = `${l.page || 0}/${l.col || 0}`;
+    edges.set(key, Math.max(edges.get(key) || 0, l.x2 || 0));
+  });
+  const rightOf = (l) => edges.get(`${l.page || 0}/${l.col || 0}`);
   // A line that stops well short of the right margin ended where it meant to; one that runs up
   // to it was broken by it, and the line beneath carries the same sentence on. A ragged margin
   // stops short too, wherever the next word was too long to fit, so a short line is only an
   // ending where the next line's first word would have fitted on it, and where it closed a
   // sentence or the next line opens like one (`14-30 day break`, not `requirements are met`).
   const fills = (line, next) => {
-    if (!line || (line.x2 || 0) >= right - column * 0.12) return true;
+    if (!line) return true;
+    const right = rightOf(line);
+    if ((line.x2 || 0) >= right - (right - margin) * 0.12) return true;
     const text = plain(line.text).trim();
     const following = plain((next && next.text) || '').trim();
     const perChar = ((line.x2 || line.x) - line.x) / Math.max(text.length, 1);
@@ -361,21 +375,29 @@ function readOutline(lines) {
     }
     const where = marker && place(marker.kinds, line.x);
 
-    // A marker that is the only bold on its line numbers a paragraph of the level above
-    // rather than naming anything: the guide sets every name it means bold.
-    if (where && !(marker.boldMarker && marker.rest && !marker.rest.startsWith('**'))) {
+    // A marker that is the only bold on a line that runs on as a sentence numbers a paragraph
+    // of the level above rather than naming anything: the NIFE guide sets every name it means
+    // bold. A short line after a bold marker is a name all the same (the TW-5 card's
+    // `**i) **Area Management`).
+    const sentence = marker && marker.rest
+      && (words(plain(marker.rest).replace(/\s[/&]\s/g, ' ')) > 12 || /[.!?][”"]?$/.test(plain(marker.rest)));
+    if (where && !(marker.boldMarker && marker.rest && !marker.rest.startsWith('**') && sentence)) {
       stack.length = where.depth;
       const named = boldName(marker.rest);
       const node = {
         marker: marker.shown,
         ...(named ? { label: named.label, parts: named.body ? [named.body] : [] } : { parts: marker.rest ? [marker.rest] : [] }),
         children: [],
+        at: line,
       };
       open(node, { style: where.kind.style, x: line.x, ord: where.kind.ord });
-    } else if (!marker && isBareHeading(line, lines[n + 1], margin, previous && fills(previous, line))) {
+    } else if (!marker && isBareHeading(line, lines[n + 1], margin,
+      previous && fills(previous, line) && !/[.:;!?][”"’)]*$/.test(plain(previous.text).trim()))) {
       const at = stack.findIndex((e) => e.style === 'head');
       stack.length = at >= 0 ? at : 0;
-      open({ marker: '', label: plain(line.text).replace(/[.:]\s*$/, '').trim(), parts: [], children: [] },
+      open({
+        marker: '', label: plain(line.text).replace(/[.:]\s*$/, '').trim(), parts: [], children: [], at: line,
+      },
         { style: 'head', x: line.x, ord: 0 });
     } else {
       const body = marker ? marker.rest : line.text.replace(BOLD_DASH, '');
@@ -482,77 +504,253 @@ function toGuideSection(node) {
 
 // ---------------------------------------------------------------------------------------
 // The card
+//
+// A card (the TW-4 guide's `FIGURE 1. … BRIEFING LIST`, the T-44C's AME card, the TW-5
+// Abbreviated Briefing Guide) is the brief's layout: which sections, in which column, and
+// what each item is called. It is an outline too, only printed in columns, so it is read by
+// the same reader as the guide once its columns are taken apart.
+//
+// A column is what lies between the gutters: the widths of the page no line crosses. A
+// block too thin to be a column (the TW-5 card's KIO table, beside its Formation items) is
+// side matter and is left out; the guide says the same thing in full.
 
-const CARD_ITEM = /^(\d{1,2})\.\s*(.*)$/;
-const CARD_SUB = /^(?:[a-z]\.|\(\d{1,2}\)|\([a-z]\))\s*/;
-// The T-44C card letters its headings in bold title case, `A. Product Inventory`, where the
-// Primary card sets them in capitals with no marker. A lettered heading can wrap
-// (`H. Standarization Board Minutes /` over `Read and Initial`), so the lines between it and
-// its first item are the rest of its name.
-const CARD_HEAD = /^[A-Z]\.\s+(.+)$/;
+const GUTTER = 12; // a gap at least this wide that no line crosses separates two columns
+const SIDE = 110; // text starting this far right of its column's margin is beside the outline
 
-// `**12. OCF procedures**` -> `12. **OCF procedures**`, so a bold line still reads as a
-// numbered one. The card sets a whole item bold; the number is not part of what it says.
-function hoistMarker(text) {
-  return text.replace(/^\*\*((?:\d{1,2}\.|[a-zA-Z]\.|\([0-9a-z]{1,2}\))\s*)/, '$1**');
+function columnsOf(lines) {
+  const segs = lines.flatMap((l) => l.segs.map((s) => ({ ...s, y: l.y })))
+    .filter((s) => !isFigureCaption(s.text));
+  if (!segs.length) return [];
+  const left = Math.min(...segs.map((s) => s.x));
+  const right = Math.max(...segs.map((s) => s.x2));
+  // A line across most of the page (a title, a caption) crosses the gutter; it is not asked.
+  const spans = segs.filter((s) => s.x2 - s.x < (right - left) * 0.6).sort((a, b) => a.x - b.x);
+  const blocks = [];
+  spans.forEach((s) => {
+    const last = blocks[blocks.length - 1];
+    if (last && s.x <= last.x2 + GUTTER) {
+      last.x2 = Math.max(last.x2, s.x2);
+      last.n += 1;
+    } else blocks.push({ x: s.x, x2: s.x2, n: 1 });
+  });
+  const real = blocks.filter((b) => b.n >= Math.max(4, spans.length * 0.15));
+  const starts = (real.length ? real : [blocks[0]]).map((b) => b.x);
+  const columns = starts.map(() => []);
+  segs.forEach((s) => {
+    let c = 0;
+    while (c + 1 < starts.length && s.x >= starts[c + 1] - 1) c += 1;
+    columns[c].push(s);
+  });
+  return columns.filter((c) => c.length).map((col) => {
+    const margin = Math.min(...col.map((s) => s.x));
+    const side = col.filter((s) => s.x > margin + SIDE);
+    // A table beside the outline is several lines at one x; a lone line out there (a version
+    // footer) is not one, and nothing runs into it. Only lines level with the table can.
+    const table = side.filter((s) => side.filter((t) => Math.abs(t.x - s.x) <= 3).length >= 2);
+    const cuts = table.map((s) => s.x);
+    const top = table.length ? Math.max(...table.map((s) => s.y)) + LINE_TOLERANCE * 4 : -Infinity;
+    const foot = table.length ? Math.min(...table.map((s) => s.y)) - LINE_TOLERANCE * 4 : Infinity;
+    return col
+      .filter((s) => !side.includes(s))
+      .map((s) => {
+        // A line the side matter runs into (`i) Designated / Formation Lead 1. Departure
+        // Spin…`) ends where the side matter starts.
+        if (s.y > top || s.y < foot) return s;
+        const cut = (s.parts || []).findIndex((p) => p.x > margin + SIDE && cuts.some((x) => Math.abs(p.x - x) <= 3));
+        if (cut < 0) return s;
+        const parts = s.parts.slice(0, cut);
+        return { ...s, text: tidy(withBold(parts)), x2: parts.length ? parts[parts.length - 1].x : s.x };
+      })
+      .filter((s) => s.text)
+      .sort((a, b) => b.y - a.y)
+      .map((s) => ({ ...s, x: s.x - margin, x2: s.x2 - margin }));
+  });
 }
 
-// Card pages -> [{ title, column, page, items: [{ label, card: [text] }] }], in reading order:
-// each page's left column, then its right.
-function readCard(cardPages) {
-  const sections = [];
-  cardPages.forEach((lines, pageIndex) => {
-    const seconds = lines.filter((l) => l.segs.length >= 2).map((l) => l.segs[1].x);
-    const rightX = seconds.length ? Math.min(...seconds) - 15 : Infinity;
-    const columns = [[], []];
-    lines.forEach((l) => l.segs.forEach((s) => {
-      if (isFigureCaption(s.text)) return;
-      columns[s.x >= rightX ? 1 : 0].push(hoistMarker(s.text));
-    }));
-    columns.forEach((texts, col) => {
-      let section = null;
-      let item = null;
-      let lastParts = null;
-      texts.forEach((text) => {
-        let m;
-        if ((m = text.match(CARD_HEAD))) {
-          section = { title: plain(m[1]), column: col + 1, page: pageIndex + 1, items: [], wraps: true };
-          sections.push(section);
-          item = null;
-          lastParts = null;
-        } else if (section && section.wraps && !section.items.length && !CARD_ITEM.test(text)) {
-          section.title = `${section.title} ${plain(text)}`;
-        } else if (isCaps(text) && !/[.,;:]$/.test(plain(text)) && !CARD_ITEM.test(text) && !CARD_SUB.test(text)) {
-          // A heading is capitals with no closing stop; `WAVE OFF.` is a sentence wrapping.
-          // A heading is already set bold by the page; the card's own bold says nothing more.
-          section = { title: plain(text), column: col + 1, page: pageIndex + 1, items: [] };
-          sections.push(section);
-          item = null;
-          lastParts = null;
-        } else if (section && (m = text.match(CARD_ITEM))) {
-          item = { parts: [m[2]], card: [] };
-          section.items.push(item);
-          lastParts = item.parts;
-        } else if (item && CARD_SUB.test(text)) {
-          const line = [text];
-          item.card.push(line);
-          lastParts = line;
-        } else if (lastParts) {
-          lastParts.push(text);
-        }
-      });
-    });
+// Card pages (their lines) -> [{ title, note, sections: [{ title, column, page, items:
+// [{ label, card: [line] }] }] }], a card that prints two briefs (the TW-5's brief and
+// debrief) split at each one's title. Reading order is each page's columns left to right.
+export function readCardPages(pagesOfLines) {
+  const lines = [];
+  pagesOfLines.forEach((pageLinesOf, page) => columnsOf(pageLinesOf).forEach((col, c) => {
+    col.forEach((s) => lines.push({ ...s, col: Math.min(c + 1, 2), page: page + 1 }));
+  }));
+  const briefs = [];
+  const seen = new Set();
+  let current = null;
+  // A debrief guide printed on a card of its own (the TW-5's second page) opens its page with
+  // its title. The TW-4 card's DEBRIEFING GUIDE is a heading half way down a column.
+  const opensPage = (l, i) => i === 0 || lines[i - 1].page !== l.page;
+  lines.forEach((l, i) => {
+    if (isBriefTitle(l.text) || (opensPage(l, i) && /\bDEBRIEF(?:ING)?\s+GUIDE\b/i.test(l.text) && words(plain(l.text)) <= 8)) {
+      if (seen.has(norm(l.text))) return;
+      seen.add(norm(l.text));
+      current = { title: cleanTitle(l.text), lines: [] };
+      briefs.push(current);
+      return;
+    }
+    if (!current) {
+      current = { title: '', lines: [] };
+      briefs.push(current);
+    }
+    current.lines.push(l);
   });
-  return sections.map(({ wraps, ...s }) => ({
-    ...s,
-    items: s.items.map((it) => {
-      const label = joinText(it.parts);
-      return {
-        label: words(label) <= 10 ? label.replace(/[.:]$/, '') : label,
-        card: it.card.map(joinText),
-      };
+  return briefs.filter((b) => b.lines.length).map((b) => {
+    const { note, nodes } = readOutline(b.lines);
+    return { title: b.title, note, sections: cardSections(nodes) };
+  });
+}
+
+// A whole card set bold says nothing by it; one item bold among plain ones (the TW-4's OCF
+// procedures, brief every flight) is the card saying so, and keeps it.
+function cardSections(nodes) {
+  const items = nodes.flatMap((n) => n.children);
+  const boldIsNews = items.filter((c) => c.label !== undefined).length * 2 < items.length;
+  const fullText = (node) => {
+    const body = joinText(node.parts);
+    if (node.label === undefined) return body;
+    return [boldIsNews ? `**${node.label}**` : node.label, body].filter(Boolean).join(' ');
+  };
+  const lines = (children, depth) => children.flatMap((c) => [
+    `${'  '.repeat(depth)}${c.marker} ${fullText(c)}`.trimEnd(),
+    ...lines(c.children, depth + 1),
+  ]);
+  return nodes.map((n) => ({
+    title: nameOf(n)[0],
+    column: n.at ? n.at.col || 1 : 1,
+    page: n.at ? n.at.page || 1 : 1,
+    items: n.children.map((c) => {
+      const label = fullText(c);
+      return { label: words(plain(label)) <= 10 ? label.replace(/[.:](\*\*)?$/, '$1').trim() : label, card: lines(c.children, 0) };
     }),
   }));
+}
+
+// How alike two names are, 0 to 1. The card and the guide name one thing in different words:
+// `Read and Initial` / `R&I`, `Damaged Aircraft / Bird strike` / `Birdstrike / Damaged
+// Aircraft`, `EP / Question of the day` / `EP / Question / Quote of the Day`.
+const NAME_STOP = new Set(['and', 'the', 'of', 'a', 'an', 'to', 'for', 'in', 'on', 'or']);
+const nameWords = (text) => (plain(text).toLowerCase().replace(/&/g, ' and ').match(/[a-z0-9]+/g) || [])
+  .filter((w) => !NAME_STOP.has(w));
+
+function bigrams(ws) {
+  const s = [...ws].sort().join('');
+  const out = new Set();
+  for (let i = 0; i < s.length - 1; i += 1) out.add(s.slice(i, i + 2));
+  return out;
+}
+
+const diceOf = (a, b) => (a.size && b.size ? (2 * [...a].filter((x) => b.has(x)).length) / (a.size + b.size) : 0);
+
+export function nameScore(a, b) {
+  const A = nameWords(a);
+  const B = nameWords(b);
+  if (!A.length || !B.length) return 0;
+  if (A.join(' ') === B.join(' ')) return 1;
+  const initials = (ws) => ws.map((w) => w[0]).join('');
+  const acronym = (x, y) => y.length > 1 && (x.length === 1 ? x[0] : x.every((w) => w.length === 1) && x.join('')) === initials(y);
+  if (acronym(A, B) || acronym(B, A)) return 0.9;
+  return Math.max(diceOf(new Set(A), new Set(B)), 0.9 * diceOf(bigrams(A), bigrams(B)));
+}
+
+const nodeName = (node) => nameOf(node)[0];
+
+function descendantsOf(nodes, out = []) {
+  nodes.forEach((n) => {
+    out.push(n);
+    descendantsOf(n.children, out);
+  });
+  return out;
+}
+
+function bestNamed(label, candidates, floor) {
+  let best = null;
+  let score = floor;
+  candidates.forEach((n) => {
+    const s = nameScore(label, nodeName(n));
+    if (s > score) {
+      best = n;
+      score = s;
+    }
+  });
+  return best;
+}
+
+// The card's sections and items, each filled with the guide's words for it.
+//
+// A section is found by its name. An item is the guide's item in the same place when the
+// names agree, else the one named like it anywhere in the section, however deep the guide
+// printed it: the TW-5 guide puts Night, VNAV and CCX under INAV, where its card makes them
+// items of their own. A guide item that becomes a card item leaves the item it was printed
+// under. Failing a name, the item in the same place is taken, unless it is named for another.
+function fillCard(card, nodes, where, warnings) {
+  const used = new Set();
+  const pairs = card.map((c) => {
+    const g = bestNamed(c.title, nodes.filter((n) => !used.has(n)), 0.6);
+    if (g) used.add(g);
+    return { c, g };
+  });
+
+  const claims = new Map();
+  const claimed = new Set();
+  pairs.forEach(({ c, g }) => {
+    if (!g) return;
+    const free = (n) => !claimed.has(n);
+    const deep = descendantsOf(g.children).filter((n) => !g.children.includes(n));
+    c.items.forEach((ci, i) => {
+      const here = g.children[i];
+      let pick = here && free(here) && nameScore(ci.label, nodeName(here)) >= 0.5 ? here : null;
+      pick = pick || bestNamed(ci.label, g.children.filter(free), 0.55) || bestNamed(ci.label, deep.filter(free), 0.65);
+      if (!pick && here && free(here)
+        && !c.items.some((other, j) => j !== i && nameScore(other.label, nodeName(here)) >= 0.55)) pick = here;
+      if (pick) {
+        claims.set(ci, pick);
+        claimed.add(pick);
+      }
+    });
+  });
+
+  // A guide node without the parts the card took from it.
+  const prune = (node) => ({
+    ...node,
+    children: node.children.filter((k) => !claimed.has(k)).map(prune),
+  });
+  const holds = (node) => claimed.has(node) || node.children.some(holds);
+
+  const sections = pairs.map(({ c, g }, index) => {
+    const items = c.items.map((ci) => {
+      const n = claims.get(ci);
+      const body = n ? toItem(prune(n), '0') : null;
+      const item = {
+        label: ci.label,
+        card: ci.card,
+        text: body ? body.text : '',
+        children: body ? body.children : [],
+      };
+      return repeatsCard(item) ? { ...item, text: '', children: [] } : item;
+    });
+    if (g) {
+      g.children.filter((n) => !holds(n)).forEach((n) => {
+        warnings.push(`${where}: "${nodeName(n)}" in ${c.title} is not on the card; it was added at the end of the section.`);
+        items.push(toItem(prune(n), '0'));
+      });
+    }
+    const prev = card[index - 1];
+    return {
+      title: c.title,
+      text: g ? nameOf(g)[1] : '',
+      column: c.column,
+      ...(prev && prev.page !== c.page ? { break: true } : {}),
+      items,
+    };
+  });
+
+  nodes.forEach((n) => {
+    if (used.has(n) || holds(n)) return;
+    warnings.push(`${where}: the guide's section "${nodeName(n)}" is not on the card; it was added at the end.`);
+    sections.push({ ...toGuideSection(prune(n)), title: nodeName(n).toUpperCase(), column: 1 });
+  });
+  return sections;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -625,17 +823,20 @@ const isFixedSection = (section) => section.items.length > 0
 // belongs to. The card reader keeps them flat, because the marker is what says the level. The
 // lead-ins are bolded here as they are in the guide, and a line that ends in a colon with
 // lines beneath it is a heading for them, so it is bold end to end.
-const CARD_LINE = /^((?:[a-z]\.|\([0-9a-z]{1,2}\))\s+)(.*)$/i;
+// A line the card reader nested deeper arrives indented already, two spaces a level.
+const CARD_LINE = /^(\s*)((?:[a-z]\.|\d{1,2}\.|•|\((?:[0-9a-z]{1,2}|[ivxlc]{2,5})\))\s+)?([\s\S]*)$/i;
 
 function cardText(card, base = 0) {
   const lines = card || [];
-  const deeper = (i) => i + 1 < lines.length && /^\(/.test(lines[i + 1]) && !/^\(/.test(lines[i]);
+  const lead = (line) => line.match(/^\s*/)[0].length;
+  const paren = (line) => /^\(/.test(line.trim());
+  const deeper = (i) => i + 1 < lines.length
+    && (lead(lines[i + 1]) > lead(lines[i]) || (paren(lines[i + 1]) && !paren(lines[i])));
   return lines
     .map((line, i) => {
-      const m = line.match(CARD_LINE);
-      const [marker, rest] = m ? [m[1], m[2]] : ['', line];
+      const [, pad, marker = '', rest] = line.match(CARD_LINE);
       const bold = /:$/.test(rest) && deeper(i) ? `**${rest}**` : boldLeadIn(rest, false);
-      return `${'  '.repeat(base + (/^\(/.test(line) ? 1 : 0))}${marker}${bold}`;
+      return `${'  '.repeat(base)}${pad || (paren(line) ? '  ' : '')}${marker}${bold}`;
     })
     .join('\n');
 }
@@ -763,51 +964,23 @@ export function unitFrom(publication) {
   return '';
 }
 
-function buildBrief({ title, source, guideLines, cardPages }, order, warnings) {
+// `card`, when given, is a card read from its own file (the abbreviated guide uploaded beside
+// the expanded one); otherwise the card is whatever card pages the guide printed with it.
+function buildBrief({
+  title, source, guideLines, cardPages, card: given, cardNote,
+}, order, warnings) {
   const { note, nodes } = readOutline(guideLines);
-  const guide = nodes.map(toGuideSection);
-  const card = cardPages.length ? readCard(cardPages) : [];
-  const where = shortName(title);
+  const card = given || (cardPages.length ? readCardPages(cardPages).flatMap((b) => b.sections) : []);
+  // The wing is on the dropdown beside the buttons, so a button does not say it again:
+  // `TW-5 BRIEFING GUIDE` is BRIEF, `TW-5 DEBRIEF GUIDE` DEBRIEF GUIDE.
+  const unit = source && source.unit;
+  const named = shortName(title);
+  const saysUnit = unit && `${named} `.toUpperCase().startsWith(`${unit.toUpperCase()} `);
+  const where = (saysUnit ? named.slice(unit.length).trim() : named) || 'BRIEF';
 
-  let sections;
-  if (!card.length) {
-    sections = guide.map((g) => ({ title: g.title, text: g.text, column: 1, items: g.items }));
-  } else {
-    const used = new Set();
-    sections = card.map((c, index) => {
-      const gi = guide.findIndex((g, i) => !used.has(i) && norm(g.title) === norm(c.title));
-      const g = gi >= 0 ? guide[gi] : null;
-      if (g) used.add(gi);
-      if (g && g.items.length !== c.items.length) {
-        warnings.push(`${where}: ${c.title} has ${c.items.length} items on the card and ${g.items.length} in the guide; they were paired in order.`);
-      }
-      const items = c.items.map((ci, i) => {
-        const gItem = g && g.items[i];
-        const item = {
-          label: ci.label,
-          card: ci.card,
-          text: gItem ? gItem.text : '',
-          children: gItem ? gItem.children : [],
-        };
-        if (repeatsCard(item)) return { ...item, text: '', children: [] };
-        return item;
-      });
-      if (g) g.items.slice(c.items.length).forEach((gItem) => items.push(gItem));
-      const prev = card[index - 1];
-      return {
-        title: c.title,
-        text: g ? g.text : '',
-        column: c.column,
-        ...(prev && prev.page !== c.page ? { break: true } : {}),
-        items,
-      };
-    });
-    guide.forEach((g, i) => {
-      if (used.has(i)) return;
-      warnings.push(`${where}: the guide's section "${g.title}" is not on the card; it was added at the end.`);
-      sections.push({ title: g.title.toUpperCase(), text: g.text, column: 1, items: g.items });
-    });
-  }
+  const sections = card.length
+    ? fillCard(card, nodes, where, warnings)
+    : nodes.map(toGuideSection).map((g) => ({ ...g, column: 1 }));
 
   return {
     id: slugify(where),
@@ -815,7 +988,7 @@ function buildBrief({ title, source, guideLines, cardPages }, order, warnings) {
     short: where,
     ...programFor(title),
     order,
-    note,
+    note: note || cardNote || '',
     ...(source ? { source } : {}),
     sections: mintIds(toDocument(dropDuplicatedRules(sections))),
   };
@@ -870,7 +1043,12 @@ export function pageList(text, total) {
 }
 
 // pages: pdf.js text items, one array per page. -> { briefs, warnings }
-export function parseBriefGuide(pages) {
+//
+// `card`, optional, is the same for an abbreviated guide uploaded beside the expanded one.
+// Where a wing's expanded guide gets its own outline wrong (the TW-5's nests Night, VNAV and
+// CCX under INAV), its abbreviated guide is the layout, and the expanded guide only fills it
+// in. The Nth brief on the card lays out the Nth brief in the guide.
+export function parseBriefGuide(pages, { card } = {}) {
   const warnings = [];
   // Not `map(pageLines)`: the second argument would be the page number, and the furniture
   // would be kept on every page but the first.
@@ -930,17 +1108,32 @@ export function parseBriefGuide(pages) {
     } else merged.push(g);
   });
 
-  const briefs = merged.map((g, n) => {
-    if (!g.guideLines.length) {
-      warnings.push(`${shortName(g.title)}: no guide text was found under the title.`);
-      return null;
-    }
-    const unit = (source && source.unit) || unitOfTitle(g.guideTitle || g.title);
+  const cards = card && card.length ? readCardPages(dropRunningLines(card.map((items) => pageLines(items)))) : [];
+  if (card && card.length && !cards.length) warnings.push('Nothing was read from the abbreviated guide.');
+
+  const briefs = merged.filter((g) => {
+    if (!g.guideLines.length) warnings.push(`${shortName(g.title)}: no guide text was found under the title.`);
+    return g.guideLines.length;
+  }).map((g, n) => {
+    const laidOut = cards[n];
+    // The card names the brief when it has a title (`TW-5 ABBREVIATED BRIEFING GUIDE`); it is
+    // the same brief as the expanded one, so the word saying which it is goes.
+    const title = laidOut && laidOut.title
+      ? laidOut.title.replace(/\s*\bABBREVIATED\b\s*/i, ' ').trim()
+      : g.title;
+    const unit = (source && source.unit) || unitOfTitle(g.guideTitle || g.title) || unitOfTitle(title);
     const own = unit ? { ...source, unit } : source;
     return buildBrief({
-      title: g.title, source: own, guideLines: g.guideLines, cardPages: g.cardPages,
+      title,
+      source: own,
+      guideLines: g.guideLines,
+      cardPages: g.cardPages,
+      ...(laidOut ? { card: laidOut.sections, cardNote: laidOut.note } : {}),
     }, n + 1, warnings);
-  }).filter(Boolean);
+  });
+  cards.slice(briefs.length).forEach((c) => {
+    warnings.push(`The abbreviated guide's ${c.title || 'brief'} has no expanded guide to fill it; it was left out.`);
+  });
 
   if (!briefs.length) warnings.push('No briefing guide was found on these pages.');
   return { briefs, warnings };

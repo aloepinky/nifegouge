@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { loadTextItems } from '../discuss/jppt/pdfText';
 import {
-  parseBriefGuide, splitName, shortName, programFor, unitFrom, unitOfTitle, pageList,
+  parseBriefGuide, splitName, shortName, programFor, unitFrom, unitOfTitle, pageList, nameScore,
 } from './parseBriefGuide';
 // No Worker in jsdom: this puts pdf.js's worker in-process.
 import 'pdfjs-dist/legacy/build/pdf.worker.entry';
@@ -460,4 +460,74 @@ test('an unfamiliar outline is read off the page', () => {
     ['Fuel', '1. Joker\n2. **Bingo**\n  a. Computed for the farthest divert.'],
   ]);
   expect(brief.sections[1].items[0].text).toBe('• Zoom or glide\n• Assess landing options');
+});
+
+test('a card and its guide name one thing in different words', () => {
+  expect(nameScore('Read and Initial', 'R&I')).toBeGreaterThan(0.8);
+  expect(nameScore('ORM', 'Operational Risk Management')).toBeGreaterThan(0.8);
+  expect(nameScore('* Damaged Aircraft / Bird strike', '* Birdstrike / Damaged Aircraft')).toBeGreaterThan(0.6);
+  expect(nameScore('EP / Question of the day', 'EP / Question / Quote of the Day')).toBeGreaterThan(0.6);
+  expect(nameScore('Night', 'VNAV')).toBeLessThan(0.5);
+});
+
+// The TW-5 expanded guide gets its own outline wrong: it prints Night, VNAV, CCX and IP / IP
+// as (2) to (5) under `c. INAV`. Its abbreviated guide makes them items of their own, and with
+// both uploaded the brief takes the abbreviated guide's layout and the expanded guide's words.
+const TW5_CARD = path.join(__dirname, '..', '..', '..', '_reference-docs', 'T6b Primary', 'Fundamental References', 'Abbreviated Wing Brief v1.0.pdf');
+const maybeTw5Card = fs.existsSync(TW5_PDF) && fs.existsSync(TW5_CARD) ? describe : describe.skip;
+
+maybeTw5Card('the TW-5 guide laid out by its abbreviated guide', () => {
+  let out;
+  const read = async (file) => loadTextItems(new Uint8Array(fs.readFileSync(file)));
+
+  beforeAll(async () => {
+    const pages = await read(TW5_PDF);
+    const card = await read(TW5_CARD);
+    out = parseBriefGuide(pageList('196-202', pages.length).pages.map((n) => pages[n]), { card });
+  });
+
+  test('the card names the brief, and its debrief page is a brief of its own', () => {
+    expect(out.warnings).toEqual([]);
+    expect(out.briefs.map((b) => [b.title, b.short])).toEqual([
+      ['TW-5 BRIEFING GUIDE', 'BRIEF'], ['TW-5 DEBRIEF GUIDE', 'DEBRIEF GUIDE'],
+    ]);
+    expect(out.briefs[0].source.unit).toBe('TW-5');
+  });
+
+  test("sections and items are the card's, in its columns", () => {
+    const [brief] = out.briefs;
+    expect(brief.sections.map((s) => [s.title, s.column])).toEqual([
+      ['ADMIN', 1], ['* CREW COORDINATION', 1], ['PROFILE', 1], ['EMERGENCIES', 1], ['TAC ADMIN', 2], ['MCG', 2],
+    ]);
+    const tac = brief.sections.find((s) => s.title === 'TAC ADMIN');
+    expect(tac.items.map((i) => i.label)).toEqual([
+      'Familiarization', 'Formation', 'INAV', 'Night', 'VNAV', 'CCX / Off Station OPS', 'IP / IP',
+    ]);
+  });
+
+  test("each item holds the expanded guide's words for it, wherever the guide printed them", () => {
+    const [brief] = out.briefs;
+    const item = (title, label) => brief.sections.find((s) => s.title === title).items.find((i) => i.label === label);
+    expect(item('ADMIN', 'Read and Initial').text).toBe('Summary of most recent R&I');
+    const inav = item('TAC ADMIN', 'INAV');
+    expect(inav.subtext.split('\n')[1]).toBe('  (ii) Non flying pilot duties for IMC and instrument approaches');
+    expect(inav.text).not.toMatch(/Night|VNAV|CCX/);
+    expect(item('TAC ADMIN', 'Night').text).toMatch(/^\(a\) Sunset \/ Moonrise \/ EENT/);
+    // The KIO table beside Formation's items is left to the guide, which lists it in full.
+    expect(item('TAC ADMIN', 'Formation').subtext).not.toMatch(/GLOC/);
+    expect(item('TAC ADMIN', 'Formation').text).toMatch(/\(c\) GLOC/);
+  });
+});
+
+// The TW-4 PDF prints its card after each guide. Read as two uploads, the guide's pages and
+// the card's pages, it comes out the same as read whole.
+maybe('a card uploaded on its own', () => {
+  test('lays out the FAM brief exactly as the card printed with it does', async () => {
+    const pages = await loadTextItems(fs.readFileSync(PDF));
+    const pick = (text) => pageList(text, pages.length).pages.map((n) => pages[n]);
+    const whole = parseBriefGuide(pages).briefs[0];
+    const split = parseBriefGuide(pick('36-44'), { card: pick('45-46') });
+    expect(split.warnings).toEqual([]);
+    expect(split.briefs[0].sections).toEqual(whole.sections);
+  });
 });
