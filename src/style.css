@@ -2179,11 +2179,17 @@ textarea.incorrect-answer {
   background-color: #003B4F;
 }
 
-/* TOLD Card Styles */
+/* TOLD Card Styles (NIFE, Flight/ToldCard.js). The tables are fluid: at phone width the
+   label column wraps and the number columns shrink; nothing scrolls sideways. */
 .told-card-container {
   max-width: 900px;
   margin: 20px auto;
   padding: 20px;
+}
+
+.brief-page .told-card-container {
+  margin: 0 auto;
+  padding: 0;
 }
 
 .told-card-container h1 {
@@ -2195,18 +2201,16 @@ textarea.incorrect-answer {
 .told-header {
   display: flex;
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
 }
 
 .told-header-item {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.told-header-item label {
   font-weight: bold;
 }
 
@@ -2215,6 +2219,7 @@ textarea.incorrect-answer {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
+  font-weight: normal;
 }
 
 .told-table {
@@ -2226,7 +2231,7 @@ textarea.incorrect-answer {
 .told-table th,
 .told-table td {
   border: 1px solid #ccc;
-  padding: 8px;
+  padding: 6px 8px;
   text-align: center;
 }
 
@@ -2237,18 +2242,29 @@ textarea.incorrect-answer {
 }
 
 .told-table td:first-child {
-  width: 5%;
-  font-weight: bold;
-}
-
-.told-table td:nth-child(2) {
-  width: 25%;
   text-align: left;
-  padding-left: 12px;
 }
 
-.told-table input {
+.told-wb td:first-child {
+  width: 1.5em;
+  font-weight: bold;
+  text-align: center;
+}
+
+.told-wb td:nth-child(2) {
+  text-align: left;
+}
+
+.told-wb th:nth-child(n+2),
+.told-wb td:nth-child(n+3) {
+  width: 21%;
+}
+
+.told-table input,
+.told-table select {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   border: none;
   text-align: center;
   padding: 4px;
@@ -2263,24 +2279,128 @@ textarea.incorrect-answer {
 
 .told-table input::placeholder {
   color: #999;
-  font-style: italic;
-  font-size: 12px;
 }
 
-.told-table input.calculated-field {
+.told-calc {
   background-color: #f5f5f5;
-  cursor: not-allowed;
 }
 
-.told-table input.calculated-field:focus {
-  outline: none;
-  background-color: #f5f5f5;
+.told-minus {
+  white-space: normal;
+}
+
+.told-minus input {
+  width: calc(100% - 0.8em);
+}
+
+.told-minus::before {
+  content: '\2212';
 }
 
 .told-summary-row {
   background-color: #f0f0f0;
   font-weight: bold;
 }
+
+.told-unit {
+  font-weight: normal;
+  color: #5a6b72;
+  font-size: 12px;
+}
+
+.told-cond th:nth-child(n+2),
+.told-dist th:nth-child(n+2) {
+  width: 32%;
+}
+
+.told-wind {
+  display: flex;
+  gap: 4px;
+}
+
+.told-table .told-wind select {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 4px 0;
+}
+
+.told-off {
+  font-size: 13px;
+}
+
+.told-dist-from {
+  margin: -12px 0 20px;
+  font-size: 12px;
+  color: #5a6b72;
+}
+
+.told-cg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  margin-bottom: 20px;
+}
+
+.told-cg-chart {
+  flex: 1 1 260px;
+  max-width: 360px;
+}
+
+.told-cg-grid line {
+  stroke: #e2e8ea;
+  stroke-width: 0.5;
+}
+
+.told-cg-grid text {
+  font-size: 9px;
+  fill: #5a6b72;
+}
+
+.told-cg-envelope {
+  fill: rgba(0, 59, 79, 0.08);
+  stroke: #003B4F;
+  stroke-width: 1.5;
+}
+
+.told-cg-shift {
+  stroke: #01202C;
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+
+.told-cg-to circle { fill: #01202C; }
+
+.told-cg-ldg circle {
+  fill: #ffffff;
+  stroke: #01202C;
+  stroke-width: 1.5;
+}
+
+.told-cg-to text,
+.told-cg-ldg text {
+  font-size: 10px;
+  font-weight: bold;
+  fill: #01202C;
+}
+
+.told-cg-verdicts {
+  flex: 1 1 200px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.told-cg-verdicts li { margin: 6px 0; }
+
+.told-cg-ok { color: #01202C; }
+
+.told-cg-out {
+  color: #b00020;
+  font-weight: bold;
+}
+
+.told-cg-none { color: #5a6b72; }
 
 .told-notes {
   margin-top: 30px;
@@ -2304,6 +2424,20 @@ textarea.incorrect-answer {
   margin: 8px 0;
   line-height: 1.4;
   color: #333;
+}
+
+@media (max-width: 480px) {
+  .told-table th,
+  .told-table td {
+    padding: 4px 3px;
+    font-size: 13px;
+  }
+
+  .told-table input { font-size: 13px; padding: 3px 1px; }
+
+  .told-notes { padding: 12px; }
+
+  .told-notes ul { padding-left: 18px; }
 }
 
 @media (max-width: 650px) {
