@@ -2574,6 +2574,8 @@ textarea.incorrect-answer {
 .doc-action-btn.open-btn {
   display: flex;
   gap: 4px;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .doc-action-btn.good-btn,
