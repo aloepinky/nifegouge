@@ -35,10 +35,18 @@ function Weather() {
     setIndAltClass('');
     setSituation('');
 
-    setDepPressure((Math.random() * 2.16 + 28.84).toFixed(2));
-    setAssignedAlt(Math.floor(Math.random() * 70) * 100 + 3000);
-    setArrivalElev(Math.floor(Math.random() * 20) * 100 + 100);
-    setArrivalPressure((Math.random() * 2.16 + 28.84).toFixed(2));
+    // Draw again until the aircraft ends up at least 1,000 ft above the arrival field.
+    let dep, alt, elev, arr;
+    do {
+      dep = (Math.random() * 2.16 + 28.84).toFixed(2);
+      alt = Math.floor(Math.random() * 70) * 100 + 3000;
+      elev = Math.floor(Math.random() * 20) * 100 + 100;
+      arr = (Math.random() * 2.16 + 28.84).toFixed(2);
+    } while ((arr - dep) * 1000 + alt - elev < 1000);
+    setDepPressure(dep);
+    setAssignedAlt(alt);
+    setArrivalElev(elev);
+    setArrivalPressure(arr);
   };
 
   const solve = () => {
@@ -77,17 +85,15 @@ function Weather() {
     const indiAlt = (depPres - (arrPres - fieldEle / 1000)) * 1000;
 
     const correctAnswers = [error, trueAlt, absolute, indiAlt];
-    const userAnswers = [
-      parseFloat(errorInput) || 0,
-      parseFloat(trueAltInput) || 0,
-      parseFloat(absAltInput) || 0,
-      parseFloat(indAltInput) || 0,
-    ];
+    const userAnswers = [errorInput, trueAltInput, absAltInput, indAltInput]
+      .map(v => parseFloat(String(v).replace(/,/g, '')));
     const setClasses = [setErrorClass, setTrueAltClass, setAbsAltClass, setIndAltClass];
 
+    // Every answer is in feet, so grade in feet: 0.01 inHg is 10 ft.
     for (let i = 0; i < 4; i++) {
-      const pError = Math.abs(100 * (userAnswers[i] - correctAnswers[i]) / correctAnswers[i]);
-      setClasses[i](pError < 2 ? 'bg-green' : pError < 5 ? 'bg-yellow' : 'bg-red');
+      if (isNaN(userAnswers[i])) { setClasses[i](''); continue; }
+      const off = Math.abs(userAnswers[i] - correctAnswers[i]);
+      setClasses[i](off <= 10 ? 'bg-green' : off <= 50 ? 'bg-yellow' : 'bg-red');
     }
   };
 
@@ -108,22 +114,22 @@ function Weather() {
           <div className="var-col">
             <div className="var-row">
               <span className="var-label">Departure Pressure</span>
-              <span style={{ minWidth: '100px' }}>{depPressure}</span>
+              <span className="setai-value">{depPressure}</span>
               <span className="var-unit">inHg</span>
             </div>
             <div className="var-row">
               <span className="var-label">Assigned Altitude</span>
-              <span style={{ minWidth: '100px' }}>{assignedAlt}</span>
+              <span className="setai-value">{assignedAlt}</span>
               <span className="var-unit">ft</span>
             </div>
             <div className="var-row">
               <span className="var-label">Arrival Field Elev</span>
-              <span style={{ minWidth: '100px' }}>{arrivalElev}</span>
+              <span className="setai-value">{arrivalElev}</span>
               <span className="var-unit">ft</span>
             </div>
             <div className="var-row">
               <span className="var-label">Arrival Pressure</span>
-              <span style={{ minWidth: '100px' }}>{arrivalPressure}</span>
+              <span className="setai-value">{arrivalPressure}</span>
               <span className="var-unit">inHg</span>
             </div>
           </div>
@@ -131,7 +137,7 @@ function Weather() {
           <div className="var-col">
             <div className="var-row">
               <span className="var-label"><b>S</b>ituation</span>
-              <span style={{ minWidth: '100px' }}>{situation}</span>
+              <span className="setai-value">{situation}</span>
               <span className="var-unit"></span>
             </div>
             <div className="var-row">

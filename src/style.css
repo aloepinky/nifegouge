@@ -1359,6 +1359,128 @@ td.xcell::after {
   transition: transform 0.5s ease-in-out;
 }
 
+/* Jet Log: why a solve or check stopped (bad wind, ATA or direction format). */
+.jetlog-message {
+  max-width: 500px;
+  margin: 0 auto 10px;
+  padding: 8px 12px;
+  border-left: 3px solid #c0392b;
+  border-radius: 4px;
+  background-color: #fdf1f0;
+  color: #333;
+}
+
+/* SETAI given values */
+.setai-value {
+  min-width: 100px;
+}
+
+/* FR&R: VFR cruising altitude */
+.frr-row {
+  gap: 6px;
+}
+
+.frr-label {
+  min-width: 110px;
+}
+
+.frr-cloud-label {
+  min-width: 50px;
+}
+
+.frr-value {
+  min-width: 60px;
+}
+
+.frr-unit {
+  min-width: 24px;
+  color: #aaa;
+}
+
+.frr-answer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.frr-answer span {
+  display: inline-block;
+  padding: 10px 28px;
+  border: 2px solid #003B4F;
+  border-radius: 8px;
+  font-size: 1.05em;
+  font-weight: bold;
+}
+
+/* FR&R: runway indicators */
+.frr-runway {
+  width: 100%;
+  max-width: 600px;
+}
+
+.frr-runway .question-area {
+  margin-bottom: 12px;
+}
+
+.frr-runway .submitBtn {
+  margin-top: 10px;
+}
+
+.frr-scale-wrapper {
+  width: 100%;
+  max-width: 500px;
+  overflow: hidden;
+  margin-top: 24px;
+}
+
+.Wheel-Container.frr-board {
+  width: 500px;
+  height: 500px;
+}
+
+.frr-alt-line {
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  height: 2px;
+  background-color: #000;
+  z-index: 3;
+}
+
+.frr-alt-label,
+.frr-alt-step {
+  position: absolute;
+  font-size: 12px;
+  color: #000;
+  z-index: 4;
+}
+
+.frr-alt-label {
+  left: 2px;
+}
+
+.frr-alt-step {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.frr-board .frr-compass {
+  width: 250px;
+  z-index: 5;
+}
+
+.frr-board .frr-aircraft {
+  width: 60px;
+  transform: translate(-50%, 150%);
+  z-index: 10;
+}
+
+.frr-board .frr-indicator {
+  top: 5%;
+  left: 10%;
+  width: 60px;
+  z-index: 11;
+}
+
 iframe {
   border: none;
   width: 100%;

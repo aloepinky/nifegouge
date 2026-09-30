@@ -3,10 +3,19 @@ import React, { useState, useEffect, useRef } from 'react';
 function JetLog() {
   const [xMode, setXMode] = useState(false);
   const [hintStage, setHintStage] = useState(0);
-  const [cellGraph, setCellGraph] = useState({});
   const [xedCells, setXedCells] = useState(new Set());
   const [inputValues, setInputValues] = useState({});
+  const [message, setMessage] = useState('');
   const tableRef = useRef(null);
+  // The solvers read the table and graph through refs, so Solve Next Row and Solve All
+  // see each box they fill before moving to the next one.
+  const valuesRef = useRef({});
+  const graphRef = useRef({});
+
+  const updateValues = (fn) => {
+    valuesRef.current = fn(valuesRef.current);
+    setInputValues(valuesRef.current);
+  };
 
   // Initialize the cell graph with all the solving logic
   useEffect(() => {
@@ -58,7 +67,7 @@ function JetLog() {
       "r8c6": {dependsOn: ["r4c8", "r8c4"], solver: ([pph, ete]) => fuelF(pph, ete), next: "r8c7", solved: false, denominator: 200},
       "r8c7": {dependsOn: ["r7c4", "r8c6"], solver: ([afr, fuel]) => efrF(afr, fuel), next: null, solved: false, denominator: 200}
     };
-    setCellGraph(graph);
+    graphRef.current = graph;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -69,16 +78,16 @@ function JetLog() {
   };
 
   const getInputValue = (cellId) => {
-    const value = inputValues[cellId] || "";
+    const value = valuesRef.current[cellId] || "";
     const match = value.match(/\d+(\.\d+)?[\dA-Za-z\s:/-]*/);
     return match ? match[0].trim() : "";
   };
 
   const setInputValue = (cellId, value) => {
-    const original = inputValues[cellId] || "";
+    const original = valuesRef.current[cellId] || "";
     const match = original.match(/^(.*?)(-?\d[\d\s\S]*)?$/);
     const prefix = match ? match[1] : "";
-    setInputValues(prev => ({ ...prev, [cellId]: prefix + value }));
+    updateValues(prev => ({ ...prev, [cellId]: prefix + value }));
   };
 
   const getRowIndex = (cellId) => {
@@ -110,16 +119,9 @@ function JetLog() {
 
   // Handler for input changes
   const handleInputChange = (cellId, value) => {
-    setInputValues(prev => ({ ...prev, [cellId]: value }));
-    setCellGraph(prev => {
-      if (prev[cellId]) {
-        return {
-          ...prev,
-          [cellId]: { ...prev[cellId], solved: false }
-        };
-      }
-      return prev;
-    });
+    updateValues(prev => ({ ...prev, [cellId]: value }));
+    if (graphRef.current[cellId]) graphRef.current[cellId].solved = false;
+    setMessage('');
     removeGlowFromAllCells();
   };
 
@@ -137,7 +139,7 @@ function JetLog() {
     const tc = parseFloat(course.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
     const windMatch = winds.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
     if (!windMatch) {
-      alert("Invalid Wind input! Must be dir/kts format");
+      setMessage("Invalid Wind input! Must be dir/kts format");
       return null;
     }
     const dir = parseFloat(windMatch[1]);
@@ -152,7 +154,7 @@ function JetLog() {
     const tc = parseFloat(course.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
     const windMatch = winds.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
     if (!windMatch) {
-      alert("Invalid Wind input! Must be dir/kts format");
+      setMessage("Invalid Wind input! Must be dir/kts format");
       return null;
     }
     const dir = parseFloat(windMatch[1]);
@@ -167,7 +169,7 @@ function JetLog() {
     tas = parseFloat(tas.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
     const match = hwtw.match(/(-?\d+)(?:\s*\w+)?\s*([HT])/i);
     if (!match) {
-      alert("Invalid HWTW input! Must be 'kts T' or 'kts H' format");
+      setMessage("Invalid HWTW input! Must be 'kts T' or 'kts H' format");
       return null;
     }
     const value = parseFloat(match[1]);
@@ -184,7 +186,7 @@ function JetLog() {
     }
     const match = xw.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
     if (!match) {
-      alert("Invalid XW input! Must be 'kts L' or 'kts R' format");
+      setMessage("Invalid XW input! Must be 'kts L' or 'kts R' format");
       return null;
     }
     const value = parseFloat(match[1]);
@@ -204,14 +206,14 @@ function JetLog() {
     }
     const match = ca.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
     if (!match) {
-      alert("Invalid CA input! Must be 'deg L' or 'deg R' format");
+      setMessage("Invalid CA input! Must be 'deg L' or 'deg R' format");
       return null;
     }
     const value = parseFloat(match[1]);
     const direction = match[2].toUpperCase();
     ca = direction === "L" ? -Math.abs(value) : Math.abs(value);
     let th = (tc + ca) % 360;
-    if (th < 0) th += 360;
+    if (th <= 0) th += 360;
     return th + "T";
   };
 
@@ -224,27 +226,27 @@ function JetLog() {
 
   const altEteF = (ete) => {
     ete = parseFloat(ete.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    let hrs = Math.floor(ete / 60);
-    let mins = Math.floor(ete % 60);
-    let secs = Math.round(60 * (ete - Math.floor(ete)));
+    const total = Math.round(ete * 60);
+    const hrs = Math.floor(total / 3600);
+    const mins = Math.floor(total / 60) % 60;
+    const secs = total % 60;
     return hrs + "+" + mins + "+" + secs;
   };
 
   const etaF = (ata, ete) => {
     const match = ata.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
     if (!match) {
-      alert("Invalid ATA format. Must be HH:MM or HH:MM:SS formats");
+      setMessage("Invalid ATA format. Must be HH:MM or HH:MM:SS formats");
       return null;
     }
     const ahrs = parseInt(match[1], 10);
     const amins = parseInt(match[2], 10);
     const asecs = parseInt(match[3] ?? "0", 10);
     ete = parseFloat(ete.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    let secs = 60 * (ete - Math.floor(ete));
-    let mins = Math.floor(ete % 60);
-    let hrs = Math.round((Math.floor(ete / 60) + ahrs + Math.floor((mins + amins) / 60)) % 24);
-    mins = Math.round((mins + amins + Math.floor((secs + asecs) / 60)) % 60);
-    secs = Math.round((secs + asecs) % 60);
+    const total = (ahrs * 3600 + amins * 60 + asecs + Math.round(ete * 60)) % 86400;
+    const hrs = Math.floor(total / 3600);
+    const mins = Math.floor(total / 60) % 60;
+    const secs = total % 60;
     const pad = n => n.toString().padStart(2, '0');
     return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
   };
@@ -290,7 +292,7 @@ function JetLog() {
     tas = parseFloat(tas.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
     const match = da.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
     if (!match) {
-      alert("Invalid DA input! Must be 'deg L' or 'deg R' format");
+      setMessage("Invalid DA input! Must be 'deg L' or 'deg R' format");
       return null;
     }
     const value = parseFloat(match[1]);
@@ -317,7 +319,7 @@ function JetLog() {
     }else{
         const match = xw.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
         if (!match) {
-        alert("Invalid XW input! Must be 'kts L' or 'kts R' format");
+        setMessage("Invalid XW input! Must be 'kts L' or 'kts R' format");
         return null;
         }
         const value = parseFloat(match[1]);
@@ -327,7 +329,7 @@ function JetLog() {
 
     const matchh = hwtw.match(/(-?\d+)(?:\s*\w+)?\s*([HT])/i);
     if (!matchh) {
-      alert("Invalid HWTW input! Must be 'kts T' or 'kts H' format");
+      setMessage("Invalid HWTW input! Must be 'kts T' or 'kts H' format");
       return null;
     }
     const valueh = parseFloat(matchh[1]);
@@ -343,7 +345,7 @@ function JetLog() {
     } else {
       dir = Math.round(trk + Math.sign(xw) * (180 / Math.PI * Math.atan(Math.abs(xw / hwtw)))) % 360;
     }
-    if (dir < 0) dir += 360;
+    if (dir <= 0) dir += 360;
 
     let vel = Math.round(Math.sqrt(xw * xw + hwtw * hwtw));
     return dir + "/" + vel + "kts";
@@ -351,9 +353,10 @@ function JetLog() {
 
   // Main action functions
   const findNextSolvableCell = (startId = 'r0c8') => {
+    const graph = graphRef.current;
     let id = startId;
-    while (id && cellGraph[id]) {
-      const cell = cellGraph[id];
+    while (id && graph[id]) {
+      const cell = graph[id];
       if (!cell.solved && !isFilled(id)) {
         return id;
       }
@@ -364,18 +367,18 @@ function JetLog() {
 
   const solveNextCell = () => {
     removeGlowFromAllCells();
+    setMessage('');
+    const graph = graphRef.current;
     const nextId = findNextSolvableCell();
-    if (!nextId || !cellGraph[nextId]) return null;
-    const cell = cellGraph[nextId];
+    if (!nextId || !graph[nextId]) return null;
+    const cell = graph[nextId];
     const inputs = cell.dependsOn.map(getInputValue);
     const result = cell.solver(inputs);
     
     if (result === null) return null;
     
-    setInputValue(nextId, result);
-    const newGraph = { ...cellGraph };
-    newGraph[nextId].solved = true;
-    setCellGraph(newGraph);
+    setInputValue(nextId, String(result));
+    cell.solved = true;
     
     return { solved: nextId, next: cell.next };
   };
@@ -402,12 +405,18 @@ function JetLog() {
     }
   };
 
+  // Headings wrap at 360; their trailing T means true, not tailwind.
+  const HEADING_CELLS = new Set(['r3c7', 'r7c7', 'r9c7']);
+  const directionOf = (text) => String(text).match(/\d\s*([LRHT])(?![a-z])/i)?.[1]?.toUpperCase() ?? null;
+
   const checkWork = () => {
     removeGlowFromAllCells();
+    setMessage('');
+    const graph = graphRef.current;
     let checkId = "r0c8";
     
-    while (checkId && cellGraph[checkId]) {
-      const cell = cellGraph[checkId];
+    while (checkId && graph[checkId]) {
+      const cell = graph[checkId];
       
       if (!cell.solved && !isFilled(checkId)) break;
       if (cell.solved || cell.denominator === null) {
@@ -417,16 +426,28 @@ function JetLog() {
       
       const inputs = cell.dependsOn.map(getInputValue);
       const result = cell.solver(inputs);
+      if (result === null) break;
+      const resultText = String(result);
       const userValue = getInputValue(checkId);
       
       // Extract numbers for comparison
-      const resultNum = parseFloat(result?.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-      const userNum = parseFloat(userValue?.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
+      const resultNum = parseFloat(resultText.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
+      const userNum = parseFloat(userValue.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
       
-      const diff = Math.abs(userNum - resultNum);
+      let diff = Math.abs(userNum - resultNum);
+      let wrongWay = false;
+      if (HEADING_CELLS.has(checkId)) {
+        diff = Math.abs(((userNum - resultNum) % 360 + 540) % 360 - 180);
+      } else {
+        // 10L is not 10R; a zero answer has no direction.
+        const want = directionOf(resultText);
+        wrongWay = want !== null && resultNum !== 0 && directionOf(userValue) !== want;
+      }
       const percent = (diff / cell.denominator) * 100;
       
-      if (percent <= 2) {
+      if (wrongWay) {
+        makeCellGlow(checkId, "red");
+      } else if (percent <= 2) {
         makeCellGlow(checkId, "green");
       } else if (percent <= 10) {
         makeCellGlow(checkId, "yellow");
@@ -440,9 +461,9 @@ function JetLog() {
 
   const hint = () => {
     const nextId = findNextSolvableCell();
-    if (!nextId || !cellGraph[nextId]) return;
+    if (!nextId || !graphRef.current[nextId]) return;
 
-    const inputs = cellGraph[nextId].dependsOn;
+    const inputs = graphRef.current[nextId].dependsOn;
 
     if (hintStage === 0) {
       removeGlowFromAllCells();
@@ -470,7 +491,7 @@ function JetLog() {
     ];
 
     const newXedCells = new Set();
-    const newInputValues = { ...inputValues };
+    const newInputValues = { ...valuesRef.current };
 
     matrix.forEach((row, rowIndex) => {
       row.forEach((val, colIndex) => {
@@ -485,19 +506,14 @@ function JetLog() {
     });
 
     setXedCells(newXedCells);
-    setInputValues(newInputValues);
+    updateValues(() => newInputValues);
   };
 
   const resetJetLogTable = () => {
     setXedCells(new Set());
-    setInputValues({});
-    setCellGraph(prev => {
-      const resetGraph = {};
-      Object.keys(prev).forEach(key => {
-        resetGraph[key] = { ...prev[key], solved: false };
-      });
-      return resetGraph;
-    });
+    updateValues(() => ({}));
+    Object.values(graphRef.current).forEach(cell => { cell.solved = false; });
+    setMessage('');
     removeGlowFromAllCells();
   };
 
@@ -545,17 +561,19 @@ function JetLog() {
       <div className="button-container">
         <button onClick={resetJetLogTable}>Reset</button>
         <button onClick={() => setXMode(!xMode)}>
-          {xMode ? 'Exit\nX-Mode' : 'Enter\nX-Mode'}
+          {xMode ? 'Exit' : 'Enter'}<br/>X-Mode
         </button>
         <button onClick={autoGougeJetLog}>Auto-Gouge<br/>Jet Log</button>
         <button onClick={checkWork}>Check</button>
         <button onClick={hint}>
-          {hintStage === 0 ? 'Hint' : 'Another\nHint'}
+          {hintStage === 0 ? 'Hint' : <>Another<br/>Hint</>}
         </button>
         <button onClick={solveNextCell}>Solve Next<br/>Box</button>
         <button onClick={solveNextRow}>Solve Next<br/>Row</button>
         <button onClick={solveAll}>Solve All</button>
       </div>
+
+      {message && <div className="jetlog-message" role="alert">{message}</div>}
 
       <table ref={tableRef} className="jetlog-table">
         <thead>

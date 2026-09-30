@@ -233,7 +233,6 @@ function WhizWheel() {
         insertHat();
         break;
       default:
-        alert("Question type not implemented");
     }
   };
 
@@ -302,7 +301,7 @@ function WhizWheel() {
     updateRow(1, { variable: 'Time', value: time, unit: units, solved: true, display: true });
     updateRow(2, { variable: 'Fuel Quantity', value: quan, unit: quanUnit, solved: true, display: true });
 
-    updateRow(vrand - 1, { value: '', unit: '', solved: false });
+    updateRow(vrand - 1, { value: '', solved: false });
     if (urand < 0.25) setExplanationText('Assume 6.8 lbs/gal');
   };
 
@@ -326,7 +325,7 @@ function WhizWheel() {
     const units = ["ft", "inHg", "C", "ft", "kts", "kts"];
 
     let calt = rand < 0.5 ? randBetween(180, 999) * 10 : randBetween(20, 45) * 500;
-    let cas = rand > 0.15 ? randBetween(22, 70) * 5 : randBetween(80, 100) * 5;
+    let cas = randBetween(22, 70) * 5;
     let altim = Number((29.92 + randBetween(-23, 10) / 10).toFixed(2));
     let temp = randBetween(0, 9) * 5 - 25;
     let palt = Math.round((29.92 - altim) * 1000 + calt);
@@ -334,15 +333,13 @@ function WhizWheel() {
 
     const values = [calt, altim, temp, palt, cas, tas];
     const vrand = Math.random();
-    let hiddenIndex = vrand < 0.3 ? 4 : 5;
-    if (rand <= 0.15) hiddenIndex = 5;
+    const hiddenIndex = vrand < 0.3 ? 4 : 5;
     values.forEach((value, i) => {
-      if(i===3){value =''}
       updateRow(i, {
         variable: labels[i],
-        value: i === hiddenIndex ? '' : value,
+        value: i === hiddenIndex || i === 3 ? '' : value,
         unit: units[i],
-        solved: i !== hiddenIndex,
+        solved: i !== hiddenIndex && i !== 3,
         display: true
       });
     });
@@ -378,15 +375,15 @@ function WhizWheel() {
   const generateInflight = () => {
     const rand = Math.random();
     const labels = ["TH", "TAS", "TRK", "GS", "DA", "XW", "HW/TW", "DIR", "VEL"];
-    const units = ["° T", "kts", "° T", "kts", "ft", "kts", "kts", "° T", "kts"];
+    const units = ["° T", "kts", "° T", "kts", "°", "kts", "kts", "° T", "kts"];
 
-    const th = randBetween(0, 359);
-    let tas = rand < 0.75 ? randBetween(100, 400) : randBetween(400, 950);
-    let trk = rand < 0.5 ? th + randBetween(7, 9) * Math.sign(rand - 0.5) : th + randBetween(2, 6) * Math.sign(rand - 0.5);
-    if (trk < 0 || trk > 360) trk = trk - Math.sign(trk) * 360;
-    let gs = (rand < 0.125 || rand > 0.875) ? 
-      tas + Math.round(randBetween(12, 30) * 2.5) * Math.sign(rand - 0.5) :
-      tas + Math.round(randBetween(10, 50) * 0.5) * Math.sign(rand - 0.5);
+    const th = randBetween(1, 360);
+    const tas = rand < 0.75 ? randBetween(100, 400) : randBetween(400, 950);
+    const drift = Math.random() < 0.5 ? randBetween(7, 9) : randBetween(2, 6);
+    const driftSign = Math.random() < 0.5 ? -1 : 1;
+    const trk = ((th + drift * driftSign) % 360 + 360) % 360 || 360;
+    const wind = Math.random() < 0.25 ? Math.round(randBetween(12, 30) * 2.5) : Math.round(randBetween(10, 50) * 0.5);
+    const gs = tas + wind * (Math.random() < 0.5 ? -1 : 1);
 
     [th, tas, trk, gs].forEach((value, i) => {
       updateRow(i, {
@@ -445,7 +442,7 @@ function WhizWheel() {
     let time1 = randBetween(0, 23) * 100 + randBetween(0, 59);
     let duration = randBetween(2, 17) * 100 + randBetween(0, 59);
     let zd = randBetween(-12, 12);
-    let zd2 = (zd + Math.floor(duration / 100) + randBetween(-3, 3) + 12) % 25 - 12;
+    let zd2 = ((zd + Math.floor(duration / 100) + randBetween(-3, 3) + 12) % 25 + 25) % 25 - 12;
     let zulutime = (time1 - zd * 100) % 2400;
     if (zulutime < 0) zulutime += 2400;
     let mins2 = zulutime % 100 + duration % 100;
@@ -454,7 +451,7 @@ function WhizWheel() {
     let time2 = (zulutime2 + zd2 * 100) % 2400;
     if (time2 < 0) time2 += 2400;
 
-    let durationText = Math.floor(duration / 100) + "+" + duration % 100;
+    let durationText = Math.floor(duration / 100) + "+" + String(duration % 100).padStart(2, "0");
 
     updateRow(0, { variable: 'Duration', value: durationText, solved: true });
     updateRow(1, { variable: 'ZD Departure', value: zd, solved: true });
@@ -501,7 +498,6 @@ function WhizWheel() {
         solutions = solveTime(visualize);
         break;
       default:
-        alert("Solve not implemented for this type");
     }
     return solutions;
   };
@@ -616,8 +612,13 @@ function WhizWheel() {
       units = "secs";
       explainTxt = "Distance is much smaller than speed, so use the 36 under speed and secs";
     }
-    if(!visualize){return [[time, 2, time]]}
-    
+    if(!visualize){
+      // Grade in whatever unit the student picked for the answer.
+      const perHour = { hrs: 1, mins: 60, secs: 3600 };
+      const answer = dist / speed * (perHour[tableData[2].unit] || perHour[units]);
+      return [[answer, 2, answer]];
+    }
+
     setExplanationText(explainTxt);
     updateRow(2, { value: time, unit: units, solved: true });
     
@@ -725,11 +726,13 @@ function WhizWheel() {
         explainTxt = "Hrs so use the 10 under flow rate";
       }
       
-      const fquan = Number((fflow * time).toFixed(1));
+      const quanUnit = tableData[2].unit || "lbs";
+      const fquanLbs = fflow * time;
+      const fquan = Number((quanUnit === "gal" ? fquanLbs / 6.8 : fquanLbs).toFixed(1));
       if(!visualize){return [[fquan, 2, fquan]]}
-      updateRow(2, { value: fquan, unit: "lbs", solved: true });
+      updateRow(2, { value: fquan, unit: quanUnit, solved: true });
       
-      outerDeg = turnToDegrees(fquan);
+      outerDeg = turnToDegrees(fquanLbs);
       innerDeg = turnToDegrees(time1);
     }else {
         outerDeg = 0;
@@ -863,7 +866,7 @@ function WhizWheel() {
     const xw = kts * Math.sin((dir - tc) * Math.PI / 180);
     const rawCaDeg = 180 / Math.PI * Math.asin(xw / tas);
     const ca = Math.round(rawCaDeg * Math.sign(rawCaDeg) * Math.sign(xw));
-    const th = (tc + ca) % 360;
+    const th = ((tc + ca) % 360 + 360) % 360 || 360;
     const hwtw = Math.round(-kts * Math.cos((dir - tc) * Math.PI / 180));
     const gs = tas + hwtw;
     
@@ -871,7 +874,7 @@ function WhizWheel() {
                  Math.round(xw) > 0 ? Math.round(xw) + " R" : "0";
     let caText = ca < 0 ? -ca + " L" : ca > 0 ? ca + " R" : "0";
     let hwtwText = hwtw < 0 ? -hwtw + " H" : hwtw > 0 ? hwtw + " T" : "0";
-    if(!visualize){return [[xw, 4, 100], [ca, 5, 100], [th, 6, 100], [hwtw, 7, 150], [gs, 8, 200]]}
+    if(!visualize){return [[xw, 4, 100], [ca, 5, 100], [th, 6, 100, 'deg'], [hwtw, 7, 150], [gs, 8, 200]]}
     
     updateRow(4, { value: xwText, solved: true });
     updateRow(5, { value: caText, solved: true });
@@ -929,6 +932,7 @@ function WhizWheel() {
       dir = Math.round(trk + Math.sign(xw) * (180 / Math.PI * Math.atan(Math.abs(xw / hwtw)))) % 360;
     }
     if (dir < 0) dir += 360;
+    if (dir === 0) dir = 360;
     
     let vel = Math.round(Math.sqrt(xw * xw + hwtw * hwtw));
     
@@ -938,7 +942,7 @@ function WhizWheel() {
                  Math.round(da) > 0 ? `${Math.round(da)} R` : "0";
     let hwtwText = Math.round(hwtw) < 0 ? `${-Math.round(hwtw)} H` : 
                    Math.round(hwtw) > 0 ? `${Math.round(hwtw)} T` : "0";
-    if(!visualize){return [[da, 4, 100], [xw, 5, 100], [hwtw, 6, 150], [dir, 7, 100], [vel, 8, 200]]}
+    if(!visualize){return [[da, 4, 100], [xw, 5, 100], [hwtw, 6, 150], [dir, 7, 100, 'deg'], [vel, 8, 200]]}
     
     updateRow(4, { value: daText, solved: true });
     updateRow(5, { value: xwText, solved: true });
@@ -1010,7 +1014,7 @@ function WhizWheel() {
     if ((x2 - x1) < 0) t3 -= 180;
     if (t3 < 0) t3 += 360;
     t3 = 360 - t3;
-    if(!visualize){return [[t3, 4, 100], [r3, 5, 100]]}
+    if(!visualize){return [[t3, 4, 100, 'deg'], [r3, 5, 100]]}
     
     updateRow(4, { value: t3, solved: true });
     updateRow(5, { value: r3, solved: true });
@@ -1033,6 +1037,7 @@ function WhizWheel() {
   };
 
   const solveTime = (visualize = true) => {
+    const isGiven = (i) => tableData[i].solved && tableData[i].value !== '';
     let duration = tableData[0].value;
     const [hours, minutes] = duration.split("+").map(Number);
     let zd = parseFloat(tableData[1].value);
@@ -1042,21 +1047,21 @@ function WhizWheel() {
     let time2 = 0;
     let zulutime2 = 0;
     
-    if (tableData[3].value !== '') {
+    if (isGiven(3)) {
       time1 = parseFloat(tableData[3].value);
       zulutime = zuluLocal(time1, zd);
       let mins2 = zulutime % 100 + minutes;
       let hrs2 = Math.floor(zulutime / 100) + hours + Math.floor(mins2 / 60);
       zulutime2 = (hrs2 * 100 + mins2 % 60) % 2400;
       time2 = zuluLocal(zulutime2, -zd2);
-    } else if (tableData[4].value !== '') {
+    } else if (isGiven(4)) {
       zulutime = parseFloat(tableData[4].value);
       time1 = zuluLocal(zulutime, -zd);
       let mins2 = zulutime % 100 + minutes;
       let hrs2 = Math.floor(zulutime / 100) + hours + Math.floor(mins2 / 60);
       zulutime2 = (hrs2 * 100 + mins2 % 60) % 2400;
       time2 = zuluLocal(zulutime2, -zd2);
-    } else if (tableData[5].value !== '') {
+    } else if (isGiven(5)) {
       zulutime2 = parseFloat(tableData[5].value);
       time2 = zuluLocal(zulutime2, -zd2);
       let mins2 = zulutime2 % 100 - minutes;
@@ -1069,7 +1074,7 @@ function WhizWheel() {
       if (hrs2 < 0) hrs2 += 24;
       zulutime = (hrs2 * 100 + mins2 % 60) % 2400;
       time1 = zuluLocal(zulutime, -zd);
-    } else if (tableData[6].value !== '') {
+    } else if (isGiven(6)) {
       time2 = parseFloat(tableData[6].value);
       zulutime2 = zuluLocal(time2, zd2);
       let mins2 = zulutime2 % 100 - minutes;
@@ -1083,7 +1088,7 @@ function WhizWheel() {
       zulutime = (hrs2 * 100 + mins2 % 60) % 2400;
       time1 = zuluLocal(zulutime, -zd);
     }
-  if(!visualize){return [[time1, 3, 50], [zulutime, 4, 50], [zulutime2, 5, 50], [time2, 6, 50]]}
+    if(!visualize){return [[time1, 3, 50, 'time'], [zulutime, 4, 50, 'time'], [zulutime2, 5, 50, 'time'], [time2, 6, 50, 'time']]}
     
     updateRow(3, { value: time1.toString().padStart(4, "0"), solved: true });
     updateRow(4, { value: zulutime.toString().padStart(4, "0"), solved: true });
@@ -1111,42 +1116,50 @@ function WhizWheel() {
     }
   };
 
+  // How far an answer is from the solution: headings wrap at 360, clock times at midnight.
+  const answerDiff = (userInput, solution, kind) => {
+    if (kind === 'time') {
+      const digits = userInput.replace(/\D/g, '');
+      if (!digits) return NaN;
+      const toMins = (hhmm) => Math.floor(hhmm / 100) * 60 + (hhmm % 100);
+      const diff = Math.abs(toMins(Number(digits)) - toMins(solution)) % 1440;
+      return Math.min(diff, 1440 - diff);
+    }
+    let userValue = parseFloat(userInput);
+    // "5 L" and "20 H" are negative; a unit such as "hrs" is not a direction.
+    if (/\d\s*[LH]\s*$/i.test(userInput)) userValue *= -1;
+    if (kind === 'deg') return Math.abs(((userValue - solution) % 360 + 540) % 360 - 180);
+    return Math.abs(userValue - solution);
+  };
+
   const checkWork = () => {
     const solutions = solve(false);
     if (!solutions || solutions.length === 0) return;
     setTableData(prev => {
-        const newData = [...prev];
+      const newData = [...prev];
 
-        solutions.forEach(([solution, rowIndex, denominator]) => {
-        if (newData[rowIndex].solved) return;
+      solutions.forEach(([solution, rowIndex, denominator, kind]) => {
+        const row = newData[rowIndex];
+        if (row.solved) return;
 
-        const userInput = newData[rowIndex].value;
+        const userInput = String(row.value ?? '').trim();
         if (!userInput) return;
 
-        let userValue = parseFloat(userInput);
-        if (/[lLhH]/.test(userInput)) {
-            userValue *= -1;
-        }
-
-        if (isNaN(userValue)) return;
+        const diff = answerDiff(userInput, solution, kind);
+        if (isNaN(diff)) return;
 
         let percentError;
-        if (solution === 0) {
-            percentError = Math.abs(userValue) < 0.01 ? 0 : 100;
+        if (solution === 0 && !kind) {
+          percentError = diff < 0.01 ? 0 : 100;
         } else {
-            percentError = Math.abs(100 * (userValue - solution) / denominator);
+          percentError = Math.abs(100 * diff / denominator);
         }
 
-        if (percentError <= 2) {
-            newData[rowIndex].bgColor = 'bg-green';
-        } else if (percentError <= 5) {
-            newData[rowIndex].bgColor = 'bg-yellow';
-        } else {
-            newData[rowIndex].bgColor = 'bg-red';
-        }
-        });
-        
-        return newData;
+        const bgColor = percentError <= 2 ? 'bg-green' : percentError <= 5 ? 'bg-yellow' : 'bg-red';
+        newData[rowIndex] = { ...row, bgColor };
+      });
+
+      return newData;
     });
   };
 
@@ -1173,7 +1186,7 @@ function WhizWheel() {
         </select>
         <button className="button" onClick={generate}>Generate</button>
         <button className="button" onClick={checkWork}>Check</button>
-        <button className="button" onClick={solve}>Solve</button>
+        <button className="button" onClick={() => solve()}>Solve</button>
       </div>
 
       {(() => {
@@ -1191,7 +1204,7 @@ function WhizWheel() {
             <input
               type="text"
               value={row.value ?? ''}
-              onChange={(e) => updateRow(row.index, { value: e.target.value, solved: e.target.value !== '' })}
+              onChange={(e) => updateRow(row.index, { value: e.target.value, solved: row.solved && e.target.value !== '', bgColor: undefined })}
               className={row.bgColor ?? ''}
             />
             <span className="var-unit">

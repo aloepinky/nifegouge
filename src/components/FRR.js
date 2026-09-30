@@ -98,8 +98,8 @@ function FRR() {
       headingVal = randBetween(0, 360);
       courseVal = headingVal + randBetween(-6, 6);
     }
-    headingVal = headingVal % 360;
-    courseVal = ((courseVal % 360) + 360) % 360;
+    headingVal = headingVal % 360 || 360;
+    courseVal = ((courseVal % 360) + 360) % 360 || 360;
 
     let ceilingAltitude = 1000000;
     for (const layer of newCloudLayers) {
@@ -198,7 +198,8 @@ function FRR() {
     const newLines = [];
     newLines.push({ lineAlt: ceilingAltitude, text: "", textAlt: ceilingAltitude, ceiling: ceilingAltitude });
 
-    const clearance = ceilingAltitude < 10000 ? 500 : 1000;
+    // 500 ft below clouds under 10,000 ft MSL, 1,000 ft at or above it.
+    const clearance = ceilingAltitude - 500 < 10000 ? 500 : 1000;
     let firstAlt = ceilingAltitude - clearance;
     newLines.push({ lineAlt: firstAlt, text: `-${clearance}`, textAlt: firstAlt + clearance / 2, ceiling: ceilingAltitude });
 
@@ -319,33 +320,33 @@ function FRR() {
         <div ref={varRowsWrapperRef} className="var-rows-wrapper">
           <div ref={varRowsInnerRef} className="var-rows var-rows-two-col">
             <div className="var-col">
-              <div className="var-row" style={{ gap: '6px' }}>
-                <span className="var-label" style={{ minWidth: '110px' }}>Airspace</span>
-                <span style={{ minWidth: '60px' }}>Class {airClass}</span>
-                <span style={{ minWidth: '24px', color: '#aaa' }}></span>
+              <div className="var-row frr-row">
+                <span className="var-label frr-label">Airspace</span>
+                <span className="frr-value">Class {airClass}</span>
+                <span className="frr-unit"></span>
               </div>
-              <div className="var-row" style={{ gap: '6px' }}>
-                <span className="var-label" style={{ minWidth: '110px' }}>Visibility</span>
-                <span style={{ minWidth: '60px' }}>{visibility}</span>
-                <span style={{ minWidth: '24px', color: '#aaa' }}>SM</span>
+              <div className="var-row frr-row">
+                <span className="var-label frr-label">Visibility</span>
+                <span className="frr-value">{visibility}</span>
+                <span className="frr-unit">SM</span>
               </div>
-              <div className="var-row" style={{ gap: '6px' }}>
-                <span className="var-label" style={{ minWidth: '110px' }}>Mag Heading</span>
-                <span style={{ minWidth: '60px' }}>{heading}</span>
-                <span style={{ minWidth: '24px', color: '#aaa' }}>°</span>
+              <div className="var-row frr-row">
+                <span className="var-label frr-label">Mag Heading</span>
+                <span className="frr-value">{heading}</span>
+                <span className="frr-unit">°</span>
               </div>
-              <div className="var-row" style={{ gap: '6px' }}>
-                <span className="var-label" style={{ minWidth: '110px' }}>Mag Course</span>
-                <span style={{ minWidth: '60px' }}>{course}</span>
-                <span style={{ minWidth: '24px', color: '#aaa' }}>°</span>
+              <div className="var-row frr-row">
+                <span className="var-label frr-label">Mag Course</span>
+                <span className="frr-value">{course}</span>
+                <span className="frr-unit">°</span>
               </div>
             </div>
             <div className="var-col">
               {cloudLayers.map((layer, i) => (
-                <div key={i} className="var-row" style={{ gap: '6px' }}>
-                  <span className="var-label" style={{ minWidth: '50px' }}>{layer.type}</span>
-                  <span style={{ minWidth: '60px' }}>{layer.altitude.toLocaleString()}</span>
-                  <span style={{ minWidth: '24px', color: '#aaa' }}>ft</span>
+                <div key={i} className="var-row frr-row">
+                  <span className="var-label frr-cloud-label">{layer.type}</span>
+                  <span className="frr-value">{layer.altitude.toLocaleString()}</span>
+                  <span className="frr-unit">ft</span>
                 </div>
               ))}
             </div>
@@ -354,23 +355,16 @@ function FRR() {
       )}
 
       {questionType === 'vfr' && answerAlt && (
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <span style={{
-            display: 'inline-block',
-            padding: '10px 28px',
-            border: '2px solid #4caf50',
-            borderRadius: '8px',
-            fontSize: '1.05em',
-            fontWeight: 'bold',
-          }}>
+        <div className="frr-answer">
+          <span>
             Max VFR Cruising Altitude: {answerAlt}
           </span>
         </div>
       )}
 
       {questionType === 'runway' && (
-        <div style={{ width: '100%', maxWidth: '600px' }}>
-          <div className="qa-box question-area" style={{ marginBottom: '12px' }}>
+        <div className="frr-runway">
+          <div className="qa-box question-area">
             {questionText}
           </div>
           {answerChoices.length > 0 && (
@@ -401,7 +395,6 @@ function FRR() {
                   type="button"
                   className="submitBtn"
                   onClick={handleSubmitClick}
-                  style={{ marginTop: '10px' }}
                 >
                   {submitButtonText}
                 </button>
@@ -411,27 +404,21 @@ function FRR() {
         </div>
       )}
 
-      <div ref={wheelWrapperRef} style={{ width: '100%', maxWidth: '500px', overflow: 'hidden', marginTop: '24px' }}>
-      <div ref={wheelContainerRef} className="Wheel-Container" id="wheel-container" style={{ position: 'relative', width: '500px', height: '500px' }}>
+      <div ref={wheelWrapperRef} className="frr-scale-wrapper">
+      <div ref={wheelContainerRef} className="Wheel-Container frr-board" id="wheel-container">
         {questionType === 'vfr' && altitudeLines.length > 0 && altitudeLines.map((line, index) => (
           <React.Fragment key={index}>
-            <div style={{
-              position: 'absolute', left: '40px', right: '40px',
-              top: `${15 + ((line.ceiling || 10000) - line.lineAlt) / 3500 * 500}px`,
-              height: '2px', backgroundColor: '#000', zIndex: 3
+            <div className="frr-alt-line" style={{
+              top: `${15 + ((line.ceiling || 10000) - line.lineAlt) / 3500 * 500}px`
             }} />
-            <div style={{
-              position: 'absolute', left: '2px',
-              top: `${9 + ((line.ceiling || 10000) - line.lineAlt) / 3500 * 500}px`,
-              fontSize: '12px', color: '#000', zIndex: 4
+            <div className="frr-alt-label" style={{
+              top: `${9 + ((line.ceiling || 10000) - line.lineAlt) / 3500 * 500}px`
             }}>
               {line.lineAlt.toLocaleString()}
             </div>
             {line.text && (
-              <div style={{
-                position: 'absolute', left: '50%',
-                top: `${10 + ((line.ceiling || 10000) - line.textAlt) / 3500 * 500}px`,
-                transform: 'translateX(-50%)', fontSize: '12px', color: '#000', zIndex: 4
+              <div className="frr-alt-step" style={{
+                top: `${10 + ((line.ceiling || 10000) - line.textAlt) / 3500 * 500}px`
               }}>
                 {line.text}
               </div>
@@ -442,26 +429,19 @@ function FRR() {
         {questionType === 'runway' && (
           <>
             {showCompassImg && (
-              <img src="/images/heading.webp" alt="Compass" style={{
-                position: 'absolute', top: '50%', left: '50%',
-                transform: `translate(-50%, -50%) rotate(${compassRotation}deg)`,
-                width: '250px', zIndex: 5
+              <img src="/images/heading.webp" alt="Compass" className="frr-compass" style={{
+                transform: `translate(-50%, -50%) rotate(${compassRotation}deg)`
               }} />
             )}
             {showArrow && (
-              <img src="/images/arrowfrr.png" alt="Aircraft Arrow" style={{
-                position: 'absolute', bottom: '100%', left: '50%',
-                transform: 'translate(-50%, 150%)', width: '60px', zIndex: 10
-              }} />
+              <img src="/images/arrowfrr.png" alt="Aircraft Arrow" className="frr-aircraft" />
             )}
             {showIndicator && (
               <img
                 src={indicatorG === 0 ? '/images/tetra.png' : '/images/sock.png'}
                 alt={indicatorG === 0 ? 'Tetrahedron' : 'Windsock'}
-                style={{
-                  position: 'absolute', top: '5%', left: '10%',
-                  transform: `rotate(${indicatorRotation}deg)`, width: '60px', zIndex: 11
-                }}
+                className="frr-indicator"
+                style={{ transform: `rotate(${indicatorRotation}deg)` }}
               />
             )}
           </>
