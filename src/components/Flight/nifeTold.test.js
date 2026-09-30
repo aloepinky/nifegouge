@@ -1,5 +1,5 @@
 import {
-  TAKEOFF, LANDING, checkCg, forwardLimit, windFactor, cellFor, takeoffTable,
+  TAKEOFF, LANDING, IFG_AIRPORTS, checkCg, forwardLimit, windFactor, cellFor, takeoffTable,
   takeoffDistances, landingDistances,
 } from './nifeTold';
 
@@ -81,4 +81,15 @@ test('takeoff reads the next weight up', () => {
 test('landing reads the 2550 table', () => {
   expect(landingDistances({ elevation: 97, temp: 15, headwind: -4 }))
     .toMatchObject({ alt: 1000, col: 20, ground: 726, total: 1662 });
+});
+
+test('IFG airports: unique ids, runway pairs reciprocal, sizes as length x width', () => {
+  const bad = [];
+  expect(new Set(IFG_AIRPORTS.map((a) => a.id)).size).toBe(IFG_AIRPORTS.length);
+  IFG_AIRPORTS.forEach((a) => a.runways.forEach(([rwy, size]) => {
+    const [x, y] = rwy.split('/').map(Number);
+    if (Math.abs(x - y) !== 18) bad.push(`${a.id} ${rwy}`);
+    if (!/^\d{4} x \d{2,3}$/.test(size)) bad.push(`${a.id} ${size}`);
+  }));
+  expect(bad).toEqual([]);
 });

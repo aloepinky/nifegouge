@@ -161,3 +161,21 @@ export function takeoffDistances(weight, cond) {
 export function landingDistances(cond) {
   return distances(LANDING[2550], 2550, cond);
 }
+
+// The airports the In-Flight Guide gives a page (pp. 7-19), with each runway's length and
+// width as its diagram prints them, for the card's airport rows. Silverhill (p. 11) is left
+// out: the guide marks it closed. Jeremiah Denton's page gives no field elevation.
+export const IFG_AIRPORTS = [
+  { id: 'KPNS', name: 'Pensacola Intl', elev: 121, runways: [['17/35', '7004 x 150'], ['08/26', '7000 x 150']] },
+  { id: 'KJKA', name: 'Jack Edwards', elev: 17, runways: [['09/27', '6962 x 100'], ['17/35', '3596 x 75']] },
+  { id: 'KBFM', name: 'Mobile Downtown', elev: 26, runways: [['14/32', '9618 x 150'], ['18/36', '7800 x 150']] },
+  { id: '5R4', name: 'Foley', elev: 74, runways: [['18/36', '3700 x 74']] },
+  { id: '2R4', name: 'Peter Prince', elev: 82, runways: [['18/36', '3701 x 75']] },
+  { id: 'KCQF', name: 'Fairhope / Sonny Callahan', elev: 91, runways: [['01/19', '6604 x 100']] },
+  { id: '2R5', name: 'St Elmo', elev: 132, runways: [['06/24', '3998 x 80']] },
+  { id: 'KPQL', name: 'Trent Lott Intl', elev: 17, runways: [['17/35', '6501 x 150']] },
+  { id: '1R8', name: 'Bay Minette', elev: 248, runways: [['08/26', '5500 x 79']] },
+  { id: '0R1', name: 'Atmore', elev: 286, runways: [['18/36', '5001 x 80']] },
+  { id: 'KCEW', name: 'Crestview', elev: 214, runways: [['17/35', '8006 x 150']] },
+  { id: '4R9', name: 'Jeremiah Denton', elev: null, runways: [['12/30', '3000 x 80']] },
+];

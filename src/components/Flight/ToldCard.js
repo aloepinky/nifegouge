@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ARMS, LBS_PER_GAL, STUDENT_FUEL_GAL, BAGGAGE_LBS, TAXI_FUEL_LBS, FUEL_BURN_LBS,
-  MAX_WEIGHT, AFT_LIMIT, ENVELOPE, MAX_TAILWIND, checkCg, takeoffDistances, landingDistances,
+  MAX_WEIGHT, AFT_LIMIT, ENVELOPE, MAX_TAILWIND, IFG_AIRPORTS, checkCg, takeoffDistances, landingDistances,
 } from './nifeTold';
 
 // The NIFE TOLD card, as the In-Flight Guide prints it (NASCINST 3710.3E, p. 24): weight and
@@ -222,9 +222,22 @@ function wording(result) {
   return `${result.weight} lbs table, ${alt}, ${result.col}°C${wind}`;
 }
 
+// The IFG's airports, one entry per runway, as the airport box's dropdown lists them.
+const RUNWAY_CHOICES = IFG_AIRPORTS.flatMap((a) => a.runways.map(([runway, size]) => ({
+  key: `${a.id} ${runway}`, airport: a.id, name: a.name, elev: a.elev, runway, size,
+})));
+
 function ToldCard() {
   const [card, setCard] = useState(load);
   useEffect(() => save(card), [card]);
+  // Which airport row's dropdown is open; a click anywhere else closes it.
+  const [openApt, setOpenApt] = useState(null);
+  useEffect(() => {
+    if (openApt === null) return undefined;
+    const close = () => setOpenApt(null);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [openApt]);
   const w = useWeights(card);
 
   const set = (line, field) => (value) => setCard((c) => ({ ...c, [line]: { ...c[line], [field]: value } }));
@@ -234,6 +247,13 @@ function ToldCard() {
   const setAirport = (i, field) => (e) => setCard((c) => ({
     ...c, airports: c.airports.map((a, j) => (j === i ? { ...a, [field]: e.target.value } : a)),
   }));
+  const pickRunway = (i, r) => {
+    setCard((c) => ({
+      ...c,
+      airports: c.airports.map((a, j) => (j === i ? { airport: r.airport, runway: r.runway, size: r.size } : a)),
+    }));
+    setOpenApt(null);
+  };
 
   // A landing wind left blank is the takeoff's, direction included; picking a direction for
   // it takes the takeoff's figure along, so the box never shows one thing and sums another.
@@ -384,7 +404,32 @@ function ToldCard() {
           {card.airports.map((a, i) => (
             // eslint-disable-next-line react/no-array-index-key
             <tr key={i}>
-              <td><input type="text" value={a.airport} onChange={setAirport(i, 'airport')} aria-label={`Airport ${i + 1}`} /></td>
+              <td className="told-apt">
+                <div className="told-apt-box">
+                  <input type="text" value={a.airport} onChange={setAirport(i, 'airport')} aria-label={`Airport ${i + 1}`} />
+                  <button
+                    type="button"
+                    className="told-apt-toggle"
+                    aria-label={`Choose airport ${i + 1} from the In-Flight Guide`}
+                    aria-expanded={openApt === i}
+                    onClick={(e) => { e.stopPropagation(); setOpenApt(openApt === i ? null : i); }}
+                  >
+                    ▾
+                  </button>
+                </div>
+                {openApt === i && (
+                  <ul className="told-apt-list">
+                    {RUNWAY_CHOICES.map((r) => (
+                      <li key={r.key}>
+                        <button type="button" onClick={() => pickRunway(i, r)}>
+                          <span className="told-apt-id">{r.airport} {r.runway}</span>
+                          <span className="told-apt-name">{r.name}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </td>
               <td><input type="text" value={a.runway} onChange={setAirport(i, 'runway')} aria-label={`Runway ${i + 1}`} /></td>
               <td><input type="text" value={a.size} onChange={setAirport(i, 'size')} aria-label={`Length and width ${i + 1}`} /></td>
             </tr>
