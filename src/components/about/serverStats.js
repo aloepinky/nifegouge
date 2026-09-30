@@ -89,12 +89,12 @@ export const SERVER_STATS = {
       {
         "id": "t44c-e2d",
         "name": "T-44C E-2D Intermediate",
-        "discussItems": 495
+        "discussItems": 481
       },
       {
         "id": "t44c-p8",
         "name": "T-44C P-8 Advanced",
-        "discussItems": 628
+        "discussItems": 621
       }
     ],
     "briefs": [
