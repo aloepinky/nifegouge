@@ -32,6 +32,41 @@ async function scanAll(params) {
     return items;
 }
 
+// A school's rows. Rows from before the program attribute existed are NIFE's.
+function programScan(TableName, program) {
+    return program === 'nife'
+        ? {
+            TableName,
+            FilterExpression: 'program = :prog OR attribute_not_exists(program)',
+            ExpressionAttributeValues: { ':prog': 'nife' }
+        }
+        : { TableName, FilterExpression: 'program = :prog', ExpressionAttributeValues: { ':prog': program } };
+}
+
+// Two links are the same when they differ only in the parts a share button adds: the fragment,
+// share and tracking parameters (Quizlet's ?i=&x=, Google's ?usp= and ?tab=), a leading www.,
+// a trailing slash, or Google's /edit or /view. src/components/docs/linkKey.js is the same
+// function; change both together.
+const SHARE_PARAMS = /^(i|x|usp|tab|funnelUUID|fbclid|gclid|utm_\w+)$/i;
+
+function linkKey(href) {
+    let url;
+    try {
+        url = new URL(href);
+    } catch {
+        return String(href).trim().toLowerCase();
+    }
+    const host = url.hostname.toLowerCase().replace(/^www\./, '');
+    let path = url.pathname.replace(/\/+$/, '');
+    if (/(^|\.)google\.com$/.test(host)) path = path.replace(/\/(edit|view|preview)$/, '');
+    const params = [...url.searchParams]
+        .filter(([name]) => !SHARE_PARAMS.test(name))
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([name, value]) => `${name}=${value}`)
+        .join('&');
+    return `${host}${path}${params ? `?${params}` : ''}`;
+}
+
 export const handler = async (event) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
@@ -248,17 +283,7 @@ async function handleGetDocuments(event, headers) {
     try {
         const program = event.queryStringParameters?.program || 'nife';
 
-        const scanParams = { TableName: 'NIFEDocuments' };
-        if (program === 'nife') {
-            // Backward compat: items without a program attribute are NIFE
-            scanParams.FilterExpression = 'program = :prog OR attribute_not_exists(program)';
-            scanParams.ExpressionAttributeValues = { ':prog': 'nife' };
-        } else {
-            scanParams.FilterExpression = 'program = :prog';
-            scanParams.ExpressionAttributeValues = { ':prog': program };
-        }
-
-        const documents = (await scanAll(scanParams)).filter(item => !isRemoved(item));
+        const documents = (await scanAll(programScan('NIFEDocuments', program))).filter(item => !isRemoved(item));
 
         // Sort by upload date (newest first)
         documents.sort((a, b) => 
@@ -386,17 +411,43 @@ async function handleLinkSubmission(event, headers) {
                 headers,
                 body: JSON.stringify({ 
                     success: false,
-                    error: 'Missing required fields' 
+                    error: 'Missing required fields'
                 })
             };
         }
-        
+
+        const refuse = (statusCode, error, extra = {}) => ({
+            statusCode,
+            headers,
+            body: JSON.stringify({ success: false, error, ...extra })
+        });
+
+        let url;
+        try {
+            url = new URL(body.url);
+        } catch {
+            return refuse(400, 'That is not a valid link');
+        }
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return refuse(400, 'Links must start with http:// or https://');
+        }
+
+        // One entry per link on a school's page. A link the page no longer lists (voted
+        // obsolete) may come back.
+        const program = body.program || 'nife';
+        const key = linkKey(body.url);
+        const existing = (await scanAll(programScan('NIFELinks', program)))
+            .find(item => !isRemoved(item) && linkKey(item.url) === key);
+        if (existing) {
+            return refuse(409, `Already listed as "${existing.title}"`, { duplicateOf: existing.linkId });
+        }
+
         const linkItem = {
             linkId: `link_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             url: body.url,
             title: body.title.slice(0, 200),
             topic: body.topic,
-            program: body.program || 'nife',
+            program,
             submittedAt: new Date().toISOString(),
             submittedBy: body.submittedBy || 'anonymous',
             upvotes: 0,
@@ -439,16 +490,7 @@ async function handleGetLinks(event, headers) {
     try {
         const program = event.queryStringParameters?.program || 'nife';
 
-        const scanParams = { TableName: 'NIFELinks' };
-        if (program === 'nife') {
-            scanParams.FilterExpression = 'program = :prog OR attribute_not_exists(program)';
-            scanParams.ExpressionAttributeValues = { ':prog': 'nife' };
-        } else {
-            scanParams.FilterExpression = 'program = :prog';
-            scanParams.ExpressionAttributeValues = { ':prog': program };
-        }
-
-        const links = (await scanAll(scanParams)).filter(item => !isRemoved(item));
+        const links = (await scanAll(programScan('NIFELinks', program))).filter(item => !isRemoved(item));
         const sortedLinks = links.sort((a, b) =>
             new Date(b.submittedAt) - new Date(a.submittedAt)
         );
