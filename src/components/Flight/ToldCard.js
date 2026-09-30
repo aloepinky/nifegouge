@@ -173,8 +173,9 @@ function Verdict({ name, point }) {
   );
 }
 
+// A blank wind is calm; elevation and temperature have no such default.
 function condOf(c) {
-  const wind = num(c.wind);
+  const wind = String(c.wind).trim() === '' ? 0 : num(c.wind);
   return { elevation: num(c.elevation), temp: num(c.temp), headwind: c.windDir === 'tail' ? -wind : wind };
 }
 
@@ -190,8 +191,19 @@ function landingCond(takeoff, landing) {
   };
 }
 
-function DistanceRow({ name, result }) {
-  if (!result) return <tr><td>{name}</td><td className="told-calc" /><td className="told-calc" /></tr>;
+// What a row still needs before it can be read, in the order the card is filled in.
+function missing(cond, weight) {
+  if (weight !== undefined && !(weight > 0)) return 'enter line 1';
+  const need = [];
+  if (!Number.isFinite(cond.elevation)) need.push('field elevation');
+  if (!Number.isFinite(cond.temp)) need.push('temperature');
+  return need.length ? `enter ${need.join(' and ')}` : null;
+}
+
+function DistanceRow({ name, result, need }) {
+  if (!result) {
+    return <tr><td>{name}</td><td colSpan="2" className="told-calc told-off">{need && need[0].toUpperCase() + need.slice(1)}</td></tr>;
+  }
   if (result.error) return <tr><td>{name}</td><td colSpan="2" className="told-calc told-off">Off the chart: {result.error}</td></tr>;
   return (
     <tr>
@@ -337,7 +349,7 @@ function ToldCard() {
                     type="number"
                     inputMode="decimal"
                     value={card[k].wind}
-                    placeholder={k === 'landing' ? card.takeoff.wind : undefined}
+                    placeholder={(k === 'landing' && card.takeoff.wind) || '0'}
                     onChange={(e) => typeWind(k, e.target.value.replace('-', ''))}
                     aria-label={`${k} wind component`}
                   />
@@ -353,8 +365,8 @@ function ToldCard() {
           <tr><th>Distances</th><th>Ground Roll</th><th>50ft Obstacle</th></tr>
         </thead>
         <tbody>
-          <DistanceRow name="Takeoff" result={toDist} />
-          <DistanceRow name="Landing" result={ldgDist} />
+          <DistanceRow name="Takeoff" result={toDist} need={missing(condOf(toCond), w.takeoff.weight)} />
+          <DistanceRow name="Landing" result={ldgDist} need={missing(condOf(ldgCond))} />
         </tbody>
       </table>
       {(wording(toDist) || wording(ldgDist)) && (
