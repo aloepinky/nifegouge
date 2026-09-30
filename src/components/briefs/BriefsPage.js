@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useMemo, useState } from 'react';
-import { Link, Route, Routes, useParams } from 'react-router-dom';
+import { Link, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import TW4Told from '../TW4Told';
 import { isSchool } from '../programs';
 import { useBriefIndex, useBrief } from './briefApi';
@@ -33,6 +33,22 @@ function readFlag(key) {
     return localStorage.getItem(key) === '1';
   } catch {
     return false;
+  }
+}
+
+function readText(key) {
+  try {
+    return localStorage.getItem(key) || '';
+  } catch {
+    return '';
+  }
+}
+
+function writeText(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Private mode: the choice still holds for this visit.
   }
 }
 
@@ -73,12 +89,41 @@ function QuickLinks() {
   );
 }
 
+// Where two wings fly one syllabus (TW-4 and TW-5 both teach Primary), each briefs from its
+// own guide, so the buttons are one wing's at a time. The choice is remembered in this browser
+// and is where the page opens next time. A brief opened by its address shows its own wing.
+function UnitPicker({ index, active }) {
+  const base = useBriefsBase();
+  const navigate = useNavigate();
+  if (index.units.length < 2) return null;
+  const choose = (unit) => {
+    index.setUnit(unit);
+    // On a brief, go to the other wing's first brief; the TOLD card is both wings'.
+    if (active !== 'told') {
+      const first = index.briefs.find((b) => b.unit === unit || !b.unit);
+      if (first) navigate(`${base}/${first.id}`);
+    }
+  };
+  return (
+    <select
+      className="brief-unit"
+      value={index.unit}
+      onChange={(e) => choose(e.target.value)}
+      aria-label="Whose briefs"
+      title="Whose briefing guide"
+    >
+      {index.units.map((u) => <option key={u} value={u}>{u}</option>)}
+    </select>
+  );
+}
+
 // The big buttons: one per brief, then TOLD where the school has a card.
-function Chooser({ briefs, active, told }) {
+function Chooser({ index, active, told }) {
   const base = useBriefsBase();
   return (
     <nav className="brief-chooser" aria-label="Briefs">
-      {briefs.map((b) => (
+      <UnitPicker index={index} active={active} />
+      {index.shown.map((b) => (
         <Link
           key={b.id}
           to={`${base}/${b.id}`}
@@ -106,7 +151,7 @@ function Frame({ index, active, title, children }) {
   return (
     <div className="page-container brief-page">
       <h1 className="brief-title">{title}</h1>
-      <Chooser briefs={index.briefs} active={active} told={index.hasTold} />
+      <Chooser index={index} active={active} told={index.hasTold} />
       {index.status === 'error' && index.briefs.length === 0 && (
         <p className="discuss-editor-warn">The briefs could not be loaded. {index.error && index.error.message}</p>
       )}
@@ -260,7 +305,8 @@ function DefaultRoute({ index, ...rest }) {
       </Frame>
     );
   }
-  return <BriefScreen key={index.briefs[0].id} id={index.briefs[0].id} index={index} {...rest} />;
+  const first = index.shown[0] || index.briefs[0];
+  return <BriefScreen key={first.id} id={first.id} index={index} {...rest} />;
 }
 
 // `base`, `school` and `told` are how another school mounts this page: NIFE's briefs are at
@@ -274,10 +320,27 @@ function BriefsPage({
   base = BRIEFS_BASE, school = 'Primary', told = <TW4Told />, toldTitle = TOLD_TITLE,
 }) {
   const all = useBriefIndex();
-  const index = useMemo(
-    () => ({ ...all, briefs: all.briefs.filter((b) => isSchool(b, school)), hasTold: !!told }),
-    [all, school, told],
-  );
+  const unitKey = `briefUnit-${school}`;
+  const [chosenUnit, setChosenUnit] = useState(() => readText(unitKey));
+  // Mounted at `/tw4/briefs/*`: the brief on screen is the first part of the rest.
+  const activeId = (useParams()['*'] || '').split('/')[0];
+  const index = useMemo(() => {
+    const briefs = all.briefs.filter((b) => isSchool(b, school));
+    const units = [...new Set(briefs.map((b) => b.unit).filter(Boolean))].sort();
+    // A brief opened by its address is on screen whatever wing was chosen, so its wing is the
+    // one shown; otherwise the remembered one, else the first.
+    const active = briefs.find((b) => b.id === activeId);
+    const unit = (active && active.unit) || (units.includes(chosenUnit) ? chosenUnit : units[0] || '');
+    // A brief that names no wing is every wing's.
+    const shown = units.length < 2 ? briefs : briefs.filter((b) => !b.unit || b.unit === unit);
+    const setUnit = (u) => {
+      setChosenUnit(u);
+      writeText(unitKey, u);
+    };
+    return {
+      ...all, briefs, shown, units, unit, setUnit, hasTold: !!told,
+    };
+  }, [all, school, told, chosenUnit, activeId, unitKey]);
   const [firstLetter, setFirstLetterState] = useState(() => readFlag(FIRST_LETTER_KEY));
   const setFirstLetter = (on) => {
     setFirstLetterState(on);

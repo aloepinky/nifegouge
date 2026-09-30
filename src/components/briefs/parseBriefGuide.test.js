@@ -366,3 +366,98 @@ maybeT44c('the T-44C Blue Card Script', () => {
     expect(out.briefs[0].sections.find((s) => s.title === 'Observer Duties').fixed).toBe(true);
   });
 });
+
+// The TW-5's guide: Appendix D of the FWOP (COMTRAWINGFIVEINST 3710.2Z), pages 196 to 202 of
+// the book. Its sections are bold `1. ADMIN:`, its items `a.` / `(1)` / `(a)` with bullets
+// under them, and Ejection carries the NATOPS post-ejection checklist — `1.` / `a.` / `(1)`
+// again — nested four deep. A debrief guide follows it under a title of its own.
+const TW5_PDF = path.join(__dirname, '..', '..', '..', '_reference-docs', 'T6b Primary', 'Fundamental References', 'Fixed-Wing Standard Operating Procedures (FWOP) 3710.2Z (Change 6) 2.pdf');
+const maybeTw5 = fs.existsSync(TW5_PDF) ? describe : describe.skip;
+
+maybeTw5('the TW-5 FWOP briefing guide', () => {
+  let out;
+  const section = (b, title) => b.sections.find((s) => s.title === title);
+  const item = (b, title, label) => section(b, title).items.find((i) => i.label === label);
+
+  beforeAll(async () => {
+    const pages = await loadTextItems(new Uint8Array(fs.readFileSync(TW5_PDF)));
+    out = parseBriefGuide(pageList('196-202', pages.length).pages.map((n) => pages[n]));
+  });
+
+  test('two guides, named without their appendix number, and the wing from the instruction', () => {
+    expect(out.warnings).toEqual([]);
+    expect(out.briefs.map((b) => b.title)).toEqual(['BRIEFING GUIDE', 'MISSION BRIEFING GUIDE']);
+    expect(out.briefs[0].source).toEqual({ publication: 'COMTRAWINGFIVEINST 3710.2Z', unit: 'TW-5' });
+  });
+
+  test('the bold numbered lines are the sections', () => {
+    const [brief] = out.briefs;
+    expect(brief.sections.map((s) => s.title)).toEqual([
+      'ADMIN', '* CREW COORDINATION', 'PROFILE', 'EMERGENCIES', 'TAC ADMIN', 'MCG',
+    ]);
+    expect(section(brief, 'ADMIN').items.map((i) => i.label)).toEqual([
+      'Side Number / Callsign', 'Walk / Takeoff / Land times', 'ORM', 'R&I', 'Pubs and EKB',
+      'Review ATJ', '* DOR / TTO Policy',
+    ]);
+    expect(section(brief, 'EMERGENCIES').items).toHaveLength(12);
+  });
+
+  test('the page footer is not part of the text it falls in', () => {
+    const text = JSON.stringify(out.briefs);
+    expect(text).not.toMatch(/D-\d/);
+    expect(item(out.briefs[0], 'EMERGENCIES', '* Birdstrike / Damaged Aircraft').text)
+      .toMatch(/conduct a controllability check IAW with NATOPS\./);
+  });
+
+  test('a checklist nested inside an item keeps its own numbering', () => {
+    const lines = item(out.briefs[0], 'EMERGENCIES', 'Ejection').text.split('\n');
+    expect(lines).toContain('    1. Inspect canopy - Carefully inspect canopy and suspension lines for damage and/or malfunctions');
+    expect(lines).toContain('      a. LeMoinge slots - Locate toggles on front risers. Pull down on toggles to turn chute into the wind prior to landing (left toggle, left turn; right toggle, right turn).');
+    expect(lines).toContain('        (5) Shoulder blade');
+    // After the checklist, the outline carries on where it was.
+    expect(lines).toContain('  (d) Once the seat beacon is set, attempt to contact SAR assets using the PRC-648 on GUARD.');
+    expect(lines).toContain('    • SQUAWK (7700, ELT on),');
+  });
+
+  test('the debrief guide is lists with nothing to open', () => {
+    const debrief = out.briefs[1];
+    expect(debrief.sections.map((s) => [s.title, !!s.fixed])).toEqual([
+      ['SAFETY OF FLIGHT', true], ['ADMIN', true], ['MISSION', true],
+    ]);
+  });
+});
+
+// A guide in none of the schemes above — roman sections, lettered items, numbered and bulleted
+// lines under them, no title on the page — made up here so the reader is held to reading the
+// page rather than knowing the guides it has met.
+test('an unfamiliar outline is read off the page', () => {
+  let y = 700;
+  const line = (x, str, bold) => {
+    y -= 14;
+    return { str, transform: [1, 0, 0, 1, x, y], width: str.length * 5, bold: !!bold };
+  };
+  const page = [
+    line(72, 'I. PREFLIGHT', true),
+    line(90, 'A. Weather. Brief the forecast for the local area and destination.'),
+    line(90, 'B. Fuel'),
+    line(108, '1. Joker'),
+    line(108, '2. Bingo'),
+    line(126, 'a. Computed for the farthest divert.'),
+    line(72, 'II. EMERGENCIES', true),
+    line(90, 'A. Engine failure'),
+    line(108, '• Zoom or glide'),
+    line(108, '• Assess landing options'),
+    line(90, 'B. Ejection'),
+  ];
+  const { briefs, warnings } = parseBriefGuide([page]);
+  expect(warnings[0]).toMatch(/read as one brief/);
+  expect(briefs).toHaveLength(1);
+  const [brief] = briefs;
+  expect(brief.sections.map((s) => s.title)).toEqual(['PREFLIGHT', 'EMERGENCIES']);
+  expect(brief.sections[0].items.map((i) => [i.label, i.text])).toEqual([
+    ['Weather', 'Brief the forecast for the local area and destination.'],
+    // A short line with lines under it heads them, so it is bold, as in the TW-4 guide.
+    ['Fuel', '1. Joker\n2. **Bingo**\n  a. Computed for the farthest divert.'],
+  ]);
+  expect(brief.sections[1].items[0].text).toBe('• Zoom or glide\n• Assess landing options');
+});

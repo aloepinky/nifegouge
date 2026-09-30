@@ -6869,6 +6869,20 @@ textarea.incorrect-answer {
 
 .brief-chooser .brief-choice.is-active { background: #01202C; color: #ffffff; }
 
+/* Whose briefs (TW-4 or TW-5): a plain dropdown the height of the buttons, set before them
+   because it decides which buttons there are. */
+.brief-chooser .brief-unit {
+  padding: 8px 10px;
+  border: 2px solid #003B4F;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #01202C;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+
 /* TOLD is a card, not a brief, so it is shaped differently and stands behind a rule — the
    chart's rule, where shape carries what a thing is and colour is left to say which one you
    are on. Fill still means chosen, on the pill exactly as on the briefs. */
@@ -7173,6 +7187,8 @@ textarea.incorrect-answer {
 .brief-upload-include { display: inline-flex; align-items: center; gap: 6px; }
 .brief-upload-include input { margin: 0; width: auto; }
 
+.discuss-editor .brief-upload-name { width: 12em; font-weight: bold; }
+
 .brief-upload-meta { flex: 1 1 240px; font-size: 13px; color: #5a7481; }
 
 .brief-upload-preview { flex-basis: 100%; }
@@ -7182,6 +7198,7 @@ textarea.incorrect-answer {
 @media (max-width: 600px) {
   .brief-page { padding: 12px 16px; }
   .brief-chooser .brief-choice { padding: 8px 12px; font-size: 13px; }
+  .brief-chooser .brief-unit { padding: 6px 8px; font-size: 13px; }
   .brief-chooser .brief-choice--told { margin-left: 0; padding-left: 16px; padding-right: 16px; }
 }
 

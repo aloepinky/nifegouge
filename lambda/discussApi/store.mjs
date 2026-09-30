@@ -559,6 +559,9 @@ export const listJetLogMetas = jetLogs.listMetas;
 export function briefFlagsOf(brief) {
   const flags = { aircraft: brief.aircraft, school: brief.school };
   if (brief.short) flags.short = brief.short;
+  // The wing whose guide it is: TW-4 and TW-5 both brief Primary, each from its own.
+  const unit = brief.source && typeof brief.source.unit === 'string' ? brief.source.unit.trim() : '';
+  if (unit) flags.unit = unit;
   if (Number.isFinite(brief.order)) flags.order = brief.order;
   return flags;
 }

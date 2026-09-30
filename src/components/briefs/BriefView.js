@@ -36,7 +36,7 @@ export function inline(text) {
   ));
 }
 
-const LINE = /^(\s*)((?:\([0-9a-zA-Z]{1,2}\)|\d{1,2}\.|[a-zA-Z]\.)\s+)?([\s\S]*)$/;
+const LINE = /^(\s*)((?:\((?:[0-9a-zA-Z]{1,2}|[ivxlc]{2,5}|[IVXLC]{2,5})\)|\d{1,2}\.|[a-zA-Z]\.|[ivxlc]{2,5}\.|[IVXLC]{2,5}\.|•)\s+)?([\s\S]*)$/;
 
 // Plain text as the page prints it: every line at its own level, its number hanging in the
 // margin so a line that wraps lines up under itself, and a blank line as a gap.

@@ -19,7 +19,7 @@ import {
 //   syllabi/<id>.json     { id, name, rev, updatedAt, aircraft, school, doc }
 //   jetlogs/index.json    { generatedAt, logs: [{ id, name, group, folder, mode, rev, updatedAt }] }
 //   jetlogs/<id>.json     { id, rev, updatedAt, author, summary, log }
-//   briefs/index.json     { generatedAt, briefs: [{ id, title, short, aircraft, school, order, rev, updatedAt }] }
+//   briefs/index.json     { generatedAt, briefs: [{ id, title, short, aircraft, school, unit?, order, rev, updatedAt }] }
 //   briefs/<id>.json      { id, rev, updatedAt, author, summary, brief }
 //   figures/<slug>/<stamp>-<name>.webp
 //
@@ -202,8 +202,20 @@ export async function mirrorBrief(meta, row) {
 }
 
 // In button order: the order the guide printed them in, then by title.
+//
+// A brief last saved before the index carried its wing has none in its flags; its newest
+// document says which, so the index reads it from there until the brief is next saved.
 export async function rebuildBriefsIndex() {
-  const entries = (await listBriefMetas()).filter((m) => !m.hidden).map(briefEntry);
+  const entries = [];
+  for (const meta of (await listBriefMetas()).filter((m) => !m.hidden)) {
+    const entry = briefEntry(meta);
+    if (!entry.unit) {
+      const found = await newestBrief(meta.briefId);
+      const unit = found && JSON.parse(found.row.docJson).source?.unit;
+      if (unit) entry.unit = unit;
+    }
+    entries.push(entry);
+  }
   entries.sort((a, b) => ((a.order ?? 999) - (b.order ?? 999)) || a.title.localeCompare(b.title));
   await putJson('briefs/index.json', { generatedAt: new Date().toISOString(), briefs: entries });
   return entries.length;

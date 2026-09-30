@@ -4,7 +4,7 @@ import { getAuthor, setAuthor } from '../serverApi';
 import { Line } from '../discuss/edit/fields';
 import { preparePdfWorker } from '../discuss/jppt/pdfWorker';
 import { loadTextItems } from '../discuss/jppt/pdfText';
-import { pageList, parseBriefGuide } from './parseBriefGuide';
+import { pageList, parseBriefGuide, slugify } from './parseBriefGuide';
 import { publishBrief, saveBrief, fetchBrief, rememberBrief } from './briefApi';
 import BriefView from './BriefView';
 import { diffBriefs, diffSummary } from './briefDiff';
@@ -154,12 +154,16 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
       // What is not matched starts unticked, because a guide also prints briefs the site does
       // not want — the Solo guide is read at the ODO's desk rather than briefed from memory,
       // and is deliberately not published.
+      //
+      // A brief only ever replaces its own wing's: TW-5's guide is not a new edition of TW-4's,
+      // though both brief the same stages.
       const taken = new Set();
       setChoices(Object.fromEntries(out.briefs.map((b, i) => {
-        const match = index.find((e) => !taken.has(e.id) && e.id === b.id)
-          || bestMatch(b, index.filter((e) => !taken.has(e.id)));
+        const unit = b.source && b.source.unit;
+        const open = index.filter((e) => !taken.has(e.id) && !(unit && e.unit && e.unit !== unit));
+        const match = open.find((e) => e.id === b.id) || bestMatch(b, open);
         if (match) taken.add(match.id);
-        return [i, { include: !index.length || !!match, target: match ? match.id : NEW }];
+        return [i, { include: !index.length || !!match || !open.length, target: match ? match.id : NEW, short: b.short }];
       })));
       // What the guide says about itself. The Primary guide prints its instruction and date as
       // a running head, and the wing follows from the instruction; the NIFE guide dates itself
@@ -189,9 +193,13 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
       if (!choice.include) continue;
       // Every brief carries the guide it came out of — whose it is and when it was published —
       // and the school whose tab it belongs on.
+      // The button name is the person's to choose; a new brief takes its address from it.
       const parsed = found.briefs[i];
+      const short = (choice.short || '').trim() || parsed.short;
       const brief = {
         ...parsed,
+        short,
+        id: choice.target === NEW ? slugify(short) : parsed.id,
         school: program.label,
         aircraft: program.aircraft,
         source: { ...parsed.source, unit: unit.trim(), date },
@@ -299,8 +307,19 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
           <div key={b.id} className="brief-upload-row">
             <label className="brief-upload-include">
               <input type="checkbox" checked={choice.include} onChange={(e) => set({ include: e.target.checked })} />
-              {' '}<strong>{b.short}</strong>
             </label>
+            {/* What the brief's button says. A guide that calls itself only BRIEFING GUIDE
+                leaves this to be named. */}
+            <input
+              type="text"
+              className="discuss-editor-line brief-upload-name"
+              value={choice.short}
+              maxLength={40}
+              disabled={!choice.include}
+              onChange={(e) => set({ short: e.target.value })}
+              aria-label="Button name"
+              title="The name on this brief's button"
+            />
             <span className="brief-upload-meta">{b.title}: {b.sections.length} sections, {items} items</span>
             <select
               className="discuss-editor-line brief-edit-select"
