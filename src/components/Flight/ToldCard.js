@@ -247,11 +247,23 @@ function ToldCard() {
   const setAirport = (i, field) => (e) => setCard((c) => ({
     ...c, airports: c.airports.map((a, j) => (j === i ? { ...a, [field]: e.target.value } : a)),
   }));
+  // The first airport row is the takeoff field and the last the landing field, so picking one
+  // also fills that side's field elevation, if it is blank. A lone airport fills takeoff only:
+  // blank landing conditions already read the takeoff's.
   const pickRunway = (i, r) => {
-    setCard((c) => ({
-      ...c,
-      airports: c.airports.map((a, j) => (j === i ? { airport: r.airport, runway: r.runway, size: r.size } : a)),
-    }));
+    setCard((c) => {
+      const airports = c.airports.map((a, j) => (j === i ? { airport: r.airport, runway: r.runway, size: r.size } : a));
+      const filled = airports.map((a, j) => (a.airport.trim() ? j : -1)).filter((j) => j >= 0);
+      const next = { ...c, airports };
+      const fill = (side) => {
+        if (r.elev !== null && String(c[side].elevation).trim() === '') {
+          next[side] = { ...c[side], elevation: String(r.elev) };
+        }
+      };
+      if (i === filled[0]) fill('takeoff');
+      if (filled.length > 1 && i === filled[filled.length - 1]) fill('landing');
+      return next;
+    });
     setOpenApt(null);
   };
 
