@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { loadTextItems } from '../discuss/jppt/pdfText';
 import {
-  parseBriefGuide, splitName, shortName, programFor, unitFrom, unitOfTitle, pageList, nameScore,
+  parseBriefGuide, splitName, shortName, programFor, unitFrom, unitOfTitle, pageList, nameScore, isoDate,
 } from './parseBriefGuide';
 // No Worker in jsdom: this puts pdf.js's worker in-process.
 import 'pdfjs-dist/legacy/build/pdf.worker.entry';
@@ -492,6 +492,8 @@ maybeTw5Card('the TW-5 guide laid out by its abbreviated guide', () => {
       ['TW-5 BRIEFING GUIDE', 'BRIEF'], ['TW-5 DEBRIEF GUIDE', 'DEBRIEF GUIDE'],
     ]);
     expect(out.briefs[0].source.unit).toBe('TW-5');
+    // The FWOP prints no date by its appendix; the abbreviated guide's footer does, to the month.
+    expect(out.briefs[0].source.date).toBe('November 2025');
   });
 
   test("sections and items are the card's, in its columns", () => {
@@ -530,4 +532,12 @@ maybe('a card uploaded on its own', () => {
     expect(split.warnings).toEqual([]);
     expect(split.briefs[0].sections).toEqual(whole.sections);
   });
+});
+
+test('a guide date becomes the date box value, a month alone its first day', () => {
+  expect(isoDate({ date: '10 Mar 2025' })).toBe('2025-03-10');
+  expect(isoDate({ date: '13 March 2026' })).toBe('2026-03-13');
+  expect(isoDate({ date: 'November 2025' })).toBe('2025-11-01');
+  expect(isoDate({ date: '' })).toBe('');
+  expect(isoDate(null)).toBe('');
 });

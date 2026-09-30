@@ -1022,6 +1022,31 @@ function readSource(pages) {
   return Object.keys(source).length ? source : null;
 }
 
+// An abbreviated guide dates itself in its footer (`Version 1.0 // November 2025`), often to
+// the month. It is the date to go by where the expanded guide prints none: the TW-5's comes
+// out of the FWOP, whose own pages say nothing of when the appendix was written.
+const MONTH_DATED = /\b(?:\d{1,2} )?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.? \d{4}\b/;
+
+function cardDate(pages) {
+  const texts = pages.flatMap((items) => pageLines(items, true).flatMap((l) => l.segs.map((s) => plain(s.text))));
+  return texts.map((t) => (DATED.exec(t) || [])[0]).find(Boolean)
+    || texts.map((t) => (MONTH_DATED.exec(t) || [])[0]).find(Boolean)
+    || '';
+}
+
+// `10 Mar 2025`, or a month alone (`November 2025`, from a card's version line), which is
+// taken as its first day. Read by hand, since browsers disagree on what Date() accepts.
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+export function isoDate(source) {
+  const m = /^(?:(\d{1,2})\s+)?([A-Za-z]{3})[a-z]*\.?\s+(\d{4})$/.exec(((source && source.date) || '').trim());
+  const month = m && MONTHS.indexOf(m[2].toLowerCase());
+  if (!m || month < 0) return '';
+  const day = Number(m[1] || 1);
+  if (day < 1 || day > 31) return '';
+  return `${m[3]}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 // `6-8` or `6, 7, 8` -> [5, 6, 7], the page indexes to read; blank -> null, every page. A guide
 // can be three pages of a longer packet (the T-44C's is pages 6 to 8 of the TW-4 On-Wing Gouge
 // Packet), and read whole the pages after it would run on as the guide's last section.
@@ -1054,7 +1079,7 @@ export function parseBriefGuide(pages, { card } = {}) {
   // would be kept on every page but the first.
   const allLines = dropRunningLines(pages.map((items) => pageLines(items)));
 
-  const source = readSource(pages);
+  let source = readSource(pages);
 
   // A guide that prints its title as a running head says it on every page; the first is where
   // the brief starts and the rest are furniture, here and in the lines gathered below.
@@ -1109,6 +1134,11 @@ export function parseBriefGuide(pages, { card } = {}) {
   });
 
   const cards = card && card.length ? readCardPages(dropRunningLines(card.map((items) => pageLines(items)))) : [];
+  // The expanded guide's own date wins; the abbreviated guide's footer stands in for none.
+  if (card && card.length && !(source && source.date)) {
+    const date = cardDate(card);
+    if (date) source = { ...(source || {}), date };
+  }
   if (card && card.length && !cards.length) warnings.push('Nothing was read from the abbreviated guide.');
 
   const briefs = merged.filter((g) => {

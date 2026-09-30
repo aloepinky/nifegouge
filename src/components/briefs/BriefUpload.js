@@ -4,7 +4,9 @@ import { getAuthor, setAuthor } from '../serverApi';
 import { Line } from '../discuss/edit/fields';
 import { preparePdfWorker } from '../discuss/jppt/pdfWorker';
 import { loadTextItems } from '../discuss/jppt/pdfText';
-import { pageList, parseBriefGuide, slugify } from './parseBriefGuide';
+import {
+  isoDate, pageList, parseBriefGuide, slugify,
+} from './parseBriefGuide';
 import { publishBrief, saveBrief, fetchBrief, rememberBrief } from './briefApi';
 import BriefView from './BriefView';
 import { diffBriefs, diffSummary } from './briefDiff';
@@ -20,13 +22,6 @@ import { useBriefsBase } from './paths';
 
 const MAX_BYTES = 25 * 1024 * 1024;
 const NEW = '__new__';
-
-// The date the guide's own header prints ("10 Mar 2025"), as a date box wants it.
-function isoDate(source) {
-  const at = new Date((source && source.date) || '');
-  if (Number.isNaN(at.getTime())) return '';
-  return at.toISOString().slice(0, 10);
-}
 
 const words = (text) => (text || '').toLowerCase().match(/[a-z0-9]+/g) || [];
 
@@ -228,6 +223,17 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
     }
   };
 
+  // A brief only ever replaces its own wing's: the Replace list offers only those, and a choice
+  // the wing box has since ruled out publishes as new.
+  const replaceable = (i) => {
+    const wing = (unit.trim() || (found.briefs[i].source || {}).unit || '').toLowerCase();
+    return index.filter((e) => !wing || !e.unit || e.unit.toLowerCase() === wing);
+  };
+  const targetOf = (i) => {
+    const { target } = choices[i];
+    return target !== NEW && replaceable(i).some((e) => e.id === target) ? target : NEW;
+  };
+
   const publishAll = async () => {
     setBusy(true);
     setAuthor(author.trim());
@@ -236,6 +242,7 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
     for (let i = 0; i < found.briefs.length; i += 1) {
       const choice = choices[i];
       if (!choice.include) continue;
+      const target = targetOf(i);
       // Every brief carries the guide it came out of — whose it is and when it was published —
       // and the school whose tab it belongs on.
       // The button name is the person's to choose; a new brief takes its address from it.
@@ -244,19 +251,19 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
       const brief = {
         ...parsed,
         short,
-        id: choice.target === NEW ? slugify(short) : parsed.id,
+        id: target === NEW ? slugify(short) : parsed.id,
         school: program.label,
         aircraft: program.aircraft,
         source: { ...parsed.source, unit: unit.trim(), date },
       };
       try {
         let id;
-        if (choice.target === NEW) {
+        if (target === NEW) {
           ({ id } = await publishBrief(brief, meta));
         } else {
           // The newest revision, read now rather than from the index this page loaded with.
-          const current = await fetchBrief(choice.target);
-          ({ id } = await saveBrief(choice.target, current.rev, { ...brief, id: choice.target }, meta));
+          const current = await fetchBrief(target);
+          ({ id } = await saveBrief(target, current.rev, { ...brief, id: target }, meta));
         }
         rememberBrief(await fetchBrief(id));
         out.push({ ok: true, id, title: brief.short || brief.title });
@@ -345,7 +352,8 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
         const choice = choices[i];
         const set = (patch) => setChoices((c) => ({ ...c, [i]: { ...c[i], ...patch } }));
         const items = b.sections.reduce((n, s) => n + s.items.length, 0);
-        const replacing = choice.include && choice.target !== NEW;
+        const target = targetOf(i);
+        const replacing = choice.include && target !== NEW;
         return (
           <div key={b.id} className="brief-upload-row">
             <label className="brief-upload-include">
@@ -366,18 +374,18 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
             <span className="brief-upload-meta">{b.title}: {b.sections.length} sections, {items} items</span>
             <select
               className="discuss-editor-line brief-edit-select"
-              value={choice.target}
+              value={target}
               disabled={!choice.include}
               onChange={(e) => set({ target: e.target.value })}
               aria-label="Where it goes"
             >
               <option value={NEW}>Publish as a new brief</option>
-              {index.map((e) => <option key={e.id} value={e.id}>Replace {e.short || e.title}</option>)}
+              {replaceable(i).map((e) => <option key={e.id} value={e.id}>Replace {e.short || e.title}</option>)}
             </select>
             <button type="button" className="brief-link" onClick={() => setPreview(preview === i ? null : i)}>
               {preview === i ? 'hide preview' : replacing ? 'preview the changes' : 'preview'}
             </button>
-            {preview === i && <Preview brief={b} against={replacing ? choice.target : null} />}
+            {preview === i && <Preview brief={b} against={replacing ? target : null} />}
           </div>
         );
       })}
