@@ -351,7 +351,7 @@ else is deleted.
 - **Removals are rulings.** Read history summaries before rewriting; don't restore removed material.
   Retired content is in `RETIRED` in `discussRules.mjs` (lint `retired-content`); add an entry
   when a removal is a ruling.
-- Conversion: FAM, F, N, CS stages and I21/22/31/32/61/62/63 are done; I41–I44 are not. A clean
+- Conversion: FAM, F, N, CS stages and I21/22/31/32/41–44/61/62/63 are done. A clean
   lint is not proof a page is compliant.
 
 **Content ethos**: the JPPT sets the items (don't invent, merge or rephrase). Write less than feels
