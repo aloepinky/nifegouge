@@ -2,7 +2,7 @@ import React from 'react';
 
 // The one line every form that publishes community writing carries: what the words are
 // released under. Shown where the contribution is made, which is what makes it a term of it.
-export const CONTENT_LICENSE_URL = 'https://github.com/aloevinger/nifegouge/blob/main/LICENSE-CONTENT.md';
+export const CONTENT_LICENSE_URL = 'https://github.com/aloepinky/nifegouge/blob/main/LICENSE-CONTENT.md';
 
 export default function LicenseNote({ className = 'discuss-editor-hint', style }) {
   return (

@@ -12,7 +12,7 @@ language. Work accordingly:
 - **Explain in their terms.** Say what changed on the page, not which component. Show them the change
   running at `http://localhost:3000` before calling it done, and tell them exactly where to click.
 - **Work on a branch in their fork and finish with a pull request** against
-  `aloevinger/nifegouge` `main`. Write the PR description in plain language: what was wrong, what it
+  `aloepinky/nifegouge` `main`. Write the PR description in plain language: what was wrong, what it
   says now, and the publication, section and page that says so. Never push to this repository's
   `main`: a push there deploys the live site and the server.
 - **Community content is not in this repository.** Discussion item pages, briefs, shared jet logs,
