@@ -20,6 +20,8 @@ function BlockPage({ block }) {
     block.media,
     block.hours != null && `${block.hours} hrs`,
     block.hx != null && `H/X ${block.hx}`,
+    // An H/X cell holding words instead of a number: FAM42's "See Syllabus Note c and d".
+    block.hx == null && block.hxNote && `H/X: ${block.hxNote}`,
     block.blkName,
   ].filter(Boolean);
 

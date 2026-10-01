@@ -22,6 +22,12 @@
 //   events[].syllabusNotes  only the lines the notes give for that event ("FAM2101 Checklist
 //                           procedures required: ..."); before 2026-10-01 every event carried
 //                           its whole block's notes run together, and Delta's were paraphrased
+//   blocks[].hxNote         words printed in the H/X cell instead of a number (FAM42's "See
+//                           Syllabus Note c and d", G60's "G")
+//   titles                  only where the old title is the corrected one plus stray text the
+//                           header reader used to pick up from the number columns (FAM42, G08,
+//                           G10, G60), on the block and on its events; a title that differs in
+//                           any other way (Delta's hand-written "FAM ..." names) is left alone
 //
 // This is not a re-seed: the chart, the rows and everything else come from the live document,
 // so every hand repair is kept, and it refuses to send if anything else would change.
@@ -73,8 +79,9 @@ const SYLLABI = [
   { id: 't44c-e2d', pdf: path.join(REFS, 'T44C Advanced', 'Fundamental References', '1542.175D CH-1.pdf') },
 ];
 
-const SUMMARY = 'Syllabus notes as the JPPT lays them out: the lettered list on the block page, '
-  + 'an event\'s own lines on its event page.';
+// Summaries are cut at 200 characters, so the ruling comes first.
+const SUMMARY = 'Block titles lose the H/X cell or event count stuck on the end (FAM42, G08, G10, G60); '
+  + 'an H/X cell of words shows as H/X.';
 
 const src = (rel) => loadSrc(path.join(__dirname, '..', 'src', 'components', 'discuss', 'jppt', rel));
 
@@ -87,6 +94,8 @@ async function parse(pdf) {
     ssr: pick(syl.events, 'ssr'),
     blockSsr: pick(syl.blocks, 'ssr'),
     notes: { events: pick(syl.events, 'syllabusNotes'), blocks: pick(syl.blocks, 'syllabusNotes') },
+    titles: pick(syl.blocks, 'title'),
+    hxNote: pick(syl.blocks, 'hxNote'),
   };
 }
 
@@ -100,8 +109,10 @@ async function readMirror(key) {
 function skeleton(doc) {
   return JSON.stringify({
     ...doc,
-    blocks: doc.blocks.map(({ ssr, syllabusNotes, ...b }) => b),
-    events: doc.events.map(({ ssr, syllabusNotes, ...e }) => e),
+    blocks: doc.blocks.map(({ ssr, syllabusNotes, hxNote, title, events, ...b }) => ({
+      ...b, events: events.map(({ title: t, ...e }) => e),
+    })),
+    events: doc.events.map(({ ssr, syllabusNotes, title, ...e }) => e),
   });
 }
 
@@ -119,7 +130,19 @@ function apply(doc, parsed, log) {
   missing('an SSR', parsed.ssr);
   if (parsed.notes) missing('notes', parsed.notes.events);
 
+  // A title is corrected only where the old one is the new one with something stuck on the end.
+  const fixed = {};
+  if (parsed.titles) {
+    next.blocks.forEach((b) => {
+      const t = parsed.titles[b.id];
+      if (t && b.title && b.title !== t && b.title.startsWith(`${t} `)) fixed[b.title] = t;
+    });
+    Object.entries(fixed).forEach(([was, now]) => log(`  title "${was}" -> "${now}"`));
+  }
+  const retitle = (row) => { if (row.title && fixed[row.title]) row.title = fixed[row.title]; };
+
   next.events.forEach((e) => {
+    retitle(e);
     setOrDrop(e, 'ssr', parsed.ssr[e.id]);
     if (!parsed.notes) return;
     const was = e.syllabusNotes || null;
@@ -129,6 +152,12 @@ function apply(doc, parsed, log) {
     e.syllabusNotes = now;
   });
   next.blocks.forEach((b) => {
+    retitle(b);
+    b.events.forEach(retitle);
+    if (parsed.hxNote && b.hx == null) {
+      if (parsed.hxNote[b.id] && b.hxNote !== parsed.hxNote[b.id]) log(`  ${b.id} H/X: ${parsed.hxNote[b.id]}`);
+      setOrDrop(b, 'hxNote', parsed.hxNote[b.id]);
+    }
     setOrDrop(b, 'ssr', parsed.blockSsr[b.id]);
     if (!parsed.notes) return;
     const list = parsed.notes.blocks[b.id] || [];
