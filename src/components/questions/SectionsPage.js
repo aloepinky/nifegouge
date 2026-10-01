@@ -4,6 +4,7 @@ import { getAuthor, readMirror, setAuthor } from '../serverApi';
 import { loadApproved } from './questionsApi';
 import { lectureIdFor, restoreSections, saveSections, sectionIdFor, sectionsHistory } from './sections';
 import Confirm, { smallButton } from './Confirm';
+import LicenseNote from '../LicenseNote';
 
 // /nife/questions/sections: the topics and lectures the quiz is sorted into, for anyone to
 // change as NIFE's syllabus changes. The whole list is one document: edit it here, say what you
@@ -226,6 +227,7 @@ export default function SectionsPage() {
           <div style={{ borderTop: '2px solid #01202C', paddingTop: '12px', display: 'grid', gap: '8px' }}>
             <input aria-label="What did you change?" style={input} placeholder="What did you change? (required)" value={summary} maxLength={200} onChange={(e) => setSummary(e.target.value)} />
             <input aria-label="Your name" style={input} placeholder="Your name (optional)" value={author} maxLength={40} onChange={(e) => setAuthorName(e.target.value)} />
+            <LicenseNote className="" style={{ margin: 0, fontSize: '13px', color: '#666' }} />
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button type="button" style={smallButton(dirty && summary.trim() && !busy ? '#01202C' : '#9aa7ab')} disabled={!dirty || !summary.trim() || busy} onClick={save}>
                 {busy ? 'Saving…' : 'Save'}

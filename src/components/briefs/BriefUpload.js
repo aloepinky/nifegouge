@@ -12,6 +12,7 @@ import BriefView from './BriefView';
 import { diffBriefs, diffSummary } from './briefDiff';
 import { PROGRAMS, programName, programOf, shown } from '../programs';
 import { useBriefsBase } from './paths';
+import LicenseNote from '../LicenseNote';
 
 // Upload a briefing guide and publish the briefs it prints. The PDF is read in this browser
 // and never leaves it; only the briefs are sent.
@@ -423,6 +424,7 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
           <label className="discuss-editor-label" htmlFor="brief-up-summary">Description</label>
           <Line id="brief-up-summary" value={summary} onChange={setSummary} maxLength={200} />
         </div>
+        <LicenseNote />
         <div className="discuss-editor-buttons">
           <button
             type="button"

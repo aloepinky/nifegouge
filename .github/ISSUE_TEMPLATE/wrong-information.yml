@@ -1,0 +1,36 @@
+name: Wrong information
+description: Something on the site disagrees with a publication.
+labels: ["content"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for catching it. Please don't attach anything marked CUI, FOUO or classified.
+  - type: input
+    id: page
+    attributes:
+      label: Which page?
+      description: Paste the address from your browser, or describe where it is.
+      placeholder: https://pinksheetmafia.com/tw4/eps-limits
+    validations:
+      required: true
+  - type: textarea
+    id: says
+    attributes:
+      label: What does the site say?
+    validations:
+      required: true
+  - type: textarea
+    id: should
+    attributes:
+      label: What should it say?
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Which publication says so?
+      description: Publication, section and page. A photo of the page helps too; drag it into the box above.
+      placeholder: NATOPS, Ch. 5 Operating Limitations, p. 5-3
+    validations:
+      required: true

@@ -1,0 +1,23 @@
+name: Something is broken
+description: A page won't load, a button does nothing, or something looks wrong.
+labels: ["bug"]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Which page?
+      description: Paste the address from your browser.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead. A screenshot helps.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: iPhone, Safari

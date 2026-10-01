@@ -38,7 +38,8 @@ yarn-error.log*
 
 # Claude Code local settings (machine-specific)
 .claude/settings.local.json
-CLAUDE.md
+# CLAUDE.md is public guidance for any agent; the maintainer's own notes go in CLAUDE.local.md
+CLAUDE.local.md
 
 # Python bytecode from tools/convert-images.py and tools/extract-jppt-flow.py. Regenerated on
 # every run and tied to the interpreter version, so it is never worth committing.

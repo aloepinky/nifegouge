@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { sendQuestion } from './questionsApi';
 import { activeSections, formLectures } from './sections';
+import LicenseNote from '../LicenseNote';
 
 const ANSWER_FIELDS = [
   ['correctAnswer', 'Correct Answer'],
@@ -157,6 +158,7 @@ export default function QuestionForm({ mode, question, sections, defaultTopic, o
 
         {error && <div style={{ color: '#c62828', fontSize: '14px', margin: '8px 0' }}>{error}</div>}
 
+        <LicenseNote className="" style={{ fontSize: '13px', color: '#666', margin: '8px 0' }} />
         <button className="submitBtn" onClick={submit} disabled={sending}>
           {sending ? 'Sending…' : mode === 'edit' ? 'Submit Edit' : 'Submit Question'}
         </button>

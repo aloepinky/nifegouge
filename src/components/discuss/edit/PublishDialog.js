@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Line, useEscape } from './fields';
 import { saveItem, getAuthor, setAuthor } from '../discussApi';
+import LicenseNote from '../../LicenseNote';
 
 // The step between a draft and the site, opened from the draft banner. Asks who and why,
 // sends the page, and reports back: a new revision, a refusal naming what to fix, or a
@@ -47,6 +48,7 @@ function PublishDialog({ slug, baseRev, item, onPublished, onConflict, onCancel 
         <p className="discuss-editor-hint">Optional. Shown in the history beside your revision.</p>
         <Line id="publish-author" value={author} onChange={setAuthorField} placeholder="How you want to be credited" maxLength={40} />
       </div>
+      <LicenseNote />
       <div className="discuss-editor-field">
         <label className="discuss-editor-label" htmlFor="publish-summary">
           What changed <span className="discuss-editor-req">required</span>

@@ -1,0 +1,11 @@
+name: Idea or request
+description: Something the site should have.
+labels: ["idea"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+      description: What you'd use it for, and which stage or event it's for.
+    validations:
+      required: true

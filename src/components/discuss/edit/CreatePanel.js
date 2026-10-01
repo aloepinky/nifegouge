@@ -6,6 +6,7 @@ import { slugify } from './ids';
 import { getItemMeta } from '../registry';
 import { createItem, rememberItem, refreshSyllabus, getAuthor, setAuthor } from '../discussApi';
 import { useDiscussBase } from '../paths';
+import LicenseNote from '../../LicenseNote';
 
 // Makes a page. It starts as a placeholder — a title, and where an author could look — and
 // opens in the page editor, where clearing the Placeholder flag and adding a section is what
@@ -113,6 +114,7 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, program: in
         <label className="discuss-editor-label" htmlFor="create-author">Your name</label>
         <Line id="create-author" value={author} onChange={setAuthorField} placeholder="Optional" maxLength={40} />
       </div>
+      <LicenseNote />
       {error && <p className="discuss-editor-warn">{error}</p>}
       <div className="discuss-editor-buttons">
         <button type="button" className="discuss-editor-save" onClick={create} disabled={!ready}>

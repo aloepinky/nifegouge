@@ -5,6 +5,7 @@ import { loadApproved, sendQuestions } from './questionsApi';
 import { activeSections, formLectures, inUse, useSections } from './sections';
 import { likelyDuplicate, parseUpload, problemsWith } from './parseUpload';
 import { smallButton } from './Confirm';
+import LicenseNote from '../LicenseNote';
 
 // /nife/questions/upload: many questions at once, from a spreadsheet paste, a CSV file or a
 // Quizlet export (parseUpload.js reads all three). Every row is shown to be checked and
@@ -224,6 +225,7 @@ export default function UploadPage() {
 
           <div style={{ borderTop: '2px solid #01202C', paddingTop: '12px', display: 'grid', gap: '8px' }}>
             <input aria-label="Your name" style={box} placeholder="Your name (optional)" value={author} maxLength={40} onChange={(e) => setAuthorName(e.target.value)} />
+            <LicenseNote className="" style={{ margin: 0, fontSize: '13px', color: '#666' }} />
             <div>
               <button type="button" style={smallButton(count && !busy ? '#01202C' : '#9aa7ab')} disabled={!count || busy} onClick={send}>
                 {busy ? 'Sending…' : `Send ${count} question${count === 1 ? '' : 's'} for review`}

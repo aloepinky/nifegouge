@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Fix a discussion item, brief, jet log or NIFE question
+    url: https://pinksheetmafia.com
+    about: These are edited on the site itself. Open the page and click edit, no GitHub needed.
