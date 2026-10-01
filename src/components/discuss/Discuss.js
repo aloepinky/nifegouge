@@ -11,7 +11,7 @@ import SearchBox from './SearchBox';
 import HistoryPage from './HistoryPage';
 import CreatePanel from './edit/CreatePanel';
 import {
-  DELTA_ID, STYLE_GUIDE_DRAFT, SyllabusContext, fromDoc, useSyllabus,
+  DELTA_ID, SyllabusContext, fromDoc, useSyllabus,
 } from './SyllabusContext';
 import { DISCUSS_BASE, DiscussBaseProvider, useDiscussBase } from './paths';
 import { useRemoteSyllabus, useSyllabusList, useItem } from './discussApi';
@@ -26,7 +26,6 @@ const UploadPage = lazy(() => import('./upload/UploadPage'));
 const EditFlowPage = lazy(() => import('./upload/EditFlowPage'));
 // Lazy for a second reason: while the guide is a draft it has no route on the deployed site,
 // and this keeps it out of the bundle every reader downloads.
-const StyleGuide = lazy(() => import('./StyleGuide'));
 
 // The word printed after a syllabus's name where it is not the school, by syllabus id. The
 // E-2D syllabus is `school: 'Advanced'`, since it shares Advanced's pages, but 1542.175D calls
@@ -217,7 +216,6 @@ function PostFlowChart({ current }) {
 // through the search box, both of which carry the context an alphabetical list throws away.
 function Index() {
   const s = useSyllabus();
-  const base = useDiscussBase();
   const platform = usePlatform();
   // A syllabus small enough not to need the JPPT's course-flow chart carries no `flow`, and
   // CourseFlow renders nothing for it. The sentence about correcting the chart would then be
@@ -253,16 +251,6 @@ function Index() {
           <h2>Stages</h2>
           <StageNav />
         </section>
-
-        {/* The one place someone who has not opened a page yet is told the pages are theirs to
-            fix, and where the guide to writing one lives. */}
-        {STYLE_GUIDE_DRAFT && (
-          <p className="discuss-foot">
-            Anyone can edit these pages, and every revision is kept. The{' '}
-            <Link to={`${base}/style`}>style guide</Link> says how a page is written and
-            how its sources are cited.
-          </p>
-        )}
       </article>
     </div>
   );
@@ -397,8 +385,6 @@ function DiscussBody({ mode }) {
           <Link to={root} onClick={() => rememberSyllabus(builtInId, school)}>Back to {syllabusName}</Link>
         </NotFound>
       );
-  } else if (mode === 'style') {
-    body = <StyleGuide />;
   } else if (mode === 'upload') {
     body = <UploadPage />;
   } else if (mode === 'edit') {
@@ -461,9 +447,6 @@ function DiscussRoutes() {
       <Route path="e/:event" element={<DiscussBody mode="event" />} />
       <Route path="b/:block" element={<DiscussBody mode="block" />} />
       <Route path="upload" element={<DiscussBody mode="upload" />} />
-      {/* A draft, on a dev server only. `Routes` ignores a non-element child, which is how a
-          route is conditioned. */}
-      {STYLE_GUIDE_DRAFT && <Route path="style" element={<DiscussBody mode="style" />} />}
       <Route path="edit" element={<DiscussBody mode="edit" />} />
       <Route path="s/:syllabus" element={<DiscussBody />} />
       <Route path="s/:syllabus/e/:event" element={<DiscussBody mode="event" />} />
