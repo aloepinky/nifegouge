@@ -15,7 +15,7 @@ import { programLabel } from './program';
 // is the right failure: a wrong tab name is worse than none.
 const HREF_TARGETS = {
   '/tw4/eps-limits': 'EPs & Limits',
-  '/tw4/courserules': 'Course Rules',
+  '/tw4/courserules': 'TW4 Course Rules',
 };
 
 // A JPPT wording as a page title: first letter up, the rest as written.

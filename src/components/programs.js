@@ -55,7 +55,7 @@ export const PROGRAM_TABS = {
     { to: '/tw4/docs', label: 'Docs' },
     { to: '/tw4/discuss', label: 'Discussion Items' },
     { to: '/tw4/briefs', label: 'Briefs/TOLD' },
-    { to: '/tw4/courserules', label: 'Course Rules' },
+    { to: '/tw4/courserules', label: 'TW4 Course Rules' },
     { to: '/tw4/systems', label: 'Systems' },
     { to: '/tw4/jetlog', label: 'Jet Log' },
   ],
