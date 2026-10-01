@@ -79,7 +79,6 @@ function T44CEPs(game) {
       nwc={T44C_EP_NWC}
       title="T-44C EMERGENCY PROCEDURES"
       aliases={T44C_ALIASES}
-      scaleSides={false}
       sideWidth={[300, 300]}
       top={(api) => <MainPanel {...api} />}
       left={(api) => <LeftSide {...api} />}

@@ -1,5 +1,6 @@
 import React from 'react';
 import useLimitsDrill from '../epsLimits/useLimitsDrill';
+import LimitsControls from '../epsLimits/LimitsControls';
 import { T44C_LIMITS, T44C_LIMIT_GROUPS } from './t44cData';
 
 // Advanced's limits table: the T-44C operating limits sheet as it is handed out, one box per
@@ -255,21 +256,7 @@ function T44CLimits({ isGameActive = false, onGameComplete }) {
         </p>
       </div>
 
-      {drill.queue && (
-        <div className="epl-limits-progress">Random Mode: Limit {drill.at + 1} of {drill.queue.length}</div>
-      )}
-      {!isGameActive && (
-        <div className="button-row" style={{ justifyContent: 'center', marginTop: '20px' }}>
-          <button type="button" onClick={drill.next}>Next Answer</button>
-          <button type="button" onClick={drill.all}>All Answers</button>
-          <button type="button" onClick={drill.check}>Check Answers</button>
-          <button type="button" onClick={drill.reset}>Reset</button>
-          <button type="button" className={`epl-random${drill.queue ? ' active' : ''}`} aria-pressed={!!drill.queue}
-            onClick={drill.toggleRandom}>
-            Random Mode
-          </button>
-        </div>
-      )}
+      <LimitsControls drill={drill} isGameActive={isGameActive} />
     </div>
   );
 }

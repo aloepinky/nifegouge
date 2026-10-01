@@ -44,12 +44,6 @@ import { openStep, clickOutcome, FILL } from './stepFlow';
 // `top` is a full-width band above the three-column row, for an aircraft whose poster is one
 // wide panel (the C172) or an atlas of separate ones (the T-44C) rather than the two tall
 // console towers Primary's `left`/`right` were shaped for. The band sizes itself.
-
-//
-// `left` and `right` are each drawn at `panelWidth` and scaled to their column, so a narrow
-// screen shrinks a fixed-width drawing rather than stacking it. `scaleSides={false}` turns that
-// off, which is right whenever a side holds something fluid: a column of buttons wants the
-// column's own width, and scaling it only makes the captions unreadable.
 //
 // `fill` writes the spelling the target step's own checklist uses rather than the caller's,
 // once the click has established which control it is. A sheet spells one control several ways
@@ -76,31 +70,13 @@ function shuffled(n) {
   return a;
 }
 
-// Draws its child at `width` and scales it down to fit the column, holding the column's height
-// to the scaled height.
-function ScaleToFit({ width, children }) {
-  const outer = useRef(null);
-  const inner = useRef(null);
-  useLayoutEffect(() => {
-    const fit = () => {
-      const o = outer.current;
-      const i = inner.current;
-      if (!o || !i) return;
-      const s = Math.min(1, o.clientWidth / width);
-      i.style.transform = s < 1 ? `scale(${s})` : '';
-      o.style.height = `${i.offsetHeight * s}px`;
-    };
-    fit();
-    const watch = new ResizeObserver(fit);
-    watch.observe(outer.current);
-    watch.observe(inner.current);
-    return () => watch.disconnect();
-  }, [width]);
-  return (
-    <div ref={outer} className="epl-scale">
-      <div ref={inner} className="epl-scale-inner" style={{ width }}>{children}</div>
-    </div>
-  );
+// The NWCs for a step or, keyed by the EP's own id, the ones the publication prints before
+// the procedure. A record with nothing in it opens nothing.
+function nwcFor(nwc, key) {
+  const found = nwc && nwc[key];
+  if (!found) return null;
+  const { warnings = [], cautions = [], notes = [] } = found;
+  return warnings.length + cautions.length + notes.length ? found : null;
 }
 
 // Within one step, warnings come first, then cautions, then notes. That is the order of
@@ -248,7 +224,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, onClose }) {
         <h3>How It Works</h3>
         <ul>
           <li>One EP is shown at a time. Type each step exactly as the checklist prints it, item and setting together: "Mixture - IDLE CUTOFF". EPs are verbatim!</li>
-          {hasPanel && <li>In Full Mode you can click the matching control instead of typing. A click fills the next empty step; clicking the same control again changes the setting it just wrote</li>}
+          {hasPanel && <li>In Full Mode you can click the matching control instead of typing. A click fills the next empty step with that step's whole answer</li>}
           {hasBand && <li>The cockpit poster is drawn above and beside the EP. Hint and Skip ring the control a step names and scroll it into view; where the poster shows one panel at a time, they bring up the panel it is on</li>}
           <li>Clicking on the ## of ## indicator will display a dropdown from which a specific EP can be selected</li>
           <li>A <span className="epl-swatch epl-swatch--red">red</span> box is wrong</li>
@@ -279,8 +255,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, onClose }) {
 }
 
 function EPDrill({
-  eps, title, subtitle, footnote, top, left, right, panelWidth = 300, sideWidth = 200,
-  scaleSides = true,
+  eps, title, footnote, top, left, right, sideWidth = 200,
   aliases = DEFAULT_ALIASES,
   nwc, nwcHints, isGameActive = false, onGameComplete,
 }) {
@@ -310,6 +285,7 @@ function EPDrill({
   const [cardMin, setCardMin] = useState(0);
   const [fit, setFit] = useState({});
   const wasCorrect = useRef({});
+  const advanceRef = useRef(null);
 
   const ep = eps[order[pos]];
   const steps = useMemo(() => ep.rows.filter((r) => r.id), [ep]);
@@ -317,14 +293,7 @@ function EPDrill({
   const fields = Object.keys(answers);
   const showTools = !isGameActive;
 
-  // The NWCs for a step or, keyed by the EP's own id, the ones the publication prints before
-  // the procedure. A record with nothing in it opens nothing.
-  const nwcAt = (key) => {
-    const found = nwc && nwc[key];
-    if (!found) return null;
-    const { warnings = [], cautions = [], notes = [] } = found;
-    return warnings.length + cautions.length + notes.length ? found : null;
-  };
+  const nwcAt = (key) => nwcFor(nwc, key);
   const hasNWC = !!nwc;
 
   // The procedure's NWC anchors in publication order: what is printed before the steps, then
@@ -356,15 +325,23 @@ function EPDrill({
   // It is the first newly-correct step *that has something to show* rather than simply the first
   // newly-correct one: a check marks several steps at once and All Answers marks the lot, and
   // most steps carry no NWC, so keying on the first of them shows nothing almost every time.
+  //
+  // What was already green is recorded with Auto NWC off too, so switching it on part way through
+  // an EP does not pop the NWC of a step answered before it.
   useEffect(() => {
-    if (!autoNWC) return undefined;
-    const opened = steps.find((s2) => results[s2.id] === 'correct' && !wasCorrect.current[s2.id] && nwcAt(s2.id));
+    const before = wasCorrect.current;
     wasCorrect.current = Object.fromEntries(steps.map((s2) => [s2.id, results[s2.id] === 'correct']));
+    if (!autoNWC) return undefined;
+    const opened = steps.find((s2) => results[s2.id] === 'correct' && !before[s2.id] && nwcAt(s2.id));
     if (!opened) return undefined;
     const at = setTimeout(() => setOpenNWC(opened.id), 600);
     return () => clearTimeout(at);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results, autoNWC, steps]);
+
+  // The move to the next EP in a game waits a moment after the last Check. Exit, or anything
+  // else that ends the game, cancels it, or it would page on and clear the answers afterwards.
+  useEffect(() => () => clearTimeout(advanceRef.current), [isGameActive]);
 
   const go = (nextPos) => {
     setPos(nextPos);
@@ -391,7 +368,8 @@ function EPDrill({
     setHint(null);
     if (isGameActive && steps.every((s) => out[s.id] === 'correct')) {
       if (pos < order.length - 1) {
-        setTimeout(() => {
+        clearTimeout(advanceRef.current);
+        advanceRef.current = setTimeout(() => {
           setData({});
           go(pos + 1);
         }, 600);
@@ -550,12 +528,7 @@ function EPDrill({
   // rounded pixel of card, and the navigation row it is supposed to hold still moved.
   const sizerCards = useMemo(() => eps.map((e) => {
     let k = 0;
-    const has = (key) => {
-      const found = nwc && nwc[key];
-      if (!found) return false;
-      const { warnings = [], cautions = [], notes = [] } = found;
-      return !!(warnings.length + cautions.length + notes.length);
-    };
+    const has = (key) => !!nwcFor(nwc, key);
     return (
       <div className="epl-card" key={e.id}>
         <div className="epl-card-title">
@@ -661,7 +634,6 @@ function EPDrill({
           </button>
         ) : <span className="epl-mode-spacer" />}
       </div>
-      {subtitle && <p className="page-subtitle">{subtitle}</p>}
       {showHelp && <Instructions hasPanel={hasPanel} hasBand={!!top} hasLeft={!!left} hasNWC={hasNWC} onClose={() => setShowHelp(false)} />}
       {openNWC && (
         <NWCModal key={openNWC} group={nwcGroup} current={openNWC} nwc={nwc} hints={nwcHints}
@@ -673,7 +645,7 @@ function EPDrill({
         <div className="epl-row">
           {full && left && (
             <div className="epl-side" style={{ width: leftWidth }}>
-              {scaleSides ? <ScaleToFit width={panelWidth}>{left(api)}</ScaleToFit> : left(api)}
+              {left(api)}
               {showTools && (
                 <div className="cockpit-side-actions">
                   <button type="button" onClick={pressHint}>Hint</button>
@@ -745,7 +717,7 @@ function EPDrill({
 
           {full && right && (
             <div className="epl-side" style={{ width: rightWidth }}>
-              {scaleSides ? <ScaleToFit width={panelWidth}>{right(api)}</ScaleToFit> : right(api)}
+              {right(api)}
               {showTools && (
                 <div className="cockpit-side-actions">
                   <button type="button" onClick={skip}>Skip</button>

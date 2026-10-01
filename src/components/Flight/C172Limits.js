@@ -1,5 +1,6 @@
 import React from 'react';
 import useLimitsDrill from '../epsLimits/useLimitsDrill';
+import LimitsControls from '../epsLimits/LimitsControls';
 import { C172_LIMITS } from './c172Data';
 
 // NIFE's limits table: the C172 limits exam as it is handed out, one box per blank. The table
@@ -84,21 +85,7 @@ function C172Limits({ isGameActive = false, onGameComplete }) {
           </tbody>
         </table>
       </div>
-      {drill.queue && (
-        <div className="epl-limits-progress">Random Mode: Limit {drill.at + 1} of {drill.queue.length}</div>
-      )}
-      {!isGameActive && (
-        <div className="button-row" style={{ justifyContent: 'center', marginTop: '20px' }}>
-          <button type="button" onClick={drill.next}>Next Answer</button>
-          <button type="button" onClick={drill.all}>All Answers</button>
-          <button type="button" onClick={drill.check}>Check Answers</button>
-          <button type="button" onClick={drill.reset}>Reset</button>
-          <button type="button" className={`epl-random${drill.queue ? ' active' : ''}`} aria-pressed={!!drill.queue}
-            onClick={drill.toggleRandom}>
-            Random Mode
-          </button>
-        </div>
-      )}
+      <LimitsControls drill={drill} isGameActive={isGameActive} />
     </div>
   );
 }

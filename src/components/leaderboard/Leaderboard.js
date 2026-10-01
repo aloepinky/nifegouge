@@ -122,7 +122,11 @@ function Leaderboard({ school, pendingResult, onClose }) {
     requested.current.add(key);
     fetchBoard(school, m, p, playerKey(savedPlayer()))
       .then((data) => setBoards((b) => ({ ...b, [key]: data })))
-      .catch((err) => setBoards((b) => ({ ...b, [key]: { error: err.message } })));
+      .catch((err) => {
+        // A failed board is fetched again the next time its pill is chosen.
+        requested.current.delete(key);
+        setBoards((b) => ({ ...b, [key]: { error: err.message } }));
+      });
   }, [school]);
 
   useEffect(() => {

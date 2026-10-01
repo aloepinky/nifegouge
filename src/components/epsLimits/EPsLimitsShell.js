@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Leaderboard from '../leaderboard/Leaderboard';
-import { formatTime } from '../leaderboard/leaderboardApi';
+import { formatTime, MODES } from '../leaderboard/leaderboardApi';
 
 // The EPs/Limits page every school shares: its tab bar, Game Mode, the timer with pause, and
 // the leaderboard. What sits under each tab is the school's own (Primary's cockpit, NIFE's
@@ -18,11 +18,18 @@ import { formatTime } from '../leaderboard/leaderboardApi';
 //   epsTab, limitsTab   which tab ids a game drives
 //   renderTab(id, { isGameActive, onGameComplete })   the tab's content; remounted per game
 
-const GAME_MODES = [
-  { id: 'EPs', label: 'EPs' },
-  { id: 'Limits', label: 'Limits' },
-  { id: 'EPs_and_Limits', label: 'EPs & Limits' },
-];
+// The running time, in a component of its own: it ticks every 10 ms, and a tick re-renders only
+// this span rather than the cockpit and posters underneath. Pausing stops the tick; the time
+// paused is in `offsetRef`, which `resume` has already added to by the time the tick restarts.
+function GameTimer({ start, offsetRef, paused }) {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!start || paused) return undefined;
+    const interval = setInterval(() => setElapsed(Date.now() - start - offsetRef.current), 10);
+    return () => clearInterval(interval);
+  }, [start, paused, offsetRef]);
+  return <span className="timer-display">{elapsed ? formatTime(elapsed) : '0:00.00'}</span>;
+}
 
 function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }) {
   const { tab } = useParams();
@@ -32,7 +39,6 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
   const [gameMode, setGameMode] = useState('EPs');
   const [isGameActive, setIsGameActive] = useState(false);
   const [gameStartTime, setGameStartTime] = useState(null);
-  const [elapsedTime, setElapsedTime] = useState(0);
   const [showGameModal, setShowGameModal] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [pendingResult, setPendingResult] = useState(null);
@@ -42,16 +48,9 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
   const epsTimeRef = useRef(null);
   const pauseStartRef = useRef(null);
   const pauseOffsetRef = useRef(0);
-
-  useEffect(() => {
-    let interval;
-    if (isGameActive && gameStartTime && !isPaused) {
-      interval = setInterval(() => {
-        setElapsedTime(Date.now() - gameStartTime - pauseOffsetRef.current);
-      }, 10);
-    }
-    return () => clearInterval(interval);
-  }, [isGameActive, gameStartTime, isPaused]);
+  // Whether a game is running, read when a tab reports in: a tab can report from a timeout set
+  // before the game ended, with the props of a render when it was still running.
+  const runningRef = useRef(false);
 
   const startGame = () => {
     completedEPsRef.current = false;
@@ -61,9 +60,9 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
     pauseStartRef.current = null;
     setIsPaused(false);
     setActiveTab(gameMode === 'Limits' ? limitsTab : epsTab);
-    setElapsedTime(0);
     setGameKey((k) => k + 1);
     setGameStartTime(Date.now());
+    runningRef.current = true;
     setIsGameActive(true);
   };
 
@@ -81,13 +80,22 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
   };
 
   const endGame = (totalMs, epsSplit, limitsSplit) => {
+    runningRef.current = false;
     setIsGameActive(false);
     setIsPaused(false);
     setPendingResult({ mode: gameMode, elapsedTime: totalMs, epsTime: epsSplit, limitsTime: limitsSplit });
     setShowLeaderboard(true);
   };
 
-  const onGameComplete = () => {
+  // The tab the game is waiting on: Limits for a Limits game and for the second half of EPs &
+  // Limits, else EPs. The tab bar is locked during a game but the browser's Back button is not,
+  // so a tab that reports done is taken at its word only if it is that one; otherwise going Back
+  // to EPs after the hand-off and finishing them again would end the game with no limits done.
+  const expectedTab = () => (gameMode === 'Limits' || (gameMode === 'EPs_and_Limits' && completedEPsRef.current)
+    ? limitsTab : epsTab);
+
+  const onGameComplete = (fromTab) => {
+    if (!runningRef.current || fromTab !== expectedTab()) return;
     const total = Date.now() - gameStartTime - pauseOffsetRef.current;
     if (gameMode !== 'EPs_and_Limits') {
       endGame(total);
@@ -101,11 +109,11 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
   };
 
   const stopGame = () => {
+    runningRef.current = false;
     setIsGameActive(false);
     setIsPaused(false);
     pauseStartRef.current = null;
     pauseOffsetRef.current = 0;
-    setElapsedTime(0);
     setGameStartTime(null);
     completedEPsRef.current = false;
     epsTimeRef.current = null;
@@ -134,7 +142,7 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
               <>
                 <div className="game-timer" style={{ position: 'static' }}>
                   <span className="timer-label">Time: </span>
-                  <span className="timer-display">{elapsedTime ? formatTime(elapsedTime) : '0:00.00'}</span>
+                  <GameTimer key={gameKey} start={gameStartTime} offsetRef={pauseOffsetRef} paused={isPaused} />
                 </div>
                 <button className="sub-navbar-btn" onClick={pauseGame}>Pause</button>
                 <button className="sub-navbar-btn danger" onClick={stopGame}>Exit</button>
@@ -154,7 +162,7 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
       <React.Fragment key={gameKey}>
         {renderTab(activeTab, {
           isGameActive: isGameActive && gameTabs.includes(activeTab),
-          onGameComplete,
+          onGameComplete: () => onGameComplete(activeTab),
         })}
       </React.Fragment>
 
@@ -168,7 +176,7 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
             <div style={{ marginBottom: '16px' }}>
               <label htmlFor="game-mode" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>Mode</label>
               <select id="game-mode" value={gameMode} onChange={(e) => setGameMode(e.target.value)} className="game-mode-select" style={{ width: '100%' }}>
-                {GAME_MODES.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
+                {MODES.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
               </select>
             </div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>

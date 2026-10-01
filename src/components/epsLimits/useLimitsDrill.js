@@ -50,6 +50,15 @@ export default function useLimitsDrill(answers, groups = [], { isGameActive = fa
   const [queue, setQueue] = useState(null); // the Random-mode order, or null when off
   const [at, setAt] = useState(0);
   const locked = useRef(null);
+  // The game ends once. Enter on the last blank checks the whole sheet, and the move on that the
+  // same answer scheduled would end it a second time, 300 ms later, over the first result.
+  const done = useRef(false);
+
+  const complete = () => {
+    if (!isGameActive || done.current) return;
+    done.current = true;
+    onGameComplete?.();
+  };
 
   const current = queue ? queue[at] : null;
 
@@ -58,6 +67,7 @@ export default function useLimitsDrill(answers, groups = [], { isGameActive = fa
   const startRandom = () => {
     const open = KEYS.filter((k) => results[k] !== 'correct');
     if (!open.length) return;
+    done.current = false;
     setQueue(shuffledGroups(open, groups));
     setAt(0);
     focusHint();
@@ -72,7 +82,7 @@ export default function useLimitsDrill(answers, groups = [], { isGameActive = fa
     locked.current = null;
     if (at + 1 >= queue.length) {
       stopRandom();
-      if (isGameActive) onGameComplete?.();
+      complete();
       return;
     }
     setAt(at + 1);
@@ -95,7 +105,7 @@ export default function useLimitsDrill(answers, groups = [], { isGameActive = fa
     const out = {};
     for (const k of KEYS) out[k] = gradeLimit(data[k], answers[k]);
     setResults(out);
-    if (isGameActive && KEYS.every((k) => out[k] === 'correct')) onGameComplete?.();
+    if (KEYS.every((k) => out[k] === 'correct')) complete();
   };
 
   const next = () => {
@@ -116,6 +126,7 @@ export default function useLimitsDrill(answers, groups = [], { isGameActive = fa
     setData({});
     setResults({});
     stopRandom();
+    done.current = false;
   };
 
   const inputClass = (field) => {

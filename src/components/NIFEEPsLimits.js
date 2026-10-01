@@ -28,7 +28,6 @@ function C172EPs(game) {
       eps={C172_EPS}
       title="C172 EMERGENCY PROCEDURES"
       aliases={C172_ALIASES}
-      scaleSides={false}
       top={(api) => <CockpitPoster poster={C172_POSTER} aliases={C172_ALIASES} {...api} />}
       left={(api) => <ActionButtons actions={C172_POSTER.actionColumns[0]} aliases={C172_ALIASES} {...api} />}
       right={(api) => <ActionButtons actions={C172_POSTER.actionColumns[1]} title="" aliases={C172_ALIASES} {...api} />}
