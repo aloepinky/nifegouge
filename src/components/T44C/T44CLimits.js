@@ -20,8 +20,10 @@ const GRID = [
   ['CRUISE CLIMB', 'cruiseClimbTime', 'cruiseClimbTq2200', 'cruiseClimbTq1900', 'cruiseClimbItt', 'cruiseClimbN1', 'cruiseClimbNp', 'cruiseClimbOilP', 'cruiseClimbOilT'],
   ['CRUISE', 'cruiseTime', 'cruiseTq2200', 'cruiseTq1900', 'cruiseItt', 'cruiseN1', 'cruiseNp', 'cruiseOilP', 'cruiseOilT'],
   ['HI-IDLE (1)', 'hiIdleTime', DASH, DASH, DASH, DASH, DASH, DASH, 'hiIdleOilT'],
-  ['LO-IDLE (2)', 'loIdleTime', DASH, DASH, ['loIdleItt', '6'], DASH, DASH, ['loIdleOilP', '', '(Min)'], 'loIdleOilT'],
-  ['STARTING', 'startingTime', DASH, DASH, ['startingItt', '4'], DASH, <span key="np">{DASH} <sup>10</sup></span>, <span key="ind">Indication</span>, ['startingOilT', '', '(MIN)']],
+  // The sheet hangs footnote 10 on STARTING's Np cell; NATOPS Figure 4.3-1 puts it on LO-IDLE's,
+  // the row note 10 is about (prop rpm with the condition levers at low idle).
+  ['LO-IDLE (2)', 'loIdleTime', DASH, DASH, ['loIdleItt', '6'], DASH, <span key="np">{DASH} <sup>10</sup></span>, ['loIdleOilP', '', '(Min)'], 'loIdleOilT'],
+  ['STARTING', 'startingTime', DASH, DASH, ['startingItt', '4'], DASH, DASH, <span key="ind">Indication</span>, ['startingOilT', '', '(MIN)']],
   ['ACCELERATION (7)', 'accelTime', 'accelTq', null, 'accelItt', 'accelN1', 'accelNp', DASH, 'accelOilT'],
   ['MAX. REVERSE', 'maxRevTime', DASH, DASH, 'maxRevItt', 'maxRevN1', 'maxRevNp', 'maxRevOilP', 'maxRevOilT'],
 ];
