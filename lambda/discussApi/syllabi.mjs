@@ -1,5 +1,7 @@
-import { HttpError, cleanText, parseBody, reply, requireProgram } from './http.mjs';
-import { newestSyllabus, putSyllabus, listSyllabi, setSyllabusHidden, setSyllabusName } from './store.mjs';
+import {
+  HttpError, cleanAuthor, cleanSummary, cleanText, parseBody, reply, requireProgram, slugify,
+} from './http.mjs';
+import { newestSyllabus, putSyllabus, listSyllabi, setSyllabusHidden } from './store.mjs';
 import {
   mirrorSyllabus, rebuildSyllabiIndex, syllabusRecord, syllabusEntry, syllabusKey, deleteKey,
 } from './mirror.mjs';
@@ -16,12 +18,8 @@ import {
 export const DELTA_ID = 'delta-primary';
 const MAX_DOC_BYTES = 350 * 1024; // under DynamoDB's 400 KB item limit, with room for the rest
 const MAX_NAME = 80;
-const MAX_AUTHOR = 40;
-const MAX_SUMMARY = 200;
 
 export const cleanName = (name) => cleanText(name, MAX_NAME);
-export const cleanAuthor = (author) => cleanText(author, MAX_AUTHOR);
-export const cleanSummary = (summary) => cleanText(summary, MAX_SUMMARY);
 
 // Shape, not content: enough that the site can render what comes back.
 export function checkDoc(doc) {
@@ -80,10 +78,6 @@ export function checkDoc(doc) {
   return null;
 }
 
-function slugify(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'syllabus';
-}
-
 async function afterWrite(row) {
   await mirrorSyllabus(row);
   await rebuildSyllabiIndex();
@@ -118,7 +112,7 @@ export async function publishSyllabusHandler(event) {
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const suffix = Math.random().toString(16).slice(2, 6);
-    const id = `${slugify(name)}-${suffix}`;
+    const id = `${slugify(name, 'syllabus')}-${suffix}`;
     try {
       const row = await putSyllabus(id, 1, name, body.doc, meta);
       await afterWrite(row);
@@ -173,8 +167,10 @@ export async function importSyllabusHandler(event) {
   return reply(200, { success: true, id, rev });
 }
 
-// Admin. Changes the name the dropdown lists a syllabus under, without a revision: a rename
-// is not an edit to the document, and nobody reading its History needs an entry for it.
+// Admin. Changes the name the dropdown lists a syllabus under. The document is unchanged, but
+// the rename is still a revision: a save carries the name its editor loaded, so a rename made
+// in place would pass that save's baseRev check and be silently put back. As a revision, the
+// stale save gets a 409 instead.
 export async function renameSyllabusHandler(event) {
   const body = parseBody(event);
   if (typeof body.id !== 'string') throw new HttpError(400, 'id is required');
@@ -182,7 +178,11 @@ export async function renameSyllabusHandler(event) {
   if (!name) throw new HttpError(400, 'A name is required');
   const current = await newestSyllabus(body.id);
   if (!current || current.hidden) throw new HttpError(404, 'No such syllabus');
-  const row = await setSyllabusName(body.id, name);
+  const row = await putSyllabus(body.id, current.rev + 1, name, JSON.parse(current.docJson), {
+    author: cleanAuthor(body.author),
+    summary: `Renamed to ${name}`,
+    baseRev: current.rev,
+  });
   await afterWrite(row);
   return reply(200, { success: true, id: body.id, rev: row.rev, name });
 }

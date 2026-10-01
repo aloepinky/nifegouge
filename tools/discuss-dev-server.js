@@ -61,8 +61,6 @@ async function main() {
   fs.mkdirSync(STATE, { recursive: true });
 
   const lambdaDir = path.join(ROOT, 'lambda', 'discussApi');
-  // The deploy workflow copies the rules in; do the same here so the import resolves.
-  fs.copyFileSync(path.join(ROOT, 'tools', 'lib', 'discussRules.mjs'), path.join(lambdaDir, 'discussRules.mjs'));
 
   const { FakeDynamo, FakeS3 } = await import(pathToFileURL(path.join(__dirname, 'lib', 'fakeAws.mjs')));
   const { setClients } = await import(pathToFileURL(path.join(lambdaDir, 'clients.mjs')));

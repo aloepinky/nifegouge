@@ -366,7 +366,18 @@ async function approve(questionId, by) {
       merged = true;
     });
   } catch (error) {
-    if (!(error instanceof HttpError && error.status === 404)) throw error;
+    if (!(error instanceof HttpError && error.status === 404)) {
+      // The merge did not happen (contention, or AWS). Left approved, the edit would sit in the
+      // quiz beside the question it edits, so it goes back to pending and is decided again.
+      // If putting it back fails too, the merge failure is still the one reported.
+      await change(questionId, (q) => {
+        if (q.status !== 'approved') return false;
+        q.status = 'pending';
+        delete q.moderatedAt;
+        delete q.moderatedBy;
+      }).catch((undo) => console.error('approve: could not put the edit back to pending', questionId, undo));
+      throw error;
+    }
   }
   if (!merged) return; // Nothing to merge into: the edit stays in the quiz as its own question.
 

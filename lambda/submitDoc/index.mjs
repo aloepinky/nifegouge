@@ -67,6 +67,21 @@ function linkKey(href) {
     return `${host}${path}${params ? `?${params}` : ''}`;
 }
 
+// A POST body, as lambda/discussApi/http.mjs reads one: none is an empty object, and one that is
+// not JSON is the browser's mistake (a 400), not ours.
+class BadBody extends Error {}
+
+function parseBody(event) {
+    if (event.body == null) return {};
+    if (typeof event.body !== 'string') return event.body;
+    const raw = event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('utf8') : event.body;
+    try {
+        return JSON.parse(raw) ?? {};
+    } catch {
+        throw new BadBody();
+    }
+}
+
 export const handler = async (event) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
@@ -84,12 +99,12 @@ export const handler = async (event) => {
     try {
         // Get presigned URL for upload
         if (path.includes('get-upload-url') && method === 'POST') {
-            return await handleGetUploadUrl(event, headers);
+            return await handleGetUploadUrl(parseBody(event), headers);
         }
         
         // Confirm successful upload
         if (path.includes('confirm-upload') && method === 'POST') {
-            return await handleConfirmUpload(event, headers);
+            return await handleConfirmUpload(parseBody(event), headers);
         }
         
         // Get all documents
@@ -99,12 +114,12 @@ export const handler = async (event) => {
         
         // Get signed URL for viewing
         if (path.includes('get-document-url') && method === 'POST') {
-            return await handleGetDocumentUrl(event, headers);
+            return await handleGetDocumentUrl(parseBody(event), headers);
         }
         
         // Submit link
         if (path.includes('submit-link') && method === 'POST') {
-            return await handleLinkSubmission(event, headers);
+            return await handleLinkSubmission(parseBody(event), headers);
         }
         
         // Get links
@@ -114,12 +129,12 @@ export const handler = async (event) => {
         
         // Vote on document
         if (path.includes('vote-document') && method === 'POST') {
-            return await handleDocumentVote(event, headers);
+            return await handleVote('NIFEDocuments', 'docId', parseBody(event), headers);
         }
         
         // Vote on link
         if (path.includes('vote-link') && method === 'POST') {
-            return await handleLinkVote(event, headers);
+            return await handleVote('NIFELinks', 'linkId', parseBody(event), headers);
         }
         
         return {
@@ -128,23 +143,27 @@ export const handler = async (event) => {
             body: JSON.stringify({ error: 'Endpoint not found' })
         };
     } catch (error) {
+        if (error instanceof BadBody) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ success: false, error: 'Body must be JSON' })
+            };
+        }
         console.error('Handler error:', error);
         return {
             statusCode: 500,
             headers,
             body: JSON.stringify({ 
-                error: 'Internal server error',
-                message: error.message
+                error: 'Internal server error'
             })
         };
     }
 };
 
 // Get presigned URL for direct S3 upload (doesn't save to DB yet)
-async function handleGetUploadUrl(event, headers) {
+async function handleGetUploadUrl(body, headers) {
     try {
-        const body = JSON.parse(event.body);
-        
         if (!body.fileName || !body.topic) {
             return {
                 statusCode: 400,
@@ -210,18 +229,15 @@ async function handleGetUploadUrl(event, headers) {
             headers,
             body: JSON.stringify({ 
                 success: false,
-                error: 'Failed to get upload URL',
-                message: error.message
+                error: 'Failed to get upload URL'
             })
         };
     }
 }
 
 // New function to confirm upload and save to DB
-async function handleConfirmUpload(event, headers) {
+async function handleConfirmUpload(body, headers) {
     try {
-        const body = JSON.parse(event.body);
-        
         if (!body.docId || !body.s3Key || !body.metadata) {
             return {
                 statusCode: 400,
@@ -233,12 +249,24 @@ async function handleConfirmUpload(event, headers) {
             };
         }
         
+        // Only what get-upload-url handed out: a fresh doc_<time>_<random> id, and a key under
+        // the document's own school.
+        const program = body.metadata.program || 'nife';
+        if (typeof body.docId !== 'string' || !/^doc_\d+_[a-z0-9]+$/.test(body.docId)
+            || typeof body.s3Key !== 'string' || !body.s3Key.startsWith(`${program}/`)) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ success: false, error: 'Invalid upload confirmation' })
+            };
+        }
+
         // Save metadata to DynamoDB only after confirmed S3 upload
         const docMetadata = {
             docId: body.docId,
             fileName: body.metadata.fileName,
             topic: body.metadata.topic,
-            program: body.metadata.program || 'nife',
+            program,
             s3Key: body.s3Key,
             fileSize: body.metadata.fileSize,
             mimeType: body.metadata.mimeType,
@@ -248,10 +276,22 @@ async function handleConfirmUpload(event, headers) {
             downvotes: 0
         };
         
-        await dynamodb.send(new PutCommand({
-            TableName: 'NIFEDocuments',
-            Item: docMetadata
-        }));
+        // A docId is confirmed once. A second confirm, replayed or crafted, would otherwise
+        // replace the row and wipe its votes.
+        try {
+            await dynamodb.send(new PutCommand({
+                TableName: 'NIFEDocuments',
+                Item: docMetadata,
+                ConditionExpression: 'attribute_not_exists(docId)'
+            }));
+        } catch (error) {
+            if (error.name !== 'ConditionalCheckFailedException') throw error;
+            return {
+                statusCode: 409,
+                headers,
+                body: JSON.stringify({ success: false, error: 'That upload is already confirmed' })
+            };
+        }
         
         console.log('Upload confirmed and saved to DB:', body.docId);
         
@@ -272,8 +312,7 @@ async function handleConfirmUpload(event, headers) {
             headers,
             body: JSON.stringify({ 
                 success: false,
-                error: 'Failed to confirm upload',
-                message: error.message
+                error: 'Failed to confirm upload'
             })
         };
     }
@@ -308,17 +347,14 @@ async function handleGetDocuments(event, headers) {
             headers,
             body: JSON.stringify({ 
                 success: false,
-                error: 'Failed to fetch documents',
-                message: error.message
+                error: 'Failed to fetch documents'
             })
         };
     }
 }
 
-async function handleGetDocumentUrl(event, headers) {
+async function handleGetDocumentUrl(body, headers) {
     try {
-        const body = JSON.parse(event.body);
-        
         if (!body.docId) {
             return {
                 statusCode: 400,
@@ -394,17 +430,14 @@ async function handleGetDocumentUrl(event, headers) {
             headers,
             body: JSON.stringify({ 
                 success: false,
-                error: 'Failed to get document URL',
-                message: error.message
+                error: 'Failed to get document URL'
             })
         };
     }
 }
 
-async function handleLinkSubmission(event, headers) {
+async function handleLinkSubmission(body, headers) {
     try {
-        const body = JSON.parse(event.body);
-        
         if (!body.url || !body.title || !body.topic) {
             return {
                 statusCode: 400,
@@ -479,8 +512,7 @@ async function handleLinkSubmission(event, headers) {
             headers,
             body: JSON.stringify({ 
                 success: false,
-                error: 'Failed to submit link',
-                message: error.message
+                error: 'Failed to submit link'
             })
         };
     }
@@ -511,18 +543,19 @@ async function handleGetLinks(event, headers) {
             headers,
             body: JSON.stringify({ 
                 success: false,
-                error: 'Failed to fetch links',
-                message: error.message
+                error: 'Failed to fetch links'
             })
         };
     }
 }
 
-async function handleDocumentVote(event, headers) {
+// A good or bad vote on a document (NIFEDocuments, docId) or a link (NIFELinks, linkId). Only
+// an entry that exists is counted: an update with no condition would create a row for an unknown
+// id, and a document row with no program lists under NIFE.
+async function handleVote(TableName, keyName, body, headers) {
     try {
-        const body = JSON.parse(event.body);
-        
-        if (!body.docId || !body.voteType) {
+        const id = body[keyName];
+        if (!id || !body.voteType) {
             return {
                 statusCode: 400,
                 headers,
@@ -534,111 +567,64 @@ async function handleDocumentVote(event, headers) {
         }
 
         if (body.voteType === 'outdated') {
-            return await handleOutdatedVote('NIFEDocuments', { docId: body.docId }, body, headers);
+            return await handleOutdatedVote(TableName, { [keyName]: id }, body, headers);
         }
 
-        const updateExpression = body.voteType === 'good' 
-            ? 'SET upvotes = if_not_exists(upvotes, :zero) + :one'
-            : 'SET downvotes = if_not_exists(downvotes, :zero) + :one';
-        
-        const updateCommand = new UpdateCommand({
-            TableName: 'NIFEDocuments',
-            Key: { docId: body.docId },
-            UpdateExpression: updateExpression,
-            ExpressionAttributeValues: {
-                ':one': 1,
-                ':zero': 0
-            },
-            ReturnValues: 'ALL_NEW'
-        });
-        
-        const result = await dynamodb.send(updateCommand);
-        
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({ 
-                success: true,
-                message: 'Vote recorded',
-                upvotes: result.Attributes?.upvotes,
-                downvotes: result.Attributes?.downvotes
-            })
-        };
-        
-    } catch (error) {
-        console.error('Error recording vote:', error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ 
-                success: false,
-                error: 'Failed to record vote',
-                message: error.message
-            })
-        };
-    }
-}
-
-async function handleLinkVote(event, headers) {
-    try {
-        const body = JSON.parse(event.body);
-        
-        if (!body.linkId || !body.voteType) {
+        if (body.voteType !== 'good' && body.voteType !== 'bad') {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Missing required fields'
-                })
+                body: JSON.stringify({ success: false, error: 'Invalid vote' })
             };
         }
 
-        if (body.voteType === 'outdated') {
-            return await handleOutdatedVote('NIFELinks', { linkId: body.linkId }, body, headers);
-        }
-
-        const updateExpression = body.voteType === 'good' 
+        const updateExpression = body.voteType === 'good'
             ? 'SET upvotes = if_not_exists(upvotes, :zero) + :one'
             : 'SET downvotes = if_not_exists(downvotes, :zero) + :one';
-        
-        const updateCommand = new UpdateCommand({
-            TableName: 'NIFELinks',
-            Key: { linkId: body.linkId },
+
+        const result = await dynamodb.send(new UpdateCommand({
+            TableName,
+            Key: { [keyName]: id },
             UpdateExpression: updateExpression,
+            ConditionExpression: `attribute_exists(${keyName})`,
             ExpressionAttributeValues: {
                 ':one': 1,
                 ':zero': 0
             },
             ReturnValues: 'ALL_NEW'
-        });
-        
-        const result = await dynamodb.send(updateCommand);
-        
+        }));
+
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 success: true,
                 message: 'Vote recorded',
                 upvotes: result.Attributes?.upvotes,
                 downvotes: result.Attributes?.downvotes
             })
         };
-        
+
     } catch (error) {
+        if (error.name === 'ConditionalCheckFailedException') {
+            return {
+                statusCode: 404,
+                headers,
+                body: JSON.stringify({ success: false, error: 'Not found' })
+            };
+        }
         console.error('Error recording vote:', error);
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 success: false,
-                error: 'Failed to record vote',
-                message: error.message
+                error: 'Failed to record vote'
             })
         };
     }
 }
+
 const outdatedBody = (item) => JSON.stringify({
     success: true,
     outdatedUseful: Math.max(0, item.outdatedUseful || 0),

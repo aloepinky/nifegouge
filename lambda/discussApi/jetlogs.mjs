@@ -1,4 +1,6 @@
-import { HttpError, cleanText, parseBody, reply } from './http.mjs';
+import {
+  HttpError, cleanAuthor, cleanSummary, cleanText, checkId, idParam, ok, parseBody, slugify,
+} from './http.mjs';
 import {
   jetLogHistory, jetLogMeta, jetLogRevision, newestJetLog, createJetLog, saveJetLog,
   setJetLogHidden,
@@ -17,32 +19,8 @@ import {
 // add a folder, which is the friction this feature exists to remove.
 
 const MAX_DOC_BYTES = 200 * 1024;
-const MAX_ID = 60;
-
-const ok = (extra) => reply(200, { success: true, ...extra });
-
 const cleanName = (value) => cleanText(value, 60);
-const cleanAuthor = (value) => cleanText(value, 40);
-const cleanSummary = (value) => cleanText(value, 200);
 const cleanFiling = (value) => cleanText(value, 40);
-
-// A slug, like an item's. Kept here rather than imported from lint.mjs, which pulls in the
-// prose rules the deploy copies in at build time.
-const ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-
-function checkLogId(id) {
-  if (typeof id !== 'string' || !id) throw new HttpError(400, 'id is required');
-  if (id.length > MAX_ID) throw new HttpError(400, `An id is at most ${MAX_ID} characters`);
-  if (!ID_RE.test(id)) throw new HttpError(400, 'An id is lowercase words joined by single hyphens');
-  return id;
-}
-
-function idParam(event) {
-  const params = event.queryStringParameters || {};
-  const id = (params.id || '').toLowerCase();
-  if (!id) throw new HttpError(400, 'id is required');
-  return id;
-}
 
 // The document as it will be stored. Nothing is rewritten: tools/jetlog-migrate.js --verify
 // compares the mirrored document against its source byte for byte.
@@ -76,11 +54,6 @@ function checkJetLog(log, id) {
 async function afterWrite(meta, row) {
   await mirrorJetLog(meta, row);
   await rebuildJetLogsIndex();
-}
-
-function slugify(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)
-    || 'jetlog';
 }
 
 // ---------------------------------------------------------------------------------------
@@ -145,7 +118,7 @@ export async function publishJetLogHandler(event) {
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const suffix = Math.random().toString(16).slice(2, 6);
-    const id = `${slugify(name)}-${suffix}`;
+    const id = `${slugify(name, 'jetlog')}-${suffix}`;
     const doc = checkJetLog({
       ...log,
       id,
@@ -166,7 +139,7 @@ export async function publishJetLogHandler(event) {
 
 export async function saveJetLogHandler(event) {
   const body = parseBody(event);
-  const id = checkLogId((body.id || '').toLowerCase());
+  const id = checkId((body.id || '').toLowerCase());
   const baseRev = body.baseRev;
   if (!Number.isInteger(baseRev) || baseRev < 1) throw new HttpError(400, 'baseRev is required');
   const summary = cleanSummary(body.summary);
@@ -197,7 +170,7 @@ export async function saveJetLogHandler(event) {
 // stays linear and the restore is itself undoable.
 export async function restoreJetLogHandler(event) {
   const body = parseBody(event);
-  const id = checkLogId((body.id || '').toLowerCase());
+  const id = checkId((body.id || '').toLowerCase());
   const rev = Number(body.rev);
   if (!Number.isInteger(rev) || rev < 1) throw new HttpError(400, 'rev is required');
 
@@ -232,7 +205,7 @@ export async function importJetLogsHandler(event) {
   const imported = [];
   const skipped = [];
   for (const log of body.logs) {
-    const id = checkLogId((log && log.id) || '');
+    const id = checkId((log && log.id) || '');
     checkJetLog(log, id);
     const meta = await jetLogMeta(id);
     if (meta && !body.overwrite) {
@@ -251,7 +224,7 @@ export async function importJetLogsHandler(event) {
 
 export async function hideJetLogHandler(event) {
   const body = parseBody(event);
-  const id = checkLogId((body.id || '').toLowerCase());
+  const id = checkId((body.id || '').toLowerCase());
   const hidden = !!body.hidden;
   await setJetLogHidden(id, hidden);
   if (hidden) {

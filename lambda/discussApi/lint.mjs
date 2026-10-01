@@ -1,18 +1,9 @@
-import { lintItem } from './discussRules.mjs';
 import { HttpError, requireProgram } from './http.mjs';
 
-// What the server checks before it stores an item.
-//
-// Two layers. `checkItem` is the structural half of the browser's edit/validate.js, redone
-// here because the browser copy is not to be trusted and imports the browser registry anyway:
-// the shape, the ids, the citations, the size. `lintForSave` then runs the shared rules and
-// decides what blocks.
-//
-// The only blocking rule is the em dash, and it blocks only when a save *adds* one. Fifty-seven
-// pages carried em dashes when the corpus was imported, and refusing every edit to those pages
-// until somebody rewrites their dashes would turn a typo fix into a rewrite. A save that leaves
-// the count where it was, or lowers it, goes through and carries the remaining dashes back as
-// warnings; a save that raises it is refused with each location named.
+// What the server checks before it stores an item: the structural half of the browser's
+// edit/validate.js, redone here because the browser copy is not to be trusted and imports the
+// browser registry anyway. The shape, the ids, the citations, the size. Nothing more: the prose
+// rules in tools/lib/discussRules.mjs are for the CLI, and a save is never linted.
 
 export const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export const RESERVED_SLUGS = new Set(['e', 'b', 's', 'upload', 'edit', 'new', 'history']);
@@ -134,22 +125,4 @@ export function checkItem(item, slug) {
     blocks(s, `Section "${s.title || s.id}"`);
     for (const sub of s.subsections || []) blocks(sub, `Subsection "${sub.title || sub.id}"`);
   }
-}
-
-const emDashes = (findings) => findings.filter((f) => f.rule === 'em-dash');
-
-// -> { errors, warnings }, each `[{ rule, detail }]`. `baseItem` is the revision the save
-// started from, or null for a brand-new page.
-export function lintForSave(item, baseItem) {
-  const findings = lintItem(item);
-  const before = baseItem ? emDashes(lintItem(baseItem)).length : 0;
-  const now = emDashes(findings);
-  const strip = (f) => ({ rule: f.rule, detail: f.detail });
-  if (now.length > before) {
-    return {
-      errors: now.map(strip),
-      warnings: findings.filter((f) => f.rule !== 'em-dash').map(strip),
-    };
-  }
-  return { errors: [], warnings: findings.map(strip) };
 }

@@ -1,4 +1,4 @@
-import { HttpError, cleanText, parseBody, reply } from './http.mjs';
+import { HttpError, cleanAuthor, cleanSummary, cleanText, ok, parseBody } from './http.mjs';
 import {
   createQuestionSections, newestQuestionSections, questionSectionsHistory, questionSectionsMeta,
   questionSectionsRevision, saveQuestionSections,
@@ -27,10 +27,6 @@ const MAX_LECTURES = 60;
 
 const SECTION_ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const LECTURE_ID = /^[A-Za-z0-9]+(-[A-Za-z0-9]+)*$/;
-
-const cleanAuthor = (value) => cleanText(value, 40);
-const cleanSummary = (value) => cleanText(value, 200);
-const ok = (extra) => reply(200, { success: true, ...extra });
 
 // The document as it will be stored: names trimmed, `retired` only where true, nothing else
 // carried. Throws on anything malformed, and on any id `previous` had that this one drops.

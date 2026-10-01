@@ -37,30 +37,6 @@ const isConflict = (error) => error && (
 // ---------------------------------------------------------------------------------------
 // Items
 
-export async function itemMeta(slug) {
-  const result = await db().send(new GetCommand({
-    TableName: CONFIG.itemsTable,
-    Key: { slug, rev: 0 },
-  }));
-  return result.Item || null;
-}
-
-export async function itemRevision(slug, rev) {
-  const result = await db().send(new GetCommand({
-    TableName: CONFIG.itemsTable,
-    Key: { slug, rev },
-  }));
-  return result.Item || null;
-}
-
-// The newest revision row of a visible item, with its meta, or null.
-export async function newestItem(slug) {
-  const meta = await itemMeta(slug);
-  if (!meta || meta.hidden) return null;
-  const row = await itemRevision(slug, meta.latestRev);
-  return row ? { meta, row } : null;
-}
-
 // What the index carries about a page besides its title: the three flags, and the aircraft
 // and school it is for.
 export function flagsOf(item) {
@@ -73,98 +49,27 @@ export function flagsOf(item) {
   return flags;
 }
 
-function revisionRow(slug, rev, item, { author, summary, baseRev }) {
-  return {
-    slug,
-    rev,
-    docJson: JSON.stringify(item),
-    author: author || '',
-    summary: summary || '',
-    baseRev: baseRev == null ? rev - 1 : baseRev,
-    createdAt: new Date().toISOString(),
-  };
-}
+// The same two-row store as jet logs and briefs (revisionStore, below), keyed by `slug`.
+const items = revisionStore({
+  table: 'itemsTable', key: 'slug', noun: 'item', titleOf: (item) => item.title, flagsOf,
+  takenMessage: 'That slug is already taken',
+});
 
+export const itemMeta = items.meta;
+export const itemRevision = items.revision;
+// The newest revision row of a visible item, with its meta, or null.
+export const newestItem = items.newest;
 // First revision of a new item: the meta row and revision 1, both conditional on the slug
 // being unused. Returns the rows written.
-export async function createItem(slug, item, meta) {
-  const row = revisionRow(slug, 1, item, { ...meta, baseRev: 0 });
-  const metaRow = {
-    slug,
-    rev: 0,
-    latestRev: 1,
-    title: item.title,
-    flags: flagsOf(item),
-    updatedAt: row.createdAt,
-  };
-  try {
-    await db().send(new TransactWriteCommand({
-      TransactItems: [
-        {
-          Put: {
-            TableName: CONFIG.itemsTable,
-            Item: metaRow,
-            ConditionExpression: 'attribute_not_exists(slug)',
-          },
-        },
-        {
-          Put: {
-            TableName: CONFIG.itemsTable,
-            Item: row,
-            ConditionExpression: 'attribute_not_exists(slug)',
-          },
-        },
-      ],
-    }));
-  } catch (error) {
-    if (isConflict(error)) throw new HttpError(409, 'That slug is already taken');
-    throw error;
-  }
-  return { meta: metaRow, row };
-}
-
+export const createItem = items.create;
 // A new revision of an existing item, conditional on `baseRev` still being the newest.
-export async function saveItem(slug, baseRev, item, meta) {
-  const rev = baseRev + 1;
-  const row = revisionRow(slug, rev, item, { ...meta, baseRev });
-  const flags = flagsOf(item);
-  try {
-    await db().send(new TransactWriteCommand({
-      TransactItems: [
-        {
-          Put: {
-            TableName: CONFIG.itemsTable,
-            Item: row,
-            ConditionExpression: 'attribute_not_exists(slug)',
-          },
-        },
-        {
-          Update: {
-            TableName: CONFIG.itemsTable,
-            Key: { slug, rev: 0 },
-            UpdateExpression: 'SET latestRev = :rev, title = :title, flags = :flags, updatedAt = :at',
-            ConditionExpression: 'latestRev = :base',
-            ExpressionAttributeValues: {
-              ':rev': rev,
-              ':title': item.title,
-              ':flags': flags,
-              ':at': row.createdAt,
-              ':base': baseRev,
-            },
-          },
-        },
-      ],
-    }));
-  } catch (error) {
-    if (isConflict(error)) {
-      const current = await itemMeta(slug);
-      throw new HttpError(409, 'A newer revision exists', { rev: current ? current.latestRev : null });
-    }
-    throw error;
-  }
-  const metaRow = await itemMeta(slug);
-  return { meta: metaRow, row };
-}
+export const saveItem = items.save;
+export const setItemHidden = items.setHidden;
+// Newest first, without the documents.
+export const itemHistory = items.history;
+// Every meta row. The filter runs after the read, so this scans every revision row; trivial
+// at this table's size, and the place to add a GSI if history ever grows into thousands.
+export const listItemMetas = items.listMetas;
 
 // Rewrites the display name on every revision of `slug` that carries `from`. Returns the
 // revisions changed. The document rows are untouched; only who is shown beside them.
@@ -182,41 +87,6 @@ export async function setRevisionAuthor(slug, from, to) {
     changed.push(r.rev);
   }
   return changed;
-}
-
-export async function setItemHidden(slug, hidden) {
-  try {
-    await db().send(new UpdateCommand({
-      TableName: CONFIG.itemsTable,
-      Key: { slug, rev: 0 },
-      UpdateExpression: hidden ? 'SET #hidden = :h' : 'REMOVE #hidden',
-      ConditionExpression: 'attribute_exists(slug)',
-      ExpressionAttributeNames: { '#hidden': 'hidden' },
-      ExpressionAttributeValues: hidden ? { ':h': true } : undefined,
-    }));
-  } catch (error) {
-    if (isConflict(error)) throw new HttpError(404, 'No such item');
-    throw error;
-  }
-}
-
-// Newest first, without the documents.
-export async function itemHistory(slug) {
-  const out = [];
-  let lastKey;
-  do {
-    const result = await db().send(new QueryCommand({
-      TableName: CONFIG.itemsTable,
-      KeyConditionExpression: 'slug = :slug AND rev >= :one',
-      ExpressionAttributeValues: { ':slug': slug, ':one': 1 },
-      ProjectionExpression: 'rev, author, summary, createdAt, baseRev',
-      ScanIndexForward: false,
-      ExclusiveStartKey: lastKey,
-    }));
-    out.push(...(result.Items || []));
-    lastKey = result.LastEvaluatedKey;
-  } while (lastKey);
-  return out;
 }
 
 // Copies every row of an item to another key, preserving `rev`, `author`, `summary`, `baseRev`
@@ -255,26 +125,6 @@ export async function copyItemRows(fromKey, toKey) {
 
   await db().send(new PutCommand({ TableName: CONFIG.itemsTable, Item: { ...meta, slug: toKey } }));
   return { copied, already: false };
-}
-
-// Every meta row. The filter runs after the read, so this scans every revision row; trivial
-// at this table's size, and the place to add a GSI if history ever grows into thousands.
-export async function listItemMetas() {
-  const out = [];
-  let lastKey;
-  do {
-    const result = await db().send(new ScanCommand({
-      TableName: CONFIG.itemsTable,
-      FilterExpression: 'rev = :zero',
-      ExpressionAttributeValues: { ':zero': 0 },
-      ProjectionExpression: 'slug, latestRev, title, flags, #hidden, updatedAt',
-      ExpressionAttributeNames: { '#hidden': 'hidden' },
-      ExclusiveStartKey: lastKey,
-    }));
-    out.push(...(result.Items || []));
-    lastKey = result.LastEvaluatedKey;
-  } while (lastKey);
-  return out.sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
 // ---------------------------------------------------------------------------------------
@@ -352,31 +202,14 @@ export async function setSyllabusHidden(id, hidden) {
   return { ...newest, hidden: hidden || undefined };
 }
 
-// Renames a syllabus on its newest row, in place: no revision, because the name is how the
-// dropdown lists the document and not part of it. Older rows keep the name they were saved
-// under, which is what History shows for them.
-export async function setSyllabusName(id, name) {
-  const newest = await newestSyllabus(id);
-  if (!newest) throw new HttpError(404, 'No such syllabus');
-  await db().send(new UpdateCommand({
-    TableName: CONFIG.syllabiTable,
-    Key: { syllabusId: id, rev: newest.rev },
-    UpdateExpression: 'SET #n = :n',
-    ExpressionAttributeNames: { '#n': 'name' },
-    ExpressionAttributeValues: { ':n': name },
-  }));
-  return { ...newest, name };
-}
-
 // ---------------------------------------------------------------------------------------
 // Jet logs and briefs
 //
 // Both are the Items shape with the partition key renamed: a meta row at rev 0 carrying the
-// newest revision, a title and the flags the index draws, and one row per revision. The
-// Items section above predates this and is written out by hand; the two corpora after it
-// share one implementation rather than being a third and a fourth copy of it.
+// newest revision, a title and the flags the index draws, and one row per revision. Items,
+// jet logs, briefs and the question sections share this one implementation.
 
-function revisionStore({ table, key, noun, titleOf, flagsOf }) {
+function revisionStore({ table, key, noun, titleOf, flagsOf, takenMessage = 'That id is already taken' }) {
   const tableName = () => CONFIG[table];
 
   async function meta(id) {
@@ -429,7 +262,7 @@ function revisionStore({ table, key, noun, titleOf, flagsOf }) {
         ],
       }));
     } catch (error) {
-      if (isConflict(error)) throw new HttpError(409, 'That id is already taken');
+      if (isConflict(error)) throw new HttpError(409, takenMessage);
       throw error;
     }
     return { meta: metaRow, row };

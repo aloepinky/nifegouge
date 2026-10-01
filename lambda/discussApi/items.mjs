@@ -1,20 +1,20 @@
-import { HttpError, parseBody, reply, requireProgram } from './http.mjs';
+import {
+  HttpError, cleanAuthor, cleanSummary, ok, parseBody, requireProgram,
+} from './http.mjs';
 import {
   newestItem, itemMeta, itemRevision, itemHistory, createItem, saveItem, setItemHidden,
   setRevisionAuthor,
 } from './store.mjs';
 import {
-  mirrorItem, rebuildItemsIndex, itemRecord, itemKey, deleteKey, presignFigure, putJson,
+  mirrorItem, rebuildItemsIndex, itemRecord, itemKey, deleteKey, presignFigure,
 } from './mirror.mjs';
 import { checkItem, checkSlug } from './lint.mjs';
-import { cleanAuthor, cleanSummary, relinkEvent } from './syllabi.mjs';
-import { itemId, splitItemId, isNamespaced, schoolNs } from './namespace.mjs';
+import { relinkEvent } from './syllabi.mjs';
+import { itemId, splitItemId, schoolNs } from './namespace.mjs';
 
 // Discuss item pages. Open editing: anyone may publish a revision, every revision is kept,
 // and a bad one is undone by restoring the one before it. What a revision records is who
 // (a display name, optional) and why (a summary, required).
-
-const ok = (extra) => reply(200, { success: true, ...extra });
 
 function slugParam(event) {
   const slug = (event.queryStringParameters || {}).slug;
@@ -53,25 +53,8 @@ async function requireItem(school, slug) {
   return found;
 }
 
-// Through the cutover the site is still asking for a page's old, bare address while the page
-// itself has moved to a namespaced one. So a namespaced write is mirrored to the old address
-// too, and the two never disagree. On by default — there is no window in which it needs
-// turning on, and forgetting would silently stale the live site; retire it by setting
-// DISCUSS_LEGACY_MIRROR=off once the client has cut over, then delete this.
-const LEGACY_MIRROR = process.env.DISCUSS_LEGACY_MIRROR !== 'off';
-
 async function afterWrite(meta, row) {
   await mirrorItem(meta, row);
-  if (LEGACY_MIRROR && isNamespaced(meta.slug)) {
-    const { ns, slug } = splitItemId(meta.slug);
-    // Only where a legacy row for this page actually exists, and only where it is THIS page's
-    // own predecessor. A new page must never write the bare address: NIFE's `crm` doing so
-    // would overwrite `items/crm.json`, which is Primary's, with a C172 document.
-    const legacy = await itemMeta(slug);
-    if (legacy && schoolNs((legacy.flags || {}).school) === ns) {
-      await putJson(itemKey(slug), itemRecord(meta, row));
-    }
-  }
   await rebuildItemsIndex();
 }
 
@@ -128,8 +111,15 @@ export async function saveItemHandler(event) {
   if (!summary) throw new HttpError(400, 'Say what you changed: a summary is required');
   checkItem(item, slug);
 
-  // The school on the document being saved is what names the page's namespace.
-  const { key, meta } = await requireItem(item && item.school, slug);
+  // The page is found by the school it was loaded under, which the site sends as `school`. An
+  // older client sends none, and the document's own school names it as before. A document
+  // whose school names another namespace would land on a different page, or on none, so it is
+  // refused: a page's school is not changed by editing it.
+  const school = body.school || item.school;
+  if (body.school && schoolNs(item.school) !== schoolNs(body.school)) {
+    throw new HttpError(400, "A page's school can't be changed by editing it");
+  }
+  const { key, meta } = await requireItem(school, slug);
   if (meta.latestRev !== baseRev) throw new HttpError(409, 'A newer revision exists', { rev: meta.latestRev });
 
   // No prose lint on the way in: the rules in discussRules.mjs are for the CLI, not for

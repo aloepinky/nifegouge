@@ -1,4 +1,7 @@
-import { HttpError, cleanText, parseBody, reply, requireProgram } from './http.mjs';
+import {
+  HttpError, cleanAuthor, cleanSummary, cleanText, checkId as checkBriefId, idParam, isId, ok, parseBody,
+  requireProgram, slugify,
+} from './http.mjs';
 import {
   briefHistory, briefMeta, briefRevision, newestBrief, createBrief, saveBrief, setBriefHidden,
 } from './store.mjs';
@@ -16,31 +19,10 @@ import {
 // fixed section carrying its text instead of items.
 
 const MAX_DOC_BYTES = 200 * 1024;
-const MAX_ID = 60;
-
-const ok = (extra) => reply(200, { success: true, ...extra });
-
 const cleanTitle = (value) => cleanText(value, 200);
 const cleanShort = (value) => cleanText(value, 40);
-const cleanAuthor = (value) => cleanText(value, 40);
-const cleanSummary = (value) => cleanText(value, 200);
 
-const ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const RESERVED = new Set(['told', 'upload']);
-
-function checkBriefId(id) {
-  if (typeof id !== 'string' || !id) throw new HttpError(400, 'id is required');
-  if (id.length > MAX_ID) throw new HttpError(400, `An id is at most ${MAX_ID} characters`);
-  if (!ID_RE.test(id)) throw new HttpError(400, 'An id is lowercase words joined by single hyphens');
-  return id;
-}
-
-function idParam(event) {
-  const params = event.queryStringParameters || {};
-  const id = (params.id || '').toLowerCase();
-  if (!id) throw new HttpError(400, 'id is required');
-  return id;
-}
 
 const isText = (v) => v == null || typeof v === 'string';
 
@@ -109,11 +91,6 @@ async function afterWrite(meta, row) {
   await rebuildBriefsIndex();
 }
 
-function slugify(text) {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)
-    || 'brief';
-}
-
 // ---------------------------------------------------------------------------------------
 // Reads
 
@@ -160,9 +137,9 @@ export async function publishBriefHandler(event) {
   const body = parseBody(event);
   const brief = body.brief;
   if (!brief || typeof brief !== 'object') throw new HttpError(400, 'brief is required');
-  const suggested = (typeof brief.id === 'string' && ID_RE.test(brief.id) && brief.id.length <= 40)
+  const suggested = (isId(brief.id) && brief.id.length <= 40)
     ? brief.id
-    : slugify(cleanTitle(brief.title) || 'brief');
+    : slugify(cleanTitle(brief.title) || 'brief', 'brief');
   // `told` and `upload` are pages of their own at /tw4/briefs/<id>, so no brief may take them.
   const base = RESERVED.has(suggested) ? `${suggested}-brief` : suggested;
   const meta = {

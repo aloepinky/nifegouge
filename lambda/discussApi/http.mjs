@@ -54,6 +54,40 @@ export function cleanText(value, max) {
   return value.replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+// What a revision records about itself: who (a display name, optional) and why.
+export const cleanAuthor = (value) => cleanText(value, 40);
+export const cleanSummary = (value) => cleanText(value, 200);
+
+export const ok = (extra) => reply(200, { success: true, ...extra });
+
+// A name made into an id: lowercase words joined by single hyphens, at most 40 characters, or
+// `fallback` when nothing of the name survives.
+export function slugify(text, fallback) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)
+    || fallback;
+}
+
+// A jet log's or a brief's id, which is shaped like an item's slug.
+const ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+export const MAX_ID = 60;
+
+export const isId = (id) => typeof id === 'string' && ID_RE.test(id);
+
+export function checkId(id) {
+  if (typeof id !== 'string' || !id) throw new HttpError(400, 'id is required');
+  if (id.length > MAX_ID) throw new HttpError(400, `An id is at most ${MAX_ID} characters`);
+  if (!ID_RE.test(id)) throw new HttpError(400, 'An id is lowercase words joined by single hyphens');
+  return id;
+}
+
+// `?id=` on a GET, lowercased.
+export function idParam(event) {
+  const params = event.queryStringParameters || {};
+  const id = (params.id || '').toLowerCase();
+  if (!id) throw new HttpError(400, 'id is required');
+  return id;
+}
+
 // The aircraft and the school a page or a syllabus is for: "T-6B" and "Primary". Every page
 // and every syllabus carries both, because a page with the same title can exist for another
 // aircraft, and nothing but these two fields tells them apart. Free text, short.

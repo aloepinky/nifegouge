@@ -50,8 +50,6 @@ __pycache__/
 # rebuilt with `npm install` in it; what gets zipped up to the console is the local copy.
 lambda/submitDoc/node_modules/
 
-# discussApi: the lint rules are copied in from tools/lib at deploy time; a build artefact
-lambda/discussApi/discussRules.mjs
 lambda/**/function.zip
 
 # Local state for tools/discuss-dev-server.js

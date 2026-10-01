@@ -1,10 +1,8 @@
 // The discuss-item lint rules, as a pure module: no filesystem, no argv, no process.exit.
 //
-// Two consumers share it and must never drift apart. `tools/discuss-lint.js` runs it over the
-// whole corpus from the command line, with the id baseline and the reporting that only make
-// sense there. `lambda/discussApi` runs it on every save, so a contributor sees the same
-// findings the maintainer would. The deploy workflow copies this file into the lambda
-// directory; the copy is gitignored and never hand-edited.
+// `tools/discuss-lint.js` runs it over the whole corpus from the command line, with the id
+// baseline and the reporting that only make sense there. The server does not lint a save: it
+// checks shape only (lambda/discussApi/lint.mjs).
 //
 // Every rule function takes a parsed item object (the data an item file exports) and returns
 // `[level, rule, detail]` triples. Of the content rules, `unsourced-block` and
@@ -664,29 +662,3 @@ export function gougeCited(item) {
     .filter((r) => GOUGE.test(`${r.work || ''} ${r.loc || ''}`))
     .map((r) => ['error', 'gouge-cited', `ref ${r.n}: ${r.work}`]);
 }
-
-// ---------------------------------------------------------------------------------------
-// The whole set at once, for a caller that wants one answer rather than the pieces.
-//
-// Returns every finding as `{ level, rule, detail }`, with heading findings folded in as
-// `rule: 'heading'`. Levels are `error` and `info`; the caller decides what blocks.
-export function lintItem(item) {
-  const out = [];
-  const seen = new Set();
-  for (const h of headingsOf(item)) {
-    const v = headingViolations(h.title, item, seen);
-    if (v.length) {
-      out.push({
-        level: 'error',
-        rule: 'heading',
-        detail: `${h.level === 3 ? 'sub-heading' : 'heading'} '${h.title}' [${v.join(', ')}]`,
-      });
-    }
-  }
-  for (const [level, rule, detail] of [...proseViolations(item), ...structureViolations(item)]) {
-    out.push({ level, rule, detail });
-  }
-  return out;
-}
-
-export default lintItem;

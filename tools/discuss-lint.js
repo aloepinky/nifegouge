@@ -33,9 +33,8 @@
 // layout from a folder, which is what `tools/discuss-migrate.js --out` writes and what the dev
 // server keeps under _discuss-dev/mirror.
 //
-// WHERE THE RULES LIVE. tools/lib/discussRules.mjs, shared with lambda/discussApi so that a
-// save on the site and a run here report the same findings. This file is the reporting and
-// the id baseline; it defines no rule of its own.
+// WHERE THE RULES LIVE. tools/lib/discussRules.mjs. This file is the reporting and the id
+// baseline; it defines no rule of its own.
 
 const fs = require('fs');
 const path = require('path');

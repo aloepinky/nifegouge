@@ -64,7 +64,7 @@ import { namespaceItemsHandler } from './namespaceOp.mjs';
 //   POST hide-item           (admin)       { slug, hidden }
 //   POST set-author          (admin)       { slug, from, to }                            -> { revs }
 //   POST hide-syllabus       (admin)       { id, hidden }
-//   POST rename-syllabus     (admin)       { id, name }                               -> { id, rev, name }
+//   POST rename-syllabus     (admin)       { id, name, author? }                      -> { id, rev, name }
 //   GET  get-jetlog?id=                    -> { jetlog }
 //   GET  jetlog-history?id=                -> { latestRev, revisions }
 //   GET  jetlog-revision?id=&rev=          -> { revision }

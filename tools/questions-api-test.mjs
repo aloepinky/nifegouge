@@ -16,8 +16,6 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const LAMBDA = path.join(ROOT, 'lambda', 'discussApi');
 
 process.env.DISCUSS_ADMIN_TOKEN = 'test-token';
-// The deploy workflow copies the lint rules in; do the same so index.mjs resolves.
-fs.copyFileSync(path.join(ROOT, 'tools', 'lib', 'discussRules.mjs'), path.join(LAMBDA, 'discussRules.mjs'));
 
 const load = (file) => import(pathToFileURL(file));
 const { FakeDynamo, FakeS3 } = await load(path.join(ROOT, 'tools', 'lib', 'fakeAws.mjs'));
