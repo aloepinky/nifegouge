@@ -33,8 +33,8 @@ export const HYD_NUMBERS = {
     highlight: false,
   },
   {
-    value: '< 1800  /  > 3500 psi',
-    label: 'HYD PX out-of-limits (CHK ENG). HYD PRESS gauge — yellow (caution) arc',
+    value: '≤ 1790  /  ≥ 3510 psi',
+    label: 'HYD PX out-of-limits (CHK ENG). HYD PRESS gauge — amber (caution) arc',
     highlight: true,
   },
   {
@@ -88,7 +88,7 @@ export const HYD_EICAS = {
     {
       label: 'CHK ENG',
       color: 'caution',
-      cause: 'HYD pressure below 1800 psi or above 3500 psi. Below 1800 psi the system should be considered unusable.',
+      cause: 'HYD pressure at or below 1790 psi or above 3510 psi. Below 1800 psi the system should be considered unusable.',
       response: 'Monitor HYD PX gauge. Execute HYDRAULIC SYSTEM MALFUNCTIONS.',
     },
     {
@@ -300,7 +300,7 @@ export const HYD_INFO = {
     items: [
       'Measures hydraulic pressure after the filter.',
       'Sends signal to the Engine Data Manager (EDM), which displays it on the EICAS HYD PRESS gauge.',
-      'Triggers a CHK ENG caution when pressure falls below 1800 psi — at this point the system should be considered unusable.',
+      'Triggers a CHK ENG caution when pressure falls to 1790 psi or below — at this point the system should be considered unusable.',
       'EICAS pressure display and HYD FL LO caution are NOT available if the Hydraulic System circuit breaker (on battery bus panel, front cockpit left side) is pulled.',
       'EHYD PX LO remains available even with the circuit breaker open.',
     ],
@@ -334,7 +334,7 @@ export const HYD_INFO = {
       'Actuator assembly has an internal centering mechanism that also helps prevent nose wheel shimmy.',
       'A friction collar on the nose gear strut provides additional shimmy damping.',
       'NWS has NO emergency backup — it is main-system powered only.',
-      'GROUND STEERING: NWS is the primary method (ramp speeds only, large turn radius around wing tip). Differential braking is secondary (80° free castor, must manually center nose wheel — no auto-centering). Do not use NWS on full-deflection brake turns.',
+      'GROUND STEERING: NWS is the primary method (ramp speeds only, large turn radius around wing tip). Differential braking is secondary (150° of castor, 75° either side from center, must manually center nose wheel — no auto-centering). Do not use NWS on full-deflection brake turns.',
     ],
   },
 

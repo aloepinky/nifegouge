@@ -119,7 +119,7 @@ function HydPressGauge({ pressure = 3040, size = 160, embedded = false }) {
     if (psi >= 2880 && psi < 3120) return '#4a9030';
     return '#d8d8d8';
   }
-  function numberCol(psi) { return (psi < 1800 || psi >= 3500) ? '#DDDB55' : '#d8d8d8'; }
+  function numberCol(psi) { return (psi <= 1790 || psi >= 3510) ? '#DDDB55' : '#d8d8d8'; }
 
   const needleAngle = psiToAngle(pressure);
   const [nx,ny]   = polar(needleAngle,      outerR * 0.84);
@@ -663,7 +663,7 @@ export default function T6BHydraulicDiagram() {
           const msgY = sliderY + sliderH + 12;
           const cautions = [
             resDivPct < 15         && { key: 'hfl', label: 'HYD FL LO',  color: C.caution, blink: true },
-            (hydPsi < 1800 || hydPsi > 3500) && { key: 'chk', label: 'CHK ENG',   color: C.caution, blink: true },
+            (hydPsi <= 1790 || hydPsi > 3510) && { key: 'chk', label: 'CHK ENG',   color: C.caution, blink: true },
             accumLvlPct < 50       && { key: 'epx', label: 'EHYD PX LO', color: C.caution, blink: true },
             sbDeployed             && { key: 'spd', label: 'SPDBRK OUT', color: C.eicasAdvisory,  blink: false },
             nwsOn                  && { key: 'nws', label: 'NWS ON',     color: C.eicasAdvisory,  blink: false },

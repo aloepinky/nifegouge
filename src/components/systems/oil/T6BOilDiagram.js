@@ -1179,7 +1179,7 @@ function T6BOilDiagram() {
           <Named k="rgb" x={RGB.x} y={RGB.y} w={RGB.w} h={RGB.h} r={3}>
             <rect x={RGB.x} y={RGB.y} width={RGB.w} height={RGB.h} rx={3}
               fill={C.metalFill} stroke={C.text} strokeWidth={1.2} />
-            <text x={210} y={160} style={{ ...T.mini, fontSize: 5.5 }}>30,000 RPM → 2,000 RPM</text>
+            <text x={210} y={160} style={{ ...T.mini, fontSize: 5.5 }}>OVER 30,000 RPM → 2000 RPM</text>
           </Named>
 
           <Named k="oiltank" x={TNK.x} y={TNK.y} w={TNK.w} h={TNK.h} r={10}>

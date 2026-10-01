@@ -60,13 +60,13 @@ export const PROP_NUMBERS = {
       highlight: false,
     },
     {
-      value: '~2,750 ft-lbs',
-      label: '100% torque at sea level, no airspeed (approximate)',
+      value: '~2900 ft-lbs',
+      label: '100% torque at the prop shaft — available from sea level to approximately 12,000 to 16,000 ft MSL on a standard day',
       highlight: false,
     },
     {
-      value: '~2,900 ft-lbs',
-      label: '100% torque at altitude — available up to roughly 12,000–16,000 ft MSL',
+      value: '~2750 lbs',
+      label: 'Thrust at 100% torque — sea level, zero airspeed',
       highlight: false,
     },
   ],

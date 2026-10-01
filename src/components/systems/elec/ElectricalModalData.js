@@ -45,12 +45,12 @@ export const ELEC_NUMBERS = {
       highlight: false,
     },
     {
-      value: '<22 V, 29.6 – 32.2 V',
+      value: '21.9 V and below, 29.6 – 32.2 V',
       label: 'Voltage caution range. Amber Text',
       highlight: 'caution',
     },
     {
-      value: '>32.2 V',
+      value: '32.3 V and above',
       label: 'Voltage exceedance range. Red Text',
       highlight: 'warning',
     },
@@ -86,7 +86,7 @@ export const ELEC_NUMBERS = {
       highlight: 'warning',
     },
     {
-      value: '~30 min',
+      value: '30 min minimum',
       label: 'Battery bus operation time with Bus Tie OPEN and generator failed',
       highlight: false,
     },

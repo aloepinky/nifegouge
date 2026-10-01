@@ -64,7 +64,7 @@ export const OIL_NUMBERS = {
     },
     {
       value: '200 psi',
-      label: 'IDLE MAX',
+      label: 'START MAX',
       highlight: 'warning',
     },
     {
@@ -91,7 +91,7 @@ export const OIL_NUMBERS = {
     },
     {
       value: '106 – 110 °C',
-      label: 'Amber arc — caution. Transient for 10 minutes, or ground operations below 20% torque',
+      label: 'Amber arc — caution. Transient for 10 minutes, or ground operations at and below 20% torque',
       highlight: 'caution',
     },
 
@@ -124,7 +124,7 @@ export const OIL_NUMBERS = {
 
     { section: 'Reduction Gearbox' },
     {
-      value: '30,000 → 2,000 RPM',
+      value: 'Over 30,000 RPM → 2000 RPM',
       label: 'Two-stage planetary gear reduction ratio from power turbine shaft speed to propeller speed',
       highlight: false,
     }
@@ -348,7 +348,7 @@ export const OIL_INFO = {
   rgb: {
     title: 'Reduction Gearbox (RGB)',
     items: [
-      'Reduces power turbine speed from 30,000 RPM to the 2,000 RPM propeller speed.',
+      'Reduces power turbine speed of over 30,000 RPM to the 2000 RPM propeller speed.',
       'Engine power is measured by the torque it produces. The chip detector is mounted on the bottom of it.',
     ],
   },
