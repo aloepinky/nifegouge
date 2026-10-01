@@ -40,7 +40,7 @@ function wordsOf(items) {
   return words;
 }
 
-export function toLines(items) {
+function toLines(items) {
   const words = wordsOf(items).sort((a, b) => (b.y - a.y) || (a.x - b.x));
   const lines = [];
   words.forEach((w) => {

@@ -82,7 +82,7 @@ function splitAnd(part) {
 }
 
 // "a, b, c and d." -> ['a', 'b', 'c', 'd'], keeping the protected wordings whole.
-export function splitItems(sentence) {
+function splitItems(sentence) {
   let text = sentence.replace(/\s+/g, ' ').trim().replace(/\.$/, '');
   text = text.replace(/^discuss\s+/i, '');
   // A lead-in before the list: "Discussion items will be at the discretion of the squadron.

@@ -7,7 +7,7 @@ import { PDFDocument, PDFArray, PDFRawStream, ParseSpeeds, decodePDFRawStream } 
 // same bytes the Python reads. Built with String.fromCharCode rather than TextDecoder: the
 // browser's 'latin1' decoder is really windows-1252 and rewrites bytes 0x80-0x9F.
 
-export function bytesToBinary(bytes) {
+function bytesToBinary(bytes) {
   let out = '';
   const CHUNK = 0x8000;
   for (let i = 0; i < bytes.length; i += CHUNK) {

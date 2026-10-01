@@ -1096,10 +1096,27 @@ def resolve_edges(nodes, connectors, arrows):
         if not src or not dst or src == dst:
             unresolved.append((r, src, dst))
             continue
+        # Moving an end onto its box side is a straight extension only when the segment beside
+        # it runs INTO that side. Where it runs across -- the line passes the box and turns to
+        # meet it -- moving the point would bend that segment into a diagonal, so the point stays
+        # where it is as a corner and the move adds one orthogonal step to the box.
+        def bends(pt, moved, nxt):
+            if nxt is None:
+                return False
+            near = lambda u, v: abs(u - v) <= 0.05
+            if not near(moved[1], pt[1]) and near(nxt[1], pt[1]):
+                return True
+            if not near(moved[0], pt[0]) and near(nxt[0], pt[0]):
+                return True
+            return False
         if src_side:
-            order[0] = on_side(order[0], src, src_side)
+            moved = on_side(order[0], src, src_side)
+            nxt = order[1] if len(order) > 1 else None
+            order = [moved] + order if bends(order[0], moved, nxt) else [moved] + order[1:]
         if dst_side:
-            order[-1] = on_side(order[-1], dst, dst_side)
+            moved = on_side(order[-1], dst, dst_side)
+            prv = order[-2] if len(order) > 1 else None
+            order = order + [moved] if bends(order[-1], moved, prv) else order[:-1] + [moved]
         # Joining a host lands on a point the host already has; keep each corner once.
         order = [q for k, q in enumerate(order) if k == 0 or dist(q, order[k - 1]) > 0.05]
         # A trunk that feeds a bus resolves to the same pair as the bus's own branch, and the
@@ -1246,17 +1263,21 @@ def main():
         else:
             rec['id'] = n['label']
             # A box may carry a footnote marker the publication prints beside it, as the T-44C
-        # Advanced chart's `T0101-2*` does. The label keeps it; the ids are read without it.
-        events = expand(n['label'].rstrip('*†‡'))
-            if not events:
+            # Advanced chart's `T0101-2*` does. The label keeps it; the ids are read without it.
+            spanned = expand(n['label'].rstrip('*†‡'))
+            if not spanned:
                 print('  WARNING: cannot expand label %r' % n['label'], file=sys.stderr)
+            # A label spans the block's NUMBERING, not a run of events that all exist. Keep the
+            # ones the syllabus lists; a label that matches none of them is kept whole, because
+            # then the mismatch is real and the warning below has to name it.
+            listed = [e for e in spanned if e in known] if known is not None else spanned
+            events = listed or spanned
             rec['events'] = events
             if events:
                 rec['block'] = block_of(events[0])
-            if known is not None:
+            if known is not None and not listed:
                 for e in events:
-                    if e not in known:
-                        missing.append((n['label'], e))
+                    missing.append((n['label'], e))
         nodes.append(rec)
 
     print('  %d labelled boxes: %s' % (

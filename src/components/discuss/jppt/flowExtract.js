@@ -15,7 +15,6 @@
 // "INTERMEDIATE E-2D MPTS COURSE FLOW". The loose title is last because both of the T-44C
 // Advanced chart pages carry it and only the specific titles tell them apart.
 const TITLES = ['COMPLETE COURSE FLOW', 'CORE COURSE FLOW', 'COURSE FLOW'];
-const TITLE = TITLES[0];
 // A syllabus flown by several communities prints a chart per community after the point they
 // part company. The T-44C Advanced syllabus's is "T-44C POST - I4601 COURSE FLOW"; the dash
 // between the two words is the publication's, so match on the two words alone.
@@ -445,7 +444,7 @@ function keyOf(shape, lw) {
 //
 // "Alternate Flow" is deliberately absent: the T-44C legends key it to a dashed LINE, not to
 // a box, so there is no shape for it to name.
-export const CATEGORY_SLUG = {
+const CATEGORY_SLUG = {
   Flight: 'flight',
   'Check Flight': 'check',
   Simulator: 'sim',
@@ -682,18 +681,7 @@ function segmentOn(point, pts, tol) {
 }
 
 function pointOnPath(point, pts, tol) {
-  for (let i = 0; i < pts.length - 1; i += 1) {
-    const [ax, ay] = pts[i];
-    const [bx, by] = pts[i + 1];
-    const dx = bx - ax;
-    const dy = by - ay;
-    const seg = Math.hypot(dx, dy);
-    if (seg < 1e-6) continue;
-    const t = ((point[0] - ax) * dx + (point[1] - ay) * dy) / (seg * seg);
-    if (t < -0.02 || t > 1.02) continue;
-    if (dist(point, [ax + t * dx, ay + t * dy]) <= tol) return true;
-  }
-  return false;
+  return segmentOn(point, pts, tol) !== -1;
 }
 
 function chain(segsIn, nodeMids) {
@@ -1030,11 +1018,17 @@ function numStr(v) {
 const squash = (s) => s.replace(/ /g, '');
 
 // Every page interpreted once, so several titles can be tried without re-reading the document.
+// The core chart and the per-community charts are looked for in the same contents, so the pages
+// are kept per contents array and the second search reuses the first's. Neither pass changes them.
+const readCache = new WeakMap();
 function readPages(pageContents) {
-  return pageContents.map((buf, index) => {
+  if (readCache.has(pageContents)) return readCache.get(pageContents);
+  const pages = pageContents.map((buf, index) => {
     const [paths, runs] = interpret(buf);
     return { page: index + 1, paths, runs, text: runs.map((r) => r.text).join('') };
   });
+  readCache.set(pageContents, pages);
+  return pages;
 }
 
 // The matching page with the most drawn on it, so a table-of-contents line loses to the figure.
@@ -1052,7 +1046,7 @@ function findChartPage(pages, titles) {
   const holds = (p, title) => squash(p.text).includes(squash(title));
   for (const title of titles) {
     const hit = pickPage(pages, (p) => holds(p, title));
-    if (hit) return hit;
+    if (hit) return { ...hit, title };
   }
   return null;
 }
@@ -1180,12 +1174,17 @@ export function extractFlow(pageContents, { knownEventIds = null } = {}) {
   const warn = (msg) => warnings.push(msg);
 
   const target = findChartPage(readPages(pageContents), TITLES);
-  if (!target) throw new Error(`No page titled "${TITLE}" was found in this PDF.`);
+  if (!target) throw new Error('No course flow chart was found in this PDF.');
   if (target.paths.length < 50) {
-    throw new Error(`"${TITLE}" appears on page ${target.page}, but nothing is drawn there. The chart may be a scanned image, which cannot be traced.`);
+    throw new Error(`"${target.title}" appears on page ${target.page}, but nothing is drawn there. The chart may be a scanned image, which cannot be traced.`);
   }
 
   const chart = traceChart(target.paths, target.runs, { knownEventIds, warn });
+  // A page that only mentions a course flow, ruled like a table, has paths but no boxes, and
+  // its chart would have no extent to draw at.
+  if (chart.NODES.length < 2) {
+    throw new Error(`"${target.title}" appears on page ${target.page}, but no boxes could be traced there.`);
+  }
   return { ...chart, warnings, page: target.page };
 }
 

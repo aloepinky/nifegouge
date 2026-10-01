@@ -82,7 +82,7 @@ function dice(a, b) {
   return (2 * common) / (a.size + b.size);
 }
 
-// -> { matchDetail(label), matchLabel(label), candidates }
+// -> { matchDetail(label), matchLabel(label), suggest(label) }
 export function buildMatcher(events, items) {
   // One candidate per distinct wording (unstemmed), carrying every page that wording is tied
   // to and how often, so a tie goes to the page the registry uses it for most.
@@ -226,7 +226,7 @@ export function buildMatcher(events, items) {
     return out;
   };
 
-  return { matchDetail, matchLabel, suggest, candidates };
+  return { matchDetail, matchLabel, suggest };
 }
 
 // Wordings the Delta registry already treats as one item even though they contain a comma or

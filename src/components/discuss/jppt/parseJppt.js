@@ -25,12 +25,12 @@ import { guessProgram } from '../program';
 //
 // `warnings` travels beside the document, not in it: it is for the person fixing the upload.
 
-export const DOC_VERSION = 1;
+const DOC_VERSION = 1;
 
 // Longest-path rank of every box through the chart, so each stage's blocks list in the order a
 // student meets them rather than by id. Circles sharing a letter are one point on the figure,
 // so an exit circle feeds every entrance with its letter.
-export function flowRanks(flow) {
+function flowRanks(flow) {
   const nodes = (flow && flow.NODES) || [];
   const out = new Map(nodes.map((n) => [n.id, []]));
   const indeg = new Map(nodes.map((n) => [n.id, 0]));
@@ -76,7 +76,7 @@ export function orderBlocks(blocks, flow) {
 
 // A chart with nothing traced still has to be editable: lay the blocks out one column per
 // stage so the editor has boxes to move rather than an empty canvas.
-export function scaffoldFlow(stages, blocks) {
+function scaffoldFlow(stages, blocks) {
   const NODES = [];
   stages.forEach((stage, col) => {
     blocks.filter((b) => b.stage === stage.id).forEach((b, row) => {
