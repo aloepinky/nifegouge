@@ -5245,6 +5245,17 @@ textarea.incorrect-answer {
   color: #33505d;
 }
 
+/* A block's syllabus notes, lettered as the JPPT letters them. */
+.discuss-notes {
+  list-style-type: lower-alpha;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.discuss-notes li + li {
+  margin-top: 4px;
+}
+
 /* ---- event context strip (?from=) ---- */
 
 .discuss-strip {

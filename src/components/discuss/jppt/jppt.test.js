@@ -103,6 +103,27 @@ maybe('Delta JPPT', () => {
       expect(ssr.FAM6201).toBeUndefined(); // "None."
     });
 
+    // The notes are a lettered list for the block; an event's own notes are the lines that
+    // start with its id. FAM21 has both, FAM62's whole list is the sentence introducing its
+    // events' lines, and F41's "(, course rules, etc.)" is the publication's own typo.
+    test('reads the syllabus notes: the list to the block, id-led lines to the event', () => {
+      const block = (id) => syl.blocks.find((b) => b.id === id).syllabusNotes;
+      const event = (id) => (syl.events.find((e) => e.id === id) || {}).syllabusNotes;
+      expect(block('FAM21')).toEqual([
+        'The student shall bring all required flight gear and practice strapping in on every event in this block.',
+        'FAM2101-2 shall only be scheduled as one event per day.',
+        'FAM2101-2 should be conducted in the UTD/ER.',
+        'The following procedures will be performed by the student on the indicated event.',
+      ]);
+      expect(event('FAM2101')).toMatch(/^Checklist procedures required: Before exterior inspection,/);
+      expect(event('FAM2101')).toMatch(/Checklist procedures optional time permitting: Climb \(passing 10,000 feet\), and descent\.$/);
+      expect(block('FAM62')).toEqual(['The following procedures will be performed on each event:']);
+      expect(event('FAM6203')).toMatch(/^Execute a full local area profile\./);
+      expect(block('F41')).toHaveLength(2);
+      expect(event('F4101')).toBeNull();
+      expect(block('FAM42')[0]).toBe('Students shall fly four events within FAM4201-4302 off-wing.');
+    });
+
     // Not an exact comparison: the registry's labels were split and trimmed by hand. What must
     // hold is that an item a human tied to a page is still tied to that page, and the report
     // shows how far the automatic split is from the hand split.

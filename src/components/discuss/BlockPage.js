@@ -23,6 +23,10 @@ function BlockPage({ block }) {
     block.blkName,
   ].filter(Boolean);
 
+  // The JPPT's syllabus notes are a lettered list for the whole block, so they live here rather
+  // than on each event; an event's own notes (its id-led lines) are on its event page.
+  const notes = Array.isArray(block.syllabusNotes) ? block.syllabusNotes : [];
+
   return (
     <div className="discuss-layout discuss-layout--plain">
       <article className="discuss-page">
@@ -37,9 +41,20 @@ function BlockPage({ block }) {
             {block.id} <span className="discuss-head-title">{block.title}</span>
           </h1>
           <p className="discuss-meta">{meta.join(' · ')}</p>
-          {(block.prereqs || block.ssr) && (
+          {(block.prereqs || notes.length > 0 || block.ssr) && (
             <dl className="discuss-eventmeta">
               {block.prereqs && <><dt>Prerequisites</dt><dd>{block.prereqs}</dd></>}
+              {notes.length === 1 && <><dt>Syllabus notes</dt><dd>{notes[0]}</dd></>}
+              {notes.length > 1 && (
+                <>
+                  <dt>Syllabus notes</dt>
+                  <dd>
+                    <ol className="discuss-notes">
+                      {notes.map((n, i) => <li key={i}>{n}</li>)}
+                    </ol>
+                  </dd>
+                </>
+              )}
               {block.ssr && <><dt>Special syllabus requirements</dt><dd>{block.ssr}</dd></>}
             </dl>
           )}

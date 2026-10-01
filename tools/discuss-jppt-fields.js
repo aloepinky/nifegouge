@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 //
-// Adds each event's Special Syllabus Requirements, read out of its JPPT, to a published
-// syllabus as one ordinary revision. The parser has read them since 2026-09-30; the syllabi
-// published before that carry none.
+// Brings a published syllabus's Special Syllabus Requirements and syllabus notes into line with
+// how the JPPT parser reads them now, as one ordinary revision per syllabus.
 //
-//   node tools/discuss-add-ssrs.js --dry-run             prints what would change, sends nothing
-//   node tools/discuss-add-ssrs.js --write --author=Loevinger
+//   node tools/discuss-jppt-fields.js --dry-run          prints what would change, sends nothing
+//   node tools/discuss-jppt-fields.js --write --author=Loevinger
 //
 //   --only=<id>      one syllabus (delta-primary, echo-syllabus-primary-76ae, nife-flight,
 //                    t44c-p8, t44c-e2d)
@@ -16,10 +15,18 @@
 //
 // Against the local dev server: --api=http://localhost:8787/discuss --mirror=http://localhost:8787/mirror
 //
-// This is not a re-seed. It reads the live document and changes one field, `ssr`, on events
-// and blocks, so every hand repair to the chart and the rows is kept; it checks that before
-// sending. Delta also had some SSRs typed into its syllabus notes by hand, and those sentences
-// come out of the notes so the page doesn't say them twice. Every notes change is printed.
+// What it writes, and nothing else:
+//   events[].ssr            the event's SSRs (since 2026-09-30)
+//   blocks[].ssr            SSRs the JPPT gives for the whole block
+//   blocks[].syllabusNotes  the block's lettered notes, one string per item, letters dropped
+//   events[].syllabusNotes  only the lines the notes give for that event ("FAM2101 Checklist
+//                           procedures required: ..."); before 2026-10-01 every event carried
+//                           its whole block's notes run together, and Delta's were paraphrased
+//
+// This is not a re-seed: the chart, the rows and everything else come from the live document,
+// so every hand repair is kept, and it refuses to send if anything else would change.
+// NIFE's syllabus was built by hand from the MCG, which the parser doesn't read, so its two SSRs
+// are typed here and its notes are left alone.
 
 const fs = require('fs');
 const path = require('path');
@@ -49,28 +56,25 @@ const REFS = path.join(__dirname, '..', '_reference-docs');
 const SYLLABI = [
   { id: 'delta-primary', pdf: path.join(REFS, 'T6b Primary', 'Fundamental References', 'Delta JPPT.pdf') },
   { id: 'echo-syllabus-primary-76ae', pdf: path.join(REFS, 'T6b Primary', 'Fundamental References', 'Echo JPPT.pdf') },
-  // NIFE's syllabus was built by hand from the MCG (tools/nife-syllabus.js), whose layout the
-  // JPPT parser doesn't read. The MCG prints two SSRs, both in C41 (NASCINST 1542.1B, Ch. 4,
-  // block C41, c. Special Syllabus Requirements); every other flight block says None.
+  // The MCG prints two SSRs, both in C41 (NASCINST 1542.1B, Ch. 4, block C41, c. Special
+  // Syllabus Requirements); every other flight block says None.
   {
     id: 'nife-flight',
     fixed: {
-      events: {
+      ssr: {
         C4101: 'CFI shall demonstrate the civilian box pattern.',
         C4102: 'Power off and power on stall shall be taken to a full stall for experience purposes.',
       },
-      blocks: {},
+      blockSsr: {},
+      notes: null,
     },
   },
   { id: 't44c-p8', pdf: path.join(REFS, 'T44C Advanced', 'Fundamental References', '1542.168C CH-2.pdf') },
   { id: 't44c-e2d', pdf: path.join(REFS, 'T44C Advanced', 'Fundamental References', '1542.175D CH-1.pdf') },
 ];
 
-const SUMMARY = 'Adds Special Syllabus Requirements from the JPPT to each event.';
-
-// "Special syllabus requirement: the instructor demonstrates ..." and "Special syllabus
-// requirements for F4103/F4104: ...", up to the end of that sentence.
-const TYPED_SSR = /\s*Special syllabus requirements?(?: for [^:.]+)?:.*?\.(?=\s+[A-Z]|\s*$)/i;
+const SUMMARY = 'Syllabus notes as the JPPT lays them out: the lettered list on the block page, '
+  + 'an event\'s own lines on its event page.';
 
 const src = (rel) => loadSrc(path.join(__dirname, '..', 'src', 'components', 'discuss', 'jppt', rel));
 
@@ -78,9 +82,11 @@ async function parse(pdf) {
   const { loadTextPages } = src('pdfText.js');
   const { extractSyllabus } = src('syllabusExtract.js');
   const syl = extractSyllabus(await loadTextPages(fs.readFileSync(pdf)));
+  const pick = (rows, k) => Object.fromEntries(rows.filter((r) => r[k]).map((r) => [r.id, r[k]]));
   return {
-    events: Object.fromEntries(syl.events.filter((e) => e.ssr).map((e) => [e.id, e.ssr])),
-    blocks: Object.fromEntries(syl.blocks.filter((b) => b.ssr).map((b) => [b.id, b.ssr])),
+    ssr: pick(syl.events, 'ssr'),
+    blockSsr: pick(syl.blocks, 'ssr'),
+    notes: { events: pick(syl.events, 'syllabusNotes'), blocks: pick(syl.blocks, 'syllabusNotes') },
   };
 }
 
@@ -94,39 +100,43 @@ async function readMirror(key) {
 function skeleton(doc) {
   return JSON.stringify({
     ...doc,
-    blocks: doc.blocks.map(({ ssr, ...b }) => b),
+    blocks: doc.blocks.map(({ ssr, syllabusNotes, ...b }) => b),
     events: doc.events.map(({ ssr, syllabusNotes, ...e }) => e),
   });
 }
 
+const setOrDrop = (row, k, v) => {
+  if (v == null || (Array.isArray(v) && !v.length)) delete row[k];
+  else row[k] = v;
+};
+
 function apply(doc, parsed, log) {
   const next = JSON.parse(JSON.stringify(doc));
   const have = new Set(next.events.map((e) => e.id));
-  Object.keys(parsed.events).filter((id) => !have.has(id)).forEach((id) => {
-    log(`  ! ${id} has an SSR but no event in this syllabus: ${parsed.events[id]}`);
+  const missing = (what, map) => Object.keys(map).filter((id) => !have.has(id)).forEach((id) => {
+    log(`  ! ${id} has ${what} but no event in this syllabus: ${map[id]}`);
   });
+  missing('an SSR', parsed.ssr);
+  if (parsed.notes) missing('notes', parsed.notes.events);
+
   next.events.forEach((e) => {
-    const ssr = parsed.events[e.id] || null;
-    if (ssr) e.ssr = ssr;
-    else delete e.ssr;
-    if (ssr && e.syllabusNotes && TYPED_SSR.test(e.syllabusNotes)) {
-      const notes = e.syllabusNotes.replace(TYPED_SSR, '').trim();
-      log(`  ${e.id} notes\n    was: ${e.syllabusNotes}\n    now: ${notes || '(none)'}`);
-      e.syllabusNotes = notes || null;
-    }
-    if (ssr) log(`  ${e.id} SSR: ${ssr}`);
+    setOrDrop(e, 'ssr', parsed.ssr[e.id]);
+    if (!parsed.notes) return;
+    const was = e.syllabusNotes || null;
+    const now = parsed.notes.events[e.id] || null;
+    if (was !== now) log(`  ${e.id} event notes\n    was: ${was || '(none)'}\n    now: ${now || '(none)'}`);
+    // Kept as null rather than dropped, as the flow editor writes a new event.
+    e.syllabusNotes = now;
   });
   next.blocks.forEach((b) => {
-    if (parsed.blocks[b.id]) {
-      b.ssr = parsed.blocks[b.id];
-      log(`  ${b.id} (block) SSR: ${b.ssr}`);
-    } else {
-      delete b.ssr;
+    setOrDrop(b, 'ssr', parsed.blockSsr[b.id]);
+    if (!parsed.notes) return;
+    const list = parsed.notes.blocks[b.id] || [];
+    if (JSON.stringify(b.syllabusNotes || []) !== JSON.stringify(list)) {
+      log(`  ${b.id} block notes:${list.length ? '' : ' (none)'}`);
+      list.forEach((t, i) => log(`    ${String.fromCharCode(97 + i)}. ${t}`));
     }
-  });
-  // A typed SSR left in notes means the event got none from the parser. Say so; don't touch it.
-  next.events.filter((e) => !e.ssr && TYPED_SSR.test(e.syllabusNotes || '')).forEach((e) => {
-    log(`  ! ${e.id} notes name an SSR the JPPT reading didn't find: ${e.syllabusNotes}`);
+    setOrDrop(b, 'syllabusNotes', list);
   });
   return next;
 }
@@ -156,10 +166,11 @@ async function main() {
     const [record, parsed] = await Promise.all([readMirror(`syllabi/${s.id}.json`), s.fixed || parse(s.pdf)]);
     const lines = [];
     const next = apply(record.doc, parsed, (l) => lines.push(l));
-    const count = next.events.filter((e) => e.ssr).length;
-    console.log(`${s.id} rev ${record.rev}: ${count} events and ${Object.keys(parsed.blocks).length} blocks get an SSR`);
+    const n = (rows, k) => rows.filter((r) => r[k]).length;
+    console.log(`${s.id} rev ${record.rev}: SSRs on ${n(next.events, 'ssr')} events and ${n(next.blocks, 'ssr')} blocks; `
+      + `notes on ${n(next.blocks, 'syllabusNotes')} blocks and ${n(next.events, 'syllabusNotes')} events`);
     console.log(lines.join('\n'));
-    if (skeleton(next) !== skeleton(record.doc)) throw new Error(`${s.id}: something besides ssr and notes changed; nothing sent`);
+    if (skeleton(next) !== skeleton(record.doc)) throw new Error(`${s.id}: something besides SSRs and notes changed; nothing sent`);
     if (JSON.stringify(next) === JSON.stringify(record.doc)) {
       console.log('  already up to date\n');
       continue;

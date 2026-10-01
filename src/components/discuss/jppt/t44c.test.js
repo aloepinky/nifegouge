@@ -145,6 +145,15 @@ CASES.forEach((c) => {
       Object.entries(c.ssr).forEach(([id, text]) => expect([id, ssr[id]]).toEqual([id, text]));
     });
 
+    // "FAM0201 has no required location, ..." starts with an id but is a sentence about the
+    // block, so it stays in the block's list and no event takes it.
+    test('keeps a sentence that starts with an event id in the block notes', () => {
+      expect(doc.events.filter((e) => e.syllabusNotes).map((e) => e.id)).toEqual([]);
+      const fam42 = doc.blocks.find((b) => b.id === 'FAM42').syllabusNotes;
+      expect(fam42.length).toBeGreaterThan(3);
+      expect(fam42.every((t) => !/^[a-z]\.\s/.test(t))).toBe(true);
+    });
+
     test('traces the course flow', () => {
       expect(doc.flow.NODES.length).toBeGreaterThan(40);
       expect(doc.flow.EDGES.length).toBeGreaterThan(40);

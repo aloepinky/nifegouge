@@ -312,35 +312,51 @@ const idsOf = (tokens) => tokens.flatMap((t) => expand(t.replace(/^([A-Z]{1,3}\d
 // paragraph, and anything before the first one is for the whole block. With `leading`, an id
 // that opens a line of text starts a paragraph too — the Special Syllabus Requirements print
 // "FAM4202 IP demonstrates spin with steady state spin recovery." on one line.
-function linesByEvent(section, { leading = false } = {}) {
+//
+// With `lettered` (the syllabus notes), the notes are a lettered list for the whole block, and a
+// lettered item ("e. ...") always belongs to the block, even after an event's lines. An id that
+// opens a line counts only at the start of a paragraph, after a line that ended a sentence: a
+// wrapped sentence can carry an id onto the start of its next line.
+function linesByEvent(section, { leading = false, lettered = false } = {}) {
   const byEvent = {};
   // With `leading`, text on the heading's own line is read like any other line: Echo prints
   // "3. Special Syllabus Requirements. F4101-F4104 Section approach, ...".
   const blockWide = section.inline && !leading ? [section.inline] : [];
   const lines = leading && section.inline ? [{ text: section.inline }, ...section.lines] : section.lines;
   let current = null;
+  let prev = '';
   const start = (ids) => {
     current = ids;
     ids.forEach((id) => { byEvent[id] = byEvent[id] || []; });
   };
   lines.forEach((line) => {
+    const opens = !lettered || !prev || /[.:)]$/.test(prev);
+    prev = line.text;
+    if (lettered && /^[a-z]\.\s/.test(line.text)) {
+      current = null;
+      blockWide.push(line.text);
+      return;
+    }
     // The SSRs write a range out in full, "F4101-F4104", which `expand` reads as F4101-4104.
     const full = leading ? line.text.replace(/\b([A-Z]{1,3})(\d{4})-\1(\d{4})\b/g, '$1$2-$3') : line.text;
     // They also set ids off on a line of their own as "F4103/F4104" or "FAM4101.".
     const text = leading ? full.replace(/\/(?=[A-Z])/g, ' ').replace(/\.$/, '') : full;
     const tokens = text.split(/[\s,]+/).filter((t) => t && !/^and$/i.test(t));
     const label = leading ? SSR_LABEL : EVENT_LABEL;
-    if (tokens.length && tokens.every((t) => label.test(t))) {
+    if (opens && tokens.length && tokens.every((t) => label.test(t))) {
       const ids = idsOf(tokens);
       if (ids.length) {
         start(ids);
         return;
       }
     }
-    if (leading) {
+    if (leading && opens) {
       // "F4103/F4104 Section approach, ..." names two events at once.
       const m = /^([A-Z]{1,3}\d{4}[A-Z]?(?:-\d{1,4})?(?:\/[A-Z]{1,3}\d{4}[A-Z]?)*)\s+(.+)$/.exec(full);
-      const ids = m ? idsOf(m[1].split('/')) : [];
+      // In the notes, an id followed by a lowercase word is the subject of a block-wide
+      // sentence ("FAM0201 has no required location, ..."), not an event's own line.
+      const own = m && (!lettered || /^[A-Z(“"']/.test(m[2]));
+      const ids = own ? idsOf(m[1].split('/')) : [];
       if (ids.length) {
         start(ids);
         ids.forEach((id) => byEvent[id].push(m[2]));
@@ -374,6 +390,43 @@ function ssrText(section, eventIds) {
     if (own || block) out[id] = [block, own].filter(Boolean).join(' ');
   });
   return { block, byEvent: out };
+}
+
+// "a. ... b. ... c. ..." -> the items, less their letters. Letters are taken only in order, so
+// "i.e." or a stray "c." inside a sentence doesn't split one.
+function splitLettered(text) {
+  if (!/^a\.\s/.test(text)) return [text];
+  const items = [];
+  let from = 0;
+  let letter = 'b';
+  for (;;) {
+    const re = new RegExp(`\\s${letter}\\.\\s+(?=[A-Z(\u201c"'])`, 'g');
+    re.lastIndex = from + 3;
+    const m = re.exec(text);
+    if (!m) break;
+    items.push(text.slice(from, m.index));
+    from = m.index + 1;
+    letter = String.fromCharCode(letter.charCodeAt(0) + 1);
+  }
+  items.push(text.slice(from));
+  return items.map((t) => t.replace(/^[a-z]\.\s+/, '').trim()).filter(Boolean);
+}
+
+// "2. Syllabus Notes" (or "3."): a lettered list for the whole block, with an event's own notes
+// on lines that start with its id, laid out as the Special Syllabus Requirements are.
+// -> { list: [item] for the block, byEvent: { id: text } }
+function notesText(section, eventIds) {
+  const none = { list: [], byEvent: {} };
+  if (!section || /^none\.?$/i.test(section.inline.trim())) return none;
+  const { byEvent, blockWide } = linesByEvent(section, { leading: true, lettered: true });
+  const block = joinLines(blockWide);
+  const list = block && !/^none\.?$/i.test(block) ? splitLettered(block) : [];
+  const out = {};
+  eventIds.forEach((id) => {
+    const own = byEvent[id] ? joinLines(byEvent[id]) : '';
+    if (own) out[id] = own;
+  });
+  return { list, byEvent: out };
 }
 
 // Per-event paragraphs under "4. Discuss Items", or one sentence for the whole block.
@@ -486,6 +539,7 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
 
       const discuss = discussItems(sections['discuss items'], ids);
       const ssr = ssrText(sections['special syllabus requirements'], ids);
+      const notes = notesText(sections['syllabus notes'], ids);
       const row = {
         id: head.id,
         stage: null,
@@ -501,10 +555,10 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
       const prereqs = prereqText(sections.prerequisites);
       if (prereqs) row.prereqs = prereqs;
       if (ssr.block) row.ssr = ssr.block;
+      if (notes.list.length) row.syllabusNotes = notes.list;
       built.push(row);
 
       if (discuss.briefed) {
-        const notes = listText(sections['syllabus notes']);
         ids.filter((id) => discuss.byEvent[id]).forEach((id) => {
           events.push({
             id,
@@ -513,7 +567,7 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
             media: row.media,
             hours: row.hx != null ? row.hx : null,
             prereqs: row.prereqs || null,
-            syllabusNotes: notes || null,
+            syllabusNotes: notes.byEvent[id] || null,
             ssr: ssr.byEvent[id] || null,
             items: (discuss.byEvent[id] || []).map((label) => ({ label })),
           });
