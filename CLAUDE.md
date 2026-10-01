@@ -47,7 +47,7 @@ On Windows PowerShell, set env vars first (`$env:PORT=3100; npm start`), never `
 
 **pinksheetmafia.com** — a free, community-built naval aviation training tool, deployed on Netlify
 (`public/_redirects` is the SPA fallback). Programs: **NIFE** (C172, `/nife/*`), **TW4 Primary**
-(T-6B, `/tw4/*`), **Advanced** (T-44C, `/t44c/*`, draft). Programs are listed in
+(T-6B, `/tw4/*`), **Advanced** (T-44C, `/t44c/*`). Programs are listed in
 `src/components/programs.js` and `TopNav.js`'s `TABS`.
 
 ## Architecture
@@ -155,7 +155,7 @@ Code in `src/components/discuss/` (route shell `Discuss.js`, `ItemPage.js`, `Eve
 ### Mounts and programs
 
 `Discuss` takes `base`, `school` and a built-in syllabus: Primary (`/tw4/discuss`, Delta), NIFE
-(`/nife/discuss`), Advanced (`/t44c/discuss`, draft). A page is identified by (school, slug).
+(`/nife/discuss`), Advanced (`/t44c/discuss`). A page is identified by (school, slug).
 Advanced has two syllabi, `t44c-p8` (1542.168C, default) and `t44c-e2d` (1542.175D), both
 `T-44C`/`Advanced`, sharing one corpus — never put the community in `school`. Seeded by
 `tools/t44c-syllabus.js` (a new school can't be bootstrapped via the site because its built-in
