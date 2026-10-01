@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import omnivore from '@mapbox/leaflet-omnivore';
+import { kml } from '@tmcw/togeojson';
 import 'leaflet/dist/leaflet.css';
 import { crFeatures } from './CourseRulesFeatures.js';
 
@@ -60,196 +60,192 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
           processFolders(doc);
         }
 
-        // Now load with omnivore
-        omnivore.kml(url)
-          .on('ready', function() {
-            const features = [];
-            let layerIndex = 0;
+        // Turn the placemarks into map layers, one per placemark in document order
+        const kmlLayers = L.geoJSON(kml(kmlDoc));
+        const features = [];
+        let layerIndex = 0;
 
-            // Process each feature from the KML
-            this.eachLayer(layer => {
-              // Extract properties from KML
-              const props = layer.feature?.properties || {};
-              const name = props.name || 'Unnamed';
-              const description = props.description || '';
+        // Process each feature from the KML
+        kmlLayers.eachLayer(layer => {
+          // Extract properties from KML
+          const props = layer.feature?.properties || {};
+          const name = props.name || 'Unnamed';
+          // An HTML description comes as { value } rather than a string.
+          const description = (typeof props.description === 'object' ? props.description?.value : props.description) || '';
 
-              // Match by document order
-              const placemarkInfo = placemarkList[layerIndex++];
-              const folderPath = placemarkInfo.folderPath || [];
-              const folderPathStr = folderPath.join(' > ');
+          // Match by document order
+          const placemarkInfo = placemarkList[layerIndex++];
+          const folderPath = placemarkInfo.folderPath || [];
+          const folderPathStr = folderPath.join(' > ');
 
-              // Try to categorize based on folder structure and name
-              let category = 'Other';
-              let featureType = 'unknown';
-              let subType = null;
+          // Try to categorize based on folder structure and name
+          let category = 'Other';
+          let featureType = 'unknown';
+          let subType = null;
 
-              // Check for airspace
-              if (name.match(/class\s*[a-e]|radius|ejection|stand\s*off/i) || description.match(/class\s*[a-e]|radius|ejection|stand\s*off/i)) {
-                category = 'Airspace';
-                const classMatch = (name + description).match(/class\s*([a-e])/i);
-                featureType = classMatch ? `Class ${classMatch[1].toUpperCase()}` : 'Airspace';
-              }
-              
-              // Check for working areas - prioritize name over folder path
-              else if (name.match(/mustang\s*(maintenance|central)/i) || folderPathStr.match(/mustang\s*(maintenance|central)/i)) {
-                category = 'Working Areas';
-                featureType = 'Mustang Maintenance/Central';
-                subType = 'Mustang Maintenance';
-              } else if (name.match(/mustang/i) || folderPathStr.match(/mustang/i)) {
-                category = 'Working Areas';
-                featureType = 'Mustang';
-                subType = 'Mustang';
-              } else if (name.match(/foxtrot/i) || folderPathStr.match(/foxtrot/i)) {
-                category = 'Working Areas';
-                featureType = 'Foxtrot';
-                subType = 'Foxtrot';
-              } else if (name.match(/king/i) || folderPathStr.match(/king/i)) {
-                category = 'Working Areas';
-                featureType = 'King';
-                subType = 'King';
-              }
-              
-              // Check for routes based on folder names
-              else if (folderPathStr.match(/arrival/i)) {
-                category = 'Routes';
-                featureType = 'Arrival';
-                subType = 'Arrivals';
-              } else if (folderPathStr.match(/departure/i)) {
-                category = 'Routes';
-                featureType = 'Departure';
-                subType = 'Departures';
-              } else if (folderPathStr.match(/transition/i)) {
-                category = 'Routes';
-                featureType = 'Transition';
-                subType = 'Transitions';
-              }
+          // Check for airspace
+          if (name.match(/class\s*[a-e]|radius|ejection|stand\s*off/i) || description.match(/class\s*[a-e]|radius|ejection|stand\s*off/i)) {
+            category = 'Airspace';
+            const classMatch = (name + description).match(/class\s*([a-e])/i);
+            featureType = classMatch ? `Class ${classMatch[1].toUpperCase()}` : 'Airspace';
+          }
+          
+          // Check for working areas - prioritize name over folder path
+          else if (name.match(/mustang\s*(maintenance|central)/i) || folderPathStr.match(/mustang\s*(maintenance|central)/i)) {
+            category = 'Working Areas';
+            featureType = 'Mustang Maintenance/Central';
+            subType = 'Mustang Maintenance';
+          } else if (name.match(/mustang/i) || folderPathStr.match(/mustang/i)) {
+            category = 'Working Areas';
+            featureType = 'Mustang';
+            subType = 'Mustang';
+          } else if (name.match(/foxtrot/i) || folderPathStr.match(/foxtrot/i)) {
+            category = 'Working Areas';
+            featureType = 'Foxtrot';
+            subType = 'Foxtrot';
+          } else if (name.match(/king/i) || folderPathStr.match(/king/i)) {
+            category = 'Working Areas';
+            featureType = 'King';
+            subType = 'King';
+          }
+          
+          // Check for routes based on folder names
+          else if (folderPathStr.match(/arrival/i)) {
+            category = 'Routes';
+            featureType = 'Arrival';
+            subType = 'Arrivals';
+          } else if (folderPathStr.match(/departure/i)) {
+            category = 'Routes';
+            featureType = 'Departure';
+            subType = 'Departures';
+          } else if (folderPathStr.match(/transition/i)) {
+            category = 'Routes';
+            featureType = 'Transition';
+            subType = 'Transitions';
+          }
 
-              // Default to Traffic Patterns if no other category matched
-              if (category === 'Other') {
-                category = 'Routes';
-                featureType = 'Traffic Pattern';
-                subType = 'Traffic Patterns';
-                if(layer._latlng){
-                  category = 'Point';
-                  featureType = null;
-                  subType = null;              
+          // Default to Traffic Patterns if no other category matched
+          if (category === 'Other') {
+            category = 'Routes';
+            featureType = 'Traffic Pattern';
+            subType = 'Traffic Patterns';
+            if(layer._latlng){
+              category = 'Point';
+              featureType = null;
+              subType = null;              
+            };
+          }
+
+          if(layer._latlng){
+            category = 'Point';           
+          };
+
+          if(layer._latlngs){
+            if(!Array.isArray(layer._latlngs[0]) && category === 'Working Areas'){
+              category = 'Routes';
+              featureType = 'Transition';
+              subType = 'Transitions';
+            }
+          };
+          
+
+          // Style features by subtype or category
+          const styles = {
+            'Airspace': { color: '#3388ff', weight: 2, fillOpacity: 0.2 },
+            'Arrivals': { color: '#00ff00', weight: 3, fillOpacity: 0.1 },
+            'Departures': { color: '#ff6600', weight: 3, fillOpacity: 0.1 },
+            'Transitions': { color: '#9966ff', weight: 3, fillOpacity: 0.1 },
+            'Traffic Patterns': { color: '#ffff00', weight: 3, fillOpacity: 0.1 },
+            'Mustang': { color: '#ff6b6b', weight: 2, fillOpacity: 0.25 },
+            'King': { color: '#4ecdc4', weight: 2, fillOpacity: 0.25 },
+            'Foxtrot': { color: '#ffe66d', weight: 2, fillOpacity: 0.25 },
+            'Mustang Maintenance': { color: '#a8dadc', weight: 2, fillOpacity: 0.25 },
+            'Point': { color: '#ff00ff', weight: 2, fillOpacity: 0.5 }
+          };
+
+          if (layer.setStyle) {
+            const styleKey = subType || category;
+            layer.setStyle(styles[styleKey] || { color: '#666', weight: 2 });
+          }
+
+          // Add popup with information
+          // For verbose descriptions (like airport info), give more space and preserve HTML
+          const featureId = `${category}-${subType || 'default'}-${features.length}`;
+
+          // Get customDescription from crFeatures if available
+          let customDescription = '';
+          if (crFeatures[featureId] && crFeatures[featureId].customDescription) {
+            const customDesc = crFeatures[featureId].customDescription;
+            // If it's an array, join with line breaks; otherwise use as-is
+            customDescription = Array.isArray(customDesc) ? customDesc.join('<br/>') : customDesc;
+          }
+
+          const hasVerboseDescription = description && description.length > 200;
+          const popupContent = `
+            <div style="max-width: ${hasVerboseDescription ? '500px' : '300px'}; max-height: 400px; overflow-y: auto;">
+              <strong style="font-size: 14px;">${name}</strong><br/>
+              <em style="font-size: 12px; color: #666;">${featureType}</em><br/>
+              ${description ? `<div style="margin-top: 10px; font-size: 13px;">${description}</div>` : ''}
+              ${customDescription ? `<div style="margin-top: 10px; font-size: 13px; color: #0066cc;">${customDescription}</div>` : ''}
+            </div>
+          `;
+          layer.bindPopup(popupContent, {
+            maxWidth: hasVerboseDescription ? 500 : 300,
+            maxHeight: 400
+          });
+
+          // Store layer with metadata
+          layersRef.current[featureId] = {
+            layer,
+            category,
+            subType,
+            featureType,
+            name,
+            description,
+            folderPath: folderPathStr
+          };
+
+          features.push({
+            id: featureId,
+            category,
+            subType,
+            featureType,
+            name,
+            description,
+            folderPath: folderPathStr
+          });
+        });
+        // Build folder tree structure
+        const tree = {};
+        features.forEach(feature => {
+          if (feature.folderPath) {
+            const parts = feature.folderPath.split(' > ');
+            let current = tree;
+            // Navigate/create the tree structure
+            parts.forEach((part, index) => {
+              if (!current[part]) {
+                current[part] = {
+                  name: part,
+                  children: {},
+                  features: [],
+                  path: parts.slice(0, index + 1).join(' > ')
                 };
               }
 
-              if(layer._latlng){
-                category = 'Point';           
-              };
-
-              if(layer._latlngs){
-                if(!Array.isArray(layer._latlngs[0]) && category === 'Working Areas'){
-                  category = 'Routes';
-                  featureType = 'Transition';
-                  subType = 'Transitions';
-                }
-              };
-              
-
-              // Style features by subtype or category
-              const styles = {
-                'Airspace': { color: '#3388ff', weight: 2, fillOpacity: 0.2 },
-                'Arrivals': { color: '#00ff00', weight: 3, fillOpacity: 0.1 },
-                'Departures': { color: '#ff6600', weight: 3, fillOpacity: 0.1 },
-                'Transitions': { color: '#9966ff', weight: 3, fillOpacity: 0.1 },
-                'Traffic Patterns': { color: '#ffff00', weight: 3, fillOpacity: 0.1 },
-                'Mustang': { color: '#ff6b6b', weight: 2, fillOpacity: 0.25 },
-                'King': { color: '#4ecdc4', weight: 2, fillOpacity: 0.25 },
-                'Foxtrot': { color: '#ffe66d', weight: 2, fillOpacity: 0.25 },
-                'Mustang Maintenance': { color: '#a8dadc', weight: 2, fillOpacity: 0.25 },
-                'Point': { color: '#ff00ff', weight: 2, fillOpacity: 0.5 }
-              };
-
-              if (layer.setStyle) {
-                const styleKey = subType || category;
-                layer.setStyle(styles[styleKey] || { color: '#666', weight: 2 });
+              // If this is the last part, add the feature
+              if (index === parts.length - 1) {
+                current[part].features.push(feature);
               }
 
-              // Add popup with information
-              // For verbose descriptions (like airport info), give more space and preserve HTML
-              const featureId = `${category}-${subType || 'default'}-${features.length}`;
-
-              // Get customDescription from crFeatures if available
-              let customDescription = '';
-              if (crFeatures[featureId] && crFeatures[featureId].customDescription) {
-                const customDesc = crFeatures[featureId].customDescription;
-                // If it's an array, join with line breaks; otherwise use as-is
-                customDescription = Array.isArray(customDesc) ? customDesc.join('<br/>') : customDesc;
-              }
-
-              const hasVerboseDescription = description && description.length > 200;
-              const popupContent = `
-                <div style="max-width: ${hasVerboseDescription ? '500px' : '300px'}; max-height: 400px; overflow-y: auto;">
-                  <strong style="font-size: 14px;">${name}</strong><br/>
-                  <em style="font-size: 12px; color: #666;">${featureType}</em><br/>
-                  ${description ? `<div style="margin-top: 10px; font-size: 13px;">${description}</div>` : ''}
-                  ${customDescription ? `<div style="margin-top: 10px; font-size: 13px; color: #0066cc;">${customDescription}</div>` : ''}
-                </div>
-              `;
-              layer.bindPopup(popupContent, {
-                maxWidth: hasVerboseDescription ? 500 : 300,
-                maxHeight: 400
-              });
-
-              // Store layer with metadata
-              layersRef.current[featureId] = {
-                layer,
-                category,
-                subType,
-                featureType,
-                name,
-                description,
-                folderPath: folderPathStr
-              };
-
-              features.push({
-                id: featureId,
-                category,
-                subType,
-                featureType,
-                name,
-                description,
-                folderPath: folderPathStr
-              });
+              current = current[part].children;
             });
-            // Build folder tree structure
-            const tree = {};
-            features.forEach(feature => {
-              if (feature.folderPath) {
-                const parts = feature.folderPath.split(' > ');
-                let current = tree;
-                // Navigate/create the tree structure
-                parts.forEach((part, index) => {
-                  if (!current[part]) {
-                    current[part] = {
-                      name: part,
-                      children: {},
-                      features: [],
-                      path: parts.slice(0, index + 1).join(' > ')
-                    };
-                  }
+          }
+        });
 
-                  // If this is the last part, add the feature
-                  if (index === parts.length - 1) {
-                    current[part].features.push(feature);
-                  }
+        setFolderTree(tree);
+        setLayersLoaded(true); // Trigger visibility effect
 
-                  current = current[part].children;
-                });
-              }
-            });
-
-            setFolderTree(tree);
-            setLayersLoaded(true); // Trigger visibility effect
-
-            // Don't add layers here - let the visibility effect handle it
-          })
-          .on('error', function(error) {
-            console.error('Error loading KML:', error);
-          });
+        // Don't add layers here - let the visibility effect handle it
       })
       .catch(error => {
         console.error('Error fetching KML:', error);
@@ -1061,7 +1057,7 @@ function TW4CourseRules() {
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <KmlLayer
             url="/kml/course-rules.kml"
