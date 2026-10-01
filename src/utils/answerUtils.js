@@ -22,7 +22,8 @@ const ABBREVS = {
   'second':  'seconds',
 };
 
-export function normalizeAnswer(str) {
+// `keep` is stop words that are not filler here, and are compared like any other word.
+export function normalizeAnswer(str, keep) {
   let s = str.toString().toLowerCase();
   // Strip zero-width/soft-hyphen invisible Unicode that appears in answer keys
   s = s.replace(/[​‌‍﻿­]/g, '');
@@ -34,7 +35,7 @@ export function normalizeAnswer(str) {
   if (!s) return '';
   let words = s.split(' ');
   words = words.map(w => ABBREVS[w] ?? w);
-  words = words.filter(w => w && !STOP_WORDS.has(w));
+  words = words.filter(w => w && (!STOP_WORDS.has(w) || (keep && keep.has(w))));
   words.sort();
   return words.join(' ');
 }
@@ -43,21 +44,24 @@ export function normalizeAnswer(str) {
 // something is missing), 'incorrect', or '' for a blank box. An empty key accepts anything.
 // This is Primary's EP checker, shared so every school's EPs grade the same way.
 //
-// A key made only of words normalizeAnswer drops ("ON", "IN") would normalize to nothing and
-// accept any answer at all, so those are compared word for word instead.
+// In a step's setting (after " - ") ON and IN are positions, not filler: "Master - ON" needs the
+// ON, and "Master" alone is partial. A key with no setting is all setting when it is nothing but
+// stop words ("ON"), or it would accept any answer at all.
+const POSITIONS = new Set(['on', 'in']);
+
 export function gradeAnswer(user, correct) {
-  const bare = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-  if (bare(correct) && !normalizeAnswer(correct)) {
-    if (!bare(user)) return '';
-    return bare(user) === bare(correct) ? 'correct' : 'incorrect';
-  }
-  const u = normalizeAnswer(user || '');
-  const c = normalizeAnswer(correct || '');
+  const key = String(correct || '');
+  const at = key.indexOf(' - ');
+  const setting = at >= 0 ? key.slice(at + 3) : normalizeAnswer(key) ? '' : key;
+  const said = normalizeAnswer(setting, STOP_WORDS).split(' ');
+  const keep = new Set(at >= 0 ? said.filter((w) => POSITIONS.has(w)) : said);
+  const u = normalizeAnswer(user || '', keep);
+  const c = normalizeAnswer(key, keep);
   if (u === c) return u === '' && c !== '' ? '' : 'correct';
   if (u === '') return '';
   if (c === '') return 'correct';
-  const key = new Set(c.split(' '));
-  return u.split(' ').every((w) => key.has(w)) ? 'partial' : 'incorrect';
+  const words = new Set(c.split(' '));
+  return u.split(' ').every((w) => words.has(w)) ? 'partial' : 'incorrect';
 }
 
 // A limit: numbers compared as numbers (7 is 7.0), ranges written with "to" or "-", and the
