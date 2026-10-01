@@ -184,7 +184,7 @@ const _LDG_UP_PA_DATA = [
   /*  2k */ [-0.01,   4],
   /*  4k */ [-0.0112, 4.2],
   /*  6k */ [-7/550,  49/11],
-  /*  8k */ [-0.14,   4.78],
+  /*  8k */ [-0.014,  4.78],
 ];
 
 function calcLandingDistFlapsUp(oat_c, pa_ft, wt_lbs) {
@@ -199,11 +199,43 @@ function _calcLdgPair(calcFn, wetFn, wtTO, wtLDG, oatImm, paImm, oatDest, paDest
   return { imm: fmt(dry(wtTO, oatImm, paImm), rcrTO), dest: fmt(dry(wtLDG, oatDest, paDest), rcrLDG) };
 }
 
+// What is typed is kept in this browser, so the card is as it was left. The calculated boxes
+// are worked out again from the entries when the card opens.
+const STORE_KEY = 'tw4ToldCard';
+
+function loadCard() {
+  const blank = { airportTO: DEFAULT_APT, airportLDG: DEFAULT_APT, fields: mkInitial(), toDistMode: '50ft' };
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (!saved || typeof saved !== 'object') return blank;
+    const apt = (a) => (a in AIRPORTS ? a : DEFAULT_APT);
+    const fields = { ...blank.fields };
+    Object.keys(fields).forEach((k) => { if (typeof (saved.fields || {})[k] === 'string') fields[k] = saved.fields[k]; });
+    return {
+      airportTO: apt(saved.airportTO),
+      airportLDG: apt(saved.airportLDG),
+      fields,
+      toDistMode: saved.toDistMode === 'noObs' ? 'noObs' : '50ft',
+    };
+  } catch {
+    return blank;
+  }
+}
+
 function TW4Told() {
-  const [airportTO,  setAirportTO]  = useState(DEFAULT_APT);
-  const [airportLDG, setAirportLDG] = useState(DEFAULT_APT);
-  const [fields, setFields] = useState(mkInitial);
-  const [toDistMode, setToDistMode] = useState('50ft');
+  const [saved] = useState(loadCard);
+  const [airportTO,  setAirportTO]  = useState(saved.airportTO);
+  const [airportLDG, setAirportLDG] = useState(saved.airportLDG);
+  const [fields, setFields] = useState(saved.fields);
+  const [toDistMode, setToDistMode] = useState(saved.toDistMode);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ airportTO, airportLDG, fields, toDistMode }));
+    } catch {
+      // Private mode: the card still works for this visit.
+    }
+  }, [airportTO, airportLDG, fields, toDistMode]);
 
   const set = (key, val) => setFields(prev => ({ ...prev, [key]: val }));
 

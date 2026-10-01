@@ -25,7 +25,6 @@ const BriefUpload = lazy(() => import('./BriefUpload'));
 // screen, every heading and item grows an edit link, and the working copy is published in one
 // revision from the bar at the top.
 
-const TOLD_TITLE = 'T-6B TAKEOFF AND LANDING DATA (TOLD) CARD';
 const FIRST_LETTER_KEY = 'briefFirstLetters';
 
 function readFlag(key) {
@@ -150,7 +149,8 @@ function Chooser({ index, active, told }) {
 function Frame({ index, active, title, children }) {
   return (
     <div className="page-container brief-page">
-      <h1 className="brief-title">{title}</h1>
+      {/* Primary's TOLD card carries its own title, as the printed card does, so it passes none. */}
+      {title && <h1 className="brief-title">{title}</h1>}
       <Chooser index={index} active={active} told={index.hasTold} />
       {index.status === 'error' && index.briefs.length === 0 && (
         <p className="discuss-editor-warn">The briefs could not be loaded. {index.error && index.error.message}</p>
@@ -317,7 +317,7 @@ function DefaultRoute({ index, ...rest }) {
 // on the server — the guides are uploaded to whichever tab the person is on — so this is what
 // keeps a T-6B brief off the NIFE page.
 function BriefsPage({
-  base = BRIEFS_BASE, school = 'Primary', told = <TW4Told />, toldTitle = TOLD_TITLE,
+  base = BRIEFS_BASE, school = 'Primary', told = <TW4Told />, toldTitle = null,
 }) {
   const all = useBriefIndex();
   const unitKey = `briefUnit-${school}`;
