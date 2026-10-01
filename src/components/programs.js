@@ -5,7 +5,7 @@
 
 // Work that is built but not ready for readers. `DRAFT` is true on a dev server and false in
 // a production build, so a half-finished tab is reachable while it is being written and simply
-// is not there on the live site — the same idea as STYLE_GUIDE_DRAFT in discuss/SyllabusContext.js.
+// is not there on the live site.
 //
 // It gates the NAVIGATION and the ROUTES, not the data: `programOf` and `isSchool` still answer
 // for a draft program, so a brief or a page already tagged `Advanced` stays correctly filed and

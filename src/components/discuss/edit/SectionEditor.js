@@ -7,7 +7,6 @@
 //
 // The words on screen are for a student editing a page, not for the person maintaining the
 // site: what a field is for, in a sentence, and nothing about why the rules are the rules.
-// The style guide is a page of its own (to be written), not the editor's hints.
 import React, { useState } from 'react';
 import { clone } from './draft';
 import {

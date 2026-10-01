@@ -397,7 +397,6 @@ are vector art — render to classify NWCs.
 - No `window.confirm/alert` — `ConfirmButton`, `RowTools confirmRemove`; unavailable actions are
   disabled with the reason in `title`. One editor open at a time. `.discuss-editor` has `clear: both`.
   Drafts show only in `ItemPage`, never in nav/search.
-- To do: a student-facing style guide page linked from editor footers.
 
 ## Shared jet logs
 

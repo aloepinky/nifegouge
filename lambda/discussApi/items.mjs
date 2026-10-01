@@ -132,8 +132,8 @@ export async function saveItemHandler(event) {
   const { key, meta } = await requireItem(item && item.school, slug);
   if (meta.latestRev !== baseRev) throw new HttpError(409, 'A newer revision exists', { rev: meta.latestRev });
 
-  // No prose lint on the way in: the rules in discussRules.mjs are for the CLI and for a
-  // style guide page, not for refusing a student's edit. The shape check above is the gate.
+  // No prose lint on the way in: the rules in discussRules.mjs are for the CLI, not for
+  // refusing a student's edit. The shape check above is the gate.
   const saved = await saveItem(key, baseRev, item, { author: cleanAuthor(body.author), summary });
   await afterWrite(saved.meta, saved.row);
   return ok({ slug, rev: saved.row.rev, updatedAt: saved.row.createdAt });

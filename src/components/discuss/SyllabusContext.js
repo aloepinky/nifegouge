@@ -23,12 +23,6 @@ export const NIFE_SYLLABUS_ID = 'nife-flight';
 // far the larger community.
 export const T44C_P8_ID = 't44c-p8';
 
-// The style guide is a draft, and it is hidden everywhere while it is being edited — the dev
-// server included, so a half-written page of rules is not what a reader finds. One flag, read
-// by the route and by both places that link it: set it back to `process.env.NODE_ENV !==
-// 'production'` to work on the page, and delete the line and its three guards to take it live.
-export const STYLE_GUIDE_DRAFT = false;
-
 function index(rows) {
   const out = {};
   rows.forEach((r) => { out[r.id.toUpperCase()] = r; });

@@ -49,7 +49,7 @@ function remapRefs(item, map) {
 }
 
 // The head of a section's block in the form: where it sits, what level it is, and the two
-// moves the style guide names — a section whose every sentence is about a sibling's subject
+// moves a page's sections make — a section whose every sentence is about a sibling's subject
 // is demoted under it, and a section that names a set promotes its members. No anchor id: it
 // is derived from the heading and nobody can act on it.
 function SectionHead({ number, title, isSub, index, count, onMove, onRemove, onShift, shiftBlocked }) {
