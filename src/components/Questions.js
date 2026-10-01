@@ -42,7 +42,6 @@ function Questions() {
   const [allQuestions, setAllQuestions] = useState([]);
   const [loadState, setLoadState] = useState('loading'); // 'loading' | 'error' | 'ready'
   const [pending, setPending] = useState([]);
-  const [threshold, setThreshold] = useState(5);
   const [seen, setSeen] = useState(pendingSeen);
 
   const [topic, setTopic] = useState('aero');
@@ -105,7 +104,6 @@ function Questions() {
     try {
       const data = await loadPending();
       setPending(data.questions);
-      setThreshold(data.threshold);
     } catch (err) {
       console.error('Error loading pending questions:', err);
     }
@@ -319,7 +317,6 @@ function Questions() {
         <PendingQueue
           pending={pending.filter(inUse(sections))}
           sections={sections}
-          threshold={threshold}
           seen={seen}
           questions={allQuestions}
           onVoted={pendingDone}
@@ -440,7 +437,6 @@ function Questions() {
             key={bonus.item.questionId}
             item={bonus.item}
             original={bonusOriginal}
-            threshold={threshold}
             badge="Bonus review"
             onDone={pendingDone}
           />

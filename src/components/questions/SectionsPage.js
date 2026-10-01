@@ -16,7 +16,12 @@ import LicenseNote from '../LicenseNote';
 // first save, then stays, so a later rename does not move its questions.
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
-const strip = (sections) => sections.map(({ isNew, ...s }) => ({
+// Each topic in the draft carries `_k`, a key of this page's own that stays put while its id
+// follows its name and while it moves, so the box under the cursor is not rebuilt and the open
+// lecture lists stay with their topics. strip() takes it off again.
+let nextKey = 0;
+const keyed = (sections) => sections.map((s) => ({ ...s, _k: (nextKey += 1) }));
+const strip = (sections) => sections.map(({ isNew, _k, ...s }) => ({
   ...s,
   lectures: s.lectures.map(({ isNew: _, ...l }) => l),
 }));
@@ -56,8 +61,9 @@ export default function SectionsPage() {
   const load = useCallback(async () => {
     const data = await readMirror('questions/nife/sections.json');
     setSaved(data && data.doc ? { rev: data.rev, doc: data.doc } : { rev: 0, doc: null });
-    setDraft(data && data.doc ? clone(data.doc.sections) : null);
+    setDraft(data && data.doc ? keyed(clone(data.doc.sections)) : null);
     setHistory(null);
+    setShowHistory(false);
   }, []);
 
   useEffect(() => {
@@ -90,9 +96,9 @@ export default function SectionsPage() {
 
   const addSection = () => setDraft((d) => {
     const taken = d.map((s) => s.id);
-    const next = [...d, { id: sectionIdFor('New topic', taken), name: 'New topic', lectures: [], isNew: true }];
-    setOpen((o) => new Set(o).add(next.length - 1));
-    return next;
+    const [added] = keyed([{ id: sectionIdFor('New topic', taken), name: 'New topic', lectures: [], isNew: true }]);
+    setOpen((o) => new Set(o).add(added._k));
+    return [...d, added];
   });
 
   const addLecture = (i) => setDraft((d) => d.map((s, j) => {
@@ -143,10 +149,10 @@ export default function SectionsPage() {
     }
   };
 
-  const toggle = (i) => setOpen((o) => {
+  const toggle = (k) => setOpen((o) => {
     const next = new Set(o);
-    if (next.has(i)) next.delete(i);
-    else next.add(i);
+    if (next.has(k)) next.delete(k);
+    else next.add(k);
     return next;
   });
 
@@ -175,16 +181,16 @@ export default function SectionsPage() {
 
       {draft && draft.map((s, i) => {
         const c = counts[s.id] || { total: 0 };
-        const isOpen = open.has(i);
+        const isOpen = open.has(s._k);
         return (
-          <div key={`${s.id}-${i}`} style={{ border: '1px solid #d5dde0', borderRadius: '8px', padding: '10px 12px', marginBottom: '10px', background: s.retired ? '#f4f4f4' : 'white' }}>
+          <div key={s._k} style={{ border: '1px solid #d5dde0', borderRadius: '8px', padding: '10px 12px', marginBottom: '10px', background: s.retired ? '#f4f4f4' : 'white' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               <Arrows index={i} count={draft.length} onMove={(from, to) => setDraft((d) => moved(d, from, to))} />
               <input aria-label="Topic name" style={{ ...input, flex: '1 1 160px', fontWeight: 'bold', color: s.retired ? '#888' : '#01202C' }} value={s.name} maxLength={40} onChange={(e) => renameSection(i, e.target.value)} />
               <span style={faint}>
                 {c.total} question{c.total === 1 ? '' : 's'}{s.retired ? ' • retired, hidden from view' : ''}{s.isNew ? ' • new' : ''}
               </span>
-              <button type="button" style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => toggle(i)}>
+              <button type="button" style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => toggle(s._k)}>
                 {isOpen ? 'Hide lectures' : `Lectures (${s.lectures.length})`}
               </button>
               {s.isNew ? (
@@ -233,7 +239,7 @@ export default function SectionsPage() {
                 {busy ? 'Saving…' : 'Save'}
               </button>
               {dirty && (
-                <Confirm label="Discard changes" question="Throw away your changes?" confirmLabel="Discard" style={smallButton('white', '#8e1c12', '1px solid #8e1c12')} onConfirm={() => setDraft(clone(saved.doc.sections))} />
+                <Confirm label="Discard changes" question="Throw away your changes?" confirmLabel="Discard" style={smallButton('white', '#8e1c12', '1px solid #8e1c12')} onConfirm={() => setDraft(keyed(clone(saved.doc.sections)))} />
               )}
               <span style={faint}>{dirty ? (summary.trim() ? '' : 'Say what you changed to save.') : 'No changes.'}</span>
             </div>

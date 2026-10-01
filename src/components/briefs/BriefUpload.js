@@ -9,7 +9,7 @@ import {
 } from './parseBriefGuide';
 import { publishBrief, saveBrief, fetchBrief, rememberBrief } from './briefApi';
 import BriefView from './BriefView';
-import { diffBriefs, diffSummary } from './briefDiff';
+import { diffBriefs, diffSummary, likeness } from './briefDiff';
 import { PROGRAMS, programName, programOf, shown } from '../programs';
 import { useBriefsBase } from './paths';
 import LicenseNote from '../LicenseNote';
@@ -24,19 +24,14 @@ import LicenseNote from '../LicenseNote';
 const MAX_BYTES = 25 * 1024 * 1024;
 const NEW = '__new__';
 
-const words = (text) => (text || '').toLowerCase().match(/[a-z0-9]+/g) || [];
-
 // Which brief on the site is this one a new edition of? The stages it is for are what say so:
 // `FAM / VNAV / INAV` against `FAM, VNAV and INAV`, whatever the wing has retitled it to.
 // Half the words have to be shared, so an edition that genuinely adds a brief matches nothing.
 function bestMatch(brief, candidates) {
-  const mine = new Set(words(brief.short || brief.title));
   let best = null;
   let bestScore = 0;
   candidates.forEach((entry) => {
-    const theirs = new Set(words(entry.short || entry.title));
-    const shared = [...mine].filter((w) => theirs.has(w)).length;
-    const score = (2 * shared) / (mine.size + theirs.size || 1);
+    const score = likeness(brief.short || brief.title, entry.short || entry.title);
     if (score > bestScore) {
       best = entry;
       bestScore = score;
@@ -59,7 +54,11 @@ function Preview({ brief, against }) {
     if (!against) return undefined;
     let live = true;
     fetchBrief(against).then(
-      (record) => { if (live) setCurrent(record.brief); },
+      (record) => {
+        if (!live) return;
+        if (record) setCurrent(record.brief);
+        else setError('The brief this replaces is no longer on the site, so this is the new one on its own.');
+      },
       (err) => { if (live) setError(`The brief on the site could not be read, so this is the new one on its own. ${err.message}`); },
     );
     return () => { live = false; };
@@ -264,6 +263,7 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
         } else {
           // The newest revision, read now rather than from the index this page loaded with.
           const current = await fetchBrief(target);
+          if (!current) throw new Error('That brief is no longer on the site; publish it as a new brief.');
           ({ id } = await saveBrief(target, current.rev, { ...brief, id: target }, meta));
         }
         rememberBrief(await fetchBrief(id));

@@ -130,11 +130,17 @@ export default function AdminPanel({ questions, sections, onExit, onChanged }) {
 function PendingTab({ questions, sections, run }) {
   const [pending, setPending] = useState(null);
   const [picked, setPicked] = useState(() => new Set());
+  const [failed, setFailed] = useState('');
 
   const refresh = useCallback(async () => {
-    const data = await loadPending();
-    setPending(data.questions);
-    setPicked(new Set());
+    setFailed('');
+    try {
+      const data = await loadPending();
+      setPending(data.questions);
+      setPicked(new Set());
+    } catch (err) {
+      setFailed(err.message);
+    }
   }, []);
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -143,6 +149,7 @@ function PendingTab({ questions, sections, run }) {
     await refresh();
   };
 
+  if (failed) return <div style={{ color: '#c62828', fontSize: '14px' }}>{failed}</div>;
   if (!pending) return <div style={meta}>Loading…</div>;
   if (pending.length === 0) return <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>No pending questions. The queue is clear.</div>;
 

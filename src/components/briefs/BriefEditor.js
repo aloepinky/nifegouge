@@ -35,7 +35,7 @@ function nextId(prefix, doc) {
   return `${prefix}-${max + 1}`;
 }
 
-export const newItem = (section, doc) => ({
+const newItem = (section, doc) => ({
   id: nextId(section.id, doc), label: '', text: '',
 });
 
@@ -377,11 +377,11 @@ export function problems(doc) {
   (doc.sections || []).forEach((s, i) => {
     const where = s.title || `Section ${i + 1}`;
     if (!(s.title || '').trim()) out.push(`Section ${i + 1} has no heading.`);
-    if (s.fixed && !(s.text || '').trim()) out.push(`${where} is fixed but has no text in it.`);
+    if (s.fixed && !(s.text || '').trim()) out.push(`${where} is set to Always Expanded but has no text in it.`);
     (s.items || []).forEach((it, j) => {
       if (!(it.label || '').trim()) out.push(`${where}, item ${j + 1} has no name.`);
       if (it.fixed && !(it.text || '').trim()) {
-        out.push(`${where}, item ${j + 1} is fixed but has no text in it.`);
+        out.push(`${where}, item ${j + 1} is set to Always Expanded but has no text in it.`);
       }
     });
   });

@@ -6,7 +6,7 @@ import PendingCard from './PendingCard';
 // first, for anyone who would rather clear the queue than wait for them to turn up in a quiz.
 // Every topic unless one is picked. What this browser has voted on or skipped is not shown.
 
-export default function PendingQueue({ pending, sections, threshold, seen, questions, onVoted, onExit }) {
+export default function PendingQueue({ pending, sections, seen, questions, onVoted, onExit }) {
   const [topic, setTopic] = useState('all');
   const waiting = pending.filter((q) => !seen[q.questionId] && (topic === 'all' || (q.topic || '').toLowerCase() === topic));
   const item = waiting[0];
@@ -38,7 +38,6 @@ export default function PendingQueue({ pending, sections, threshold, seen, quest
           key={item.questionId}
           item={item}
           original={original}
-          threshold={threshold}
           badge={name((item.topic || '').toLowerCase())}
           onDone={onVoted}
         />

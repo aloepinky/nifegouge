@@ -178,25 +178,31 @@ export function problemsWith(row) {
 
 const words = (s) => new Set(clean(s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').split(' ').filter((w) => w.length > 1));
 
-export function dice(a, b) {
-  const x = words(a);
-  const y = words(b);
+const diceOf = (x, y) => {
   if (!x.size || !y.size) return 0;
   let shared = 0;
   x.forEach((w) => { if (y.has(w)) shared += 1; });
   return (2 * shared) / (x.size + y.size);
-}
+};
+
+export const dice = (a, b) => diceOf(words(a), words(b));
 
 export const DUPLICATE_AT = 0.8;
 
-// The live question this row most looks like, if it looks like one enough to mention.
-export function likelyDuplicate(row, live) {
-  const key = words(row.question);
+// The live questions with their words worked out once, for checking many rows against them.
+export const duplicateIndex = (live) => live.map((q) => ({ q, norm: norm(q.question), words: words(q.question) }));
+
+// The live question this wording most looks like, if it looks like one enough to mention.
+export function duplicateIn(question, index) {
+  const key = words(question);
   if (!key.size) return null;
+  const n = norm(question);
   let best = null;
-  for (const q of live) {
-    const score = norm(q.question) === norm(row.question) ? 1 : dice(row.question, q.question);
-    if (score >= DUPLICATE_AT && (!best || score > best.score)) best = { question: q, score };
+  for (const e of index) {
+    const score = e.norm === n ? 1 : diceOf(key, e.words);
+    if (score >= DUPLICATE_AT && (!best || score > best.score)) best = { question: e.q, score };
   }
   return best;
 }
+
+export const likelyDuplicate = (row, live) => duplicateIn(row.question, duplicateIndex(live));

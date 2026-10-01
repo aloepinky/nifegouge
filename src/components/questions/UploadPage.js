@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getAuthor, setAuthor } from '../serverApi';
 import { loadApproved, sendQuestions } from './questionsApi';
 import { activeSections, formLectures, inUse, useSections } from './sections';
-import { likelyDuplicate, parseUpload, problemsWith } from './parseUpload';
+import { duplicateIn, duplicateIndex, parseUpload, problemsWith } from './parseUpload';
 import { smallButton } from './Confirm';
 import LicenseNote from '../LicenseNote';
 
@@ -29,6 +29,9 @@ export default function UploadPage() {
   const [live, setLive] = useState([]);
   const [text, setText] = useState('');
   const [rows, setRows] = useState([]);
+  // Per row: true or false once the user has ticked or unticked it; undefined leaves it to the
+  // default (ticked unless it looks like a question already in the quiz, which may load after
+  // the paste).
   const [include, setInclude] = useState([]);
   const [topic, setTopic] = useState('');
   const [lecture, setLecture] = useState('');
@@ -45,6 +48,15 @@ export default function UploadPage() {
   const section = sections.find((s) => s.id === topic);
   const lectures = formLectures(section);
   const liveInUse = useMemo(() => live.filter(inUse(sections)), [live, sections]);
+  // The duplicate check, once per wording: editing an answer or a lecture checks nothing again.
+  const duplicateOf = useMemo(() => {
+    const index = duplicateIndex(liveInUse);
+    const cache = new Map();
+    return (question) => {
+      if (!cache.has(question)) cache.set(question, duplicateIn(question, index));
+      return cache.get(question);
+    };
+  }, [liveInUse]);
 
   // Every row as it would be sent: its own topic and lecture where it has them, the batch's
   // where it does not.
@@ -65,9 +77,9 @@ export default function UploadPage() {
       topicId: rowSection ? rowSection.id : '',
       lectureId: rowLecture,
       problems,
-      duplicate: likelyDuplicate(row, liveInUse),
+      duplicate: duplicateOf(row.question),
     };
-  }), [rows, sections, section, lecture, liveInUse]);
+  }), [rows, sections, section, lecture, duplicateOf]);
 
   // Which shape a paste is (spreadsheet, CSV or Quizlet) is always worked out from the paste.
   const read = (value) => {
@@ -76,7 +88,7 @@ export default function UploadPage() {
     const out = parseUpload(value);
     setRows(out.rows);
     // A row is ticked unless something is wrong with it or it looks like one already in the quiz.
-    setInclude(out.rows.map((r) => problemsWith(r).length === 0 && !likelyDuplicate(r, liveInUse)));
+    setInclude(out.rows.map((r) => (problemsWith(r).length === 0 ? undefined : false)));
   };
 
   const readFile = (file) => {
@@ -87,7 +99,8 @@ export default function UploadPage() {
   };
 
   const setRow = (i, change) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...change } : r)));
-  const sendable = prepared.map((r, i) => include[i] && r.problems.length === 0 && r.topicId);
+  const ticked = prepared.map((r, i) => (include[i] === undefined ? !r.duplicate : include[i]));
+  const sendable = prepared.map((r, i) => ticked[i] && r.problems.length === 0 && r.topicId);
   const count = sendable.filter(Boolean).length;
 
   const send = async () => {
@@ -182,12 +195,12 @@ export default function UploadPage() {
             const rowSection = sections.find((s) => s.id === r.topicId);
             const rowLectures = formLectures(rowSection);
             return (
-              <div key={i} style={{ border: '1px solid #d5dde0', borderLeft: `4px solid ${r.problems.length ? '#c62828' : include[i] ? '#003B4F' : '#ccc'}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '10px', background: 'white' }}>
+              <div key={i} style={{ border: '1px solid #d5dde0', borderLeft: `4px solid ${r.problems.length ? '#c62828' : ticked[i] ? '#003B4F' : '#ccc'}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '10px', background: 'white' }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap' }}>
                   <input
                     type="checkbox"
                     aria-label={`Send row ${i + 1}`}
-                    checked={!!include[i] && r.problems.length === 0}
+                    checked={ticked[i] && r.problems.length === 0}
                     disabled={r.problems.length > 0}
                     onChange={(e) => setInclude((inc) => inc.map((v, j) => (j === i ? e.target.checked : v)))}
                     style={{ width: '18px', minWidth: '18px', flex: '0 0 18px', padding: 0 }}

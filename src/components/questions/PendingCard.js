@@ -10,7 +10,8 @@ import EditDiff from './EditDiff';
 // item and, one after another, in the Review pending view.
 //
 // `onDone({ vote, result, error })` once the student votes or skips; the card has already
-// recorded it in this browser, so it will not be offered again here.
+// recorded a skip or a vote the server took in this browser, so it will not be offered again
+// here. A vote that failed is not recorded.
 
 // No box of its own: it sits on the yellow the whole review section already has.
 const bannerStyle = {
@@ -20,7 +21,7 @@ const bannerStyle = {
   fontWeight: 'bold',
 };
 
-export default function PendingCard({ item, original, threshold, badge, onDone }) {
+export default function PendingCard({ item, original, badge, onDone }) {
   const isEdit = item.type === 'edit';
   const choices = useMemo(() => answerChoices(item), [item]);
   const [selected, setSelected] = useState('');
@@ -30,16 +31,20 @@ export default function PendingCard({ item, original, threshold, badge, onDone }
   const vote = async (what) => {
     if (busy) return;
     setBusy(true);
-    markPendingSeen(item.questionId, what);
     if (what === 'skip') {
+      markPendingSeen(item.questionId, what);
       onDone({ vote: what });
       return;
     }
     try {
       const result = await voteOnPending(item.questionId, what);
+      // Seen only once the server has the vote (or already had it), so one that failed to
+      // reach it is offered again.
+      markPendingSeen(item.questionId, what);
       onDone({ vote: what, result });
     } catch (error) {
       onDone({ vote: what, error });
+      setBusy(false);
     }
   };
 

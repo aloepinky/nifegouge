@@ -69,7 +69,7 @@ function dropRunningLines(pagesOfLines) {
 // the guide's pages carry no bold at all.
 // `keepFurniture` leaves the running head and footer in, which is how the guide's own
 // instruction and date are read; everything else wants them gone.
-export function pageLines(items, keepFurniture) {
+function pageLines(items, keepFurniture) {
   const runs = items
     .filter((i) => i.str !== '')
     .map((i) => ({
@@ -244,7 +244,7 @@ function markerKinds(open, token, close) {
 // The marker a line opens with, and the rest of it. A marker inside a bold run
 // (`**b) Crew Day and Rest **Brief start…`) leaves the bold on what follows it; a marker that
 // is the only bold on its line (`**a) **DOR/TTO is in effect…`) says so.
-export function readMarker(text) {
+function readMarker(text) {
   const bolded = text.startsWith('**');
   const bare = bolded ? text.slice(2) : text;
   const bullet = bare.match(BULLET);
@@ -570,7 +570,7 @@ function columnsOf(lines) {
 // Card pages (their lines) -> [{ title, note, sections: [{ title, column, page, items:
 // [{ label, card: [line] }] }] }], a card that prints two briefs (the TW-5's brief and
 // debrief) split at each one's title. Reading order is each page's columns left to right.
-export function readCardPages(pagesOfLines) {
+function readCardPages(pagesOfLines) {
   const lines = [];
   pagesOfLines.forEach((pageLinesOf, page) => columnsOf(pageLinesOf).forEach((col, c) => {
     col.forEach((s) => lines.push({ ...s, col: Math.min(c + 1, 2), page: page + 1 }));
@@ -900,13 +900,7 @@ function repeatsCard(item) {
   return body.filter((w) => card.has(w)).length / body.length >= 0.6;
 }
 
-const dice = (a, b) => {
-  const A = new Set(wordsIn(a));
-  const B = new Set(wordsIn(b));
-  if (!A.size || !B.size) return 0;
-  const shared = [...A].filter((w) => B.has(w)).length;
-  return (2 * shared) / (A.size + B.size);
-};
+const dice = (a, b) => diceOf(new Set(wordsIn(a)), new Set(wordsIn(b)));
 
 // The guide prints the ELP training rules under Mission execution, and the card prints them
 // again as a section of their own. A student reads them from the section, so the item keeps

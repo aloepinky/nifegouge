@@ -1,4 +1,5 @@
 import React from 'react';
+import { lcsOps } from '../briefs/briefDiff';
 
 // What a proposed edit changes, for someone deciding whether it is better. Each part of the
 // question is shown once: unchanged parts plainly, changed ones with the removed words struck
@@ -7,30 +8,15 @@ import React from 'react';
 
 const tokens = (text) => (text || '').split(/(\s+)/).filter((t) => t !== '');
 
-// Longest-common-subsequence diff over words (spaces kept as their own tokens), the same method
-// as lineDiff in briefs/briefDiff.js one level down.
+// Longest-common-subsequence diff over words (spaces kept as their own tokens), the same
+// lcsOps as lineDiff in briefs/briefDiff.js one level down, with runs of one state joined.
 export function wordDiff(before, after) {
-  const a = tokens(before);
-  const b = tokens(after);
-  const len = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
-  for (let i = a.length - 1; i >= 0; i -= 1) {
-    for (let j = b.length - 1; j >= 0; j -= 1) {
-      len[i][j] = a[i] === b[j] ? len[i + 1][j + 1] + 1 : Math.max(len[i + 1][j], len[i][j + 1]);
-    }
-  }
   const out = [];
-  const push = (text, state) => {
+  lcsOps(tokens(before), tokens(after)).forEach(({ token, state }) => {
     const last = out[out.length - 1];
-    if (last && last.state === state) last.text += text;
-    else out.push({ text, state });
-  };
-  let i = 0;
-  let j = 0;
-  while (i < a.length && j < b.length) {
-    if (a[i] === b[j]) { push(b[j], 'same'); i += 1; j += 1; } else if (len[i + 1][j] >= len[i][j + 1]) { push(a[i], 'removed'); i += 1; } else { push(b[j], 'added'); j += 1; }
-  }
-  while (i < a.length) { push(a[i], 'removed'); i += 1; }
-  while (j < b.length) { push(b[j], 'added'); j += 1; }
+    if (last && last.state === state) last.text += token;
+    else out.push({ text: token, state });
+  });
   return out;
 }
 

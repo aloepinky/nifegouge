@@ -28,7 +28,7 @@ const ASIS = (t) => t;
 
 // `**bold**` is the only markup, as on the discuss pages. The card sets one item bold — OCF
 // procedures, brief it every flight — and its headings, which the page sets bold anyway.
-export function inline(text) {
+function inline(text) {
   if (typeof text !== 'string' || !text.includes('**')) return text;
   return text.split(/\*\*(.+?)\*\*/g).map((part, i) => (
     // eslint-disable-next-line react/no-array-index-key
@@ -214,7 +214,7 @@ function sourceLine(source) {
 }
 
 // Sections grouped into the card's pages: a section with `break` starts a new one.
-export function sheetsOf(sections) {
+function sheetsOf(sections) {
   const sheets = [];
   sections.forEach((s, i) => {
     if (i === 0 || s.break) sheets.push([]);

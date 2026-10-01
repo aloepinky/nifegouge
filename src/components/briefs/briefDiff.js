@@ -14,7 +14,7 @@ const linesOf = (text) => (text && text.trim() ? text.split('\n') : []);
 
 // Dice on two names: enough to see that `IMC Penetration` has become `Penetration` rather
 // than report one item removed and another added in its place.
-function likeness(a, b) {
+export function likeness(a, b) {
   const mine = new Set(wordsOf(a));
   const theirs = new Set(wordsOf(b));
   if (!mine.size || !theirs.size) return 0;
@@ -22,11 +22,10 @@ function likeness(a, b) {
   return (2 * shared) / (mine.size + theirs.size);
 }
 
-// Which line became which. Removals come out ahead of the additions at the same place, so the
-// merged text reads as the old line followed by the line that replaced it.
-export function lineDiff(before, after) {
-  const a = linesOf(before);
-  const b = linesOf(after);
+// Longest-common-subsequence diff of two token lists: every token once, in order, as
+// `{ token, state }` with state 'same', 'removed' or 'added'. Removals come out ahead of the
+// additions at the same place. Shared with the questions' EditDiff, which runs it over words.
+export function lcsOps(a, b) {
   const n = a.length;
   const m = b.length;
   const len = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
@@ -35,17 +34,24 @@ export function lineDiff(before, after) {
       len[i][j] = a[i] === b[j] ? len[i + 1][j + 1] + 1 : Math.max(len[i + 1][j], len[i][j + 1]);
     }
   }
-  const lines = [];
-  const states = [];
+  const out = [];
   let i = 0;
   let j = 0;
-  const take = (line, state) => { lines.push(line); states.push(state); };
+  const take = (token, state) => { out.push({ token, state }); };
   while (i < n && j < m) {
     if (a[i] === b[j]) { take(b[j], 'same'); i += 1; j += 1; } else if (len[i + 1][j] >= len[i][j + 1]) { take(a[i], 'removed'); i += 1; } else { take(b[j], 'added'); j += 1; }
   }
   while (i < n) { take(a[i], 'removed'); i += 1; }
   while (j < m) { take(b[j], 'added'); j += 1; }
-  return { text: lines.join('\n'), states, same: states.every((s) => s === 'same') };
+  return out;
+}
+
+// Which line became which. Removals come out ahead of the additions at the same place, so the
+// merged text reads as the old line followed by the line that replaced it.
+export function lineDiff(before, after) {
+  const ops = lcsOps(linesOf(before), linesOf(after));
+  const states = ops.map((o) => o.state);
+  return { text: ops.map((o) => o.token).join('\n'), states, same: states.every((s) => s === 'same') };
 }
 
 // Every new block in its own order, with each deleted block put back in front of whatever
