@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useOutdatedVotes, OutdatedBadge, OutdatedControl } from './Outdated';
+import { useOutdatedVotes, OutdatedBadge, OutdatedControl, readVotes } from './Outdated';
 import { linkKey, isWebLink, hostOf } from './linkKey';
 
 // The Documents and Useful Links page, one component for every school (Docs.js is NIFE's,
@@ -81,14 +81,8 @@ function DocsPage({ school }) {
   };
 
   // Track voted items - stores 'good', 'bad', or null
-  const [votedDocs, setVotedDocs] = useState(() => {
-    const saved = localStorage.getItem(storage.votedDocs);
-    return saved ? JSON.parse(saved) : {};
-  });
-  const [votedLinks, setVotedLinks] = useState(() => {
-    const saved = localStorage.getItem(storage.votedLinks);
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [votedDocs, setVotedDocs] = useState(() => readVotes(storage.votedDocs));
+  const [votedLinks, setVotedLinks] = useState(() => readVotes(storage.votedLinks));
 
   // REACT_APP_DOCS_API points the page at tools/docs-dev-server.mjs for local work.
   const API_BASE_URL = process.env.REACT_APP_DOCS_API || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod';

@@ -5,6 +5,7 @@ import LandingPage from './components/LandingPage.js';
 import Footer from './components/Footer.js';
 import TopNav from './components/TopNav.js';
 import { warmDiscuss } from './components/discuss/warm';
+import { DRAFT, PROGRAMS, PROGRAM_TABS, shown } from './components/programs';
 
 const loaders = [];
 
@@ -70,6 +71,28 @@ const TW4Docs = page(() => import('./components/TW4Docs.js'));
 // navigation the tab may already hold what they would return and never claim them.
 warmDiscuss(window.location.pathname);
 
+// Whether a route is served here. A draft program (`draft`), a draft tab (PROGRAM_TABS
+// `draft`) and a draft Discussion Items or Briefs tab (`discuss: 'draft'`, `briefs: 'draft'`)
+// are hidden from the navigation on the live site, and their addresses must not answer
+// either, or the page is live to anyone who has the link. On a dev server everything is.
+const under = (path, base) => path === base || path.startsWith(`${base}/`);
+// The program flags that each govern one tab, named for its address.
+const TAB_FLAGS = ['discuss', 'briefs'];
+function routed(path) {
+  const program = PROGRAMS.find((p) => under(path, p.base));
+  if (!program) return true;
+  if (program.draft && !DRAFT) return false;
+  const tab = (PROGRAM_TABS[program.id] || []).find((t) => under(path, t.to));
+  if (!tab) return true;
+  if (tab.draft && !DRAFT) return false;
+  const section = tab.to.slice(program.base.length + 1);
+  return !TAB_FLAGS.includes(section) || shown(program[section]);
+}
+
+// The routes in a fragment that are served here.
+const served = (routes) =>
+  React.Children.toArray(routes.props.children).filter((route) => routed(route.props.path));
+
 // /nife/flight/told is now on the Briefs/TOLD page; its other tabs are on EPs/Limits.
 function FlightTabRedirect() {
   const { tab } = useParams();
@@ -89,6 +112,7 @@ function App() {
 
       <Suspense fallback={<div className="route-loading" />}>
       <Routes>
+      {served(<>
         <Route path="/" element={<LandingPage />} />
         <Route path="/nife" element={<Navigate to="/nife/about" replace />} />
         <Route path="/nife/about" element={<NIFEAbout />} />
@@ -123,6 +147,7 @@ function App() {
         <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />
         <Route path="/t44c/discuss/*" element={<T44CDiscuss />} />
         <Route path="/t44c/briefs/*" element={<T44CBriefs />} />
+      </>)}
       </Routes>
       </Suspense>
 

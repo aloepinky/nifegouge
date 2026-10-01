@@ -96,6 +96,45 @@ for (const [ch, freqs] of Object.entries(CHANNEL_FREQS)) {
 // Alternate table rows use r200+ namespace so main table can grow freely
 const ALT_ROWS = [200, 202, 204, 206];
 
+// Cruise TAS, fuel flow and IAS from Cruise.csv, grouped by altitude: interpolated (or clamped
+// at the table's ends) by OAT within each altitude, then between the two altitudes either side.
+// Unrounded; null when the table has not loaded.
+const cruiseAt = ({ groups, altList }, alt, oat) => {
+  if (altList.length === 0) return null;
+  const interpOat = (rows) => {
+    const sorted = [...rows].sort((a, b) => a.oat - b.oat);
+    if (oat <= sorted[0].oat) return sorted[0];
+    if (oat >= sorted[sorted.length - 1].oat) return sorted[sorted.length - 1];
+    let lo, hi;
+    for (let i = 0; i < sorted.length - 1; i++) {
+      if (oat >= sorted[i].oat && oat <= sorted[i + 1].oat) {
+        lo = sorted[i]; hi = sorted[i + 1]; break;
+      }
+    }
+    const f = (oat - lo.oat) / (hi.oat - lo.oat);
+    return {
+      tas: lo.tas + f * (hi.tas - lo.tas),
+      ff:  lo.ff  + f * (hi.ff  - lo.ff),
+      ias: lo.ias + f * (hi.ias - lo.ias),
+    };
+  };
+
+  if (alt <= altList[0]) return interpOat(groups[altList[0]]);
+  if (alt >= altList[altList.length - 1]) return interpOat(groups[altList[altList.length - 1]]);
+
+  let lowAlt, highAlt;
+  for (let i = 0; i < altList.length - 1; i++) {
+    if (alt >= altList[i] && alt <= altList[i + 1]) {
+      lowAlt = altList[i]; highAlt = altList[i + 1]; break;
+    }
+  }
+  const altFrac = (alt - lowAlt) / (highAlt - lowAlt);
+  const lo = interpOat(groups[lowAlt]);
+  const hi = interpOat(groups[highAlt]);
+  const lerp = (a, b) => a + altFrac * (b - a);
+  return { tas: lerp(lo.tas, hi.tas), ff: lerp(lo.ff, hi.ff), ias: lerp(lo.ias, hi.ias) };
+};
+
 function TW4JetLog() {
   const [mainRowCount, setMainRowCount] = useState(9);
   const [editRowsMode, setEditRowsMode] = useState(false);
@@ -412,53 +451,13 @@ function TW4JetLog() {
   const autoFillCruise = (oat, alt) => {
     const oatNum = parseFloat(oat);
     if (isNaN(oatNum) || !alt || cruiseData.length === 0) return;
-
-    const { groups: altGroups, altList } = cruiseGrouped;
-
-    // Interpolate (or clamp) within one altitude's rows by OAT
-    const interpOat = (rows) => {
-      const sorted = [...rows].sort((a, b) => a.oat - b.oat);
-      if (oatNum <= sorted[0].oat) return sorted[0];
-      if (oatNum >= sorted[sorted.length - 1].oat) return sorted[sorted.length - 1];
-      let lo, hi;
-      for (let i = 0; i < sorted.length - 1; i++) {
-        if (oatNum >= sorted[i].oat && oatNum <= sorted[i + 1].oat) {
-          lo = sorted[i]; hi = sorted[i + 1]; break;
-        }
-      }
-      const f = (oatNum - lo.oat) / (hi.oat - lo.oat);
-      return {
-        tas: lo.tas + f * (hi.tas - lo.tas),
-        ff:  lo.ff  + f * (hi.ff  - lo.ff),
-        ias: lo.ias + f * (hi.ias - lo.ias),
-      };
-    };
-
-    const apply = (row) => setClncFields(prev => ({
+    const row = cruiseAt(cruiseGrouped, alt, oatNum);
+    if (!row) return;
+    setClncFields(prev => ({
       ...prev,
       tasCruise:   String(Math.round(row.tas)),
       lbsPhCruise: String(Math.round(row.ff)),
       ias:         String(Math.round(row.ias)),
-    }));
-
-    if (alt <= altList[0]) { apply(interpOat(altGroups[altList[0]])); return; }
-    if (alt >= altList[altList.length - 1]) { apply(interpOat(altGroups[altList[altList.length - 1]])); return; }
-
-    let lowAlt, highAlt;
-    for (let i = 0; i < altList.length - 1; i++) {
-      if (alt >= altList[i] && alt <= altList[i + 1]) {
-        lowAlt = altList[i]; highAlt = altList[i + 1]; break;
-      }
-    }
-    const altFrac = (alt - lowAlt) / (highAlt - lowAlt);
-    const lo = interpOat(altGroups[lowAlt]);
-    const hi = interpOat(altGroups[highAlt]);
-    const interp = (a, b) => Math.round(a + altFrac * (b - a));
-    setClncFields(prev => ({
-      ...prev,
-      tasCruise:   String(interp(lo.tas, hi.tas)),
-      lbsPhCruise: String(interp(lo.ff,  hi.ff)),
-      ias:         String(interp(lo.ias, hi.ias)),
     }));
   };
 
@@ -1144,29 +1143,9 @@ function TW4JetLog() {
     // Returns cruise TAS and FF interpolated from cruiseData for the given altitude and current OAT
     const getCruiseForAlt = (alt) => {
       const oatNum = parseFloat(clncFields.oat);
-      if (isNaN(oatNum) || !alt || cruiseGrouped.altList.length === 0) return { tas: cruiseTAS, ff: lbsPhCruise };
-      const { groups: altGroups, altList } = cruiseGrouped;
-      const interpOat = (rows) => {
-        const sorted = [...rows].sort((a, b) => a.oat - b.oat);
-        if (oatNum <= sorted[0].oat) return sorted[0];
-        if (oatNum >= sorted[sorted.length - 1].oat) return sorted[sorted.length - 1];
-        let lo, hi;
-        for (let i = 0; i < sorted.length - 1; i++) {
-          if (oatNum >= sorted[i].oat && oatNum <= sorted[i + 1].oat) { lo = sorted[i]; hi = sorted[i + 1]; break; }
-        }
-        const f = (oatNum - lo.oat) / (hi.oat - lo.oat);
-        return { tas: lo.tas + f * (hi.tas - lo.tas), ff: lo.ff + f * (hi.ff - lo.ff) };
-      };
-      if (alt <= altList[0]) { const r = interpOat(altGroups[altList[0]]); return { tas: Math.round(r.tas), ff: Math.round(r.ff) }; }
-      if (alt >= altList[altList.length - 1]) { const r = interpOat(altGroups[altList[altList.length - 1]]); return { tas: Math.round(r.tas), ff: Math.round(r.ff) }; }
-      let lowAlt, highAlt;
-      for (let i = 0; i < altList.length - 1; i++) {
-        if (alt >= altList[i] && alt <= altList[i + 1]) { lowAlt = altList[i]; highAlt = altList[i + 1]; break; }
-      }
-      const altFrac = (alt - lowAlt) / (highAlt - lowAlt);
-      const lo = interpOat(altGroups[lowAlt]);
-      const hi = interpOat(altGroups[highAlt]);
-      return { tas: Math.round(lo.tas + altFrac * (hi.tas - lo.tas)), ff: Math.round(lo.ff + altFrac * (hi.ff - lo.ff)) };
+      const row = isNaN(oatNum) || !alt ? null : cruiseAt(cruiseGrouped, alt, oatNum);
+      if (!row) return { tas: cruiseTAS, ff: lbsPhCruise };
+      return { tas: Math.round(row.tas), ff: Math.round(row.ff) };
     };
 
     // Climb data per section (section 0 = primary, section N = after Nth int climb)
@@ -1589,15 +1568,24 @@ function TW4JetLog() {
       return `You already have one called "${trimmed}".`;
     }
     const updated = [...localPresets, capturePreset({ name: trimmed })];
+    // Stored first, so a full or blocked store leaves no preset listed that a reload would lose.
+    try {
+      localStorage.setItem('tw4_jet_presets', JSON.stringify(updated));
+    } catch {
+      return 'Could not save in this browser.';
+    }
     setLocalPresets(updated);
-    localStorage.setItem('tw4_jet_presets', JSON.stringify(updated));
     return null;
   };
 
   const deleteLocalPreset = (id) => {
     const updated = localPresets.filter(p => p.id !== id);
     setLocalPresets(updated);
-    localStorage.setItem('tw4_jet_presets', JSON.stringify(updated));
+    try {
+      localStorage.setItem('tw4_jet_presets', JSON.stringify(updated));
+    } catch {
+      // Gone from the list for this visit; storage that refuses writes kept it anyway.
+    }
   };
 
   const renderVFRNotesCells = (top) => (
@@ -1785,11 +1773,10 @@ function TW4JetLog() {
         try { entry.annotDict.set(PDFName.of('V'), PDFString.of(text)); entry.annotDict.delete(PDFName.of('AP')); } catch (_) {}
       };
 
-      const fillChars = (yLo, yHi, xLo, xHi, text, label) => {
+      const fillChars = (yLo, yHi, xLo, xHi, text) => {
         const cells = fieldList
           .filter(f => f.y >= yLo && f.y <= yHi && f.x >= xLo && f.x <= xHi)
           .sort((a, b) => a.x - b.x);
-        if (label) console.log(`fillChars [${label}] matched ${cells.length} cells:`, cells.map(c => ({x: Math.round(c.x), y: Math.round(c.y)})));
         const groups = [];
         let lastX = -999;
         for (const c of cells) {
@@ -2015,8 +2002,8 @@ function TW4JetLog() {
       fillChars(555, 578, 35, 110, speedStr);
       // 15b Level
       fillChars(555, 578, 135, 212, levelStr);
-      // 13 Departure ICAO — logged so we can verify the match
-      fillChars(580, 607, 35, 220, depAirport, 'DEP');
+      // 13 Departure ICAO
+      fillChars(580, 607, 35, 220, depAirport);
       // 16a Destination ICAO
       fillChars(416, 436, 92, 154, destAirport);
       // 16b Total EET
@@ -2064,7 +2051,6 @@ function TW4JetLog() {
       const jlW = jlPage.getWidth();   // PDF stored width  (612 for this form)
       const jlH = jlPage.getHeight();  // PDF stored height (792 for this form)
       const jlRot = jlPage.getRotation().angle; // 270 for this form
-      console.log(`Jet log template: W=${jlW} H=${jlH} Rot=${jlRot}`);
 
       // Visual landscape dimensions after applying the page rotation
       const visW = (jlRot === 90 || jlRot === 270) ? jlH : jlW; // 792

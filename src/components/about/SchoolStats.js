@@ -57,8 +57,8 @@ async function loadQuestions() {
 const deriveQuestions = (records) => questionCount(records.questions, records.doc);
 
 // One read per school and kind, shared: the same numbers are mounted twice, in the panel and
-// under the blurb a phone shows instead of it. A failed read settles on an empty list, since
-// the page is still worth drawing without them.
+// under the blurb a phone shows instead of it. A failed read settles on null and changes
+// nothing, so the seeded figures stand, and is forgotten so the next mount tries again.
 const loads = new Map();
 
 // `derive` turns the records into the figures a panel shows, and is the same function the
@@ -73,9 +73,9 @@ function useFigures(source, kind, load, derive, school) {
   const [state, setState] = useState(() => (SERVER_STATS[school] || {})[kind]);
   useEffect(() => {
     setState((SERVER_STATS[school] || {})[kind]);
-    if (!loads.has(key)) loads.set(key, load(school).catch(() => { loads.delete(key); return []; }));
+    if (!loads.has(key)) loads.set(key, load(school).catch(() => { loads.delete(key); return null; }));
     let live = true;
-    loads.get(key).then((records) => { if (live) setState(derive(records)); });
+    loads.get(key).then((records) => { if (live && records !== null) setState(derive(records)); });
     return () => { live = false; };
   }, [key, load, derive, school, kind]);
   return state;

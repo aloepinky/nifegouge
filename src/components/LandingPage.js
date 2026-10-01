@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PROGRAMS, shown } from './programs';
-import { PLATFORMS } from './about/platforms';
 import { useCourseWeeks } from './about/SchoolStats';
 
 // The biggest numbers of each school, under its tile: how long the course is and what its
@@ -14,18 +13,39 @@ import { useCourseWeeks } from './about/SchoolStats';
 // flag: a draft Discussion Items tab is hidden on the live site, and its syllabi are published
 // to the same server as everybody else's, so testing the flag for truth would print a course
 // length here for a tab nobody can open.
+//
+// The EPs, limits and NWCs are counted from every EPs/Limits data file, which this page, the
+// only one in the entry bundle, has no other use for. So about/platforms.js is imported when
+// the page mounts, into a chunk of its own, and those figures show a dash (the NWCs nothing)
+// until it lands. The About pages import it the ordinary way.
 const fmt = (n) => n.toLocaleString('en-US');
+
+// One import for the session; a failed one is forgotten, so the next visit tries again.
+let platformsLoad = null;
+let platformsLoaded = null;
+const loadPlatforms = () => {
+  if (!platformsLoad) {
+    platformsLoad = import('./about/platforms').then(
+      (m) => { platformsLoaded = m.PLATFORMS; return m.PLATFORMS; },
+      (err) => { platformsLoad = null; throw err; },
+    );
+  }
+  return platformsLoad;
+};
 
 // "P-8, E-6, C-130, USCG, Tilt-Rotor" — plain commas. These are the communities flying one
 // syllabus, not a sentence, and the "and" only lengthened a label that was already the widest
 // thing under the tile.
 const listOf = (names) => names.join(', ');
 
-function SchoolHighlights({ id }) {
+// `platforms` is this school's rows of about/platforms.js, or null while that is loading.
+function SchoolHighlights({ id, platforms }) {
   const program = PROGRAMS.find((p) => p.id === id);
   const hasSyllabi = shown(program.discuss);
   const weeks = useCourseWeeks(program.label, hasSyllabi);
-  const sum = (k) => PLATFORMS[id].reduce((n, p) => n + (k === 'limits' ? p.limits : p.eps[k] || 0), 0);
+  const sum = (k) => (platforms
+    ? platforms.reduce((n, p) => n + (k === 'limits' ? p.limits : p.eps[k] || 0), 0)
+    : null);
 
   // A school whose syllabi run to different lengths names the communities each one covers, and
   // those names are long enough to shoulder the exam figures out of line. So they get a row of
@@ -81,6 +101,12 @@ function SchoolHighlights({ id }) {
 
 function LandingPage() {
   const navigate = useNavigate();
+  const [platforms, setPlatforms] = useState(platformsLoaded);
+  useEffect(() => {
+    let live = true;
+    loadPlatforms().then((p) => { if (live) setPlatforms(p); }, () => {});
+    return () => { live = false; };
+  }, []);
   // Preload images to prevent mobile display issues
   useEffect(() => {
     const imagesToPreload = [
@@ -115,7 +141,7 @@ function LandingPage() {
             <img src="/images/c172.webp" alt="NIFE - Cessna 172" />
             <div className="landing-button-label">NIFE</div>
           </div>
-          <SchoolHighlights id="nife" />
+          <SchoolHighlights id="nife" platforms={platforms && platforms.nife} />
         </div>
 
         <div className="landing-school">
@@ -127,7 +153,7 @@ function LandingPage() {
             <img src="/images/t6b.webp" alt="Primary - T-6B Texan II" />
             <div className="landing-button-label">Primary</div>
           </div>
-          <SchoolHighlights id="tw4" />
+          <SchoolHighlights id="tw4" platforms={platforms && platforms.tw4} />
         </div>
 
         <div className="landing-school">
@@ -140,7 +166,7 @@ function LandingPage() {
             <img src="/images/t44c.webp" alt="T-44C Advanced - Pegasus" />
             <div className="landing-button-label">T-44C Advanced</div>
           </div>
-          <SchoolHighlights id="t44c" />
+          <SchoolHighlights id="t44c" platforms={platforms && platforms.t44c} />
         </div>
       </div>
     </div>

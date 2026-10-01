@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useLayoutEffect, useRef } from 'react';
 import { useVarRowsScale } from './useVarRowsScale';
-import { vfrCruise, runwayIndex, RUNWAYS } from './Nav/navMath';
+import { vfrCruise, randBetween, runwayIndex, RUNWAYS } from './Nav/navMath';
 
 function FRR() {
   const [questionType, setQuestionType] = useState('vfr');
@@ -63,8 +63,6 @@ function FRR() {
   useLayoutEffect(() => {
     updateScale();
   }, [cloudLayers, answerAlt, updateScale]);
-
-  const randBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
   const generateVfr = useCallback(() => {
     setAnswerAlt('');
@@ -166,15 +164,9 @@ function FRR() {
     setIndicatorG(indicator);
     setFlagDirectionG(flagDirection);
 
-    let options;
-    if (!complexMode && direction % 2 === 0) {
-      options = ["Runway 18", "Runway 27", "Runway 36", "Runway 09"];
-    } else if (!complexMode) {
-      options = ["Runway 23", "Runway 32", "Runway 05", "Runway 14"];
-    } else {
-      options = ["Runway 18", "Runway 23", "Runway 27", "Runway 32", "Runway 36", "Runway 05", "Runway 09", "Runway 14"];
-    }
-    setAnswerChoices(options);
+    // Simple mode offers only the four runways on this direction's axis set (18/27/36/09 or
+    // 23/32/05/14), in RUNWAYS order.
+    setAnswerChoices(complexMode ? RUNWAYS : RUNWAYS.filter((_, i) => i % 2 === direction % 2));
   }, [complexMode]);
 
   const generate = useCallback(() => {

@@ -23,7 +23,8 @@ export const isOutdated = (item) => {
     && Date.now() - new Date(item.outdatedAt).getTime() < OUTDATED_FOR_DAYS * DAY;
 };
 
-const readVotes = (key) => {
+// This browser's votes under `key`. Blocked storage or a spoiled value reads as none.
+export const readVotes = (key) => {
   try {
     return JSON.parse(localStorage.getItem(key)) || {};
   } catch {

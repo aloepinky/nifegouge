@@ -30,7 +30,15 @@ function HistoryPanel({ entry, onApply, onBack, onRestored }) {
     setError('');
     try {
       const revision = await jetLogRevision(entry.id, rev);
-      onApply(revision.log, null);
+      // Loaded as the record at its newest revision, filed as the index files it, so Replace
+      // stays offered and saves on top of the newest rather than the one applied.
+      onApply(revision.log, {
+        id: entry.id,
+        rev: state.data.latestRev,
+        name: entry.name,
+        group: entry.group || '',
+        folder: entry.folder || '',
+      });
     } catch (err) {
       setError(err.message);
       setBusy('');

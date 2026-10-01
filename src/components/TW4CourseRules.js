@@ -1186,7 +1186,7 @@ function TW4CourseRules() {
             <div style={{ marginBottom: '15px', padding: '10px', background: '#e3f2fd', borderRadius: '4px' }}>
               <strong>Current Location:</strong>
               <div style={{ marginTop: '5px' }}>
-                {crFeatures[currentNode] ? crFeatures[currentNode].name : `Loading... (${currentNode})`}
+                {crFeatures[currentNode] ? crFeatures[currentNode].name : 'Loading…'}
               </div>
 
               {/* Course Rule or Question (depending on quiz mode) */}
@@ -1227,13 +1227,6 @@ function TW4CourseRules() {
               {crFeatures[currentNode] && flightPathQuizMode && (!crFeatures[currentNode].questions || crFeatures[currentNode].questions.length === 0) && (
                 <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #90caf9' }}>
                   <em style={{ color: '#666', fontSize: '13px' }}>No questions available for this location.</em>
-                </div>
-              )}
-
-              {/* Debug info */}
-              {!crFeatures[currentNode] && (
-                <div style={{ fontSize: '10px', color: '#999', marginTop: '5px' }}>
-                  Debug: crFeatures loaded: {Object.keys(crFeatures).length} features
                 </div>
               )}
             </div>
@@ -1281,15 +1274,6 @@ function TW4CourseRules() {
                 {getNextNodes(currentNode).length > 0 ? (
                   getNextNodes(currentNode).map(nodeId => {
                     const feature = crFeatures[nodeId];
-                    if (!feature) {
-                      console.log('Feature not found:', nodeId);
-                      return (
-                        <div key={nodeId} style={{ padding: '12px', background: '#fee', border: '1px solid #fcc', borderRadius: '4px' }}>
-                          Feature not found: {nodeId}
-                        </div>
-                      );
-                    }
-
                     return (
                       <button
                         key={nodeId}
