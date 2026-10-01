@@ -65,3 +65,6 @@ tools/discuss-audit.json
 # Local state for tools/docs-dev-server.mjs
 /_docs-dev
 /_weekly-report
+
+# Output of invoking the weekly-report Lambda by hand
+out.json

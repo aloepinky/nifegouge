@@ -42,7 +42,7 @@ describe, show it to you running on your own computer, and send it in for review
 repository includes instructions written for the agent ([`CLAUDE.md`](CLAUDE.md)), so it already
 knows the site's rules: sources, style, and permissions.
 
-I use **[Claude Code](https://claude.com/claude-code)**, and the steps below are for it. They are subject to change at the whims of Anthropic, but this should provide a good baseline. Other coding agents can use `CLAUDE.md` too; point them at it.
+I use **[Claude Code](https://claude.com/claude-code)**, and the steps below are for it. They are subject to change at the whims of Anthropic, but this should provide a good baseline. Other coding agents can use `CLAUDE.md` too, but you may have to point them to it.
 
 A code change can't reach the live site on its own. It goes live only after a maintainer has
 reviewed it and merged it. There may be times I can't review pull requests, so expect some delays.
