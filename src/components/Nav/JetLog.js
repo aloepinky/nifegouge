@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { jetLog, JetLogInputError, gradeJetLogBox } from './navMath';
 
 function JetLog() {
   const [xMode, setXMode] = useState(false);
@@ -7,6 +8,22 @@ function JetLog() {
   const [inputValues, setInputValues] = useState({});
   const [message, setMessage] = useState('');
   const tableRef = useRef(null);
+  // On a narrow screen the log keeps its desktop layout (800 px) and is zoomed to fit, as
+  // the Primary jet log is; squeezed instead, its boxes are too narrow for a time or wind
+  // (an HH:MM:SS needs about 62 px of its 13 columns).
+  const fitRef = useRef(null);
+  const [fit, setFit] = useState(1);
+
+  useEffect(() => {
+    const update = () => {
+      const el = fitRef.current;
+      if (el) setFit(Math.min(1, el.offsetWidth / 800));
+    };
+    update();
+    const obs = new ResizeObserver(() => requestAnimationFrame(update));
+    if (fitRef.current) obs.observe(fitRef.current);
+    return () => obs.disconnect();
+  }, []);
   // The solvers read the table and graph through refs, so Solve Next Row and Solve All
   // see each box they fill before moving to the next one.
   const valuesRef = useRef({});
@@ -135,221 +152,34 @@ function JetLog() {
     }
   };
 
-  const hwtwF = (winds, course) => {
-    const tc = parseFloat(course.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    const windMatch = winds.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
-    if (!windMatch) {
-      setMessage("Enter winds as direction/speed, for example 270/20.");
+  // Work a box from the boxes it depends on; a box that can't be read says what to type.
+  const work = (fn) => (...args) => {
+    try {
+      return fn(...args);
+    } catch (e) {
+      if (!(e instanceof JetLogInputError)) throw e;
+      setMessage(e.message);
       return null;
     }
-    const dir = parseFloat(windMatch[1]);
-    const kts = parseFloat(windMatch[2]);
-    const hwtw = Math.round(-kts * Math.cos((dir - tc) * Math.PI / 180));
-    if (hwtw < 0) return -hwtw + "H";
-    else if (hwtw > 0) return hwtw + "T";
-    else return "0";
   };
 
-  const xwF = (winds, course) => {
-    const tc = parseFloat(course.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    const windMatch = winds.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
-    if (!windMatch) {
-      setMessage("Enter winds as direction/speed, for example 270/20.");
-      return null;
-    }
-    const dir = parseFloat(windMatch[1]);
-    const kts = parseFloat(windMatch[2]);
-    const xw = kts * Math.sin((dir - tc) * Math.PI / 180);
-    if (Math.round(xw) < 0) return Math.round(-xw) + "L";
-    else if (Math.round(xw) > 0) return Math.round(xw) + "R";
-    else return "0";
-  };
-
-  const gsF = (tas, hwtw) => {
-    tas = parseFloat(tas.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    const match = hwtw.match(/(-?\d+)(?:\s*\w+)?\s*([HT])/i);
-    if (!match) {
-      setMessage("Enter headwind or tailwind as knots then H or T, for example 15H.");
-      return null;
-    }
-    const value = parseFloat(match[1]);
-    const direction = match[2].toUpperCase();
-    hwtw = direction === "H" ? -Math.abs(value) : Math.abs(value);
-    const gs = tas + hwtw;
-    return gs + "kts";
-  };
-
-  const caF = (tas, xw) => {
-    tas = parseFloat(tas.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    if (xw === "0" || xw === 0) {
-      return "0";
-    }
-    const match = xw.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
-    if (!match) {
-      setMessage("Enter crosswind as knots then L or R, for example 10L.");
-      return null;
-    }
-    const value = parseFloat(match[1]);
-    const direction = match[2].toUpperCase();
-    xw = direction === "L" ? -Math.abs(value) : Math.abs(value);
-    const rawCaDeg = 180 / Math.PI * Math.asin(xw / tas);
-    const ca = Math.round(rawCaDeg * Math.sign(rawCaDeg) * Math.sign(xw));
-    if (ca < 0) return -ca + "L";
-    else if (ca > 0) return ca + "R";
-    else return "0";
-  };
-
-  const thF = (course, ca) => {
-    const tc = parseFloat(course.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    if (ca === "0" || ca === 0) {
-      return tc + "T";
-    }
-    const match = ca.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
-    if (!match) {
-      setMessage("Enter crab angle as degrees then L or R, for example 4R.");
-      return null;
-    }
-    const value = parseFloat(match[1]);
-    const direction = match[2].toUpperCase();
-    ca = direction === "L" ? -Math.abs(value) : Math.abs(value);
-    let th = (tc + ca) % 360;
-    if (th <= 0) th += 360;
-    return th + "T";
-  };
-
-  const eteF = (gs, dist) => {
-    gs = parseFloat(gs.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    dist = parseFloat(dist.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    let ete = Math.round(600 * dist / gs) / 10;
-    return ete;
-  };
-
-  const altEteF = (ete) => {
-    ete = parseFloat(ete.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    const total = Math.round(ete * 60);
-    const hrs = Math.floor(total / 3600);
-    const mins = Math.floor(total / 60) % 60;
-    const secs = total % 60;
-    return hrs + "+" + mins + "+" + secs;
-  };
-
-  const etaF = (ata, ete) => {
-    const match = ata.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-    if (!match) {
-      setMessage("Enter ATA as HH:MM or HH:MM:SS, for example 10:30.");
-      return null;
-    }
-    const ahrs = parseInt(match[1], 10);
-    const amins = parseInt(match[2], 10);
-    const asecs = parseInt(match[3] ?? "0", 10);
-    ete = parseFloat(ete.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    const total = (ahrs * 3600 + amins * 60 + asecs + Math.round(ete * 60)) % 86400;
-    const hrs = Math.floor(total / 3600);
-    const mins = Math.floor(total / 60) % 60;
-    const secs = total % 60;
-    const pad = n => n.toString().padStart(2, '0');
-    return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
-  };
-
-  const fuelF = (pph, ete) => {
-    pph = parseFloat(pph.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    ete = parseFloat(ete.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    let fuel = Math.round(pph * ete / 60);
-    return fuel + "#";
-  };
-
-  const efrF = (afr, fuel) => {
-    afr = parseFloat(afr.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    fuel = parseFloat(fuel.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    let efr = afr - fuel;
-    return efr + "#";
-  };
-
+  const hwtwF = work(jetLog.hwtw);
+  const xwF = work(jetLog.xw);
+  const gsF = work(jetLog.gs);
+  const caF = work(jetLog.ca);
+  const thF = work(jetLog.th);
+  const eteF = work(jetLog.ete);
+  const altEteF = work(jetLog.altEte);
+  const etaF = work(jetLog.eta);
+  const fuelF = work(jetLog.fuel);
+  const efrF = work(jetLog.efr);
   const iThF = (th) => th;
-
-  const daF = (course, th) => {
-    let trk = parseFloat(course.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    th = parseFloat(th.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    let da = trk - th;
-    if (Math.abs(da) > 180) {
-      da = da - Math.sign(da) * 360;
-    }
-    let daText = Math.round(da);
-    return daText < 0 ? `${-daText} L` : daText > 0 ? `${daText} R` : "0";
-  };
-
-  const iGsF = (ete, dist) => {
-    ete = parseFloat(ete.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    dist = parseFloat(dist.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    let gs = Math.round(dist / (ete / 60));
-    return gs + "kts";
-  };
-
-  const iXwF = (tas, da) => {
-    if (da === "0" || da === 0) {
-      return "0";
-    }
-    tas = parseFloat(tas.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    const match = da.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
-    if (!match) {
-      setMessage("Enter drift angle as degrees then L or R, for example 5L.");
-      return null;
-    }
-    const value = parseFloat(match[1]);
-    const direction = match[2].toUpperCase();
-    da = direction === "L" ? -Math.abs(value) : Math.abs(value);
-    let xw = -1 * Math.sin(da * Math.PI / 180) * tas * Math.sign(da) * Math.sign(Math.sin(da * Math.PI / 180) * tas);
-    xw = Math.round(xw);
-    return Math.round(xw) < 0 ? `${Math.round(-xw)}L` :
-           Math.round(xw) > 0 ? `${Math.round(xw)}R` : "0";
-  };
-
-  const iHwtwF = (tas, gs) => {
-    tas = parseFloat(tas.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    gs = parseFloat(gs.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    let hwtw = gs - tas;
-    if (hwtw < 0) return -hwtw + "H";
-    else if (hwtw > 0) return hwtw + "T";
-    else return "0kts";
-  };
-
-  const inflightF = (xw, hwtw) => {
-    if (xw === "0" || xw === 0) {
-      xw = 0;
-    }else{
-        const match = xw.match(/(-?\d+)(?:\s*\w+)?\s*([LR])/i);
-        if (!match) {
-        setMessage("Enter crosswind as knots then L or R, for example 10L.");
-        return null;
-        }
-        const value = parseFloat(match[1]);
-        const direction = match[2].toUpperCase();
-        xw = direction === "L" ? -Math.abs(value) : Math.abs(value);
-    }
-
-    const matchh = hwtw.match(/(-?\d+)(?:\s*\w+)?\s*([HT])/i);
-    if (!matchh) {
-      setMessage("Enter headwind or tailwind as knots then H or T, for example 15H.");
-      return null;
-    }
-    const valueh = parseFloat(matchh[1]);
-    const directionh = matchh[2].toUpperCase();
-    hwtw = directionh === "H" ? -Math.abs(valueh) : Math.abs(valueh);
-    
-    // Need to get track from r6c2 or r7c7
-    const trk = parseFloat(getInputValue("r6c2").match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-    
-    let dir = 0;
-    if (Math.sign(hwtw) > 0) {
-      dir = Math.round((trk - 180) % 360 - Math.sign(xw) * (180 / Math.PI * Math.atan(Math.abs(xw / hwtw)))) % 360;
-    } else {
-      dir = Math.round(trk + Math.sign(xw) * (180 / Math.PI * Math.atan(Math.abs(xw / hwtw)))) % 360;
-    }
-    if (dir <= 0) dir += 360;
-
-    let vel = Math.round(Math.sqrt(xw * xw + hwtw * hwtw));
-    return dir + "/" + vel + "kts";
-  };
+  const daF = work(jetLog.da);
+  const iGsF = work(jetLog.inflightGs);
+  const iXwF = work(jetLog.inflightXw);
+  const iHwtwF = work(jetLog.inflightHwtw);
+  // The in-flight wind is worked against the track flown (r6c2).
+  const inflightF = (xw, hwtw) => work(jetLog.inflightWind)(xw, hwtw, getInputValue("r6c2"));
 
   // Main action functions
   const findNextSolvableCell = (startId = 'r0c8') => {
@@ -407,7 +237,6 @@ function JetLog() {
 
   // Headings wrap at 360; their trailing T means true, not tailwind.
   const HEADING_CELLS = new Set(['r3c7', 'r7c7', 'r9c7']);
-  const directionOf = (text) => String(text).match(/\d\s*([LRHT])(?![a-z])/i)?.[1]?.toUpperCase() ?? null;
 
   const checkWork = () => {
     removeGlowFromAllCells();
@@ -432,33 +261,7 @@ function JetLog() {
         checkId = cell.next;
         continue;
       }
-      const resultText = String(result);
-      const userValue = getInputValue(checkId);
-      
-      // Extract numbers for comparison
-      const resultNum = parseFloat(resultText.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-      const userNum = parseFloat(userValue.match(/-?\d+(\.\d+)?/)?.[0] ?? 0);
-      
-      let diff = Math.abs(userNum - resultNum);
-      let wrongWay = false;
-      if (HEADING_CELLS.has(checkId)) {
-        diff = Math.abs(((userNum - resultNum) % 360 + 540) % 360 - 180);
-      } else {
-        // 10L is not 10R; a zero answer has no direction.
-        const want = directionOf(resultText);
-        wrongWay = want !== null && resultNum !== 0 && directionOf(userValue) !== want;
-      }
-      const percent = (diff / cell.denominator) * 100;
-      
-      if (wrongWay) {
-        makeCellGlow(checkId, "red");
-      } else if (percent <= 2) {
-        makeCellGlow(checkId, "green");
-      } else if (percent <= 10) {
-        makeCellGlow(checkId, "yellow");
-      } else {
-        makeCellGlow(checkId, "red");
-      }
+      makeCellGlow(checkId, gradeJetLogBox(getInputValue(checkId), result, cell.denominator, HEADING_CELLS.has(checkId)));
       
       checkId = cell.next;
     }
@@ -580,6 +383,8 @@ function JetLog() {
 
       {message && <div className="jetlog-message" role="alert">{message}</div>}
 
+      <div ref={fitRef}>
+      <div className={fit < 1 ? 'jetlog-fit' : undefined} style={fit < 1 ? { zoom: fit } : undefined}>
       <table ref={tableRef} className="jetlog-table">
         <thead>
           <tr>
@@ -714,6 +519,8 @@ function JetLog() {
           </tr>
         </tbody>
       </table>
+      </div>
+      </div>
     </div>
   );
 }

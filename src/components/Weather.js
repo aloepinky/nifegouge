@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useVarRowsScale } from './useVarRowsScale';
+import { setai, gradeSetai } from './Nav/navMath';
 
 function Weather() {
   const [depPressure, setDepPressure] = useState('');
@@ -42,12 +43,19 @@ function Weather() {
       alt = Math.floor(Math.random() * 70) * 100 + 3000;
       elev = Math.floor(Math.random() * 20) * 100 + 100;
       arr = (Math.random() * 2.16 + 28.84).toFixed(2);
-    } while ((arr - dep) * 1000 + alt - elev < 1000);
+    } while (setai({ depPres: +dep, assAlt: alt, fieldEle: elev, arrPres: +arr }).absolute < 1000);
     setDepPressure(dep);
     setAssignedAlt(alt);
     setArrivalElev(elev);
     setArrivalPressure(arr);
   };
+
+  const answers = () => setai({
+    depPres: parseFloat(depPressure),
+    assAlt: parseFloat(assignedAlt),
+    fieldEle: parseFloat(arrivalElev),
+    arrPres: parseFloat(arrivalPressure),
+  });
 
   const solve = () => {
     setErrorClass('');
@@ -55,18 +63,9 @@ function Weather() {
     setAbsAltClass('');
     setIndAltClass('');
 
-    const depPres = parseFloat(depPressure);
-    const assAlt = parseFloat(assignedAlt);
-    const fieldEle = parseFloat(arrivalElev);
-    const arrPres = parseFloat(arrivalPressure);
+    const { situation: sit, error, trueAlt, absolute, indicated: indiAlt } = answers();
 
-    setSituation(arrPres <= depPres ? "H → L" : "L → H");
-
-    const error = Math.abs((depPres - arrPres) * 1000);
-    const trueAlt = (arrPres - (depPres - assAlt / 1000)) * 1000;
-    const absolute = trueAlt - fieldEle;
-    const indiAlt = (depPres - (arrPres - fieldEle / 1000)) * 1000;
-
+    setSituation(sit);
     setErrorInput(Math.round(error).toString());
     setTrueAltInput(Math.round(trueAlt).toString());
     setAbsAltInput(Math.round(absolute).toString());
@@ -74,27 +73,11 @@ function Weather() {
   };
 
   const checkWork = () => {
-    const depPres = parseFloat(depPressure);
-    const assAlt = parseFloat(assignedAlt);
-    const fieldEle = parseFloat(arrivalElev);
-    const arrPres = parseFloat(arrivalPressure);
-
-    const error = Math.abs((depPres - arrPres) * 1000);
-    const trueAlt = (arrPres - (depPres - assAlt / 1000)) * 1000;
-    const absolute = trueAlt - fieldEle;
-    const indiAlt = (depPres - (arrPres - fieldEle / 1000)) * 1000;
-
-    const correctAnswers = [error, trueAlt, absolute, indiAlt];
-    const userAnswers = [errorInput, trueAltInput, absAltInput, indAltInput]
-      .map(v => parseFloat(String(v).replace(/,/g, '')));
+    const { error, trueAlt, absolute, indicated } = answers();
+    const correctAnswers = [error, trueAlt, absolute, indicated];
+    const userAnswers = [errorInput, trueAltInput, absAltInput, indAltInput];
     const setClasses = [setErrorClass, setTrueAltClass, setAbsAltClass, setIndAltClass];
-
-    // Every answer is in feet, so grade in feet: 0.01 inHg is 10 ft.
-    for (let i = 0; i < 4; i++) {
-      if (isNaN(userAnswers[i])) { setClasses[i](''); continue; }
-      const off = Math.abs(userAnswers[i] - correctAnswers[i]);
-      setClasses[i](off <= 10 ? 'bg-green' : off <= 50 ? 'bg-yellow' : 'bg-red');
-    }
+    for (let i = 0; i < 4; i++) setClasses[i](gradeSetai(userAnswers[i], correctAnswers[i]));
   };
 
   useEffect(() => { generate(); }, []); // eslint-disable-line react-hooks/exhaustive-deps

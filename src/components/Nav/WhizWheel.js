@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useVarRowsScale } from '../useVarRowsScale';
+import {
+  randBetween, turnToDegrees, tasFromCas, casFromTas, pressureAltitude, timeWithUnit, PER_HOUR,
+  preflightWinds, inflightWinds, tacanPointToPoint, convertTimes, timeProblem, gradeAnswer,
+} from './navMath';
 
 // The faces and overlays of each wheel, centred in the box. `rest` is how each one sits
 // before a solve turns or moves it; the wind overlays start shrunk out of sight.
@@ -74,50 +78,6 @@ const wheelContainerRef = useRef(null);
   useLayoutEffect(() => {
     updateScale();
   }, [tableData, updateScale]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Helper functions
-  const randBetween = (min, max) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
-
-  const turnToDegrees = (input) => {
-    let mid = 360 * (Math.log10(input / Math.pow(10, Math.floor(Math.log10(input) - 1))) - 1);
-    return mid * -1;
-  };
-
-  const tasFromCas = (temp, palt, cas) => {
-    const x1 = 0.000167710133972731;
-    const x2 = -0.0483548613736768;
-    const x3 = 4.5070725375605;
-
-    let psi = 101325 * Math.pow((288.15 / (288.15 - (6.5 / 1000) * (palt * 0.3048))), (9.80665 * 28.9644 / (8.31432 * 1000 * (-6.5 / 1000))));
-    let qc = 101325 * (Math.pow((1 + 0.2 * Math.pow((0.514444444 * cas / 340.29), 2)), (7 / 2)) - 1);
-    let m = Math.sqrt(5 * (Math.pow(qc / psi + 1, 2 / 7) - 1));
-    let a = Math.sqrt(1.4 * 287.053 * (temp + 273.15));
-    let tas = -x1 * Math.pow(m * a * 1.94384, 2) + (1 - x2) * (m * a * 1.94384) - x3;
-    return tas;
-  };
-
-  const casFromTas = (temp, palt, tas) => {
-    const x1 = 0.000167710133972731;
-    const x2 = -0.0483548613736768;
-    const x3 = 4.5070725375605;
-
-    tas = (-(x2 - 1) - Math.sqrt(Math.pow((x2 - 1), 2) - 4 * x1 * (x3 + 0.514444444 * tas))) / (2 * x1);
-    let a = Math.sqrt(1.4 * 287.053 * (temp + 273.15));
-    let m = tas / a;
-    let psi = 101325 * Math.pow((288.15 / (288.15 - (6.5 / 1000) * (palt * 0.3048))), (9.80665 * 28.9644 / (8.31432 * 1000 * (-6.5 / 1000))));
-    let qc = psi * (Math.pow((1 + 0.2 * Math.pow(m, 2)), (7 / 2)) - 1);
-    let cas = 340.29 * Math.sqrt(5 * (Math.pow(qc / 101325 + 1, 2 / 7) - 1)) * 1.94384;
-    return cas;
-  };
-
-  const zuluLocal = (time, zd) => {
-    let zulutime = ((Math.floor(time / 100) - zd) % 24);
-    if (zulutime < 0) zulutime += 24;
-    zulutime = zulutime * 100 + time % 100;
-    return zulutime;
-  };
 
   const clearInputFields = () => {
     setTableData(() => Array(10).fill(null).map(() => ({
@@ -203,21 +163,7 @@ const wheelContainerRef = useRef(null);
     else if (rand < 0.9) dist = randBetween(22, 199) * 5;
     else dist = randBetween(20, 49) * 50;
 
-    let time = dist / speed;
-    let units = "";
-
-    if (time > 1.66) {
-      time = Number(time.toFixed(1));
-      units = "hrs";
-    } else if (time > 0.027) {
-      time = time * 60;
-      time = Number(time.toFixed(1));
-      units = "mins";
-    } else {
-      time = time * 3600;
-      time = Number(time.toFixed(1));
-      units = "secs";
-    }
+    const { value: time, unit: units } = timeWithUnit(dist / speed);
 
     updateRow(0, { variable: 'Distance', value: dist, unit: 'nm', solved: true, display: true });
     updateRow(1, { variable: 'Speed', value: speed, unit: 'kts', solved: true, display: true });
@@ -233,21 +179,7 @@ const wheelContainerRef = useRef(null);
     let fflow = rand < 0.5 ? randBetween(27, 199) * 5 : randBetween(11, 50) * 100;
     let fquan = rand < 0.3 ? randBetween(100, 999) : rand < 0.9 ? randBetween(100, 999) * 10 : randBetween(20, 60) * 500;
     let gquan = Number((fquan / 6.8).toFixed(1));
-    let time = fquan / fflow;
-    let units = "";
-
-    if (time > 1.66) {
-      time = Number(time.toFixed(1));
-      units = "hrs";
-    } else if (time > 0.027) {
-      time = time * 60;
-      time = Number(time.toFixed(1));
-      units = "mins";
-    } else {
-      time = time * 3600;
-      time = Number(time.toFixed(1));
-      units = "secs";
-    }
+    const { value: time, unit: units } = timeWithUnit(fquan / fflow);
 
     const vrand = Math.ceil(3 * Math.random());
     const urand = Math.random();
@@ -285,7 +217,7 @@ const wheelContainerRef = useRef(null);
     let cas = randBetween(22, 70) * 5;
     let altim = Number((29.92 + randBetween(-23, 10) / 10).toFixed(2));
     let temp = randBetween(0, 9) * 5 - 25;
-    let palt = Math.round((29.92 - altim) * 1000 + calt);
+    let palt = Math.round(pressureAltitude(calt, altim));
     let tas = Math.round(tasFromCas(temp, palt, cas));
 
     const values = [calt, altim, temp, palt, cas, tas];
@@ -396,27 +328,16 @@ const wheelContainerRef = useRef(null);
       updateRow(i, { display: true });
     }
 
-    let time1 = randBetween(0, 23) * 100 + randBetween(0, 59);
-    let duration = randBetween(2, 17) * 100 + randBetween(0, 59);
-    let zd = randBetween(-12, 12);
-    let zd2 = ((zd + Math.floor(duration / 100) + randBetween(-3, 3) + 12) % 25 + 25) % 25 - 12;
-    let zulutime = (time1 - zd * 100) % 2400;
-    if (zulutime < 0) zulutime += 2400;
-    let mins2 = zulutime % 100 + duration % 100;
-    let hrs2 = Math.floor(zulutime / 100) + Math.floor(duration / 100) + Math.floor(mins2 / 60);
-    let zulutime2 = (hrs2 * 100 + mins2 % 60) % 2400;
-    let time2 = (zulutime2 + zd2 * 100) % 2400;
-    if (time2 < 0) time2 += 2400;
+    const { duration, zd, zd2, times } = timeProblem();
+    const hhmm = (t) => t.toString().padStart(4, "0");
 
-    let durationText = Math.floor(duration / 100) + "+" + String(duration % 100).padStart(2, "0");
-
-    updateRow(0, { variable: 'Duration', value: durationText, solved: true });
+    updateRow(0, { variable: 'Duration', value: duration, solved: true });
     updateRow(1, { variable: 'ZD Departure', value: zd, solved: true });
     updateRow(2, { variable: 'ZD Arrival', value: zd2, solved: true });
-    updateRow(3, { variable: 'Departure Time LT', value: time1.toString().padStart(4, "0"), unit: 'LT', solved: true });
-    updateRow(4, { variable: 'Departure Time UTC', value: zulutime.toString().padStart(4, "0"), unit: 'UTC', solved: true });
-    updateRow(5, { variable: 'Arrival Time UTC', value: zulutime2.toString().padStart(4, "0"), unit: 'UTC', solved: true });
-    updateRow(6, { variable: 'Arrival Time LT', value: time2.toString().padStart(4, "0"), unit: 'LT', solved: true });
+    updateRow(3, { variable: 'Departure Time LT', value: hhmm(times[0]), unit: 'LT', solved: true });
+    updateRow(4, { variable: 'Departure Time UTC', value: hhmm(times[1]), unit: 'UTC', solved: true });
+    updateRow(5, { variable: 'Arrival Time UTC', value: hhmm(times[2]), unit: 'UTC', solved: true });
+    updateRow(6, { variable: 'Arrival Time LT', value: hhmm(times[3]), unit: 'LT', solved: true });
 
     const given = randBetween(3, 6);
     [3, 4, 5, 6].filter(i => i !== given).forEach(i => updateRow(i, { value: '', solved: false }));
@@ -542,29 +463,15 @@ const wheelContainerRef = useRef(null);
   const solveTDS = (visualize = true) => {
     const dist = parseFloat(tableData[0].value);
     const speed = parseFloat(tableData[1].value);
-    let time = dist / speed;
-    let units = "";
-    
-    let explainTxt = "";
-    if (time > 1.66) {
-      time = Number(time.toFixed(1));
-      units = "hrs";
-      explainTxt = "Distance is much greater than speed, so use the 10 under speed and hrs";
-    } else if (time > 0.027) {
-      time *= 60;
-      time = Number(time.toFixed(1));
-      units = "mins";
-      explainTxt = "Distance is not too small or large, so use the 60 under speed and mins";
-    } else {
-      time *= 3600;
-      time = Number(time.toFixed(1));
-      units = "secs";
-      explainTxt = "Distance is much smaller than speed, so use the 36 under speed and secs";
-    }
+    const { value: time, unit: units } = timeWithUnit(dist / speed);
+    const explainTxt = {
+      hrs: "Distance is much greater than speed, so use the 10 under speed and hrs",
+      mins: "Distance is not too small or large, so use the 60 under speed and mins",
+      secs: "Distance is much smaller than speed, so use the 36 under speed and secs",
+    }[units];
     if(!visualize){
       // Grade in whatever unit the student picked for the answer.
-      const perHour = { hrs: 1, mins: 60, secs: 3600 };
-      const answer = dist / speed * (perHour[tableData[2].unit] || perHour[units]);
+      const answer = dist / speed * (PER_HOUR[tableData[2].unit] || PER_HOUR[units]);
       return [[answer, 2, answer]];
     }
 
@@ -630,24 +537,12 @@ const wheelContainerRef = useRef(null);
       const quanUnit = tableData[2].unit || "lbs";
       if (quanUnit === "gal") fquan *= 6.8;
       
-      let time = fquan / fflow;
-      let unit = "";
-      
-      if (time > 1.66) {
-        time = Number(time.toFixed(1));
-        unit = "hrs";
-        explainTxt = "Quantity is much greater than flow, so use the 10 under flow and hrs";
-      } else if (time > 0.027) {
-        time *= 60;
-        time = Number(time.toFixed(1));
-        unit = "mins";
-        explainTxt = "Quantity is not too small or large, so use the 60 under flow and mins";
-      } else {
-        time *= 3600;
-        time = Number(time.toFixed(1));
-        unit = "secs";
-        explainTxt = "Quantity is much smaller than flow, so use the 36 under flow and secs";
-      }
+      const { value: time, unit } = timeWithUnit(fquan / fflow);
+      explainTxt = {
+        hrs: "Quantity is much greater than flow, so use the 10 under flow and hrs",
+        mins: "Quantity is not too small or large, so use the 60 under flow and mins",
+        secs: "Quantity is much smaller than flow, so use the 36 under flow and secs",
+      }[unit];
       if(!visualize){return [[time, 1, time]]}
       
       updateRow(1, { value: time, unit: unit, solved: true });
@@ -748,7 +643,7 @@ const wheelContainerRef = useRef(null);
     if (!tableData[4].solved) qnum = 4;
     else if (!tableData[5].solved) qnum = 5;
     
-    let palt = isNaN(calt) ? parseFloat(tableData[3].value) : (29.92 - altim) * 1000 + calt;
+    let palt = isNaN(calt) ? parseFloat(tableData[3].value) : pressureAltitude(calt, altim);
     
     if (qnum === 4) {
       const tas = parseFloat(tableData[5].value);
@@ -800,12 +695,7 @@ const wheelContainerRef = useRef(null);
     const dir = parseFloat(tableData[2].value);
     const kts = parseFloat(tableData[3].value);
     
-    const xw = kts * Math.sin((dir - tc) * Math.PI / 180);
-    const rawCaDeg = 180 / Math.PI * Math.asin(xw / tas);
-    const ca = Math.round(rawCaDeg * Math.sign(rawCaDeg) * Math.sign(xw));
-    const th = ((tc + ca) % 360 + 360) % 360 || 360;
-    const hwtw = Math.round(-kts * Math.cos((dir - tc) * Math.PI / 180));
-    const gs = tas + hwtw;
+    const { xw, ca, th, hwtw, gs } = preflightWinds({ tc, tas, dir, kts });
     
     let xwText = Math.round(xw) < 0 ? Math.round(-xw) + " L" :
                  Math.round(xw) > 0 ? Math.round(xw) + " R" : "0";
@@ -850,24 +740,7 @@ const wheelContainerRef = useRef(null);
     const trk = parseFloat(tableData[2].value);
     const gs = parseFloat(tableData[3].value);
     
-    let da = trk - th;
-    if (Math.abs(da) > 180) {
-      da = da - Math.sign(da) * 360;
-    }
-    
-    let xw = -1 * Math.sin(da * Math.PI / 180) * tas * Math.sign(da) * Math.sign(Math.sin(da * Math.PI / 180) * tas);
-    let hwtw = gs - tas;
-    
-    let dir = 0;
-    if (Math.sign(hwtw) > 0) {
-      dir = Math.round((trk - 180) % 360 - Math.sign(xw) * (180 / Math.PI * Math.atan(Math.abs(xw / hwtw)))) % 360;
-    } else {
-      dir = Math.round(trk + Math.sign(xw) * (180 / Math.PI * Math.atan(Math.abs(xw / hwtw)))) % 360;
-    }
-    if (dir < 0) dir += 360;
-    if (dir === 0) dir = 360;
-    
-    let vel = Math.round(Math.sqrt(xw * xw + hwtw * hwtw));
+    const { da, xw, hwtw, dir, vel } = inflightWinds({ th, tas, trk, gs });
     
     let xwText = Math.round(xw) < 0 ? `${Math.round(-xw)} L` :
                  Math.round(xw) > 0 ? `${Math.round(xw)} R` : "0";
@@ -910,29 +783,10 @@ const wheelContainerRef = useRef(null);
   };
 
   const solveLollipop = (visualize = true) => {
-let t1Raw = tableData[0].value.toString();
-    let r1 = parseFloat(tableData[1].value);
-    let t2 = parseFloat(tableData[2].value);
-    let r2 = parseFloat(tableData[3].value);
-    
-    let t1 = 0;
-    if (t1Raw.includes("TO")) {
-      t1 = Number(t1Raw.match(/\d+/g).join("")) - 180;
-    } else {
-      t1 = Number(t1Raw.match(/\d+/g).join(""));
-    }
-    if (t1 < 0) t1 += 360;
-    
-    const x1 = r1 * Math.cos(t1 * Math.PI / 180);
-    const y1 = r1 * Math.sin(-t1 * Math.PI / 180);
-    const x2 = r2 * Math.cos(t2 * Math.PI / 180);
-    const y2 = r2 * Math.sin(-t2 * Math.PI / 180);
-    
-    const r3 = Math.round(Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2));
-    let t3 = Math.round(Math.atan((y2 - y1) / (x2 - x1)) * 180 / Math.PI);
-    if ((x2 - x1) < 0) t3 -= 180;
-    if (t3 < 0) t3 += 360;
-    t3 = 360 - t3;
+    const r1 = parseFloat(tableData[1].value);
+    const t2 = parseFloat(tableData[2].value);
+    const r2 = parseFloat(tableData[3].value);
+    const { t1, course: t3, distance: r3 } = tacanPointToPoint({ bdhi: tableData[0].value, r1, t2, r2 });
     if(!visualize){return [[t3, 4, 100, 'deg'], [r3, 5, 100]]}
     
     updateRow(4, { value: t3, solved: true });
@@ -953,56 +807,13 @@ let t1Raw = tableData[0].value.toString();
 
   const solveTime = (visualize = true) => {
     const isGiven = (i) => tableData[i].solved && tableData[i].value !== '';
-    let duration = tableData[0].value;
-    const [hours, minutes] = duration.split("+").map(Number);
-    let zd = parseFloat(tableData[1].value);
-    let zd2 = parseFloat(tableData[2].value);
-    let time1 = 0;
-    let zulutime = 0;
-    let time2 = 0;
-    let zulutime2 = 0;
-    
-    if (isGiven(3)) {
-      time1 = parseFloat(tableData[3].value);
-      zulutime = zuluLocal(time1, zd);
-      let mins2 = zulutime % 100 + minutes;
-      let hrs2 = Math.floor(zulutime / 100) + hours + Math.floor(mins2 / 60);
-      zulutime2 = (hrs2 * 100 + mins2 % 60) % 2400;
-      time2 = zuluLocal(zulutime2, -zd2);
-    } else if (isGiven(4)) {
-      zulutime = parseFloat(tableData[4].value);
-      time1 = zuluLocal(zulutime, -zd);
-      let mins2 = zulutime % 100 + minutes;
-      let hrs2 = Math.floor(zulutime / 100) + hours + Math.floor(mins2 / 60);
-      zulutime2 = (hrs2 * 100 + mins2 % 60) % 2400;
-      time2 = zuluLocal(zulutime2, -zd2);
-    } else if (isGiven(5)) {
-      zulutime2 = parseFloat(tableData[5].value);
-      time2 = zuluLocal(zulutime2, -zd2);
-      let mins2 = zulutime2 % 100 - minutes;
-      let hrs = 0;
-      if (mins2 < 0) {
-        hrs = -1;
-        mins2 += 60;
-      }
-      let hrs2 = Math.floor(zulutime2 / 100) - hours + hrs;
-      if (hrs2 < 0) hrs2 += 24;
-      zulutime = (hrs2 * 100 + mins2 % 60) % 2400;
-      time1 = zuluLocal(zulutime, -zd);
-    } else if (isGiven(6)) {
-      time2 = parseFloat(tableData[6].value);
-      zulutime2 = zuluLocal(time2, zd2);
-      let mins2 = zulutime2 % 100 - minutes;
-      let hrs = 0;
-      if (mins2 < 0) {
-        hrs = -1;
-        mins2 += 60;
-      }
-      let hrs2 = Math.floor(zulutime2 / 100) - hours + hrs;
-      if (hrs2 < 0) hrs2 += 24;
-      zulutime = (hrs2 * 100 + mins2 % 60) % 2400;
-      time1 = zuluLocal(zulutime, -zd);
-    }
+    const zd = parseFloat(tableData[1].value);
+    const zd2 = parseFloat(tableData[2].value);
+    const given = [3, 4, 5, 6].find(isGiven);
+    if (given === undefined) return;
+    const [time1, zulutime, zulutime2, time2] = convertTimes({
+      duration: tableData[0].value, zd, zd2, given: given - 3, value: parseFloat(tableData[given].value),
+    });
     if(!visualize){return [[time1, 3, 50, 'time'], [zulutime, 4, 50, 'time'], [zulutime2, 5, 50, 'time'], [time2, 6, 50, 'time']]}
     
     updateRow(3, { value: time1.toString().padStart(4, "0"), solved: true });
@@ -1025,22 +836,6 @@ let t1Raw = tableData[0].value.toString();
     }));
   };
 
-  // How far an answer is from the solution: headings wrap at 360, clock times at midnight.
-  const answerDiff = (userInput, solution, kind) => {
-    if (kind === 'time') {
-      const digits = userInput.replace(/\D/g, '');
-      if (!digits) return NaN;
-      const toMins = (hhmm) => Math.floor(hhmm / 100) * 60 + (hhmm % 100);
-      const diff = Math.abs(toMins(Number(digits)) - toMins(solution)) % 1440;
-      return Math.min(diff, 1440 - diff);
-    }
-    let userValue = parseFloat(userInput);
-    // "5 L" and "20 H" are negative; a unit such as "hrs" is not a direction.
-    if (/\d\s*[LH]\s*$/i.test(userInput)) userValue *= -1;
-    if (kind === 'deg') return Math.abs(((userValue - solution) % 360 + 540) % 360 - 180);
-    return Math.abs(userValue - solution);
-  };
-
   const checkWork = () => {
     const solutions = solve(false);
     if (!solutions || solutions.length === 0) return;
@@ -1054,18 +849,8 @@ let t1Raw = tableData[0].value.toString();
         const userInput = String(row.value ?? '').trim();
         if (!userInput) return;
 
-        const diff = answerDiff(userInput, solution, kind);
-        if (isNaN(diff)) return;
-
-        let percentError;
-        if (solution === 0 && !kind) {
-          percentError = diff < 0.01 ? 0 : 100;
-        } else {
-          percentError = Math.abs(100 * diff / denominator);
-        }
-
-        const bgColor = percentError <= 2 ? 'bg-green' : percentError <= 5 ? 'bg-yellow' : 'bg-red';
-        newData[rowIndex] = { ...row, bgColor };
+        const bgColor = gradeAnswer(userInput, solution, denominator, kind);
+        if (bgColor) newData[rowIndex] = { ...row, bgColor };
       });
 
       return newData;

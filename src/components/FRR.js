@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useLayoutEffect, useRef } from 'react';
 import { useVarRowsScale } from './useVarRowsScale';
+import { vfrCruise, runwayIndex, RUNWAYS } from './Nav/navMath';
 
 function FRR() {
   const [questionType, setQuestionType] = useState('vfr');
@@ -182,64 +183,20 @@ function FRR() {
   }, [questionType, generateVfr, generateRunway]);
 
   const solveVfr = () => {
-    setAltitudeLines([]);
-
-    if (airClass === "A") { setAnswerAlt("VFR not allowed (Class A)"); return; }
-    if (visibility < 3) { setAnswerAlt("VFR not allowed (Vis < 3 SM)"); return; }
-
-    let ceilingAltitude = 1000000;
-    for (const layer of cloudLayers) {
-      if ((layer.type === "BKN" || layer.type === "OVC") && layer.altitude < ceilingAltitude) {
-        ceilingAltitude = layer.altitude;
-      }
-    }
-    if (ceilingAltitude === 1000000) { setAnswerAlt("No ceiling found"); return; }
-
-    const newLines = [];
-    newLines.push({ lineAlt: ceilingAltitude, text: "", textAlt: ceilingAltitude, ceiling: ceilingAltitude });
-
-    // 500 ft below clouds under 10,000 ft MSL, 1,000 ft at or above it.
-    const clearance = ceilingAltitude - 500 < 10000 ? 500 : 1000;
-    let firstAlt = ceilingAltitude - clearance;
-    newLines.push({ lineAlt: firstAlt, text: `-${clearance}`, textAlt: firstAlt + clearance / 2, ceiling: ceilingAltitude });
-
-    let finalAlt = Math.round(firstAlt / 1000) * 1000 - 500;
-    const dif = finalAlt - firstAlt;
-    if (dif !== 0) {
-      newLines.push({ lineAlt: finalAlt, text: `${dif}`, textAlt: finalAlt - dif / 2, ceiling: ceilingAltitude });
-    }
-
-    const thousand = Math.floor(finalAlt / 1000);
-    let adjust = false;
-    if (course < 180) {
-      if (thousand % 2 === 0) { finalAlt -= 1000; adjust = true; }
-    } else {
-      if (thousand % 2 === 1) { finalAlt -= 1000; adjust = true; }
-    }
-    if (adjust) {
-      newLines.push({ lineAlt: finalAlt, text: "-1000", textAlt: finalAlt + 500, ceiling: ceilingAltitude });
-    }
-
-    setAltitudeLines(newLines);
-    setAnswerAlt(`${finalAlt?.toLocaleString() ?? "N/A"} ft`);
+    const { answer, lines } = vfrCruise({ airClass, visibility, cloudLayers, course });
+    setAltitudeLines(lines);
+    setAnswerAlt(answer);
   };
 
-  const getRunwayIndex = () => {
-    let direction = directionG;
-    let randPosiAve = 2 * randPosiG;
-    if (toG) direction = (direction + 4) % 8;
-    if (randPosi2G != null) randPosiAve = randPosiG + randPosi2G;
-
-    if (!relativeG) {
-      return indicatorG === 0 ? (flagDirectionG + 4) % 8 : flagDirectionG;
-    }
-    let runwayindex = (direction + randPosiAve) % 8;
-    if (indicatorG === 0) runwayindex = (runwayindex + 4) % 8;
-    if ([randPosiG, randPosi2G].includes(0) && [randPosiG, randPosi2G].includes(3)) {
-      runwayindex = (runwayindex + 4) % 8;
-    }
-    return runwayindex;
-  };
+  const getRunwayIndex = () => runwayIndex({
+    direction: directionG,
+    to: toG,
+    relative: relativeG,
+    randPosi: randPosiG,
+    randPosi2: randPosi2G,
+    indicator: indicatorG,
+    flagDirection: flagDirectionG,
+  });
 
   const calculateIndicatorRotation = () => {
     let direction = directionG;
@@ -266,8 +223,7 @@ function FRR() {
   };
 
   const solveRunway = () => {
-    const runways = ["Runway 18", "Runway 23", "Runway 27", "Runway 32", "Runway 36", "Runway 05", "Runway 09", "Runway 14"];
-    setSelectedAnswer(runways[getRunwayIndex()]);
+    setSelectedAnswer(RUNWAYS[getRunwayIndex()]);
     setIsAnswered(true);
   };
 

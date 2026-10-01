@@ -1410,6 +1410,29 @@ td.xcell::after {
 .whiz-hat-field--destZD { top: 40px; left: 400px; }
 .whiz-hat-field--destZulu { top: 165px; left: 425px; }
 
+/* NIFE Jet Log on a narrow screen: its desktop width, zoomed to fit by JetLog.js. */
+.jetlog-fit {
+  width: 800px;
+}
+
+/* The problem rows on a phone: tighter columns, so useVarRowsScale shrinks them by ~15%
+   rather than by half. Labels keep one width so the answer boxes line up. */
+@media (max-width: 480px) {
+  .var-rows-two-col { gap: 10px; }
+  .var-row { gap: 6px; }
+  .var-label,
+  .var-label.frr-label {
+    flex: 0 0 84px;
+    min-width: 0;
+    font-size: 0.9em;
+    line-height: 1.15;
+  }
+  .var-label.frr-cloud-label { flex-basis: 40px; }
+  .var-row input[type="text"] { width: 76px; padding: 5px 6px; }
+  .var-unit { min-width: 0; font-size: 0.9em; }
+  .setai-value { min-width: 56px; }
+}
+
 /* Jet Log: why a solve or check stopped (bad wind, ATA or direction format). */
 .jetlog-message {
   max-width: 500px;
