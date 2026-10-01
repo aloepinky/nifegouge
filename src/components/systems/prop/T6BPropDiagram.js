@@ -3,7 +3,8 @@ import { PROP_INFO, PROP_VERBATIM, PROP_NUMBERS, PROP_EICAS, PROP_EPS } from './
 import { InfoModal } from '../InfoModal';
 import { HotRing } from '../Hot';
 import DiagramShell from '../DiagramShell';
-import { THEME, DIAGRAM_FONT, WIRE_KEYFRAMES } from '../diagramTheme';
+import { THEME, DIAGRAM_FONT } from '../diagramTheme';
+import { El } from '../Notation';
 
 const FONT = DIAGRAM_FONT;
 
@@ -87,15 +88,16 @@ function PropCB({ x, y, live, isOpen = false, onToggle, label }) {
   const cr       = 2;
   const lift     = isOpen ? 4 : 0;
   const arcLive  = live && !isOpen;
-  const color    = arcLive ? THEME.wireLive : THEME.wireDead;
+  const color    = arcLive ? C.muted : THEME.wireDead;
   const op       = arcLive ? 1 : 0.35;
   const arc      = `M ${x - r} ${y - 2} A ${r} ${r} 0 0 1 ${x + r} ${y - 2}`;
   const topY     = y - r - 2;
   return (
     <g style={{ cursor: onToggle ? 'pointer' : 'default' }} onClick={onToggle}>
       <g style={{ transform: `translateY(${-lift}px)`, transition: 'transform 0.18s ease' }}>
-        {arcLive && <path d={arc} fill="none" stroke={THEME.wireLive} strokeWidth={3.5} />}
-        <path d={arc} fill="none" stroke={arcLive ? THEME.wireDash : color} strokeWidth={1.5} opacity={op} />
+        {arcLive
+          ? <El d={arc} live />
+          : <path d={arc} fill="none" stroke={color} strokeWidth={1.5} opacity={op} />}
         <line x1={x} y1={topY} x2={x} y2={topY - 3} stroke={color} strokeWidth={1} opacity={op} />
         <line x1={x - 3} y1={topY - 3} x2={x + 3} y2={topY - 3} stroke={color} strokeWidth={1} opacity={op} />
       </g>
@@ -399,7 +401,6 @@ export default function T6BPropDiagram() {
 
   return (
     <DiagramShell
-      keyframes={WIRE_KEYFRAMES}
       briefing={{
         verbatim: PROP_VERBATIM, numbers: PROP_NUMBERS, eicas: PROP_EICAS, eps: PROP_EPS,
         conditionalSteps: true, valueMinWidth: 120,
@@ -975,17 +976,7 @@ export default function T6BPropDiagram() {
           const effectiveFault = uncommandedFeather && !cbPropSys;
           const pmuWireLive = !pmuOff && pcl >= 0 && !effectiveFault
             && Math.abs(oil - computeTargetOil(pcl)) > 0.005;
-          const wC = (on) => on ? C.wireLive : C.wireDead;
-          const wCl = (on) => on ? 'wire-anim' : undefined;
-          return (
-            <path
-              d={`M 50,${pclOffY + 38} H 65 V 268 H 174`}
-              fill="none"
-              stroke={wC(pmuWireLive)}
-              strokeWidth={1.2}
-              className={wCl(pmuWireLive)}
-            />
-          );
+          return <El d={`M 50,${pclOffY + 38} H 65 V 268 H 174`} live={pmuWireLive} />;
         })()}
 
         {/* ════════════════════════════════════════════
@@ -1017,20 +1008,12 @@ export default function T6BPropDiagram() {
             Upper junction (90,344):
               - down to lower junction (90,364) → right to PSV bottom-left
               - right → down to FDS solenoid (fork)
-            Live (animated yellow) when PCL is in OFF position.
+            Live (animated) when PCL is in OFF position.
         ════════════════════════════════════════════ */}
         {(() => {
-          const wC = (on) => on ? C.wireLive : C.wireDead;
-          // Two-layer wire matching the electrical diagram: colored conductor
-          // with white animated dashes when live, faint grey when dead.
-          const wire = (on, d) => on ? (
-            <g>
-              <path d={d} fill="none" stroke={C.wireLive} strokeWidth={3} />
-              <path d={d} fill="none" stroke={C.wireDash} strokeWidth={1.2} className="wire-anim" />
-            </g>
-          ) : (
-            <path d={d} fill="none" stroke={C.wireDead} strokeWidth={1.2} opacity={0.6} />
-          );
+          // The shared signal run (Notation `El`), drawn as on every other diagram.
+          const wire = (on, d) => <El d={d} live={on} />;
+          const wC = (on) => on ? C.muted : C.wireDead;
           return (<>
             {/* PMU wire: dead when PMU is OFF */}
             {wire(psvLive, `M ${pclCX + 14},${pclOffY + 49} H 110 V 364`)}

@@ -109,7 +109,8 @@ is authored in flow direction. A line is colored only when its fluid is in it, a
 with real flow animate. Animate a valve only when something on the diagram commands it. Unknown
 connections are plain `sense` lines, not wires. Each EICAS message gets its own wire entering level
 with it. Dark fills only for instrument faces (gauges, screens). One flow idiom: saturated conductor
-+ white dashes; signals use `El`. Static chrome built at module scope. `sims` entries carry
++ white dashes. Every electrical wire is `El`, elec and prop included (`dim` pales secondary
+power); only elec draws a dead wire solid, for clarity on a page of wires. Static chrome built at module scope. `sims` entries carry
 `col`/`row`. Legend only when >2–3 line functions (`fuel`, `elec`).
 
 ## Discussion Items

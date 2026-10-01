@@ -4,13 +4,10 @@ import { ELEC_VERBATIM, ELEC_NUMBERS, ELEC_EICAS, ELEC_EPS, ELEC_INFO } from './
 import { InfoModal } from '../InfoModal';
 import { HotRing } from '../Hot';
 import DiagramShell from '../DiagramShell';
-import { THEME, DIAGRAM_FONT, WIRE_KEYFRAMES } from '../diagramTheme';
+import { THEME, DIAGRAM_FONT } from '../diagramTheme';
+import { El } from '../Notation';
 
-const KEYFRAMES = WIRE_KEYFRAMES + `
-  @keyframes wireFlowRev { to { stroke-dashoffset:  12; } }
-  @keyframes wireFlowDim { to { stroke-dashoffset:  -7; } }
-  .wire-anim-rev { stroke-dasharray: 8 4; animation: wireFlowRev 0.9s linear infinite; }
-  .wire-anim-dim { stroke-dasharray: 4 3; animation: wireFlowDim 0.7s linear infinite; }
+const KEYFRAMES = `
   @keyframes eicasFlash  { 0%,100%{opacity:1} 25%{opacity:0.1} 50%{opacity:1} 75%{opacity:0.1} }
 `;
 
@@ -170,28 +167,12 @@ function EICASDisplay({ x, y, w = 82, h = 38, on = true, amps = 0, volts = 0 }) 
 
 // ── Wire segment ─────────────────────────────────────────────────────
 // d: SVG path string, e.g. "M 10 20 L 50 20 L 50 80"
-// live: false → faint static grey dashes; true → animated yellow over dark pipe
+// Live: the shared signal run (Notation `El`), as on every other diagram. Dead: a solid
+// faint line rather than El's dashes, so on this page, where wires are the subject,
+// an unpowered wire reads as a plain conductor and only power moves.
 function Wire({ d, live = false, reverse = false, dim = false }) {
-  if (!live) {
-    return <path d={d} stroke={C.stroke} strokeWidth={1.5} fill="none"
-      opacity={0.5} />;
-  }
-  if (dim) {
-    return (
-      <g>
-        <path d={d} stroke={C.wireDim} strokeWidth={2.5} fill="none" />
-        <path d={d} fill="none" stroke={C.wireDash} strokeWidth={1}
-          className="wire-anim-dim" />
-      </g>
-    );
-  }
-  return (
-    <g>
-      <path d={d} stroke={C.wire} strokeWidth={3.5} fill="none" />
-      <path d={d} fill="none" stroke={C.wireDash} strokeWidth={1.5}
-        className={reverse ? 'wire-anim-rev' : 'wire-anim'} />
-    </g>
-  );
+  if (!live) return <path d={d} stroke={C.stroke} strokeWidth={1.5} fill="none" opacity={0.5} />;
+  return <El d={d} live rev={reverse} dim={dim} />;
 }
 
 // ── Wire crossover hop ───────────────────────────────────────────────
@@ -203,17 +184,11 @@ function Wire({ d, live = false, reverse = false, dim = false }) {
 const HopLayerContext = createContext(null);
 
 function HopShape({ x, y, dir = 'h', live = false, dim = false, r = 5 }) {
-  const color = live ? (dim ? C.wireDim : C.wire) : C.stroke;
-  const opacity = live ? 1 : 0.35;
   const arc = dir === 'h'
     ? `M ${x - r} ${y} A ${r} ${r} 0 0 1 ${x + r} ${y}`
     : `M ${x} ${y - r} A ${r} ${r} 0 0 1 ${x} ${y + r}`;
-  return (
-    <g>
-      <path d={arc} fill="none" stroke={color} strokeWidth={live ? (dim ? 2.5 : 3.5) : 1.5} opacity={opacity} />
-      {live && <path d={arc} fill="none" stroke={C.wireDash} strokeWidth={dim ? 1 : 1.5} />}
-    </g>
-  );
+  if (!live) return <path d={arc} fill="none" stroke={C.stroke} strokeWidth={1.5} opacity={0.35} />;
+  return <El d={arc} live dim={dim} />;
 }
 
 function Hop(props) {
@@ -240,8 +215,7 @@ function CB({ x, y, isOpen = false, live = false, dim = false, onToggle, label, 
   const r        = 5;
   const lift     = isOpen ? 4 : 0;
   const arcLive  = live && !isOpen;
-  const liveColor  = dim ? C.wireDim : C.wire;
-  const arcColor   = legend ? C.muted : (arcLive ? liveColor : C.stroke);
+  const arcColor   = legend || arcLive ? C.muted : C.stroke;
   const arcOpacity = (legend || arcLive) ? 1 : 0.35;
   const arc  = `M ${x - r} ${y-2} A ${r} ${r} 0 0 1 ${x + r} ${y-2}`;
   const topY = y - r - 2;
@@ -254,9 +228,9 @@ function CB({ x, y, isOpen = false, live = false, dim = false, onToggle, label, 
     <g className={onToggle ? 'dgm-hot' : undefined} onClick={onToggle}>
       {/* Arc + T — translate upward when open */}
       <g style={{ transform: `translateY(${-lift}px)`, transition: 'transform 0.18s ease' }}>
-        {arcLive && <path d={arc} fill="none" stroke={liveColor} strokeWidth={dim ? 2.5 : 3.5} />}
-        <path d={arc} fill="none" stroke={arcLive ? C.wireDash : arcColor}
-          strokeWidth={dim ? 1 : 1.5} opacity={arcOpacity} />
+        {arcLive
+          ? <El d={arc} live dim={dim} />
+          : <path d={arc} fill="none" stroke={arcColor} strokeWidth={1.5} opacity={arcOpacity} />}
         <line x1={x} y1={topY} x2={x} y2={topY - tStem}
           stroke={arcColor} strokeWidth={1} opacity={arcOpacity} />
         <line x1={x - tBar/2} y1={topY - tStem} x2={x + tBar/2} y2={topY - tStem}

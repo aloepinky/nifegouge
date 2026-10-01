@@ -57,13 +57,14 @@ export const Ldr = ({ d }) => <path d={d} fill="none" stroke={C.stroke} strokeWi
 // `rev` flips the chase where the path happens to be drawn against the direction the
 // signal actually travels — rewriting the path would be the honest fix, but some runs
 // are drawn back-to-front so they cross the schematic cleanly.
-export const El = ({ d, live = false, rev = false }) => {
+// `dim` pales a live run (electrical: power that is on but secondary, e.g. external power).
+export const El = ({ d, live = false, rev = false, dim = false }) => {
   if (!live) return <path d={d} fill="none" stroke={C.muted} strokeWidth={1.1} strokeDasharray="5 4" opacity={0.9} />;
   // Both paths mount together, so their animations stay in phase and the edge tracks
   // the bar it is outlining.
   const bars = { strokeDasharray: '5 4', animation: `${rev ? 'signalFlowRev' : 'signalFlow'} 1.1s linear infinite` };
   return (
-    <g>
+    <g opacity={dim ? 0.55 : undefined}>
       <path d={d} fill="none" stroke={C.muted}      strokeWidth={2.8} style={bars} />
       <path d={d} fill="none" stroke={C.signalLive} strokeWidth={1.8} style={bars} />
     </g>

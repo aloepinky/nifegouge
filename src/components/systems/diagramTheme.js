@@ -68,25 +68,16 @@ export const THEME = {
   gaugeTick:      '#6a8a9a',
   panelFace:      '#080f18',
 
-  // Energized signal run (fuel / oil / obogs, via Notation.js `El`). Deliberately a
-  // neon yellow rather than wireLive's gold: on those pages the runs are background
-  // detail, not the subject the way they are on the electrical diagram, so they want
-  // to read as a flicker of current rather than as another weighted line.
+  // Energized wire on every diagram (Notation.js `El`), elec and prop included.
   signalLive: '#ffe500',
 
-  // Electrical wiring (shared by elec + prop): saturated colored conductor
-  // with white animated dashes riding on it — same idiom as the hyds pipes.
+  // wireLive: the electrical page's switch, relay and button highlight (gold reads as
+  // text on white where signalLive would not). wireDead: an unpowered symbol.
+  // wireDash: the white dashes riding on the fluid lines (hyds, fuel, oil, obogs).
   wireLive: '#b8a000',
-  wireDim:  '#a08a00',
   wireDead: '#8b9cad',
   wireDash: '#ffffff',
 };
 
 export const DIAGRAM_FONT = "'Courier New', monospace";
 
-// Base animation for the shared live-wire idiom (elec + prop). The elec
-// diagram appends its extra reverse/dim variants to this string.
-export const WIRE_KEYFRAMES = `
-  @keyframes wireFlow { to { stroke-dashoffset: -12; } }
-  .wire-anim { stroke-dasharray: 8 4; animation: wireFlow 0.9s linear infinite; }
-`;
