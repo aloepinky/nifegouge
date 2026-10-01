@@ -21,34 +21,22 @@
 // revision intact and the old rows stay where they are, so the site keeps reading them until
 // the client cuts over — which is what makes this reversible. Running it twice is a no-op.
 //
-// Order matters, and it is in the plan: deploy the Lambda (with DISCUSS_LEGACY_MIRROR set) →
-// run this → verify → deploy the client → unset DISCUSS_LEGACY_MIRROR and retire the old rows.
+// Done (2026-09). The order was: deploy the Lambda with the legacy bare-address mirror on →
+// run this → verify → deploy the client → turn the legacy mirror off. The Lambda no longer
+// has that mirror, so this is a record of the migration rather than a step to repeat.
 
-const argv = process.argv.slice(2);
-const flag = (name) => argv.includes(`--${name}`);
-const value = (name) => {
-  const hit = argv.find((a) => a.startsWith(`--${name}=`));
-  return hit ? hit.slice(name.length + 3) : null;
-};
+const { args, API_URL, apiPost } = require('./lib/cli');
+
+const { flag, value } = args();
 
 const OPT = {
-  api: value('api') || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss',
+  api: value('api') || API_URL,
   batch: Math.max(1, Math.min(200, Number(value('batch')) || 40)),
   dryRun: flag('dry-run'),
   token: process.env.DISCUSS_ADMIN_TOKEN || value('token'),
 };
 
-async function post(op, body) {
-  const res = await fetch(`${OPT.api}/${op}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Admin-Token': OPT.token },
-    body: JSON.stringify(body),
-  });
-  let data = {};
-  try { data = await res.json(); } catch (e) { /* non-JSON body */ }
-  if (!res.ok || data.success === false) throw new Error(`${op}: ${data.error || `HTTP ${res.status}`}`);
-  return data;
-}
+const post = (op, body) => apiPost(OPT.api, op, body, OPT.token);
 
 async function main() {
   if (!OPT.token) throw new Error('DISCUSS_ADMIN_TOKEN is not set');

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 //
-// Renames a syllabus in the dropdown, through the admin `rename-syllabus` operation. The name
-// is changed on the newest revision in place, so no revision is added and the syllabus's id,
-// and with it every URL under /tw4/discuss/s/, is unchanged.
+// Renames a syllabus in the dropdown, through the admin `rename-syllabus` operation. The rename
+// is added as a revision carrying the same document, so an editor who loaded the old name gets
+// a 409 rather than putting it back. The syllabus's id, and with it every URL under
+// /tw4/discuss/s/, is unchanged.
 //
-//   DISCUSS_ADMIN_TOKEN=... node tools/discuss-rename-syllabus.js --id=delta-primary --name="Delta Syllabus"
+//   DISCUSS_ADMIN_TOKEN=... node tools/discuss-rename-syllabus.js --id=delta-primary --name="Delta Syllabus" --author=Loevinger
 //
+//   --author=<name>  the name the revision carries
 //   --api=<url>      the API base (default: the production API Gateway stage)
 //   --mirror=<url>   where the current name is read from (default: the bucket)
 //   --dry-run        report what would be sent, and send nothing
@@ -16,39 +18,23 @@
 // Against the local dev server: --api=http://localhost:8787/discuss --mirror=http://localhost:8787/mirror
 // with DISCUSS_ADMIN_TOKEN=dev.
 
-const argv = process.argv.slice(2);
-const flag = (name) => argv.includes(`--${name}`);
-const value = (name) => {
-  const hit = argv.find((a) => a.startsWith(`--${name}=`));
-  return hit ? hit.slice(name.length + 3) : null;
-};
+const { args, API_URL, MIRROR_URL, apiPost, readMirror: read } = require('./lib/cli');
+
+const { flag, value } = args();
 
 const OPT = {
-  api: value('api') || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss',
-  mirror: value('mirror') || process.env.DISCUSS_MIRROR_URL || 'https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com',
+  api: value('api') || API_URL,
+  mirror: value('mirror') || MIRROR_URL,
   id: value('id'),
   name: value('name'),
+  author: value('author') || '',
   dryRun: flag('dry-run'),
   token: process.env.DISCUSS_ADMIN_TOKEN || value('token'),
 };
 
-const readMirror = async (key) => {
-  const res = await fetch(`${OPT.mirror}/${key}`, { headers: { 'Cache-Control': 'no-cache' } });
-  if (!res.ok) throw new Error(`${key}: HTTP ${res.status}`);
-  return res.json();
-};
+const readMirror = (key) => read(OPT.mirror, key);
 
-async function post(op, body) {
-  const res = await fetch(`${OPT.api}/${op}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Admin-Token': OPT.token },
-    body: JSON.stringify(body),
-  });
-  let data = {};
-  try { data = await res.json(); } catch (e) { /* non-JSON body */ }
-  if (!res.ok || data.success === false) throw new Error(`${op}: ${data.error || `HTTP ${res.status}`}`);
-  return data;
-}
+const post = (op, body) => apiPost(OPT.api, op, body, OPT.token);
 
 async function main() {
   if (!OPT.id) throw new Error('--id= is required');
@@ -63,11 +49,11 @@ async function main() {
     return;
   }
   if (OPT.dryRun) {
-    console.log(`would rename ${OPT.id}: "${current.name}" -> "${name}" (rev ${current.rev} stays)`);
+    console.log(`would rename ${OPT.id}: "${current.name}" -> "${name}" (as rev ${current.rev + 1})`);
     return;
   }
   if (!OPT.token) throw new Error('DISCUSS_ADMIN_TOKEN is not set');
-  const out = await post('rename-syllabus', { id: OPT.id, name });
+  const out = await post('rename-syllabus', { id: OPT.id, name, author: OPT.author });
   console.log(`renamed ${OPT.id}: "${current.name}" -> "${out.name}" (rev ${out.rev})`);
 }
 

@@ -24,29 +24,19 @@
 //                   something that claims it; this walks the page's own rule and says the
 //                   sequence actually works.
 //
-// Node, no dependencies, not part of the build. Exits non-zero on any finding.
+// Node, not part of the build. Exits non-zero on any finding.
 //
 //     node tools/check-posters.js
 
-const fs = require('fs');
 const path = require('path');
-const vm = require('vm');
+const { loadSrc } = require('./lib/loadSrc');
 
 const SRC = path.join(__dirname, '..', 'src');
 
-// The data files are ES modules that React compiles; node here is CommonJS. They are pure data
-// apart from one helper, so they are evaluated with their imports and exports stripped — the
-// same trick tools/discuss-migrate.js uses on the item files, and it works for the same reason.
-function load(rel, extra = {}) {
-  const src = fs.readFileSync(path.join(SRC, rel), 'utf8')
-    .replace(/^\s*import[^;]*;$/gm, '')
-    .replace(/^export\s+/gm, '');
-  const sandbox = { ...extra, module: {}, exports: {} };
-  vm.createContext(sandbox);
-  const names = [...src.matchAll(/^(?:const|let|var|function)\s+([A-Za-z0-9_$]+)/gm)].map((m) => m[1]);
-  vm.runInContext(`${src}\n;__out = { ${names.join(', ')} };`, sandbox);
-  return sandbox.__out;
-}
+// The data files are ES modules that React compiles; node here is CommonJS. tools/lib/loadSrc.js
+// compiles each one and resolves its own imports, so a poster gets `aliasesFrom` from
+// controlMatch.js the way the page does.
+const load = (rel) => loadSrc(path.join(SRC, rel));
 
 // The real matcher and the real step rule the page uses, not copies of them. A second
 // implementation here would drift from the first and then this check would be confirming its own
@@ -68,7 +58,7 @@ let findings = 0;
 
 for (const school of SCHOOLS) {
   const eps = load(school.data)[school.eps];
-  const poster = load(school.poster, { aliasesFrom })[school.key];
+  const poster = load(school.poster)[school.key];
   const aliases = aliasesFrom(poster);
   const records = [
     ...(poster.regions || []).flatMap((r) => r.spots || []),

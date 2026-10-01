@@ -12,7 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const MIRROR_URL = process.env.DISCUSS_MIRROR_URL || 'https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com';
+const { MIRROR_URL } = require('./cli');
 const DELTA_ID = 'delta-primary';
 
 // A page is stored at `items/<school>/<slug>.json`: two schools may both have a `turn-pattern`
@@ -132,4 +132,4 @@ async function loadCorpus({ from = null, quiet = false, school = null } = {}) {
   };
 }
 
-module.exports = { loadCorpus, adapt, MIRROR_URL, DELTA_ID, schoolNs };
+module.exports = { loadCorpus, adapt, MIRROR_URL, DELTA_ID, SYLLABUS_OF, schoolNs, itemPath };

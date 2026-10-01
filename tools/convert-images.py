@@ -90,7 +90,7 @@ def saved_pct(new, old):
 
 
 def convert(src, quality, dry_run):
-    """Encode src as WebP, writing it beside src unless dry_run.
+    """Encode src as WebP, writing it beside src unless dry_run or it came out no smaller.
 
     Returns (old_bytes, new_bytes, kept_alpha). Always encodes to memory first so the
     dry-run figure is provably the exact bytes a real run would write.
@@ -118,7 +118,9 @@ def convert(src, quality, dry_run):
     buf = io.BytesIO()
     out_im.save(buf, "WEBP", quality=quality, method=6)
 
-    if not dry_run:
+    # A WebP no smaller than its original is a loss, so it is never written; main() keeps
+    # that original in public/ too.
+    if not dry_run and buf.tell() < old:
         with open(os.path.splitext(src)[0] + ".webp", "wb") as fh:
             fh.write(buf.getvalue())
     return old, buf.tell(), keep_alpha
@@ -166,7 +168,8 @@ def main():
     for src, rel in files:
         q = quality_for(rel)
         old, new, keep_alpha = convert(src, q, args.dry_run)
-        # A WebP that came out bigger than its PNG is a loss — flag it rather than ship it.
+        # A WebP that came out bigger than its PNG is a loss — flag it rather than ship it:
+        # convert() wrote nothing for it, and its original stays where it is.
         if new >= old:
             grew.append(rel)
         tot_old += old
@@ -181,18 +184,20 @@ def main():
           f"{tot_new/1024/1024:7.2f}MB {saved:6.1f}%")
 
     if grew:
-        print("\nWARNING — WebP came out no smaller for: " + ", ".join(grew))
+        print("\nWARNING — WebP came out no smaller, so was not written, for: " + ", ".join(grew))
 
     if args.dry_run:
         print("\n(dry run — nothing written; re-run without --dry-run to apply)")
         return
 
     held = [rel for _src, rel in files if still_referenced(rel)]
+    moved = 0
     for src, rel in files:
-        if rel not in held:
+        if rel not in held and rel not in grew:
             archive(src, rel)
+            moved += 1
 
-    print(f"\n{len(files) - len(held)} originals moved to "
+    print(f"\n{moved} originals moved to "
           f"{os.path.relpath(ARCHIVE, REPO)}/ (gitignored)")
     if held:
         print(f"\n{len(held)} original(s) KEPT in public/ — src/ still references the original:")

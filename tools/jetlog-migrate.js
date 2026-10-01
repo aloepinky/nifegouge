@@ -49,16 +49,13 @@ const REMAP = {
   'Capstone Flights': ['Flight Gouge', 'Capstone Flights'],
 };
 
-const argv = process.argv.slice(2);
-const flag = (name) => argv.includes(`--${name}`);
-const value = (name) => {
-  const hit = argv.find((a) => a.startsWith(`--${name}=`));
-  return hit ? hit.slice(name.length + 3) : null;
-};
+const { args, API_URL, MIRROR_URL, apiPost, readMirror } = require('./lib/cli');
+
+const { flag, value } = args();
 
 const OPT = {
-  api: value('api') || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss',
-  mirror: value('mirror') || process.env.DISCUSS_MIRROR_URL || 'https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com',
+  api: value('api') || API_URL,
+  mirror: value('mirror') || MIRROR_URL,
   seed: value('seed') || path.join(ROOT, 'tools', 'jetlog-seed.json'),
   out: value('out'),
   overwrite: flag('overwrite'),
@@ -90,29 +87,11 @@ function toJetLog(record) {
 
 async function post(op, body) {
   if (!OPT.token) throw new Error('DISCUSS_ADMIN_TOKEN is not set');
-  const res = await fetch(`${OPT.api}/${op}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Admin-Token': OPT.token },
-    body: JSON.stringify(body),
-  });
-  let data = {};
-  try {
-    data = await res.json();
-  } catch (e) {
-    // A non-JSON body; the status is all there is to report.
-  }
-  if (!res.ok || data.success === false) {
-    throw new Error(`${op}: ${data.error || `HTTP ${res.status}`}`);
-  }
-  return data;
+  return apiPost(OPT.api, op, body, OPT.token);
 }
 
-async function fetchJson(url) {
-  const res = await fetch(url, { headers: { 'Cache-Control': 'no-cache' } });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
-  return res.json();
-}
+// A file the mirror does not have yet comes back null.
+const fetchMirror = (key) => readMirror(OPT.mirror, key, { missingOk: true });
 
 function writeMirror(dir, logs) {
   const jetlogs = path.join(dir, 'jetlogs');
@@ -186,14 +165,14 @@ async function main() {
   if (!OPT.verify) return;
 
   const problems = [];
-  const index = await fetchJson(`${OPT.mirror}/jetlogs/index.json`);
+  const index = await fetchMirror('jetlogs/index.json');
   if (!index) {
     problems.push('jetlogs/index.json is missing');
   } else if (index.logs.length !== logs.length) {
     problems.push(`index lists ${index.logs.length} jet logs, expected ${logs.length}`);
   }
   for (const log of logs) {
-    const record = await fetchJson(`${OPT.mirror}/jetlogs/${log.id}.json`);
+    const record = await fetchMirror(`jetlogs/${log.id}.json`);
     if (!record) {
       problems.push(`jetlogs/${log.id}.json is missing`);
       continue;

@@ -6,6 +6,8 @@
 //   node tools/about-stats.js
 //   node tools/about-stats.js --mirror=http://localhost:8787/mirror --dry-run
 //
+//   --force   write an empty snapshot over one that has figures in it, which it otherwise refuses
+//
 // WHY A SNAPSHOT. These figures come from documents on the server, so the pages used to fetch
 // every syllabus and every brief — about a third of a megabyte — to put six numbers on screen,
 // and showed a dash until it landed. They change only when somebody publishes. So they are
@@ -23,6 +25,7 @@
 const fs = require('fs');
 const path = require('path');
 const { loadSrc } = require('./lib/loadSrc');
+const { MIRROR_URL } = require('./lib/cli');
 
 const argv = process.argv.slice(2);
 const flag = (n) => argv.includes(`--${n}`);
@@ -31,27 +34,30 @@ const value = (n) => {
   return hit ? hit.slice(n.length + 3) : null;
 };
 
-const MIRROR = value('mirror') || process.env.REACT_APP_DISCUSS_MIRROR
-  || 'https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com';
+const MIRROR = value('mirror') || process.env.REACT_APP_DISCUSS_MIRROR || MIRROR_URL;
 const OUT = path.join(__dirname, '..', 'src', 'components', 'about', 'serverStats.js');
 
 const SRC = path.join(__dirname, '..', 'src', 'components');
 const { weekGroups, syllabusRows, briefRows, questionCount } = loadSrc(path.join(SRC, 'about', 'stats.js'));
 const { PROGRAMS, isSchool } = loadSrc(path.join(SRC, 'programs.js'));
 
-async function getJson(url) {
-  const res = await fetch(url, { cache: 'no-cache' });
+// Only a 404 means "nothing published", and then only where `missingOk` says it may. Any
+// other failure stops the run: a snapshot written from a half-read mirror would paint wrong
+// figures until the reader's own fetch corrected them, which is what the file exists to avoid.
+async function getJson(url, { missingOk = false } = {}) {
+  const res = await fetch(url, { cache: 'no-cache' }).catch((err) => {
+    throw new Error(`${err.message} ${url}`);
+  });
+  if (missingOk && res.status === 404) return null;
   if (!res.ok) throw new Error(`${res.status} ${url}`);
   return res.json();
 }
 
-const index = (name) => getJson(`${MIRROR}/${name}/index.json`).catch(() => null);
+const index = (name) => getJson(`${MIRROR}/${name}/index.json`, { missingOk: true });
 
-// A brief's file is keyed by its lower-cased id, as briefApi reads it.
-async function records(name, rows, id) {
-  const out = await Promise.all(rows.map((r) => getJson(`${MIRROR}/${name}/${id(r)}.json`).catch(() => null)));
-  return out.filter(Boolean);
-}
+// A brief's file is keyed by its lower-cased id, as briefApi reads it. Every record an index
+// lists must be there.
+const records = (name, rows, id) => Promise.all(rows.map((r) => getJson(`${MIRROR}/${name}/${id(r)}.json`)));
 
 async function main() {
   const [syllabi, briefs] = await Promise.all([index('syllabi'), index('briefs')]);
@@ -78,8 +84,8 @@ async function main() {
 
   // The Questions tab's live count, which only NIFE has.
   const [approved, sections] = await Promise.all([
-    getJson(`${MIRROR}/questions/nife/approved.json`).catch(() => null),
-    getJson(`${MIRROR}/questions/nife/sections.json`).catch(() => null),
+    getJson(`${MIRROR}/questions/nife/approved.json`, { missingOk: true }),
+    getJson(`${MIRROR}/questions/nife/sections.json`, { missingOk: true }),
   ]);
   const questions = questionCount(approved && approved.questions, sections && sections.doc);
   if (questions != null) stats.NIFE = { ...(stats.NIFE || {}), questions };
@@ -97,8 +103,14 @@ export const SERVER_STATS = ${JSON.stringify(stats, null, 2)};
     console.log(body);
     return;
   }
-  fs.writeFileSync(OUT, body);
   const names = Object.keys(stats);
+  // An empty snapshot over a full one is far likelier a wrong --mirror than a site with
+  // nothing on it.
+  const before = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : '';
+  if (!names.length && !/SERVER_STATS = \{\s*\};/.test(before) && before && !flag('force')) {
+    throw new Error(`nothing published at ${MIRROR}; ${path.relative(process.cwd(), OUT)} left as it is (--force to empty it)`);
+  }
+  fs.writeFileSync(OUT, body);
   console.log(`${path.relative(process.cwd(), OUT)}: ${names.length ? names.join(', ') : 'nothing published'}`);
   names.forEach((s) => console.log(`  ${s}: ${(stats[s].syllabi || []).length} syllabi, ${(stats[s].briefs || []).length} briefs`
     + (stats[s].questions != null ? `, ${stats[s].questions} questions` : '')));

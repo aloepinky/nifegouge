@@ -41,15 +41,12 @@ const { loadSrc } = require('./lib/loadSrc');
 // pdf.js runs its worker in-process when this is loaded, as it does under Jest.
 require('pdfjs-dist/legacy/build/pdf.worker.entry');
 
-const argv = process.argv.slice(2);
-const flag = (n) => argv.includes(`--${n}`);
-const value = (n) => {
-  const hit = argv.find((a) => a.startsWith(`--${n}=`));
-  return hit ? hit.slice(n.length + 3) : null;
-};
+const { args, API_URL, MIRROR_URL, apiPost, readMirror: read } = require('./lib/cli');
 
-const API = value('api') || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss';
-const MIRROR = value('mirror') || 'https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com';
+const { flag, value } = args();
+
+const API = value('api') || API_URL;
+const MIRROR = value('mirror') || MIRROR_URL;
 const AUTHOR = value('author');
 const WRITE = flag('write');
 if (WRITE && flag('dry-run')) {
@@ -99,11 +96,7 @@ async function parse(pdf) {
   };
 }
 
-async function readMirror(key) {
-  const res = await fetch(`${MIRROR}/${key}`, { headers: { 'Cache-Control': 'no-cache' } });
-  if (!res.ok) throw new Error(`${key}: HTTP ${res.status}`);
-  return res.json();
-}
+const readMirror = (key) => read(MIRROR, key);
 
 // Everything but the fields this tool writes, so the check below can say nothing else moved.
 function skeleton(doc) {
@@ -170,21 +163,8 @@ function apply(doc, parsed, log) {
   return next;
 }
 
-async function post(op, body) {
-  const res = await fetch(`${API}/${op}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  let data = {};
-  try { data = await res.json(); } catch (e) { /* non-JSON body */ }
-  if (!res.ok || data.success === false) {
-    const err = new Error(`${op}: ${data.error || `HTTP ${res.status}`}`);
-    err.status = res.status;
-    throw err;
-  }
-  return data;
-}
+// An ordinary save, made as the --author named: no admin token.
+const post = (op, body) => apiPost(API, op, body);
 
 async function main() {
   if (WRITE && !AUTHOR) throw new Error('--author= is required with --write (the user\'s name, never Claude\'s)');

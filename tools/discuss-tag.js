@@ -13,15 +13,12 @@
 //
 // Against the local dev server: --api=http://localhost:8787/discuss with DISCUSS_ADMIN_TOKEN=dev.
 
-const argv = process.argv.slice(2);
-const flag = (name) => argv.includes(`--${name}`);
-const value = (name) => {
-  const hit = argv.find((a) => a.startsWith(`--${name}=`));
-  return hit ? hit.slice(name.length + 3) : null;
-};
+const { args, API_URL, apiPost } = require('./lib/cli');
+
+const { flag, value } = args();
 
 const OPT = {
-  api: value('api') || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss',
+  api: value('api') || API_URL,
   aircraft: value('aircraft'),
   school: value('school'),
   overwrite: flag('overwrite'),
@@ -29,17 +26,7 @@ const OPT = {
   token: process.env.DISCUSS_ADMIN_TOKEN || value('token'),
 };
 
-async function post(op, body) {
-  const res = await fetch(`${OPT.api}/${op}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Admin-Token': OPT.token },
-    body: JSON.stringify(body),
-  });
-  let data = {};
-  try { data = await res.json(); } catch (e) { /* non-JSON body */ }
-  if (!res.ok || data.success === false) throw new Error(`${op}: ${data.error || `HTTP ${res.status}`}`);
-  return data;
-}
+const post = (op, body) => apiPost(OPT.api, op, body, OPT.token);
 
 async function main() {
   if (!OPT.token) throw new Error('DISCUSS_ADMIN_TOKEN is not set');

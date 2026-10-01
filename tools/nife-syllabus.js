@@ -22,13 +22,10 @@
 //     `slug` as its page is published. Capitalized, per the Manual of Style: the label is the
 //     name a list prints, not a lowercase fragment.
 
-const argv = process.argv.slice(2);
-const flag = (n) => argv.includes(`--${n}`);
-const value = (n) => {
-  const hit = argv.find((a) => a.startsWith(`--${n}=`));
-  return hit ? hit.slice(n.length + 3) : null;
-};
-const API = value('api') || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss';
+const { args, API_URL } = require('./lib/cli');
+
+const { flag, value } = args();
+const API = value('api') || API_URL;
 const TOKEN = process.env.DISCUSS_ADMIN_TOKEN || value('token');
 
 const EPS = '/nife/eps-limits';

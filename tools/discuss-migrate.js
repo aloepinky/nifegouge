@@ -37,16 +37,13 @@ const DELTA_NAME = 'Delta Syllabus';
 // Everything in the archive is for the one aircraft and school the site was written for.
 const PROGRAM = { aircraft: 'T-6B', school: 'Primary' };
 
-const argv = process.argv.slice(2);
-const flag = (name) => argv.includes(`--${name}`);
-const value = (name) => {
-  const hit = argv.find((a) => a.startsWith(`--${name}=`));
-  return hit ? hit.slice(name.length + 3) : null;
-};
+const { args, API_URL, MIRROR_URL, apiPost, readMirror } = require('./lib/cli');
+
+const { flag, value } = args();
 
 const OPT = {
-  api: value('api') || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss',
-  mirror: value('mirror') || process.env.DISCUSS_MIRROR_URL || 'https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com',
+  api: value('api') || API_URL,
+  mirror: value('mirror') || MIRROR_URL,
   items: value('items') || [path.join(ROOT, '_reference-docs', 'T6b Primary', 'discuss-items-archive', 'items'), path.join(DISCUSS, 'items')].find((d) => fs.existsSync(d)) || path.join(DISCUSS, 'items'),
   registries: value('registries'),
   out: value('out'),
@@ -131,25 +128,11 @@ function indexEntry(item) {
 
 async function post(op, body) {
   if (!OPT.token) throw new Error('DISCUSS_ADMIN_TOKEN is not set');
-  const res = await fetch(`${OPT.api}/${op}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Admin-Token': OPT.token },
-    body: JSON.stringify(body),
-  });
-  let data = {};
-  try { data = await res.json(); } catch (e) { /* non-JSON body */ }
-  if (!res.ok || data.success === false) {
-    throw new Error(`${op}: ${data.error || `HTTP ${res.status}`}`);
-  }
-  return data;
+  return apiPost(OPT.api, op, body, OPT.token);
 }
 
-async function fetchJson(url) {
-  const res = await fetch(url, { headers: { 'Cache-Control': 'no-cache' } });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
-  return res.json();
-}
+// A file the mirror does not have yet comes back null.
+const fetchMirror = (key) => readMirror(OPT.mirror, key, { missingOk: true });
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -227,16 +210,16 @@ async function main() {
 
   if (OPT.verify) {
     console.log(`verifying against ${OPT.mirror}`);
-    const index = await fetchJson(`${OPT.mirror}/items/index.json`);
+    const index = await fetchMirror('items/index.json');
     const problems = [];
     const listed = new Set((index ? index.items : []).map((e) => e.slug));
     for (const item of items) {
       if (!listed.has(item.slug)) problems.push(`${item.slug}: not in index`);
-      const record = await fetchJson(`${OPT.mirror}/items/${item.slug}.json`);
+      const record = await fetchMirror(`items/${item.slug}.json`);
       if (!record) problems.push(`${item.slug}: missing from the mirror`);
       else if (!same(record.item, item)) problems.push(`${item.slug}: mirror differs from the file`);
     }
-    const delta = await fetchJson(`${OPT.mirror}/syllabi/${DELTA_ID}.json`);
+    const delta = await fetchMirror(`syllabi/${DELTA_ID}.json`);
     if (!delta) problems.push('delta-primary: missing from the mirror');
     else if (!same(delta.doc, doc)) problems.push('delta-primary: mirror differs from the registries');
     if (problems.length) {

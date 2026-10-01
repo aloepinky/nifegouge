@@ -47,14 +47,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const argv = process.argv.slice(2);
-const flag = (n) => argv.includes(`--${n}`);
-const value = (n) => {
-  const hit = argv.find((a) => a.startsWith(`--${n}=`));
-  return hit ? hit.slice(n.length + 3) : null;
-};
+const { args, API_URL } = require('./lib/cli');
 
-const API = value('api') || 'https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss';
+const { flag, value } = args();
+
+const API = value('api') || API_URL;
 const TOKEN = process.env.DISCUSS_ADMIN_TOKEN || value('token');
 const FROM = value('from')
   || path.join(__dirname, '..', '_reference-docs', 'T44C Advanced', 'Fundamental References', 'generated');

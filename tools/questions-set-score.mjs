@@ -30,12 +30,23 @@ for (const questionId of ids) {
   const was = (row.upvotes || 0) - (row.downvotes || 0);
   if (row.status !== 'approved') { console.log(`${questionId}  is ${row.status}, left alone`); continue; }
   if (DRY) { console.log(`${questionId}  ${was} -> ${score}  (rev ${row.rev || 1})`); continue; }
-  await db.send(new UpdateCommand({
-    TableName,
-    Key: { questionId },
-    UpdateExpression: 'SET upvotes = :u, downvotes = :d, ver = :next',
-    ConditionExpression: 'ver = :ver',
-    ExpressionAttributeValues: { ':u': up, ':d': down, ':ver': row.ver, ':next': (row.ver || 0) + 1 },
-  }));
+  // A row no write has touched since `ver` was introduced has none, as the Lambda allows for.
+  const fresh = row.ver === undefined;
+  try {
+    await db.send(new UpdateCommand({
+      TableName,
+      Key: { questionId },
+      UpdateExpression: 'SET upvotes = :u, downvotes = :d, ver = :next',
+      ConditionExpression: fresh ? 'attribute_not_exists(ver)' : 'ver = :ver',
+      ExpressionAttributeValues: {
+        ':u': up, ':d': down, ':next': (row.ver || 0) + 1, ...(fresh ? {} : { ':ver': row.ver }),
+      },
+    }));
+  } catch (err) {
+    // A vote landed between the read and the write: report it and go on with the rest.
+    if (err.name !== 'ConditionalCheckFailedException') throw err;
+    console.log(`${questionId}  changed while being set, left alone; run it again`);
+    continue;
+  }
   console.log(`${questionId}  ${was} -> ${score}`);
 }
