@@ -31,12 +31,6 @@ export function upsertItemMeta(meta) {
   notify();
 }
 
-export function removeItemMeta(slug) {
-  bySlug.delete(slug.toLowerCase());
-  list = [...bySlug.values()];
-  notify();
-}
-
 // Case-insensitive, like getItem was — a slug can arrive from the URL bar or the search box.
 export function getItemMeta(slug) {
   return (slug && bySlug.get(slug.toLowerCase())) || null;

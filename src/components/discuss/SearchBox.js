@@ -26,18 +26,15 @@ function buildIndex(delta, items, base) {
   // Only events and blocks that carry discuss items are indexed. The academics, exams and
   // ground training are not searchable, because there is nothing in them to find.
   delta.briefedEvents().forEach((e) => {
-    // An event with no page of its own still resolves — to its block, which always has its
-    // JPPT metadata to show. Better than a link into a not-found.
-    const written = !!delta.getEvent(e.id);
     // A briefed block can hold events the JPPT names no items for (G01's, bar G0102).
-    if (!written) return;
+    if (!delta.getEvent(e.id)) return;
     rows.push({
       kind: 'event',
       key: `e:${e.id}`,
       label: e.id,
       sub: e.title,
-      to: written ? `${base}/e/${e.id}` : `${base}/b/${e.block}`,
-      written,
+      to: `${base}/e/${e.id}`,
+      written: true,
       terms: [norm(e.id), norm(e.title)],
     });
   });
@@ -248,9 +245,6 @@ function SearchBox() {
               <span className="discuss-search-kind">{kindLabel(row, delta.aircraft)}</span>
               <span className="discuss-search-label">{row.label}</span>
               {row.sub && <span className="discuss-search-sub">{row.sub}</span>}
-              {!row.written && row.kind === 'event' && (
-                <span className="discuss-tag">not written</span>
-              )}
             </li>
           ))}
         </ul>

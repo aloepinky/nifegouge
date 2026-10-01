@@ -45,10 +45,6 @@ export function getRecord(slug) {
   return readAll()[slug] || null;
 }
 
-export function hasDraft(slug) {
-  return !!readAll()[slug];
-}
-
 // `published` and `baseRev` describe the revision the draft sits on. `baseIds` records the ids
 // the edit started from, so a later save can tell a lost id from one that never existed;
 // `baseRev` is what Publish sends as the revision it expects to replace. Both are set when the
@@ -70,9 +66,4 @@ export function clearDraft(slug) {
   const all = readAll();
   delete all[slug];
   return writeAll(all);
-}
-
-export function listDrafts() {
-  const all = readAll();
-  return Object.keys(all).map((slug) => ({ slug, savedAt: all[slug].savedAt }));
 }

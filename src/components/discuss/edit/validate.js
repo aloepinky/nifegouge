@@ -39,40 +39,63 @@ function linkedSlugs(item) {
   return out;
 }
 
-// Every `refs` array on the page, with a label for the message.
-function allRefs(item) {
+// Ids are never shown, so a message names a part of the page the way the writer sees it: by
+// its heading and its position ("Paragraph 2 in "Entry"").
+const headingOf = (b, label) => (b.title && b.title.trim() ? `"${b.title}"` : `a ${label}`);
+
+// Every part of the page that carries an id or `refs`, in page order, with its plain name.
+function parts(item) {
   const out = [];
-  for (const n of item.numbers || []) out.push({ refs: n.refs, where: `Numbers row ${n.id}` });
-  const block = (b, where) => {
-    if (b.refs) out.push({ refs: b.refs, where });
-    for (const p of b.paras || []) out.push({ refs: p.refs, where: `${where} — ${p.id}` });
-    for (const f of b.figures || []) out.push({ refs: f.refs, where: `${where} — ${f.id}` });
-    for (const t of b.tables || []) out.push({ refs: t.refs, where: `${where} — ${t.id}` });
-    const walk = (list) => {
-      for (const x of list || []) {
-        out.push({ refs: x.refs, where: `${where} — ${x.id}` });
-        walk(x.sub);
-      }
+  (item.numbers || []).forEach((n, i) => out.push({ node: n, name: `Numbers row ${i + 1}` }));
+  const block = (b, label) => {
+    const name = headingOf(b, label);
+    // An untitled one reads "An untitled section", never "The section a section".
+    const self = b.title && b.title.trim() ? `The ${label} ${name}` : `An untitled ${label}`;
+    out.push({ node: b, name: self });
+    (b.paras || []).forEach((p, i) => out.push({ node: p, name: `Paragraph ${i + 1} in ${name}` }));
+    (b.figures || []).forEach((f, i) => out.push({ node: f, name: `Figure ${i + 1} in ${name}` }));
+    (b.tables || []).forEach((t, i) => out.push({ node: t, name: `Table ${i + 1} in ${name}` }));
+    const walk = (list, where) => {
+      (list || []).forEach((x, i) => {
+        const here = `${where ? 'Sub-item' : 'List item'} ${i + 1}${where ? ` of ${where}` : ''}`;
+        out.push({ node: x, name: `${here} in ${name}` });
+        walk(x.sub, here.toLowerCase());
+      });
     };
-    walk(b.items);
+    walk(b.items, '');
   };
   for (const s of item.sections || []) {
-    block(s, s.title);
-    for (const sub of s.subsections || []) block(sub, sub.title);
+    block(s, 'section');
+    for (const sub of s.subsections || []) block(sub, 'subsection');
   }
-  return out.filter((r) => r.refs && r.refs.length);
+  return out;
 }
 
-export function validate(item, baseIds) {
+// Every `refs` array on the page, with a label for the message.
+function allRefs(item) {
+  return parts(item)
+    .filter(({ node }) => node.refs && node.refs.length)
+    .map(({ node, name }) => ({ refs: node.refs, where: name }));
+}
+
+// `published` is the page as it is on the site, used only to name a section that has gone.
+export function validate(item, baseIds, published) {
   const errors = [];
   const warnings = [];
 
   // --- ids: the one thing worth blocking a save over ------------------------------------
   const ids = allIds(item);
+  const named = parts(item);
   for (const id of dupes(ids)) {
-    errors.push(`Two parts of the page share the id "${id}". Remove one of them.`);
+    const both = named.filter(({ node }) => node.id === id).map(({ name }) => name);
+    errors.push(`${both.slice(0, 2).join(' and ')} cannot be saved together. Remove one and add it again.`);
   }
-  if (ids.some((id) => !id || !id.trim())) errors.push('A part of the page has no id.');
+  for (const { node, name } of named) {
+    // Same reach as before: a blank id, not a missing one, which older pages may have.
+    if (typeof node.id === 'string' && node.id && !node.id.trim()) {
+      errors.push(`${name} cannot be saved. Remove it and add it again.`);
+    }
+  }
 
   if (baseIds && baseIds.length) {
     const now = new Set(ids);
@@ -86,8 +109,11 @@ export function validate(item, baseIds) {
       // prose section is rewritten as numbered steps — that is advisory.
       (anchors.has(id) ? lostAnchors : lostBlocks).push(id);
     }
+    const was = published ? parts(published) : [];
     for (const id of lostAnchors) {
-      errors.push(`The section "${id}" was renamed or removed, which would break links to it.`);
+      const hit = was.find(({ node }) => node.id === id);
+      const name = hit ? hit.name : 'A section that was on the page';
+      errors.push(`${name} was renamed or removed, which would break links to it.`);
     }
     // Paragraph and list ids come and go as prose is rewritten; nothing hangs off them yet.
     void lostBlocks;

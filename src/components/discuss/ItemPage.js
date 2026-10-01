@@ -629,6 +629,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   );
   const [publishing, setPublishing] = useState(false);
   const [conflict, setConflict] = useState(false);
+  const [conflictError, setConflictError] = useState(null);
   const [published, setPublished] = useState(false); // a publish just went through
   const [justSaved, setJustSaved] = useState(false);
   const bannerRef = useRef(null);
@@ -643,7 +644,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
 
   const view = draft || item;
   const baseIds = draftRecord ? draftRecord.baseIds : allIds(item);
-  const check = (next) => validate(next, baseIds);
+  const check = (next) => validate(next, baseIds, item);
   // A draft started against an older revision than the one now published.
   const draftBase = draftRecord && draftRecord.baseRev != null ? draftRecord.baseRev : rev;
   const behind = draft && draftBase !== rev;
@@ -720,11 +721,16 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   // Someone published first. The draft stays; loading the newest revision rebases it, so the
   // next publish goes against what is actually on the site.
   const loadNewest = async () => {
-    const newest = await refreshItem(item.slug);
-    if (newest && draft) saveDraft(item.slug, draft, newest.item, newest.rev);
-    setDraftRecord(getRecord(item.slug));
-    setConflict(false);
-    setPublishing(false);
+    try {
+      const newest = await refreshItem(item.slug);
+      if (newest && draft) saveDraft(item.slug, draft, newest.item, newest.rev);
+      setDraftRecord(getRecord(item.slug));
+      setConflictError(null);
+      setConflict(false);
+      setPublishing(false);
+    } catch (err) {
+      setConflictError(`Could not load the newest version. ${err.message}`);
+    }
   };
 
   // One editor open at a time, as a wiki does it. Rather than asking whether to throw away
@@ -766,7 +772,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
           baseRev={draftBase}
           item={view}
           onPublished={onPublished}
-          onConflict={() => setConflict(true)}
+          onConflict={() => { setConflictError(null); setConflict(true); }}
           onCancel={() => setPublishing(false)}
         />
       )}
@@ -777,6 +783,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
             edits are kept in this browser. Load the newest version, check your changes
             against it, then publish again.
           </p>
+          {conflictError && <p className="discuss-editor-warn">{conflictError}</p>}
           <div className="discuss-draft-actions">
             <ConfirmButton
               label="Load the newest version"

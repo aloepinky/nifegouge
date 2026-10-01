@@ -22,7 +22,7 @@ const MOUNTS = [
 ].filter((m) => shown((PROGRAMS.find((p) => p.label === m.school) || {}).discuss));
 
 // First path segments under a mount that are not an item's slug.
-const NOT_ITEMS = new Set(['e', 'b', 's', 'upload', 'edit', 'style']);
+const NOT_ITEMS = new Set(['e', 'b', 's', 'upload', 'edit']);
 
 export function warmDiscuss(pathname) {
   const mount = MOUNTS.find((m) => pathname === m.base || pathname.startsWith(`${m.base}/`));

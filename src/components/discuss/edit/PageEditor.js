@@ -7,7 +7,7 @@
 // the page, so the ids minted for a new paragraph in one section see the paragraphs added in
 // another a moment ago. The lead is edited here and nowhere else, because the lead is not a
 // section — MOS gives it no heading, so there is nowhere honest to hang a link.
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { clone } from './draft';
 import { newSectionId } from './ids';
 import { psmPage, psmPagesForSchool, psmLinksOf } from '../psmPages';
@@ -137,8 +137,16 @@ function PageEditor({ item, onSave, onCancel, check }) {
     delete next.diagram;
     delete next.limits;
     if (links.length) next.psmLinks = links;
+    // Numbered by position from the start, so a source appended later (numbered length + 1)
+    // cannot collide with an older page's gap; a citation of a number not in the list goes,
+    // as the save used to drop it.
+    const map = {};
+    (next.references || []).forEach((r, i) => { map[r.n] = i + 1; });
+    remapRefs(next, map);
+    if (next.references) next.references = next.references.map((r, i) => ({ ...r, n: i + 1, __key: `ref-${i}` }));
     return next;
   });
+  const keyCount = useRef(0);
   useEscape(onCancel);
 
   const problems = check ? check(p) : { errors: [], warnings: [] };
@@ -193,29 +201,42 @@ function PageEditor({ item, onSave, onCancel, check }) {
   };
 
   // --- references ------------------------------------------------------------------------
-  const refs = (p.references || []).map((r, i) => ({ ...r, __was: r.__was === undefined ? r.n : r.__was, n: i + 1 }));
-  const setRefs = (next) => set('references', next.map((r, i) => ({ ...r, n: i + 1 })));
-  const setRef = (i, key, value) => setRefs(refs.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
-  const removeRef = (i) => setRefs(refs.filter((_, j) => j !== i));
-  // A source added from inside a section or the Numbers box: appended, numbered next, and
-  // its number handed back so the block that asked can cite it.
-  const addReference = (ref) => {
+  // `n` is always the position. A removal or a reorder rewrites every citation on the form's
+  // copy of the page at once, so a source added afterwards can never take over the citations
+  // of one that was removed. `__key` keeps each row's identity across moves and is dropped
+  // on save.
+  const refs = p.references || [];
+  const newKey = () => `new-${(keyCount.current += 1)}`;
+  const reorderRefs = (next) =>
+    setP((prev) => {
+      const map = {};
+      for (const r of prev.references || []) map[r.n] = null;
+      next.forEach((r, i) => { map[r.n] = i + 1; });
+      const out = remapRefs(clone(prev), map);
+      const list = next.map((r, i) => ({ ...r, n: i + 1 }));
+      out.references = list.length ? list : undefined;
+      return out;
+    });
+  const setRef = (i, key, value) =>
+    setP((prev) => ({
+      ...prev,
+      references: (prev.references || []).map((r, j) => (j === i ? { ...r, [key]: value } : r)),
+    }));
+  const removeRef = (i) => reorderRefs(refs.filter((_, j) => j !== i));
+  const appendRef = (ref) => {
     const n = refs.length + 1;
-    setRefs([...refs, { n, ...ref }]);
+    setP((prev) => ({ ...prev, references: [...(prev.references || []), { ...ref, n, __key: newKey() }] }));
     return n;
   };
+  // A source added from inside a section or the Numbers box: appended, numbered next, and
+  // its number handed back so the block that asked can cite it.
+  const addReference = appendRef;
 
   const save = () => {
     const out = clone(p);
-    // Reference numbers are position-derived, so commit the renumber and rewrite every
-    // citation before the page goes out.
-    const map = {};
-    for (const r of out.references || []) map[r.__was === undefined ? r.n : r.__was] = r.n;
-    // Anything the page cited that is no longer in the list maps to nothing and its markers go.
-    for (const r of item.references || []) if (!(r.n in map)) map[r.n] = null;
-    remapRefs(out, map);
+    // Citations were rewritten as the list changed; only the row keys are left to drop.
     for (const r of out.references || []) {
-      delete r.__was;
+      delete r.__key;
       // A blank date prints the site's own date for the work, so it is not stored.
       if (typeof r.date === 'string') r.date = r.date.trim();
       if (!r.date) delete r.date;
@@ -387,7 +408,7 @@ function PageEditor({ item, onSave, onCancel, check }) {
         <h3>References</h3>
         <div className="discuss-editor-structure">
           {refs.map((r, i) => (
-            <div className="discuss-editor-row" key={r.__was ?? `new-${i}`}>
+            <div className="discuss-editor-row" key={r.__key}>
               <span className="discuss-editor-marker">{r.n}</span>
               <Line value={r.work} onChange={(v) => setRef(i, 'work', v)} placeholder="Publication, e.g. NATOPS" />
               <Line value={r.loc} onChange={(v) => setRef(i, 'loc', v)} placeholder="Section, e.g. §522 — Spin" />
@@ -403,7 +424,7 @@ function PageEditor({ item, onSave, onCancel, check }) {
               <RowTools
                 index={i}
                 count={refs.length}
-                onMove={(from, to) => setRefs(move(refs, from, to))}
+                onMove={(from, to) => reorderRefs(move(refs, from, to))}
                 onRemove={removeRef}
                 what="reference"
                 confirmRemove
@@ -413,7 +434,7 @@ function PageEditor({ item, onSave, onCancel, check }) {
           <button
             type="button"
             className="discuss-editor-add"
-            onClick={() => setRefs([...refs, { n: refs.length + 1, work: '', loc: '', pages: '' }])}
+            onClick={() => appendRef({ work: '', loc: '', pages: '' })}
           >
             + reference
           </button>

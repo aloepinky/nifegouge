@@ -415,6 +415,10 @@ function SectionEditor({
     : setLocal;
 
   const problems = !embedded && check ? check(s, added) : { errors: [], warnings: [] };
+  // New ids are minted against the page with this section's unsaved blocks in it. Embedded,
+  // `item` already is that page; on its own, `item` is the published record, which has not
+  // seen the paragraph added a moment ago, so the next one would mint the same id.
+  const scope = embedded ? item : { ...item, sections: [...(item.sections || []), s] };
   const refs = [...(item.references || []), ...(embedded ? [] : added)];
   const addRef = embedded
     ? onAddReference
@@ -604,7 +608,7 @@ function SectionEditor({
               references={refs}
               onAddReference={addRef}
               sectionId={s.id}
-              item={item}
+              item={scope}
               numbered={!!s.numbered}
               ep={!!s.ep}
               stepMarker={stepMarkers[i]}
@@ -621,14 +625,14 @@ function SectionEditor({
         <button
           type="button"
           className="discuss-editor-add"
-          onClick={() => addBlock('paras', { id: newParaId(item, s, s.id), text: '' })}
+          onClick={() => addBlock('paras', { id: newParaId(scope, s, s.id), text: '' })}
         >
           + paragraph
         </button>
         <button
           type="button"
           className="discuss-editor-add"
-          onClick={() => addBlock('items', { id: newBulletId(item, s, s.id), text: '' })}
+          onClick={() => addBlock('items', { id: newBulletId(scope, s, s.id), text: '' })}
         >
           {s.ep ? '+ step' : '+ list item'}
         </button>
@@ -637,7 +641,7 @@ function SectionEditor({
             type="button"
             className="discuss-editor-add"
             onClick={() => {
-              const block = { id: newBulletId(item, s, s.id), text: '' };
+              const block = { id: newBulletId(scope, s, s.id), text: '' };
               setS((prev) => {
                 const ep = toEp(prev);
                 return { ...ep, items: [...(ep.items || []), block] };
@@ -654,7 +658,7 @@ function SectionEditor({
             type="button"
             className="discuss-editor-add"
             title={`A ${NWC_LABELS[k].toLowerCase()} for the whole procedure`}
-            onClick={() => addBlock('items', { id: newBulletId(item, s, s.id), kind: k, text: '' })}
+            onClick={() => addBlock('items', { id: newBulletId(scope, s, s.id), kind: k, text: '' })}
           >
             + {NWC_LABELS[k].toLowerCase()}
           </button>
@@ -662,7 +666,7 @@ function SectionEditor({
         <button
           type="button"
           className="discuss-editor-add"
-          onClick={() => addBlock('figures', { id: newFigureId(item, s), src: '', alt: '', caption: '' })}
+          onClick={() => addBlock('figures', { id: newFigureId(scope, s), src: '', alt: '', caption: '' })}
         >
           + figure
         </button>
@@ -671,7 +675,7 @@ function SectionEditor({
           className="discuss-editor-add"
           onClick={() =>
             addBlock('tables', {
-              id: newTableId(item, s),
+              id: newTableId(scope, s),
               caption: '',
               cols: ['', ''],
               rows: [['', ''], ['', '']],

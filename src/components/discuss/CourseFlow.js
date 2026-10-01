@@ -261,7 +261,6 @@ export function Legend({ legend }) {
           )}
         </g>
       )))}
-      ))}
     </g>
   );
 }

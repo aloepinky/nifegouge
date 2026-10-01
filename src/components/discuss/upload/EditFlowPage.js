@@ -3,16 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import FlowEditor from './FlowEditor';
 import { ConfirmButton, Line, ProgramFields } from '../edit/fields';
 import { SCHOOLS, programOf, withDefaultProgram } from '../program';
-import { getSyllabus, rememberSyllabus, saveSyllabus, getAuthor } from '../discussApi';
-import { DELTA_ID } from '../SyllabusContext';
+import { fetchSyllabus, rememberSyllabus, saveSyllabus, getAuthor } from '../discussApi';
+import { useDiscussData } from '../DiscussData';
 import { useDiscussBase } from '../paths';
 
 // Correct a syllabus's course flow — Delta Primary's or an uploaded one. Anyone can; every
 // save is a new revision, so a bad one can be rolled back. An unsaved edit is kept in this
 // browser against the revision it started from, and a save that would overwrite someone
 // else's newer revision is refused.
-
-const baseFor = (root, id) => (id === DELTA_ID ? root : `${root}/s/${id}`);
 
 const draftKey = (id) => `discuss-flow-draft-${id}`;
 
@@ -47,7 +45,9 @@ function EditFlowPage({ record: initialRecord }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [conflict, setConflict] = useState(false);
-  const base = baseFor(root, record.id);
+  // The mount's own built-in syllabus lives at the root; any other is under /s/.
+  const { syllabusId } = useDiscussData();
+  const base = record.id === syllabusId ? root : `${root}/s/${record.id}`;
 
   const onCommit = useCallback((doc) => {
     if (doc === record.doc) return;
@@ -84,7 +84,7 @@ function EditFlowPage({ record: initialRecord }) {
 
   const loadNewest = async () => {
     try {
-      const newest = await getSyllabus(record.id);
+      const newest = await fetchSyllabus(record.id);
       if (!newest) throw new Error('It is no longer published.');
       rememberSyllabus(newest);
       writeDraft(record.id, null);

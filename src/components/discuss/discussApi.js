@@ -1,6 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { upsertItemMeta } from './registry';
-import { DELTA_ID } from './SyllabusContext';
 import { call, post, readMirror, savedMirror, makeStore } from '../serverApi';
 import { schoolNs } from '../programs';
 import { DEFAULT_PROGRAM } from './program';
@@ -10,8 +9,7 @@ import { DEFAULT_PROGRAM } from './program';
 // — the two bases, the `.status`/`.data` error contract, the store factory and the author
 // name — is shared with the jet log page and lives in ../serverApi.
 
-export { DELTA_ID };
-export { API_BASE_URL, MIRROR_BASE_URL, getAuthor, setAuthor } from '../serverApi';
+export { getAuthor, setAuthor } from '../serverApi';
 
 // ---------------------------------------------------------------------------------------
 // Which school's corpus this mount reads
@@ -30,8 +28,6 @@ let corpusSchool = DEFAULT_PROGRAM.school;
 export function setCorpusSchool(next) {
   if (next) corpusSchool = next;
 }
-
-export const getCorpusSchool = () => corpusSchool;
 
 // The cache key and the mirror path for a page of the current school. Cache keys carry the
 // school too, so two schools' `turn-pattern` never share an entry.
@@ -56,8 +52,6 @@ export async function fetchSyllabus(id) {
     throw err;
   }
 }
-
-export const getSyllabus = fetchSyllabus;
 
 export function listSyllabi() {
   return fetchSyllabusIndex().then((d) => (d ? d.syllabi : []));
@@ -85,10 +79,6 @@ export function rememberItem(record) {
     aircraft: record.item.aircraft || undefined,
     school: record.item.school || undefined,
   });
-}
-
-export function getCachedItem(slug) {
-  return items.get(keyOf(slug)) || null;
 }
 
 // The copy of a page this browser saved on an earlier visit, put in the store so the page draws
@@ -209,10 +199,6 @@ export function figureUploadUrl(slug, name) {
 
 export function rememberSyllabus(record) {
   syllabi.set(record.id, record);
-}
-
-export function getCachedSyllabus(id) {
-  return syllabi.get(id) || null;
 }
 
 // Re-read one syllabus from the mirror; whoever shows it re-renders.

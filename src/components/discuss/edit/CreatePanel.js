@@ -95,7 +95,7 @@ function CreatePanel({ slug: initialSlug, title: initialTitle, link, program: in
       <div className="discuss-editor-field">
         <label className="discuss-editor-label" htmlFor="create-slug">Address</label>
         <p className="discuss-editor-hint">
-          The page&apos;s web address: <code>/tw4/discuss/{clean || 'page-name'}</code>. Lowercase
+          The page&apos;s web address: <code>{base}/{clean || 'page-name'}</code>. Lowercase
           words joined by hyphens. It cannot be changed later.
         </p>
         <Line id="create-slug" value={slug} onChange={setSlug} maxLength={80} />

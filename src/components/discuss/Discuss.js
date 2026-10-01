@@ -24,8 +24,6 @@ import { SelectedSyllabusContext, recalledSyllabus, rememberSyllabus } from './R
 // someone opens them.
 const UploadPage = lazy(() => import('./upload/UploadPage'));
 const EditFlowPage = lazy(() => import('./upload/EditFlowPage'));
-// Lazy for a second reason: while the guide is a draft it has no route on the deployed site,
-// and this keeps it out of the bundle every reader downloads.
 
 // The word printed after a syllabus's name where it is not the school, by syllabus id. The
 // E-2D syllabus is `school: 'Advanced'`, since it shares Advanced's pages, but 1542.175D calls
