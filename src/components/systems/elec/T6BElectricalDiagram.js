@@ -183,12 +183,13 @@ function Wire({ d, live = false, reverse = false, dim = false }) {
 // live: match to the Wire's live prop
 const HopLayerContext = createContext(null);
 
-function HopShape({ x, y, dir = 'h', live = false, dim = false, r = 5 }) {
+// rev: the wire under the hop carries current right to left (the arc is drawn left to right).
+function HopShape({ x, y, dir = 'h', live = false, dim = false, rev = false, r = 5 }) {
   const arc = dir === 'h'
     ? `M ${x - r} ${y} A ${r} ${r} 0 0 1 ${x + r} ${y}`
     : `M ${x} ${y - r} A ${r} ${r} 0 0 1 ${x} ${y + r}`;
   if (!live) return <path d={arc} fill="none" stroke={C.stroke} strokeWidth={1.5} opacity={0.35} />;
-  return <El d={arc} live dim={dim} />;
+  return <El d={arc} live rev={rev} dim={dim} />;
 }
 
 function Hop(props) {
@@ -211,7 +212,8 @@ function Ground({ x, y }) {
 // ── Circuit breaker symbol ───────────────────────────────────────────
 // x,y: center of the crossing point (same as Hop).
 // The arc + T lifts upward when open, leaving the terminal circles behind.
-function CB({ x, y, isOpen = false, live = false, dim = false, onToggle, label, legend = false}) {
+// rev: as on Hop, current runs right to left through the breaker.
+function CB({ x, y, isOpen = false, live = false, dim = false, rev = false, onToggle, label, legend = false}) {
   const r        = 5;
   const lift     = isOpen ? 4 : 0;
   const arcLive  = live && !isOpen;
@@ -229,7 +231,7 @@ function CB({ x, y, isOpen = false, live = false, dim = false, onToggle, label, 
       {/* Arc + T — translate upward when open */}
       <g style={{ transform: `translateY(${-lift}px)`, transition: 'transform 0.18s ease' }}>
         {arcLive
-          ? <El d={arc} live dim={dim} />
+          ? <El d={arc} live rev={rev} dim={dim} />
           : <path d={arc} fill="none" stroke={arcColor} strokeWidth={1.5} opacity={arcOpacity} />}
         <line x1={x} y1={topY} x2={x} y2={topY - tStem}
           stroke={arcColor} strokeWidth={1} opacity={arcOpacity} />
@@ -681,7 +683,7 @@ export default function T6BElectricalDiagram() {
               MAIN BUS WIRE  (horizontal, y=MY)
           ═══════════════════════════════════════════════════════════ */}
           <Wire d={`M 631 ${LY-102} ${588+5} ${LY-102}`}  live={n1AtThreshold && !effStrRlyOn}/>
-          <Hop x={588} y={LY-102} dir="h"  live={n1AtThreshold && !effStrRlyOn}/>
+          <Hop x={588} y={LY-102} dir="h"  live={n1AtThreshold && !effStrRlyOn} rev />
           <Wire d={`M ${588-5} ${LY-102} 536 ${LY-102}`}  live={n1AtThreshold && !effStrRlyOn}/>
           <Wire d={`M 520 ${LY-102} 390 ${LY-102}`} live={effGenRlyOn} />
           <Wire d={`M 390 ${LY-102} 386 ${LY-102}`} live={(effBusTie && batRlyOn) || effGenRlyOn} reverse={!effGenRlyOn}  />
@@ -689,7 +691,7 @@ export default function T6BElectricalDiagram() {
           <Wire d={`M 325 ${LY-102} 316 ${LY-102}`} live={batRlyOn || (effBusTie && effGenRlyOn)} reverse={batWireReverse}/>
           <Wire d={`M 300 ${LY-102} 290 ${LY-102}`} live={batRlyOn || (effBusTie && effGenRlyOn)} reverse={batWireReverse}/>
           <Wire d={`M 290 ${LY-102} ${280+5} ${LY-102}`} live={batWireLive} reverse={batWireReverse} />
-          <Hop x={280} y={LY-102} dir="h" live={batWireLive} />
+          <Hop x={280} y={LY-102} dir="h" live={batWireLive} rev={!batWireReverse} />
           <Wire d={`M ${280-5} ${LY-102} 262 ${LY-102}`} live={batWireLive} reverse={batWireReverse} />
           <Rly x={300} y={LY-111} label={['BAT', 'RLY']} isOn={batRlyOn} />
           <Rly x={370} y={LY-111} label={['BUS', 'TIE', 'RLY']} isOn={sw.fBusTie} live={effBusTie && batRlyOn} onToggle={() => pick('bustierly')} />
@@ -698,11 +700,11 @@ export default function T6BElectricalDiagram() {
           <Wire d={`M 366 ${LY-102} 366 ${LY+99} L 235 ${LY+99}`} live={fwdBatBusLive} />
           {/* BUS TIE TO BUS TIE SWITCH*/}
           <Wire d={`M 499 260 L 499 285 L ${464+5} 285`} live={sw.fBusTie} dim />
-          <Hop x={464} y={285} dir="h" live={sw.fBusTie} dim />
+          <Hop x={464} y={285} dir="h" live={sw.fBusTie} dim rev />
           <Wire d={`M ${464-5} 285 L ${405+5} 285`} live={sw.fBusTie} dim />
-          <Hop x={405} y={285} dir="h" live={sw.fBusTie} dim />
+          <Hop x={405} y={285} dir="h" live={sw.fBusTie} dim rev />
           <Wire d={`M ${405-5} 285 L ${390+5} 285`} live={sw.fBusTie} dim />
-          <Hop x={390} y={285} dir="h" live={sw.fBusTie} dim />
+          <Hop x={390} y={285} dir="h" live={sw.fBusTie} dim rev />
           <Wire d={`M ${390-5} 285 L 378 285 L 378 ${LY-96}`} live={sw.fBusTie} dim />
           {/* BUS TIE TO GEN BUS*/}
           <Wire d={`M 390 ${LY-102} 390 ${RY+67} L ${405-5} ${RY+67}`} live={fwdGenBusLive}  />
@@ -712,7 +714,7 @@ export default function T6BElectricalDiagram() {
           <Wire d={`M ${464+5} ${RY+67} L 555 ${RY+67}`}  live={fwdGenBusLive}/>
           {/* SHUNT TO EICAS*/}
           <Wire d={`M 346 ${LY-102} 346 ${LY-50} L ${290+5} ${LY-50}`}  live={batRlyOn || (effBusTie && effGenRlyOn)}/>
-          <Hop x={290} y={LY-50} dir="h"  live={batRlyOn || (effBusTie && effGenRlyOn)}/>
+          <Hop x={290} y={LY-50} dir="h"  live={batRlyOn || (effBusTie && effGenRlyOn)} rev />
           <Wire d={`M ${290-5} ${LY-50} L 150 ${LY-50}`} live={batRlyOn || (effBusTie && effGenRlyOn)}/>
           <EICASDisplay x={68} y={LY-50-19} on={eicasOn} amps={eicasAmps} volts={eicasVolts} />
           {/* EICAS-style EP warning messages below display — only when display is powered */}
@@ -992,9 +994,9 @@ export default function T6BElectricalDiagram() {
           <Wire d={`M 464 260 L 464 ${LY+210}`} live={sw.fAviMstr} dim/>
           {/* Horizontal bus below both relays */}
           <Wire d={`M ${LX+LW+80-5} ${LY+210} L ${LX+188} ${LY+210}`} live={sw.fAviMstr} dim/>
-          <Hop x={LX+LW+80} y={LY+210} dir="h" live={sw.fAviMstr} dim/>
+          <Hop x={LX+LW+80} y={LY+210} dir="h" live={sw.fAviMstr} dim rev />
           <Wire d={`M 400 ${LY+210} L ${LX+LW+80+5} ${LY+210}`} live={sw.fAviMstr} dim/>
-          <Hop x={405} y={LY+210} dir="h" live={sw.fAviMstr} dim/>
+          <Hop x={405} y={LY+210} dir="h" live={sw.fAviMstr} dim rev />
           <Wire d={`M 464 ${LY+210} L 410 ${LY+210}`} live={sw.fAviMstr} dim/>
           <Wire d={`M 464 ${LY+210} L 472 ${LY+210}`} live={sw.fAviMstr} dim/>
           <Hop x={477} y={LY+210} dir="h" live={sw.fAviMstr} dim/>
@@ -1008,39 +1010,39 @@ export default function T6BElectricalDiagram() {
           {/* BATT SWITCH TO EXT PWR RLY */}
           <Wire d={`M 463 125 463 100 `} live={batRlyOn & !batRlyOnRear} dim/>
           <Wire d={`M 463 100 L ${390+5} 100`} live={batRlyOn} dim/>
-          <Hop x={390} y={100} dir="h" live={batRlyOn} dim/>
+          <Hop x={390} y={100} dir="h" live={batRlyOn} dim rev />
           <Wire d={`M ${390-5} 100 L ${378+5} 100`} live={batRlyOn} dim/>
-          <Hop x={378} y={100} dir="h" live={batRlyOn} dim/>
+          <Hop x={378} y={100} dir="h" live={batRlyOn} dim rev />
           <Wire d={`M ${378-5} 100 L ${366+5} 100`} live={batRlyOn} dim/>
-          <Hop x={366} y={100} dir="h" live={batRlyOn} dim/>
+          <Hop x={366} y={100} dir="h" live={batRlyOn} dim rev />
           <Wire d={`M ${366-5} 100 L ${346+5} 100`} live={batRlyOn} dim/>
-          <Hop x={346} y={100} dir="h" live={batRlyOn} dim/>
+          <Hop x={346} y={100} dir="h" live={batRlyOn} dim rev />
           <Wire d={`M ${346-5} 100 L ${290+5} 100`} live={batRlyOn} dim/>
           <Wire d={`M 308 100 L 308 85`} live={batRlyOn} dim/>
-          <Hop x={290} y={100} dir="h" live={batRlyOn} dim/>
+          <Hop x={290} y={100} dir="h" live={batRlyOn} dim rev />
           <Wire d={`M ${290-5} 100 L 280 100 L 280 28`} live={batRlyOn} dim/>
           <Wire d={`M 623 170 623 100 L ${588+5} 100`} live={batRlyOnRear} dim/>
-          <Hop x={588} y={100} dir="h" live={batRlyOnRear} dim/>
+          <Hop x={588} y={100} dir="h" live={batRlyOnRear} dim rev />
           <Wire d={`M ${588-5} 100 L ${575+5} 100`} live={batRlyOnRear} dim/>
-          <Hop x={575} y={100} dir="h" live={batRlyOnRear} dim/>
+          <Hop x={575} y={100} dir="h" live={batRlyOnRear} dim rev />
           <Wire d={`M ${575-5} 100 L ${528+5} 100`} live={batRlyOnRear} dim/>
-          <Hop x={528} y={100} dir="h" live={batRlyOnRear} dim/>
+          <Hop x={528} y={100} dir="h" live={batRlyOnRear} dim rev />
           <Wire d={`M ${528-5} 100 L 463 100`} live={batRlyOnRear} dim/>
           {/* GEN SWITCH TO GEN RLY */}
           <Wire d={`M 499 125 499 110 L 528 110`} live={effGenRlyOn && sw.fGen}  dim/>
           <Wire d={`M 528 110 L 528 85`} live={effGenRlyOn}  dim/>
           <Wire d={`M 660 170 660 165 L 630 165 L 630 110 L ${623+5} 110`} live={effGenRlyOn && sw.rGen}  dim/>
-          <Hop x={623} y={110} dir="h" live={effGenRlyOn && sw.rGen}  dim/>
+          <Hop x={623} y={110} dir="h" live={effGenRlyOn && sw.rGen}  dim rev />
           <Wire d={`M ${623-5} 110 L ${588+5} 110`} live={effGenRlyOn && sw.rGen}  dim/>
-          <Hop x={588} y={110} dir="h" live={effGenRlyOn && sw.rGen}  dim/>
+          <Hop x={588} y={110} dir="h" live={effGenRlyOn && sw.rGen}  dim rev />
           <Wire d={`M ${588-5} 110 L ${575+5} 110`} live={effGenRlyOn && sw.rGen}  dim/>
-          <Hop x={575} y={110} dir="h" live={effGenRlyOn && sw.rGen}  dim/>
+          <Hop x={575} y={110} dir="h" live={effGenRlyOn && sw.rGen}  dim rev />
           <Wire d={`M ${575-5} 110 L 528 110`} live={effGenRlyOn && sw.rGen}  dim/>
           {/* AUX BAT SWITCH TO AUX BAT RLY */}
           <Wire d={`M 535 125 535 120 L ${499+5} 120`} live={sw.fAuxBat} dim/>
-          <Hop x={499} y={120} dir="h" live={sw.fAuxBat} dim/>
+          <Hop x={499} y={120} dir="h" live={sw.fAuxBat} dim rev />
           <Wire d={`M ${499-5} 120 L ${463+5} 120`} live={sw.fAuxBat} dim/>
-          <Hop x={463} y={120} dir="h" live={sw.fAuxBat} dim/>
+          <Hop x={463} y={120} dir="h" live={sw.fAuxBat} dim rev />
           <Wire d={`M ${463-5} 120 L 405 120 L 405 ${RY+240} L 354 ${RY+240} L 354 ${RY+234}`} live={sw.fAuxBat} dim/>
 
           {/* ═══════════════════════════════════════════════════════════
@@ -1080,7 +1082,7 @@ export default function T6BElectricalDiagram() {
           {/* Wire: just below TEST (FWD GEN BUS col-0 row-3) → FWD AVI GEN BUS header */}
           <Wire d={`M ${RX-3} ${RY+107} L ${541+5} ${RY+107}`} live={fwdGenBusLive} />
           <Wire d={`M ${541-5} ${RY+107} L ${RX-26} ${RY+107}`} live={fwdGenBusLive} />
-          <CB x={541} y={RY+107} live={fwdGenBusLive} isOpen={cb.fwdAvi} onToggle={() => togCb('fwdAvi')} label={['FWD','AVI']}/>
+          <CB x={541} y={RY+107} live={fwdGenBusLive} isOpen={cb.fwdAvi} onToggle={() => togCb('fwdAvi')} label={['FWD','AVI']} rev />
           <Rly x={RX-43} y={RY+98} label={['AVI', 'MSTR', 'RLY']} isOn={sw.fAviMstr||cb.fwdAvi} onToggle={() => pick('avimstrrly')} />
           <Wire d={`M ${RX-44} ${RY+107} L ${RX-50} ${RY+107} L ${RX-50} ${RY+195} L ${RX} ${RY+195}`}  live={fwdAviGenLive}/>
 
@@ -1120,7 +1122,7 @@ export default function T6BElectricalDiagram() {
           {/* Wire: AFT AVI box → AFT AVI GEN BUS (outside right, outer column) */}
           <Wire d={`M ${RX+RW+3} ${RY+255} L ${RX+RW+10} ${RY+255} L ${RX+RW+10} ${RY+330} L ${RX+RW} ${RY+330}`}   live={fwdAviGenLive}/>
           {/* Hop: AFT GEN wire jumps over AFT AVI wire at their crossing */}
-          <Hop x={RX+RW+10} y={RY+285} dir="h" live={fwdGenBusLive} />
+          <Hop x={RX+RW+10} y={RY+285} dir="h" live={fwdGenBusLive} rev />
 
           {/* AFT AVI GEN BUS */}
           <Bus x={RX} y={RY+325} w={RW} label="AFT AVI GEN BUS" color={C.avi} id="aftavigenbus" sel={sel} onSel={pick} />
@@ -1161,11 +1163,11 @@ export default function T6BElectricalDiagram() {
           {/* Wire: AUX BAT + circle → Switch */}
           <Wire d={`M 476 ${RY+196} L 458 ${RY+178} L ${438+5} ${RY+178}`} live={true} />
           <Wire d={`M ${438-5} ${RY+178} L ${478-60} ${RY+178} L ${478-60} ${RY+210} L 410 ${RY+210}`} live={!cb.fwdBatAux} />
-          <CB x={438} y={RY+178} live={true} isOpen={cb.fwdBatAux} onToggle={() => togCb('fwdBatAux')} label={['AUX', 'BAT']} />
-          <Hop x={405} y={RY+210} dir="h" live={!cb.fwdBatAux} />
+          <CB x={438} y={RY+178} live={true} isOpen={cb.fwdBatAux} onToggle={() => togCb('fwdBatAux')} label={['AUX', 'BAT']} rev />
+          <Hop x={405} y={RY+210} dir="h" live={!cb.fwdBatAux} rev />
           <Wire d={`M 400 ${RY+210} L 364 ${RY+210}`} live={!cb.fwdBatAux} />
           <Wire d={`M ${478-60} ${RY+210} L ${478-60} ${RY+229} L 410 ${RY+229}`} live={!cb.fwdBatAux} dim/>
-          <Hop x={405} y={RY+229} dir="h" live={!cb.fwdBatAux} dim/>
+          <Hop x={405} y={RY+229} dir="h" live={!cb.fwdBatAux} dim rev />
           <Wire d={`M 400 ${RY+229} L 362 ${RY+229}`} live={!cb.fwdBatAux} dim/>
           {/* Wire: FWD BAT BUS (LDG row height) → AUX BAT + circle */}
           <Wire d={`M ${LX+LW+3} ${LY+193} L ${268-5} ${LY+193}`} live={fwdBatBusLive && !cb.fwdBatAux} />
