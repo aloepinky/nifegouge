@@ -38,14 +38,17 @@ export function primaryEpStats({ titles, answers, nwc, nwcGroups }) {
 // unfixed item's `text`, which is also all first-letter mode hides (BriefView.js). A fixed item
 // or section, a section's own text and subtext are always on screen, so none is counted.
 //
-// Within that, each school's guide marks what is memorized its own way:
+// Within that, each guide marks what is memorized its own way, so the rules are looked up by
+// the guide's wing first and then by school:
 //
-// - Primary's guide puts the words said aloud in quotation marks and wraps them in
+// - TW-4's guide (Primary) puts the words said aloud in quotation marks and wraps them in
 //   instructions ("Brief history of airsickness if applicable."), so only quoted words count.
 //   A quote the guide opens and never closes runs to the end of the block.
 // - NIFE's guide quotes almost nothing (20 words of 840), so its text counts whole, less the
 //   items that are looked up rather than memorized and the line that only names the pubs.
+// - TW-5's guide quotes nothing, so every word first-letter mode hides counts.
 const SAID_RULES = {
+  'tw-5': {},
   primary: { quotedOnly: true },
   nife: { skipItems: [/^crew day and rest$/i, /^told$/i, /^profile\b/i] },
 };
@@ -65,7 +68,9 @@ function quotedWords(text) {
 }
 
 export function briefWords(brief, school = brief.school) {
-  const rules = SAID_RULES[String(school || '').toLowerCase()] || {};
+  const key = (v) => String(v || '').toLowerCase();
+  const unit = brief.source && brief.source.unit;
+  const rules = SAID_RULES[key(unit)] || SAID_RULES[key(school)] || {};
   const count = (text) => {
     if (!text) return 0;
     const kept = text.split('\n').filter((l) => !SKIP_LINES.some((re) => re.test(l))).join('\n');
@@ -262,9 +267,14 @@ export function syllabusRows(records) {
   }));
 }
 
-// One row per brief for the About page's Briefs panel.
+// One row per brief for the About page's Briefs panel. `unit` is the wing whose guide it came
+// from, which splits Primary's panel into TW-4 and TW-5 as the Briefs tab's dropdown does.
 export function briefRows(records) {
-  return (records || []).map((r) => ({ aircraft: r.brief.aircraft, words: briefWords(r.brief) }));
+  return (records || []).map((r) => ({
+    aircraft: r.brief.aircraft,
+    unit: (r.brief.source && r.brief.source.unit) || null,
+    words: briefWords(r.brief),
+  }));
 }
 
 // The questions the Questions tab would draw from: approved, and filed under a topic and lecture

@@ -125,19 +125,26 @@ export function EpStats({ platforms, byAircraft = false }) {
   );
 }
 
+// A school whose briefs come from two or more wings' guides (Primary: TW-4 and TW-5) shows one
+// group per wing, side by side like its syllabi, as the Briefs tab's dropdown splits them. A
+// brief that names no wing is shown under every wing, as that tab does.
 export function BriefStats({ school, platforms = [], byAircraft = false }) {
   const briefs = useFigures('briefs', 'briefs', loadBriefs, briefRows, school);
   const titled = perAircraft(platforms, byAircraft);
-  const planes = titled ? platforms.map((p) => p.aircraft) : [null];
+  const units = titled || !briefs ? [] : [...new Set(briefs.map((b) => b.unit).filter(Boolean))].sort();
+  const groups = units.length > 1
+    ? units.map((unit) => ({ key: unit, title: unit, test: (b) => !b.unit || b.unit === unit }))
+    : (titled ? platforms.map((p) => p.aircraft) : [null])
+      .map((aircraft) => ({ key: aircraft || 'all', title: aircraft, test: (b) => !aircraft || b.aircraft === aircraft }));
   return (
-    <div className="about-stats">
-      {planes.map((aircraft) => {
-        const mine = !briefs ? null : briefs.filter((b) => !aircraft || b.aircraft === aircraft);
+    <div className={units.length > 1 ? 'about-stats about-stats--across' : 'about-stats'}>
+      {groups.map(({ key, title, test }) => {
+        const mine = !briefs ? null : briefs.filter(test);
         if (mine && titled && !mine.length) return null;
         return (
           <Group
-            key={aircraft || 'all'}
-            title={aircraft}
+            key={key}
+            title={title}
             stats={[
               { label: 'briefs', one: 'brief', value: mine && mine.length },
               { label: 'words to memorize', one: 'word to memorize', value: mine && mine.reduce((n, b) => n + b.words, 0) },
