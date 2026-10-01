@@ -202,14 +202,19 @@ function readHeader(headerLine, rows) {
   const find = (t) => hw.find((w) => w.text.toLowerCase() === t.toLowerCase());
   const media = find('Media');
   const title = find('Title');
-  const events = find('Events');
+  // The E-2D syllabus heads its G10 column "Event"; without it the count of 7 joined the title.
+  const events = find('Events') || find('Event');
   const hrs = find('Hrs');
   const hx = find('H/X');
   const name = find('Name');
 
   const words = rows.flatMap((l) => l.words);
   const idWord = words.find((w) => BLOCK_ID.test(w.text));
-  const out = { id: idWord ? idWord.text : null, media: [], title: [], blkName: [], numbers: [] };
+  const out = { id: idWord ? idWord.text : null, media: [], title: [], blkName: [], numbers: [], note: [] };
+  // Words under the number columns are a cell's text where a number would be: FAM42 prints
+  // "See Syllabus Note c and d" in its H/X cell. They are not the title.
+  const firstNumber = [events, hrs, hx].find(Boolean);
+  const numbersFrom = firstNumber ? firstNumber.x - 6 : Infinity;
 
   const nums = [];
   words.forEach((w) => {
@@ -229,6 +234,7 @@ function readHeader(headerLine, rows) {
     const reach = media ? Math.max(media.x2 - media.x, 12) : 0;
     if (name && c >= (hrs ? (hrs.x2 + name.x) / 2 : name.x - 20)) out.blkName.push(w.text);
     else if (media && title && c < (media.x2 + title.x) / 2 && c <= media.x2 + reach) out.media.push(w.text);
+    else if (c >= numbersFrom) out.note.push(w.text);
     else out.title.push(w.text);
   });
 
@@ -550,6 +556,7 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
         briefed: discuss.briefed,
       };
       if (head.hx != null) row.hx = head.hx;
+      else if (head.note.length) row.hxNote = head.note.join(' ');
       const blkName = head.blkName.join(' ');
       if (blkName) row.blkName = blkName;
       const prereqs = prereqText(sections.prerequisites);

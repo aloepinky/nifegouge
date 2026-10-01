@@ -154,6 +154,19 @@ CASES.forEach((c) => {
       expect(fam42.every((t) => !/^[a-z]\.\s/.test(t))).toBe(true);
     });
 
+    // FAM42 prints "See Syllabus Note c and d" in its H/X cell, and the E-2D heads G08's and
+    // G10's count column "Event": neither may end up in a title.
+    test('keeps the number columns out of block titles', () => {
+      const block = (id) => doc.blocks.find((b) => b.id === id);
+      expect(block('FAM42').title).toBe('Emergency Familiarization');
+      expect(block('FAM42').hxNote).toMatch(/^See Syllabus Notes? c\.? and d\.?$/);
+      expect(block('G10').title).toBe('Flight Rules and Regulations (FRR)');
+      expect(block('G10').hxNote).toBeUndefined();
+      expect(doc.events.find((e) => e.id === 'FAM4201').title).toBe('Emergency Familiarization');
+      // (A title may end in a number of its own: "Instrument Approaches 1".)
+      doc.blocks.forEach((b) => expect([b.id, b.title]).toEqual([b.id, expect.not.stringMatching(/See Syllabus/)]));
+    });
+
     test('traces the course flow', () => {
       expect(doc.flow.NODES.length).toBeGreaterThan(40);
       expect(doc.flow.EDGES.length).toBeGreaterThan(40);
