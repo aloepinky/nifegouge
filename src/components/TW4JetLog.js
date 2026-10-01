@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import JetLogLibrary from './jetlogs/JetLogLibrary';
 import { DEFAULT_PARAMS, applyParams, captureParams } from './jetlogs/params';
 
@@ -93,6 +93,9 @@ for (const [ch, freqs] of Object.entries(CHANNEL_FREQS)) {
   }
 }
 
+// Alternate table rows use r200+ namespace so main table can grow freely
+const ALT_ROWS = [200, 202, 204, 206];
+
 function TW4JetLog() {
   const [mainRowCount, setMainRowCount] = useState(9);
   const [editRowsMode, setEditRowsMode] = useState(false);
@@ -133,9 +136,6 @@ function TW4JetLog() {
   const [solveBlocked, setSolveBlocked] = useState(false); // the last Solve refused to run
   const [intClimbs, setIntClimbs] = useState([]); // [{row: pairIdx, elev: '', alt: number}]
   const containerRef = useRef(null);
-
-  // Alternate table rows use r200+ namespace so main table can grow freely
-  const ALT_ROWS = [200, 202, 204, 206];
 
   // The jet log PDFs have a fixed number of row slots before the Total row
   // (IFR: STTO + 8 legs, VFR: STTO + 13 legs); row pairs at this index or
@@ -260,6 +260,8 @@ function TW4JetLog() {
       }
       return next;
     });
+    // approachCells is declared further down and reads exactly the params listed here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vfrMode, routeBadges, holdCells, params.approachTime, params.approachFuel, params.holdTime, clncFields.lbsPhCruise]);
 
   // Derive a stable key from alt-row distances so the effect below re-runs only when dist changes.
@@ -596,14 +598,14 @@ function TW4JetLog() {
     return `${h}+${String(m).padStart(2, '0')}+${String(s).padStart(2, '0')}`;
   };
 
-  const sumCells = (ids) => {
+  const sumCells = useCallback((ids) => {
     const total = ids.reduce((acc, id) => {
       const raw = (splitCells[id]?.bottom ?? inputValues[id] ?? '');
       const num = parseFloat((raw).match(/-?\d+(\.\d+)?/)?.[0]);
       return acc + (isNaN(num) ? 0 : num);
     }, 0);
     return total > 0 ? Math.round(total * 10) / 10 : null;
-  };
+  }, [splitCells, inputValues]);
 
   // Sums ETE cells that may contain "mm+ss" (VFR) or plain minutes (IFR/alt).
   // Returns total seconds, or null if all empty.
@@ -903,20 +905,6 @@ function TW4JetLog() {
           </div>
         </div>
       </td>
-    );
-  };
-
-  const pairHasData = (pairIdx) => {
-    const top = pairIdx * 2;
-    const bot = top + 1;
-    const hasVal = (id) => (inputValues[id] || '').trim() !== '';
-    if (hasVal(`r${top}c0_a`) || hasVal(`r${top}c0_b`)) return true;
-    const otherTopCols = ['c1','c2','c3','c4','c5','c6','c7','c8'];
-    const botCols = ['c0','c1','c2'];
-    return (
-      otherTopCols.some(col => hasVal(`r${top}${col}`)) ||
-      botCols.some(col => hasVal(`r${bot}${col}`)) ||
-      Object.keys(splitCells).some(k => k.startsWith(`r${top}c`) || k.startsWith(`r${bot}c`))
     );
   };
 
@@ -1406,12 +1394,12 @@ function TW4JetLog() {
     }
     if (finalEFR === null) return '';
     return formatEteSum(finalEFR / lbsPh * 60);
-  }, [inputValues, clncFields.lbsPhCruise, clncFields.vfrLbsPh, vfrMode, mainRowCount]);
+  }, [sumCells, inputValues, clncFields.lbsPhCruise, clncFields.vfrLbsPh, vfrMode, mainRowCount]);
 
   const timeDisplay = useMemo(() => {
     const t = sumCells(ALT_ROWS.map(r => `r${r}c4`));
     return t != null ? formatEteSum(t) : '';
-  }, [inputValues]);
+  }, [sumCells]);
 
   const fuelPlan = useMemo(() => {
     const approachFuelParam = parseFloat(params.approachFuel) || 0;
@@ -1759,7 +1747,7 @@ function TW4JetLog() {
     setPdfBusy(true);
     setPdfError(null);
     try {
-      const { PDFDocument, PDFName, PDFArray, PDFString, StandardFonts, rgb, degrees } = await import('pdf-lib');
+      const { PDFDocument, PDFName, PDFString, StandardFonts, rgb, degrees } = await import('pdf-lib');
       const [pdfBytes, jlBytes] = await Promise.all([
         fetch('/DD-1801.pdf').then(r => r.arrayBuffer()),
         fetch(`/${vfrMode ? 'vfrflightlog' : 'ifrflightlog'}.pdf`).then(r => r.arrayBuffer()),
@@ -2123,7 +2111,7 @@ function TW4JetLog() {
 
       const toWinAnsi = (s) => s
         .replace(/→/g, ' ->').replace(/←/g, '<-').replace(/↑/g, '^').replace(/↓/g, 'v')
-        .replace(/[^\x00-\xFF]/g, '?');
+        .replace(/[\u0100-\uFFFF]/g, '?');
 
       // All coordinates in draw/drawFlipped are VISUAL coordinates:
       //   vx: 0 = left edge of landscape page, increases rightward

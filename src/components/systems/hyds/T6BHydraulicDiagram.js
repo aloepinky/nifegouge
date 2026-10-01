@@ -178,12 +178,6 @@ export default function T6BHydraulicDiagram() {
 
   const FLAP_SNAP_Y = { UP: 663, TO: 682, LDG: 701 };
 
-  const clientToSvgY = (clientY) => {
-    if (!svgRef.current) return 0;
-    const rect = svgRef.current.getBoundingClientRect();
-    return (clientY - rect.top) * (820 / rect.height);
-  };
-
   const handleFlapMouseDown = (e) => { e.preventDefault(); flapDragging.current = true; };
 
   const sbDragging      = useRef(false);
@@ -573,7 +567,6 @@ export default function T6BHydraulicDiagram() {
 
   const _goingDown  = gearPhase.startsWith('to_down');
   const _goingUp    = gearPhase.startsWith('to_up');
-  const _mainRed    = gearLights[0][1] === 1;
   const _noseRed    = gearLights[1][1] === 1;
   const _mainGreen  = gearLights[0][0] === 1;
   const doorDownHL  = gearPhase === 'to_down_1' || gearPhase === 'to_up_1';

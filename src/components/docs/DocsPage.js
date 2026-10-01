@@ -23,7 +23,6 @@ function DocsPage({ school }) {
 
   // Document states
   const [docs, setDocs] = useState([]);
-  const [filteredDocs, setFilteredDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState('all');
@@ -46,7 +45,6 @@ function DocsPage({ school }) {
 
   // Links states
   const [usefulLinks, setUsefulLinks] = useState([]);
-  const [filteredLinks, setFilteredLinks] = useState([]);
 
   // Messages, shown where they happened rather than in a pop-up: a form's problem inside the
   // form (which stays open), a row's problem on the row until that row is tried again, and a
@@ -104,18 +102,12 @@ function DocsPage({ school }) {
     storageKey: storage.outdatedLinks, setItems: setUsefulLinks,
   });
 
+  // Load both lists once, when the page opens.
   useEffect(() => {
     fetchDocuments();
     fetchLinks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    filterDocuments();
-  }, [docs, selectedTopic, searchTerm, sortBy]);
-
-  useEffect(() => {
-    filterLinks();
-  }, [usefulLinks, selectedTopic, searchTerm, sortBy]);
 
   // The first load shows the loading screen; a refresh keeps the lists on screen until the new
   // ones arrive, and keeps the old ones if it fails.
@@ -179,9 +171,9 @@ function DocsPage({ school }) {
       });
   };
 
-  const filterDocuments = () => setFilteredDocs(filterAndSort(docs, doc => doc.fileName));
+  const filteredDocs = filterAndSort(docs, doc => doc.fileName);
 
-  const filterLinks = () => setFilteredLinks(filterAndSort(usefulLinks, link => link.title));
+  const filteredLinks = filterAndSort(usefulLinks, link => link.title);
 
   const topicLabel = (value) => topics.find(t => t.value === value)?.label || 'Other';
 

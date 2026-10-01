@@ -16,6 +16,7 @@ test('parameters that name the page still tell links apart', () => {
 test('only web addresses are links', () => {
   expect(isWebLink('https://quizlet.com/1')).toBe(true);
   expect(isWebLink('http://example.com')).toBe(true);
+  // eslint-disable-next-line no-script-url -- the test is that this is refused
   expect(isWebLink('javascript:alert(1)')).toBe(false);
   expect(isWebLink('data:text/html,hi')).toBe(false);
   expect(isWebLink('quizlet.com/1')).toBe(false);

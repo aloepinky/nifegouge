@@ -1,4 +1,4 @@
-﻿const STOP_WORDS = new Set(['a','an','the','and','or','of','for','by','with','to','in','on','at','be','is']);
+const STOP_WORDS = new Set(['a','an','the','and','or','of','for','by','with','to','in','on','at','be','is']);
 
 const ABBREVS = {
   'req':  'required',

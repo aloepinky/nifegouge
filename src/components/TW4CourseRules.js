@@ -264,7 +264,7 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
       });
       layersRef.current = {};
     };
-  }, [url, map]);
+  }, [url, map, setFolderTree]);
 
   // Update visible layers when selection changes
   useEffect(() => {
@@ -378,7 +378,7 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
 function TW4CourseRules() {
   const [folderTree, setFolderTree] = useState({});
   const [expandedFolders, setExpandedFolders] = useState({});
-  const [visibleLayers, setVisibleLayers] = useState({
+  const [visibleLayers] = useState({
     'Airspace': true,
     'Arrivals': true,
     'Departures': true,
@@ -858,77 +858,6 @@ function TW4CourseRules() {
 
     setFolderVisibility(allFolderPaths);
     setTreeFeatureVisibility(allFeatureIds);
-  };
-
-  // Show all folders and features in a specific parent folder only
-  const showAllInSelectedArea = () => {
-    if (!selectedParentFolder || !folderTree[selectedParentFolder]) return;
-
-    const folderPaths = {};
-    const featureIds = {};
-
-    const collectPaths = (folder, basePath) => {
-      const path = basePath;
-      // Always show all folders including the parent
-      folderPaths[path] = true;
-
-      // Collect features
-      if (folder.features) {
-        folder.features.forEach(feature => {
-          featureIds[feature.id] = true;
-        });
-      }
-
-      // Recurse into children
-      if (folder.children) {
-        Object.entries(folder.children).forEach(([childName, childFolder]) => {
-          const childPath = `${path} > ${childName}`;
-          collectPaths(childFolder, childPath);
-        });
-      }
-    };
-
-    collectPaths(folderTree[selectedParentFolder], selectedParentFolder);
-
-    setFolderVisibility(prev => ({ ...prev, ...folderPaths }));
-    setTreeFeatureVisibility(prev => ({ ...prev, ...featureIds }));
-  };
-
-  // Hide all folders and features in a specific parent folder only
-  const hideAllInSelectedArea = () => {
-    if (!selectedParentFolder || !folderTree[selectedParentFolder]) return;
-
-    const folderPaths = {};
-    const featureIds = {};
-
-    const collectPaths = (folder, basePath, isRoot = false) => {
-      const path = basePath;
-
-      // Don't hide the root parent folder, only its children
-      if (!isRoot) {
-        folderPaths[path] = false;
-      }
-
-      // Collect features
-      if (folder.features) {
-        folder.features.forEach(feature => {
-          featureIds[feature.id] = false;
-        });
-      }
-
-      // Recurse into children
-      if (folder.children) {
-        Object.entries(folder.children).forEach(([childName, childFolder]) => {
-          const childPath = `${path} > ${childName}`;
-          collectPaths(childFolder, childPath, false);
-        });
-      }
-    };
-
-    collectPaths(folderTree[selectedParentFolder], selectedParentFolder, true);
-
-    setFolderVisibility(prev => ({ ...prev, ...folderPaths }));
-    setTreeFeatureVisibility(prev => ({ ...prev, ...featureIds }));
   };
 
   // Build folder options for quiz dropdown

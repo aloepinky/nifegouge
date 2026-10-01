@@ -121,15 +121,9 @@ export default function T6BPropDiagram() {
   const oilAnimRef = useRef(null);
   const [offTransition, setOffTransition] = useState(false); // true while animating out of off zone
 
-  // Tube fill factor (0–1): animates independently from oil at a gentler rate
-  // so drain and refill both look quick-but-visible rather than instant or too fast.
-  const [tubeFill, setTubeFill] = useState(0);
-  const tubeFillRef  = useRef(0);
-  const tubeFillAnim = useRef(null);
-
   // Piston fraction (0=feather, 1=fine pitch): snaps right with oil, rate-limited leftward.
   // Only moves once the oil fill's right edge reaches pistonMin (derived from layout geometry).
-  const [pistonFrac, setPistonFrac] = useState(0);
+  const [, setPistonFrac] = useState(0);
   const pistonFracRef  = useRef(0);
   const pistonFracAnim = useRef(null);
 
@@ -141,7 +135,6 @@ export default function T6BPropDiagram() {
   const [flightMode, setFlightMode] = useState(false);
   const [cbPropSys, setCbPropSys] = useState(false);
   const [uncommandedFeather, setUncommandedFeather] = useState(false);
-  const cutoffTimerRef = useRef(null);
   const svgRef = useRef(null);
   const pclDraggingRef = useRef(false);
   const pclGroupRef = useRef(null);
@@ -356,21 +349,8 @@ export default function T6BPropDiagram() {
   // Piston position computed first — blade and cam are tied to it, not to oil directly.
   const pistonMin = CYL.x + 5; // leftmost (feather) position
   const extTubeLeft = 230;   // left edge of extended housing (past drain taps at 240/260)
-  let nominalPistonLeft = pistonMin
-  let oilLeftPiston = 0.3125*(pistonMin - extTubeLeft)/(pistonMin - extTubeLeft+0.31*70)
-  if(oil >  oilLeftPiston & oil < 0.3125){
-      nominalPistonLeft = pistonMin + 0.31*70*(oil-oilLeftPiston)/(0.3125-oilLeftPiston)
-  }else if (oil >= 0.3125){
-      nominalPistonLeft = pistonMin + (0.31 + (oil - 0.3125) / 0.6875 * 0.69) * 70
-  }
-  // Oil channel: main tube extends left to extTubeLeft to cover drain taps,
-  // core fill physics still anchored at HUB.x (the port fitting).
-  const oilTubeX = HUB.x;
+  const oilLeftPiston = 0.3125*(pistonMin - extTubeLeft)/(pistonMin - extTubeLeft+0.31*70)
 
-  // Fill: aims for nominal piston, gated by tubeFill animation (0→1)
-  const fillMaxW       = Math.max(0, nominalPistonLeft - oilTubeX);
-  const oilFillW       = fillMaxW * tubeFill;
-  const fillRightEdge  = oilTubeX + oilFillW;
 
   // Oil level: pixel width of the oil fill, derived from oil pressure.
   // oilLevel: pixel fill width. Piecewise linear — matches piston fraction mapping.
@@ -898,11 +878,6 @@ export default function T6BPropDiagram() {
           }
           const curvePath2 = `M ${pts2.join(' L ')}`;
 
-          // Key x positions
-          const pxIdleAng    = px0 + (15   / angMax) * pw;  // angle at idle (oil=1)
-          const pxMaxTqAng   = px0 + (63.8 / angMax) * pw;  // angle at max torque (oil=0.3125)
-          const pxFeatherAng = px0 + (86   / angMax) * pw;  // feather angle (oil=0)
-
           // Dot: normal region snaps instantly; off/transition slides horizontally at y=pyB
           const onOffRegion2 = pcl <= 0 || offTransition;
           const curAngle = 86 - oil * 71;
@@ -1198,12 +1173,6 @@ export default function T6BPropDiagram() {
             NP READOUT BOX  (above torque dial)
         ════════════════════════════════════════════ */}
         {(() => {
-          const effectiveFault = uncommandedFeather && !cbPropSys;
-          const targetOil = (pcl < 0 || effectiveFault) ? 0 : computeTargetOil(pcl);
-          const propMoving = Math.abs(oil - targetOil) > 0.005;
-          // oil decreasing toward lower target = power increasing; oil increasing = power decreasing
-          const powerIncreasing = oil > targetOil;
-
           // Normal NP value (used as recovery target during fault transition).
           // Airborne the prop governs at 100% NP regardless of torque; on the
           // ground NP tracks PCL between ground idle and 100%.

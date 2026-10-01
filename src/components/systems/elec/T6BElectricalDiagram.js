@@ -386,8 +386,6 @@ export default function T6BElectricalDiagram() {
     return { ...s, fGen: k === 'fGen', rGen: k === 'rGen' }; // mutual exclusion
   });
 
-  const [rly, setRly] = useState({ busRly: false, extRly: false });
-  const togRly = (k) => setRly(s => ({ ...s, [k]: !s[k] }));
 
   // Derived relay states
   const batRlyOn  = sw.fBat || sw.rBat;
@@ -493,7 +491,6 @@ export default function T6BElectricalDiagram() {
   }, [n1AtThreshold]);
 
   // Layout constants
-  const MY = 22;    // main bus wire Y-center
   const CW = 60; // column width
   const RY = 270; // relay box top Y (16px tall, centered on MY)
   const LY = 180; // heigh of hot bat bus
@@ -701,16 +698,16 @@ export default function T6BElectricalDiagram() {
           <Rly x={580} y={13} label={['STR', 'RLY']} isOn={strRlyOn} live={batRlyOn && strRlyOn} />
           <Wire d={`M 600 22 L 660 22 L 660 49`} live={batRlyOn && strRlyOn} />
           {/* STARTER RELAY TO STARTER SWITCH*/}
-          <Wire d={`M 440 197 420 197 L 420 268 L ${464-5} 268`} live = {strRlyOn && (sw.fStrAuto || sw.fStarter !=0)}/>
-          <Hop x={464} y={268} dir="h" live = {strRlyOn && (sw.fStrAuto || sw.fStarter !=0)}/>
-          <Wire d={`M ${464+5} 268 L ${499-5} 268`} live = {strRlyOn && (sw.fStrAuto || sw.fStarter !=0)}/>
-          <Hop x={499} y={268} dir="h" live = {strRlyOn && (sw.fStrAuto || sw.fStarter !=0)}/>
-          <Wire d={`M ${499+5} 268 L ${545-5} 268`} live = {strRlyOn && (sw.fStrAuto || sw.fStarter !=0)}/>
-          <Hop x={545} y={268} dir="h" live = {strRlyOn && (sw.fStrAuto || sw.fStarter !=0)}/>
-          <Wire d={`M ${545+5} 268 L 588 268 L 588 245`} live = {strRlyOn && (sw.fStrAuto || sw.fStarter !=0)}/>
+          <Wire d={`M 440 197 420 197 L 420 268 L ${464-5} 268`} live = {strRlyOn && (sw.fStrAuto || sw.fStarter !== 0)}/>
+          <Hop x={464} y={268} dir="h" live = {strRlyOn && (sw.fStrAuto || sw.fStarter !== 0)}/>
+          <Wire d={`M ${464+5} 268 L ${499-5} 268`} live = {strRlyOn && (sw.fStrAuto || sw.fStarter !== 0)}/>
+          <Hop x={499} y={268} dir="h" live = {strRlyOn && (sw.fStrAuto || sw.fStarter !== 0)}/>
+          <Wire d={`M ${499+5} 268 L ${545-5} 268`} live = {strRlyOn && (sw.fStrAuto || sw.fStarter !== 0)}/>
+          <Hop x={545} y={268} dir="h" live = {strRlyOn && (sw.fStrAuto || sw.fStarter !== 0)}/>
+          <Wire d={`M ${545+5} 268 L 588 268 L 588 245`} live = {strRlyOn && (sw.fStrAuto || sw.fStarter !== 0)}/>
           <Wire d={`M 588 245 L 588 28`} live = {strRlyOn}/>
           {/* STARTER RELAY TO REAR STARTER SWITCH*/}
-          <Wire d={`M 600 245 589 245`} live = {strRlyOn && (sw.rStrAuto || sw.rStarter !=0)}/>
+          <Wire d={`M 600 245 589 245`} live = {strRlyOn && (sw.rStrAuto || sw.rStarter !== 0)}/>
 
           {/* ═══════════════════════════════════════════════════════════
               MAIN BUS WIRE  (horizontal, y=MY)
@@ -719,7 +716,7 @@ export default function T6BElectricalDiagram() {
           <Hop x={588} y={LY-102} dir="h"  live={n1AtThreshold && !effStrRlyOn}/>
           <Wire d={`M ${588-5} ${LY-102} 536 ${LY-102}`}  live={n1AtThreshold && !effStrRlyOn}/>
           <Wire d={`M 520 ${LY-102} 390 ${LY-102}`} live={effGenRlyOn} />
-          <Wire d={`M 390 ${LY-102} 386 ${LY-102}`} live={effBusTie && batRlyOn || effGenRlyOn} reverse={!effGenRlyOn}  />
+          <Wire d={`M 390 ${LY-102} 386 ${LY-102}`} live={(effBusTie && batRlyOn) || effGenRlyOn} reverse={!effGenRlyOn}  />
           <Wire d={`M 370 ${LY-102} 325 ${LY-102}`} live={batRlyOn || (effBusTie && effGenRlyOn)}  reverse={!effGenRlyOn || !effBusTie}  />
           <Wire d={`M 325 ${LY-102} 316 ${LY-102}`} live={batRlyOn || (effBusTie && effGenRlyOn)} reverse={batWireReverse}/>
           <Wire d={`M 300 ${LY-102} 290 ${LY-102}`} live={batRlyOn || (effBusTie && effGenRlyOn)} reverse={batWireReverse}/>

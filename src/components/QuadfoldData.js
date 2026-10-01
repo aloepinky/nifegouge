@@ -1342,7 +1342,7 @@ export const QUAD_ACTIONS = {
     [{bold: true, text: '"Auto / Reset"', center: true}]
   ]),
   qestart7: createActionBubbles([
-    [{text:'Monitor engine instruments for normal indications and the lineman during the start. Hydraulic pressure must climb to the normal range followed by N1 rotation. Indication of Fuel Flow must follow, with light-off occurring shortly thereafter. Call out \"Light-off\" with initial rise of ITT. ITT must rise steadily, peaking twice. Oil pressure will rise as well and N1 will accelerate to 60-61%. Call out \"N1 60%\" as appropriate. Ensure ST READY advisory message remains illuminated throughout.'},
+    [{text:'Monitor engine instruments for normal indications and the lineman during the start. Hydraulic pressure must climb to the normal range followed by N1 rotation. Indication of Fuel Flow must follow, with light-off occurring shortly thereafter. Call out "Light-off" with initial rise of ITT. ITT must rise steadily, peaking twice. Oil pressure will rise as well and N1 will accelerate to 60-61%. Call out "N1 60%" as appropriate. Ensure ST READY advisory message remains illuminated throughout.'},
     {italic: true, text: 'Note: ST READY message will change position on the EICAS during start.'}],
     [{bold: true, text: '"Light-off..."', center: true}, {space: true}, {bold: true, text: '"ITT; N1; ST READY; Lineman"', center: true}, {text:'(Repeat until N1 60%)', center: true}, {space: true}, {bold: true, text: '"N1 60%"', center: true}]
   ]),

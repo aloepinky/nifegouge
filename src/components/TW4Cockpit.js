@@ -90,6 +90,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       setCurrentIndex(0)
       setCurrentIndexArray(shuffleIndices(20));
     }
+    // Shuffle once, when the page opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -121,6 +123,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
         </div>
       );
     }
+    // Deliberately keyed to the values listed; the helpers it calls are rebuilt every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkResults]);
 
   // Auto-expand logic: automatically advance to next empty field when current field is completed
@@ -146,6 +150,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
         }, 500);
       }
     }
+    // Deliberately keyed to the values listed; the helpers it calls are rebuilt every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkResults, autoExpanded, showChecklistModal, currentDivKey]);
 
 
@@ -476,7 +482,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   }
 
   const giveHint = (matchingKeys = null, nextKey = null) =>{
-    const {nextEmptyField, emptyNum} = findNextEmpty(nextKey);
+    const {nextEmptyField} = findNextEmpty(nextKey);
     console.log(nextEmptyField)
     setActiveHints({});
     if(!nextEmptyField){return}
@@ -750,6 +756,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
 
     // Update the ref for next comparison
     prevCheckResultsRef.current = {...checkResults};
+    // Deliberately keyed to the values listed; the helpers it calls are rebuilt every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkResults, autoNWC, currentDivKey, currentIndex, currentIndexArray, divMap, inputAnswers]);
 
   // Pressing Hint scrolls the highlighted control into view, unless one is already on screen.
