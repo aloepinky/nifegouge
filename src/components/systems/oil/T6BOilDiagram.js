@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { THEME, DIAGRAM_FONT } from '../diagramTheme';
 import { OIL_VERBATIM, OIL_NUMBERS, OIL_EICAS, OIL_EPS, OIL_INFO } from './OilModalData';
 import DiagramShell from '../DiagramShell';
@@ -29,13 +29,10 @@ import { T, Lbl, Ldr, El } from '../Notation';
 //  those annunciators — the table is the logic, not a component on the drawing.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Keyframes (dash cycles: 8+4=12, 6+5=11 — offsets are one full cycle ×2) ──
-// The hover-ring rules and the signal-run chase are not here: DiagramShell injects
-// the shared HOT_STYLES and SIGNAL_KEYFRAMES.
-// The fluid lines carry no keyframes of their own — their dashes are driven from the
-// simulation loop so the speed can change without the phase jumping. What is left here is
-// nothing; DiagramShell still injects the shared signal-run chase for <El>.
-const KEYFRAMES = '';
+// ── Keyframes ──
+// The fluid lines carry no keyframes of their own: their dashes are driven from the
+// simulation loop so the speed can change without the phase jumping. DiagramShell injects
+// the shared HOT_STYLES and SIGNAL_KEYFRAMES (the signal-run chase for <El>).
 
 // ── Colors: shared THEME + NATOPS Figure 1-9 line-function colors ────────────
 // Named by function, not severity. The figure's own legend is PRESSURE OIL /
@@ -725,8 +722,6 @@ function Fig110Table({ active, delayLeft }) {
           </g>
         );
       })}
-
-      {/* The header row is the click target for the logic write-up */}
     </g>
   );
 }
@@ -1002,11 +997,8 @@ const SEIZE_RATE   = 40;    // psi/s once it does
 
 // A pump losing its prime does not switch off, it winds down: the oil runs at full speed
 // down to 40 psi, then slows off linearly and is stopped by 10, which on this page is
-// what a seized engine looks like. Quantised to tenths because the duration is a CSS
-// animation — re-timing it on every 20 Hz commit would jitter the dashes instead of
-// decelerating them, so the rate steps rather than sliding.
-// Truly linear now that the phase is ours: the rate is a plain ramp with no steps in it,
-// and it reaches zero exactly at FLOW_STOP.
+// what a seized engine looks like. The rate is a plain linear ramp (the dash phase is
+// driven from the simulation loop) and reaches zero exactly at FLOW_STOP.
 const FLOW_FULL = 40, FLOW_STOP = 10;
 const flowRate = psi => Math.max(0, Math.min(1, (psi - FLOW_STOP) / (FLOW_FULL - FLOW_STOP)));
 
@@ -1026,6 +1018,7 @@ function T6BOilDiagram() {
   const [nuisanceT, setNuisanceT] = useState(0);
   const [chipT,     setChipT]     = useState(0);    // seconds the CHIP warning has been up
   const [infoKey, setInfoKey] = useState(null);
+  const closeInfo = useCallback(() => setInfoKey(null), []);
   const [hover,   setHover]   = useState(null);     // { title, x, y } — the name under the pointer
 
   // Stable, so <Named> never re-renders on account of the context itself.
@@ -1149,7 +1142,6 @@ function T6BOilDiagram() {
 
   return (
     <DiagramShell
-      keyframes={KEYFRAMES}
       briefing={{
         verbatim: OIL_VERBATIM, numbers: OIL_NUMBERS, eicas: OIL_EICAS, eps: OIL_EPS,
         sortMemoryFirst: true, conditionalSteps: true, valueMinWidth: 190,
@@ -1165,7 +1157,7 @@ function T6BOilDiagram() {
     >
       <>
         {infoKey && OIL_INFO[infoKey]?.items?.length > 0 && (
-          <InfoModal {...OIL_INFO[infoKey]} onClose={() => setInfoKey(null)} theme={C} />
+          <InfoModal {...OIL_INFO[infoKey]} onClose={closeInfo} theme={C} />
         )}
 
         <svg ref={svgEl} viewBox="0 0 880 800" width="100%" style={{ display: 'block' }}

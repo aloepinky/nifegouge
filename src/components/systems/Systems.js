@@ -1,23 +1,18 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import T6BHydraulicDiagram from './hyds/T6BHydraulicDiagram';
-import T6BPropDiagram from './prop/T6BPropDiagram';
-import T6BOilDiagram from './oil/T6BOilDiagram';
-import T6BElectricalDiagram from './elec/T6BElectricalDiagram';
-import T6BObogsDiagram from './obogs/T6BObogsDiagram';
-import T6BFuelDiagram from './fuel/T6BFuelDiagram';
 import { SYSTEM_TABS } from './systemTabs';
 
 // The diagram each system renders. The :tab values and nav labels live in systemTabs.js,
 // which the discuss item pages also read — they link to a system without importing its
-// schematic. Adding a system is one line there and one line here.
+// schematic. Adding a system is one line there and one line here. Each diagram is its own
+// chunk, so opening one system doesn't download the other five.
 const DIAGRAMS = {
-  hyds: T6BHydraulicDiagram,
-  prop: T6BPropDiagram,
-  oil: T6BOilDiagram,
-  elec: T6BElectricalDiagram,
-  obogs: T6BObogsDiagram,
-  fuel: T6BFuelDiagram,
+  hyds: lazy(() => import('./hyds/T6BHydraulicDiagram')),
+  prop: lazy(() => import('./prop/T6BPropDiagram')),
+  oil: lazy(() => import('./oil/T6BOilDiagram')),
+  elec: lazy(() => import('./elec/T6BElectricalDiagram')),
+  obogs: lazy(() => import('./obogs/T6BObogsDiagram')),
+  fuel: lazy(() => import('./fuel/T6BFuelDiagram')),
 };
 
 const TABS = SYSTEM_TABS.map(t => ({ ...t, Diagram: DIAGRAMS[t.id] }));
@@ -44,7 +39,10 @@ function Systems() {
           </span>
         ))}
       </div>
-      <Diagram />
+      {/* Holds the page's height while a diagram's chunk loads, so the footer doesn't jump. */}
+      <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
+        <Diagram />
+      </Suspense>
     </div>
   );
 }

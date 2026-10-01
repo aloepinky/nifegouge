@@ -13,7 +13,3 @@ export const SYSTEM_TABS = [
   { id: 'obogs', label: 'OBOGS' },
   { id: 'fuel',  label: 'Fuel' },
 ];
-
-export function getSystemTab(id) {
-  return SYSTEM_TABS.find(t => t.id === id) || null;
-}

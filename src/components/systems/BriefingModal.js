@@ -143,7 +143,7 @@ function BriefingModal({
         {eicas.items.map((msg) => {
           const col = eicasColor(msg.color);
           return (
-            <div key={msg.label} style={{ ...sectionStyle, background: col.bg, border: `0.5px solid ${col.border}`, marginBottom: 10 }}>
+            <div key={`${msg.color}-${msg.label}`} style={{ ...sectionStyle, background: col.bg, border: `0.5px solid ${col.border}`, marginBottom: 10 }}>
               <div style={{ fontWeight: 700, fontSize: 13, letterSpacing: '0.14em', color: col.label, marginBottom: 8 }}>
                 {msg.label}
               </div>

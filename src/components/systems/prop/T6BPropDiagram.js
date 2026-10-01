@@ -40,7 +40,6 @@ const Rr  = 38;                   // blade root bore radius
 const HUB = { x: 279, y: 183, w: 100, h: 180 };
 const CYL = { x: 382, y: 234, w: 170, h: 70  };
 const SR  = 534;                  // spring fixed right-end x
-const PISTON_LEFT_SPEED = 0.3; // max piston fraction moved left per frame (~5-6s full travel at 60fps)
 
 // ── Feather reference vectors (all blade geometry defined at oil = 0) ────────
 //
@@ -120,13 +119,6 @@ export default function T6BPropDiagram() {
   const oilRef    = useRef(0);
   const oilAnimRef = useRef(null);
   const [offTransition, setOffTransition] = useState(false); // true while animating out of off zone
-
-  // Piston fraction (0=feather, 1=fine pitch): snaps right with oil, rate-limited leftward.
-  // Only moves once the oil fill's right edge reaches pistonMin (derived from layout geometry).
-  const [, setPistonFrac] = useState(0);
-  const pistonFracRef  = useRef(0);
-  const pistonFracAnim = useRef(null);
-
 
   const [pcl, setPcl] = useState(-0.15); // -0.15 = OFF, 0 = IDLE, 1 = MAX
   const [cutoffLifted, setCutoffLifted] = useState(false);
@@ -218,34 +210,6 @@ export default function T6BPropDiagram() {
     return () => cancelAnimationFrame(oilAnimRef.current);
   }, [pcl, pmuOff, cbPropSys, uncommandedFeather]); // eslint-disable-line react-hooks/exhaustive-deps
 
-
-  // Piston animation: reads oilRef each frame.
-  // Oil fill right edge = extTubeLeft(230) + oil * maxFillW(227).
-  // Piston only starts moving once that edge reaches pistonMin(387).
-  // Snaps right instantly with oil; rate-limited leftward.
-  useEffect(() => {
-    function animate() {
-      const oilNow = oilRef.current;
-      let target = 0;
-      if (oilNow < 0.3125) {
-        target = (oilNow / 0.3125) * 0.31;
-      } else {
-        target = 0.31 + (oilNow - 0.3125) / 0.6875 * 0.69;
-      }
-      const diff = target - pistonFracRef.current;
-      if (Math.abs(diff) > 0.0005) {
-        if (diff > 0) {
-          pistonFracRef.current = target;
-        } else {
-          pistonFracRef.current = Math.max(target, pistonFracRef.current - PISTON_LEFT_SPEED);
-        }
-        setPistonFrac(pistonFracRef.current);
-      }
-      pistonFracAnim.current = requestAnimationFrame(animate);
-    }
-    pistonFracAnim.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(pistonFracAnim.current);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Drain tube fill: two independent animations — one per valve tap.
   // Each fills while pcl<0 AND tubeFillRef > its threshold, then drains once

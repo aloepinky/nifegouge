@@ -338,11 +338,9 @@ export default function T6BElectricalDiagram() {
   const [sel, setSel] = useState(null);
   const pick = (id) => setSel(s => s === id ? null : id);
   const [hopLayer, setHopLayer] = useState(null);
-  const [extPwrInfo, setExtPwrInfo] = useState(false);
   // Stable, so the memoized InfoModal can bail out — it re-binds its keydown
   // listener whenever onClose changes identity.
   const closeInfo    = useCallback(() => setSel(null), []);
-  const closeExtPwr  = useCallback(() => setExtPwrInfo(false), []);
   const [extPwrConn, setExtPwrConn] = useState(false);
   const [simGenBusInop,  setSimGenBusInop]  = useState(false);
   const [simBatBusInop,  setSimBatBusInop]  = useState(false);
@@ -421,7 +419,7 @@ export default function T6BElectricalDiagram() {
   const eicasOn = fwdBatBusLive || fwdAviGenLive;
   const [eicasAmps,  setEicasAmps]  = useState(0);
   const [eicasVolts, setEicasVolts] = useState(24);
-  const eicasRef = useRef({ amps: 0, volts: 24, tAmps: 0, tVolts: 24 });
+  const eicasRef = useRef({ amps: 0, volts: 24, tAmps: 0, tVolts: 24, shown: '' });
   useEffect(() => {
     const r = eicasRef.current;
     const newTarget = () => {
@@ -433,6 +431,11 @@ export default function T6BElectricalDiagram() {
     const lerpId   = setInterval(() => {
       r.amps  += (r.tAmps  - r.amps)  * 0.12;
       r.volts += (r.tVolts - r.volts) * 0.12;
+      // Commit only when the readout would change (sign, whole amps, tenths of a volt),
+      // so the schematic doesn't re-render at 20 Hz while the value settles.
+      const shown = `${r.amps < 0}|${Math.abs(Math.round(r.amps))}|${r.volts.toFixed(1)}`;
+      if (shown === r.shown) return;
+      r.shown = shown;
       setEicasAmps(r.amps);
       setEicasVolts(r.volts);
     }, 50);
@@ -511,15 +514,6 @@ export default function T6BElectricalDiagram() {
         { active: simGenFail,    onClick: () => setSimGenFail(v => !v),    label: 'Gen Failure',  kind: 'warn' },
       ]}
     >
-        {extPwrInfo && ELEC_INFO['extpwr'] && (
-          <InfoModal
-            title={ELEC_INFO['extpwr'].title}
-            items={ELEC_INFO['extpwr'].items}
-            photos={ELEC_INFO['extpwr'].photos ?? []}
-            onClose={closeExtPwr}
-            theme={C}
-          />
-        )}
         {sel && ELEC_INFO[sel] && (
           <InfoModal
             title={ELEC_INFO[sel].title}
@@ -568,7 +562,7 @@ export default function T6BElectricalDiagram() {
             const [cx1, cx2, cx3] = [px + 8, px + 20, px + 32];
             const active = extPwrConn;
             return (
-              <g className="dgm-hot" onClick={() => setExtPwrInfo(true)}>
+              <g className="dgm-hot" onClick={() => pick('extpwr')}>
                 {/* Pill body */}
                 <rect x={px} y={py} width={pw} height={ph} rx={pr}
                   fill={active ? `${C.wire}18` : C.box}

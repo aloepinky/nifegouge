@@ -426,9 +426,8 @@ export default function T6BHydraulicDiagram() {
       if (steps === 1) {
         animateFlapStep(fromAngle, toAngle, null);
       } else {
-        // skip a step: stitch two animations via the intermediate angle
-        const midPos = FLAP_ORDER[pos] > FLAP_ORDER[flapPos] ? 'TO' : 'TO';
-        const midAngle = FLAP_ANGLES[midPos];
+        // skip a step (UP <-> LDG): stitch two animations through TO
+        const midAngle = FLAP_ANGLES.TO;
         animateFlapStep(fromAngle, midAngle, () => animateFlapStep(midAngle, toAngle, null));
       }
     }
