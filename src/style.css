@@ -8,8 +8,6 @@ body {
 
 /* Common Layout Containers */
 .page-container,
-.about-container,
-.setai-container,
 .questions-container,
 .jetlog-container,
 .whiz-container {
@@ -34,15 +32,12 @@ body {
   align-items: center;
 }
 
-.setai-container,
 .questions-container {
   max-width: 600px;
 }
 
 /* Common Titles */
-.page-title,
 .about-title,
-.setai-container h1,
 .jetlog-container h1,
 .whiz-container h1 {
   text-align: center;
@@ -50,7 +45,6 @@ body {
   margin-bottom: 1em;
 }
 
-.setai-container h1,
 .jetlog-container h1,
 .whiz-container h1 {
   margin-bottom: 20px;
@@ -117,8 +111,7 @@ button,
 .button,
 .submitBtn,
 .button-row button,
-.button-container button,
-.setai-container .button-row button {
+.button-container button {
   padding: 8px 16px;
   background-color: #01202C;
   color: white;
@@ -131,7 +124,6 @@ button,
 button:hover,
 .button-row button:hover,
 .button-container button:hover,
-.setai-container .button-row button:hover, 
 .submitBtn:hover {
   background-color: #003B4F;
 }
@@ -159,8 +151,7 @@ button:hover,
 
 /* Button Containers */
 .button-row,
-.button-container,
-.setai-container .button-row {
+.button-container {
   display: flex;
   gap: 10px;
   margin-bottom: 10px;
@@ -177,19 +168,13 @@ button:hover,
   padding: 8px 12px;
 }
 
-.setai-container .button-row {
-  justify-content: center;
-}
-
 /* Tables */
 table,
-.setai-table,
 .jetlog-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.setai-table,
 .jetlog-table {
   margin-bottom: 20px;
 }
@@ -256,8 +241,6 @@ table,
 
 th,
 td,
-.setai-table th,
-.setai-table td,
 .jetlog-table th,
 .jetlog-table td {
   border: 1px solid black;
@@ -275,20 +258,17 @@ td,
 }
 
 th,
-.setai-table th,
 .jetlog-table th {
   background-color: #ddd;
 }
 
 /* Input Elements */
 input,
-.setai-table input,
 .jetlog-table input {
   width: 100%;
   box-sizing: border-box;
 }
 
-.setai-table input,
 .jetlog-table input {
   text-align: center;
   border: none;
@@ -305,19 +285,16 @@ input,
 
 /* Color Classes */
 .bg-green,
-.setai-table input.bg-green,
 .radio-list label.correct,
 #answerForm label.correct {
   background-color: #d0f0d0;
 }
 
-.bg-yellow,
-.setai-table input.bg-yellow {
+.bg-yellow {
   background-color: #fff9c7;
 }
 
 .bg-red,
-.setai-table input.bg-red,
 .radio-list label.wrong,
 #answerForm label.wrong {
   background-color: #f8d0d0;
@@ -381,12 +358,6 @@ input,
   box-shadow: 0 0 6px rgba(0, 172, 193, 0.3);
 }
 
-.radio-list label.softSelected {
-  background-color: #e0f0ff;
-  border-color: #b0d4f1;
-  color: #003366;
-}
-
 .radio-list input[type="radio"],
 .radio-list input[type="checkbox"] {
   display: none;
@@ -395,59 +366,6 @@ input,
 .radio-list input[type="checkbox"] {
   display: inline;
   margin-right: 5px;
-}
-.frr-radio-list label:not(.checkbox-label) {
-  padding: 3px 8px !important;  /* Reduced from 5px 10px */
-  margin: 0.2em !important;
-  min-width: fit-content !important;
-  width: 175px!important;
-}
-
-.checkbox-label {
-  display: inline-flex !important;
-  align-items: center;
-  width: auto !important;
-  min-width: fit-content;
-  padding: 5px 10px !important;
-  margin-left: 20px;
-  border: 2px solid #ccc;
-  background-color: #f9f9f9;
-}
-
-.checkbox-label input[type="checkbox"] {
-  display: inline-block;
-  margin-right: 8px;
-  width: auto;
-  vertical-align: middle;
-  cursor: pointer;
-}
-
-.checkbox-label:hover {
-  background-color: #e0e0e0;
-  border-color: #999;
-}
-
-/* Container for runway option and checkbox */
-.runway-option-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-/* Adjust the runway radio label to not take full width */
-.runway-option-container > label:first-child {
-  flex: 0 0 auto;  /* Don't grow, just fit content */
-  margin: 0.15em !important;
-}
-
-/* Style the inline checkbox */
-.checkbox-label.inline-checkbox {
-  margin-left: 0 !important;  /* Remove the left margin */
-  padding: 2px 8px !important;  /* Smaller padding */
-  font-size: 0.85em;
-  border: 1px solid #ccc;  /* Thinner border */
-  min-height: auto;
 }
 
 #answerForm {
@@ -514,27 +432,7 @@ input,
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-/* Feedback Buttons */
-.feedback-row {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
-
-.thumb-btn {
-  width: 60px;
-  height: 60px;
-  border: none;
-  border-radius: 8px;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
+/* Feedback Buttons (.feedback-row and .thumb-btn are with the vote score, below) */
 .thumb-btn.up {
   background-color: green;
 }
@@ -668,10 +566,6 @@ td.xcell::after {
 }
 
 /* Misc Styles */
-.jetlog-table.x-mode td {
-  cursor: pointer;
-}
-
 .about-text {
   line-height: 1.6;
   margin-bottom: 1em;
@@ -1095,29 +989,6 @@ td.xcell::after {
   }
 }
 
-.coming-soon {
-  text-align: center;
-  padding: 50px 20px;
-  color: #666;
-  font-size: 1.2em;
-}
-
-.frr-content {
-  display: flex;
-  gap: 40px;
-  margin: 40px auto;
-  max-width: 1100px;
-  padding: 0 20px;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.frr-left-section {
-  display: flex;
-  flex-direction: column;
-  width: 500px;
-}
-
 .whiz-controls {
   display: flex;
   gap: 12px;
@@ -1279,14 +1150,6 @@ td.xcell::after {
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   border: 1px solid #aaa;
   min-height: 120px;
-  font-family: sans-serif;
-  white-space: pre-wrap;
-}
-
-.answer-area {
-  border: 1px solid #aaa;
-  padding: 10px;
-  min-height: 10px;
   font-family: sans-serif;
   white-space: pre-wrap;
 }
@@ -1562,14 +1425,10 @@ iframe {
 }
 
 /* Flight Component Styles */
+/* Zoomed out to 80% */
 .limits-eps-container {
-  max-width: 900px;
   margin: 20px auto;
   padding: 0 20px;
-}
-
-/* Zoom out the limits-eps-container to 80% */
-.limits-eps-container {
   transform: scale(0.8);
   transform-origin: top center;
   width: 125%; /* Compensate for the 80% scale (100/80 = 125) */
@@ -1784,18 +1643,6 @@ textarea.incorrect-answer {
   box-shadow: 0 2px 6px rgba(1, 32, 44, 0.3);
 }
 
-.left-controls, .right-controls {
-  box-sizing: border-box;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  padding: 10px;
-  background-color: #2c2c2c;
-  border-radius: 8px;
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
-}
-
 .control-section {
   background-color: #1a1a1a;
   padding: 10px;
@@ -1812,402 +1659,7 @@ textarea.incorrect-answer {
   letter-spacing: 1px;
 }
 
-/* Fuel Selector Dial */
-.fuel-selector {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  margin: 0 auto;
-}
-
-.dial-base {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: radial-gradient(circle, #666, #333);
-  border: 3px solid #222;
-  position: relative;
-  cursor: pointer;
-}
-
-.dial-pointer {
-  position: absolute;
-  width: 4px;
-  height: 50px;
-  background: #ff0000;
-  left: calc(50% - 2px);
-  top: 0px;
-  transform-origin: 2px 50px;
-  transform: rotate(var(--rotation, 0deg));
-  transition: transform 0.3s ease;
-  pointer-events: all;
-  cursor: grab;
-}
-
-.dial-pointer:active,
-.mags-dial.dragging .dial-pointer {
-  transition: none;
-  cursor: grabbing;
-}
-
-.dial-label {
-  position: absolute;
-  color: #fff;
-  font-size: 0.7em;
-  font-weight: bold;
-}
-
-.dial-label.off { bottom: -5px; left: 50%; transform: translateX(-50%); }
-.dial-label.left { left: -25px; top: 50%; transform: translateY(-50%); }
-.dial-label.both { top: -5px; left: 50%; transform: translateX(-50%); }
-.dial-label.right { right: -30px; top: 50%; transform: translateY(-50%); }
-
-/* Circular Buttons */
-.circular-buttons {
-  display: flex;
-  justify-content: space-around;
-  gap: 10px;
-}
-
-.circular-button {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #555, #222);
-  border: 2px solid #111;
-  color: #fff;
-  font-size: 0.65em;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  transition: all 0.2s;
-}
-
-.circular-button:hover {
-  background: radial-gradient(circle, #666, #333);
-  transform: scale(1.05);
-}
-
-.circular-button:active {
-  transform: scale(0.95);
-  background: radial-gradient(circle, #444, #111);
-}
-
-.button-with-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.button-state-text {
-  color: #fff;
-  font-size: 0.5em;
-  margin-top: 5px;
-  text-align: center;
-  min-height: 12px;
-}
-
-/* Throttle button states */
-.throttle-state-0 {
-  background: radial-gradient(circle, #666, #333) !important;
-}
-
-.throttle-state-1 {
-  background: radial-gradient(circle, #E8B00F, #806208) !important;
-}
-
-.throttle-state-2 {
-  background: radial-gradient(circle, #B30003, #921818) !important;
-}
-
-/* Mixture button states */
-.mixture-state-0 {
-  background: radial-gradient(circle, #888, #444) !important;
-}
-
-.mixture-state-1 {
-  background: radial-gradient(circle, #B30003, #921818) !important;
-}
-
-/* Vertical Flaps Control */
-.flaps-vertical-control {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-left: 15px;
-}
-
-.flaps-vertical-slider {
-  width: 20px;
-  height: 80px;
-  background: #333;
-  border: 2px solid #555;
-  border-radius: 10px;
-  position: relative;
-  cursor: pointer;
-}
-
-.flaps-vertical-track {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(to bottom, #666, #444);
-  border-radius: 8px;
-}
-
-.flaps-vertical-handle {
-  width: 24px;
-  height: 12px;
-  background: radial-gradient(circle, #aaa, #777);
-  border: 1px solid #333;
-  border-radius: 6px;
-  position: absolute;
-  left: -2px;
-  cursor: grab;
-  transition: top 0.1s ease;
-}
-
-.flaps-vertical-handle:active {
-  cursor: grabbing;
-  background: radial-gradient(circle, #ccc, #999);
-}
-
-.flaps-vertical-label {
-  color: #fff;
-  font-size: 0.6em;
-  margin-top: 5px;
-  text-align: center;
-}
-
-/* Flaps Slider */
-.flaps-control {
-  margin: 15px 0;
-}
-
-.flaps-slider {
-  position: relative;
-  height: 40px;
-  background: linear-gradient(to right, #222, #444);
-  border-radius: 20px;
-  border: 2px solid #111;
-}
-
-.flaps-track {
-  position: absolute;
-  width: calc(100% - 20px);
-  height: 2px;
-  background: #666;
-  top: 50%;
-  left: 10px;
-  transform: translateY(-50%);
-}
-
-.flaps-handle {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  background: radial-gradient(circle, #888, #444);
-  border: 2px solid #222;
-  border-radius: 50%;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: grab;
-  transition: left 0.3s ease;
-}
-
-.flaps-handle:active {
-  cursor: grabbing;
-}
-
-.flaps-marks {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 10px;
-  margin-top: 5px;
-}
-
-.flaps-mark {
-  color: #aaa;
-  font-size: 0.7em;
-  font-weight: bold;
-}
-
-/* Engine Controls Layout */
-.engine-controls-layout {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  width: 100%;
-  min-height: 100px;
-}
-
-.engine-left {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-}
-
-.engine-center {
-  flex: 1 0 auto;
-  display: flex;
-  justify-content: center;
-}
-
-.engine-right {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-}
-
-/* Horizontal Switches Container */
-.horizontal-switches {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-}
-
-/* Vertical Switches Container */
-.vertical-switches {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* Toggle Switches */
-.switch-row {
-  display: flex;
-  gap: 10px;
-  justify-content: space-around;
-  flex-wrap: wrap;
-}
-
-.toggle-switch {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-
-.toggle-switch.vertical {
-  align-items: center;
-  gap: 3px;
-}
-
-.switch-label {
-  color: #ccc;
-  font-size: 0.6em;
-  text-align: center;
-  max-width: 80px;
-}
-
-.switch-body {
-  width: 40px;
-  height: 20px;
-  background: #333;
-  border-radius: 10px;
-  position: relative;
-  cursor: pointer;
-  border: 1px solid #222;
-}
-
-.switch-body.vertical {
-  width: 20px;
-  height: 40px;
-  border-radius: 10px;
-}
-
-.switch-toggle {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  background: radial-gradient(circle, #888, #444);
-  border-radius: 50%;
-  top: 1px;
-  transition: left 0.3s ease;
-  left: 1px;
-}
-
-.switch-body.vertical .switch-toggle {
-  width: 18px;
-  height: 18px;
-  transition: top 0.3s ease;
-  left: 1px;
-  top: 21px; /* Start at bottom for vertical switches */
-}
-
-.switch-body.on .switch-toggle {
-  left: 21px;
-  background: radial-gradient(circle, #4CAF50, #2E7D32);
-}
-
-.switch-body.vertical.on .switch-toggle {
-  top: 1px; /* Move to top when ON for vertical switches */
-  left: 1px;
-  background: radial-gradient(circle, #4CAF50, #2E7D32);
-}
-
-/* Mags Dial */
-.mags-dial {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  margin: 0 auto;
-}
-
-.mags-dial .dial-base {
-  background: radial-gradient(circle, #555, #222);
-}
-
-.mags-positions {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-
-.mag-label {
-  position: absolute;
-  color: #fff;
-  font-size: 0.6em;
-  font-weight: bold;
-}
-
-.mag-label.mag-off { left: 5px; top: 50%; transform: translateY(-50%); }     /* W - Left side */
-.mag-label.mag-left { left: 15px; top: 15px; }                              /* NW - Top-left */
-.mag-label.mag-right { left: 50%; top: 0px; transform: translateX(-50%); }   /* N - Top */
-.mag-label.mag-both { right: 15px; top: 15px; }                             /* NE - Top-right */
-.mag-label.mag-start { right: 5px; top: 50%; transform: translateY(-50%); } /* E - Right side */
-
-/* Primer Button */
-.primer-button {
-  width: 50px;
-  height: 50px;
-  margin: 0 auto;
-  border-radius: 50%;
-  background: radial-gradient(circle, #666, #333);
-  border: 3px solid #222;
-  color: #fff;
-  font-size: 0.7em;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.primer-button:active {
-  transform: scale(0.9);
-  background: radial-gradient(circle, #444, #222);
-}
-
 /* Action Buttons */
-.action-buttons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
 .action-button {
   padding: 8px 5px;
   background: linear-gradient(135deg, #555, #333);
@@ -3460,25 +2912,6 @@ textarea.incorrect-answer {
   border-color: #c62828 !important;
 }
 
-/* Vote Score Styles */
-.vote-score {
-  font-weight: bold;
-  padding: 0 10px;
-  font-size: 20px;  /* Large size */
-  display: inline-flex;
-  align-items: center;  /* Vertically center */
-  justify-content: center;
-  text-align: center;
-}
-
-.vote-score.positive {
-  color: #4CAF50;
-}
-
-.vote-score.negative {
-  color: #f44336;
-}
-
 /* Active state for voting buttons */
 .thumb-btn.active {
   transform: scale(1.1);
@@ -3533,31 +2966,22 @@ textarea.incorrect-answer {
   margin-top: 10px;
 }
 
-/* Moderation mode background */
-.questions-container.moderation-mode {
-  background-color: #003B4F;
-  padding: 20px;
-  border-radius: 10px;
-  margin: 20px auto;
-}
-
-.questions-container.moderation-mode .qa-box {
-  background-color: white;
-}
-
-.questions-container.moderation-mode .dropdown-row select,
-.questions-container.moderation-mode .dropdown-row input {
-  background-color: white;
-}
-
 /* Vote buttons with text labels */
 .thumb-btn {
   position: relative;
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 8px;
+  color: white;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 60px;
+  padding: 10px;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
 /* Pending question background styling */
@@ -3613,22 +3037,10 @@ textarea.incorrect-answer {
   background: #555;
 }
 
-/* Navigation enhancements for page toggle */
-.nav-links {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-/* ── Horizontally scrolling nav rows ─────────────────────────────────────────
-   The top nav and any sub-navbar with more tabs than fit on one line. The two
-   differ only in scrollbar color, so those come in as custom properties and the
-   rest of the treatment is written once. */
-.nav-links,
+/* ── Horizontally scrolling sub-navbar ───────────────────────────────────────
+   A sub-navbar with more tabs than fit on one line. Its scrollbar colors are set
+   with the rest of .sub-navbar--scrollable further down. */
 .sub-navbar--scrollable {
-  --scroll-track:       #01202C;
-  --scroll-thumb:       #003B4F;
-  --scroll-thumb-hover: #005070;
   overflow-x: auto;
   flex-wrap: nowrap;
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
@@ -3636,109 +3048,27 @@ textarea.incorrect-answer {
   scrollbar-color: var(--scroll-thumb) var(--scroll-track); /* Firefox */
 }
 
-.nav-links::-webkit-scrollbar,
 .sub-navbar--scrollable::-webkit-scrollbar {
   height: 6px;
 }
 
-.nav-links::-webkit-scrollbar-track,
 .sub-navbar--scrollable::-webkit-scrollbar-track {
   background: var(--scroll-track);
 }
 
-.nav-links::-webkit-scrollbar-thumb,
 .sub-navbar--scrollable::-webkit-scrollbar-thumb {
   background: var(--scroll-thumb);
   border-radius: 3px;
 }
 
-.nav-links::-webkit-scrollbar-thumb:hover,
 .sub-navbar--scrollable::-webkit-scrollbar-thumb:hover {
   background: var(--scroll-thumb-hover);
 }
 
 /* Keep each row's items on one line so the row scrolls instead of wrapping */
-.nav-links a,
 .sub-navbar--scrollable span {
   flex-shrink: 0;
   white-space: nowrap;
-}
-
-.page-toggle-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-radius: 15px;
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.page-toggle-container span {
-  color: #ffffff;
-  font-weight: bold;
-  font-size: 12px;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 3px;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.page-toggle-container span.active {
-}
-
-.page-toggle-switch {
-  width: 30px;
-  height: 16px;
-  background-color: #003B4F;
-  border-radius: 8px;
-  position: relative;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.page-toggle-slider {
-  width: 14px;
-  height: 14px;
-  background-color: #ffffff;
-  border-radius: 50%;
-  position: absolute;
-  top: 1px;
-  transition: transform 0.3s ease;
-}
-
-.page-toggle-slider.left {
-  transform: translateX(1px);
-}
-
-.page-toggle-slider.right {
-  transform: translateX(15px);
-}
-
-.toggle-slider {
-  position: relative;
-  width: 60px;
-  height: 30px;
-  background-color: #ccc;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-.toggle-slider.active {
-  background-color: #4a90e2;
-}
-.toggle-slider-circle {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 24px;
-  height: 24px;
-  background-color: white;
-  border-radius: 50%;
-  transition: transform 0.3s;
-}
-.toggle-slider.active .toggle-slider-circle {
-  transform: translateX(30px);
 }
 .navigation-buttons {
   display: flex;
@@ -3748,11 +3078,6 @@ textarea.incorrect-answer {
   padding: 15px;
   border-radius: 5px;
   margin-bottom: 10px;
-}
-.ep-counter {
-  font-weight: bold;
-  font-size: 16px;
-  color: #333;
 }
 
 
@@ -4175,100 +3500,6 @@ textarea.incorrect-answer {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  .toggle-buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .toggle-buttons button {
-    padding: 12px 24px;
-    font-size: 14px;
-    font-weight: 500;
-    border: 2px solid #ccc;
-    background-color: white;
-    color: #333;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .toggle-buttons button:hover {
-    background-color: #f0f0f0;
-    border-color: #888;
-  }
-
-  .toggle-buttons button.active {
-    background-color: #4CAF50;
-    color: white;
-    border-color: #4CAF50;
-  }
-
-  .layer-checklist {
-    max-width: 400px;
-    margin: 0 auto;
-  }
-
-  .layer-checklist h3 {
-    margin: 0 0 15px 0;
-    font-size: 18px;
-    text-align: center;
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    margin: 8px 0;
-    background-color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-
-  .checkbox-label:hover {
-    background-color: #f0f0f0;
-  }
-
-  .checkbox-label input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-    cursor: pointer;
-  }
-
-  .checkbox-color {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    margin-right: 12px;
-    border: 2px solid #333;
-  }
-
-  .dropdown-controls {
-    max-width: 400px;
-    margin: 0 auto;
-  }
-
-  .dropdown-controls label {
-    display: block;
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
-
-  .dropdown-controls select {
-    width: 100%;
-    padding: 12px;
-    font-size: 14px;
-    border: 2px solid #ccc;
-    border-radius: 6px;
-    background-color: white;
-    cursor: pointer;
-    margin-top: 8px;
-  }
-
   .quiz-mode {
     max-width: 600px;
     margin: 0 auto;
@@ -4278,79 +3509,6 @@ textarea.incorrect-answer {
     text-align: center;
     margin: 0 0 20px 0;
     font-size: 18px;
-  }
-
-  .quiz-question {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  .quiz-question p {
-    margin: 10px 0;
-    font-size: 16px;
-    line-height: 1.6;
-  }
-
-  .quiz-question button {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin: 15px 0;
-    transition: background-color 0.2s ease;
-  }
-
-  .quiz-question button:hover:not(:disabled) {
-    background-color: #45a049;
-  }
-
-  .quiz-question button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
-
-  .quiz-hint {
-    font-style: italic;
-    color: #666;
-    font-size: 14px !important;
-  }
-
-  .quiz-complete {
-    background-color: white;
-    padding: 30px;
-    border-radius: 8px;
-    text-align: center;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  .quiz-complete p {
-    font-size: 18px;
-    color: #4CAF50;
-    font-weight: 600;
-    margin-bottom: 20px;
-  }
-
-  .quiz-complete button {
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: 600;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-
-  .quiz-complete button:hover {
-    background-color: #45a049;
   }
 
   /* Mobile responsive for course rules */
@@ -4367,11 +3525,6 @@ textarea.incorrect-answer {
 
     .course-rules-mode-selector button {
       padding: 8px 16px;
-      font-size: 12px;
-    }
-
-    .toggle-buttons button {
-      padding: 10px 16px;
       font-size: 12px;
     }
   }
@@ -4400,113 +3553,15 @@ textarea.incorrect-answer {
     font-size: 13px;
   }
 
-  .tree-item {
-    margin: 0;
-  }
-
-  .tree-folder-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 2px 4px;
-    min-height: 22px;
-    line-height: 22px;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .tree-folder-row:hover {
-    background-color: #e8e8e8;
-  }
-
-  .tree-left {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .tree-icon {
-    width: 14px;
-    min-width: 14px;
-    display: inline-block;
-    text-align: center;
-    font-size: 9px;
-    color: #666;
-    cursor: pointer;
-    margin-right: 4px;
-    flex-shrink: 0;
-  }
-
-  .tree-label {
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #333;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .tree-feature {
-    color: #666;
-    font-size: 12px;
-  }
-
-  .tree-checkbox {
-    cursor: pointer;
-    margin: 0;
-    margin-left: 8px;
-    flex-shrink: 0;
-  }
-
 /* TW4 Leaderboard / Game Mode */
-.tw4-nav-btn {
-  padding: 6px 14px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 0.85em;
-  transition: background-color 0.2s ease;
-  white-space: nowrap;
-}
-
-.tw4-nav-btn.primary {
-  background-color: #4CAF50;
-  color: #fff;
-}
-
-.tw4-nav-btn.primary:hover {
-  background-color: #45a049;
-}
-
-.tw4-nav-btn.secondary {
-  background-color: #1a3a5c;
-  color: #fff;
-}
-
-.tw4-nav-btn.secondary:hover {
-  background-color: #254d7a;
-}
-
-.tw4-nav-btn.danger {
-  background-color: #c62828;
-  color: #fff;
-}
-
-.tw4-nav-btn.danger:hover {
-  background-color: #b71c1c;
-}
 
 /* Wrappable sub-navbar: tabs stay on row 1, controls push right and wrap to row 2 on narrow screens */
 .sub-navbar--wrappable {
   flex-wrap: wrap;
 }
 
-/* Scrollable sub-navbar: tabs stay on one row and scroll sideways. The scrolling
-   itself is shared with .nav-links above; only the scrollbar colors differ — inverted,
-   to read against the lighter sub-navbar.
+/* Scrollable sub-navbar: tabs stay on one row and scroll sideways (the scrolling is
+   set above). Scrollbar colors are inverted to read against the lighter sub-navbar.
    Inherits justify-content: space-between from .sub-navbar — tabs spread when they fit,
    and pack left automatically once they overflow and there is no free space to distribute. */
 .sub-navbar--scrollable {
@@ -4563,42 +3618,6 @@ textarea.incorrect-answer {
 
 .game-button-danger:hover {
   background-color: #b71c1c;
-}
-
-.submit-button {
-  padding: 8px 18px;
-  background-color: #4CAF50;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 0.9em;
-  transition: background-color 0.2s ease;
-}
-
-.submit-button:hover:not(:disabled) {
-  background-color: #45a049;
-}
-
-.submit-button:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.modal-close-button {
-  padding: 8px 18px;
-  background-color: #1a3a5c;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  transition: background-color 0.2s ease;
-}
-
-.modal-close-button:hover {
-  background-color: #254d7a;
 }
 
 /* Edit Rows mode */
@@ -6385,16 +5404,6 @@ textarea.incorrect-answer {
   margin-bottom: 6px;
 }
 
-.discuss-editor-id {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 11px;
-  color: #8ba1ab;
-  background: rgba(0, 59, 79, 0.05);
-  padding: 2px 6px;
-  border-radius: 2px;
-  white-space: nowrap;
-}
-
 /* Aircraft and school side by side; one column on a phone. */
 .discuss-editor-pair {
   display: grid;
@@ -6457,11 +5466,8 @@ textarea.incorrect-answer {
 }
 
 .discuss-editor-row--tight { border-bottom: none; padding: 3px 0; }
-.discuss-editor-row--sub { padding-left: 26px; }
 .discuss-editor-row .discuss-editor-line { width: auto; flex: 1 1 120px; min-width: 0; }
 .discuss-editor-row .discuss-editor-tools { margin-left: auto; }
-
-.discuss-editor-structure-title { flex: 1 1 auto; font-size: 14px; color: #24404b; }
 
 .discuss-editor-resolve { font-size: 13px; color: #708995; flex: 1 1 120px; }
 .discuss-editor-resolve.is-missing { color: #b42525; }
@@ -7527,9 +6533,6 @@ textarea.incorrect-answer {
   line-height: 1.6;
 }
 
-.brief-para { margin: 0 0 6px; }
-.brief-para:last-child { margin-bottom: 0; }
-
 .brief-section-text { font-size: 11px; line-height: 1.6; padding: 4px 8px; }
 
 .brief-fixed-body {
@@ -7628,8 +6631,6 @@ textarea.incorrect-answer {
 
 /* ---- editing ---- */
 
-.brief-edit-section { margin-top: 18px; padding-top: 10px; border-top: 1px solid #dde5e9; }
-
 .brief-edit-item {
   margin: 6px 0 0;
   padding: 0 0 6px 8px;
@@ -7644,8 +6645,6 @@ textarea.incorrect-answer {
 .brief-switches .brief-switch-small { font-size: 12px; color: #5a7481; }
 
 .discuss-editor .brief-edit-select { width: auto; }
-
-.brief-conflict p { font-size: 14px; margin: 0 0 10px; }
 
 /* ---- upload ---- */
 
@@ -7936,14 +6935,6 @@ textarea.incorrect-answer {
   flex-direction: column;
   flex-shrink: 1;
   min-width: 80px;
-}
-
-.epl-scale {
-  width: 100%;
-}
-
-.epl-scale-inner {
-  transform-origin: top left;
 }
 
 .epl-center {
@@ -8433,6 +7424,11 @@ button.epl-modal-close:hover {
   margin-top: 10px;
   font-size: 16px;
   font-weight: bold;
+}
+
+.epl-limits-controls {
+  justify-content: center;
+  margin-top: 20px;
 }
 
 /* The lit toggles: Random Mode on a limits table and Auto NWC on an EPs page. Primary styles
