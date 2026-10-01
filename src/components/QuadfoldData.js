@@ -375,7 +375,7 @@ export const getQuadDivs = ({getInputClass, openChecklistModal, openNWCModal}) =
                     <span className={getInputClass('qas11c')}>c. ALT audio switch ----------------------- TEST</span>
                     </div>
                     <div style={quadSubStepStyle} data-step-key="qas11d" onClick={() => openChecklistModal(QUAD_ACTIONS.qas11d, 'qas11d')}>
-                    <span className={getInputClass('qas11d')}>d. LDG GR audio swtich ---------------- TEST</span>
+                    <span className={getInputClass('qas11d')}>d. LDG GR audio switch ---------------- TEST</span>
                     </div>
                     <div style={quadSubStepStyle} data-step-key="qas11e" onClick={() => openChecklistModal(QUAD_ACTIONS.qas11e, 'qas11e')}>
                     <span className={getInputClass('qas11e')}>e. OVR SPD audio switch -------------- TEST</span>
@@ -925,7 +925,7 @@ export const QUAD_ANSWERS = {
   qas11a: ["Lamp test ", "Gear", "Gea\u200Br Light", "FD\u200BR", "Master Warning", "Fire Light", "Master Caution", "COM1", "COM2", "EICAS"],
   qas11b: ["AOA system \u200Btest switch ---------- CHECK", "Amber Donut", "Red Chevron", "Green Chevron", "AOA Indicator", "Controls"],
   qas11c: ["ALT audio switch ---------- CHECK"],
-  qas11d: ["LDG GR audio swtich ---------- CHECK"],
+  qas11d: ["LDG GR audio switch ---------- CHECK"],
   qas11e: ["OVR SPD audio switch ---------- CHECK"],
   qas11f: ["OVR G audio switch ---------- CHECK"],
   qas11g: ["BINGO FUEL audio switch ---------- CHECK"],
