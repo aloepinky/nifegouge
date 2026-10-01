@@ -26,6 +26,7 @@ const ACTIONS_LEFT = [
   { label: 'Land ASAP', action: 'Land As Soon As Possible' },
   { label: 'Brakes', action: 'Brakes', values: ['AS REQ'] },
   { label: 'Doors', action: 'Doors', values: ['UNLATCHED'] },
+  { label: 'Vents', action: 'Vents', values: ['CLOSED'] },
 ];
 
 const ACTIONS_RIGHT = [
@@ -75,12 +76,15 @@ export const C172_POSTER = {
         { box: [0.544, 0.457, 0.052, 0.065], label: 'Mixture',
           action: 'Mixture', values: ['IDLE CUTOFF', 'FULL RICH'] },
         { box: [0.622, 0.46, 0.045, 0.08], label: 'Wing flap lever',
-          action: 'Flaps', values: ['AS REQ'] },
+          action: 'Flaps', values: ['AS REQUIRED'] },
 
+        // One step, "Cabin Heat / Air - OFF", shuts both pulls, so both answer it. The sheet's
+        // "Vents - CLOSED" is the wing-root vents overhead, which the drawing leaves out, so
+        // that step is a button.
         { box: [0.728, 0.47, 0.027, 0.032], label: 'Cabin heat pull',
           action: 'Cabin Heat / Air', values: ['OFF'] },
         { box: [0.728, 0.514, 0.027, 0.032], label: 'Cabin air pull',
-          action: 'Vents / Cabin Air', values: ['CLOSED'] },
+          action: 'Cabin Heat / Air', values: ['OFF'] },
 
         { box: [0.418, 0.865, 0.123, 0.130], label: 'Fuel selector',
           action: 'Fuel Selector', values: ['OFF', 'BOTH'] },
