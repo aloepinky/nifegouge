@@ -8,8 +8,7 @@ import { PLATFORMS as ALL_PLATFORMS } from './about/platforms.js';
 // numbers are titled with the aircraft and a second platform has somewhere to go.
 const PLATFORMS = ALL_PLATFORMS.t44c;
 
-// Advanced's About page. The program is being built: EPs/Limits is the one page so far, and a
-// tab joins this index as soon as it is added to the program's tab list in programs.js, which
+// Advanced's About page. A tab joins this index as soon as it is added to the program's tab list in programs.js, which
 // the top bar reads too — see about/tabs.js.
 const CONTENT = {
   '/t44c/eps-limits': {
@@ -51,8 +50,8 @@ function T44CAbout() {
       explainer={
         <>
           <p>
-            This section is for the T-44C. It begins where NIFE and Primary began: with the EPs and
-            limits you are held to from memory. Other tabs are to follow!
+            This section is for the T-44C: the EPs and limits you are held to from memory, the
+            discussion items for every syllabus event, and the briefs.
           </p>
           <p>
             Everything here is built by students, so it is only as good as what gets contributed. If you

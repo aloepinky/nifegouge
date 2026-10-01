@@ -5,7 +5,6 @@ import LandingPage from './components/LandingPage.js';
 import Footer from './components/Footer.js';
 import TopNav from './components/TopNav.js';
 import { warmDiscuss } from './components/discuss/warm';
-import { DRAFT } from './components/programs';
 
 const loaders = [];
 
@@ -122,10 +121,8 @@ function App() {
         <Route path="/t44c/about" element={<T44CAbout />} />
         <Route path="/t44c/eps-limits" element={<T44CEPsLimits />} />
         <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />
-        {/* Draft: shown on a dev server, absent from the live site — nav AND route, so a
-            deep link cannot reach a half-written tab. See programs.js. */}
-        {DRAFT && <Route path="/t44c/discuss/*" element={<T44CDiscuss />} />}
-        {DRAFT && <Route path="/t44c/briefs/*" element={<T44CBriefs />} />}
+        <Route path="/t44c/discuss/*" element={<T44CDiscuss />} />
+        <Route path="/t44c/briefs/*" element={<T44CBriefs />} />
       </Routes>
       </Suspense>
 
