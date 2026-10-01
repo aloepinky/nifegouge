@@ -539,7 +539,7 @@
     {
       "slug": "abnormal-starts",
       "title": "Abnormal starts",
-      "file": "items/abnormal-starts.json",
+      "file": "items/primary/abnormal-starts.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -719,7 +719,7 @@
     {
       "slug": "aborted-takeoff",
       "title": "Aborted takeoff",
-      "file": "items/aborted-takeoff.json",
+      "file": "items/primary/aborted-takeoff.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -959,7 +959,7 @@
     {
       "slug": "accelerated-stall",
       "title": "Accelerated stall",
-      "file": "items/accelerated-stall.json",
+      "file": "items/primary/accelerated-stall.json",
       "flags": [
         "maneuver"
       ],
@@ -1078,7 +1078,7 @@
     {
       "slug": "acceleration-limitations",
       "title": "Acceleration limitations",
-      "file": "items/acceleration-limitations.json",
+      "file": "items/primary/acceleration-limitations.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -1213,7 +1213,7 @@
     {
       "slug": "aerobatic-maneuvers",
       "title": "Aerobatic maneuvers",
-      "file": "items/aerobatic-maneuvers.json",
+      "file": "items/primary/aerobatic-maneuvers.json",
       "flags": [
         "maneuver"
       ],
@@ -1416,7 +1416,7 @@
     {
       "slug": "aileron-roll",
       "title": "Aileron roll",
-      "file": "items/aileron-roll.json",
+      "file": "items/primary/aileron-roll.json",
       "flags": [
         "maneuver"
       ],
@@ -1523,7 +1523,7 @@
     {
       "slug": "airborne-damaged-aircraft",
       "title": "Airborne-damaged aircraft",
-      "file": "items/airborne-damaged-aircraft.json",
+      "file": "items/primary/airborne-damaged-aircraft.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -1662,7 +1662,7 @@
     {
       "slug": "aircraft-and-cockpit-lighting",
       "title": "Aircraft and cockpit lighting",
-      "file": "items/aircraft-and-cockpit-lighting.json",
+      "file": "items/primary/aircraft-and-cockpit-lighting.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -1802,7 +1802,7 @@
     {
       "slug": "aircraft-departs-prepared-surface",
       "title": "Aircraft departs prepared surface",
-      "file": "items/aircraft-departs-prepared-surface.json",
+      "file": "items/primary/aircraft-departs-prepared-surface.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -1896,7 +1896,7 @@
     {
       "slug": "aircraft-discrepancy-reporting",
       "title": "Aircraft discrepancy reporting",
-      "file": "items/aircraft-discrepancy-reporting.json",
+      "file": "items/primary/aircraft-discrepancy-reporting.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -1992,7 +1992,7 @@
     {
       "slug": "aircraft-issue",
       "title": "Aircraft issue",
-      "file": "items/aircraft-issue.json",
+      "file": "items/primary/aircraft-issue.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -2084,7 +2084,7 @@
     {
       "slug": "airfield-and-runway-lighting",
       "title": "Airfield and runway lighting",
-      "file": "items/airfield-and-runway-lighting.json",
+      "file": "items/primary/airfield-and-runway-lighting.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -2294,7 +2294,7 @@
     {
       "slug": "airspace-classification",
       "title": "Airspace classification",
-      "file": "items/airspace-classification.json",
+      "file": "items/primary/airspace-classification.json",
       "flags": [],
       "stages": [
         "I",
@@ -2488,7 +2488,7 @@
     {
       "slug": "airspeed-changes",
       "title": "Airspeed changes",
-      "file": "items/airspeed-changes.json",
+      "file": "items/primary/airspeed-changes.json",
       "flags": [
         "maneuver"
       ],
@@ -2587,7 +2587,7 @@
     {
       "slug": "airway-navigation",
       "title": "Airway navigation",
-      "file": "items/airway-navigation.json",
+      "file": "items/primary/airway-navigation.json",
       "flags": [],
       "stages": [
         "I"
@@ -2679,7 +2679,7 @@
     {
       "slug": "aldis-lamp-signals",
       "title": "Aldis lamp signals",
-      "file": "items/aldis-lamp-signals.json",
+      "file": "items/primary/aldis-lamp-signals.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -2774,7 +2774,7 @@
     {
       "slug": "alternate-filing-minimums",
       "title": "Alternate filing minimums",
-      "file": "items/alternate-filing-minimums.json",
+      "file": "items/primary/alternate-filing-minimums.json",
       "flags": [],
       "stages": [
         "I"
@@ -2908,7 +2908,7 @@
     {
       "slug": "anti-spin-recovery-procedures",
       "title": "Anti-spin recovery procedures",
-      "file": "items/anti-spin-recovery-procedures.json",
+      "file": "items/primary/anti-spin-recovery-procedures.json",
       "flags": [
         "maneuver"
       ],
@@ -3068,7 +3068,7 @@
     {
       "slug": "any-item-discussed-in-this-block",
       "title": "Any item discussed in this block",
-      "file": "items/any-item-discussed-in-this-block.json",
+      "file": "items/primary/any-item-discussed-in-this-block.json",
       "flags": [
         "generated",
         "orphan"
@@ -3097,7 +3097,7 @@
     {
       "slug": "any-maneuver-in-this-block",
       "title": "Any maneuver performed in this block",
-      "file": "items/any-maneuver-in-this-block.json",
+      "file": "items/primary/any-maneuver-in-this-block.json",
       "flags": [
         "generated"
       ],
@@ -3132,7 +3132,7 @@
     {
       "slug": "aoa-approach",
       "title": "AOA approach",
-      "file": "items/aoa-approach.json",
+      "file": "items/primary/aoa-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -3310,7 +3310,7 @@
     {
       "slug": "approach-maneuver",
       "title": "Approach maneuver",
-      "file": "items/approach-maneuver.json",
+      "file": "items/primary/approach-maneuver.json",
       "flags": [
         "maneuver"
       ],
@@ -3448,7 +3448,7 @@
     {
       "slug": "arc-radial-intercepts",
       "title": "Arc-radial intercepts",
-      "file": "items/arc-radial-intercepts.json",
+      "file": "items/primary/arc-radial-intercepts.json",
       "flags": [
         "maneuver"
       ],
@@ -3554,7 +3554,7 @@
     {
       "slug": "arcing-approach",
       "title": "Arcing approach",
-      "file": "items/arcing-approach.json",
+      "file": "items/primary/arcing-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -3685,7 +3685,7 @@
     {
       "slug": "arcing",
       "title": "Arcing",
-      "file": "items/arcing.json",
+      "file": "items/primary/arcing.json",
       "flags": [
         "maneuver"
       ],
@@ -3790,7 +3790,7 @@
     {
       "slug": "area-sun-management",
       "title": "Area and sun management",
-      "file": "items/area-sun-management.json",
+      "file": "items/primary/area-sun-management.json",
       "flags": [],
       "stages": [
         "F"
@@ -3884,7 +3884,7 @@
     {
       "slug": "asr-approach",
       "title": "ASR approach",
-      "file": "items/asr-approach.json",
+      "file": "items/primary/asr-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -3984,7 +3984,7 @@
     {
       "slug": "avionics-malfunctions",
       "title": "Avionics malfunctions",
-      "file": "items/avionics-malfunctions.json",
+      "file": "items/primary/avionics-malfunctions.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -4166,7 +4166,7 @@
     {
       "slug": "barrel-roll",
       "title": "Barrel roll",
-      "file": "items/barrel-roll.json",
+      "file": "items/primary/barrel-roll.json",
       "flags": [
         "maneuver"
       ],
@@ -4288,7 +4288,7 @@
     {
       "slug": "bash",
       "title": "BASH",
-      "file": "items/bash.json",
+      "file": "items/primary/bash.json",
       "flags": [
         "orphan"
       ],
@@ -4427,7 +4427,7 @@
     {
       "slug": "basic-air-work",
       "title": "Basic air work",
-      "file": "items/basic-air-work.json",
+      "file": "items/primary/basic-air-work.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -4521,7 +4521,7 @@
     {
       "slug": "basic-transitions",
       "title": "Basic transitions",
-      "file": "items/basic-transitions.json",
+      "file": "items/primary/basic-transitions.json",
       "flags": [
         "maneuver"
       ],
@@ -4679,7 +4679,7 @@
     {
       "slug": "battery-and-generator-failure",
       "title": "Battery and generator failure",
-      "file": "items/battery-and-generator-failure.json",
+      "file": "items/primary/battery-and-generator-failure.json",
       "flags": [],
       "stages": [
         "I"
@@ -4786,7 +4786,7 @@
     {
       "slug": "battery-bus-light-during-start",
       "title": "Battery bus light during start",
-      "file": "items/battery-bus-light-during-start.json",
+      "file": "items/primary/battery-bus-light-during-start.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -4866,7 +4866,7 @@
     {
       "slug": "bfi-approach",
       "title": "BFI approach",
-      "file": "items/bfi-approach.json",
+      "file": "items/primary/bfi-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -4945,7 +4945,7 @@
     {
       "slug": "bfi",
       "title": "Backup flight instrument",
-      "file": "items/bfi.json",
+      "file": "items/primary/bfi.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -5092,7 +5092,7 @@
     {
       "slug": "blind-procedures",
       "title": "Blind procedures",
-      "file": "items/blind-procedures.json",
+      "file": "items/primary/blind-procedures.json",
       "flags": [],
       "stages": [
         "F"
@@ -5199,7 +5199,7 @@
     {
       "slug": "blindfold-cockpit-check",
       "title": "Blindfold cockpit check",
-      "file": "items/blindfold-cockpit-check.json",
+      "file": "items/primary/blindfold-cockpit-check.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -5288,7 +5288,7 @@
     {
       "slug": "brake-failure",
       "title": "Brake failure",
-      "file": "items/brake-failure.json",
+      "file": "items/primary/brake-failure.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -5368,7 +5368,7 @@
     {
       "slug": "brief-and-debrief",
       "title": "Brief and debrief",
-      "file": "items/brief-and-debrief.json",
+      "file": "items/primary/brief-and-debrief.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -5553,7 +5553,7 @@
     {
       "slug": "cdi-reverse-sensing-precautions",
       "title": "CDI reverse sensing precautions",
-      "file": "items/cdi-reverse-sensing-precautions.json",
+      "file": "items/primary/cdi-reverse-sensing-precautions.json",
       "flags": [],
       "stages": [
         "I"
@@ -5635,7 +5635,7 @@
     {
       "slug": "cfs-and-ejection-crm",
       "title": "CFS and ejection CRM",
-      "file": "items/cfs-and-ejection-crm.json",
+      "file": "items/primary/cfs-and-ejection-crm.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -5734,7 +5734,7 @@
     {
       "slug": "change-of-route-or-destination",
       "title": "Change of route or destination",
-      "file": "items/change-of-route-or-destination.json",
+      "file": "items/primary/change-of-route-or-destination.json",
       "flags": [],
       "stages": [
         "I"
@@ -5840,7 +5840,7 @@
     {
       "slug": "checklist-challenge-action-response",
       "title": "Checklist challenge-action response format",
-      "file": "items/checklist-challenge-action-response.json",
+      "file": "items/primary/checklist-challenge-action-response.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -5939,7 +5939,7 @@
     {
       "slug": "chip-detector-warning",
       "title": "Chip detector warning",
-      "file": "items/chip-detector-warning.json",
+      "file": "items/primary/chip-detector-warning.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -6001,7 +6001,7 @@
     {
       "slug": "circling-maneuver",
       "title": "Circling maneuver",
-      "file": "items/circling-maneuver.json",
+      "file": "items/primary/circling-maneuver.json",
       "flags": [
         "maneuver"
       ],
@@ -6206,7 +6206,7 @@
     {
       "slug": "clearance-and-departure-procedures",
       "title": "Clearance and departure procedures",
-      "file": "items/clearance-and-departure-procedures.json",
+      "file": "items/primary/clearance-and-departure-procedures.json",
       "flags": [],
       "stages": [
         "I"
@@ -6419,7 +6419,7 @@
     {
       "slug": "cloud-clearances",
       "title": "Cloud clearances",
-      "file": "items/cloud-clearances.json",
+      "file": "items/primary/cloud-clearances.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -6527,7 +6527,7 @@
     {
       "slug": "combination-maneuvers",
       "title": "Combination maneuvers",
-      "file": "items/combination-maneuvers.json",
+      "file": "items/primary/combination-maneuvers.json",
       "flags": [
         "maneuver"
       ],
@@ -6617,7 +6617,7 @@
     {
       "slug": "constant-airspeed-climbs-and-descents",
       "title": "Constant airspeed climbs and descents",
-      "file": "items/constant-airspeed-climbs-and-descents.json",
+      "file": "items/primary/constant-airspeed-climbs-and-descents.json",
       "flags": [
         "maneuver"
       ],
@@ -6755,7 +6755,7 @@
     {
       "slug": "contact-unusual-attitudes",
       "title": "Contact unusual attitudes",
-      "file": "items/contact-unusual-attitudes.json",
+      "file": "items/primary/contact-unusual-attitudes.json",
       "flags": [
         "maneuver"
       ],
@@ -7001,7 +7001,7 @@
     {
       "slug": "controlled-ejection",
       "title": "Controlled ejection",
-      "file": "items/controlled-ejection.json",
+      "file": "items/primary/controlled-ejection.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -7140,7 +7140,7 @@
     {
       "slug": "crm",
       "title": "Crew resource management",
-      "file": "items/crm.json",
+      "file": "items/primary/crm.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -7289,7 +7289,7 @@
     {
       "slug": "crosswind-computations",
       "title": "Crosswind computations",
-      "file": "items/crosswind-computations.json",
+      "file": "items/primary/crosswind-computations.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -7396,7 +7396,7 @@
     {
       "slug": "crosswind-full-stops",
       "title": "Crosswind full stops",
-      "file": "items/crosswind-full-stops.json",
+      "file": "items/primary/crosswind-full-stops.json",
       "flags": [
         "maneuver"
       ],
@@ -7505,7 +7505,7 @@
     {
       "slug": "crosswind-limits",
       "title": "Crosswind limits",
-      "file": "items/crosswind-limits.json",
+      "file": "items/primary/crosswind-limits.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -7640,7 +7640,7 @@
     {
       "slug": "crosswind-takeoff-and-landings",
       "title": "Crosswind takeoff and landings",
-      "file": "items/crosswind-takeoff-and-landings.json",
+      "file": "items/primary/crosswind-takeoff-and-landings.json",
       "flags": [
         "maneuver"
       ],
@@ -7769,7 +7769,7 @@
     {
       "slug": "crosswind-touch-and-goes",
       "title": "Crosswind touch-and-goes",
-      "file": "items/crosswind-touch-and-goes.json",
+      "file": "items/primary/crosswind-touch-and-goes.json",
       "flags": [
         "maneuver"
       ],
@@ -7868,7 +7868,7 @@
     {
       "slug": "cruise-maneuvering",
       "title": "Cruise maneuvering",
-      "file": "items/cruise-maneuvering.json",
+      "file": "items/primary/cruise-maneuvering.json",
       "flags": [
         "maneuver"
       ],
@@ -8059,7 +8059,7 @@
     {
       "slug": "day-emergencies",
       "title": "Day emergency procedures",
-      "file": "items/day-emergencies.json",
+      "file": "items/primary/day-emergencies.json",
       "flags": [],
       "stages": [
         "N"
@@ -8213,7 +8213,7 @@
     {
       "slug": "dd-175-1-weather-brief",
       "title": "DD-175-1 weather brief",
-      "file": "items/dd-175-1-weather-brief.json",
+      "file": "items/primary/dd-175-1-weather-brief.json",
       "flags": [],
       "stages": [
         "I"
@@ -8367,7 +8367,7 @@
     {
       "slug": "dd-1801",
       "title": "DD-1801",
-      "file": "items/dd-1801.json",
+      "file": "items/primary/dd-1801.json",
       "flags": [],
       "stages": [
         "I"
@@ -8502,7 +8502,7 @@
     {
       "slug": "destination-maintenance-facilities",
       "title": "Destination maintenance facilities and operating procedures",
-      "file": "items/destination-maintenance-facilities.json",
+      "file": "items/primary/destination-maintenance-facilities.json",
       "flags": [],
       "stages": [
         "N"
@@ -8581,7 +8581,7 @@
     {
       "slug": "direct-to-a-vor",
       "title": "Direct to a VOR",
-      "file": "items/direct-to-a-vor.json",
+      "file": "items/primary/direct-to-a-vor.json",
       "flags": [
         "maneuver"
       ],
@@ -8672,7 +8672,7 @@
     {
       "slug": "discontinued-entry",
       "title": "Discontinued entry",
-      "file": "items/discontinued-entry.json",
+      "file": "items/primary/discontinued-entry.json",
       "flags": [
         "maneuver"
       ],
@@ -8778,7 +8778,7 @@
     {
       "slug": "divert-to-alternate",
       "title": "Divert to alternate",
-      "file": "items/divert-to-alternate.json",
+      "file": "items/primary/divert-to-alternate.json",
       "flags": [],
       "stages": [
         "I"
@@ -8876,7 +8876,7 @@
     {
       "slug": "dor-tto-policy",
       "title": "DOR/TTO policy",
-      "file": "items/dor-tto-policy.json",
+      "file": "items/primary/dor-tto-policy.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -8987,7 +8987,7 @@
     {
       "slug": "dual-concurrence-response-crm",
       "title": "Dual concurrence/response CRM",
-      "file": "items/dual-concurrence-response-crm.json",
+      "file": "items/primary/dual-concurrence-response-crm.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -9072,7 +9072,7 @@
     {
       "slug": "ejection-seat-and-cfs",
       "title": "Ejection seat and CFS",
-      "file": "items/ejection-seat-and-cfs.json",
+      "file": "items/primary/ejection-seat-and-cfs.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -9349,7 +9349,7 @@
     {
       "slug": "ejection",
       "title": "Ejection",
-      "file": "items/ejection.json",
+      "file": "items/primary/ejection.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -9587,7 +9587,7 @@
     {
       "slug": "electrical-system-malfunctions",
       "title": "Electrical system malfunctions",
-      "file": "items/electrical-system-malfunctions.json",
+      "file": "items/primary/electrical-system-malfunctions.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -9767,7 +9767,7 @@
     {
       "slug": "electrical-system",
       "title": "Electrical system",
-      "file": "items/electrical-system.json",
+      "file": "items/primary/electrical-system.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -9902,7 +9902,7 @@
     {
       "slug": "emergency-engine-shutdown-on-the-ground",
       "title": "Emergency engine shutdown on the ground",
-      "file": "items/emergency-engine-shutdown-on-the-ground.json",
+      "file": "items/primary/emergency-engine-shutdown-on-the-ground.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -9991,7 +9991,7 @@
     {
       "slug": "emergency-field-selection",
       "title": "Emergency field selection",
-      "file": "items/emergency-field-selection.json",
+      "file": "items/primary/emergency-field-selection.json",
       "flags": [],
       "stages": [
         "I",
@@ -10245,7 +10245,7 @@
     {
       "slug": "emergency-ground-egress",
       "title": "Emergency ground egress",
-      "file": "items/emergency-ground-egress.json",
+      "file": "items/primary/emergency-ground-egress.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -10327,7 +10327,7 @@
     {
       "slug": "emergency-landing-pattern",
       "title": "Emergency landing pattern",
-      "file": "items/emergency-landing-pattern.json",
+      "file": "items/primary/emergency-landing-pattern.json",
       "flags": [
         "maneuver"
       ],
@@ -10634,7 +10634,7 @@
     {
       "slug": "emergency-orbit-pattern",
       "title": "Emergency orbit pattern",
-      "file": "items/emergency-orbit-pattern.json",
+      "file": "items/primary/emergency-orbit-pattern.json",
       "flags": [
         "maneuver"
       ],
@@ -10772,7 +10772,7 @@
     {
       "slug": "en-route-descent",
       "title": "En route descent",
-      "file": "items/en-route-descent.json",
+      "file": "items/primary/en-route-descent.json",
       "flags": [
         "maneuver"
       ],
@@ -10907,7 +10907,7 @@
     {
       "slug": "en-route-fuel-management",
       "title": "En route fuel management",
-      "file": "items/en-route-fuel-management.json",
+      "file": "items/primary/en-route-fuel-management.json",
       "flags": [],
       "stages": [
         "I"
@@ -11059,7 +11059,7 @@
     {
       "slug": "en-route-procedures",
       "title": "En route procedures",
-      "file": "items/en-route-procedures.json",
+      "file": "items/primary/en-route-procedures.json",
       "flags": [],
       "stages": [
         "I"
@@ -11244,7 +11244,7 @@
     {
       "slug": "en-route-weather-sources",
       "title": "En route weather sources",
-      "file": "items/en-route-weather-sources.json",
+      "file": "items/primary/en-route-weather-sources.json",
       "flags": [],
       "stages": [
         "I"
@@ -11335,7 +11335,7 @@
     {
       "slug": "energy-management",
       "title": "Energy management",
-      "file": "items/energy-management.json",
+      "file": "items/primary/energy-management.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -11479,7 +11479,7 @@
     {
       "slug": "engine-air-starts",
       "title": "Engine air starts",
-      "file": "items/engine-air-starts.json",
+      "file": "items/primary/engine-air-starts.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -11656,7 +11656,7 @@
     {
       "slug": "engine-failure-during-flight",
       "title": "Engine failure during flight",
-      "file": "items/engine-failure-during-flight.json",
+      "file": "items/primary/engine-failure-during-flight.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -11838,7 +11838,7 @@
     {
       "slug": "engine-failure-immediately-after-takeoff",
       "title": "Engine failure immediately after takeoff",
-      "file": "items/engine-failure-immediately-after-takeoff.json",
+      "file": "items/primary/engine-failure-immediately-after-takeoff.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -11937,7 +11937,7 @@
     {
       "slug": "engine-failure-indications",
       "title": "Engine failure indications",
-      "file": "items/engine-failure-indications.json",
+      "file": "items/primary/engine-failure-indications.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -12040,7 +12040,7 @@
     {
       "slug": "engine-malfunctions",
       "title": "Engine malfunctions",
-      "file": "items/engine-malfunctions.json",
+      "file": "items/primary/engine-malfunctions.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -12134,7 +12134,7 @@
     {
       "slug": "engine-system",
       "title": "Engine system",
-      "file": "items/engine-system.json",
+      "file": "items/primary/engine-system.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -12261,7 +12261,7 @@
     {
       "slug": "faf-to-map-timing-adjustments",
       "title": "FAF-to-MAP timing adjustments",
-      "file": "items/faf-to-map-timing-adjustments.json",
+      "file": "items/primary/faf-to-map-timing-adjustments.json",
       "flags": [],
       "stages": [
         "I"
@@ -12335,7 +12335,7 @@
     {
       "slug": "fan-break",
       "title": "Fan break",
-      "file": "items/fan-break.json",
+      "file": "items/primary/fan-break.json",
       "flags": [
         "maneuver"
       ],
@@ -12419,7 +12419,7 @@
     {
       "slug": "feeder-fixes",
       "title": "Feeder fixes",
-      "file": "items/feeder-fixes.json",
+      "file": "items/primary/feeder-fixes.json",
       "flags": [],
       "stages": [
         "I"
@@ -12481,7 +12481,7 @@
     {
       "slug": "feeder-routes",
       "title": "Feeder routes",
-      "file": "items/feeder-routes.json",
+      "file": "items/primary/feeder-routes.json",
       "flags": [],
       "stages": [
         "I"
@@ -12543,7 +12543,7 @@
     {
       "slug": "feet-to-rudder-placement",
       "title": "Feet to rudder placement",
-      "file": "items/feet-to-rudder-placement.json",
+      "file": "items/primary/feet-to-rudder-placement.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -12634,7 +12634,7 @@
     {
       "slug": "fire-on-ground",
       "title": "Fire on ground",
-      "file": "items/fire-on-ground.json",
+      "file": "items/primary/fire-on-ground.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -12709,7 +12709,7 @@
     {
       "slug": "fire-warning-in-flight",
       "title": "Fire warning in flight",
-      "file": "items/fire-warning-in-flight.json",
+      "file": "items/primary/fire-warning-in-flight.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -12793,7 +12793,7 @@
     {
       "slug": "flap-failures",
       "title": "Flap failures",
-      "file": "items/flap-failures.json",
+      "file": "items/primary/flap-failures.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -12896,7 +12896,7 @@
     {
       "slug": "flight-gear-check",
       "title": "Flight gear check",
-      "file": "items/flight-gear-check.json",
+      "file": "items/primary/flight-gear-check.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -13034,7 +13034,7 @@
     {
       "slug": "flight-service-station",
       "title": "Flight Service Station",
-      "file": "items/flight-service-station.json",
+      "file": "items/primary/flight-service-station.json",
       "flags": [],
       "stages": [
         "I"
@@ -13179,7 +13179,7 @@
     {
       "slug": "flight-split",
       "title": "Flight split",
-      "file": "items/flight-split.json",
+      "file": "items/primary/flight-split.json",
       "flags": [
         "maneuver"
       ],
@@ -13259,7 +13259,7 @@
     {
       "slug": "fms-arrivals",
       "title": "FMS arrivals",
-      "file": "items/fms-arrivals.json",
+      "file": "items/primary/fms-arrivals.json",
       "flags": [],
       "stages": [
         "I"
@@ -13376,7 +13376,7 @@
     {
       "slug": "fms-flight-plan-usage",
       "title": "FMS flight plan usage",
-      "file": "items/fms-flight-plan-usage.json",
+      "file": "items/primary/fms-flight-plan-usage.json",
       "flags": [],
       "stages": [
         "I"
@@ -13494,7 +13494,7 @@
     {
       "slug": "fms-procedures",
       "title": "FMS procedures",
-      "file": "items/fms-procedures.json",
+      "file": "items/primary/fms-procedures.json",
       "flags": [],
       "stages": [
         "N"
@@ -13650,7 +13650,7 @@
     {
       "slug": "forced-landing",
       "title": "Forced landing",
-      "file": "items/forced-landing.json",
+      "file": "items/primary/forced-landing.json",
       "flags": [
         "maneuver"
       ],
@@ -13777,7 +13777,7 @@
     {
       "slug": "formation-arrival-and-departure-procedures",
       "title": "Formation arrival and departure procedures",
-      "file": "items/formation-arrival-and-departure-procedures.json",
+      "file": "items/primary/formation-arrival-and-departure-procedures.json",
       "flags": [
         "maneuver"
       ],
@@ -13971,7 +13971,7 @@
     {
       "slug": "formation-communications",
       "title": "Formation communications",
-      "file": "items/formation-communications.json",
+      "file": "items/primary/formation-communications.json",
       "flags": [],
       "stages": [
         "F"
@@ -14107,7 +14107,7 @@
     {
       "slug": "formation-emergency-procedures",
       "title": "Formation emergency procedures",
-      "file": "items/formation-emergency-procedures.json",
+      "file": "items/primary/formation-emergency-procedures.json",
       "flags": [],
       "stages": [
         "F",
@@ -14231,7 +14231,7 @@
     {
       "slug": "formation-maneuvers",
       "title": "Formation maneuvers",
-      "file": "items/formation-maneuvers.json",
+      "file": "items/primary/formation-maneuvers.json",
       "flags": [
         "maneuver"
       ],
@@ -14468,7 +14468,7 @@
     {
       "slug": "formation-position-corrections",
       "title": "Formation position corrections",
-      "file": "items/formation-position-corrections.json",
+      "file": "items/primary/formation-position-corrections.json",
       "flags": [
         "maneuver"
       ],
@@ -14552,7 +14552,7 @@
     {
       "slug": "formation-preflight-planning",
       "title": "Formation preflight planning",
-      "file": "items/formation-preflight-planning.json",
+      "file": "items/primary/formation-preflight-planning.json",
       "flags": [],
       "stages": [
         "F"
@@ -14705,7 +14705,7 @@
     {
       "slug": "formation-squadron-sop",
       "title": "Formation squadron SOP",
-      "file": "items/formation-squadron-sop.json",
+      "file": "items/primary/formation-squadron-sop.json",
       "flags": [],
       "stages": [
         "F"
@@ -14852,7 +14852,7 @@
     {
       "slug": "fuel-cutoff-gate-finger-lift-guard",
       "title": "Fuel cutoff gate finger lift guard",
-      "file": "items/fuel-cutoff-gate-finger-lift-guard.json",
+      "file": "items/primary/fuel-cutoff-gate-finger-lift-guard.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -14912,7 +14912,7 @@
     {
       "slug": "fuel-planning",
       "title": "Fuel planning",
-      "file": "items/fuel-planning.json",
+      "file": "items/primary/fuel-planning.json",
       "flags": [],
       "stages": [
         "CS"
@@ -15023,7 +15023,7 @@
     {
       "slug": "fuel-system",
       "title": "Fuel system",
-      "file": "items/fuel-system.json",
+      "file": "items/primary/fuel-system.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -15179,7 +15179,7 @@
     {
       "slug": "full-stop-landings",
       "title": "Full-stop landings",
-      "file": "items/full-stop-landings.json",
+      "file": "items/primary/full-stop-landings.json",
       "flags": [
         "maneuver"
       ],
@@ -15391,7 +15391,7 @@
     {
       "slug": "gca-pattern",
       "title": "GCA pattern",
-      "file": "items/gca-pattern.json",
+      "file": "items/primary/gca-pattern.json",
       "flags": [
         "maneuver"
       ],
@@ -15549,7 +15549,7 @@
     {
       "slug": "gear-emergencies",
       "title": "Gear emergencies",
-      "file": "items/gear-emergencies.json",
+      "file": "items/primary/gear-emergencies.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -15748,7 +15748,7 @@
     {
       "slug": "gps-allowable-operations",
       "title": "GPS allowable operations",
-      "file": "items/gps-allowable-operations.json",
+      "file": "items/primary/gps-allowable-operations.json",
       "flags": [],
       "stages": [
         "I"
@@ -15853,7 +15853,7 @@
     {
       "slug": "gps-approaches",
       "title": "GPS approaches",
-      "file": "items/gps-approaches.json",
+      "file": "items/primary/gps-approaches.json",
       "flags": [
         "maneuver"
       ],
@@ -16059,7 +16059,7 @@
     {
       "slug": "gps-flight-modes",
       "title": "GPS flight modes",
-      "file": "items/gps-flight-modes.json",
+      "file": "items/primary/gps-flight-modes.json",
       "flags": [],
       "stages": [
         "I"
@@ -16210,7 +16210,7 @@
     {
       "slug": "gps-holding",
       "title": "GPS holding",
-      "file": "items/gps-holding.json",
+      "file": "items/primary/gps-holding.json",
       "flags": [
         "maneuver"
       ],
@@ -16318,7 +16318,7 @@
     {
       "slug": "gps-procedures",
       "title": "GPS procedures",
-      "file": "items/gps-procedures.json",
+      "file": "items/primary/gps-procedures.json",
       "flags": [],
       "stages": [
         "I"
@@ -16401,7 +16401,7 @@
     {
       "slug": "grading-and-standards",
       "title": "ATF, ATS, CTS and MIF",
-      "file": "items/grading-and-standards.json",
+      "file": "items/primary/grading-and-standards.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -16504,7 +16504,7 @@
     {
       "slug": "ground-handling-signals",
       "title": "Ground handling signals",
-      "file": "items/ground-handling-signals.json",
+      "file": "items/primary/ground-handling-signals.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -16584,7 +16584,7 @@
     {
       "slug": "ground-speed-calculations",
       "title": "Ground-speed calculations",
-      "file": "items/ground-speed-calculations.json",
+      "file": "items/primary/ground-speed-calculations.json",
       "flags": [],
       "stages": [
         "I"
@@ -16687,7 +16687,7 @@
     {
       "slug": "half-cuban-eight",
       "title": "Half cuban eight",
-      "file": "items/half-cuban-eight.json",
+      "file": "items/primary/half-cuban-eight.json",
       "flags": [
         "maneuver"
       ],
@@ -16787,7 +16787,7 @@
     {
       "slug": "hand-signals",
       "title": "Hand signals",
-      "file": "items/hand-signals.json",
+      "file": "items/primary/hand-signals.json",
       "flags": [],
       "stages": [
         "F"
@@ -16884,7 +16884,7 @@
     {
       "slug": "hard-landings",
       "title": "Hard landings",
-      "file": "items/hard-landings.json",
+      "file": "items/primary/hard-landings.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -17015,7 +17015,7 @@
     {
       "slug": "headwork",
       "title": "Headwork",
-      "file": "items/headwork.json",
+      "file": "items/primary/headwork.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -17091,7 +17091,7 @@
     {
       "slug": "heavy-weight-landing-considerations",
       "title": "Heavy-weight landing considerations",
-      "file": "items/heavy-weight-landing-considerations.json",
+      "file": "items/primary/heavy-weight-landing-considerations.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -17167,7 +17167,7 @@
     {
       "slug": "hefoe",
       "title": "HEFOE",
-      "file": "items/hefoe.json",
+      "file": "items/primary/hefoe.json",
       "flags": [],
       "stages": [
         "F"
@@ -17249,7 +17249,7 @@
     {
       "slug": "high-altitude-approach",
       "title": "High altitude approach",
-      "file": "items/high-altitude-approach.json",
+      "file": "items/primary/high-altitude-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -17379,7 +17379,7 @@
     {
       "slug": "hilo-approach",
       "title": "HILO approach",
-      "file": "items/hilo-approach.json",
+      "file": "items/primary/hilo-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -17485,7 +17485,7 @@
     {
       "slug": "holding-corrections",
       "title": "Holding corrections",
-      "file": "items/holding-corrections.json",
+      "file": "items/primary/holding-corrections.json",
       "flags": [
         "maneuver"
       ],
@@ -17614,7 +17614,7 @@
     {
       "slug": "holding-entry",
       "title": "Holding entry",
-      "file": "items/holding-entry.json",
+      "file": "items/primary/holding-entry.json",
       "flags": [
         "maneuver"
       ],
@@ -17779,7 +17779,7 @@
     {
       "slug": "holding",
       "title": "Holding",
-      "file": "items/holding.json",
+      "file": "items/primary/holding.json",
       "flags": [
         "maneuver"
       ],
@@ -18022,7 +18022,7 @@
     {
       "slug": "home-field-arrival",
       "title": "Home field arrival",
-      "file": "items/home-field-arrival.json",
+      "file": "items/primary/home-field-arrival.json",
       "flags": [
         "maneuver"
       ],
@@ -18240,7 +18240,7 @@
     {
       "slug": "hot-start",
       "title": "Hot start",
-      "file": "items/hot-start.json",
+      "file": "items/primary/hot-start.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -18343,7 +18343,7 @@
     {
       "slug": "hsi-orientation",
       "title": "HSI orientation",
-      "file": "items/hsi-orientation.json",
+      "file": "items/primary/hsi-orientation.json",
       "flags": [],
       "stages": [
         "I"
@@ -18472,7 +18472,7 @@
     {
       "slug": "hud",
       "title": "HUD",
-      "file": "items/hud.json",
+      "file": "items/primary/hud.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -18616,7 +18616,7 @@
     {
       "slug": "hung-start",
       "title": "Hung start",
-      "file": "items/hung-start.json",
+      "file": "items/primary/hung-start.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -18703,7 +18703,7 @@
     {
       "slug": "hydraulic-system-malfunctions",
       "title": "Hydraulic system malfunctions",
-      "file": "items/hydraulic-system-malfunctions.json",
+      "file": "items/primary/hydraulic-system-malfunctions.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -18790,7 +18790,7 @@
     {
       "slug": "hydraulic-system",
       "title": "Hydraulic system",
-      "file": "items/hydraulic-system.json",
+      "file": "items/primary/hydraulic-system.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -18994,7 +18994,7 @@
     {
       "slug": "hyperventilation-and-hypoxia",
       "title": "Hyperventilation and hypoxia",
-      "file": "items/hyperventilation-and-hypoxia.json",
+      "file": "items/primary/hyperventilation-and-hypoxia.json",
       "flags": [],
       "stages": [
         "I"
@@ -19126,7 +19126,7 @@
     {
       "slug": "iac-failure",
       "title": "IAC failure",
-      "file": "items/iac-failure.json",
+      "file": "items/primary/iac-failure.json",
       "flags": [],
       "stages": [
         "I"
@@ -19240,7 +19240,7 @@
     {
       "slug": "icing",
       "title": "Icing",
-      "file": "items/icing.json",
+      "file": "items/primary/icing.json",
       "flags": [],
       "stages": [
         "I"
@@ -19380,7 +19380,7 @@
     {
       "slug": "ifr-clearance-from-uncontrolled-airports",
       "title": "IFR clearance from uncontrolled airports",
-      "file": "items/ifr-clearance-from-uncontrolled-airports.json",
+      "file": "items/primary/ifr-clearance-from-uncontrolled-airports.json",
       "flags": [],
       "stages": [
         "I"
@@ -19458,7 +19458,7 @@
     {
       "slug": "ifr-flight-planning",
       "title": "IFR flight planning",
-      "file": "items/ifr-flight-planning.json",
+      "file": "items/primary/ifr-flight-planning.json",
       "flags": [],
       "stages": [
         "I"
@@ -19742,7 +19742,7 @@
     {
       "slug": "ifr-pickup",
       "title": "IFR pick-up",
-      "file": "items/ifr-pickup.json",
+      "file": "items/primary/ifr-pickup.json",
       "flags": [],
       "stages": [
         "CS"
@@ -19827,7 +19827,7 @@
     {
       "slug": "ifr-supplement",
       "title": "IFR Supplement",
-      "file": "items/ifr-supplement.json",
+      "file": "items/primary/ifr-supplement.json",
       "flags": [],
       "stages": [
         "I"
@@ -19953,7 +19953,7 @@
     {
       "slug": "ifr-to-vfr-transition",
       "title": "IFR to VFR transition",
-      "file": "items/ifr-to-vfr-transition.json",
+      "file": "items/primary/ifr-to-vfr-transition.json",
       "flags": [],
       "stages": [
         "CS"
@@ -20039,7 +20039,7 @@
     {
       "slug": "ifr-unusual-attitudes",
       "title": "IFR unusual attitudes",
-      "file": "items/ifr-unusual-attitudes.json",
+      "file": "items/primary/ifr-unusual-attitudes.json",
       "flags": [
         "maneuver"
       ],
@@ -20179,7 +20179,7 @@
     {
       "slug": "ils-approach",
       "title": "ILS approach",
-      "file": "items/ils-approach.json",
+      "file": "items/primary/ils-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -20409,7 +20409,7 @@
     {
       "slug": "ils-full-procedure-turn",
       "title": "ILS full procedure turn",
-      "file": "items/ils-full-procedure-turn.json",
+      "file": "items/primary/ils-full-procedure-turn.json",
       "flags": [
         "maneuver"
       ],
@@ -20496,7 +20496,7 @@
     {
       "slug": "imc-emergencies",
       "title": "IMC emergencies",
-      "file": "items/imc-emergencies.json",
+      "file": "items/primary/imc-emergencies.json",
       "flags": [],
       "stages": [
         "I",
@@ -20651,7 +20651,7 @@
     {
       "slug": "immediate-air-start",
       "title": "Immediate air-start",
-      "file": "items/immediate-air-start.json",
+      "file": "items/primary/immediate-air-start.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -20800,7 +20800,7 @@
     {
       "slug": "immelmann",
       "title": "Immelmann",
-      "file": "items/immelmann.json",
+      "file": "items/primary/immelmann.json",
       "flags": [
         "maneuver"
       ],
@@ -20921,7 +20921,7 @@
     {
       "slug": "impending-engine-failure-indications",
       "title": "Impending engine failure indications",
-      "file": "items/impending-engine-failure-indications.json",
+      "file": "items/primary/impending-engine-failure-indications.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -21019,7 +21019,7 @@
     {
       "slug": "imsafe-checklist",
       "title": "I'M SAFE checklist",
-      "file": "items/imsafe-checklist.json",
+      "file": "items/primary/imsafe-checklist.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -21184,7 +21184,7 @@
     {
       "slug": "inadvertent-instrument-flight",
       "title": "Inadvertent instrument flight",
-      "file": "items/inadvertent-instrument-flight.json",
+      "file": "items/primary/inadvertent-instrument-flight.json",
       "flags": [],
       "stages": [
         "F"
@@ -21288,7 +21288,7 @@
     {
       "slug": "inadvertent-thunderstorm-penetration",
       "title": "Inadvertent thunderstorm penetration",
-      "file": "items/inadvertent-thunderstorm-penetration.json",
+      "file": "items/primary/inadvertent-thunderstorm-penetration.json",
       "flags": [],
       "stages": [
         "I"
@@ -21442,7 +21442,7 @@
     {
       "slug": "inadvertent-trim-actuation",
       "title": "Inadvertent trim actuation",
-      "file": "items/inadvertent-trim-actuation.json",
+      "file": "items/primary/inadvertent-trim-actuation.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -21543,7 +21543,7 @@
     {
       "slug": "incipient-spin-recovery",
       "title": "Incipient spin recovery",
-      "file": "items/incipient-spin-recovery.json",
+      "file": "items/primary/incipient-spin-recovery.json",
       "flags": [
         "maneuver"
       ],
@@ -21660,7 +21660,7 @@
     {
       "slug": "instrument-scan-patterns",
       "title": "Instrument scan patterns",
-      "file": "items/instrument-scan-patterns.json",
+      "file": "items/primary/instrument-scan-patterns.json",
       "flags": [],
       "stages": [
         "I"
@@ -21776,7 +21776,7 @@
     {
       "slug": "integrated-vmc-scan",
       "title": "Integrated (VMC) scan",
-      "file": "items/integrated-vmc-scan.json",
+      "file": "items/primary/integrated-vmc-scan.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -21878,7 +21878,7 @@
     {
       "slug": "intentional-spin-entry",
       "title": "Intentional spin entry",
-      "file": "items/intentional-spin-entry.json",
+      "file": "items/primary/intentional-spin-entry.json",
       "flags": [
         "maneuver"
       ],
@@ -22025,7 +22025,7 @@
     {
       "slug": "intersections",
       "title": "Intersections",
-      "file": "items/intersections.json",
+      "file": "items/primary/intersections.json",
       "flags": [
         "maneuver"
       ],
@@ -22162,7 +22162,7 @@
     {
       "slug": "inverted-spin",
       "title": "Inverted spin",
-      "file": "items/inverted-spin.json",
+      "file": "items/primary/inverted-spin.json",
       "flags": [
         "maneuver"
       ],
@@ -22299,7 +22299,7 @@
     {
       "slug": "jet-log",
       "title": "Jet log",
-      "file": "items/jet-log.json",
+      "file": "items/primary/jet-log.json",
       "flags": [],
       "stages": [
         "I"
@@ -22428,7 +22428,7 @@
     {
       "slug": "knock-it-off",
       "title": "Knock-it-off",
-      "file": "items/knock-it-off.json",
+      "file": "items/primary/knock-it-off.json",
       "flags": [],
       "stages": [
         "F",
@@ -22513,7 +22513,7 @@
     {
       "slug": "landing-flap-landings",
       "title": "Landing flap landings",
-      "file": "items/landing-flap-landings.json",
+      "file": "items/primary/landing-flap-landings.json",
       "flags": [
         "maneuver"
       ],
@@ -22618,7 +22618,7 @@
     {
       "slug": "landing-gear-emergency-extension",
       "title": "Landing gear emergency extension",
-      "file": "items/landing-gear-emergency-extension.json",
+      "file": "items/primary/landing-gear-emergency-extension.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -22696,7 +22696,7 @@
     {
       "slug": "landing-gear-inspection",
       "title": "Landing gear inspection",
-      "file": "items/landing-gear-inspection.json",
+      "file": "items/primary/landing-gear-inspection.json",
       "flags": [],
       "stages": [
         "F"
@@ -22827,7 +22827,7 @@
     {
       "slug": "landing-irregularities",
       "title": "Landing irregularities",
-      "file": "items/landing-irregularities.json",
+      "file": "items/primary/landing-irregularities.json",
       "flags": [
         "maneuver"
       ],
@@ -22905,7 +22905,7 @@
     {
       "slug": "landing-pattern-stalls",
       "title": "Landing pattern stalls",
-      "file": "items/landing-pattern-stalls.json",
+      "file": "items/primary/landing-pattern-stalls.json",
       "flags": [
         "maneuver"
       ],
@@ -23059,7 +23059,7 @@
     {
       "slug": "landing-pattern",
       "title": "Landing pattern",
-      "file": "items/landing-pattern.json",
+      "file": "items/primary/landing-pattern.json",
       "flags": [
         "maneuver"
       ],
@@ -23270,7 +23270,7 @@
     {
       "slug": "lead-lag-and-pure-pursuit",
       "title": "Lead, lag and pure pursuit",
-      "file": "items/lead-lag-and-pure-pursuit.json",
+      "file": "items/primary/lead-lag-and-pure-pursuit.json",
       "flags": [
         "maneuver"
       ],
@@ -23366,7 +23366,7 @@
     {
       "slug": "level-speed-change",
       "title": "Level speed change",
-      "file": "items/level-speed-change.json",
+      "file": "items/primary/level-speed-change.json",
       "flags": [
         "maneuver"
       ],
@@ -23492,7 +23492,7 @@
     {
       "slug": "local-area-departure",
       "title": "Local area departure",
-      "file": "items/local-area-departure.json",
+      "file": "items/primary/local-area-departure.json",
       "flags": [
         "maneuver"
       ],
@@ -23651,7 +23651,7 @@
     {
       "slug": "local-area-flight-procedures-sop",
       "title": "Local area flight procedures",
-      "file": "items/local-area-flight-procedures-sop.json",
+      "file": "items/primary/local-area-flight-procedures-sop.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -23925,7 +23925,7 @@
     {
       "slug": "local-cross-country-sop",
       "title": "Local cross-country SOP",
-      "file": "items/local-cross-country-sop.json",
+      "file": "items/primary/local-cross-country-sop.json",
       "flags": [],
       "stages": [
         "N"
@@ -24073,7 +24073,7 @@
     {
       "slug": "local-night-vnav-sop",
       "title": "Local night VNAV SOP",
-      "file": "items/local-night-vnav-sop.json",
+      "file": "items/primary/local-night-vnav-sop.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -24222,7 +24222,7 @@
     {
       "slug": "local-vfr-sectional-review",
       "title": "Local VFR sectional review",
-      "file": "items/local-vfr-sectional-review.json",
+      "file": "items/primary/local-vfr-sectional-review.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -24392,7 +24392,7 @@
     {
       "slug": "localizer-approach",
       "title": "Localizer approach",
-      "file": "items/localizer-approach.json",
+      "file": "items/primary/localizer-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -24524,7 +24524,7 @@
     {
       "slug": "loop",
       "title": "Loop",
-      "file": "items/loop.json",
+      "file": "items/primary/loop.json",
       "flags": [
         "maneuver"
       ],
@@ -24635,7 +24635,7 @@
     {
       "slug": "loss-of-start-ready-light-during-start-sequence",
       "title": "Loss of START READY light during start sequence",
-      "file": "items/loss-of-start-ready-light-during-start-sequence.json",
+      "file": "items/primary/loss-of-start-ready-light-during-start-sequence.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -24753,7 +24753,7 @@
     {
       "slug": "lost-aircraft-procedures",
       "title": "Lost aircraft procedures",
-      "file": "items/lost-aircraft-procedures.json",
+      "file": "items/primary/lost-aircraft-procedures.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -24844,7 +24844,7 @@
     {
       "slug": "lost-communication-procedures",
       "title": "Lost communication procedures",
-      "file": "items/lost-communication-procedures.json",
+      "file": "items/primary/lost-communication-procedures.json",
       "flags": [],
       "stages": [
         "F"
@@ -24973,7 +24973,7 @@
     {
       "slug": "lost-communications",
       "title": "Lost communications",
-      "file": "items/lost-communications.json",
+      "file": "items/primary/lost-communications.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -25196,7 +25196,7 @@
     {
       "slug": "lost-sight-procedures",
       "title": "Lost sight procedures",
-      "file": "items/lost-sight-procedures.json",
+      "file": "items/primary/lost-sight-procedures.json",
       "flags": [],
       "stages": [
         "F"
@@ -25330,7 +25330,7 @@
     {
       "slug": "low-fuel-pressure",
       "title": "Low fuel pressure",
-      "file": "items/low-fuel-pressure.json",
+      "file": "items/primary/low-fuel-pressure.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -25415,7 +25415,7 @@
     {
       "slug": "maneuvering-speeds",
       "title": "Maneuvering speeds",
-      "file": "items/maneuvering-speeds.json",
+      "file": "items/primary/maneuvering-speeds.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -25541,7 +25541,7 @@
     {
       "slug": "memorized-checklists",
       "title": "Memorized checklists",
-      "file": "items/memorized-checklists.json",
+      "file": "items/primary/memorized-checklists.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -25665,7 +25665,7 @@
     {
       "slug": "minimum-fuel-requirements",
       "title": "Minimum fuel requirements",
-      "file": "items/minimum-fuel-requirements.json",
+      "file": "items/primary/minimum-fuel-requirements.json",
       "flags": [],
       "stages": [
         "I"
@@ -25825,7 +25825,7 @@
     {
       "slug": "missed-approach",
       "title": "Missed approach",
-      "file": "items/missed-approach.json",
+      "file": "items/primary/missed-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -26039,7 +26039,7 @@
     {
       "slug": "natops-limitations",
       "title": "NATOPS limitations",
-      "file": "items/natops-limitations.json",
+      "file": "items/primary/natops-limitations.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -26346,7 +26346,7 @@
     {
       "slug": "night-cockpit-setup",
       "title": "Night cockpit setup",
-      "file": "items/night-cockpit-setup.json",
+      "file": "items/primary/night-cockpit-setup.json",
       "flags": [],
       "stages": [
         "I"
@@ -26476,7 +26476,7 @@
     {
       "slug": "night-emergency-procedures",
       "title": "Night emergency procedures",
-      "file": "items/night-emergency-procedures.json",
+      "file": "items/primary/night-emergency-procedures.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -26553,7 +26553,7 @@
     {
       "slug": "night-flying-considerations",
       "title": "Night flying considerations",
-      "file": "items/night-flying-considerations.json",
+      "file": "items/primary/night-flying-considerations.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -26726,7 +26726,7 @@
     {
       "slug": "night-vfr-chart-interpretation",
       "title": "Night VFR chart interpretation",
-      "file": "items/night-vfr-chart-interpretation.json",
+      "file": "items/primary/night-vfr-chart-interpretation.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -26824,7 +26824,7 @@
     {
       "slug": "night-vnav-timing-and-course-corrections",
       "title": "Night VNAV timing and course corrections",
-      "file": "items/night-vnav-timing-and-course-corrections.json",
+      "file": "items/primary/night-vnav-timing-and-course-corrections.json",
       "flags": [],
       "stages": [
         "N"
@@ -26973,7 +26973,7 @@
     {
       "slug": "no-flap-landings",
       "title": "No-flap landings",
-      "file": "items/no-flap-landings.json",
+      "file": "items/primary/no-flap-landings.json",
       "flags": [
         "maneuver"
       ],
@@ -27088,7 +27088,7 @@
     {
       "slug": "no-gyro-approach",
       "title": "No-gyro approach",
-      "file": "items/no-gyro-approach.json",
+      "file": "items/primary/no-gyro-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -27225,7 +27225,7 @@
     {
       "slug": "no-start",
       "title": "No start",
-      "file": "items/no-start.json",
+      "file": "items/primary/no-start.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -27323,7 +27323,7 @@
     {
       "slug": "no-wind-orbit",
       "title": "No-wind orbit",
-      "file": "items/no-wind-orbit.json",
+      "file": "items/primary/no-wind-orbit.json",
       "flags": [
         "maneuver"
       ],
@@ -27416,7 +27416,7 @@
     {
       "slug": "non-radar-environment-communications",
       "title": "Non-radar environment communications",
-      "file": "items/non-radar-environment-communications.json",
+      "file": "items/primary/non-radar-environment-communications.json",
       "flags": [],
       "stages": [
         "I"
@@ -27552,7 +27552,7 @@
     {
       "slug": "normal-takeoff",
       "title": "Normal takeoff",
-      "file": "items/normal-takeoff.json",
+      "file": "items/primary/normal-takeoff.json",
       "flags": [
         "maneuver"
       ],
@@ -27726,7 +27726,7 @@
     {
       "slug": "notams",
       "title": "NOTAMs",
-      "file": "items/notams.json",
+      "file": "items/primary/notams.json",
       "flags": [],
       "stages": [
         "I"
@@ -27900,7 +27900,7 @@
     {
       "slug": "obogs-and-pressurization-system",
       "title": "OBOGS and pressurization system",
-      "file": "items/obogs-and-pressurization-system.json",
+      "file": "items/primary/obogs-and-pressurization-system.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -28070,7 +28070,7 @@
     {
       "slug": "obogs-fail-message",
       "title": "OBOGS FAIL message",
-      "file": "items/obogs-fail-message.json",
+      "file": "items/primary/obogs-fail-message.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -28161,7 +28161,7 @@
     {
       "slug": "obogs-malfunctions",
       "title": "OBOGS malfunctions",
-      "file": "items/obogs-malfunctions.json",
+      "file": "items/primary/obogs-malfunctions.json",
       "flags": [],
       "stages": [
         "I"
@@ -28290,7 +28290,7 @@
     {
       "slug": "obstacle-departure-procedures",
       "title": "Obstacle departure procedures",
-      "file": "items/obstacle-departure-procedures.json",
+      "file": "items/primary/obstacle-departure-procedures.json",
       "flags": [],
       "stages": [
         "I"
@@ -28406,7 +28406,7 @@
     {
       "slug": "oil-and-propeller-systems",
       "title": "Oil and propeller systems",
-      "file": "items/oil-and-propeller-systems.json",
+      "file": "items/primary/oil-and-propeller-systems.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -28590,7 +28590,7 @@
     {
       "slug": "oil-system-malfunction-or-low-oil-pressure",
       "title": "Oil system malfunction or low oil pressure",
-      "file": "items/oil-system-malfunction-or-low-oil-pressure.json",
+      "file": "items/primary/oil-system-malfunction-or-low-oil-pressure.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -28702,7 +28702,7 @@
     {
       "slug": "olf-arrival-and-departure",
       "title": "OLF arrival and departure",
-      "file": "items/olf-arrival-and-departure.json",
+      "file": "items/primary/olf-arrival-and-departure.json",
       "flags": [
         "maneuver"
       ],
@@ -28914,7 +28914,7 @@
     {
       "slug": "olf-course-rules",
       "title": "OLF course rules",
-      "file": "items/olf-course-rules.json",
+      "file": "items/primary/olf-course-rules.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -29097,7 +29097,7 @@
     {
       "slug": "olf-rdo-communication",
       "title": "OLF/RDO communication",
-      "file": "items/olf-rdo-communication.json",
+      "file": "items/primary/olf-rdo-communication.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -29222,7 +29222,7 @@
     {
       "slug": "on-speed-crosscheck-in-crosswind-conditions",
       "title": "On-speed crosscheck in crosswind conditions",
-      "file": "items/on-speed-crosscheck-in-crosswind-conditions.json",
+      "file": "items/primary/on-speed-crosscheck-in-crosswind-conditions.json",
       "flags": [
         "orphan"
       ],
@@ -29328,7 +29328,7 @@
     {
       "slug": "out-of-control-flight",
       "title": "Out-of-control flight",
-      "file": "items/out-of-control-flight.json",
+      "file": "items/primary/out-of-control-flight.json",
       "flags": [
         "maneuver"
       ],
@@ -29524,7 +29524,7 @@
     {
       "slug": "over-the-station-intercepts",
       "title": "Over-the-station intercepts",
-      "file": "items/over-the-station-intercepts.json",
+      "file": "items/primary/over-the-station-intercepts.json",
       "flags": [
         "maneuver"
       ],
@@ -29625,7 +29625,7 @@
     {
       "slug": "par-approach",
       "title": "PAR approach",
-      "file": "items/par-approach.json",
+      "file": "items/primary/par-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -29860,7 +29860,7 @@
     {
       "slug": "par-without-glideslope",
       "title": "PAR without glideslope",
-      "file": "items/par-without-glideslope.json",
+      "file": "items/primary/par-without-glideslope.json",
       "flags": [
         "maneuver"
       ],
@@ -29997,7 +29997,7 @@
     {
       "slug": "parade-sequence-checkpoints",
       "title": "Parade sequence checkpoints",
-      "file": "items/parade-sequence-checkpoints.json",
+      "file": "items/primary/parade-sequence-checkpoints.json",
       "flags": [
         "maneuver",
         "orphan"
@@ -30199,7 +30199,7 @@
     {
       "slug": "pattern-adjustments-for-crosswinds",
       "title": "Pattern adjustments for crosswinds",
-      "file": "items/pattern-adjustments-for-crosswinds.json",
+      "file": "items/primary/pattern-adjustments-for-crosswinds.json",
       "flags": [
         "maneuver"
       ],
@@ -30350,7 +30350,7 @@
     {
       "slug": "pcl-cutoff-and-inadvertent-engine-shutdown",
       "title": "PCL cutoff and inadvertent engine shutdown",
-      "file": "items/pcl-cutoff-and-inadvertent-engine-shutdown.json",
+      "file": "items/primary/pcl-cutoff-and-inadvertent-engine-shutdown.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -30439,7 +30439,7 @@
     {
       "slug": "pel-from-the-pattern",
       "title": "PEL from the pattern",
-      "file": "items/pel-from-the-pattern.json",
+      "file": "items/primary/pel-from-the-pattern.json",
       "flags": [
         "maneuver"
       ],
@@ -30563,7 +30563,7 @@
     {
       "slug": "pmu-norm-air-start",
       "title": "PMU NORM air-start",
-      "file": "items/pmu-norm-air-start.json",
+      "file": "items/primary/pmu-norm-air-start.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -30704,7 +30704,7 @@
     {
       "slug": "pmu-off-air-start",
       "title": "PMU OFF air-start",
-      "file": "items/pmu-off-air-start.json",
+      "file": "items/primary/pmu-off-air-start.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -30843,7 +30843,7 @@
     {
       "slug": "point-to-point",
       "title": "Point-to-point",
-      "file": "items/point-to-point.json",
+      "file": "items/primary/point-to-point.json",
       "flags": [
         "maneuver"
       ],
@@ -30971,7 +30971,7 @@
     {
       "slug": "power-off-stall",
       "title": "Power-off stall",
-      "file": "items/power-off-stall.json",
+      "file": "items/primary/power-off-stall.json",
       "flags": [
         "maneuver"
       ],
@@ -31120,7 +31120,7 @@
     {
       "slug": "power-on-stalls",
       "title": "Power-on stalls",
-      "file": "items/power-on-stalls.json",
+      "file": "items/primary/power-on-stalls.json",
       "flags": [
         "maneuver"
       ],
@@ -31258,7 +31258,7 @@
     {
       "slug": "precautionary-emergency-landing",
       "title": "Precautionary emergency landing",
-      "file": "items/precautionary-emergency-landing.json",
+      "file": "items/primary/precautionary-emergency-landing.json",
       "flags": [
         "maneuver"
       ],
@@ -31504,7 +31504,7 @@
     {
       "slug": "previously-discussed-familiarization-items",
       "title": "Any previously discussed familiarization items",
-      "file": "items/previously-discussed-familiarization-items.json",
+      "file": "items/primary/previously-discussed-familiarization-items.json",
       "flags": [
         "generated"
       ],
@@ -31555,7 +31555,7 @@
     {
       "slug": "previously-discussed-items",
       "title": "Any previously discussed item",
-      "file": "items/previously-discussed-items.json",
+      "file": "items/primary/previously-discussed-items.json",
       "flags": [
         "generated"
       ],
@@ -31592,7 +31592,7 @@
     {
       "slug": "previously-discussed-maneuvers",
       "title": "Any previously discussed maneuver",
-      "file": "items/previously-discussed-maneuvers.json",
+      "file": "items/primary/previously-discussed-maneuvers.json",
       "flags": [
         "generated"
       ],
@@ -31666,7 +31666,7 @@
     {
       "slug": "procedure-turn-approach",
       "title": "Procedure turn approach",
-      "file": "items/procedure-turn-approach.json",
+      "file": "items/primary/procedure-turn-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -31822,7 +31822,7 @@
     {
       "slug": "progressive-spin",
       "title": "Progressive spin",
-      "file": "items/progressive-spin.json",
+      "file": "items/primary/progressive-spin.json",
       "flags": [
         "maneuver"
       ],
@@ -31910,7 +31910,7 @@
     {
       "slug": "radial-arc-intercepts",
       "title": "Radial-arc intercepts",
-      "file": "items/radial-arc-intercepts.json",
+      "file": "items/primary/radial-arc-intercepts.json",
       "flags": [
         "maneuver"
       ],
@@ -31996,7 +31996,7 @@
     {
       "slug": "radial-intercept-procedures",
       "title": "Radial intercept procedures",
-      "file": "items/radial-intercept-procedures.json",
+      "file": "items/primary/radial-intercept-procedures.json",
       "flags": [
         "maneuver"
       ],
@@ -32119,7 +32119,7 @@
     {
       "slug": "radial-rendezvous",
       "title": "Radial rendezvous",
-      "file": "items/radial-rendezvous.json",
+      "file": "items/primary/radial-rendezvous.json",
       "flags": [
         "maneuver"
       ],
@@ -32268,7 +32268,7 @@
     {
       "slug": "rate-of-descent-calculation",
       "title": "Rate of descent calculation",
-      "file": "items/rate-of-descent-calculation.json",
+      "file": "items/primary/rate-of-descent-calculation.json",
       "flags": [
         "orphan"
       ],
@@ -32379,7 +32379,7 @@
     {
       "slug": "recommended-altitudes",
       "title": "Recommended altitudes",
-      "file": "items/recommended-altitudes.json",
+      "file": "items/primary/recommended-altitudes.json",
       "flags": [],
       "stages": [
         "I"
@@ -32463,7 +32463,7 @@
     {
       "slug": "route-management",
       "title": "Route management",
-      "file": "items/route-management.json",
+      "file": "items/primary/route-management.json",
       "flags": [],
       "stages": [
         "N"
@@ -32621,7 +32621,7 @@
     {
       "slug": "runaway-trim",
       "title": "Runaway trim",
-      "file": "items/runaway-trim.json",
+      "file": "items/primary/runaway-trim.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -32745,7 +32745,7 @@
     {
       "slug": "rvfac-for-rnav-approaches",
       "title": "RVFAC for RNAV approaches",
-      "file": "items/rvfac-for-rnav-approaches.json",
+      "file": "items/primary/rvfac-for-rnav-approaches.json",
       "flags": [
         "maneuver"
       ],
@@ -32830,7 +32830,7 @@
     {
       "slug": "rvfac",
       "title": "Radar vectors to final approach course",
-      "file": "items/rvfac.json",
+      "file": "items/primary/rvfac.json",
       "flags": [
         "maneuver"
       ],
@@ -32958,7 +32958,7 @@
     {
       "slug": "s-1-pattern",
       "title": "S-1 pattern",
-      "file": "items/s-1-pattern.json",
+      "file": "items/primary/s-1-pattern.json",
       "flags": [
         "maneuver"
       ],
@@ -33086,7 +33086,7 @@
     {
       "slug": "safety-check-call",
       "title": "Safety check and call",
-      "file": "items/safety-check-call.json",
+      "file": "items/primary/safety-check-call.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -33198,7 +33198,7 @@
     {
       "slug": "scatsafe",
       "title": "SCATSAFE maneuver",
-      "file": "items/scatsafe.json",
+      "file": "items/primary/scatsafe.json",
       "flags": [
         "maneuver"
       ],
@@ -33318,7 +33318,7 @@
     {
       "slug": "scheduling",
       "title": "Scheduling",
-      "file": "items/scheduling.json",
+      "file": "items/primary/scheduling.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -33460,7 +33460,7 @@
     {
       "slug": "seat-height-and-rudder-pedal-adjustment",
       "title": "Seat height and rudder pedal adjustment",
-      "file": "items/seat-height-and-rudder-pedal-adjustment.json",
+      "file": "items/primary/seat-height-and-rudder-pedal-adjustment.json",
       "flags": [],
       "stages": [
         "GND",
@@ -33567,7 +33567,7 @@
     {
       "slug": "section-approach-procedures",
       "title": "Section approach procedures",
-      "file": "items/section-approach-procedures.json",
+      "file": "items/primary/section-approach-procedures.json",
       "flags": [
         "maneuver"
       ],
@@ -33685,7 +33685,7 @@
     {
       "slug": "section-pel",
       "title": "Section PEL",
-      "file": "items/section-pel.json",
+      "file": "items/primary/section-pel.json",
       "flags": [
         "maneuver"
       ],
@@ -33792,7 +33792,7 @@
     {
       "slug": "section-takeoff",
       "title": "Section takeoff",
-      "file": "items/section-takeoff.json",
+      "file": "items/primary/section-takeoff.json",
       "flags": [
         "maneuver"
       ],
@@ -33980,7 +33980,7 @@
     {
       "slug": "securing-rear-cockpit-for-solo",
       "title": "Securing the rear cockpit for solo",
-      "file": "items/securing-rear-cockpit-for-solo.json",
+      "file": "items/primary/securing-rear-cockpit-for-solo.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -34056,7 +34056,7 @@
     {
       "slug": "see-and-avoid",
       "title": "See and avoid principle",
-      "file": "items/see-and-avoid.json",
+      "file": "items/primary/see-and-avoid.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -34188,7 +34188,7 @@
     {
       "slug": "shuttle-descent",
       "title": "Shuttle descent",
-      "file": "items/shuttle-descent.json",
+      "file": "items/primary/shuttle-descent.json",
       "flags": [
         "maneuver"
       ],
@@ -34293,7 +34293,7 @@
     {
       "slug": "slip",
       "title": "Slip",
-      "file": "items/slip.json",
+      "file": "items/primary/slip.json",
       "flags": [
         "maneuver"
       ],
@@ -34403,7 +34403,7 @@
     {
       "slug": "slow-flight",
       "title": "Slow flight",
-      "file": "items/slow-flight.json",
+      "file": "items/primary/slow-flight.json",
       "flags": [
         "maneuver"
       ],
@@ -34531,7 +34531,7 @@
     {
       "slug": "smoke-and-fume-elimination",
       "title": "Smoke and fume elimination",
-      "file": "items/smoke-and-fume-elimination.json",
+      "file": "items/primary/smoke-and-fume-elimination.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -34603,7 +34603,7 @@
     {
       "slug": "snivels",
       "title": "Snivels",
-      "file": "items/snivels.json",
+      "file": "items/primary/snivels.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -34680,7 +34680,7 @@
     {
       "slug": "speed-brake-use-as-a-section",
       "title": "Speed brake use as a section",
-      "file": "items/speed-brake-use-as-a-section.json",
+      "file": "items/primary/speed-brake-use-as-a-section.json",
       "flags": [
         "maneuver"
       ],
@@ -34776,7 +34776,7 @@
     {
       "slug": "spin",
       "title": "Spin",
-      "file": "items/spin.json",
+      "file": "items/primary/spin.json",
       "flags": [
         "maneuver"
       ],
@@ -34965,7 +34965,7 @@
     {
       "slug": "split-s",
       "title": "Split-S",
-      "file": "items/split-s.json",
+      "file": "items/primary/split-s.json",
       "flags": [
         "maneuver"
       ],
@@ -35094,7 +35094,7 @@
     {
       "slug": "stabilized-approach-criteria",
       "title": "Stabilized approach criteria",
-      "file": "items/stabilized-approach-criteria.json",
+      "file": "items/primary/stabilized-approach-criteria.json",
       "flags": [
         "orphan"
       ],
@@ -35315,7 +35315,7 @@
     {
       "slug": "standard-course-corrections",
       "title": "Standard course corrections",
-      "file": "items/standard-course-corrections.json",
+      "file": "items/primary/standard-course-corrections.json",
       "flags": [],
       "stages": [
         "N"
@@ -35447,7 +35447,7 @@
     {
       "slug": "standard-instrument-departure",
       "title": "Standard instrument departure",
-      "file": "items/standard-instrument-departure.json",
+      "file": "items/primary/standard-instrument-departure.json",
       "flags": [],
       "stages": [
         "I"
@@ -35553,7 +35553,7 @@
     {
       "slug": "standard-time-corrections",
       "title": "Standard time corrections",
-      "file": "items/standard-time-corrections.json",
+      "file": "items/primary/standard-time-corrections.json",
       "flags": [],
       "stages": [
         "N"
@@ -35687,7 +35687,7 @@
     {
       "slug": "star",
       "title": "Standard terminal arrival",
-      "file": "items/star.json",
+      "file": "items/primary/star.json",
       "flags": [],
       "stages": [
         "I"
@@ -35785,7 +35785,7 @@
     {
       "slug": "station-passage",
       "title": "Station passage",
-      "file": "items/station-passage.json",
+      "file": "items/primary/station-passage.json",
       "flags": [],
       "stages": [
         "I"
@@ -35854,7 +35854,7 @@
     {
       "slug": "steady-state-spin-recovery",
       "title": "Steady-state spin recovery",
-      "file": "items/steady-state-spin-recovery.json",
+      "file": "items/primary/steady-state-spin-recovery.json",
       "flags": [
         "maneuver"
       ],
@@ -35982,7 +35982,7 @@
     {
       "slug": "steep-turns",
       "title": "Steep turns",
-      "file": "items/steep-turns.json",
+      "file": "items/primary/steep-turns.json",
       "flags": [
         "maneuver"
       ],
@@ -36087,7 +36087,7 @@
     {
       "slug": "stereo-routes",
       "title": "Stereo routes",
-      "file": "items/stereo-routes.json",
+      "file": "items/primary/stereo-routes.json",
       "flags": [],
       "stages": [
         "I"
@@ -36206,7 +36206,7 @@
     {
       "slug": "strange-field-operations",
       "title": "Strange Field operations",
-      "file": "items/strange-field-operations.json",
+      "file": "items/primary/strange-field-operations.json",
       "flags": [],
       "stages": [
         "I"
@@ -36368,7 +36368,7 @@
     {
       "slug": "strike-of-ground-object",
       "title": "Strike of ground object",
-      "file": "items/strike-of-ground-object.json",
+      "file": "items/primary/strike-of-ground-object.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -36472,7 +36472,7 @@
     {
       "slug": "tail-chase",
       "title": "Tail chase",
-      "file": "items/tail-chase.json",
+      "file": "items/primary/tail-chase.json",
       "flags": [
         "maneuver",
         "orphan"
@@ -36675,7 +36675,7 @@
     {
       "slug": "takeoff-and-approach-minimums",
       "title": "Takeoff and approach minimums",
-      "file": "items/takeoff-and-approach-minimums.json",
+      "file": "items/primary/takeoff-and-approach-minimums.json",
       "flags": [],
       "stages": [
         "I"
@@ -36811,7 +36811,7 @@
     {
       "slug": "takeoff-flap-landings",
       "title": "Takeoff flap landings",
-      "file": "items/takeoff-flap-landings.json",
+      "file": "items/primary/takeoff-flap-landings.json",
       "flags": [
         "maneuver"
       ],
@@ -36922,7 +36922,7 @@
     {
       "slug": "teardrop-approach",
       "title": "Teardrop approach",
-      "file": "items/teardrop-approach.json",
+      "file": "items/primary/teardrop-approach.json",
       "flags": [
         "maneuver"
       ],
@@ -37048,7 +37048,7 @@
     {
       "slug": "terminate",
       "title": "Terminate",
-      "file": "items/terminate.json",
+      "file": "items/primary/terminate.json",
       "flags": [],
       "stages": [
         "F"
@@ -37123,7 +37123,7 @@
     {
       "slug": "three-cs",
       "title": "Three Cs",
-      "file": "items/three-cs.json",
+      "file": "items/primary/three-cs.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -37247,7 +37247,7 @@
     {
       "slug": "time-on-target",
       "title": "Time on target",
-      "file": "items/time-on-target.json",
+      "file": "items/primary/time-on-target.json",
       "flags": [],
       "stages": [
         "N"
@@ -37391,7 +37391,7 @@
     {
       "slug": "timed-turns",
       "title": "Timed turns",
-      "file": "items/timed-turns.json",
+      "file": "items/primary/timed-turns.json",
       "flags": [
         "maneuver"
       ],
@@ -37546,7 +37546,7 @@
     {
       "slug": "tire-failures",
       "title": "Tire failures",
-      "file": "items/tire-failures.json",
+      "file": "items/primary/tire-failures.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -37633,7 +37633,7 @@
     {
       "slug": "tracking",
       "title": "Tracking",
-      "file": "items/tracking.json",
+      "file": "items/primary/tracking.json",
       "flags": [
         "maneuver"
       ],
@@ -37740,7 +37740,7 @@
     {
       "slug": "trim",
       "title": "Trim",
-      "file": "items/trim.json",
+      "file": "items/primary/trim.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -37871,7 +37871,7 @@
     {
       "slug": "trouble-t",
       "title": "Trouble T",
-      "file": "items/trouble-t.json",
+      "file": "items/primary/trouble-t.json",
       "flags": [],
       "stages": [
         "I"
@@ -37941,7 +37941,7 @@
     {
       "slug": "turn-pattern",
       "title": "Turn pattern",
-      "file": "items/turn-pattern.json",
+      "file": "items/primary/turn-pattern.json",
       "flags": [
         "maneuver"
       ],
@@ -38085,7 +38085,7 @@
     {
       "slug": "ufcp-failure",
       "title": "UFCP failure",
-      "file": "items/ufcp-failure.json",
+      "file": "items/primary/ufcp-failure.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -38201,7 +38201,7 @@
     {
       "slug": "unauthorized-solo-maneuvers",
       "title": "Unauthorized solo maneuvers",
-      "file": "items/unauthorized-solo-maneuvers.json",
+      "file": "items/primary/unauthorized-solo-maneuvers.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -38326,7 +38326,7 @@
     {
       "slug": "uncommanded-power-changes-lop",
       "title": "Uncommanded power changes and loss of power",
-      "file": "items/uncommanded-power-changes-lop.json",
+      "file": "items/primary/uncommanded-power-changes-lop.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -38453,7 +38453,7 @@
     {
       "slug": "uncommanded-prop-feather",
       "title": "Uncommanded prop feather",
-      "file": "items/uncommanded-prop-feather.json",
+      "file": "items/primary/uncommanded-prop-feather.json",
       "flags": [],
       "stages": [
         "FAM",
@@ -38598,7 +38598,7 @@
     {
       "slug": "uncontrolled-field-instrument-communications",
       "title": "Uncontrolled field instrument communications",
-      "file": "items/uncontrolled-field-instrument-communications.json",
+      "file": "items/primary/uncontrolled-field-instrument-communications.json",
       "flags": [
         "orphan"
       ],
@@ -38729,7 +38729,7 @@
     {
       "slug": "unintentional-instrument-flight",
       "title": "Unintentional instrument flight",
-      "file": "items/unintentional-instrument-flight.json",
+      "file": "items/primary/unintentional-instrument-flight.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -38825,7 +38825,7 @@
     {
       "slug": "vfr-chart-preparation",
       "title": "VFR chart preparation",
-      "file": "items/vfr-chart-preparation.json",
+      "file": "items/primary/vfr-chart-preparation.json",
       "flags": [],
       "stages": [
         "N"
@@ -39038,7 +39038,7 @@
     {
       "slug": "vfr-field-entry-departure",
       "title": "VFR field entry/departure (AIM)",
-      "file": "items/vfr-field-entry-departure.json",
+      "file": "items/primary/vfr-field-entry-departure.json",
       "flags": [],
       "stages": [
         "N"
@@ -39248,7 +39248,7 @@
     {
       "slug": "visual-descent-point",
       "title": "Visual descent point",
-      "file": "items/visual-descent-point.json",
+      "file": "items/primary/visual-descent-point.json",
       "flags": [],
       "stages": [
         "I"
@@ -39356,7 +39356,7 @@
     {
       "slug": "visual-signals",
       "title": "Visual signals",
-      "file": "items/visual-signals.json",
+      "file": "items/primary/visual-signals.json",
       "flags": [],
       "stages": [
         "F"
@@ -39440,7 +39440,7 @@
     {
       "slug": "visual-straight-in",
       "title": "Visual straight-in",
-      "file": "items/visual-straight-in.json",
+      "file": "items/primary/visual-straight-in.json",
       "flags": [
         "maneuver"
       ],
@@ -39627,7 +39627,7 @@
     {
       "slug": "vn-diagram",
       "title": "V-n diagram",
-      "file": "items/vn-diagram.json",
+      "file": "items/primary/vn-diagram.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -39735,7 +39735,7 @@
     {
       "slug": "vor-approach-procedures",
       "title": "VOR approach procedures",
-      "file": "items/vor-approach-procedures.json",
+      "file": "items/primary/vor-approach-procedures.json",
       "flags": [
         "maneuver"
       ],
@@ -39879,7 +39879,7 @@
     {
       "slug": "wave-off",
       "title": "Wave-off",
-      "file": "items/wave-off.json",
+      "file": "items/primary/wave-off.json",
       "flags": [
         "maneuver"
       ],
@@ -40035,7 +40035,7 @@
     {
       "slug": "weight-and-balance",
       "title": "Weight and balance",
-      "file": "items/weight-and-balance.json",
+      "file": "items/primary/weight-and-balance.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -40207,7 +40207,7 @@
     {
       "slug": "wind-shear-recovery",
       "title": "Wind shear recovery",
-      "file": "items/wind-shear-recovery.json",
+      "file": "items/primary/wind-shear-recovery.json",
       "flags": [],
       "stages": [
         "FAM"
@@ -40349,7 +40349,7 @@
     {
       "slug": "wingman-flight-leader-responsibilities",
       "title": "Wingman/flight leader responsibilities",
-      "file": "items/wingman-flight-leader-responsibilities.json",
+      "file": "items/primary/wingman-flight-leader-responsibilities.json",
       "flags": [],
       "stages": [
         "F"
@@ -40446,7 +40446,7 @@
     {
       "slug": "wingover",
       "title": "Wingover",
-      "file": "items/wingover.json",
+      "file": "items/primary/wingover.json",
       "flags": [
         "maneuver"
       ],

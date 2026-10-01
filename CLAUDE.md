@@ -569,8 +569,9 @@ registry.
 ## Tools
 
 - `tools/convert-images.py` — PNG→WebP for `public/`, archives originals (Pillow; `--dry-run` first).
-- `tools/discuss-inventory.js` — regenerates `discuss-inventory.md/.json` from the mirror; use it to
-  sweep a new reference publication across all items. Never hand-edit.
+- `tools/discuss-inventory.js` — regenerates `discuss-inventory.md/.json` (Primary) and
+  `discuss-inventory-<school>.md/.json` (`--school=nife`, `--school=advanced`) from the mirror;
+  use it to sweep a new reference publication across all items. Never hand-edit.
 - `tools/discuss-audit.js` (local, gitignored) — checks pages against the PDFs they cite (composed
   sentences, unsupported/off-page numbers). Advisory; findings mean "open the book".
 - `tools/discuss-lint.js` — heading, prose, citation and id rules (`tools/lib/discussRules.mjs`).

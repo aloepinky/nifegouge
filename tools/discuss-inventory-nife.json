@@ -1,0 +1,5514 @@
+{
+  "summary": {
+    "items": 39,
+    "written": 37,
+    "stubs": 0,
+    "generated": 2,
+    "maneuvers": 11,
+    "orphans": 0,
+    "tables": 2,
+    "tableItems": 2,
+    "uncitedItems": 15,
+    "uncitedBlocks": 87,
+    "citedBlocks": 771,
+    "events": 9,
+    "hrefRows": 3,
+    "unwrittenRows": 0
+  },
+  "works": {
+    "NIFE FTI": [
+      "aborted-takeoff",
+      "aircraft-documentation-and-airworthiness",
+      "aircraft-preflight-inspection",
+      "atc-light-gun-signals",
+      "crm",
+      "crosswind-landing",
+      "electrical-fire-in-flight",
+      "emergency-landing-pattern",
+      "engine-failure-after-takeoff",
+      "engine-failure-during-flight",
+      "engine-fire-during-start",
+      "engine-run-up",
+      "four-ts",
+      "im-safe",
+      "instrument-usage-during-vfr-flying",
+      "level-speed-change",
+      "lost-communication",
+      "normal-takeoff-and-climb",
+      "pat-principle",
+      "power-off-stall",
+      "power-on-stall",
+      "racetrack-pattern",
+      "runway-incursion-avoidance",
+      "scan-pattern-and-sight-picture",
+      "see-and-avoid",
+      "slip-to-land",
+      "takeoff-brief",
+      "towered-operations-and-ctaf",
+      "traffic-pattern",
+      "turn-pattern",
+      "wake-turbulence-and-wind-shear",
+      "waveoff"
+    ],
+    "14 C.F.R.": [
+      "class-c-airspace",
+      "cloud-clearances"
+    ],
+    "AIM": [
+      "class-c-airspace",
+      "cloud-clearances",
+      "wake-turbulence-and-wind-shear"
+    ],
+    "Ground School Trainee Guide": [
+      "crm",
+      "orm"
+    ],
+    "NIFE SOP": [
+      "crm",
+      "orm",
+      "standard-operating-procedures"
+    ],
+    "NIFE IFG": [
+      "engine-fire-during-start",
+      "engine-run-up",
+      "normal-takeoff-and-climb"
+    ],
+    "NIFE Checklist Study Guide": [
+      "engine-run-up"
+    ],
+    "NIFE MCG": [
+      "level-speed-change",
+      "normal-takeoff-and-climb",
+      "power-off-stall",
+      "power-on-stall",
+      "traffic-pattern",
+      "turn-pattern"
+    ],
+    "NWP LOA": [
+      "local-area-procedures"
+    ]
+  },
+  "items": [
+    {
+      "slug": "aborted-takeoff",
+      "title": "Aborted takeoff",
+      "file": "items/nife/aborted-takeoff.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4103",
+          "stage": "C",
+          "block": "C41",
+          "label": "Aborted takeoff"
+        }
+      ],
+      "sections": [
+        {
+          "id": "reasons-to-abort",
+          "title": "Reasons to abort",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 7,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "doors",
+          "title": "Doors",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§512 — Aborted/Rejected Takeoff",
+          "pages": "p. 5-9"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§513 — Procedures for Aborting a Takeoff",
+          "pages": "p. 5-10"
+        }
+      ],
+      "coverage": {
+        "cited": 10,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "takeoff-brief"
+      ],
+      "sourcingLead": null,
+      "lede": "A takeoff is aborted when an emergency or abnormal situation occurs during the takeoff roll that will require a pilot to abort the takeoff. The power is reduced to idle and sufficient braking applied to stop on the runway while also maintaining directional control.",
+      "terms": [
+        "Reasons to abort",
+        "Aborted takeoff",
+        "Procedure",
+        "Doors"
+      ]
+    },
+    {
+      "slug": "aircraft-documentation-and-airworthiness",
+      "title": "Aircraft documentation and airworthiness",
+      "file": "items/nife/aircraft-documentation-and-airworthiness.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2101",
+          "stage": "C",
+          "block": "C21",
+          "label": "Aircraft documentation/airworthiness (AROW)"
+        }
+      ],
+      "sections": [
+        {
+          "id": "documents-on-board",
+          "title": "Documents on board",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "recurrent-inspections",
+          "title": "Recurrent inspections",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "airworthiness-directives",
+          "title": "Airworthiness directives",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "minimum-vfr-equipment",
+          "title": "Minimum VFR equipment",
+          "refs": [
+            4
+          ],
+          "paras": 1,
+          "items": 9,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "inoperative-equipment",
+          "title": "Inoperative equipment",
+          "refs": null,
+          "paras": 2,
+          "items": 2,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/aircraft-documentation-and-airworthiness/muehe3t4-airworthiness-flow-chart.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "discrepancies",
+          "title": "Discrepancies",
+          "refs": null,
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Annual inspection",
+          "value": "12 calendar months"
+        },
+        {
+          "label": "NIFE inspection",
+          "value": "every 100 hours"
+        },
+        {
+          "label": "Transponder",
+          "value": "24 calendar months"
+        },
+        {
+          "label": "Altimeter, pitot-static",
+          "value": "24 calendar months"
+        },
+        {
+          "label": "ELT",
+          "value": "12 calendar months"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§403 — Preflight Inspection",
+          "pages": "p. 4-2"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§300 — Introduction",
+          "pages": "p. 3-1"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§301 — Governing Guidance",
+          "pages": "p. 3-1"
+        },
+        {
+          "n": 4,
+          "work": "NIFE FTI",
+          "loc": "§303 — Minimum VFR Equipment",
+          "pages": "p. 3-2"
+        }
+      ],
+      "coverage": {
+        "cited": 33,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "aircraft-preflight-inspection"
+      ],
+      "sourcingLead": null,
+      "lede": "The airworthiness of the airplane is determined in three general ways: compliance with recurrent inspections requirements, ready access to FAA required documentation, and a physical pre-flight. The ultimate decision on whether an aircraft is airworthy resides with the Pilot in Command (PIC).",
+      "terms": [
+        "Aircraft documentation/airworthiness (AROW)",
+        "Aircraft documentation and airworthiness",
+        "Airworthiness directives",
+        "Recurrent inspections",
+        "Minimum VFR equipment",
+        "Inoperative equipment",
+        "Documents on board",
+        "Discrepancies"
+      ]
+    },
+    {
+      "slug": "aircraft-preflight-inspection",
+      "title": "Aircraft preflight inspection",
+      "file": "items/nife/aircraft-preflight-inspection.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2101",
+          "stage": "C",
+          "block": "C21",
+          "label": "Aircraft preflight inspection"
+        }
+      ],
+      "sections": [
+        {
+          "id": "general-appearance",
+          "title": "General appearance",
+          "refs": null,
+          "paras": 2,
+          "items": 0,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/aircraft-preflight-inspection/muehe2xq-preflight-inspection-flow.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "inside-the-cockpit",
+          "title": "Inside the cockpit",
+          "refs": [
+            2
+          ],
+          "paras": 6,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "wings-and-tail",
+          "title": "Wings and tail",
+          "refs": [
+            3
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "fuel-and-oil",
+          "title": "Fuel and oil",
+          "refs": [
+            4
+          ],
+          "paras": 5,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "landing-gear-and-brakes",
+          "title": "Landing gear and brakes",
+          "refs": [
+            5
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "engine-and-propeller",
+          "title": "Engine and propeller",
+          "refs": [
+            6
+          ],
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Altimeter accuracy",
+          "value": "within 75 feet"
+        },
+        {
+          "label": "Strut extension",
+          "value": "3 to 4 inches"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§403 — Preflight Inspection",
+          "pages": "p. 4-2"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§404 — Inside the Cockpit",
+          "pages": "p. 4-4"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§405 — Outer Wing Surfaces and Tail Section",
+          "pages": "p. 4-6"
+        },
+        {
+          "n": 4,
+          "work": "NIFE FTI",
+          "loc": "§406 — Fuel and Oil",
+          "pages": "p. 4-6"
+        },
+        {
+          "n": 5,
+          "work": "NIFE FTI",
+          "loc": "§407 — Landing Gear, Tires, and Brakes",
+          "pages": "p. 4-7"
+        },
+        {
+          "n": 6,
+          "work": "NIFE FTI",
+          "loc": "§408 — Engine and Propeller",
+          "pages": "p. 4-8"
+        }
+      ],
+      "coverage": {
+        "cited": 26,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "aircraft-documentation-and-airworthiness"
+      ],
+      "sourcingLead": null,
+      "lede": "A safe flight begins with a careful visual inspection of the airplane. The purpose of the preflight visual inspection is twofold: to determine that the airplane is legally airworthy, and that it is in condition for safe flight. The final determination of whether the airplane is in a condition for safe flight is made by a physical preflight inspection of the airplane and its components.",
+      "terms": [
+        "Aircraft preflight inspection",
+        "Landing gear and brakes",
+        "Engine and propeller",
+        "General appearance",
+        "Inside the cockpit",
+        "Wings and tail",
+        "Fuel and oil"
+      ]
+    },
+    {
+      "slug": "atc-light-gun-signals",
+      "title": "ATC light gun signals",
+      "file": "items/nife/atc-light-gun-signals.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4104",
+          "stage": "C",
+          "block": "C41",
+          "label": "ATC light gun signals"
+        }
+      ],
+      "sections": [
+        {
+          "id": "colors-and-meanings",
+          "title": "Colors and meanings",
+          "refs": [
+            1
+          ],
+          "paras": 0,
+          "items": 0,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/atc-light-gun-signals/mudp7mo1-light-gun-signals.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "disadvantages",
+          "title": "Disadvantages",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 2,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "acknowledgement",
+          "title": "Acknowledgement",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§B108 — Light Gun Signals",
+          "pages": "p. B-7"
+        }
+      ],
+      "coverage": {
+        "cited": 5,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "lost-communication"
+      ],
+      "sourcingLead": null,
+      "lede": "An airport control tower uses a directive traffic control signal which emits an intense narrow light beam of a selected color (either red, white, or green) to issue control instructions to aircraft with inoperative radios.",
+      "terms": [
+        "ATC light gun signals",
+        "Colors and meanings",
+        "Acknowledgement",
+        "Disadvantages"
+      ]
+    },
+    {
+      "slug": "class-c-airspace",
+      "title": "Class C airspace",
+      "file": "items/nife/class-c-airspace.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4103",
+          "stage": "C",
+          "block": "C41",
+          "label": "Class \"C\" airspace"
+        }
+      ],
+      "sections": [
+        {
+          "id": "dimensions",
+          "title": "Dimensions",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/class-c-airspace/muehg2vf-airspace-classes.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "equipment",
+          "title": "Equipment",
+          "refs": [
+            1,
+            2
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "entry-requirements",
+          "title": "Entry requirements",
+          "refs": null,
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Core radius",
+          "value": "5 NM"
+        },
+        {
+          "label": "Shelf radius",
+          "value": "10 NM"
+        },
+        {
+          "label": "Shelf floor",
+          "value": "1,200 feet"
+        },
+        {
+          "label": "Ceiling",
+          "value": "4,000 feet above the airport"
+        },
+        {
+          "label": "Outer area radius",
+          "value": "20 NM"
+        }
+      ],
+      "works": [
+        "14 C.F.R.",
+        "AIM"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "AIM",
+          "loc": "§3-2-4 — Class C Airspace",
+          "pages": "p. 3-2-5"
+        },
+        {
+          "n": 2,
+          "work": "14 C.F.R.",
+          "loc": "§ 91.130 — Operations in Class C airspace",
+          "pages": null
+        },
+        {
+          "n": 3,
+          "work": "AIM",
+          "loc": "§3-2-1 — General",
+          "pages": "p. 3-2-1"
+        }
+      ],
+      "coverage": {
+        "cited": 6,
+        "uncited": 5,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03",
+          "numbers/num-04",
+          "numbers/num-05"
+        ]
+      },
+      "seeAlso": [
+        "cloud-clearances"
+      ],
+      "sourcingLead": null,
+      "lede": "Class C airspace is generally that airspace from the surface to 4,000 feet above the airport elevation (charted in MSL) surrounding those airports that have an operational control tower, are serviced by a radar approach control, and that have a certain number of IFR operations or passenger enplanements. Entry requires a two-way radio, a transponder with automatic altitude reporting, ADS-B Out, and two-way radio communications established with ATC before crossing the boundary.",
+      "terms": [
+        "Class \"C\" airspace",
+        "Entry requirements",
+        "Class C airspace",
+        "Dimensions",
+        "Equipment"
+      ]
+    },
+    {
+      "slug": "cloud-clearances",
+      "title": "Cloud clearances",
+      "file": "items/nife/cloud-clearances.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4103",
+          "stage": "C",
+          "block": "C41",
+          "label": "Cloud clearances"
+        }
+      ],
+      "sections": [
+        {
+          "id": "minimums-by-airspace",
+          "title": "Minimums by airspace",
+          "refs": null,
+          "paras": 0,
+          "items": 0,
+          "figures": [],
+          "tables": [
+            "tbl-1"
+          ],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "ceiling",
+          "title": "Ceiling",
+          "refs": [
+            1,
+            2
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [],
+      "works": [
+        "14 C.F.R.",
+        "AIM"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "AIM",
+          "loc": "§3-1-4 — Basic VFR Weather Minimums",
+          "pages": "p. 3-1-2"
+        },
+        {
+          "n": 2,
+          "work": "14 C.F.R.",
+          "loc": "§ 91.155 — Basic VFR Weather Minimums",
+          "pages": null
+        }
+      ],
+      "coverage": {
+        "cited": 2,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "class-c-airspace"
+      ],
+      "sourcingLead": null,
+      "lede": "No person may operate an aircraft under basic VFR when the flight visibility is less, or at a distance from clouds that is less, than that prescribed for the corresponding altitude and class of airspace.",
+      "terms": [
+        "Minimums by airspace",
+        "Cloud clearances",
+        "Ceiling"
+      ]
+    },
+    {
+      "slug": "crm",
+      "title": "Crew resource management",
+      "file": "items/nife/crm.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2102",
+          "stage": "C",
+          "block": "C21",
+          "label": "CRM"
+        }
+      ],
+      "sections": [
+        {
+          "id": "critical-skills",
+          "title": "Critical skills",
+          "refs": [
+            2
+          ],
+          "paras": 1,
+          "items": 7,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "barriers-to-coordination",
+          "title": "Barriers to coordination",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 7,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "aids-to-coordination",
+          "title": "Aids to coordination",
+          "refs": [
+            1
+          ],
+          "paras": 0,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "transfer-of-controls",
+          "title": "Transfer of controls",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "nife-sop",
+          "title": "NIFE SOP",
+          "refs": [
+            3
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [],
+      "works": [
+        "Ground School Trainee Guide",
+        "NIFE FTI",
+        "NIFE SOP"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§109 — Crew Resource Management (CRM)",
+          "pages": "p. 1-9"
+        },
+        {
+          "n": 2,
+          "work": "Ground School Trainee Guide",
+          "loc": "C0102 — Crew Resource Management (CRM)",
+          "pages": "p. 8"
+        },
+        {
+          "n": 3,
+          "work": "NIFE SOP",
+          "loc": "§206 — Crew Resource Management (CRM) Roles and Responsibilities",
+          "pages": "p. 5"
+        }
+      ],
+      "coverage": {
+        "cited": 26,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "orm"
+      ],
+      "sourcingLead": null,
+      "lede": "Crew resource management is the effective use of all available resources by individuals, crews and teams to safely and efficiently accomplish the mission or task. It includes all crew members, equipment, and external factors involving the flight from before the flight brief to after the flight debrief. The human error factor, or inadequate CRM, is the single leading causal factor for Class A mishaps in modern naval aviation.",
+      "terms": [
+        "Crew resource management",
+        "Barriers to coordination",
+        "Aids to coordination",
+        "Transfer of controls",
+        "Critical skills",
+        "NIFE SOP",
+        "CRM"
+      ]
+    },
+    {
+      "slug": "crosswind-landing",
+      "title": "Crosswind landing",
+      "file": "items/nife/crosswind-landing.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4201",
+          "stage": "C",
+          "block": "C42",
+          "label": "Crosswind landing"
+        }
+      ],
+      "sections": [
+        {
+          "id": "sideslip-method",
+          "title": "Sideslip method",
+          "refs": null,
+          "paras": 4,
+          "items": 2,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/crosswind-landing/muehedw3-sideslip-crosswind-landing.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "flare",
+          "title": "Flare",
+          "refs": [
+            3
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "touchdown",
+          "title": "Touchdown",
+          "refs": [
+            4
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "rollout",
+          "title": "Rollout",
+          "refs": [
+            5
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "crosswind-limits",
+          "title": "Crosswind limits",
+          "refs": [
+            6
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "turbulent-air",
+          "title": "Turbulent air",
+          "refs": [
+            8
+          ],
+          "paras": 5,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "common-errors",
+          "title": "Common errors",
+          "refs": [
+            7
+          ],
+          "paras": 0,
+          "items": 10,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Crosswind limit",
+          "value": "15 KIAS"
+        },
+        {
+          "label": "FAA demonstration",
+          "value": "0.2 Vso at 90°"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§623 — Crosswind Approach and Landing",
+          "pages": "p. 6-20"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§624 — Procedure for Crosswind Landing",
+          "pages": "p. 6-21"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§625 — Crosswind Flare",
+          "pages": "p. 6-21"
+        },
+        {
+          "n": 4,
+          "work": "NIFE FTI",
+          "loc": "§626 — Crosswind Touchdown",
+          "pages": "p. 6-21"
+        },
+        {
+          "n": 5,
+          "work": "NIFE FTI",
+          "loc": "§627 — Crosswind After-Landing Roll",
+          "pages": "p. 6-22"
+        },
+        {
+          "n": 6,
+          "work": "NIFE FTI",
+          "loc": "§628 — Maximum Safe Crosswind Velocities",
+          "pages": "p. 6-22"
+        },
+        {
+          "n": 7,
+          "work": "NIFE FTI",
+          "loc": "§629 — Common Errors During Crosswind Approaches and Landings",
+          "pages": "p. 6-23"
+        },
+        {
+          "n": 8,
+          "work": "NIFE FTI",
+          "loc": "§630 — Turbulent Air Approach and Landing",
+          "pages": "p. 6-23"
+        }
+      ],
+      "coverage": {
+        "cited": 33,
+        "uncited": 2,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02"
+        ]
+      },
+      "seeAlso": [
+        "slip-to-land"
+      ],
+      "sourcingLead": null,
+      "lede": "The same basic principles and factors involved in a normal approach and landing apply to a crosswind approach and landing, so only the additional procedures required for correcting for wind drift are different. The wing-down, top rudder (sideslip) method will compensate for a crosswind from any angle, and it enables the pilot to simultaneously keep the airplane's ground track and longitudinal axis aligned with the runway centerline throughout the final approach, roundout, touchdown, and after-landing roll. This prevents the airplane from touching down in a sideward motion and imposing damaging side loads on the landing gear. The drift is controlled with aileron and the heading with rudder. A maximum of 15 KIAS is the crosswind limitation for NIFE aircraft.",
+      "terms": [
+        "Crosswind landing",
+        "Crosswind limits",
+        "Sideslip method",
+        "Turbulent air",
+        "Common errors",
+        "Touchdown",
+        "Rollout",
+        "Flare"
+      ]
+    },
+    {
+      "slug": "electrical-fire-in-flight",
+      "title": "Electrical fire in flight",
+      "file": "items/nife/electrical-fire-in-flight.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4102",
+          "stage": "C",
+          "block": "C41",
+          "label": "Electrical fire in flight"
+        }
+      ],
+      "sections": [
+        {
+          "id": "faulty-circuit",
+          "title": "Faulty circuit",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "power-essential",
+          "title": "Power essential to flight",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "electrical-master-switch",
+          "title": "Electrical master switch",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "smoke-in-the-cabin",
+          "title": "Smoke in the cabin",
+          "refs": [
+            1
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§706 — Fires",
+          "pages": "p. 7-12"
+        }
+      ],
+      "coverage": {
+        "cited": 10,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "engine-fire-during-start"
+      ],
+      "sourcingLead": null,
+      "lede": "A fire in flight demands immediate and decisive action. In-flight fires are classified as inflight engine fires, electrical fires, and cabin fires. The initial indication of an electrical fire is usually the distinct odor of burning insulation. The most prudent course of action is to land as soon as possible.",
+      "terms": [
+        "Electrical fire in flight",
+        "Power essential to flight",
+        "Electrical master switch",
+        "Smoke in the cabin",
+        "Faulty circuit"
+      ]
+    },
+    {
+      "slug": "emergency-landing-pattern",
+      "title": "Emergency landing pattern",
+      "file": "items/nife/emergency-landing-pattern.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4201",
+          "stage": "C",
+          "block": "C42",
+          "label": "ELP profile"
+        }
+      ],
+      "sections": [
+        {
+          "id": "planning",
+          "title": "Planning",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/emergency-landing-pattern/muehe1a9-emergency-landing-pattern.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "key-positions",
+          "title": "Key positions",
+          "refs": [
+            1
+          ],
+          "paras": 0,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "simulated-approaches",
+          "title": "Simulated approaches",
+          "refs": [
+            1
+          ],
+          "paras": 5,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "common-errors",
+          "title": "Common errors",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 7,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "High key",
+          "value": "1500 feet AGL"
+        },
+        {
+          "label": "High key",
+          "value": "68 KIAS"
+        },
+        {
+          "label": "Turn to low key",
+          "value": "10-15° bank"
+        },
+        {
+          "label": "Low key",
+          "value": "700-800 feet AGL"
+        },
+        {
+          "label": "Low key",
+          "value": "68 KIAS"
+        },
+        {
+          "label": "Flaps at low key",
+          "value": "10°"
+        },
+        {
+          "label": "Full flaps",
+          "value": "30°"
+        },
+        {
+          "label": "Base key",
+          "value": "400 feet AGL"
+        },
+        {
+          "label": "Base key",
+          "value": "68 KIAS minimum"
+        },
+        {
+          "label": "Final",
+          "value": "60 KIAS minimum"
+        },
+        {
+          "label": "Off-field termination",
+          "value": "500 feet AGL"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§703 — Simulated Emergency Approaches and Landings",
+          "pages": "p. 7-6"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§704 — Common Errors During Emergency Landing Patterns",
+          "pages": "p. 7-10"
+        }
+      ],
+      "coverage": {
+        "cited": 15,
+        "uncited": 11,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03",
+          "numbers/num-04",
+          "numbers/num-05",
+          "numbers/num-06",
+          "numbers/num-07",
+          "numbers/num-08",
+          "numbers/num-09",
+          "numbers/num-10",
+          "numbers/num-11"
+        ]
+      },
+      "seeAlso": [
+        "engine-failure-during-flight",
+        "slip-to-land"
+      ],
+      "sourcingLead": null,
+      "lede": "The ELP is a 360° pattern designed to position the aircraft for landing at a prepared surface during a complete power loss or when an impending engine failure exists in which sufficient power for continued flight is available. It is used for both actual and simulated emergency approaches and landings to a runway or a cleared area. The entire pattern is designed to be circular, but the turn may be shallowed, steepened, or discontinued at any point to adjust the accuracy of the flightpath.",
+      "terms": [
+        "Emergency landing pattern",
+        "Simulated approaches",
+        "Key positions",
+        "Common errors",
+        "ELP profile",
+        "Planning"
+      ]
+    },
+    {
+      "slug": "engine-failure-after-takeoff",
+      "title": "Engine failure after takeoff",
+      "file": "items/nife/engine-failure-after-takeoff.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4104",
+          "stage": "C",
+          "block": "C41",
+          "label": "Engine failure after takeoff"
+        }
+      ],
+      "sections": [
+        {
+          "id": "aircraft-control",
+          "title": "Aircraft control",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "decision-points",
+          "title": "Decision points",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "landing-area-selection",
+          "title": "Landing area selection",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "turn-back",
+          "title": "Turn back",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "descent-rates",
+          "title": "Descent rates",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Field selection arc",
+          "value": "30 degrees either side of takeoff path"
+        },
+        {
+          "label": "Glide speed",
+          "value": "68 KIAS"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§705 — Engine Failure After Takeoff",
+          "pages": "p. 7-11"
+        }
+      ],
+      "coverage": {
+        "cited": 9,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "takeoff-brief",
+        "engine-failure-during-flight",
+        "emergency-landing-pattern"
+      ],
+      "sourcingLead": null,
+      "lede": "What characterizes all power loss or engine failure occurrences after takeoff is urgency. In most instances, the pilot has only a few seconds after an engine failure to decide what course of action to take and to execute it. Unless prepared in advance to make the proper decision, there is an excellent chance the pilot will make a poor decision, or make no decision at all and allow events to rule.",
+      "terms": [
+        "Engine failure after takeoff",
+        "Landing area selection",
+        "Aircraft control",
+        "Decision points",
+        "Descent rates",
+        "Turn back"
+      ]
+    },
+    {
+      "slug": "engine-failure-during-flight",
+      "title": "Engine failure during flight",
+      "file": "items/nife/engine-failure-during-flight.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4201",
+          "stage": "C",
+          "block": "C42",
+          "label": "Engine failure during flight"
+        }
+      ],
+      "sections": [
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 8,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "landing-site-selection",
+          "title": "Landing site selection",
+          "refs": [
+            1
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "approach-planning",
+          "title": "Approach planning",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "airplane-configuration",
+          "title": "Airplane configuration",
+          "refs": [
+            1
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "attitude-and-sink-rate",
+          "title": "Attitude and sink rate",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Restart attempt above",
+          "value": "1000 feet"
+        },
+        {
+          "label": "Emergency squawk",
+          "value": "7700"
+        },
+        {
+          "label": "Injurious sink rate",
+          "value": "well over 500 fpm"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§702 — Emergency Landings",
+          "pages": "p. 7-3"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§703 — Simulated Emergency Approaches and Landings",
+          "pages": "p. 7-6"
+        }
+      ],
+      "coverage": {
+        "cited": 18,
+        "uncited": 3,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03"
+        ]
+      },
+      "seeAlso": [
+        "emergency-landing-pattern",
+        "engine-failure-after-takeoff"
+      ],
+      "sourcingLead": null,
+      "lede": "An airplane forced down by engine failure is the typical example of a forced landing: an immediate landing, on or off an airport, necessitated by the inability to continue further flight. A pilot's choice of emergency landing sites is governed by the route selected during preflight planning, the height above the ground when the emergency occurs, and excess airspeed, which can be converted into distance and/or altitude. Above 1000 feet the Emergency Landing Procedure attempts a restart; below 1000 feet with no restart it goes to emergency shutdown and the emergency approach profile.",
+      "terms": [
+        "Engine failure during flight",
+        "Landing site selection",
+        "Airplane configuration",
+        "Attitude and sink rate",
+        "Approach planning",
+        "Procedure"
+      ]
+    },
+    {
+      "slug": "engine-fire-during-start",
+      "title": "Engine fire during start",
+      "file": "items/nife/engine-fire-during-start.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4103",
+          "stage": "C",
+          "block": "C41",
+          "label": "Engine fire during start"
+        }
+      ],
+      "sections": [
+        {
+          "id": "indications",
+          "title": "Indications",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "emergency-shutdown-on-deck",
+          "title": "Emergency shutdown on deck",
+          "refs": [
+            3
+          ],
+          "paras": 0,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Throttle if engine starts",
+          "value": "1700 RPM"
+        },
+        {
+          "label": "Throttle if engine starts",
+          "value": "5 seconds"
+        }
+      ],
+      "works": [
+        "NIFE FTI",
+        "NIFE IFG"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§706 — Fires",
+          "pages": "p. 7-12"
+        },
+        {
+          "n": 2,
+          "work": "NIFE IFG",
+          "loc": "NIFE Checklist — Engine Fire During Start",
+          "pages": "p. 3"
+        },
+        {
+          "n": 3,
+          "work": "NIFE IFG",
+          "loc": "NIFE Checklist — Emergency Shutdown on Deck",
+          "pages": "p. 3"
+        }
+      ],
+      "coverage": {
+        "cited": 11,
+        "uncited": 2,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02"
+        ]
+      },
+      "seeAlso": [
+        "electrical-fire-in-flight"
+      ],
+      "sourcingLead": null,
+      "lede": "Engine compartment fires can be indicated by smoke and/or flames coming from the engine cowling area. Whether or not the engine starts, the procedure ends in Emergency Shutdown on Deck.",
+      "terms": [
+        "Emergency shutdown on deck",
+        "Engine fire during start",
+        "Indications",
+        "Procedure"
+      ]
+    },
+    {
+      "slug": "engine-run-up",
+      "title": "Engine run-up",
+      "file": "items/nife/engine-run-up.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2101",
+          "stage": "C",
+          "block": "C21",
+          "label": "Engine run up procedures and limitations"
+        }
+      ],
+      "sections": [
+        {
+          "id": "position",
+          "title": "Position",
+          "refs": [
+            1
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "engine-warm-up",
+          "title": "Engine warm-up",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "checks",
+          "title": "Checks",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 15,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "engine-limits",
+          "title": "Engine limits",
+          "refs": [
+            3
+          ],
+          "paras": 0,
+          "items": 2,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "checklist-use",
+          "title": "Checklist use",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Run-up power",
+          "value": "1700 RPM"
+        },
+        {
+          "label": "Magneto drop",
+          "value": "125 RPM maximum"
+        },
+        {
+          "label": "Magneto split",
+          "value": "50 RPM maximum"
+        },
+        {
+          "label": "Carb heat drop",
+          "value": "50 to 100 RPM"
+        },
+        {
+          "label": "Idle",
+          "value": "above 600 RPM"
+        },
+        {
+          "label": "Throttle after check",
+          "value": "1000 RPM"
+        },
+        {
+          "label": "Oil temperature",
+          "value": "100° to 245° F"
+        },
+        {
+          "label": "Oil pressure",
+          "value": "60 to 90 PSI"
+        },
+        {
+          "label": "Oil pressure",
+          "value": "25 PSI minimum, 115 PSI maximum"
+        }
+      ],
+      "works": [
+        "NIFE Checklist Study Guide",
+        "NIFE FTI",
+        "NIFE IFG"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§413 — Engine Runup",
+          "pages": "p. 4-13"
+        },
+        {
+          "n": 2,
+          "work": "NIFE Checklist Study Guide",
+          "loc": "Table 1-5 — Run-Up Checklist",
+          "pages": "p. 9"
+        },
+        {
+          "n": 3,
+          "work": "NIFE IFG",
+          "loc": "Limitations and Airspeeds",
+          "pages": "p. 23"
+        }
+      ],
+      "coverage": {
+        "cited": 32,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "takeoff-brief"
+      ],
+      "sourcingLead": null,
+      "lede": "The runup check is the systematic procedure for making a check of the engine, controls, systems, instruments, and avionics prior to flight. Normally, it is performed after taxiing to a general runup area or a position near the takeoff end of the runway.",
+      "terms": [
+        "Engine run up procedures and limitations",
+        "Engine warm-up",
+        "Engine run-up",
+        "Engine limits",
+        "Checklist use",
+        "Position",
+        "Checks"
+      ]
+    },
+    {
+      "slug": "four-ts",
+      "title": "4 Ts",
+      "file": "items/nife/four-ts.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2102",
+          "stage": "C",
+          "block": "C21",
+          "label": "4 \"Ts\""
+        }
+      ],
+      "sections": [
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": [
+            1
+          ],
+          "paras": 0,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Power",
+          "value": "1000 RPM or idle if necessary"
+        },
+        {
+          "label": "Flaps",
+          "value": "20°"
+        },
+        {
+          "label": "Airspeed",
+          "value": "70 KIAS"
+        },
+        {
+          "label": "Turn",
+          "value": "1200-1500 feet past the threshold"
+        },
+        {
+          "label": "Angle of bank",
+          "value": "15°"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§606 — Transition Procedure (4T's)",
+          "pages": "p. 6-5"
+        }
+      ],
+      "coverage": {
+        "cited": 4,
+        "uncited": 5,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03",
+          "numbers/num-04",
+          "numbers/num-05"
+        ]
+      },
+      "seeAlso": [
+        "traffic-pattern",
+        "racetrack-pattern"
+      ],
+      "sourcingLead": null,
+      "lede": "The transition procedure is flown in four steps: **T**ransition, **T**rim, **T**urn, **T**alk. At a towered field, expect tower to clear you for landing before the Abeam position, which will take care of the fourth T.",
+      "terms": [
+        "Procedure",
+        "4 \"Ts\"",
+        "4 Ts"
+      ]
+    },
+    {
+      "slug": "im-safe",
+      "title": "I'M SAFE checklist",
+      "file": "items/nife/im-safe.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2101",
+          "stage": "C",
+          "block": "C21",
+          "label": "\"I'M SAFE\" checklist"
+        }
+      ],
+      "sections": [
+        {
+          "id": "external-human-factors",
+          "title": "External human factors",
+          "refs": [
+            1
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "personal-preflight",
+          "title": "Personal preflight",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "elements",
+          "title": "Elements",
+          "refs": [
+            1
+          ],
+          "paras": 0,
+          "items": 6,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§110 — Physical/Psychological Factors",
+          "pages": "p. 1-11"
+        }
+      ],
+      "coverage": {
+        "cited": 10,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [],
+      "sourcingLead": null,
+      "lede": "External human factors refer to all the external happenings in a pilot's life that are not directly related to the safe operation of the aircraft. \"I'M SAFE\" is a simple checklist to determine if we are ready and fit to fly.",
+      "terms": [
+        "External human factors",
+        "\"I'M SAFE\" checklist",
+        "I'M SAFE checklist",
+        "Personal preflight",
+        "Elements"
+      ]
+    },
+    {
+      "slug": "instrument-usage-during-vfr-flying",
+      "title": "Instrument usage during VFR flying",
+      "file": "items/nife/instrument-usage-during-vfr-flying.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4101",
+          "stage": "C",
+          "block": "C41",
+          "label": "Instrument usage during VFR flying"
+        }
+      ],
+      "sections": [
+        {
+          "id": "composite-method",
+          "title": "Composite method",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "attitude-and-performance",
+          "title": "Attitude and performance",
+          "refs": [
+            1
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Attention outside",
+          "value": "At least 90 percent"
+        },
+        {
+          "label": "Attention inside",
+          "value": "No more than 10 percent"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§204 — Integrated Flight Instruction",
+          "pages": "p. 2-4"
+        }
+      ],
+      "coverage": {
+        "cited": 6,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "scan-pattern-and-sight-picture"
+      ],
+      "sourcingLead": null,
+      "lede": "When introducing basic flight maneuvers to a beginning pilot, the \"integrated flight instruction\" or \"composite\" method will be used. This means that each flight maneuver will be performed by using both outside visual references and the flight instruments. At least 90 percent of the pilot's attention should be devoted to positioning the airplane in relation to the natural horizon, along with scanning for other airplanes, and no more than 10 percent of the pilot's attention should be inside the cockpit.",
+      "terms": [
+        "Instrument usage during VFR flying",
+        "Attitude and performance",
+        "Composite method"
+      ]
+    },
+    {
+      "slug": "level-speed-change",
+      "title": "Level speed change",
+      "file": "items/nife/level-speed-change.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2102",
+          "stage": "C",
+          "block": "C21",
+          "label": "Level speed change"
+        }
+      ],
+      "sections": [
+        {
+          "id": "slow-flight",
+          "title": "Slow flight",
+          "refs": [
+            1
+          ],
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 17,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "course-training-standards",
+          "title": "Course training standards",
+          "refs": [
+            4
+          ],
+          "paras": 0,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "common-errors",
+          "title": "Common errors",
+          "refs": [
+            3
+          ],
+          "paras": 0,
+          "items": 7,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Entry airspeed",
+          "value": "90 KIAS"
+        },
+        {
+          "label": "Power reduction",
+          "value": "About 1500 RPM"
+        },
+        {
+          "label": "Slow flight airspeed",
+          "value": "55 KIAS"
+        },
+        {
+          "label": "Power at 55 KIAS",
+          "value": "About 2100 RPM"
+        },
+        {
+          "label": "Turn",
+          "value": "90°, about 10-15° AOB"
+        },
+        {
+          "label": "Entry altitude",
+          "value": "No lower than 1,500 feet AGL"
+        },
+        {
+          "label": "Airspeed tolerance",
+          "value": "55 KIAS, +10/-0 knots"
+        }
+      ],
+      "works": [
+        "NIFE FTI",
+        "NIFE MCG"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§515 — Level Speed Change",
+          "pages": "p. 5-10"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§516 — Procedure for Level Speed Change",
+          "pages": "p. 5-11"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§517 — Common Errors During Level Speed Change",
+          "pages": "p. 5-12"
+        },
+        {
+          "n": 4,
+          "work": "NIFE MCG",
+          "loc": "§8 — Course Training Standards",
+          "pages": "p. 5-2"
+        }
+      ],
+      "coverage": {
+        "cited": 32,
+        "uncited": 7,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03",
+          "numbers/num-04",
+          "numbers/num-05",
+          "numbers/num-06",
+          "numbers/num-07"
+        ]
+      },
+      "seeAlso": [
+        "power-off-stall",
+        "pat-principle"
+      ],
+      "sourcingLead": null,
+      "lede": "Maneuvering during slow flight demonstrates the flight characteristics and degree of controllability of an airplane at less than cruise speeds. The objective is to develop the pilot's sense of feel and ability to use the controls correctly, and to improve proficiency in performing maneuvers that require slow airspeeds.",
+      "terms": [
+        "Course training standards",
+        "Level speed change",
+        "Common errors",
+        "Slow flight",
+        "Procedure"
+      ]
+    },
+    {
+      "slug": "local-area-procedures",
+      "title": "Local area procedures",
+      "file": "items/nife/local-area-procedures.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4390",
+          "stage": "C",
+          "block": "C43",
+          "label": "Local area procedures"
+        }
+      ],
+      "sections": [
+        {
+          "id": "definitions",
+          "title": "Definitions",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "departure-procedures",
+          "title": "Departure procedures",
+          "refs": [
+            3
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "arrival-procedures",
+          "title": "Arrival procedures",
+          "refs": [
+            4
+          ],
+          "paras": 1,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "pattern-entry",
+          "title": "Pattern entry",
+          "refs": [
+            4
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "areas-to-avoid",
+          "title": "Areas to avoid",
+          "refs": null,
+          "paras": 1,
+          "items": 0,
+          "figures": [
+            null
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "local-callsigns",
+          "title": "Local callsigns",
+          "refs": null,
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [
+            "tbl-1"
+          ],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Northwest Arrival downwind",
+          "value": "2,200 MSL"
+        },
+        {
+          "label": "Vectors to LASKE or PAPER",
+          "value": "2,700 MSL"
+        },
+        {
+          "label": "TRACON",
+          "value": "118.60 MHz"
+        },
+        {
+          "label": "Contact TRACON",
+          "value": "before 20 NM from PNS"
+        },
+        {
+          "label": "Transfer to TOWER",
+          "value": "prior to 5 NM"
+        },
+        {
+          "label": "Chicken Ranch Corridor",
+          "value": "3,500 feet MSL"
+        },
+        {
+          "label": "Chicken Ranch Corridor",
+          "value": "2.5 NM either side"
+        },
+        {
+          "label": "PENSI holding helos",
+          "value": "AOA 1700 ft"
+        },
+        {
+          "label": "V198",
+          "value": "AOA 4000 ft"
+        },
+        {
+          "label": "WABEN transition area",
+          "value": "AOB 2200 ft"
+        }
+      ],
+      "works": [
+        "NWP LOA"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NWP LOA",
+          "loc": "§4 — Definitions",
+          "pages": "p. 1"
+        },
+        {
+          "n": 2,
+          "work": "NWP LOA",
+          "loc": "§5 — Responsibilities",
+          "pages": "p. 2"
+        },
+        {
+          "n": 3,
+          "work": "NWP LOA",
+          "loc": "§6 — Departure Procedures",
+          "pages": "p. 2"
+        },
+        {
+          "n": 4,
+          "work": "NWP LOA",
+          "loc": "§7 — Arrival Procedures",
+          "pages": "p. 2"
+        },
+        {
+          "n": 5,
+          "work": "NWP LOA",
+          "loc": "Attachment 1 — Areas to Avoid",
+          "pages": "p. 4"
+        },
+        {
+          "n": 6,
+          "work": "NWP LOA",
+          "loc": "Attachment 2 — Areas to Avoid",
+          "pages": "p. 5"
+        },
+        {
+          "n": 7,
+          "work": "NWP LOA",
+          "loc": "Attachment 3 — Local Callsigns",
+          "pages": "p. 6"
+        }
+      ],
+      "coverage": {
+        "cited": 17,
+        "uncited": 10,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03",
+          "numbers/num-04",
+          "numbers/num-05",
+          "numbers/num-06",
+          "numbers/num-07",
+          "numbers/num-08",
+          "numbers/num-09",
+          "numbers/num-10"
+        ]
+      },
+      "seeAlso": [],
+      "sourcingLead": null,
+      "lede": "The Letter of Agreement between Pensacola TRACON, Pensacola ATCT, Sky Warrior Flight Training Inc, Pensacola Air Flight School, the Navy Flying Club and US Navy Introductory Flight Evaluation (NIFE) provides standard VFR arrival and departure procedures for locally based training flights and describes areas to avoid (hot spots) in the local area. These procedures are for training flights to and from the Pensacola International Airport (PNS). Aircraft requesting the Northwest Practice Area can expect radar vectors to point LASKE or PAPER at 2,700 MSL on departure, and on return either radar vectors to final or the Northwest Arrival, depending on the runway in use.",
+      "terms": [
+        "Local area procedures",
+        "Departure procedures",
+        "Arrival procedures",
+        "Local callsigns",
+        "Areas to avoid",
+        "Pattern entry",
+        "Definitions"
+      ]
+    },
+    {
+      "slug": "lost-communication",
+      "title": "Lost communication",
+      "file": "items/nife/lost-communication.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4104",
+          "stage": "C",
+          "block": "C41",
+          "label": "Loss communication"
+        }
+      ],
+      "sections": [
+        {
+          "id": "inbound-to-destination",
+          "title": "Inbound to destination",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "on-the-taxiway",
+          "title": "On the taxiway",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Squawk",
+          "value": "7600"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§B107 — Radio Malfunction Procedures",
+          "pages": "p. B-7"
+        }
+      ],
+      "coverage": {
+        "cited": 3,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "atc-light-gun-signals"
+      ],
+      "sourcingLead": null,
+      "lede": "Radio malfunction procedures cover an inoperative transmitter and receiver or one of the other, in the air and on the taxiway. After extensive troubleshooting, squawk 7600 and proceed inbound to your destination while continuing to make all calls in the blind (making calls as if it still worked).",
+      "terms": [
+        "Inbound to destination",
+        "Lost communication",
+        "Loss communication",
+        "On the taxiway"
+      ]
+    },
+    {
+      "slug": "normal-takeoff-and-climb",
+      "title": "Normal takeoff and climb",
+      "file": "items/nife/normal-takeoff-and-climb.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2102",
+          "stage": "C",
+          "block": "C21",
+          "label": "Normal takeoff and climb"
+        }
+      ],
+      "sections": [
+        {
+          "id": "takeoff-roll",
+          "title": "Takeoff roll",
+          "refs": null,
+          "paras": 5,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "lift-off",
+          "title": "Lift-off",
+          "refs": null,
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "initial-climb",
+          "title": "Initial climb",
+          "refs": null,
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": null,
+          "paras": 1,
+          "items": 10,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "course-training-standards",
+          "title": "Course training standards",
+          "refs": [
+            7
+          ],
+          "paras": 0,
+          "items": 6,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "common-errors",
+          "title": "Common errors",
+          "refs": [
+            5
+          ],
+          "paras": 0,
+          "items": 12,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Power before release",
+          "value": "2000 RPM"
+        },
+        {
+          "label": "Rotate (Vr)",
+          "value": "55 KIAS"
+        },
+        {
+          "label": "Climb (Vy)",
+          "value": "73 KIAS"
+        },
+        {
+          "label": "Climb checklist above",
+          "value": "1,000 feet AGL"
+        },
+        {
+          "label": "Centerline tolerance",
+          "value": "Within 10 feet"
+        },
+        {
+          "label": "Vy tolerance",
+          "value": "+10/-5 knots"
+        }
+      ],
+      "works": [
+        "NIFE FTI",
+        "NIFE IFG",
+        "NIFE MCG"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§502 — Takeoffs",
+          "pages": "p. 5-1"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§504 — Normal Takeoff",
+          "pages": "p. 5-3"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§505 — Initial Climb",
+          "pages": "p. 5-4"
+        },
+        {
+          "n": 4,
+          "work": "NIFE FTI",
+          "loc": "§506 — Procedure for Normal Takeoff",
+          "pages": "p. 5-5"
+        },
+        {
+          "n": 5,
+          "work": "NIFE FTI",
+          "loc": "§507 — Common Errors During Normal Takeoffs",
+          "pages": "p. 5-6"
+        },
+        {
+          "n": 6,
+          "work": "NIFE IFG",
+          "loc": "Limitations and Airspeeds",
+          "pages": "p. 23"
+        },
+        {
+          "n": 7,
+          "work": "NIFE MCG",
+          "loc": "§8 — Course Training Standards",
+          "pages": "p. 5-2"
+        }
+      ],
+      "coverage": {
+        "cited": 42,
+        "uncited": 6,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03",
+          "numbers/num-04",
+          "numbers/num-05",
+          "numbers/num-06"
+        ]
+      },
+      "seeAlso": [
+        "takeoff-brief",
+        "power-on-stall"
+      ],
+      "sourcingLead": null,
+      "lede": "Although the takeoff and climb is one continuous maneuver, it is divided into three steps for purposes of explanation: the takeoff roll, the lift-off, and the initial climb after becoming airborne. The takeoff is made as nearly into the wind as possible, because the airplane's speed while on the ground is much less than if the takeoff were made downwind, and a shorter ground roll and therefore much less runway length is required to develop the minimum lift necessary for takeoff and climb.",
+      "terms": [
+        "Course training standards",
+        "Normal takeoff and climb",
+        "Initial climb",
+        "Common errors",
+        "Takeoff roll",
+        "Procedure",
+        "Lift-off"
+      ]
+    },
+    {
+      "slug": "orm",
+      "title": "Operational risk management",
+      "file": "items/nife/orm.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2102",
+          "stage": "C",
+          "block": "C21",
+          "label": "ORM"
+        }
+      ],
+      "sections": [
+        {
+          "id": "levels",
+          "title": "Levels",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "principles",
+          "title": "Principles",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "steps",
+          "title": "Steps",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "nife-sop",
+          "title": "NIFE SOP",
+          "refs": null,
+          "paras": 4,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Low risk",
+          "value": "0-5 hazards"
+        },
+        {
+          "label": "Medium risk",
+          "value": "6-9 hazards"
+        },
+        {
+          "label": "High risk",
+          "value": "More than 9 hazards"
+        }
+      ],
+      "works": [
+        "Ground School Trainee Guide",
+        "NIFE SOP"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "Ground School Trainee Guide",
+          "loc": "C0104 — Operational Risk Management",
+          "pages": "p. 20"
+        },
+        {
+          "n": 2,
+          "work": "NIFE SOP",
+          "loc": "§301 — Operational Risk Management (ORM)",
+          "pages": "p. 8"
+        },
+        {
+          "n": 3,
+          "work": "NIFE SOP",
+          "loc": "Enclosure (1) — NIFE ORM Worksheet",
+          "pages": null
+        }
+      ],
+      "coverage": {
+        "cited": 19,
+        "uncited": 3,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03"
+        ]
+      },
+      "seeAlso": [
+        "crm",
+        "im-safe"
+      ],
+      "sourcingLead": null,
+      "lede": "Operational risk management is the process of dealing with the risk associated with military operations. The ORM process is a decision-making tool used by personnel at all levels to increase effectiveness by identifying, assessing, and managing risks. It is utilized on three levels based upon time and assets available, guided by four principles and worked through five steps. ORM shall be conducted prior to all NIFE flights using the NIFE ORM Worksheet.",
+      "terms": [
+        "Operational risk management",
+        "Principles",
+        "NIFE SOP",
+        "Levels",
+        "Steps",
+        "ORM"
+      ]
+    },
+    {
+      "slug": "pat-principle",
+      "title": "Power, attitude, trim principle",
+      "file": "items/nife/pat-principle.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2102",
+          "stage": "C",
+          "block": "C21",
+          "label": "Power, Attitude, Trim (PAT) Principle"
+        }
+      ],
+      "sections": [
+        {
+          "id": "execution",
+          "title": "Execution",
+          "refs": [
+            1
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§216 — The P.A.T. Principle",
+          "pages": "p. 2-15"
+        }
+      ],
+      "coverage": {
+        "cited": 3,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "turn-pattern",
+        "level-speed-change"
+      ],
+      "sourcingLead": null,
+      "lede": "For corrections and to execute many maneuvers you must set or reset power, adjust the nose attitude, and trim for the new attitude. The mechanics of the transitions are performed in a specific sequence: **P**ower, **A**ttitude, **T**rim.",
+      "terms": [
+        "Power, Attitude, Trim (PAT) Principle",
+        "Power, attitude, trim principle",
+        "Execution"
+      ]
+    },
+    {
+      "slug": "power-off-stall",
+      "title": "Power-off stall",
+      "file": "items/nife/power-off-stall.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2102",
+          "stage": "C",
+          "block": "C21",
+          "label": "Power off stall"
+        }
+      ],
+      "sections": [
+        {
+          "id": "stall-awareness",
+          "title": "Stall awareness",
+          "refs": [
+            1
+          ],
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "recognition",
+          "title": "Recognition",
+          "refs": [
+            2
+          ],
+          "paras": 1,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "recovery-fundamentals",
+          "title": "Recovery fundamentals",
+          "refs": [
+            3
+          ],
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "ailerons-and-rudder",
+          "title": "Ailerons and rudder",
+          "refs": [
+            4
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "landing-configuration",
+          "title": "Landing configuration",
+          "refs": [
+            5
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": [
+            6
+          ],
+          "paras": 0,
+          "items": 14,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "course-training-standards",
+          "title": "Course training standards",
+          "refs": [
+            8
+          ],
+          "paras": 0,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "common-errors",
+          "title": "Common errors",
+          "refs": [
+            7
+          ],
+          "paras": 0,
+          "items": 12,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Critical angle of attack",
+          "value": "16 to 20°"
+        },
+        {
+          "label": "Recovery altitude",
+          "value": "No lower than 1,500 feet AGL"
+        },
+        {
+          "label": "Entry airspeed",
+          "value": "90 KIAS or less"
+        },
+        {
+          "label": "Stabilized descent",
+          "value": "65 KIAS"
+        },
+        {
+          "label": "Pitch",
+          "value": "Raise the nose 5-10°"
+        },
+        {
+          "label": "Flaps as aircraft recovers",
+          "value": "20°"
+        },
+        {
+          "label": "Level off",
+          "value": "Next 500 foot increment"
+        },
+        {
+          "label": "Transition back to",
+          "value": "90 KIAS"
+        },
+        {
+          "label": "Heading tolerance",
+          "value": "±10°"
+        },
+        {
+          "label": "Bank tolerance",
+          "value": "±10°, not greater than 20°"
+        }
+      ],
+      "works": [
+        "NIFE FTI",
+        "NIFE MCG"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§521 — Stall Awareness",
+          "pages": "p. 5-14"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§522 — Recognition of Stalls",
+          "pages": "p. 5-15"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§523 — Fundamentals of Stall Recovery",
+          "pages": "p. 5-16"
+        },
+        {
+          "n": 4,
+          "work": "NIFE FTI",
+          "loc": "§524 — Use of Ailerons/Rudder During Stall Recovery",
+          "pages": "p. 5-16"
+        },
+        {
+          "n": 5,
+          "work": "NIFE FTI",
+          "loc": "§525 — Power Off Stalls",
+          "pages": "p. 5-17"
+        },
+        {
+          "n": 6,
+          "work": "NIFE FTI",
+          "loc": "§526 — Procedure for Power Off Stall",
+          "pages": "p. 5-18"
+        },
+        {
+          "n": 7,
+          "work": "NIFE FTI",
+          "loc": "§529 — Common Errors During Stalls",
+          "pages": "p. 5-19"
+        },
+        {
+          "n": 8,
+          "work": "NIFE MCG",
+          "loc": "§8 — Course Training Standards",
+          "pages": "p. 5-2"
+        }
+      ],
+      "coverage": {
+        "cited": 49,
+        "uncited": 10,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03",
+          "numbers/num-04",
+          "numbers/num-05",
+          "numbers/num-06",
+          "numbers/num-07",
+          "numbers/num-08",
+          "numbers/num-09",
+          "numbers/num-10"
+        ]
+      },
+      "seeAlso": [
+        "power-on-stall",
+        "level-speed-change"
+      ],
+      "sourcingLead": null,
+      "lede": "A stall occurs when the smooth airflow over the airplane's wing is disrupted, and the lift degenerates rapidly. This is caused when the wing exceeds its critical angle of attack, and can occur at any airspeed, in any attitude, with any power setting. The practice of power-off stalls is usually performed in the landing configuration simulating an accidental stall occurring during landing approaches.",
+      "terms": [
+        "Course training standards",
+        "Recovery fundamentals",
+        "Landing configuration",
+        "Ailerons and rudder",
+        "Power-off stall",
+        "Power off stall",
+        "Stall awareness",
+        "Common errors",
+        "Recognition",
+        "Procedure"
+      ]
+    },
+    {
+      "slug": "power-on-stall",
+      "title": "Power-on stall",
+      "file": "items/nife/power-on-stall.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2102",
+          "stage": "C",
+          "block": "C21",
+          "label": "Power on stall"
+        }
+      ],
+      "sections": [
+        {
+          "id": "entry-and-recovery",
+          "title": "Entry and recovery",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 12,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "course-training-standards",
+          "title": "Course training standards",
+          "refs": [
+            4
+          ],
+          "paras": 0,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "common-errors",
+          "title": "Common errors",
+          "refs": [
+            3
+          ],
+          "paras": 0,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Entry airspeed",
+          "value": "90 KIAS or less"
+        },
+        {
+          "label": "Power at entry",
+          "value": "1000 RPM"
+        },
+        {
+          "label": "Slow to",
+          "value": "65 KIAS"
+        },
+        {
+          "label": "Power before pitch up",
+          "value": "Above 2000 RPM"
+        },
+        {
+          "label": "Pitch",
+          "value": "Raise the nose 15-20°"
+        },
+        {
+          "label": "Level off",
+          "value": "Next 500 foot increment"
+        },
+        {
+          "label": "Transition to",
+          "value": "90 KIAS"
+        },
+        {
+          "label": "Recovery altitude",
+          "value": "No lower than 1,500 feet AGL"
+        },
+        {
+          "label": "Heading tolerance",
+          "value": "±10°"
+        },
+        {
+          "label": "Bank tolerance",
+          "value": "±10°, not greater than 20°"
+        }
+      ],
+      "works": [
+        "NIFE FTI",
+        "NIFE MCG"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§527 — Power On Stalls",
+          "pages": "p. 5-18"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§528 — Procedure for Power On Stall",
+          "pages": "p. 5-19"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§529 — Common Errors During Stalls",
+          "pages": "p. 5-19"
+        },
+        {
+          "n": 4,
+          "work": "NIFE MCG",
+          "loc": "§8 — Course Training Standards",
+          "pages": "p. 5-2"
+        }
+      ],
+      "coverage": {
+        "cited": 23,
+        "uncited": 10,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03",
+          "numbers/num-04",
+          "numbers/num-05",
+          "numbers/num-06",
+          "numbers/num-07",
+          "numbers/num-08",
+          "numbers/num-09",
+          "numbers/num-10"
+        ]
+      },
+      "seeAlso": [
+        "power-off-stall",
+        "normal-takeoff-and-climb"
+      ],
+      "sourcingLead": null,
+      "lede": "Power-on stall recoveries are practiced from straight climbs to simulate an accidental stall occurring during takeoff climbs and departure climbs. Power-on stalls are practiced with the airplane in a clean configuration as in departure and normal climbs.",
+      "terms": [
+        "Course training standards",
+        "Entry and recovery",
+        "Power-on stall",
+        "Power on stall",
+        "Common errors",
+        "Procedure"
+      ]
+    },
+    {
+      "slug": "previously-discussed-items",
+      "title": "Any previously discussed item",
+      "file": "items/nife/previously-discussed-items.json",
+      "flags": [
+        "generated"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4390",
+          "stage": "C",
+          "block": "C43",
+          "label": "Any previously discussed items"
+        }
+      ],
+      "sections": [],
+      "numbers": [],
+      "works": [],
+      "references": [],
+      "coverage": {
+        "cited": 0,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "previously-discussed-maneuvers"
+      ],
+      "sourcingLead": null,
+      "lede": "The discuss items briefed on earlier events, any of which can be asked. The list below is built from the syllabus.",
+      "terms": [
+        "Any previously discussed items",
+        "Any previously discussed item"
+      ]
+    },
+    {
+      "slug": "previously-discussed-maneuvers",
+      "title": "Any previously discussed maneuver",
+      "file": "items/nife/previously-discussed-maneuvers.json",
+      "flags": [
+        "generated"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4390",
+          "stage": "C",
+          "block": "C43",
+          "label": "Any maneuver or procedure"
+        }
+      ],
+      "sections": [],
+      "numbers": [],
+      "works": [],
+      "references": [],
+      "coverage": {
+        "cited": 0,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "previously-discussed-items"
+      ],
+      "sourcingLead": null,
+      "lede": "Maneuvers briefed on earlier events, any of which may be discussed on this event.",
+      "terms": [
+        "Any previously discussed maneuver",
+        "Any maneuver or procedure"
+      ]
+    },
+    {
+      "slug": "racetrack-pattern",
+      "title": "Racetrack pattern",
+      "file": "items/nife/racetrack-pattern.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4102",
+          "stage": "C",
+          "block": "C41",
+          "label": "Racetrack pattern procedures"
+        }
+      ],
+      "sections": [
+        {
+          "id": "pattern-positions",
+          "title": "Pattern positions",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 8,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/racetrack-pattern/muehe25n-landing-pattern.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "runway-references",
+          "title": "Runway references",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "downwind",
+          "title": "Downwind",
+          "refs": null,
+          "paras": 3,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "abeam-and-the-180",
+          "title": "Abeam and the 180",
+          "refs": [
+            5
+          ],
+          "paras": 7,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": [
+            "four-ts"
+          ]
+        },
+        {
+          "id": "ninety-position",
+          "title": "90° position",
+          "refs": null,
+          "paras": 3,
+          "items": 5,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/racetrack-pattern/muek2rqn-ninety-position.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "final-approach",
+          "title": "Final approach",
+          "refs": null,
+          "paras": 6,
+          "items": 6,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/racetrack-pattern/muek2smi-the-groove.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "use-of-flaps",
+          "title": "Use of flaps",
+          "refs": [
+            11
+          ],
+          "paras": 4,
+          "items": 3,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/racetrack-pattern/muekk9kx-flaps-glideslope.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "visual-focus",
+          "title": "Visual focus",
+          "refs": [
+            12
+          ],
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "flare",
+          "title": "Flare",
+          "refs": null,
+          "paras": 8,
+          "items": 6,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/racetrack-pattern/muekkcp6-height-during-flare.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "touchdown",
+          "title": "Touchdown",
+          "refs": [
+            15
+          ],
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "touch-and-go",
+          "title": "Touch and go",
+          "refs": null,
+          "paras": 2,
+          "items": 7,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "after-landing-roll",
+          "title": "After landing roll",
+          "refs": [
+            17
+          ],
+          "paras": 9,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "pattern-interval",
+          "title": "Pattern interval",
+          "refs": [
+            2
+          ],
+          "paras": 1,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "departure-interval",
+          "title": "Departure interval",
+          "refs": [
+            2
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "spacing",
+          "title": "Spacing",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "box-pattern",
+          "title": "Box pattern",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "common-errors",
+          "title": "Common errors",
+          "refs": [
+            10
+          ],
+          "paras": 0,
+          "items": 14,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Downwind",
+          "value": "1000 feet AGL"
+        },
+        {
+          "label": "Downwind",
+          "value": "85 KIAS"
+        },
+        {
+          "label": "Abeam distance",
+          "value": "0.7 to 0.8 NM"
+        },
+        {
+          "label": "180",
+          "value": "1200 to 1500 feet past the threshold"
+        },
+        {
+          "label": "Approach turn",
+          "value": "15° AOB"
+        },
+        {
+          "label": "Approach turn",
+          "value": "30° AOB maximum"
+        },
+        {
+          "label": "90",
+          "value": "500 feet AGL"
+        },
+        {
+          "label": "90",
+          "value": "70 KIAS"
+        },
+        {
+          "label": "Glidepath",
+          "value": "3°"
+        },
+        {
+          "label": "Final straightaway",
+          "value": "1200 to 1500 feet"
+        },
+        {
+          "label": "Final altitude",
+          "value": "100 to 150 feet AGL"
+        },
+        {
+          "label": "Flare",
+          "value": "10 to 15 feet AGL"
+        },
+        {
+          "label": "Level-off",
+          "value": "3 to 5 feet AGL"
+        },
+        {
+          "label": "Touch and go crosswind",
+          "value": "400' AGL"
+        },
+        {
+          "label": "Intended Point of Landing",
+          "value": "500 feet past the threshold"
+        },
+        {
+          "label": "Touchdown Zone",
+          "value": "500 feet beyond that point"
+        },
+        {
+          "label": "Interval",
+          "value": "90 degrees of turn"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§601 — Landing Pattern",
+          "pages": "p. 6-1"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§602 — Landing Pattern Terminology",
+          "pages": "p. 6-2"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§603 — Downwind to the 180° Position",
+          "pages": "p. 6-3"
+        },
+        {
+          "n": 4,
+          "work": "NIFE FTI",
+          "loc": "§604 — Procedure for Downwind",
+          "pages": "p. 6-4"
+        },
+        {
+          "n": 5,
+          "work": "NIFE FTI",
+          "loc": "§605 — Abeam and the 180° Position",
+          "pages": "p. 6-4"
+        },
+        {
+          "n": 6,
+          "work": "NIFE FTI",
+          "loc": "§607 — 90° Position (Base Leg)",
+          "pages": "p. 6-5"
+        },
+        {
+          "n": 7,
+          "work": "NIFE FTI",
+          "loc": "§608 — Procedure at the 90° Position (Base Leg)",
+          "pages": "p. 6-6"
+        },
+        {
+          "n": 8,
+          "work": "NIFE FTI",
+          "loc": "§609 — The Groove (Final Approach)",
+          "pages": "p. 6-6"
+        },
+        {
+          "n": 9,
+          "work": "NIFE FTI",
+          "loc": "§610 — Procedures for Final Approach",
+          "pages": "p. 6-7"
+        },
+        {
+          "n": 10,
+          "work": "NIFE FTI",
+          "loc": "§618 — Common Errors During Normal Approach and Landing",
+          "pages": "p. 6-15"
+        },
+        {
+          "n": 11,
+          "work": "NIFE FTI",
+          "loc": "§611 — Use of Flaps",
+          "pages": "p. 6-8"
+        },
+        {
+          "n": 12,
+          "work": "NIFE FTI",
+          "loc": "§612 — Estimating Height During the Flare",
+          "pages": "p. 6-9"
+        },
+        {
+          "n": 13,
+          "work": "NIFE FTI",
+          "loc": "§613 — Roundout (Flare)",
+          "pages": "p. 6-10"
+        },
+        {
+          "n": 14,
+          "work": "NIFE FTI",
+          "loc": "§614 — Procedure for Normal Flare",
+          "pages": "p. 6-12"
+        },
+        {
+          "n": 15,
+          "work": "NIFE FTI",
+          "loc": "§615 — Touchdown",
+          "pages": "p. 6-12"
+        },
+        {
+          "n": 16,
+          "work": "NIFE FTI",
+          "loc": "§616 — Procedure for Touch and Go Landing",
+          "pages": "p. 6-13"
+        },
+        {
+          "n": 17,
+          "work": "NIFE FTI",
+          "loc": "§617 — After Landing Roll",
+          "pages": "p. 6-13"
+        }
+      ],
+      "coverage": {
+        "cited": 143,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "traffic-pattern",
+        "waveoff",
+        "four-ts",
+        "crosswind-landing"
+      ],
+      "sourcingLead": null,
+      "lede": "The landing pattern is a geometric racetrack-shaped course flown so that an approach and landing may be executed in a systematic sequence. The landing line, the upwind leg, and the parallel downwind leg form the sides of the racetrack pattern. These lines are joined together by the crosswind turn and by the approach turn at the downwind end of the pattern. The racetrack pattern is a military style pattern, while most civilians fly a rectangular (box) pattern. It is flown from the downwind leg through the abeam position, the 180 and the 90 to the groove, and then through the flare, the touchdown and the after-landing roll.",
+      "terms": [
+        "Racetrack pattern procedures",
+        "After landing roll",
+        "Departure interval",
+        "Racetrack pattern",
+        "Pattern positions",
+        "Runway references",
+        "Abeam and the 180",
+        "Pattern interval",
+        "Final approach",
+        "Common errors",
+        "90° position",
+        "Use of flaps",
+        "Visual focus",
+        "Touch and go",
+        "Box pattern",
+        "Touchdown",
+        "Downwind",
+        "Spacing",
+        "Flare"
+      ]
+    },
+    {
+      "slug": "runway-incursion-avoidance",
+      "title": "Runway incursion avoidance",
+      "file": "items/nife/runway-incursion-avoidance.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2101",
+          "stage": "C",
+          "block": "C21",
+          "label": "Runway incursion avoidance"
+        }
+      ],
+      "sections": [
+        {
+          "id": "causes",
+          "title": "Causes",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "communication",
+          "title": "Communication",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "taxi-operations",
+          "title": "Taxi operations",
+          "refs": null,
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§A104 — Runway Incursion Avoidance",
+          "pages": "p. A-4"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§410 — General Ground Procedures",
+          "pages": "p. 4-9"
+        }
+      ],
+      "coverage": {
+        "cited": 8,
+        "uncited": 1,
+        "uncitedIds": [
+          "taxi-operations/to-p4"
+        ]
+      },
+      "seeAlso": [],
+      "sourcingLead": null,
+      "lede": "A runway incursion is any occurrence at an airport involving an aircraft, vehicle, person, or object on the ground that creates a collision hazard or results in a loss of separation with an aircraft taking off, landing, or intending to land.",
+      "terms": [
+        "Runway incursion avoidance",
+        "Taxi operations",
+        "Communication",
+        "Causes"
+      ]
+    },
+    {
+      "slug": "scan-pattern-and-sight-picture",
+      "title": "Scan pattern and sight picture",
+      "file": "items/nife/scan-pattern-and-sight-picture.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4101",
+          "stage": "C",
+          "block": "C41",
+          "label": "Scan pattern and sight picture"
+        }
+      ],
+      "sections": [
+        {
+          "id": "division-of-attention",
+          "title": "Division of attention",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "scan-coverage",
+          "title": "Scan coverage",
+          "refs": [
+            3
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/scan-pattern-and-sight-picture/mueheg8b-outside-scan.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "example-pattern",
+          "title": "Example pattern",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "sight-picture",
+          "title": "Sight picture",
+          "refs": null,
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "fixation",
+          "title": "Fixation",
+          "refs": [
+            1
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Scan area",
+          "value": "60 degrees either side of center"
+        },
+        {
+          "label": "Scan area",
+          "value": "10 degrees up and down"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§207 — Scan Pattern",
+          "pages": "p. 2-6"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§205 — Attitude Flying",
+          "pages": "p. 2-4"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§206 — \"See and Avoid\" Doctrine",
+          "pages": "p. 2-5"
+        },
+        {
+          "n": 4,
+          "work": "NIFE FTI",
+          "loc": "§204 — Integrated Flight Instruction",
+          "pages": "p. 2-4"
+        }
+      ],
+      "coverage": {
+        "cited": 17,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "instrument-usage-during-vfr-flying",
+        "see-and-avoid"
+      ],
+      "sourcingLead": null,
+      "lede": "A scan pattern is a means or procedure by which you can observe everything you need to see by starting at one point, moving visually about the aircraft, checking all applicable items systematically and thoroughly, and completing the pattern at the starting point. A scan pattern may be started anywhere, but it must be complete and continuous. Contact flying, or attitude flying, means visually establishing the airplane's attitude with reference to ground references and the natural horizon.",
+      "terms": [
+        "Scan pattern and sight picture",
+        "Division of attention",
+        "Example pattern",
+        "Scan coverage",
+        "Sight picture",
+        "Fixation"
+      ]
+    },
+    {
+      "slug": "see-and-avoid",
+      "title": "See and avoid doctrine",
+      "file": "items/nife/see-and-avoid.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4101",
+          "stage": "C",
+          "block": "C41",
+          "label": "See and avoid doctrine"
+        }
+      ],
+      "sections": [
+        {
+          "id": "midair-collisions",
+          "title": "Midair collisions",
+          "refs": [
+            1
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "immediate-action",
+          "title": "Immediate action",
+          "refs": [
+            2
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Most midairs",
+          "value": "Within 5 miles of an airport"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§A102 — Collision Avoidance",
+          "pages": "p. A-2"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§206 — \"See and Avoid\" Doctrine",
+          "pages": "p. 2-5"
+        }
+      ],
+      "coverage": {
+        "cited": 6,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "scan-pattern-and-sight-picture"
+      ],
+      "sourcingLead": null,
+      "lede": "All pilots must be alert to the potential for midair collision and near midair collisions. The general operating and flight rules in 14 CFR part 91 set forth the concept of \"See and Avoid,\" which requires that vigilance shall be maintained at all times, by each person operating an aircraft regardless of whether the operation is conducted under instrument or visual meteorological conditions. Simply stated, the \"See and Avoid\" Doctrine is a pilot's best defense against a midair collision.",
+      "terms": [
+        "See and avoid doctrine",
+        "Midair collisions",
+        "Immediate action"
+      ]
+    },
+    {
+      "slug": "slip-to-land",
+      "title": "Slip to land",
+      "file": "items/nife/slip-to-land.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4201",
+          "stage": "C",
+          "block": "C42",
+          "label": "Slip to land"
+        }
+      ],
+      "sections": [
+        {
+          "id": "sideslip",
+          "title": "Sideslip",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "forward-slip",
+          "title": "Forward slip",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/slip-to-land/mueheeor-forward-slip.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "recovery",
+          "title": "Recovery",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "airspeed-indication-and-stalls",
+          "title": "Airspeed indication and stalls",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "uses-and-limitations",
+          "title": "Uses and limitations",
+          "refs": null,
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "unintentional-slips",
+          "title": "Unintentional slips",
+          "refs": [
+            2
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§619 — Intentional Slips",
+          "pages": "p. 6-16"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§214 — Slip",
+          "pages": "p. 2-13"
+        }
+      ],
+      "coverage": {
+        "cited": 13,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "crosswind-landing",
+        "emergency-landing-pattern"
+      ],
+      "sourcingLead": null,
+      "lede": "A slip occurs when the aircraft yaws towards the outside of a turn. An intentional slip requires deliberate cross-controlling ailerons and rudder throughout the maneuver, and is used to dissipate altitude without increasing airspeed, and/or to adjust airplane ground track during a crosswind. In a sideslip the airplane's longitudinal axis remains parallel to the original flightpath; in a forward slip the nose is yawed opposite the bank so that the longitudinal axis is at an angle to the original flightpath. Always announce the slip, \"(Left/Right) wing down, (Left/Right) top rudder.\"",
+      "terms": [
+        "Airspeed indication and stalls",
+        "Uses and limitations",
+        "Unintentional slips",
+        "Slip to land",
+        "Forward slip",
+        "Sideslip",
+        "Recovery"
+      ]
+    },
+    {
+      "slug": "standard-operating-procedures",
+      "title": "Standard operating procedures",
+      "file": "items/nife/standard-operating-procedures.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4101",
+          "stage": "C",
+          "block": "C41",
+          "label": "Standard operating procedures"
+        },
+        {
+          "id": "C4202",
+          "stage": "C",
+          "block": "C42",
+          "label": "SOP knowledge"
+        }
+      ],
+      "sections": [
+        {
+          "id": "crew-day-and-crew-rest",
+          "title": "Crew day and rest",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "crewmember-duties",
+          "title": "Crewmember duties",
+          "refs": [
+            2
+          ],
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "weather-criteria",
+          "title": "Weather criteria",
+          "refs": [
+            3
+          ],
+          "paras": 0,
+          "items": 8,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "personal-electronic-devices",
+          "title": "Personal electronic devices",
+          "refs": [
+            4
+          ],
+          "paras": 0,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "fuel-requirements",
+          "title": "Fuel requirements",
+          "refs": [
+            5
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "airfield-and-altitude-limits",
+          "title": "Airfield and altitude limits",
+          "refs": null,
+          "paras": 0,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Crew day",
+          "value": "12 hours"
+        },
+        {
+          "label": "Crew rest",
+          "value": "12 hours continuous"
+        },
+        {
+          "label": "Takeoff minimums",
+          "value": "1,500 foot ceiling, 3 statute miles"
+        },
+        {
+          "label": "Stall minimums",
+          "value": "2,500 foot ceiling, 3 statute miles"
+        },
+        {
+          "label": "Minimum fuel",
+          "value": "12 gallons"
+        },
+        {
+          "label": "Emergency fuel",
+          "value": "6 gallons"
+        },
+        {
+          "label": "Runway, normal operations",
+          "value": "3,000 feet"
+        },
+        {
+          "label": "Runway, emergency field",
+          "value": "2,000 feet"
+        },
+        {
+          "label": "Stall recovery",
+          "value": "Above 1,500 feet AGL"
+        },
+        {
+          "label": "NOLF Silverhill",
+          "value": "1,500 feet MSL within 2 NM"
+        }
+      ],
+      "works": [
+        "NIFE SOP"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE SOP",
+          "loc": "§204 — Aircrew Rest/Scheduling Requirements",
+          "pages": "p. 3"
+        },
+        {
+          "n": 2,
+          "work": "NIFE SOP",
+          "loc": "§206 — Crew Resource Management (CRM) Roles and Responsibilities",
+          "pages": "p. 6"
+        },
+        {
+          "n": 3,
+          "work": "NIFE SOP",
+          "loc": "§302 — Weather Criteria",
+          "pages": "p. 9"
+        },
+        {
+          "n": 4,
+          "work": "NIFE SOP",
+          "loc": "§402 — Personal Electronic Devices (PEDs)/Electronic Kneeboard (EKB)",
+          "pages": "p. 11"
+        },
+        {
+          "n": 5,
+          "work": "NIFE SOP",
+          "loc": "§403 — Fuel Requirements",
+          "pages": "p. 11"
+        },
+        {
+          "n": 6,
+          "work": "NIFE SOP",
+          "loc": "§404 — Airfield Operations",
+          "pages": "p. 12"
+        },
+        {
+          "n": 7,
+          "work": "NIFE SOP",
+          "loc": "§405 — Minimum Altitudes",
+          "pages": "p. 12"
+        }
+      ],
+      "coverage": {
+        "cited": 32,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [],
+      "sourcingLead": null,
+      "lede": "The NIFE SOP promulgates standard operating procedures for ground and flight operations within the NIFE course. It supplements the Master Curriculum Guide, the FTI and the Inflight Guide, and provides guidance in the event that no other governing directive applies. Should conflict exist between it and any other publication, the more restrictive directive will govern. Only the Commanding Officer or his representative may approve deviations from it.",
+      "terms": [
+        "Standard operating procedures",
+        "Airfield and altitude limits",
+        "Personal electronic devices",
+        "Crew day and rest",
+        "Crewmember duties",
+        "Fuel requirements",
+        "Weather criteria",
+        "SOP knowledge"
+      ]
+    },
+    {
+      "slug": "takeoff-brief",
+      "title": "Takeoff brief",
+      "file": "items/nife/takeoff-brief.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2101",
+          "stage": "C",
+          "block": "C21",
+          "label": "Takeoff brief"
+        }
+      ],
+      "sections": [
+        {
+          "id": "script",
+          "title": "Script",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "lineup",
+          "title": "Lineup",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "ground-reference-points",
+          "title": "Ground reference points",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Pattern climb",
+          "value": "1000 feet"
+        },
+        {
+          "label": "Engine failure split",
+          "value": "800 feet AGL"
+        },
+        {
+          "label": "Landing site arc",
+          "value": "30° of the nose"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§503 — Takeoff Brief",
+          "pages": "p. 5-2"
+        }
+      ],
+      "coverage": {
+        "cited": 6,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "engine-run-up",
+        "engine-failure-after-takeoff"
+      ],
+      "sourcingLead": null,
+      "lede": "Prior to taking the runway a concise takeoff brief shall be conducted. The takeoff brief ensures the student and instructor have clearly defined roles and have discussed a plan should an emergency occur during this critical phase of flight.",
+      "terms": [
+        "Ground reference points",
+        "Takeoff brief",
+        "Script",
+        "Lineup"
+      ]
+    },
+    {
+      "slug": "towered-operations-and-ctaf",
+      "title": "Towered operations and CTAF",
+      "file": "items/nife/towered-operations-and-ctaf.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4102",
+          "stage": "C",
+          "block": "C41",
+          "label": "Towered ops vs. CTAF"
+        }
+      ],
+      "sections": [
+        {
+          "id": "non-towered-airports",
+          "title": "Non-towered airports",
+          "refs": null,
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "ctaf-calls",
+          "title": "CTAF calls",
+          "refs": [
+            4
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "preflight-and-taxi",
+          "title": "Preflight and taxi",
+          "refs": null,
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "takeoff",
+          "title": "Takeoff",
+          "refs": null,
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "arrival-and-departure",
+          "title": "Arrival and departure",
+          "refs": null,
+          "paras": 5,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "pattern-calls",
+          "title": "Pattern calls",
+          "refs": [
+            5
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "AWOS inbound",
+          "value": "approximately 15 miles"
+        },
+        {
+          "label": "CTAF inbound",
+          "value": "10 miles"
+        },
+        {
+          "label": "CTAF outbound",
+          "value": "5 to 10 miles"
+        },
+        {
+          "label": "Straight-in calls",
+          "value": "5, 3 and 1 mile final"
+        },
+        {
+          "label": "Downwind entry",
+          "value": "45 degrees"
+        }
+      ],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§B105 — Communications at Tower-Controlled Airports",
+          "pages": "p. B-4"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§B106 — Communication at Non-Towered Airports",
+          "pages": "p. B-7"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§C100 — Introduction",
+          "pages": "p. C-1"
+        },
+        {
+          "n": 4,
+          "work": "NIFE FTI",
+          "loc": "§C101 — Communications",
+          "pages": "p. C-1"
+        },
+        {
+          "n": 5,
+          "work": "NIFE FTI",
+          "loc": "§C102 — Procedures at Non-Towered Airports",
+          "pages": "p. C-3"
+        }
+      ],
+      "coverage": {
+        "cited": 24,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "traffic-pattern",
+        "racetrack-pattern",
+        "lost-communication"
+      ],
+      "sourcingLead": null,
+      "lede": "The flow of communications at a non-towered field mirrors that of a towered field. At a towered airport, surface operations are controlled by a member of the local ATC service team referred to as the ground controller, and the tower issues the clearance to take the runway and the clearance to land. At a non-towered field, all communications happen on the same Common Traffic Advisory Frequency (CTAF), all communications are in the form of a self-announcement (broadcast) of the pilot's intentions, and pilots are responsible for ensuring that their takeoff will not interfere with landing traffic.",
+      "terms": [
+        "Towered operations and CTAF",
+        "Arrival and departure",
+        "Towered ops vs. CTAF",
+        "Non-towered airports",
+        "Preflight and taxi",
+        "Pattern calls",
+        "CTAF calls",
+        "Takeoff"
+      ]
+    },
+    {
+      "slug": "traffic-pattern",
+      "title": "Traffic pattern",
+      "file": "items/nife/traffic-pattern.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2102",
+          "stage": "C",
+          "block": "C21",
+          "label": "Traffic pattern"
+        }
+      ],
+      "sections": [
+        {
+          "id": "towered-and-non-towered",
+          "title": "Towered and non-towered",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "military-racetrack",
+          "title": "Military racetrack",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "right-of-way",
+          "title": "Right of way",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "course-training-standards",
+          "title": "Course training standards",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Pattern altitude",
+          "value": "1,000 feet above airport elevation"
+        },
+        {
+          "label": "Altitude tolerance",
+          "value": "±100 feet"
+        },
+        {
+          "label": "Airspeed tolerance",
+          "value": "±10 knots"
+        }
+      ],
+      "works": [
+        "NIFE FTI",
+        "NIFE MCG"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§A101 — Standard Airport Traffic Patterns",
+          "pages": "p. A-1"
+        },
+        {
+          "n": 2,
+          "work": "NIFE MCG",
+          "loc": "§8 — Course Training Standards",
+          "pages": "p. 5-2"
+        }
+      ],
+      "coverage": {
+        "cited": 7,
+        "uncited": 3,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03"
+        ]
+      },
+      "seeAlso": [
+        "racetrack-pattern",
+        "four-ts"
+      ],
+      "sourcingLead": null,
+      "lede": "An airport traffic pattern is established appropriate to the local conditions, including the direction and placement of the pattern, the altitude to be flown, and the procedures for entering and leaving the pattern. Unless the airport displays approved visual markings indicating that turns should be made to the right, the pilot should make all turns in the pattern to the left. The standard traffic pattern altitude is usually 1,000 feet above the elevation of the airport surface.",
+      "terms": [
+        "Course training standards",
+        "Towered and non-towered",
+        "Military racetrack",
+        "Traffic pattern",
+        "Right of way"
+      ]
+    },
+    {
+      "slug": "turn-pattern",
+      "title": "Turn pattern",
+      "file": "items/nife/turn-pattern.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C2102",
+          "stage": "C",
+          "block": "C21",
+          "label": "Turn pattern"
+        }
+      ],
+      "sections": [
+        {
+          "id": "execution",
+          "title": "Execution",
+          "refs": null,
+          "paras": 5,
+          "items": 0,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/turn-pattern/muehe0bc-turn-pattern.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": [
+            2
+          ],
+          "paras": 0,
+          "items": 7,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "course-training-standards",
+          "title": "Course training standards",
+          "refs": [
+            4
+          ],
+          "paras": 0,
+          "items": 2,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "common-errors",
+          "title": "Common errors",
+          "refs": [
+            3
+          ],
+          "paras": 0,
+          "items": 6,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Entry airspeed",
+          "value": "90 KIAS"
+        },
+        {
+          "label": "First pair",
+          "value": "15° AOB, 30° of turn"
+        },
+        {
+          "label": "Second pair",
+          "value": "30° AOB, 90° of turn"
+        },
+        {
+          "label": "Third pair",
+          "value": "45° AOB, 180° of turn"
+        },
+        {
+          "label": "Altitude",
+          "value": "±100 feet"
+        },
+        {
+          "label": "Airspeed",
+          "value": "±10 knots"
+        },
+        {
+          "label": "Bank",
+          "value": "±10°"
+        },
+        {
+          "label": "Rollout heading",
+          "value": "±10°"
+        }
+      ],
+      "works": [
+        "NIFE FTI",
+        "NIFE MCG"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§518 — Turn Pattern",
+          "pages": "p. 5-12"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§519 — Procedure for Turn Pattern",
+          "pages": "p. 5-13"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§520 — Common Errors During Turn Pattern",
+          "pages": "p. 5-14"
+        },
+        {
+          "n": 4,
+          "work": "NIFE MCG",
+          "loc": "§8 — Course Training Standards",
+          "pages": "p. 5-2"
+        }
+      ],
+      "coverage": {
+        "cited": 20,
+        "uncited": 9,
+        "uncitedIds": [
+          "numbers/num-01",
+          "numbers/num-02",
+          "numbers/num-03",
+          "numbers/num-04",
+          "numbers/num-05",
+          "numbers/num-06",
+          "numbers/num-07",
+          "numbers/num-08",
+          "execution/p2"
+        ]
+      },
+      "seeAlso": [
+        "pat-principle",
+        "level-speed-change"
+      ],
+      "sourcingLead": null,
+      "lede": "The objective of the turn pattern is to develop smoothness, coordination, orientation, and division of attention. Smoothness of control use, coordination, and accuracy of execution are the important features of this maneuver. It is started at 90 KIAS on any cardinal heading and consists of two 15° AOB turns in opposite directions for 30° of heading change, two 30° AOB turns in opposite directions for 90° of heading change, and two 45° AOB turns in opposite directions for 180° of heading change.",
+      "terms": [
+        "Course training standards",
+        "Common errors",
+        "Turn pattern",
+        "Execution",
+        "Procedure"
+      ]
+    },
+    {
+      "slug": "wake-turbulence-and-wind-shear",
+      "title": "Wake turbulence and wind shear",
+      "file": "items/nife/wake-turbulence-and-wind-shear.json",
+      "flags": [],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4101",
+          "stage": "C",
+          "block": "C41",
+          "label": "Wake turbulence/windshear"
+        }
+      ],
+      "sections": [
+        {
+          "id": "vortex-behavior",
+          "title": "Vortex behavior",
+          "refs": null,
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "conditions-to-watch",
+          "title": "Conditions to watch",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "vortex-avoidance-procedures",
+          "title": "Vortex avoidance procedures",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 9,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "wind-shear",
+          "title": "Wind shear",
+          "refs": null,
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [
+        {
+          "label": "Wake interval",
+          "value": "At least 2 minutes"
+        },
+        {
+          "label": "Parallel runway caution",
+          "value": "Closer than 2,500 feet"
+        },
+        {
+          "label": "Vortex lateral movement",
+          "value": "2 or 3 knots"
+        }
+      ],
+      "works": [
+        "AIM",
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§A103 — Wake Turbulence",
+          "pages": "p. A-2"
+        },
+        {
+          "n": 2,
+          "work": "AIM",
+          "loc": "§7-4-3 — Vortex Strength",
+          "pages": "p. 7-4-1"
+        },
+        {
+          "n": 3,
+          "work": "AIM",
+          "loc": "§7-4-4 — Vortex Behavior",
+          "pages": "p. 7-4-2"
+        },
+        {
+          "n": 4,
+          "work": "AIM",
+          "loc": "§7-1-22 — Wind Shear PIREPs",
+          "pages": "p. 7-1-49"
+        },
+        {
+          "n": 5,
+          "work": "AIM",
+          "loc": "§4-3-7 — Low Level Wind Shear/Microburst Detection Systems",
+          "pages": "p. 4-3-12"
+        },
+        {
+          "n": 6,
+          "work": "NIFE FTI",
+          "loc": "§620 — Waveoffs (Go Arounds/Rejected Landings)",
+          "pages": "p. 6-17"
+        }
+      ],
+      "coverage": {
+        "cited": 27,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [],
+      "sourcingLead": null,
+      "lede": "Every aircraft generates a wake while in flight, caused by a pair of counter-rotating vortices trailing from the wing tips. The vortices from larger aircraft pose problems to encountering aircraft such as severe rolling moments while near the ground. In general, avoid the area below and behind the generating aircraft, especially at low altitude where even a momentary wake encounter could be hazardous. Wind shear is a change in wind speed and/or wind direction in a short distance, and it can exist in a horizontal or vertical direction and occasionally in both.",
+      "terms": [
+        "Wake turbulence and wind shear",
+        "Vortex avoidance procedures",
+        "Wake turbulence/windshear",
+        "Conditions to watch",
+        "Vortex behavior",
+        "Wind shear"
+      ]
+    },
+    {
+      "slug": "waveoff",
+      "title": "Waveoff",
+      "file": "items/nife/waveoff.json",
+      "flags": [
+        "maneuver"
+      ],
+      "stages": [
+        "C"
+      ],
+      "events": [
+        {
+          "id": "C4102",
+          "stage": "C",
+          "block": "C41",
+          "label": "Waveoff"
+        }
+      ],
+      "sections": [
+        {
+          "id": "unsatisfactory-landing-conditions",
+          "title": "Unsatisfactory conditions",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "delay",
+          "title": "Delay",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": [
+            2
+          ],
+          "paras": 1,
+          "items": 5,
+          "figures": [
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/nife/waveoff/muehefeo-waveoff.webp"
+          ],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "cardinal-principles",
+          "title": "Cardinal principles",
+          "refs": [
+            1
+          ],
+          "paras": 0,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "control-pressures",
+          "title": "Control pressures",
+          "refs": [
+            1
+          ],
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "ground-effect",
+          "title": "Ground effect",
+          "refs": [
+            1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "common-errors",
+          "title": "Common errors",
+          "refs": [
+            3
+          ],
+          "paras": 0,
+          "items": 8,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        }
+      ],
+      "numbers": [],
+      "works": [
+        "NIFE FTI"
+      ],
+      "references": [
+        {
+          "n": 1,
+          "work": "NIFE FTI",
+          "loc": "§620 — Waveoffs",
+          "pages": "p. 6-17"
+        },
+        {
+          "n": 2,
+          "work": "NIFE FTI",
+          "loc": "§621 — Procedures for Waveoff",
+          "pages": "p. 6-19"
+        },
+        {
+          "n": 3,
+          "work": "NIFE FTI",
+          "loc": "§622 — Common Errors During Waveoff",
+          "pages": "p. 6-20"
+        }
+      ],
+      "coverage": {
+        "cited": 24,
+        "uncited": 0,
+        "uncitedIds": []
+      },
+      "seeAlso": [
+        "racetrack-pattern",
+        "traffic-pattern"
+      ],
+      "sourcingLead": null,
+      "lede": "Whenever landing conditions are not satisfactory, a waveoff is warranted. The waveoff is not strictly an emergency procedure. It is a normal maneuver that may at times be used in an emergency situation, and like any other normal maneuver it must be practiced and perfected. The improper execution of the waveoff maneuver stems from a lack of familiarity with the three cardinal principles of the procedure: power, attitude, and configuration.",
+      "terms": [
+        "Unsatisfactory conditions",
+        "Cardinal principles",
+        "Control pressures",
+        "Ground effect",
+        "Common errors",
+        "Procedure",
+        "Waveoff",
+        "Delay"
+      ]
+    }
+  ]
+}
