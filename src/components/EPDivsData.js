@@ -610,7 +610,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
               {renderStepContent('sfe8')}
               {renderNWCButton('sfe8')}
             </div>
-            <div style={decisionPointStyle}>IF FIRE CEASES:</div>
+            <div style={decisionPointStyle}>IF SMOKE/FIRE CEASES:</div>
             <div style={epStepStyle}>
               <span style={{minWidth: '20px'}}>9.</span>
               {renderStepContent('sfe9')}
@@ -646,7 +646,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     (
       <div key="osm" style={epSectionStyle}>
         {renderEPHeader('OIL SYSTEM MALFUNCTION OR LOW OIL PRESSURE', 'osmT')}
-        <div style={decisionPointStyle}>IF ONLY AMBER OIL PX caution ILLUMINATES:</div>
+        <div style={decisionPointStyle}>IF ONLY AMBER OIL PX CAUTION ILLUMINATES:</div>
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('osm1')}
@@ -655,7 +655,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
           <span style={{minWidth: '20px'}}>2.</span>
           {renderStepContent('osm2', {fontSize: '8px'})}
         </div>
-        <div style={decisionPointStyle}>IF RED OIL PX WARNING ILLUMINATES AND/OR AMBER OIL PX CAUTION REMAINS ILLUMINATED FOR 5 SECONDS:</div>
+        <div style={decisionPointStyle}>IF RED OIL PX WARNING ILLUMINATES AND/OR AMBER OIL PX CAUTION REMAINS ILLUMINATED FOR 5 SECONDS, OIL PRESSURE FLUCTUATIONS, OR OIL TEMPERATURE OUT OF LIMITS:</div>
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>3.</span>
           {renderStepContent('osm3', {fontSize: '7px'})}
@@ -689,6 +689,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
     (
       <div key="hff" style={epSectionStyle}>
         <div style={epHeaderStyle}>HIGH FUEL FLOW</div>
+        <div style={decisionPointStyle}>IF FUEL FLOW IS 800 PPH OR GREATER:</div>
         <div style={epStepStyle}>
           <span style={{minWidth: '20px'}}>1.</span>
           {renderStepContent('hff1')}
