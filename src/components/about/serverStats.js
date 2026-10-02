@@ -64,7 +64,15 @@ export const SERVER_STATS = {
       },
       {
         "aircraft": "T-6B",
+        "unit": "VT-3"
+      },
+      {
+        "aircraft": "T-6B",
         "unit": "TW-4"
+      },
+      {
+        "aircraft": "T-6B",
+        "unit": "VT-3"
       }
     ]
   },
