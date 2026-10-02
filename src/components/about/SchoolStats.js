@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchBriefIndex, fetchBrief, rememberBrief } from '../briefs/briefApi';
+import { wingOf } from '../briefs/paths';
 import { fetchSyllabusIndex, fetchSyllabus, rememberSyllabus } from '../discuss/discussApi';
 import { isSchool } from '../programs';
 import { readMirror } from '../serverApi';
@@ -131,9 +132,9 @@ export function EpStats({ platforms, byAircraft = false }) {
 export function BriefStats({ school, platforms = [], byAircraft = false }) {
   const briefs = useFigures('briefs', 'briefs', loadBriefs, briefRows, school);
   const titled = perAircraft(platforms, byAircraft);
-  const units = titled || !briefs ? [] : [...new Set(briefs.map((b) => b.unit).filter(Boolean))].sort();
+  const units = titled || !briefs ? [] : [...new Set(briefs.map((b) => wingOf(b.unit)).filter(Boolean))].sort();
   const groups = units.length > 1
-    ? units.map((unit) => ({ key: unit, title: unit, test: (b) => !b.unit || b.unit === unit }))
+    ? units.map((unit) => ({ key: unit, title: unit, test: (b) => !b.unit || wingOf(b.unit) === unit }))
     : (titled ? platforms.map((p) => p.aircraft) : [null])
       .map((aircraft) => ({ key: aircraft || 'all', title: aircraft, test: (b) => !aircraft || b.aircraft === aircraft }));
   return (
@@ -147,7 +148,6 @@ export function BriefStats({ school, platforms = [], byAircraft = false }) {
             title={title}
             stats={[
               { label: 'briefs', one: 'brief', value: mine && mine.length },
-              { label: 'words to memorize', one: 'word to memorize', value: mine && mine.reduce((n, b) => n + b.words, 0) },
             ]}
           />
         );

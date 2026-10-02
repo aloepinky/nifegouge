@@ -510,7 +510,7 @@ SK `rev`); same revision/409/history model. No seed — briefs come from uploadi
   `source.unit` rides in the index as `unit`; a school with 2+ units gets the wing dropdown
   (remembered as `briefUnit-<school>`), and upload never replaces across units. Bold lead-ins per card rules;
   `repeatsCard` makes card-duplicate items inert; `dropDuplicatedRules`.
-- First-letter mode hides only unfixed item `text`; `briefWords` counts the same way.
+- First-letter mode hides only unfixed item `text`. There is no words-to-memorize count: each guide marks what is said differently, so it cannot be worked out from the page.
 - Editing is in place (`[edit]` per block, one publish bar). UI words: **Title**, **Text**,
   **Always Expanded** (`fixed`; ticking it on a section writes its items into the text box),
   **Subtitle** (`subtext`), **New Page** (`break`).

@@ -25,8 +25,7 @@ export const SERVER_STATS = {
     "briefs": [
       {
         "aircraft": "C172",
-        "unit": "NIFE",
-        "words": 651
+        "unit": "NIFE"
       }
     ],
     "questions": 437
@@ -57,18 +56,15 @@ export const SERVER_STATS = {
     "briefs": [
       {
         "aircraft": "T-6B",
-        "unit": "TW-4",
-        "words": 1908
+        "unit": "TW-4"
       },
       {
         "aircraft": "T-6B",
-        "unit": "TW-5",
-        "words": 2711
+        "unit": "TW-5"
       },
       {
         "aircraft": "T-6B",
-        "unit": "TW-4",
-        "words": 1959
+        "unit": "TW-4"
       }
     ]
   },
@@ -108,8 +104,7 @@ export const SERVER_STATS = {
     "briefs": [
       {
         "aircraft": "T-44C",
-        "unit": "TW-4",
-        "words": 474
+        "unit": "TW-4"
       }
     ]
   }

@@ -34,56 +34,6 @@ export function primaryEpStats({ titles, answers, nwc, nwcGroups }) {
   };
 }
 
-// The words of a brief a student says from memory. Only text that opens and closes can be: an
-// unfixed item's `text`, which is also all first-letter mode hides (BriefView.js). A fixed item
-// or section, a section's own text and subtext are always on screen, so none is counted.
-//
-// Within that, each guide marks what is memorized its own way, so the rules are looked up by
-// the guide's wing first and then by school:
-//
-// - TW-4's guide (Primary) puts the words said aloud in quotation marks and wraps them in
-//   instructions ("Brief history of airsickness if applicable."), so only quoted words count.
-//   A quote the guide opens and never closes runs to the end of the block.
-// - NIFE's guide quotes almost nothing (20 words of 840), so its text counts whole, less the
-//   items that are looked up rather than memorized and the line that only names the pubs.
-// - TW-5's guide quotes nothing, so every word first-letter mode hides counts.
-const SAID_RULES = {
-  'tw-5': {},
-  primary: { quotedOnly: true },
-  nife: { skipItems: [/^crew day and rest$/i, /^told$/i, /^profile\b/i] },
-};
-// Never counted, in any brief: it says where the procedure is, not what it is. The guide prints
-// it both as "Brief IAW: …" (Wave Off) and "Brief memory items IAW: …" (the three EP items).
-const SKIP_LINES = [/^\s*brief (memory items )?iaw:? nife ifg and nife fti\.?\s*$/i];
-
-function quotedWords(text) {
-  let n = 0;
-  const re = /[“"]([^”"]*)(?:[”"]|$)/g;
-  let m;
-  while ((m = re.exec(text)) !== null) {
-    n += countWords(m[1]);
-    if (m[0].length === 0) re.lastIndex += 1;
-  }
-  return n;
-}
-
-export function briefWords(brief, school = brief.school) {
-  const key = (v) => String(v || '').toLowerCase();
-  const unit = brief.source && brief.source.unit;
-  const rules = SAID_RULES[key(unit)] || SAID_RULES[key(school)] || {};
-  const count = (text) => {
-    if (!text) return 0;
-    const kept = text.split('\n').filter((l) => !SKIP_LINES.some((re) => re.test(l))).join('\n');
-    return rules.quotedOnly ? quotedWords(kept) : countWords(kept);
-  };
-  return (brief.sections || [])
-    .filter((s) => !s.fixed)
-    .flatMap((s) => s.items || [])
-    .filter((item) => !item.fixed)
-    .filter((item) => !(rules.skipItems || []).some((re) => re.test((item.label || '').trim())))
-    .reduce((n, item) => n + count(item.text), 0);
-}
-
 // Flights and sims, by event number. Every event numbered 2000 or above is one or the other,
 // and nothing below 2000 is either (1000s are ground training). Of those, an event whose
 // block's media names the aircraft (`T-6B`, `Single Engine Land Aircraft`) is a flight, and
@@ -273,7 +223,6 @@ export function briefRows(records) {
   return (records || []).map((r) => ({
     aircraft: r.brief.aircraft,
     unit: (r.brief.source && r.brief.source.unit) || null,
-    words: briefWords(r.brief),
   }));
 }
 

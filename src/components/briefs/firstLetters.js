@@ -10,8 +10,8 @@ export function firstLetters(text) {
   return text.replace(WORD, (word) => word[0] + '-'.repeat(word.length - 1));
 }
 
-// How many words first-letter mode would hide in `text`: the About pages count what there is
-// to memorize with the same idea of a word the mode itself uses.
+// How many words first-letter mode would hide in `text`, by the same idea of a word the mode
+// itself uses. The About pages count an EP's words with it.
 export function countWords(text) {
   return text ? (text.match(WORD) || []).length : 0;
 }
