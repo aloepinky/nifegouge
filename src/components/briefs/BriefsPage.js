@@ -6,7 +6,9 @@ import { useBriefIndex, useBrief } from './briefApi';
 import BriefView, { opens } from './BriefView';
 import { HeadForm, PublishBar, keyOf } from './BriefEditor';
 import BriefHistory from './BriefHistory';
-import { BriefsBaseProvider, BRIEFS_BASE, useBriefsBase } from './paths';
+import {
+  BriefsBaseProvider, BRIEFS_BASE, useBriefsBase, wingOf,
+} from './paths';
 
 // pdf.js is 110 KB gzipped; only someone uploading a guide should download it.
 const BriefUpload = lazy(() => import('./BriefUpload'));
@@ -99,7 +101,7 @@ function UnitPicker({ index, active }) {
     index.setUnit(unit);
     // On a brief, go to the other wing's first brief; the TOLD card is both wings'.
     if (active !== 'told') {
-      const first = index.briefs.find((b) => b.unit === unit || !b.unit);
+      const first = index.briefs.find((b) => wingOf(b.unit) === unit || !b.unit);
       if (first) navigate(`${base}/${first.id}`);
     }
   };
@@ -326,13 +328,13 @@ function BriefsPage({
   const activeId = (useParams()['*'] || '').split('/')[0];
   const index = useMemo(() => {
     const briefs = all.briefs.filter((b) => isSchool(b, school));
-    const units = [...new Set(briefs.map((b) => b.unit).filter(Boolean))].sort();
+    const units = [...new Set(briefs.map((b) => wingOf(b.unit)).filter(Boolean))].sort();
     // A brief opened by its address is on screen whatever wing was chosen, so its wing is the
     // one shown; otherwise the remembered one, else the first.
     const active = briefs.find((b) => b.id === activeId);
-    const unit = (active && active.unit) || (units.includes(chosenUnit) ? chosenUnit : units[0] || '');
+    const unit = (active && wingOf(active.unit)) || (units.includes(chosenUnit) ? chosenUnit : units[0] || '');
     // A brief that names no wing is every wing's.
-    const shown = units.length < 2 ? briefs : briefs.filter((b) => !b.unit || b.unit === unit);
+    const shown = units.length < 2 ? briefs : briefs.filter((b) => !b.unit || wingOf(b.unit) === unit);
     const setUnit = (u) => {
       setChosenUnit(u);
       writeText(unitKey, u);
