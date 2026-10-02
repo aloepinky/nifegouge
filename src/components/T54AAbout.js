@@ -37,7 +37,7 @@ function T54AAbout() {
   return (
     <AboutPage
       title={<>Welcome to <em>T-54A Advanced</em></>}
-      intro="Training pages to drill the fundamentals."
+      intro="T-54A training resources for drilling the fundamentals."
       photo={photo}
       photoAlt="A T-54A in flight"
       // Too long for the banner: keep the nose and its wheel, let the tail go.
