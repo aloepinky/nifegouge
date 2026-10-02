@@ -3,7 +3,6 @@ import { getAuthor, setAuthor } from '../serverApi';
 import { GROUP_NAMES, folderOptions } from './groups';
 import { describeParams } from './params';
 import { publishJetLog, saveJetLog } from './jetlogApi';
-import LicenseNote from '../LicenseNote';
 import {
   ConfirmButton, ERROR, Field, INPUT, LABEL, NOTE, PRIMARY, SECONDARY,
 } from './controls';
@@ -208,7 +207,6 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
           onChange={(e) => setAuthorField(e.target.value)}
         />
       </Field>
-      <LicenseNote className="" style={{ ...NOTE, marginTop: 0, marginBottom: '12px' }} />
 
       <Field label={replacing ? 'What changed' : 'Brief description'}>
         <input

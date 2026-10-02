@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { getAuthor, setAuthor } from '../serverApi';
 import { ConfirmButton, Grow, Line, RowTools, move } from '../discuss/edit/fields';
 import { saveBrief, rememberBrief, fetchBrief } from './briefApi';
-import LicenseNote from '../LicenseNote';
 
 // Editing a brief, one block at a time.
 //
@@ -500,7 +499,6 @@ export function PublishBar({ record, doc, dirty, onPublished, onCancel, onEditHe
         )}
         <button type="button" className="brief-link" onClick={onEditHead}>title, note and buttons</button>
       </div>
-      <LicenseNote />
       {error && <p className="discuss-editor-warn">{error}</p>}
     </div>
   );
