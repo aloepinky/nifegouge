@@ -36,8 +36,8 @@ const CONTENT = {
 function T54AAbout() {
   return (
     <AboutPage
-      title={<>Welcome to <em>Advanced</em></>}
-      intro="T-54A training resources. This program is just getting started — more pages are on the way."
+      title={<>Welcome to <em>T-54A Advanced</em></>}
+      intro="Training pages to drill the fundamentals."
       photo={photo}
       photoAlt="A T-54A in flight"
       // Too long for the banner: keep the nose and its wheel, let the tail go.
