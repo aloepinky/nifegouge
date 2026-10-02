@@ -3387,6 +3387,11 @@ textarea.incorrect-answer {
     }
   }
 
+  /* A photo whose aircraft is wider than the tile: keep the nose, give up the tail. */
+  .landing-button img.landing-photo--nose {
+    object-position: right center;
+  }
+
   .landing-button-label {
     position: absolute;
     bottom: 0;

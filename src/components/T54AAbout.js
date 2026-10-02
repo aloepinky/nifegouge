@@ -40,6 +40,8 @@ function T54AAbout() {
       intro="T-54A training resources. This program is just getting started — more pages are on the way."
       photo={photo}
       photoAlt="A T-54A in flight"
+      // Too long for the banner: keep the nose and its wheel, let the tail go.
+      photoCrop="right 52%"
       tabs={aboutTabs('t54a', CONTENT)}
       explainer={
         <>
