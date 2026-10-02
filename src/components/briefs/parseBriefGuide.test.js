@@ -535,10 +535,10 @@ test('pages with no text are named as scans', () => {
   const stamp = [{ str: 'Xerox 8045' }];
   expect(pagesWithoutText([text, [], stamp, text], [6, 7, 8, 9])).toEqual([7, 8]);
   expect(noTextMessage('This PDF', [], 4, false)).toBeNull();
-  expect(noTextMessage('This PDF', [1, 2, 3], 3, false)).toMatch(/^This PDF has no text in it, only pictures of the pages, so it is a scan\. To upload it, run the PDF through text recognition \(OCR\)/);
-  expect(noTextMessage('This PDF', [17, 18], 2, true)).toMatch(/^This PDF: the pages you chose have no text in them/);
-  expect(noTextMessage('This PDF', [7], 4, true)).toMatch(/^This PDF: page 7 has no text in it, so nothing on it was read\. If it is a scanned page, run/);
-  expect(noTextMessage('The abbreviated guide', [7, 8, 9], 4, false)).toMatch(/^The abbreviated guide: pages 7, 8 and 9 have no text in them, so nothing on them was read\. If they are scanned pages/);
+  expect(noTextMessage('This PDF', [1, 2, 3], 3, false)).toBe('This PDF is a scan with no searchable text in it. To upload the brief, run the PDF through text recognition (OCR) first (like Adobe’s Scan & OCR or OCRmyPDF) and upload the OCR output.');
+  expect(noTextMessage('This PDF', [17, 18], 2, true)).toMatch(/^This PDF: the pages you chose are a scan with no searchable text in them. To upload the brief/);
+  expect(noTextMessage('This PDF', [7], 4, true)).toMatch(/^This PDF: page 7 has no searchable text in it, so nothing on it was read\. If it is a scanned page, run/);
+  expect(noTextMessage('The abbreviated guide', [7, 8, 9], 4, false)).toMatch(/^The abbreviated guide: pages 7, 8 and 9 have no searchable text in them, so nothing on them was read\. If they are scanned pages/);
 });
 
 test('a card and its guide name one thing in different words', () => {

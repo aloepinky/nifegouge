@@ -1158,19 +1158,19 @@ export function pagesWithoutText(pages, numbers) {
     .map(([n]) => n);
 }
 
-const OCR_ADVICE = 'run the PDF through text recognition (OCR) first, for example Adobe Acrobat’s Scan & OCR or the free OCRmyPDF, and upload the copy it makes.';
+const OCR_ADVICE = 'run the PDF through text recognition (OCR) first (like Adobe’s Scan & OCR or OCRmyPDF) and upload the OCR output.';
 
 // What to tell the uploader about pages with no text, or null when every page has some.
 // `what` names the file ('This PDF', 'The abbreviated guide'); `chosen` says pages were picked.
 export function noTextMessage(what, blank, total, chosen) {
   if (!blank.length) return null;
   if (blank.length === total) {
-    const subject = chosen ? `${what}: the pages you chose have no text in them` : `${what} has no text in it`;
-    return `${subject}, only pictures of the pages, so it is a scan. To upload it, ${OCR_ADVICE}`;
+    const subject = chosen ? `${what}: the pages you chose are a scan with no searchable text in them` : `${what} is a scan with no searchable text in it`;
+    return `${subject}. To upload the brief, ${OCR_ADVICE}`;
   }
   const one = blank.length === 1;
   const pages = one ? `page ${blank[0]} has` : `pages ${blank.slice(0, -1).join(', ')} and ${blank[blank.length - 1]} have`;
-  return `${what}: ${pages} no text in ${one ? 'it' : 'them'}, so nothing on ${one ? 'it' : 'them'} was read. If ${one ? 'it is a scanned page' : 'they are scanned pages'}, ${OCR_ADVICE}`;
+  return `${what}: ${pages} no searchable text in ${one ? 'it' : 'them'}, so nothing on ${one ? 'it' : 'them'} was read. If ${one ? 'it is a scanned page' : 'they are scanned pages'}, ${OCR_ADVICE}`;
 }
 
 // `6-8` or `6, 7, 8` -> [5, 6, 7], the page indexes to read; blank -> null, every page. A guide
