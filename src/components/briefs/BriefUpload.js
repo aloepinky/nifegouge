@@ -5,7 +5,7 @@ import { Line } from '../discuss/edit/fields';
 import { preparePdfWorker } from '../discuss/jppt/pdfWorker';
 import { loadTextItems } from '../discuss/jppt/pdfText';
 import {
-  isoDate, pageList, parseBriefGuide, slugify,
+  isoDate, noTextMessage, pageList, pagesWithoutText, parseBriefGuide, slugify,
 } from './parseBriefGuide';
 import { publishBrief, saveBrief, fetchBrief, rememberBrief } from './briefApi';
 import BriefView from './BriefView';
@@ -170,7 +170,19 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
         setError(wanted.error);
         return;
       }
+      // A scan with no text layer reads as nothing at all, so say that rather than that no
+      // brief was found.
+      const chosen = (pages, w) => (w.pages ? w.pages.map((n) => pages[n]) : pages);
+      const numbers = (pages, w) => (w.pages ? w.pages.map((n) => n + 1) : pages.map((_, i) => i + 1));
+      const guidePages = chosen(all, wanted);
+      const blank = pagesWithoutText(guidePages, numbers(all, wanted));
+      const blankNote = noTextMessage('This PDF', blank, guidePages.length, !!wanted.pages);
+      if (blank.length && blank.length === guidePages.length) {
+        setError(blankNote);
+        return;
+      }
       let card;
+      let cardNote = null;
       if (cardFile) {
         const cardAll = await loadTextItems(await cardFile.arrayBuffer(), (p, total) => setProgress(`Reading the abbreviated guide, page ${p} of ${total}`));
         const cardWanted = pageList(cardPageText, cardAll.length);
@@ -178,9 +190,16 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
           setError(`Abbreviated guide: ${cardWanted.error}`);
           return;
         }
-        card = cardWanted.pages ? cardWanted.pages.map((n) => cardAll[n]) : cardAll;
+        card = chosen(cardAll, cardWanted);
+        const cardBlank = pagesWithoutText(card, numbers(cardAll, cardWanted));
+        cardNote = noTextMessage('The abbreviated guide', cardBlank, card.length, !!cardWanted.pages);
+        if (cardBlank.length && cardBlank.length === card.length) {
+          setError(cardNote);
+          return;
+        }
       }
-      const out = parseBriefGuide(wanted.pages ? wanted.pages.map((n) => all[n]) : all, { card });
+      const out = parseBriefGuide(guidePages, { card });
+      out.warnings = [blankNote, cardNote, ...out.warnings].filter(Boolean);
       if (!out.briefs.length) {
         setError(out.warnings.join(' ') || 'No brief was found in this PDF.');
         return;

@@ -1147,6 +1147,32 @@ export function isoDate(source) {
   return `${m[3]}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+// A scanned page is a picture: the PDF holds no text for it, or only a stamp the scanner
+// printed on it. -> the page numbers (as printed in `numbers`) of the pages with no text.
+const TEXT_LETTERS = 20;
+
+export function pagesWithoutText(pages, numbers) {
+  return pages
+    .map((items, i) => [numbers[i], (items || []).map((t) => t.str).join('').replace(/[^A-Za-z]/g, '').length])
+    .filter(([, letters]) => letters < TEXT_LETTERS)
+    .map(([n]) => n);
+}
+
+const OCR_ADVICE = 'run the PDF through text recognition (OCR) first, for example Adobe Acrobat’s Scan & OCR or the free OCRmyPDF, and upload the copy it makes.';
+
+// What to tell the uploader about pages with no text, or null when every page has some.
+// `what` names the file ('This PDF', 'The abbreviated guide'); `chosen` says pages were picked.
+export function noTextMessage(what, blank, total, chosen) {
+  if (!blank.length) return null;
+  if (blank.length === total) {
+    const subject = chosen ? `${what}: the pages you chose have no text in them` : `${what} has no text in it`;
+    return `${subject}, only pictures of the pages, so it is a scan. To upload it, ${OCR_ADVICE}`;
+  }
+  const one = blank.length === 1;
+  const pages = one ? `page ${blank[0]} has` : `pages ${blank.slice(0, -1).join(', ')} and ${blank[blank.length - 1]} have`;
+  return `${what}: ${pages} no text in ${one ? 'it' : 'them'}, so nothing on ${one ? 'it' : 'them'} was read. If ${one ? 'it is a scanned page' : 'they are scanned pages'}, ${OCR_ADVICE}`;
+}
+
 // `6-8` or `6, 7, 8` -> [5, 6, 7], the page indexes to read; blank -> null, every page. A guide
 // can be three pages of a longer packet (the T-44C's is pages 6 to 8 of the TW-4 On-Wing Gouge
 // Packet), and read whole the pages after it would run on as the guide's last section.

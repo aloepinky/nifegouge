@@ -3,6 +3,7 @@ import path from 'path';
 import { loadTextItems } from '../discuss/jppt/pdfText';
 import {
   parseBriefGuide, splitName, shortName, programFor, unitFrom, unitOfTitle, pageList, nameScore, isoDate,
+  pagesWithoutText, noTextMessage,
 } from './parseBriefGuide';
 // No Worker in jsdom: this puts pdf.js's worker in-process.
 import 'pdfjs-dist/legacy/build/pdf.worker.entry';
@@ -525,6 +526,19 @@ test('an OCR scan is read through its misreads', () => {
   expect(emergencies[11].text).toBe('(i) Waveoffs are free.');
   // No running head is left in anything read.
   expect(JSON.stringify(brief)).not.toMatch(/SQUADR/);
+});
+
+// A scan with no text layer reads as nothing at all; the uploader is told it is a scan, and
+// which pages, rather than that no brief was found.
+test('pages with no text are named as scans', () => {
+  const text = [{ str: 'a) Weather / NOTAMS / AHAS / TFRs. Brief the forecast.' }];
+  const stamp = [{ str: 'Xerox 8045' }];
+  expect(pagesWithoutText([text, [], stamp, text], [6, 7, 8, 9])).toEqual([7, 8]);
+  expect(noTextMessage('This PDF', [], 4, false)).toBeNull();
+  expect(noTextMessage('This PDF', [1, 2, 3], 3, false)).toMatch(/^This PDF has no text in it, only pictures of the pages, so it is a scan\. To upload it, run the PDF through text recognition \(OCR\)/);
+  expect(noTextMessage('This PDF', [17, 18], 2, true)).toMatch(/^This PDF: the pages you chose have no text in them/);
+  expect(noTextMessage('This PDF', [7], 4, true)).toMatch(/^This PDF: page 7 has no text in it, so nothing on it was read\. If it is a scanned page, run/);
+  expect(noTextMessage('The abbreviated guide', [7, 8, 9], 4, false)).toMatch(/^The abbreviated guide: pages 7, 8 and 9 have no text in them, so nothing on them was read\. If they are scanned pages/);
 });
 
 test('a card and its guide name one thing in different words', () => {
