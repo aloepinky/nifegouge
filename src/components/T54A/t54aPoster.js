@@ -14,10 +14,10 @@ import cbSrc from './images/t54a-cb.webp';
 // goes live, they can move to public/images/ like the T-44C's, or stay; either works.
 //
 // Every box was read off a grid over the region image, then checked on an overlay against the
-// control the NATOPS (A1-T54A-NFM-000, IC 04) names; none has been tuned with ?spots yet. The
-// NATOPS settled two the placards could not: the autothrottles disconnect at the AT button on the
-// right power lever (§2.17.2.7), and the autopilot at the AP/TRIM MASTER switch or the YD/AP DISC
-// bar (§15.15.1).
+// control the NATOPS (A1-T54A-NFM-000, IC 04) names, then tuned by hand. The NATOPS settled two
+// the placards could not: the autothrottles disconnect at the AT button on the right power lever
+// (§2.17.2.7), which the power lever box stands for, and the autopilot at the AP/TRIM MASTER
+// switch or the YD/AP DISC bar (§15.15.1).
 //
 // Five regions, every one a whole sub-panel off the sheet: the main instrument panel, the
 // pilot's control wheel, the whole centre pedestal (power quadrant to the RUDDER BOOST switch),
@@ -49,7 +49,7 @@ export const T54A_POSTER = {
           } },
         // The engine strip down the left of the MFD. "Verify feathered" is read off it (prop
         // rpm), as the monitor step is: an instrument the step is worked against.
-        { box: [0.373, 0.368, 0.062, 0.19], label: 'Engine instruments',
+        { box: [0.373, 0.368, 0.043, 0.22], label: 'Engine instruments',
           action: 'Engine Instruments',
           actions: ['Engine Instruments', 'Propeller (inoperative engine)'],
           values: {
@@ -58,43 +58,39 @@ export const T54A_POSTER = {
           } },
 
         // One step, one control, drawn at each end of the glareshield. Same `action`, different `id`.
-        { id: 'fire-ext-left', box: [0.337, 0.103, 0.025, 0.045], label: 'LH engine fire push button',
+        { id: 'fire-ext-left', box: [0.343, 0.11, 0.026, 0.045], label: 'LH engine fire push button',
           action: 'Fire Extinguisher', values: ['As required', 'As required (LS, RS)'] },
-        { id: 'fire-ext-right', box: [0.612, 0.103, 0.025, 0.045], label: 'RH engine fire push button',
+        { id: 'fire-ext-right', box: [0.619, 0.11, 0.026, 0.045], label: 'RH engine fire push button',
           action: 'Fire Extinguisher', values: ['As required', 'As required (LS, RS)'] },
 
         // The MASTER SWITCH bar is the gang bar; the generator switches sit under it.
-        { box: [0.022, 0.793, 0.09, 0.018], label: 'Master switch gang bar',
+        { box: [0.022, 0.8, 0.09, 0.013], label: 'Master switch gang bar',
           action: 'Gang bar', values: ['OFF'] },
-        { box: [0.055, 0.811, 0.054, 0.025], label: 'Generators',
+        { box: [0.061, 0.814, 0.045, 0.023], label: 'Generators',
           action: 'Generators (one at a time)', values: ['OFF, RESET momentarily, then ON (LS)'] },
         // STBY DISPLAY powers the standby display unit, poster item 1.
-        { box: [0.026, 0.855, 0.018, 0.03], label: 'Standby display',
+        { box: [0.029, 0.858, 0.013, 0.03], label: 'Standby display',
           action: 'SDU Power', values: ['OFF'] },
-        { box: [0.054, 0.888, 0.04, 0.036], label: 'Ignition and engine start',
+        { box: [0.056, 0.912, 0.035, 0.025], label: 'Ignition and engine start',
           action: 'IGNITION AND ENGINE START switch',
           also: ['IGNITION AND ENGINE START switches'],
           values: ['OFF (1 sec)', 'STARTER ONLY (for the remainder of the 40 second time limit)',
             'OFF (at the 40 second time limit)', 'OFF', 'OFF (LS)'] },
-        { box: [0.126, 0.748, 0.03, 0.034], label: 'Engine auto ignition',
+        { box: [0.128, 0.755, 0.026, 0.033], label: 'Engine auto ignition',
           action: 'Autoignition', values: ['ARM (LS)'] },
-        { box: [0.008, 0.958, 0.026, 0.042], label: 'Parking brake',
+        { box: [0.01, 0.968, 0.023, 0.035], label: 'Parking brake',
           action: 'Stop the aircraft and set the parking brake.' },
-        { box: [0.342, 0.815, 0.022, 0.105], label: 'Landing gear handle',
+        { box: [0.345, 0.816, 0.016, 0.103], label: 'Landing gear handle',
           action: 'Landing Gear', also: ['Gear', 'Landing Gear (when climb established)'],
           values: ['UP', 'As required', 'DN'] },
         // Both BLEED AIR VALVES toggles under one box: the step names the affected engine's, and
         // they sit side by side.
-        { box: [0.658, 0.88, 0.04, 0.04], label: 'Bleed air valves',
+        { box: [0.665, 0.9, 0.032, 0.026], label: 'Bleed air valves',
           action: 'Bleed Air Valve (affected engine(s))', values: ['PNEU & ENVIR OFF (RS)'] },
         // The YD/AP DISC bar on the flight guidance panel. AP/TRIM MASTER on the wheel does the
         // same (§15.15.1), so the yoke carries the step too.
-        { id: 'yd-ap-disc', box: [0.592, 0.232, 0.031, 0.03], label: 'YD/AP DISC bar',
+        { id: 'yd-ap-disc', box: [0.593, 0.234, 0.031, 0.027], label: 'YD/AP DISC bar',
           action: 'Autopilot', values: ['Disengage'] },
-        // The AT button on the right power lever, whose head the poster draws at the foot of this
-        // panel: "the Autothrottle Disconnect (AT) button on the right power lever" (§2.17.2.7).
-        { box: [0.398, 0.975, 0.034, 0.025], label: 'Autothrottle disconnect (AT) button',
-          action: 'Autothrottles', values: ['Disengage', 'As required'] },
       ],
     },
     {
@@ -104,14 +100,23 @@ export const T54A_POSTER = {
       alt: "T-54A pilot's control wheel, with its left grip drawn out beside it: MIC, pitch trim "
         + 'and the AP/TRIM MASTER switch',
       spots: [
-        { box: [0.12, 0.32, 0.035, 0.06], label: 'AP/TRIM MASTER',
+        // Drawn twice: on the grip drawn out beside the wheel, and from above on the wheel's left
+        // horn (the red button). Same control, different `id`.
+        { id: 'ap-trim-master-grip', box: [0.123, 0.33, 0.03, 0.06], label: 'AP/TRIM MASTER',
           action: 'AP/TRIM MASTER',
           actions: ['AP/TRIM MASTER', 'Autopilot'],
           values: {
             'AP/TRIM MASTER': ['Depress Fully and Hold'],
             Autopilot: ['Disengage'],
           } },
-        { box: [0.14, 0.45, 0.7, 0.55], label: 'Control wheel',
+        { id: 'ap-trim-master-top', box: [0.329, 0.21, 0.036, 0.085], label: 'AP/TRIM MASTER',
+          action: 'AP/TRIM MASTER',
+          actions: ['AP/TRIM MASTER', 'Autopilot'],
+          values: {
+            'AP/TRIM MASTER': ['Depress Fully and Hold'],
+            Autopilot: ['Disengage'],
+          } },
+        { box: [0.1, 0.45, 0.886, 0.55], label: 'Control wheel',
           action: 'Control wheel',
           actions: ['Control wheel', 'Ailerons'],
           values: {
@@ -128,24 +133,31 @@ export const T54A_POSTER = {
         + 'gates, the flap handle, the trim wheels, the FMS keypad and display controls, and low '
         + 'down the pressurization controls and the RUDDER BOOST switch',
       spots: [
-        { box: [0.04, 0.0, 0.36, 0.14], label: 'Power levers',
+        // The power levers also stand for the AT button on the right one's head, the knob its "AT"
+        // placard points to: "the Autothrottle Disconnect (AT) button on the right power lever"
+        // (§2.17.2.7). Drawn the size of a lever end, it is too small for a target of its own.
+        { box: [0.04, 0.0, 0.36, 0.15], label: 'Power levers',
           action: 'POWER levers', also: ['Power'],
-          values: ['IDLE', 'IDLE (PF)', 'GROUND FINE', 'REVERSE as required', 'As required',
-            'As Required (PF)', 'Max Continuous',
-            'Max Continuous, establish positive rate of climb (VXSE minimum)'] },
-        { box: [0.46, 0.01, 0.18, 0.12], label: 'Prop levers',
+          actions: ['POWER levers', 'Autothrottles'],
+          values: {
+            'POWER levers': ['IDLE', 'IDLE (PF)', 'GROUND FINE', 'REVERSE as required', 'As required',
+              'As Required (PF)', 'Max Continuous',
+              'Max Continuous, establish positive rate of climb (VXSE minimum)'],
+            Autothrottles: ['Disengage', 'As required'],
+          } },
+        { box: [0.47, 0.008, 0.16, 0.1], label: 'Prop levers',
           action: 'PROP lever',
           also: ['If propeller fails to feather, PROP lever (inoperative engine)'],
           values: ['FEATHER', 'FEATHER (PF)', 'Full Forward', 'Full Forward (PF)',
             'Attempt to adjust to normal operating range (PF)'] },
-        { box: [0.67, 0.06, 0.25, 0.11], label: 'Condition levers',
+        { box: [0.675, 0.065, 0.24, 0.09], label: 'Condition levers',
           action: 'Condition Lever',
           also: ['Condition Lever(s)', 'CONDITION lever (11.5% N1 or above)'],
           values: ['FUEL CUTOFF', 'FUEL CUTOFF (PF)', 'LOW IDLE (PF)'] },
-        { box: [0.70, 0.215, 0.12, 0.04], label: 'Flap handle',
+        { box: [0.70, 0.225, 0.12, 0.04], label: 'Flap handle',
           action: 'Flaps',
           values: ['UP', 'As required', 'APPROACH (unless already up)', 'Maintain current setting'] },
-        { box: [0.29, 0.79, 0.05, 0.035], label: 'Rudder boost',
+        { box: [0.29, 0.8, 0.05, 0.02], label: 'Rudder boost',
           action: 'RUDDER BOOST', values: ['OFF (PM)'] },
       ],
     },
@@ -158,10 +170,10 @@ export const T54A_POSTER = {
         + 'red guarded FIREWALL SHUTOFF VALVE switches at each end',
       spots: [
         // One control drawn at each end of the panel. Same `action`, different `id`.
-        { id: 'firewall-left', box: [0.15, 0.56, 0.058, 0.17], label: 'Left firewall shutoff valve',
+        { id: 'firewall-left', box: [0.15, 0.58, 0.058, 0.16], label: 'Left firewall shutoff valve',
           action: 'Firewall shutoff valve', also: ['Firewall Shutoff Valves (both)'],
           values: ['CLOSE', 'CLOSE (LS)', 'OPEN (LS)'] },
-        { id: 'firewall-right', box: [0.785, 0.56, 0.058, 0.17], label: 'Right firewall shutoff valve',
+        { id: 'firewall-right', box: [0.785, 0.58, 0.058, 0.16], label: 'Right firewall shutoff valve',
           action: 'Firewall shutoff valve', also: ['Firewall Shutoff Valves (both)'],
           values: ['CLOSE', 'CLOSE (LS)', 'OPEN (LS)'] },
       ],
@@ -173,7 +185,7 @@ export const T54A_POSTER = {
       alt: 'T-54A circuit breaker panel: engines, lights, warnings, weather, flight, electrical, '
         + 'environmental and avionics breakers, with RUDDER BOOST in the flight group',
       spots: [
-        { box: [0.383, 0.578, 0.044, 0.05], label: 'Rudder boost circuit breaker',
+        { box: [0.39, 0.58, 0.035, 0.04], label: 'Rudder boost circuit breaker',
           action: 'Rudder boost circuit breaker (RS circuit breaker panel)', values: ['Pull (RS)'] },
       ],
     },
