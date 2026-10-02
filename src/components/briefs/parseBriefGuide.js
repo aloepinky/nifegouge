@@ -29,7 +29,7 @@ const COLUMN_GAP = 18; // a gap this wide between runs on one line is two column
 const WORD_GAP = 1.5; // a gap narrower than this is inside a word
 
 const FURNITURE = [
-  /^[A-Z]{4,}INST\s+[\d.]+[A-Z]?$/, // COMTRAWINGFOURINST 1552.1
+  /^[A-Z][A-Za-z]{3,}INST\s+[\d.]+[A-Z]?$/, // COMTRAWINGFOURINST 1552.1; OCR's TRARONTiiREEINST 3710.3G
   /^\d{1,2} [A-Z][a-z]{2} \d{4}$/, // 10 Mar 2025
   /^(\d+\s+)?Enclosure \(\s*\d+\s*\)$/, // 11 Enclosure (2)
   /^Version\s+[\d.]+\s+\d{1,2}\s+[A-Za-z]+\s+\d{4}$/, // Version 2.0 13 March 2026
@@ -51,12 +51,41 @@ function dropRunningLines(pagesOfLines) {
   const top = Math.max(...ys) - BAND;
   const foot = Math.min(...ys) + BAND;
   const keyOf = (l) => (l.y >= top || l.y <= foot) && plain(l.segs.map((s) => s.text).join(' ')).replace(/\d+/g, '#');
-  const seen = new Map();
-  pagesOfLines.forEach((lines) => new Set(lines.map(keyOf).filter(Boolean)).forEach((k) => seen.set(k, (seen.get(k) || 0) + 1)));
+  const pageKeys = pagesOfLines.map((lines) => [...new Set(lines.map(keyOf).filter(Boolean))]);
+  // OCR spells a running head a little differently from page to page (TRARONTHREEINST,
+  // TRARONTiiREEINST, TRARONIHREEINST), so long lines nearly the same are one line, and two
+  // misspellings each near the true one are one with it though not near each other.
+  const keys = [...new Set(pageKeys.flat())];
+  const group = new Map(keys.map((k) => [k, k]));
+  const root = (k) => (group.get(k) === k ? k : root(group.get(k)));
+  keys.forEach((a, i) => keys.slice(i + 1).forEach((b) => {
+    if (a.length >= 12 && b.length >= 12 && nearlySame(a, b)) group.set(root(b), root(a));
+  }));
+  const pages = new Map();
+  pageKeys.forEach((ks, p) => ks.forEach((k) => {
+    const r = root(k);
+    if (!pages.has(r)) pages.set(r, new Set());
+    pages.get(r).add(p);
+  }));
+  const recurs = new Map(keys.map((k) => [k, pages.get(root(k)).size >= 3]));
   return pagesOfLines.map((lines) => lines.filter((l) => {
     const k = keyOf(l);
-    return !k || seen.get(k) < 3 || isBriefTitle(l.segs[0].text);
+    return !k || !recurs.get(k) || isBriefTitle(l.segs[0].text);
   }));
+}
+
+// Two strings within one edit in eight of each other.
+function nearlySame(a, b) {
+  if (Math.abs(a.length - b.length) > Math.max(a.length, b.length) / 8) return false;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i += 1) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j += 1) {
+      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = row;
+  }
+  return prev[b.length] <= Math.max(a.length, b.length) / 8;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -113,10 +142,22 @@ const lastText = (seg) => (seg.parts.length ? seg.parts[seg.parts.length - 1].s 
 
 // Runs joined, with each stretch of bold ones wrapped. The markers go inside the spaces, so
 // `**OCF procedures** (Brief every Flight)` never comes out as `** OCF procedures **`.
+// OCR sets the joining marks of a bold name in plain type (`**Engine Failure** / **Un-commanded
+// Power Change**`); a mark with bold on both sides of it is part of the bold. A lone plain `I`
+// there is the slash misread (`**AHAS** I **TFRs**`).
+const JOINER = /^(?:[/&+,–—-]+|I)$/;
+
 function withBold(parts) {
   let out = '';
   let open = false;
-  parts.forEach(({ s, bold }) => {
+  const boldAt = (i, step) => {
+    for (let j = i + step; j >= 0 && j < parts.length; j += step) {
+      if (parts[j].s.trim()) return parts[j].bold;
+    }
+    return false;
+  };
+  parts.map((p, i) => (!p.bold && JOINER.test(p.s.trim()) && boldAt(i, -1) && boldAt(i, 1)
+    ? { ...p, s: p.s.replace('I', '/'), bold: true } : p)).forEach(({ s, bold }) => {
     const blank = !s.trim();
     if (!blank && bold !== open) {
       out += '**';
@@ -203,6 +244,23 @@ function isCardPage(lines) {
 
 const X_SAME = 6; // printed at the same indent
 const X_NEAR = 24; // near enough, for a line that also continues its level's count
+// A scanned page sits a few points off the one before it, but less than a level's indent.
+const X_OCR = 12;
+// The letters an OCR'd marker glyph may really be.
+const OCR_LETTERS = { I: ['l', 'i'], l: ['i'], 1: ['l', 'i'] };
+const OCR_DIGITS = {
+  S: 5, s: 5, I: 1, l: 1, O: 0, o: 0, B: 8, Z: 2, z: 2, G: 6,
+};
+const ordChar = (ord) => String.fromCharCode(96 + ord);
+
+// A marker read as the next of the open level `due`.
+function dueMarker(marker, due, bracketed) {
+  const ord = due.ord + 1;
+  const token = /num/.test(due.style) ? String(ord) : ordChar(ord);
+  return {
+    ...marker, kinds: [{ style: due.style, ord }], shown: bracketed ? `(${token})` : `${token}.`,
+  };
+}
 const BULLET = /^([•●▪◦○■□►➢✓])\s*(.*)$/;
 // A bracketed marker may run straight into its text (`(2)“Transfer…`); a bare one needs the space.
 const MARKER = /^(\()?(\d{1,2}|[a-zA-Z]|[ivxlc]{2,5}|[IVXLC]{2,5})([.)])(\s*)(.*)$/;
@@ -341,7 +399,11 @@ function readOutline(lines) {
   const place = (kinds, x) => {
     for (let i = stack.length - 1; i >= 0; i -= 1) {
       const e = stack[i];
-      const hit = kinds.find((k) => k.style === e.style && k.ord === e.ord + 1 && Math.abs(x - e.x) <= X_NEAR)
+      // Continuing a count may sit a little off its level, but a marker that could as well
+      // start a list and is printed a level in does start one: VT-3's `i) Stalls not properly
+      // recovered` under `h) Stall` is a first numeral, not the letter after h.
+      const hit = kinds.find((k) => k.style === e.style && k.ord === e.ord + 1 && Math.abs(x - e.x) <= X_NEAR
+          && !(x - e.x > X_SAME && kinds.some((o) => o !== k && o.ord === 1)))
         || kinds.find((k) => k.style === e.style && Math.abs(x - e.x) <= X_SAME);
       if (hit) return { depth: i, kind: hit };
     }
@@ -372,6 +434,39 @@ function readOutline(lines) {
           kinds: [{ style: 'alpha.', ord: due.ord + 1 }], shown: `${m[1]}.`, rest: m[2], boldMarker: false,
         };
       }
+    }
+    // OCR misreads markers: a lowercase l as I or 1 (`I) Landing Irregularities` after `k)`), a
+    // 5 as S (`S) Event Specific Admin` after `4)`). Where the letter or number due at that
+    // indent is one the glyph could be, it is that.
+    if (marker) {
+      const m = plain(line.text).match(/^(\()?([A-Za-z0-9])([.)])/);
+      const due = m && stack.find((e) => Math.abs(line.x - e.x) <= X_OCR && (
+        (e.style === `${m[1] || ''}alpha${m[3]}` && (OCR_LETTERS[m[2]] || []).includes(ordChar(e.ord + 1)))
+        || (e.style === `${m[1] || ''}num${m[3]}` && OCR_DIGITS[m[2]] === e.ord + 1)));
+      if (due) marker = dueMarker(marker, due, m[1] || m[3] === ')');
+      // With nothing open to say what is due (`I) Admin` opening a card), the next marker at
+      // this indent says what this one was: `2) Mission Conduct` makes it a 1.
+      else if (m && (OCR_LETTERS[m[2]] || OCR_DIGITS[m[2]] != null)) {
+        const pre = m[1] || '';
+        const next = lines.slice(n + 1).map((l) => ({ l, mk: readMarker(l.text) }))
+          .find(({ l, mk }) => mk && Math.abs(l.x - line.x) <= X_OCR);
+        const follows = (style, ord) => next && next.mk.kinds.some((k) => k.style === style && k.ord === ord + 1);
+        const letter = (OCR_LETTERS[m[2]] || []).find((c) => follows(`${pre}alpha${m[3]}`, c.charCodeAt(0) - 96));
+        const digit = OCR_DIGITS[m[2]];
+        if (digit != null && follows(`${pre}num${m[3]}`, digit)) {
+          marker = dueMarker(marker, { style: `${pre}num${m[3]}`, ord: digit - 1 }, pre || m[3] === ')');
+        } else if (letter) {
+          marker = dueMarker(marker, { style: `${pre}alpha${m[3]}`, ord: letter.charCodeAt(0) - 97 }, pre || m[3] === ')');
+        }
+      }
+    }
+    // Or garbles one beyond reading (`j)` came out `ii`): a line at a lettered level's indent
+    // that opens with a scrap and then a name set bold, as that level's names are, is the
+    // letter due.
+    if (!marker) {
+      const m = line.text.match(/^\(?[ijlI1|!]{1,2}[.)]?\s+(\*\*[\s\S]+)$/);
+      const due = m && [...stack].reverse().find((e) => /alpha/.test(e.style) && Math.abs(line.x - e.x) <= X_OCR);
+      if (due) marker = dueMarker({ rest: m[1], boldMarker: false }, due, /\)/.test(due.style));
     }
     const where = marker && place(marker.kinds, line.x);
 
@@ -643,6 +738,17 @@ function bigrams(ws) {
 const diceOf = (a, b) => (a.size && b.size ? (2 * [...a].filter((x) => b.has(x)).length) / (a.size + b.size) : 0);
 
 export function nameScore(a, b) {
+  // A card may carry its line's text after the name (`CFS: Command and crew coordination`,
+  // `Ejection: 6000' AGL OCF`); the name is what comes before the colon.
+  const head = (s) => {
+    const i = plain(s || '').indexOf(':');
+    return i > 1 ? plain(s).slice(0, i) : null;
+  };
+  if (head(a) || head(b)) return Math.max(namesAlike(a, b), namesAlike(head(a) || a, head(b) || b));
+  return namesAlike(a, b);
+}
+
+function namesAlike(a, b) {
   const A = nameWords(a);
   const B = nameWords(b);
   if (!A.length || !B.length) return 0;

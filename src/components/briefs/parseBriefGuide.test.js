@@ -462,12 +462,80 @@ test('an unfamiliar outline is read off the page', () => {
   expect(brief.sections[1].items[0].text).toBe('• Zoom or glide\n• Assess landing options');
 });
 
+// A scanned guide run through OCR, made up here with the misreads a real one showed: each page
+// sits a few points off the last, the running head is spelled differently on every page, the
+// slashes in bold names come back plain, `l)` reads `I)`, `5)` reads `S)`, `j)` comes back as
+// a scrap, and an `i)` indented under `h)` must not be taken for the letter after it.
+test('an OCR scan is read through its misreads', () => {
+  const HEADS = ['TRAINING SQUADRON NINE GUIDE', 'TRAlNING SQUADRON NlNE GUIDE', 'TRAINING SQUADR0N NINE GUlDE'];
+  const pages = [[], [], []];
+  let page;
+  let y;
+  let shift;
+  const start = (n) => {
+    page = pages[n];
+    y = 700;
+    shift = [0, 6, 2][n];
+    page.push({ str: HEADS[n], transform: [1, 0, 0, 1, 300, 760], width: 150, bold: false });
+  };
+  // runs: [text, bold]; one line, the runs side by side.
+  const line = (x, ...runs) => {
+    y -= 14;
+    let at = x + shift;
+    runs.forEach(([str, bold]) => {
+      page.push({ str, transform: [1, 0, 0, 1, at, y], width: str.length * 5, bold: !!bold });
+      at += str.length * 5 + 2;
+    });
+  };
+  start(0);
+  line(46, ['1)', true], ['ADMIN', true]);
+  line(64, ['a)', true], ['Weather', true], ['/', false], ['NOTAMS', true], ['I', false], ['TFRs', true], ['Brief it as planned for the day.', false]);
+  line(64, ['b)', true], ['Fuel', true], ['Brief it as planned for the day.', false]);
+  line(46, ['2)', true], ['EMERGENCIES', true]);
+  'abcdef'.split('').forEach((c) => line(64, [`${c})`, true], [`Item ${c}`, true], ['Brief it as planned for the day.', false]));
+  line(64, ['g)', true], ['Engine Failure', true], ['/', false], ['Power Loss', true], ['Brief it as planned for the day.', false]);
+  line(64, ['h)', true], ['Stall', true], ['&', false], ['Recovery', true]);
+  line(82, ['i) Stalls not properly recovered can lead to out of control flight.']);
+  line(82, ['ii) Recover from the unusual attitude.']);
+  line(64, ['i)', true], ['Radio Failure', true], ['Brief it as planned for the day.', false]);
+  start(1);
+  line(64, ['ii', false], ['Loss of ICS', true], ['Brief it as planned for the day.', false]);
+  line(64, ['k)', true], ['Inadvertent IMC', true], ['Brief it as planned for the day.', false]);
+  line(64, ['I)', false], ['Landing Irregularities', true]);
+  line(82, ['i) Waveoffs are free.']);
+  line(64, ['m)', true], ['CFS', true], ['Brief it as planned for the day.', false]);
+  start(2);
+  line(46, ['3)', true], ['MISSION', true]);
+  line(64, ['a)', true], ['Contact', true], ['Brief it as planned for the day.', false]);
+  line(46, ['4)', true], ['NIGHT', true]);
+  line(64, ['a)', true], ['Lighting', true], ['Brief it as planned for the day.', false]);
+  line(46, ['S)', true], ['WRAP UP', true]);
+  line(64, ['a)', true], ['Debrief', true], ['Brief it as planned for the day.', false]);
+
+  const { briefs } = parseBriefGuide(pages);
+  const [brief] = briefs;
+  expect(brief.sections.map((s) => s.title)).toEqual(['ADMIN', 'EMERGENCIES', 'MISSION', 'NIGHT', 'WRAP UP']);
+  expect(brief.sections[0].items.map((i) => i.label)).toEqual(['Weather / NOTAMS / TFRs', 'Fuel']);
+  const emergencies = brief.sections[1].items;
+  expect(emergencies.slice(6).map((i) => i.label)).toEqual([
+    'Engine Failure / Power Loss', 'Stall & Recovery', 'Radio Failure', 'Loss of ICS',
+    'Inadvertent IMC', 'Landing Irregularities', 'CFS',
+  ]);
+  expect(emergencies[7].text).toMatch(/^\(i\) Stalls not properly recovered/);
+  expect(emergencies[11].text).toBe('(i) Waveoffs are free.');
+  // No running head is left in anything read.
+  expect(JSON.stringify(brief)).not.toMatch(/SQUADR/);
+});
+
 test('a card and its guide name one thing in different words', () => {
   expect(nameScore('Read and Initial', 'R&I')).toBeGreaterThan(0.8);
   expect(nameScore('ORM', 'Operational Risk Management')).toBeGreaterThan(0.8);
   expect(nameScore('* Damaged Aircraft / Bird strike', '* Birdstrike / Damaged Aircraft')).toBeGreaterThan(0.6);
   expect(nameScore('EP / Question of the day', 'EP / Question / Quote of the Day')).toBeGreaterThan(0.6);
   expect(nameScore('Night', 'VNAV')).toBeLessThan(0.5);
+  // A card line may run on past its name after a colon.
+  expect(nameScore('*CFS: Command and crew coordination', 'CFS')).toBeGreaterThan(0.8);
+  expect(nameScore("Ejection: 6000' AGL OCF, 2000' AGL controlled", 'Ejection')).toBeGreaterThan(0.8);
 });
 
 // The TW-5 expanded guide gets its own outline wrong: it prints Night, VNAV, CCX and IP / IP
