@@ -20,6 +20,9 @@ import { useCourseWeeks } from './about/SchoolStats';
 // until it lands. The About pages import it the ordinary way.
 const fmt = (n) => n.toLocaleString('en-US');
 
+// T54A-DRAFT: required inside the gate, so a production build neither emits the photo nor names it.
+const T54A_PHOTO = process.env.NODE_ENV !== 'production' ? require('./T54A/images/t54a.webp') : null;
+
 // One import for the session; a failed one is forgotten, so the next visit tries again.
 let platformsLoad = null;
 let platformsLoaded = null;
@@ -168,6 +171,21 @@ function LandingPage() {
           </div>
           <SchoolHighlights id="t44c" platforms={platforms && platforms.t44c} />
         </div>
+
+        {/* T54A-DRAFT */}
+        {process.env.NODE_ENV !== 'production' && (
+          <div className="landing-school">
+            <div
+              className="landing-button"
+              onClick={() => navigate('/t54a/about')}
+            >
+              <div className="landing-button-fallback">T-54A Advanced</div>
+              <img src={T54A_PHOTO} alt="T-54A Advanced - King Air" />
+              <div className="landing-button-label">T-54A Advanced</div>
+            </div>
+            <SchoolHighlights id="t54a" platforms={platforms && platforms.t54a} />
+          </div>
+        )}
       </div>
     </div>
   );

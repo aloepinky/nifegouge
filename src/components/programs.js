@@ -22,6 +22,14 @@ export const PROGRAMS = [
   { id: 'nife', label: 'NIFE', aircraft: 'C172', home: '/nife/about', base: '/nife', briefs: true, discuss: true },
   { id: 'tw4', label: 'Primary', aircraft: 'T-6B', home: '/tw4/about', base: '/tw4', briefs: true, discuss: true },
   { id: 't44c', label: 'Advanced', aircraft: 'T-44C', home: '/t44c/about', base: '/t44c', briefs: true, discuss: true },
+  // T54A-DRAFT. Gated inline, not just flagged `draft`: the literal NODE_ENV test is folded to a
+  // constant at build time, so a production build carries no trace of the program at all. Every
+  // T-54A gate is marked T54A-DRAFT; taking it live is removing each one (see CLAUDE.md). Listed
+  // after the T-44C so `programOf('Advanced')` still finds the T-44C, whose briefs and pages
+  // carry that school word.
+  ...(process.env.NODE_ENV !== 'production'
+    ? [{ id: 't54a', label: 'Advanced', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', draft: true }]
+    : []),
 ];
 
 // Whether a thing flagged `true`, `'draft'` or falsy is shown here. A draft is shown on a dev
@@ -65,6 +73,15 @@ export const PROGRAM_TABS = {
     { to: '/t44c/discuss', label: 'Discussion Items' },
     { to: '/t44c/briefs', label: 'Briefs' },
   ],
+  // T54A-DRAFT
+  ...(process.env.NODE_ENV !== 'production'
+    ? {
+      t54a: [
+        { to: '/t54a/about', label: 'About' },
+        { to: '/t54a/eps-limits', label: 'EPs/Limits' },
+      ],
+    }
+    : {}),
 };
 
 // The tabs of a program that are shown here: everything but a draft one on the live site.

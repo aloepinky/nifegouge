@@ -15,6 +15,7 @@ const babel = require('@babel/core');
 // point: what is worth sharing with a tool is the pure part, and pure parts have no JSX.
 
 const cache = new Map();
+const ASSET = /\.(webp|png|jpe?g|gif|svg)$/i;
 
 function resolve(from, id) {
   const base = path.resolve(path.dirname(from), id);
@@ -41,7 +42,13 @@ function load(file) {
   // rather than recursing until the stack runs out.
   cache.set(full, mod.exports);
 
-  const req = (id) => (id.startsWith('.') ? load(resolve(full, id)) : require(id));
+  // An imported image is a URL in the browser build; here it is its own path, which is all a
+  // tool that only reads the data around it needs.
+  const req = (id) => {
+    if (!id.startsWith('.')) return require(id);
+    if (ASSET.test(id)) return { __esModule: true, default: path.resolve(path.dirname(full), id) };
+    return load(resolve(full, id));
+  };
   // eslint-disable-next-line no-new-func
   const run = new Function('exports', 'require', 'module', '__filename', '__dirname', code);
   run(mod.exports, req, mod, full, path.dirname(full));

@@ -52,6 +52,7 @@ const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').tr
 const SCHOOLS = [
   { name: 'C172', data: 'components/Flight/c172Data.js', eps: 'C172_EPS', poster: 'components/Flight/c172Poster.js', key: 'C172_POSTER' },
   { name: 'T-44C', data: 'components/T44C/t44cData.js', eps: 'T44C_EPS', poster: 'components/T44C/t44cPoster.js', key: 'T44C_POSTER' },
+  { name: 'T-54A', data: 'components/T54A/t54aData.js', eps: 'T54A_EPS', poster: 'components/T54A/t54aPoster.js', key: 'T54A_POSTER' },
 ];
 
 let findings = 0;

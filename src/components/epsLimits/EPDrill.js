@@ -538,10 +538,10 @@ function EPDrill({
         {e.rows.map((row, i) => {
           if (row.decision) return <div key={i} className="epl-decision">{row.decision}</div>;
           if (row.note) return <div key={i} className="epl-note">{row.note}</div>;
-          k += 1;
+          if (!row.sub) k += 1;
           return (
             <div key={row.id} className="epl-step">
-              <span className="epl-num">{row.concur ? '†' : ''}{row.critical ? '*' : ''}{k}.</span>
+              <span className="epl-num">{row.concur ? '†' : ''}{row.critical ? '*' : ''}{row.sub || k}.</span>
               <input type="text" className="epl-input" readOnly tabIndex={-1} defaultValue="" />
               {has(row.id) && <button type="button" className="epl-nwc-btn" tabIndex={-1}>NWC</button>}
             </div>
@@ -609,11 +609,13 @@ function EPDrill({
       {ep.rows.map((row, i) => {
         if (row.decision) return <div key={i} className="epl-decision">{row.decision}</div>;
         if (row.note) return <div key={i} className="epl-note">{row.note}</div>;
-        n += 1;
+        // A lettered sub-step ({ sub: 'a' }) is numbered with its letter and does not advance
+        // the count, as the T-54A sheet prints "† a." under step 4.
+        if (!row.sub) n += 1;
         return (
           <div key={row.id} className="epl-step">
-            <span className="epl-num">{row.concur ? '†' : ''}{row.critical ? '*' : ''}{n}.</span>
-            <input type="text" aria-label={`Step ${n}`} className={cls(row.id)}
+            <span className="epl-num">{row.concur ? '†' : ''}{row.critical ? '*' : ''}{row.sub || n}.</span>
+            <input type="text" aria-label={`Step ${n}${row.sub || ''}`} className={cls(row.id)}
               style={fit[row.id] ? { fontSize: `${fit[row.id]}px` } : undefined}
               value={data[row.id] || ''} onChange={(e) => change(row.id, e.target.value)} onKeyDown={onKeyDown} />
             {nwcButton(row.id)}

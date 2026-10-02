@@ -47,8 +47,17 @@ On Windows PowerShell, set env vars first (`$env:PORT=3100; npm start`), never `
 
 **pinksheetmafia.com** — a free, community-built naval aviation training tool, deployed on Netlify
 (`public/_redirects` is the SPA fallback). Programs: **NIFE** (C172, `/nife/*`), **TW4 Primary**
-(T-6B, `/tw4/*`), **Advanced** (T-44C, `/t44c/*`). Programs are listed in
-`src/components/programs.js` and `TopNav.js`'s `TABS`.
+(T-6B, `/tw4/*`), **Advanced** (T-44C, `/t44c/*`). Programs and their tabs are listed in
+`src/components/programs.js` (`PROGRAMS`, `PROGRAM_TABS`), which `TopNav.js` reads.
+
+**T-54A (`/t54a/*`, "Advanced - T-54A") is a draft that a production build does not contain.**
+`draft: true` only hides nav and routes, so every T-54A reference is also behind an inline
+`process.env.NODE_ENV !== 'production'` test marked `T54A-DRAFT` (programs, routes, landing tile,
+`about/platforms.js`), which webpack folds away; its images live in `src/components/T54A/images/`
+(imported, not `public/`) and its limits sheet reuses the `.t44c-*` classes. Check with
+`npm run build` and a search of `build/` (source maps aside) for `t54a`. Going live: remove each
+`T54A-DRAFT` gate and the `draft` flag. Its NATOPS and PCL are CUI, so its EPs/limits come from
+the exam sheets alone and it has no NWCs; its leaderboard is `T-54A`.
 
 ## Architecture
 

@@ -67,6 +67,12 @@ REF = os.path.join(REPO, "_reference-docs")
 T44C_PDF = os.path.join(REF, "T44C Advanced", "Fundamental References",
                         "T44C Cockpit Poster 12-2021.pdf")
 C172_SRC = os.path.join(REF, "C172 NIFE", "Fundamental References", "c172p poster.jpg")
+T54A_PDF = os.path.join(REF, "T-54A Advanced", "T_54 Poster.pdf")
+# The T-54A is a draft (programs.js, T54A-DRAFT), so its crops go next to its code in src/ and are
+# imported from there: webpack emits an image only when something in the build references it,
+# whereas everything in public/ ships to the live site. Move them to public/images/ (and the
+# poster's `src` to a plain path) when the program goes live.
+T54A_OUT = os.path.join(REPO, "src", "components", "T54A", "images")
 
 # The page is rendered once at this and every region cut from it. The sheet is 2592x1728 pt, so
 # 200 dpi is 7200x4800 - the narrowest region still has ~1500 px across before downscaling.
@@ -107,6 +113,27 @@ T44C_REGIONS = {
     "elec":     (0.743, 0.449, 0.988, 0.944),   # start, electrical, radios and CB stack
 }
 
+# The T-54A poster is a 24.9x36.9" portrait Illustrator sheet of thirteen numbered items, drawn as
+# whole sub-panels floating on white. Five are cut, every one whole:
+#   main      the main instrument panel, glareshield to the parking brake handle (items 1-6, and
+#             the lower sub-panel carrying the master switch, generators, start and auto-ignition,
+#             STBY DISPLAY, landing gear and bleed air)
+#   yoke      the pilot's control wheel, with its grip drawn out beside it (AP/TRIM MASTER)
+#   pedestal  the whole centre console, power quadrant (10) to the bottom of the pedestal: the
+#             levers and flap handle, and RUDDER BOOST low down beside the pressurization controls
+#   fuel      the fuel control panel and the fuel circuit breaker panel below it (7, 9), with the
+#             guarded FIREWALL SHUTOFF VALVE switches
+#   cb        the circuit breaker panel (8), for the RUDDER BOOST breaker
+# Left out: the overhead and its standby gauges, the copilot's yoke (a duplicate), the airspeed
+# placard and the small ELT/free-air-temperature panel; no step names anything on them.
+T54A_REGIONS = {
+    "main":     (0.082, 0.180, 0.928, 0.476),
+    "yoke":     (0.055, 0.476, 0.362, 0.558),
+    "pedestal": (0.376, 0.474, 0.622, 0.940),
+    "fuel":     (0.055, 0.578, 0.366, 0.737),
+    "cb":       (0.624, 0.580, 0.946, 0.752),
+}
+
 # The C172P drawing is 1637x1355 and every part of it is wanted, so there is nothing to crop -
 # panel, both yokes and the pedestal all carry controls the EPs name, and at 1637x1355 it is
 # already under LONG_EDGE, so it is only re-encoded.
@@ -122,8 +149,8 @@ def fit(im):
     return im.resize((round(w * scale), round(h * scale)), Image.LANCZOS)
 
 
-def save(im, name, dry):
-    path = os.path.join(OUT, name)
+def save(im, name, dry, out=OUT):
+    path = os.path.join(out, name)
     im = fit(im)
     if dry:
         print(f"  would write {name:<24} {im.size[0]}x{im.size[1]}")
@@ -160,6 +187,34 @@ def crop_t44c(only, dry):
             save(page.crop(box), f"t44c-{name}.webp", dry)
 
 
+def crop_t54a(only, dry):
+    if only and only not in T54A_REGIONS:
+        return
+    if not os.path.exists(T54A_PDF):
+        print(f"! missing {T54A_PDF}", file=sys.stderr)
+        return
+    if not shutil.which("pdftoppm"):
+        sys.exit("pdftoppm (poppler) is required on the PATH")
+    print(f"T-54A: rendering {os.path.basename(T54A_PDF)} at {DPI} dpi")
+    os.makedirs(T54A_OUT, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        stem = os.path.join(tmp, "page")
+        subprocess.run(
+            ["pdftoppm", "-r", str(DPI), "-png", "-singlefile", T54A_PDF, stem],
+            check=True, capture_output=True,
+        )
+        Image.MAX_IMAGE_PIXELS = None   # 4983x7383: over Pillow's bomb guard, and a known file
+        page = Image.open(stem + ".png").convert("RGB")
+        page.load()
+        W, H = page.size
+        print(f"  page {W}x{H}")
+        for name, (l, t, r, b) in T54A_REGIONS.items():
+            if only and only != name:
+                continue
+            box = (round(l * W), round(t * H), round(r * W), round(b * H))
+            save(page.crop(box), f"t54a-{name}.webp", dry, T54A_OUT)
+
+
 def crop_c172(only, dry):
     if only and only != "c172":
         return
@@ -174,13 +229,14 @@ def crop_c172(only, dry):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     ap.add_argument("--dry-run", action="store_true", help="report only, write nothing")
-    ap.add_argument("--only", metavar="REGION", help="one of: c172, " + ", ".join(T44C_REGIONS))
+    ap.add_argument("--only", metavar="REGION", help="one of: c172, " + ", ".join([*T44C_REGIONS, *T54A_REGIONS]))
     args = ap.parse_args()
 
     if args.dry_run:
         print("DRY RUN - nothing is written\n")
     crop_c172(args.only, args.dry_run)
     crop_t44c(args.only, args.dry_run)
+    crop_t54a(args.only, args.dry_run)
 
 
 if __name__ == "__main__":

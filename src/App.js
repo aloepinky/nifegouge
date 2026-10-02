@@ -50,6 +50,9 @@ const T44CEPsLimits = page(() => import('./components/T44CEPsLimits.js'));
 const T44CAbout = page(() => import('./components/T44CAbout.js'));
 const T44CDiscuss = page(() => import('./components/T44CDiscuss.js'));
 const T44CBriefs = page(() => import('./components/T44CBriefs.js'));
+// T54A-DRAFT: gated inline so a production build has neither the chunk nor a preload for it.
+const T54AAbout = process.env.NODE_ENV !== 'production' ? page(() => import('./components/T54AAbout.js')) : null;
+const T54AEPsLimits = process.env.NODE_ENV !== 'production' ? page(() => import('./components/T54AEPsLimits.js')) : null;
 const BriefsPage = page(() => import('./components/briefs/BriefsPage'));
 const NIFEAbout = page(() => import('./components/NIFEAbout.js'));
 const CourseRules = page(() => import('./components/TW4CourseRules.js'));
@@ -147,6 +150,11 @@ function App() {
         <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />
         <Route path="/t44c/discuss/*" element={<T44CDiscuss />} />
         <Route path="/t44c/briefs/*" element={<T44CBriefs />} />
+        {/* T54A-DRAFT */}
+        {process.env.NODE_ENV !== 'production' && <Route path="/t54a" element={<Navigate to="/t54a/about" replace />} />}
+        {process.env.NODE_ENV !== 'production' && <Route path="/t54a/about" element={<T54AAbout />} />}
+        {process.env.NODE_ENV !== 'production' && <Route path="/t54a/eps-limits" element={<T54AEPsLimits />} />}
+        {process.env.NODE_ENV !== 'production' && <Route path="/t54a/eps-limits/:tab" element={<T54AEPsLimits />} />}
       </>)}
       </Routes>
       </Suspense>
