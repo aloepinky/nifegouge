@@ -4361,6 +4361,27 @@ textarea.incorrect-answer {
   font-weight: 600;
 }
 
+/* Another squadron's section, folded to its heading once the reader has picked a squadron. */
+.discuss-section--folded { margin-bottom: 14px; }
+.discuss-section--folded h2 { color: #708995; margin-bottom: 0; }
+.discuss-toc li.discuss-toc-folded > a { color: #93a8b1; }
+
+.discuss-unit-picker {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #33566a;
+}
+
+.discuss-unit-picker select {
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  background: #ffffff;
+  padding: 2px 4px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1c2b31;
+}
+
 /* A subsection is a named part of a section, not a lesser section: no rule under the heading,
    because the H2's rule already opened the block it belongs to. */
 .discuss-subsection { margin-top: 16px; }

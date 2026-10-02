@@ -20,6 +20,7 @@ import NumbersEditor from './edit/NumbersEditor';
 import PageEditor from './edit/PageEditor';
 import { NWC_LABELS } from './nwc';
 import { citedDate } from './works';
+import { SQUADRONS, isOthers, hasSeveralUnits, ownerOf, readSquadron, writeSquadron } from './units';
 
 // The one piece of inline markup the item data carries: `**bold**`. It exists for mnemonics —
 // the C-R-A-F-T of a clearance readback, the L-D-D-H-A of an approach setup — where the point
@@ -491,7 +492,7 @@ function genTitle(g, many) {
 
 // Left rail, section headings only. Sticky on wide screens; collapses above the article
 // on a phone. The lead is not a numbered section, so its row is not numbered either.
-function Contents({ item, extra, hasSeeAlso, hasRefs }) {
+function Contents({ item, extra, hasSeeAlso, hasRefs, folded, onUnfold }) {
   return (
     <nav className="discuss-toc" aria-label="Contents">
       <RandomPage current={item.slug} />
@@ -504,8 +505,8 @@ function Contents({ item, extra, hasSeeAlso, hasRefs }) {
             generated lists. Tolerate the absence rather than making every such item
             carry an empty array. */}
         {(item.sections || []).map((s) => (
-          <li key={s.id}>
-            <a href={`#${s.id}`}>{s.title}</a>
+          <li key={s.id} className={folded.has(s.id) ? 'discuss-toc-folded' : undefined}>
+            <a href={`#${s.id}`} onClick={folded.has(s.id) ? () => onUnfold(s.id) : undefined}>{s.title}</a>
             {(s.subsections || []).length > 0 && (
               <ol>
                 {s.subsections.map((sub) => (
@@ -594,6 +595,23 @@ function replaceBlock(item, id, next) {
   return { ...item, sections };
 }
 
+// Which squadron the reader flies with. Shown above the first wing or squadron section of a
+// page that has several units' sections; the other units' then fold to their headings.
+function SquadronPicker({ value, onChange }) {
+  return (
+    <p className="discuss-unit-picker">
+      <label>
+        My squadron{' '}
+        <select value={value} onChange={(e) => onChange(e.target.value)}>
+          <option value="">All squadrons</option>
+          {SQUADRONS.map((q) => <option key={q.id} value={q.id}>{q.id}</option>)}
+        </select>
+      </label>
+    </p>
+  );
+}
+
+
 // `record` is the published page as the mirror serves it: { slug, rev, item, author,
 // updatedAt }. `readOnly` renders it with no edit affordances, which is how an old revision
 // is shown from the history page; `banner` is that page's note above the head. The page
@@ -633,6 +651,23 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const [published, setPublished] = useState(false); // a publish just went through
   const [justSaved, setJustSaved] = useState(false);
   const bannerRef = useRef(null);
+  const [squadron, setSquadron] = useState(readSquadron);
+  const [unfolded, setUnfolded] = useState(() => new Set());
+  const unfold = (id) => setUnfolded((prev) => new Set(prev).add(id));
+  // A link straight to a folded section (or something inside it) opens that section.
+  const hashId = decodeURIComponent((location.hash || '').slice(1));
+  useEffect(() => {
+    if (!hashId) return;
+    const owner = (item.sections || []).find(
+      (x) => x.id === hashId || (x.subsections || []).some((sub) => sub.id === hashId),
+    );
+    if (owner) unfold(owner.id);
+  }, [hashId, item]);
+  const pickSquadron = (v) => {
+    writeSquadron(v);
+    setSquadron(v);
+    setUnfolded(new Set());
+  };
 
   // The form is open; the instruction to open it has been carried out and is cleared, so a
   // reload or a step back does not re-open it over whatever the writer did next.
@@ -749,6 +784,14 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const seeAlso = (view.seeAlso || []).map(resolveLink).filter(Boolean);
   const genGroups = view.stub ? null : generatedFor(view, params.get('from'), gs);
   const editingPage = editing && editing.kind === 'page';
+  // Nothing folds while an editor is open: the writer is looking at the whole page.
+  const several = hasSeveralUnits(view.sections);
+  const folded = new Set(
+    several && !editing
+      ? (view.sections || []).filter((x) => isOthers(x.title, squadron) && !unfolded.has(x.id)).map((x) => x.id)
+      : [],
+  );
+  const firstLocal = several ? (view.sections || []).find((x) => ownerOf(x.title)) : null;
 
   const head = (
     <>
@@ -871,6 +914,8 @@ function ItemPage({ record, readOnly = false, banner = null }) {
         extra={(genGroups || []).map((g) => ({ id: genId(g), title: genTitle(g, genGroups.length > 1) }))}
         hasSeeAlso={seeAlso.length > 0}
         hasRefs={!!(view.references && view.references.length)}
+        folded={folded}
+        onUnfold={unfold}
       />
       <article className="discuss-page">
         {head}
@@ -905,83 +950,105 @@ function ItemPage({ record, readOnly = false, banner = null }) {
             {(view.sections || []).map((section) => {
               const collapsed = sectionCite(section);
               const editingThis = editing && editing.kind === 'section' && editing.id === section.id;
+              const picker = firstLocal === section && !editing
+                && <SquadronPicker value={squadron} onChange={pickSquadron} />;
+              if (folded.has(section.id)) {
+                return (
+                  <React.Fragment key={section.id}>
+                    {picker}
+                    <section className="discuss-section discuss-section--folded" id={section.id}>
+                      <h2>
+                        {section.title}
+                        <span className="discuss-edit-link">
+                          <span className="discuss-edit-bracket">[</span>
+                          <button type="button" onClick={() => unfold(section.id)}>show</button>
+                          <span className="discuss-edit-bracket">]</span>
+                        </span>
+                      </h2>
+                    </section>
+                  </React.Fragment>
+                );
+              }
               return (
-                <section className="discuss-section" id={section.id} key={section.id}>
-                  <h2>
-                    {section.title}
-                    {!editingThis && (
-                      <Edit
-                        onClick={() => open({ kind: 'section', id: section.id })}
-                        what={section.title}
-                        disabled={busy}
+                <React.Fragment key={section.id}>
+                  {picker}
+                  <section className="discuss-section" id={section.id}>
+                    <h2>
+                      {section.title}
+                      {!editingThis && (
+                        <Edit
+                          onClick={() => open({ kind: 'section', id: section.id })}
+                          what={section.title}
+                          disabled={busy}
+                        />
+                      )}
+                    </h2>
+                    {editingThis ? (
+                      <SectionEditor
+                        section={section}
+                        item={view}
+                        onSave={(next, added) => commit(withRefs(replaceBlock(view, section.id, next), added))}
+                        onCancel={cancel}
+                        onRemove={() => commit(replaceBlock(view, section.id, null))}
+                        check={(next, added) => check(withRefs(replaceBlock(view, section.id, next), added))}
                       />
+                    ) : (
+                      <SectionBody block={section} showCite={!collapsed} collapsed={collapsed} />
                     )}
-                  </h2>
-                  {editingThis ? (
-                    <SectionEditor
-                      section={section}
-                      item={view}
-                      onSave={(next, added) => commit(withRefs(replaceBlock(view, section.id, next), added))}
-                      onCancel={cancel}
-                      onRemove={() => commit(replaceBlock(view, section.id, null))}
-                      check={(next, added) => check(withRefs(replaceBlock(view, section.id, next), added))}
-                    />
-                  ) : (
-                    <SectionBody block={section} showCite={!collapsed} collapsed={collapsed} />
-                  )}
 
-                  {(section.subsections || []).map((sub) => {
-                    const editingSub =
-                      editing && editing.kind === 'section' && editing.id === sub.id;
-                    // A subsection collapses on its own refs when the parent has not already
-                    // collapsed on behalf of the whole section. Without this a subsection that
-                    // carries `refs` renders no citation at all: the parent's SOURCE line is
-                    // absent and the blocks inside it were never given markers of their own.
-                    const subCite = collapsed ? null : sectionCite(sub);
-                    return (
-                      <section className="discuss-subsection" id={sub.id} key={sub.id}>
-                        <h3>
-                          {sub.title}
-                          {!editingSub && (
-                            <Edit
-                              onClick={() => open({ kind: 'section', id: sub.id })}
-                              what={sub.title}
-                              disabled={busy}
-                            />
-                          )}
-                        </h3>
-                        {editingSub ? (
-                          <SectionEditor
-                            section={sub}
-                            item={view}
-                            isSub
-                            onSave={(next, added) => commit(withRefs(replaceBlock(view, sub.id, next), added))}
-                            onCancel={cancel}
-                            onRemove={() => commit(replaceBlock(view, sub.id, null))}
-                            check={(next, added) => check(withRefs(replaceBlock(view, sub.id, next), added))}
-                          />
-                        ) : (
-                          <>
-                            <SectionBody block={sub} showCite={!collapsed && !subCite} collapsed={collapsed || subCite} />
-                            {subCite && (
-                              <p className="discuss-section-cite">
-                                Source
-                                <Cite refs={subCite} />
-                              </p>
+                    {(section.subsections || []).map((sub) => {
+                      const editingSub =
+                        editing && editing.kind === 'section' && editing.id === sub.id;
+                      // A subsection collapses on its own refs when the parent has not already
+                      // collapsed on behalf of the whole section. Without this a subsection that
+                      // carries `refs` renders no citation at all: the parent's SOURCE line is
+                      // absent and the blocks inside it were never given markers of their own.
+                      const subCite = collapsed ? null : sectionCite(sub);
+                      return (
+                        <section className="discuss-subsection" id={sub.id} key={sub.id}>
+                          <h3>
+                            {sub.title}
+                            {!editingSub && (
+                              <Edit
+                                onClick={() => open({ kind: 'section', id: sub.id })}
+                                what={sub.title}
+                                disabled={busy}
+                              />
                             )}
-                          </>
-                        )}
-                      </section>
-                    );
-                  })}
+                          </h3>
+                          {editingSub ? (
+                            <SectionEditor
+                              section={sub}
+                              item={view}
+                              isSub
+                              onSave={(next, added) => commit(withRefs(replaceBlock(view, sub.id, next), added))}
+                              onCancel={cancel}
+                              onRemove={() => commit(replaceBlock(view, sub.id, null))}
+                              check={(next, added) => check(withRefs(replaceBlock(view, sub.id, next), added))}
+                            />
+                          ) : (
+                            <>
+                              <SectionBody block={sub} showCite={!collapsed && !subCite} collapsed={collapsed || subCite} />
+                              {subCite && (
+                                <p className="discuss-section-cite">
+                                  Source
+                                  <Cite refs={subCite} />
+                                </p>
+                              )}
+                            </>
+                          )}
+                        </section>
+                      );
+                    })}
 
-                  {collapsed && !editingThis && (
-                    <p className="discuss-section-cite">
-                      Source
-                      <Cite refs={collapsed} />
-                    </p>
-                  )}
-                </section>
+                    {collapsed && !editingThis && (
+                      <p className="discuss-section-cite">
+                        Source
+                        <Cite refs={collapsed} />
+                      </p>
+                    )}
+                  </section>
+                </React.Fragment>
               );
             })}
 

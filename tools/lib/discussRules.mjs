@@ -143,7 +143,12 @@ const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 // these carries its own section, headed with the publication's name, so a student at the
 // other squadron can see which part of the page is theirs. Advisory, not an error: a page
 // can be local end to end and say so in its lede, and the numbers on it are still right.
-export const LOCAL_WORKS = new Set(['TW-4 SOP', 'VT-27 SOP', 'VT-28 SOP', 'VT-35 SOP', 'TW-4 Formation Supplement', 'TW-4 Briefing Guide']);
+export const LOCAL_WORKS = new Set([
+  'TW-4 SOP', 'VT-27 SOP', 'VT-28 SOP', 'VT-35 SOP', 'TW-4 Formation Supplement', 'TW-4 Briefing Guide',
+  'TW-5 SOP', 'VT-2 SOP', 'VT-2 DCON FAM Supplement', 'VT-2 INAV Supplement', 'VT-2 Formation Supplement',
+  'VT-3 SOP', 'VT-6 SOP', 'VT-6 Formation Supplement', 'VT-6 Standards', 'VT-6 Formation Briefing Guide',
+  'VT-6 NATOPS Briefing Guide',
+]);
 
 export function headingViolations(title, item, seen) {
   const out = [];
