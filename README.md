@@ -40,7 +40,7 @@ Anyone can of course contribute normally. However, I don't expect any student na
 have, or want to use, extensive coding experience. You don't need to know how to code. An AI coding agent can read the code, make the change you
 describe, show it to you running on your own computer, and send it in for review. This
 repository includes instructions written for the agent ([`CLAUDE.md`](CLAUDE.md)), so it already
-knows the site's rules: sources, style, and permissions.
+knows the site's rules for sources, style, and permissions.
 
 I use **[Claude Code](https://claude.com/claude-code)**, and the steps below are for it. They are subject to change at the whims of Anthropic, but this should provide a good baseline. Other coding agents can use `CLAUDE.md` too, but you may have to point them to it.
 
