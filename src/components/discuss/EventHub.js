@@ -14,8 +14,8 @@ import { programLabel } from './program';
 // badge is looked up rather than assumed. A path with no entry here renders no badge, which
 // is the right failure: a wrong tab name is worse than none.
 const HREF_TARGETS = {
-  '/tw4/eps-limits': 'EPs & Limits',
-  '/tw4/courserules': 'TW4 Course Rules',
+  '/primary/eps-limits': 'EPs & Limits',
+  '/primary/courserules': 'TW4 Course Rules',
 };
 
 // A JPPT wording as a page title: first letter up, the rest as written.

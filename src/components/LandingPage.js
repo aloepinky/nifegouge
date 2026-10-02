@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PROGRAMS, shown } from './programs';
+import { PROGRAMS, listed, shown } from './programs';
 import { useCourseWeeks } from './about/SchoolStats';
+import T54A_PHOTO from './T54A/images/t54a.webp';
 
 // The biggest numbers of each school, under its tile: how long the course is and what its
 // EPs/Limits exam asks. Counted from the data (about/platforms.js, the syllabi on the mirror),
@@ -19,9 +20,6 @@ import { useCourseWeeks } from './about/SchoolStats';
 // the page mounts, into a chunk of its own, and those figures show a dash (the NWCs nothing)
 // until it lands. The About pages import it the ordinary way.
 const fmt = (n) => n.toLocaleString('en-US');
-
-// T54A-DRAFT: required inside the gate, so a production build neither emits the photo nor names it.
-const T54A_PHOTO = process.env.NODE_ENV !== 'production' ? require('./T54A/images/t54a.webp') : null;
 
 // One import for the session; a failed one is forgotten, so the next visit tries again.
 let platformsLoad = null;
@@ -150,7 +148,7 @@ function LandingPage() {
         <div className="landing-school">
           <div
             className="landing-button"
-            onClick={() => navigate('/tw4/about')}
+            onClick={() => navigate('/primary/about')}
           >
             <div className="landing-button-fallback">Primary</div>
             <img src="/images/t6b.webp" alt="Primary - T-6B Texan II" />
@@ -172,8 +170,8 @@ function LandingPage() {
           <SchoolHighlights id="t44c" platforms={platforms && platforms.t44c} />
         </div>
 
-        {/* T54A-DRAFT */}
-        {process.env.NODE_ENV !== 'production' && (
+        {/* Unlisted on the live site (programs.js): reached by link only. */}
+        {listed(PROGRAMS.find((p) => p.id === 't54a')) && (
           <div className="landing-school">
             <div
               className="landing-button"

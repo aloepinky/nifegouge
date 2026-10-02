@@ -11,7 +11,7 @@
 //
 //   $env:REACT_APP_DOCS_API='http://localhost:8788'; $env:PORT=3100; npm start
 //
-// and open http://localhost:3100/tw4/docs. The first run copies the live documents and links
+// and open http://localhost:3100/primary/docs. The first run copies the live documents and links
 // through the public read endpoints (read only), and every write lands in
 // _docs-dev/tables.json (gitignored), which persists between runs. Opening a document does not
 // work locally: that needs a presigned S3 URL, and this server has no bucket.

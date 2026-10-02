@@ -6,6 +6,21 @@ body {
   color: #333;
 }
 
+/* The footer sits at the bottom of the screen on a short page and after the content on a
+   long one: the shell is at least a screen tall and the page between nav and footer takes
+   the slack. dvh leaves out a phone's address bar; 100vh is the fallback. Pages draw on the
+   body's grey, so the slack needs no background of its own. */
+.site-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.site-main {
+  flex: 1 0 auto;
+}
+
 /* Common Layout Containers */
 .page-container,
 .questions-container,
@@ -3704,6 +3719,7 @@ textarea.incorrect-answer {
   color: #ffffff;
   padding: 25px 30px;
   border-top: 3px solid #003B4F;
+  flex-shrink: 0;
 }
 
 .footer-feedback {
@@ -3883,11 +3899,6 @@ textarea.incorrect-answer {
    #003B4F plus the same rgba(0,59,79,*) washes the systems briefing
    modals use, so a discuss page and a systems page read as one site.
    =================================================================== */
-
-.discuss-wrap {
-  background: #f7f9fa;
-  min-height: 100vh;
-}
 
 /* Discuss uses real links in the sub-navbar (a wiki's tabs should be
    linkable); the shared rules only target span. */
@@ -6964,6 +6975,10 @@ textarea.incorrect-answer {
   top: 0;
   left: 0;
   right: 0;
+  /* Every EP stacked is far taller than the page; unclipped, it ran on past the footer and
+     left a screen of blank page to scroll into. Its cards measure the same clipped. */
+  height: 0;
+  overflow: hidden;
   visibility: hidden;
   pointer-events: none;
 }
@@ -7040,6 +7055,14 @@ textarea.incorrect-answer {
    electrical and radio stack, which is the order they run front to back down the pedestal. It is
    one column rather than three tabs because every panel a step touches should be on screen at
    once — knowing where a control is only counts if the neighbours are there to place it among. */
+/* A control drawn over the EP card (EPDrill's `above`): the T-54A's control wheel, as Primary
+   draws its stick in the middle of the page. */
+.epl-above {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 10px;
+}
+
 .t44c-console {
   display: flex;
   flex-direction: column;

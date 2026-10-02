@@ -32,7 +32,7 @@ function Systems() {
           <span
             key={id}
             className={active.id === id ? 'active' : ''}
-            onClick={() => navigate(`/tw4/systems/${id}`)}
+            onClick={() => navigate(`/primary/systems/${id}`)}
             style={{ cursor: 'pointer' }}
           >
             {label}

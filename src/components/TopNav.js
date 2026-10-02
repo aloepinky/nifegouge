@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useMenuDismiss from './useMenuDismiss';
-import { navPrograms, programName, PROGRAM_TABS, shownTabs } from './programs';
+import { navPrograms, programAt, programName, PROGRAM_TABS, shownTabs } from './programs';
 
 // The top bar: which program you are in, and which page of it you are on. Both are dropdowns
 // rather than rows of tabs, because the row stopped fitting — TW4 has eight pages now, and the
@@ -10,8 +10,8 @@ import { navPrograms, programName, PROGRAM_TABS, shownTabs } from './programs';
 
 // The program list is shared with everything else that names a school: see programs.js.
 
-// The tab you are on: the longest `to` the path starts with, so /tw4/discuss/hud is still
-// Discussion Items and /tw4/systems/fuel is still Systems.
+// The tab you are on: the longest `to` the path starts with, so /primary/discuss/hud is still
+// Discussion Items and /primary/systems/fuel is still Systems.
 function currentTab(tabs, pathname) {
   return tabs
     .filter((t) => pathname === t.to || pathname.startsWith(`${t.to}/`))
@@ -93,11 +93,11 @@ function TopNav() {
   const bar = useRef(null);
   const brand = useRef(null);
 
-  // Chosen from the programs the navigation offers, not from every program there is: a draft
-  // program's routes do not exist on the live site, and picking it here would leave the bar
-  // announcing a program whose pages render nothing.
+  // The program whose pages these are, if they are served here: an unlisted one is (someone was
+  // sent the link), so the bar names it and offers its tabs, though the menu does not list it.
+  // A draft one on the live site is not, and the bar falls back to the first program listed.
   const offered = navPrograms();
-  const program = offered.find((p) => pathname.startsWith(p.base)) || offered[0];
+  const program = programAt(pathname) || offered[0];
   const tabs = shownTabs(PROGRAM_TABS[program.id]);
   const tab = currentTab(tabs, pathname);
   useBrandFit(bar, brand, [program.id, tab && tab.to]);
@@ -105,7 +105,7 @@ function TopNav() {
   return (
     <div className="navbar" ref={bar}>
       <Dropdown name="Program" current={programName(program)}>
-        {navPrograms().map((p) => (
+        {(offered.includes(program) ? offered : [...offered, program]).map((p) => (
           <button
             type="button"
             key={p.id}

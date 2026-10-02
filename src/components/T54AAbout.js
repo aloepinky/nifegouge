@@ -1,7 +1,7 @@
 import React from 'react';
 import AboutPage from './about/AboutPage.js';
 import { aboutTabs } from './about/tabs.js';
-import { EpStats } from './about/SchoolStats.js';
+import { BriefStats, EpStats } from './about/SchoolStats.js';
 import { epListStats } from './about/stats.js';
 import { T54A_EPS, T54A_LIMITS } from './T54A/t54aData';
 import photo from './T54A/images/t54a.webp';
@@ -23,6 +23,14 @@ const CONTENT = {
       'The Limits tab is the T-54A operating limits sheet to fill in from memory, with the answers a click away when you are stuck.',
     ],
   },
+  '/t54a/briefs': {
+    stats: <BriefStats school="T-54A" />,
+    icon: 'brief',
+    blurb: 'The T-54A briefs, for quick reference.',
+    more: [
+      'The Briefs page holds the T-54A briefs for quick reference.',
+    ],
+  },
 };
 
 function T54AAbout() {
@@ -35,7 +43,7 @@ function T54AAbout() {
       tabs={aboutTabs('t54a', CONTENT)}
       explainer={
         <>
-          <p>This section is for the T-54A: the EPs and limits you are held to from memory.</p>
+          <p>This section is for the T-54A: the EPs and limits you are held to from memory, and the briefs.</p>
           <p>
             Everything here is built by students, so it is only as good as what gets contributed. If you
             see something wrong, or want to help write a page, reach out at pinksheetmafia@gmail.com.

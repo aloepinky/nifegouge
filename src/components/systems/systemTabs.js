@@ -1,4 +1,4 @@
-// The six systems that have a diagram: the :tab value in /tw4/systems/:tab and its nav label.
+// The six systems that have a diagram: the :tab value in /primary/systems/:tab and its nav label.
 //
 // Split out from Systems.js so a consumer can name a system without importing the diagrams
 // themselves — the discuss item pages link here, and pulling Systems.js in would drag all six

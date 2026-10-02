@@ -13,7 +13,7 @@ import {
 // pdf.js is 110 KB gzipped; only someone uploading a guide should download it.
 const BriefUpload = lazy(() => import('./BriefUpload'));
 
-// /tw4/briefs: the mission briefing guides and the TOLD card.
+// /primary/briefs: the mission briefing guides and the TOLD card.
 //
 // The briefs are community-edited documents on the discuss server, generated from an uploaded
 // briefing guide PDF (see parseBriefGuide.js) and published like a jet log: every edit is a
@@ -292,7 +292,7 @@ function HistoryRoute({ index }) {
   );
 }
 
-// /tw4/briefs itself: the first brief, at the address the site has always linked.
+// /primary/briefs itself: the first brief, at the address the site has always linked.
 function DefaultRoute({ index, ...rest }) {
   const base = useBriefsBase();
   if (index.status === 'loading' && !index.briefs.length) {
@@ -324,7 +324,7 @@ function BriefsPage({
   const all = useBriefIndex();
   const unitKey = `briefUnit-${school}`;
   const [chosenUnit, setChosenUnit] = useState(() => readText(unitKey));
-  // Mounted at `/tw4/briefs/*`: the brief on screen is the first part of the rest.
+  // Mounted at `/primary/briefs/*`: the brief on screen is the first part of the rest.
   const activeId = (useParams()['*'] || '').split('/')[0];
   const index = useMemo(() => {
     const briefs = all.briefs.filter((b) => isSchool(b, school));

@@ -15,7 +15,7 @@ const advisoryBg     = 'rgba(30,120,30,0.10)';
 const advisoryBorder = '#3a7a3a';
 
 export const THEME = {
-  bg:       '#f0f3f6',
+  bg:       '#f4f4f4',
   box:      '#ffffff',
   boxAlt:   '#e8ecf0',
   stroke:   '#9aaabb',

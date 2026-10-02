@@ -13,16 +13,17 @@ import cbSrc from './images/t54a-cb.webp';
 // T-54A is a draft and an import is only emitted by a build that uses it (T54A-DRAFT). When it
 // goes live, they can move to public/images/ like the T-44C's, or stay; either works.
 //
-// FIRST PASS. Every box was read off a grid over the region image and has not been tuned with
-// ?spots; expect some to need moving. Where a control sits was read off the poster's own
-// placards only: the NATOPS is CUI and is not used for anything on this site.
+// Every box was read off a grid over the region image, then checked on an overlay against the
+// control the NATOPS (A1-T54A-NFM-000, IC 04) names; none has been tuned with ?spots yet. The
+// NATOPS settled two the placards could not: the autothrottles disconnect at the AT button on the
+// right power lever (§2.17.2.7), and the autopilot at the AP/TRIM MASTER switch or the YD/AP DISC
+// bar (§15.15.1).
 //
 // Five regions, every one a whole sub-panel off the sheet: the main instrument panel, the
 // pilot's control wheel, the whole centre pedestal (power quadrant to the RUDDER BOOST switch),
 // the fuel control and fuel breaker panel, and the circuit breaker panel.
 
 export const T54A_POSTER = {
-  credit: 'Panel diagrams from the T-54A instrument panel poster',
   regions: [
     {
       id: 'main',
@@ -79,13 +80,21 @@ export const T54A_POSTER = {
           action: 'Autoignition', values: ['ARM (LS)'] },
         { box: [0.008, 0.958, 0.026, 0.042], label: 'Parking brake',
           action: 'Stop the aircraft and set the parking brake.' },
-        { box: [0.62, 0.79, 0.032, 0.14], label: 'Landing gear handle',
+        { box: [0.342, 0.815, 0.022, 0.105], label: 'Landing gear handle',
           action: 'Landing Gear', also: ['Gear', 'Landing Gear (when climb established)'],
           values: ['UP', 'As required', 'DN'] },
         // Both BLEED AIR VALVES toggles under one box: the step names the affected engine's, and
         // they sit side by side.
         { box: [0.658, 0.88, 0.04, 0.04], label: 'Bleed air valves',
           action: 'Bleed Air Valve (affected engine(s))', values: ['PNEU & ENVIR OFF (RS)'] },
+        // The YD/AP DISC bar on the flight guidance panel. AP/TRIM MASTER on the wheel does the
+        // same (§15.15.1), so the yoke carries the step too.
+        { id: 'yd-ap-disc', box: [0.592, 0.232, 0.031, 0.03], label: 'YD/AP DISC bar',
+          action: 'Autopilot', values: ['Disengage'] },
+        // The AT button on the right power lever, whose head the poster draws at the foot of this
+        // panel: "the Autothrottle Disconnect (AT) button on the right power lever" (§2.17.2.7).
+        { box: [0.398, 0.975, 0.034, 0.025], label: 'Autothrottle disconnect (AT) button',
+          action: 'Autothrottles', values: ['Disengage', 'As required'] },
       ],
     },
     {
@@ -96,7 +105,12 @@ export const T54A_POSTER = {
         + 'and the AP/TRIM MASTER switch',
       spots: [
         { box: [0.12, 0.32, 0.035, 0.06], label: 'AP/TRIM MASTER',
-          action: 'AP/TRIM MASTER', values: ['Depress Fully and Hold'] },
+          action: 'AP/TRIM MASTER',
+          actions: ['AP/TRIM MASTER', 'Autopilot'],
+          values: {
+            'AP/TRIM MASTER': ['Depress Fully and Hold'],
+            Autopilot: ['Disengage'],
+          } },
         { box: [0.14, 0.45, 0.7, 0.55], label: 'Control wheel',
           action: 'Control wheel',
           actions: ['Control wheel', 'Ailerons'],
@@ -131,7 +145,7 @@ export const T54A_POSTER = {
         { box: [0.70, 0.215, 0.12, 0.04], label: 'Flap handle',
           action: 'Flaps',
           values: ['UP', 'As required', 'APPROACH (unless already up)', 'Maintain current setting'] },
-        { box: [0.185, 0.795, 0.04, 0.025], label: 'Rudder boost',
+        { box: [0.29, 0.79, 0.05, 0.035], label: 'Rudder boost',
           action: 'RUDDER BOOST', values: ['OFF (PM)'] },
       ],
     },
@@ -167,11 +181,6 @@ export const T54A_POSTER = {
 
   // The steps with nothing on the poster to point at.
   //
-  //   Autopilot / Autothrottles        the poster draws an AT switch on the power lever and a
-  //                                    YD/AP DISC bar on the guidance panel, but which control
-  //                                    each step means can only be settled from the NATOPS,
-  //                                    which is CUI. Buttons until someone can say from an
-  //                                    unrestricted source.
   //   Rudder, Brakes                   on pedals the poster does not draw.
   //   Oxygen Mask/MIC Switch           the masks and MIC switches are not drawn.
   //   Announce, Crew, Descend, Evacuate, Land or ditch, Maneuver, Continue climb, Do not
@@ -179,8 +188,6 @@ export const T54A_POSTER = {
   //   Execute / Go to ... Checklist    cross-references to another procedure.
   actions: [
     { label: 'Announce "Abort"', action: 'Announce "Abort"' },
-    { label: 'Autopilot', action: 'Autopilot', values: ['Disengage'] },
-    { label: 'Autothrottles', action: 'Autothrottles', values: ['Disengage', 'As required'] },
     { label: 'Brakes', action: 'Brakes', values: ['As required'] },
     { label: 'Rudder', action: 'Rudder',
       values: ['Maintain directional control (PF)', 'Full deflection opposite the direction of the spin',

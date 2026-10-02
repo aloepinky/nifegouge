@@ -16,7 +16,7 @@ import { PROGRAMS, schoolNs, shown } from '../programs';
 // would fetch a syllabus — the T-44C one is the largest there is — for a page that then does not
 // resolve. Read off `programs.js` rather than repeated here, so a tab going live needs no edit.
 const MOUNTS = [
-  { base: '/tw4/discuss', school: 'Primary', syllabusId: 'delta-primary' },
+  { base: '/primary/discuss', school: 'Primary', syllabusId: 'delta-primary' },
   { base: '/nife/discuss', school: 'NIFE', syllabusId: 'nife-flight' },
   { base: '/t44c/discuss', school: 'Advanced', syllabusId: 't44c-p8' },
 ].filter((m) => shown((PROGRAMS.find((p) => p.label === m.school) || {}).discuss));

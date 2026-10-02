@@ -1,6 +1,6 @@
 import React from 'react';
 import T54ALimits from './T54A/T54ALimits';
-import { T54A_EPS } from './T54A/t54aData';
+import { T54A_EPS, T54A_EP_NWC } from './T54A/t54aData';
 import { T54A_POSTER, T54A_ALIASES, t54aRegion } from './T54A/t54aPoster';
 import ActionButtons from './epsLimits/ActionButtons';
 import { PosterRegion, usePoster } from './epsLimits/CockpitPoster';
@@ -8,14 +8,14 @@ import EPDrill from './epsLimits/EPDrill';
 import EPsLimitsShell from './epsLimits/EPsLimitsShell';
 
 // The T-54A's EPs/Limits page: the critical action memory items one at a time, and the operating
-// limits sheet, laid out as the T-44C's is (see T44CEPsLimits.js). A draft (T54A-DRAFT): routed
-// and built only outside production.
+// limits sheet, laid out as the T-44C's is (see T44CEPsLimits.js).
 //
-// The main instrument panel runs across the top. Down the left are the fuel panel, which is on
-// that side of the cockpit, and the pilot's control wheel, with the steps no panel performs as
-// buttons beneath; down the right, the pedestal and then the circuit breaker panel.
+// The main instrument panel runs across the top, and the pilot's control wheel sits directly over
+// the EP card in the middle, where it is in front of the pilot. Down the left is the fuel panel,
+// which is on that side of the cockpit, with the steps no panel performs as buttons beneath; down
+// the right, the pedestal and then the circuit breaker panel.
 //
-// No NWCs: the T-54A's are in its NATOPS, which is CUI and is not used on this site.
+// `nwc` gives the page its NWC buttons and Auto NWC toggle, from the NATOPS (t54aData.js).
 
 const TABS = [
   { id: 'eps', label: 'EPs' },
@@ -23,7 +23,8 @@ const TABS = [
 ];
 
 const MAIN = t54aRegion('main');
-const LEFT = ['fuel', 'yoke'].map(t54aRegion);
+const FUEL = t54aRegion('fuel');
+const YOKE = t54aRegion('yoke');
 const RIGHT = ['pedestal', 'cb'].map(t54aRegion);
 
 // Each slot is its own component, so the hook is not called inline in a slot that comes and goes
@@ -34,13 +35,14 @@ function MainPanel(api) {
   return <PosterRegion region={MAIN} view={useT54APoster(api)} className="epl-band-frame--fluid" />;
 }
 
+function Yoke(api) {
+  return <PosterRegion region={YOKE} view={useT54APoster(api)} className="epl-band-frame--fluid" />;
+}
+
 function LeftSide(api) {
-  const view = useT54APoster(api);
   return (
     <div className="t44c-console">
-      {LEFT.map((region) => (
-        <PosterRegion key={region.id} region={region} view={view} className="epl-band-frame--fluid" />
-      ))}
+      <PosterRegion region={FUEL} view={useT54APoster(api)} className="epl-band-frame--fluid" />
       <ActionButtons actions={T54A_POSTER.actions} aliases={T54A_ALIASES} {...api} />
     </div>
   );
@@ -53,7 +55,6 @@ function RightSide(api) {
       {RIGHT.map((region) => (
         <PosterRegion key={region.id} region={region} view={view} className="epl-band-frame--fluid" />
       ))}
-      <p className="epl-credit">{T54A_POSTER.credit}</p>
     </div>
   );
 }
@@ -63,10 +64,12 @@ function T54AEPs(game) {
     <EPDrill
       {...game}
       eps={T54A_EPS}
+      nwc={T54A_EP_NWC}
       title="T-54A EMERGENCY PROCEDURES"
       aliases={T54A_ALIASES}
       sideWidth={[300, 300]}
       top={(api) => <MainPanel {...api} />}
+      above={(api) => <Yoke {...api} />}
       left={(api) => <LeftSide {...api} />}
       right={(api) => <RightSide {...api} />}
       footnote="* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS"

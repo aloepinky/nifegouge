@@ -19,10 +19,10 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 // A discuss page's stored key is `<school>/<slug>` (lambda/discussApi/namespace.mjs); the
 // school's namespace is its route prefix on the site.
-const DISCUSS_BASE = { primary: '/tw4/discuss', nife: '/nife/discuss', advanced: '/t44c/discuss' };
+const DISCUSS_BASE = { primary: '/primary/discuss', nife: '/nife/discuss', advanced: '/t44c/discuss' };
 function pageUrl(key) {
   const [ns, slug] = key.includes('/') ? key.split('/') : ['primary', key];
-  return `${SITE}${DISCUSS_BASE[ns] || '/tw4/discuss'}/${slug}`;
+  return `${SITE}${DISCUSS_BASE[ns] || '/primary/discuss'}/${slug}`;
 }
 
 // `own`: author names whose activity is counted in one line per section rather than listed
@@ -191,7 +191,7 @@ export async function buildReport({ db, days = 7, until = new Date(), own = ['Lo
   // Docs and useful links
   {
     const programName = (p) => (p === 'tw4primary' ? 'Primary' : p === 'nife' ? 'NIFE' : p || 'NIFE');
-    const docsPath = (p) => (p === 'tw4primary' ? '/tw4/docs' : '/nife/docs');
+    const docsPath = (p) => (p === 'tw4primary' ? '/primary/docs' : '/nife/docs');
     const newDocs = docs.filter((d) => inWeek(d.uploadedAt)).sort((a, b) => a.uploadedAt.localeCompare(b.uploadedAt));
     const newLinks = links.filter((l) => inWeek(l.submittedAt)).sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
     const flagged = [...docs, ...links].filter((e) => inWeek(e.outdatedAt));

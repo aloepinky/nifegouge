@@ -131,7 +131,7 @@ function EventItemsEditor({ event, onSaved, onCancel }) {
               </>
             )}
             {r.kind === 'href' && (
-              <Line value={r.href} onChange={(v) => set(i, { href: v })} placeholder="/tw4/eps-limits" aria-label="PSM tab" />
+              <Line value={r.href} onChange={(v) => set(i, { href: v })} placeholder="/primary/eps-limits" aria-label="PSM tab" />
             )}
             <RowTools
               index={i}

@@ -255,14 +255,14 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, onClose }) {
 }
 
 function EPDrill({
-  eps, title, footnote, top, left, right, sideWidth = 200,
+  eps, title, footnote, top, above, left, right, sideWidth = 200,
   aliases = DEFAULT_ALIASES,
   nwc, nwcHints, isGameActive = false, onGameComplete,
 }) {
   // One number sets both columns; a pair sets them separately, which a bespoke layout needs —
   // Advanced hangs a column of buttons on the left and a stack of three panels on the right.
   const [leftWidth, rightWidth] = Array.isArray(sideWidth) ? sideWidth : [sideWidth, sideWidth];
-  const hasPanel = !!(top || left || right);
+  const hasPanel = !!(top || above || left || right);
   const [full, setFull] = useState(() => hasPanel && window.innerWidth >= 750);
   const [showHelp, setShowHelp] = useState(false);
   const [reveal, setReveal] = useState(null);
@@ -595,7 +595,10 @@ function EPDrill({
     };
     measure();
     const watch = new ResizeObserver(measure);
+    // The sizer itself is clipped to no height, so a card that grows without the page
+    // widening (a late font) is only seen by watching the cards.
     watch.observe(el);
+    for (const child of el.children) watch.observe(child);
     return () => watch.disconnect();
   }, [sizerCards, eps, full]);
 
@@ -662,6 +665,9 @@ function EPDrill({
                 and the control row beneath them — from walking up and down the page as you
                 move between a four-step procedure and an eleven-step one. */}
             <div className="epl-card-sizer" ref={sizerRef} aria-hidden="true">{sizerCards}</div>
+            {/* `above`: a control drawn over the card, in Full Mode, the way Primary puts the
+                stick between its two button groups — the T-54A's control wheel. */}
+            {full && above && <div className="epl-above">{above(api)}</div>}
             {/* The card hugs its own steps — a four-step EP is a four-step box. The RESERVATION
                 is the slot around it, which is always as tall as the longest EP, so everything
                 below sits at the same place whichever procedure is showing. */}

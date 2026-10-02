@@ -47,17 +47,16 @@ On Windows PowerShell, set env vars first (`$env:PORT=3100; npm start`), never `
 
 **pinksheetmafia.com** — a free, community-built naval aviation training tool, deployed on Netlify
 (`public/_redirects` is the SPA fallback). Programs: **NIFE** (C172, `/nife/*`), **TW4 Primary**
-(T-6B, `/tw4/*`), **Advanced** (T-44C, `/t44c/*`). Programs and their tabs are listed in
+(T-6B, `/primary/*`), **Advanced** (T-44C, `/t44c/*`). Primary was `/tw4` until 2026-10-02; `/tw4/*` redirects, and a
+stored link is read through `currentPath()` (programs.js), so old `href` rows on the server still
+resolve. The program's `id` is still `tw4` (it keys stored data). Programs and their tabs are listed in
 `src/components/programs.js` (`PROGRAMS`, `PROGRAM_TABS`), which `TopNav.js` reads.
 
-**T-54A (`/t54a/*`, "Advanced - T-54A") is a draft that a production build does not contain.**
-`draft: true` only hides nav and routes, so every T-54A reference is also behind an inline
-`process.env.NODE_ENV !== 'production'` test marked `T54A-DRAFT` (programs, routes, landing tile,
-`about/platforms.js`), which webpack folds away; its images live in `src/components/T54A/images/`
-(imported, not `public/`) and its limits sheet reuses the `.t44c-*` classes. Check with
-`npm run build` and a search of `build/` (source maps aside) for `t54a`. Going live: remove each
-`T54A-DRAFT` gate and the `draft` flag. Its NATOPS and PCL are CUI, so its EPs/limits come from
-the exam sheets alone and it has no NWCs; its leaderboard is `T-54A`.
+**T-54A (`/t54a/*`, "Advanced - T-54A") is `unlisted`** (programs.js): its pages are served on
+the live site so a link can be sent to testers, but the program menu and the landing tile hide it
+there (`navPrograms`, `listed`); `TopNav` still names it when you are on one of its pages. Take it
+live by deleting `unlisted`. Its images live in `src/components/T54A/images/` (imported, not
+`public/`) and its limits sheet reuses the `.t44c-*` classes; its leaderboard is `T-54A`.
 
 ## Architecture
 
@@ -164,7 +163,7 @@ Code in `src/components/discuss/` (route shell `Discuss.js`, `ItemPage.js`, `Eve
 
 ### Mounts and programs
 
-`Discuss` takes `base`, `school` and a built-in syllabus: Primary (`/tw4/discuss`, Delta), NIFE
+`Discuss` takes `base`, `school` and a built-in syllabus: Primary (`/primary/discuss`, Delta), NIFE
 (`/nife/discuss`), Advanced (`/t44c/discuss`). A page is identified by (school, slug).
 Advanced has two syllabi, `t44c-p8` (1542.168C, default) and `t44c-e2d` (1542.175D), both
 `T-44C`/`Advanced`, sharing one corpus — never put the community in `school`. Seeded by
@@ -176,7 +175,7 @@ syllabus is required).
   409; after the seed, a correction is an ordinary revision made on the site.
   `discuss-migrate.js --overwrite` can still do this to Delta, whose chart also has hand repairs.
 
-### Routes (`/tw4/discuss` shown)
+### Routes (`/primary/discuss` shown)
 
 `/` All Events (flow chart + nav) · `/e/:event` event hub · `/b/:block` block page · `/:item`
 item page (canonical) · `/:item?from=N3101` with event context strip · `/:item/history`
@@ -263,7 +262,7 @@ regenerate, don't hand-edit fixtures; the live flow is edited in the flow editor
   appear in the block's own `2. Events` table; items split on commas outside parens, keeping known
   multi-comma wordings.
 - All syllabi render via `fromDoc()` → `buildSyllabus()`. Delta is `builtIn: true` (keeps `?from=`).
-  Item pages are shared (`/tw4/discuss/:slug`, never under `/s/`). `fromDoc` re-matches unmatched
+  Item pages are shared (`/primary/discuss/:slug`, never under `/s/`). `fromDoc` re-matches unmatched
   rows on load; Delta is never re-matched.
 - `buildMatcher`: exact → plurals → spaces → token Dice ≥ 0.8 → containment. `suggest()` is a
   separate, looser, rarity-weighted pass for the **Items** tab (`upload/LinkReview.js`), never
@@ -330,7 +329,7 @@ number has a stable id (`cp-04`) — **add ids, never rename or renumber them**.
 - **Prose or list**: prose by default. Lists only for a parallel set, a sequence (`numbered: true`),
   or scan-under-pressure lookups. Consistent grammatical form; a >2-line bullet is a paragraph.
 - **Link items**: any EP wording (incl. critical-action variants) is an `href` row to
-  `/tw4/eps-limits`, displayed as "Any critical action emergency procedure", not searchable
+  `/primary/eps-limits`, displayed as "Any critical action emergency procedure", not searchable
   (`LINK_ROWS`). A named EP is a page with a `Procedure` section (`ep: true`, NATOPS steps verbatim,
   NWCs as `kind: 'warning'|'caution'|'note'` entries where NATOPS puts them; styles copy
   `NWC_BUBBLE_STYLES`). Shared procedures live on an umbrella page (`abnormal-starts`) with `main`
@@ -466,7 +465,7 @@ quiz. `node tools/questions-api-test.mjs` runs the ops against the fakes.
 
 ## Docs and Useful Links
 
-`/nife/docs` (`Docs.js`) and `/tw4/docs` (`TW4Docs.js`) are one page, `docs/DocsPage.js`; each
+`/nife/docs` (`Docs.js`) and `/primary/docs` (`TW4Docs.js`) are one page, `docs/DocsPage.js`; each
 file only passes its school's topics, program and localStorage keys (keep the keys as they are —
 they hold the votes browsers have already cast).
 Data is not in the repo: `lambda/submitDoc` over tables `NIFEDocuments` / `NIFELinks`, behind
@@ -487,7 +486,7 @@ Lambda, so a new op is a console change — or a new `voteType` on an existing p
 
 ## Briefs
 
-`/tw4/briefs` (and `/nife/briefs` via `BriefsPage` with `base`, `school`, `told`). Code in
+`/primary/briefs` (and `/nife/briefs` via `BriefsPage` with `base`, `school`, `told`). Code in
 `src/components/briefs/`, ops in `lambda/discussApi/briefs.mjs` (table `Briefs`, PK `briefId`,
 SK `rev`); same revision/409/history model. No seed — briefs come from uploading the guide.
 - Document: `{ id, title, short, aircraft, school, order, note, source, sections: [{ id, title,

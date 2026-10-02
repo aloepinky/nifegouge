@@ -3,9 +3,14 @@
 // 15 NOVEMBER 2025 Revision" (EP answer key, 31 JUL 26 update; limits answer key, 06 APR 26
 // update). Pure data, no JSX — the shape `EPDrill` renders (see T44C/t44cData.js).
 //
-// The two sheets are the only source. The T-54A NATOPS (A1-T54A-NFM-000) and its pocket
-// checklist are marked CUI, and nothing marked CUI goes on this site — so, unlike the T-44C's,
-// these steps are not checked against NATOPS, and there are no NWCs.
+// Checked against the NATOPS, A1-T54A-NFM-000 with IC 04 (Ch. 13 to 16 for the procedures, Ch. 4
+// for the limits). The sheet's 24 procedures are exactly the 24 the NATOPS asterisks, with the
+// same steps in the same order, the daggers where the NATOPS puts them, and each decision line
+// where the NATOPS prints it. Every limit agrees. Where the two differ it is in wording only, and
+// the sheet's is kept, because it is what a student writes: "hot or hung start" (NATOPS "hot start
+// or hung start"), no "(PF)" after Unscheduled Electric Trim's step 1 or Explosive Decompression's
+// step 2, "15 degrees" for 15°. The pocket checklist still prints TCAS RA step 2 as
+// "Autothrottles — Disengage"; IC 04 made it "As required", as the sheet has it.
 //
 // A row is a step ({ id, critical, text }: one box, answered as the sheet prints it), a decision
 // line ({ decision }: the conditionals the blank sheet pre-prints), or a sub-step ({ sub }:
@@ -285,8 +290,8 @@ export const T54A_EPS = [
 // leading "+".
 //
 // Cells the sheet prints itself are not here: every "---" in the engine grid, and the footnote
-// markers. Notes 1 to 8 are printed in full and carry no blanks. The grid hangs markers (9) and
-// (10) on cells, but neither sheet prints a note 9 or 10.
+// markers. The notes carry no blanks. The sheet prints notes 1 to 8 and hangs markers (9) and
+// (10) on cells without printing either note; both are on the next page of NATOPS Figure 4.2-3.
 export const T54A_LIMITS = {
   // ENGINE OPERATING LIMITS
   startingItt: '850-1000',
@@ -429,3 +434,202 @@ export const T54A_LIMIT_GROUPS = [
   ['maxRamp', 'maxTakeoff', 'maxLanding', 'maxZeroFuel'],
   ['ceiling', 'ceilingYdInop'],
 ];
+
+// The notes, warnings and cautions the NATOPS prints with these procedures, keyed by the step
+// they follow. A key that is an EP's own id carries the ones printed before the steps, in the
+// section the procedure belongs to, and the EP's title bar opens those. Each bullet of a bulleted
+// block is its own entry.
+//
+// Every one was read off the rendered page: the WARNING and CAUTION labels are drawn, not text,
+// and a text-only read cannot tell them apart. Only the critical action steps are covered, as on
+// the T-44C's: where the NATOPS prints more against a later, non-memory step (Dual Generator
+// Failure, Propeller Malfunction, Hydraulic Fluid Low), it is not here.
+const AT_DISCONNECT = 'Failure to press and hold the A/T Disconnect button on the power lever for at least one quarter second may result in the autothrottles remaining engaged despite the A/T Disconnect button being pressed.';
+const POWER_STOPS = 'Engine damage will occur if POWER levers are advanced to the forward mechanical stops, however climb performance will improve.';
+const OXYGEN_NORM = 'For prolonged flight below 20,000 feet with the oxygen mask on, switching the oxygen mask selector to NORM will increase the duration of oxygen available.';
+const TERRAIN_ALERT = 'In the event of a terrain alert, the MFD will automatically switch to TOPO+R and auto range to 5 miles.';
+
+export const T54A_EP_NWC = {
+  // Aborted Takeoff — NATOPS §14.1
+  abort2: {
+    warnings: ['If autothrottles are manually overridden, a failure to disengage the autothrottles will result in the autothrottles returning to their previously set position and may result in an inadvertent runway departure.'],
+    cautions: [],
+    notes: [AT_DISCONNECT],
+  },
+  abort3: {
+    warnings: ['An unrecoverable yaw and runway departure will occur if both power levers are brought to idle or into GND FINE with an asymmetric uncontrollable high power condition.'],
+    cautions: [],
+    notes: [],
+  },
+  abort5: {
+    warnings: ['If single-engine reverse is used too aggressively, a loss of aircraft directional control may occur. Consideration should be given to both the runway condition and length before utilizing single-engine reverse.'],
+    cautions: [],
+    notes: [],
+  },
+
+  // Engine Failure After Takeoff — NATOPS §14.2
+  efat4a: {
+    warnings: [
+      'Retarding the failed engine power lever prior to the autofeathering system completing the feather cycle, will deactivate the autofeather circuit and prevent automatic feathering.',
+      'While a lack of engine oil pressure will eventually result in the propeller moving to feather and the autofeathering system should provide immediate propeller feathering, any delay in propeller feathering may result in insufficient climb rate.',
+    ],
+    cautions: [],
+    notes: [],
+  },
+
+  // Emergency Shutdown Checklist — NATOPS §15.1.1
+  esc3: {
+    warnings: [],
+    cautions: [],
+    notes: ['Full thrust on operating engine is not available without setting operating propeller to 2,000 rpm.'],
+  },
+
+  // Windmilling Airstart — NATOPS §15.4.2, under what §15.4 prints for airstarts generally
+  'windmilling-airstart': {
+    warnings: [],
+    cautions: [
+      'The pilot should determine the reason for engine failure before attempting an airstart. Do not attempt an airstart if N1 indicates zero and mechanical failure is suspected.',
+      'Airstarts may not be possible above 25,000 feet. Descend to a lower altitude if necessary. Above 20,000 feet, starts tend to be hotter. During engine acceleration to idle speed, it may become necessary to cycle the condition lever into FUEL CUTOFF to avoid an over-temperature.',
+    ],
+    notes: ['Electrical loads not required for current flight conditions should be reduced.'],
+  },
+  wa6: {
+    warnings: [],
+    cautions: ['Airspeeds below 140 KIAS may result in a hot start.'],
+    notes: [],
+  },
+
+  // Smoke, Fire, or Fumes Checklist — NATOPS §15.5.1
+  'smoke-fire-fumes': {
+    warnings: [],
+    cautions: [],
+    notes: ['If conditions permit and the source is definitively known, consideration should be given to immediately securing the source prior to initiating the Smoke, Fire, or Fumes Checklist.'],
+  },
+  sff1: {
+    warnings: [
+      'Anytime the smoke or fumes become the greatest threat execute the Smoke or Fumes Elimination Checklist without delay to prevent aircrew incapacitation.',
+      'Prolonged use of EMER setting will deplete oxygen supply prematurely and may result in loss of consciousness or crew incapacitation.',
+    ],
+    cautions: [],
+    notes: [],
+  },
+
+  // Spin/Out of Control Flight Recovery — NATOPS §15.12.2
+  spin6: {
+    warnings: ['Pulling out of the resulting dive too abruptly could result in excessive wing loading and a secondary stall or structural damage.'],
+    cautions: [],
+    notes: [],
+  },
+
+  // Unscheduled Electric Trim Activation — NATOPS §15.12.4
+  ueta1: {
+    warnings: [],
+    cautions: [],
+    notes: ['Autopilot will disengage when the AP/TRIM MASTER is depressed.'],
+  },
+
+  // Abnormal Pressurization — NATOPS §15.14.1
+  ap1: {
+    warnings: [],
+    cautions: [],
+    notes: ['Adequate oxygen pressure is not provided to passengers for sustained flight above 34,000 feet. The highest recommended altitude for sustained flight is 25,000 feet.'],
+  },
+  ap2: {
+    warnings: [],
+    cautions: [],
+    notes: [OXYGEN_NORM],
+  },
+
+  // Bleed Air Fail — NATOPS §15.14.3
+  baf1: {
+    warnings: [],
+    cautions: [],
+    notes: ['With both Bleed Air Valves selected to PNEU & ENVIR OFF, the aircraft will eventually depressurize.'],
+  },
+
+  // Explosive Decompression — NATOPS §15.14.8
+  ed1: {
+    warnings: [],
+    cautions: [],
+    notes: [OXYGEN_NORM],
+  },
+
+  // Pull Up Warning — NATOPS §15.26.1, whose note stands over both procedures
+  'pull-up-day': {
+    warnings: [],
+    cautions: [],
+    notes: [TERRAIN_ALERT],
+  },
+  'pull-up-night': {
+    warnings: [],
+    cautions: [],
+    notes: [TERRAIN_ALERT],
+  },
+  pun2: {
+    warnings: [],
+    cautions: [],
+    notes: [AT_DISCONNECT],
+  },
+  pun4: {
+    warnings: [],
+    cautions: [POWER_STOPS],
+    notes: [],
+  },
+  pun8: {
+    warnings: ['Alerts cease (by design) before the aircraft is at an altitude where a safe level off can be performed. Terrain may remain a threat.'],
+    cautions: [],
+    notes: [],
+  },
+
+  // Single-Engine Go-Around/Missed Approach — NATOPS §16.2
+  sega2: {
+    warnings: ['A single-engine full-flap go-around is left to the discretion of the crew but is not recommended because of the poor go-around capability of the aircraft in this configuration.'],
+    cautions: [],
+    notes: [],
+  },
+  sega3: {
+    warnings: ['The landing gear is raised when the rate of descent has been stopped or there is no possibility of a touchdown, to prevent a gear up landing.'],
+    cautions: [],
+    notes: [],
+  },
+
+  // TCAS Resolution Advisory — NATOPS §15.27.1 (IC 04)
+  tcas2: {
+    warnings: ['Disengaging the autothrottles during an active TCAS RA will remove RA guidance (aural and visual) and display TCAS TA Only information for approximately 10 seconds. This may lead to improper action by aircrew and increase the risk of a midair collision. If not clear of conflict, the RA guidance will return after approximately 10 seconds.'],
+    cautions: [],
+    notes: [AT_DISCONNECT],
+  },
+  tcas7: {
+    warnings: ['Comply with the RA if there is a conflict between the RA and air traffic control. Continuing to comply with ATC may compromise aircraft separation.'],
+    cautions: [],
+    notes: [
+      'The PF and PM shall attempt to establish visual contact and call out any conflicting traffic.',
+      'If an RA response requires deviation from an ATC clearance, return to the current ATC clearance or follow any subsequent change to clearance after the traffic conflict is resolved or the "CLEAR OF CONFLICT" is heard.',
+      'After responding to the RA, the flight crew shall notify ATC as soon as practicable.',
+    ],
+  },
+
+  // Windshear — NATOPS §16.3
+  ws2: {
+    warnings: [],
+    cautions: [],
+    notes: [AT_DISCONNECT],
+  },
+  ws3: {
+    warnings: [],
+    cautions: [POWER_STOPS],
+    notes: [],
+  },
+  ws6: {
+    warnings: ['If stall warning is encountered during windshear recovery, aft yoke pressure should be reduced only slightly to lessen angle of attack and allow the aircraft to exit stall.'],
+    cautions: [],
+    notes: [],
+  },
+
+  // Hydraulic Fluid Low — NATOPS §16.6.1
+  'hydraulic-fluid-low': {
+    warnings: ['If the landing gear relay circuit breaker is open or if the hydraulic fluid sensor is inoperative, the HYD FLUID LOW CAS message will not illuminate regardless of the hydraulic fluid level.'],
+    cautions: [],
+    notes: [],
+  },
+};

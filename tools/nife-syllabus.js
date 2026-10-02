@@ -159,7 +159,7 @@ const ITEMS = {
     'Engine failure during flight',
   ],
   // The catch-alls. "Any aircraft limits" and "any EP" are the limits and EP tab rather than
-  // pages of their own, the way Primary's EP wordings link to /tw4/eps-limits; SOP knowledge
+  // pages of their own, the way Primary's EP wordings link to /primary/eps-limits; SOP knowledge
   // is a page, and gets its slug when it is written.
   C4202: [
     { href: EPS, label: 'Any aircraft limits' },

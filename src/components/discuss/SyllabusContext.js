@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import { DISCUSS_BASE } from './paths';
+import { currentPath } from '../programs';
 
 // One syllabus, whichever document it came from. The chart, the stage nav, the block page and
 // the event hub read the syllabus they are showing through this shape and never touch a
@@ -42,7 +43,7 @@ export function rowKey(row) {
 // emergency procedures", …) and all of them open the same page, so on screen they are one
 // item. `searchable: false` keeps them out of the search box, which lists pages to read.
 const LINK_ROWS = {
-  '/tw4/eps-limits': { name: 'Any critical action emergency procedure', searchable: false },
+  '/primary/eps-limits': { name: 'Any critical action emergency procedure', searchable: false },
 };
 
 // What a row is called on its event's list: the row's own `label`, which starts as the JPPT's
@@ -187,7 +188,8 @@ export function fromDoc(record, { builtIn = false, matcher = null, root = DISCUS
     items: (e.items || []).map((row) => (
       // `noPage` is a decision that this item wants no page, so it is not re-matched: the
       // re-match exists to catch up with pages written later, not to overrule the reader.
-      row.slug || row.href || row.noPage || !matcher ? row : { ...row, ...matcher.matchLabel(row.label) }
+      row.href ? { ...row, href: currentPath(row.href) }
+        : row.slug || row.noPage || !matcher ? row : { ...row, ...matcher.matchLabel(row.label) }
     )),
   }));
   return buildSyllabus({

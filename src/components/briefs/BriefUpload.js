@@ -10,7 +10,7 @@ import {
 import { publishBrief, saveBrief, fetchBrief, rememberBrief } from './briefApi';
 import BriefView from './BriefView';
 import { diffBriefs, diffSummary, likeness } from './briefDiff';
-import { PROGRAMS, programName, programOf, shown } from '../programs';
+import { PROGRAMS, programName, programOf, schoolOf, shown } from '../programs';
 import { useBriefsBase } from './paths';
 
 // Upload a briefing guide and publish the briefs it prints. The PDF is read in this browser
@@ -270,7 +270,7 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
         ...parsed,
         short,
         id: target === NEW ? slugify(short) : parsed.id,
-        school: program.label,
+        school: schoolOf(program),
         aircraft: program.aircraft,
         source: { ...parsed.source, unit: unit.trim(), date },
       };
@@ -430,7 +430,7 @@ function BriefUpload({ index, school: startingSchool, onPublished }) {
               id="brief-up-school"
               className="discuss-editor-line"
               value={program.id}
-              onChange={(e) => setSchool(PROGRAMS.find((p) => p.id === e.target.value).label)}
+              onChange={(e) => setSchool(schoolOf(PROGRAMS.find((p) => p.id === e.target.value)))}
             >
               {/* Only the schools with a Briefs tab: a brief filed under one without is a
                   brief nobody can reach. See `briefs` in programs.js. */}

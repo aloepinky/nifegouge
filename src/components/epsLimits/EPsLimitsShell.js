@@ -122,7 +122,7 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
   const gameTabs = [epsTab, limitsTab];
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div>
       <div className="sub-navbar sub-navbar--wrappable" style={{ marginBottom: 0 }}>
         <div className="sub-navbar-tabs">
           {tabs.map((t) => (

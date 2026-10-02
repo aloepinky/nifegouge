@@ -8,7 +8,7 @@ import { createContext, useContext } from 'react';
 //
 // `e`, `b`, `s`, `upload` and `edit` are pages of their own beneath this, which is why the
 // server refuses them as a page's slug (RESERVED_SLUGS in lambda/discussApi/lint.mjs).
-export const DISCUSS_BASE = '/tw4/discuss';
+export const DISCUSS_BASE = '/primary/discuss';
 
 const DiscussBase = createContext(DISCUSS_BASE);
 

@@ -22,7 +22,7 @@
 // word boundaries pdf.js reports, and the outline is read by marker and indent, never by
 // number alone: the FORM guide numbers two sections `5.`.
 
-import { PROGRAMS } from '../programs';
+import { PROGRAMS, schoolOf } from '../programs';
 
 const LINE_TOLERANCE = 2.5;
 const COLUMN_GAP = 18; // a gap this wide between runs on one line is two columns
@@ -1038,7 +1038,7 @@ export function programFor(title) {
     new RegExp(`\\b${p.label}\\b`, 'i').test(title)
     || new RegExp(`\\b${p.aircraft.replace(/-/g, '-?')}\\b`, 'i').test(title)
   ));
-  if (known) return { aircraft: known.aircraft, school: known.label };
+  if (known) return { aircraft: known.aircraft, school: schoolOf(known) };
   if (/\bT-6\b/.test(title)) return { aircraft: 'T-6B', school: 'Primary' };
   // Nothing recognised (`AME BRIEFING GUIDE`): no school, so the upload keeps the tab's own.
   return {};

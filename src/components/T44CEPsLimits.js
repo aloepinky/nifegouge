@@ -57,7 +57,6 @@ function Console(api) {
       {CONSOLE.map((region) => (
         <PosterRegion key={region.id} region={region} view={view} className="epl-band-frame--fluid" />
       ))}
-      <p className="epl-credit">{T44C_POSTER.credit}</p>
     </div>
   );
 }

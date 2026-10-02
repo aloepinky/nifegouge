@@ -16,28 +16,43 @@ export const DRAFT = process.env.NODE_ENV !== 'production';
 // those, because a brief filed under a school with no tab is a brief nobody can reach.
 //
 // `draft` hides the program from the navigation and unroutes it on the live site.
+// `unlisted` hides it from the navigation on the live site but leaves its pages there, so a link
+// to one works for whoever is sent it and nobody else finds it. A dev server lists it.
 // `discuss: 'draft'` / `briefs: 'draft'` do the same for that one tab of an otherwise live
 // program — read them through `shown()`, since `'draft'` is truthy.
 export const PROGRAMS = [
   { id: 'nife', label: 'NIFE', aircraft: 'C172', home: '/nife/about', base: '/nife', briefs: true, discuss: true },
-  { id: 'tw4', label: 'Primary', aircraft: 'T-6B', home: '/tw4/about', base: '/tw4', briefs: true, discuss: true },
+  { id: 'tw4', label: 'Primary', aircraft: 'T-6B', home: '/primary/about', base: '/primary', briefs: true, discuss: true },
   { id: 't44c', label: 'Advanced', aircraft: 'T-44C', home: '/t44c/about', base: '/t44c', briefs: true, discuss: true },
-  // T54A-DRAFT. Gated inline, not just flagged `draft`: the literal NODE_ENV test is folded to a
-  // constant at build time, so a production build carries no trace of the program at all. Every
-  // T-54A gate is marked T54A-DRAFT; taking it live is removing each one (see CLAUDE.md). Listed
-  // after the T-44C so `programOf('Advanced')` still finds the T-44C, whose briefs and pages
-  // carry that school word.
-  ...(process.env.NODE_ENV !== 'production'
-    ? [{ id: 't54a', label: 'Advanced', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', draft: true }]
-    : []),
+  // Unlisted while it is tested: its pages answer on the live site, but nothing links to them.
+  // Take it live by deleting `unlisted`. Named Advanced in the menu, but a school of its own:
+  // its briefs carry `school`, not the T-44C's word, so neither tab shows the other's.
+  { id: 't54a', label: 'Advanced', school: 'T-54A', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', unlisted: true, briefs: true },
 ];
 
 // Whether a thing flagged `true`, `'draft'` or falsy is shown here. A draft is shown on a dev
 // server and hidden in a production build.
 export const shown = (flag) => (flag === 'draft' ? DRAFT : !!flag);
 
-// The programs the navigation offers: everything but a draft one on the live site.
-export const navPrograms = () => PROGRAMS.filter((p) => !p.draft || DRAFT);
+// The programs the navigation offers: everything but a draft or unlisted one on the live site.
+export const navPrograms = () => PROGRAMS.filter((p) => !(p.draft || p.unlisted) || DRAFT);
+
+// Whether a program is listed here: on the program menu and the landing page.
+export const listed = (p) => !!p && (!(p.draft || p.unlisted) || DRAFT);
+
+// The program a path is under, if its pages are served here: an unlisted one is, a draft one
+// on the live site is not.
+export const programAt = (pathname) => PROGRAMS.find((p) => (pathname === p.base || pathname.startsWith(`${p.base}/`)) && (!p.draft || DRAFT)) || null;
+
+// Addresses a program has moved from, oldest first: Primary was /tw4 until 2026-10-02. A link
+// stored before the move (an event row's `href` on the server, a bookmark) is read through
+// `currentPath`, and App.js redirects the old address itself.
+const MOVED = [['/tw4', '/primary']];
+export const currentPath = (path) => {
+  const s = String(path || '');
+  const hit = MOVED.find(([from]) => s === from || s.startsWith(`${from}/`) || s.startsWith(`${from}?`) || s.startsWith(`${from}#`));
+  return hit ? hit[1] + s.slice(hit[0].length) : s;
+};
 
 export const programName = (p) => `${p.label} - ${p.aircraft}`;
 
@@ -58,14 +73,14 @@ export const PROGRAM_TABS = {
     { to: '/nife/briefs', label: 'Briefs/TOLD' },
   ],
   tw4: [
-    { to: '/tw4/about', label: 'About' },
-    { to: '/tw4/eps-limits', label: 'EPs/Limits' },
-    { to: '/tw4/docs', label: 'Docs' },
-    { to: '/tw4/discuss', label: 'Discussion Items' },
-    { to: '/tw4/briefs', label: 'Briefs/TOLD' },
-    { to: '/tw4/courserules', label: 'TW4 Course Rules' },
-    { to: '/tw4/systems', label: 'Systems' },
-    { to: '/tw4/jetlog', label: 'Jet Log' },
+    { to: '/primary/about', label: 'About' },
+    { to: '/primary/eps-limits', label: 'EPs/Limits' },
+    { to: '/primary/docs', label: 'Docs' },
+    { to: '/primary/discuss', label: 'Discussion Items' },
+    { to: '/primary/briefs', label: 'Briefs/TOLD' },
+    { to: '/primary/courserules', label: 'TW4 Course Rules' },
+    { to: '/primary/systems', label: 'Systems' },
+    { to: '/primary/jetlog', label: 'Jet Log' },
   ],
   t44c: [
     { to: '/t44c/about', label: 'About' },
@@ -73,15 +88,11 @@ export const PROGRAM_TABS = {
     { to: '/t44c/discuss', label: 'Discussion Items' },
     { to: '/t44c/briefs', label: 'Briefs' },
   ],
-  // T54A-DRAFT
-  ...(process.env.NODE_ENV !== 'production'
-    ? {
-      t54a: [
-        { to: '/t54a/about', label: 'About' },
-        { to: '/t54a/eps-limits', label: 'EPs/Limits' },
-      ],
-    }
-    : {}),
+  t54a: [
+    { to: '/t54a/about', label: 'About' },
+    { to: '/t54a/eps-limits', label: 'EPs/Limits' },
+    { to: '/t54a/briefs', label: 'Briefs' },
+  ],
 };
 
 // The tabs of a program that are shown here: everything but a draft one on the live site.
@@ -90,8 +101,11 @@ export const shownTabs = (tabs) => (tabs || []).filter((t) => !t.draft || DRAFT)
 
 const norm = (text) => (text || '').trim().toLowerCase();
 
+// The word a program's briefs and pages are filed under: its label, unless it names its own.
+export const schoolOf = (p) => p.school || p.label;
+
 // The program a school's name belongs to, however it was typed.
-export const programOf = (school) => PROGRAMS.find((p) => norm(p.label) === norm(school)) || null;
+export const programOf = (school) => PROGRAMS.find((p) => norm(schoolOf(p)) === norm(school)) || null;
 
 // Whether a brief, page or document belongs to this school. A document always carries one —
 // the server refuses one without — so an unnamed school matches nothing rather than everything.

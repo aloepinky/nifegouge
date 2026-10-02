@@ -15,7 +15,7 @@ function TW4EPsLimits() {
   return (
     <EPsLimitsShell
       school="Primary"
-      basePath="/tw4/eps-limits"
+      basePath="/primary/eps-limits"
       tabs={TABS}
       epsTab="cockpit"
       limitsTab="limits"

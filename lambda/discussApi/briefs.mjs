@@ -140,7 +140,7 @@ export async function publishBriefHandler(event) {
   const suggested = (isId(brief.id) && brief.id.length <= 40)
     ? brief.id
     : slugify(cleanTitle(brief.title) || 'brief', 'brief');
-  // `told` and `upload` are pages of their own at /tw4/briefs/<id>, so no brief may take them.
+  // `told` and `upload` are pages of their own at /primary/briefs/<id>, so no brief may take them.
   const base = RESERVED.has(suggested) ? `${suggested}-brief` : suggested;
   const meta = {
     author: cleanAuthor(body.author),

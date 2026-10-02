@@ -5,7 +5,7 @@ import LandingPage from './components/LandingPage.js';
 import Footer from './components/Footer.js';
 import TopNav from './components/TopNav.js';
 import { warmDiscuss } from './components/discuss/warm';
-import { DRAFT, PROGRAMS, PROGRAM_TABS, shown } from './components/programs';
+import { DRAFT, PROGRAMS, PROGRAM_TABS, shown, currentPath } from './components/programs';
 
 const loaders = [];
 
@@ -50,9 +50,9 @@ const T44CEPsLimits = page(() => import('./components/T44CEPsLimits.js'));
 const T44CAbout = page(() => import('./components/T44CAbout.js'));
 const T44CDiscuss = page(() => import('./components/T44CDiscuss.js'));
 const T44CBriefs = page(() => import('./components/T44CBriefs.js'));
-// T54A-DRAFT: gated inline so a production build has neither the chunk nor a preload for it.
-const T54AAbout = process.env.NODE_ENV !== 'production' ? page(() => import('./components/T54AAbout.js')) : null;
-const T54AEPsLimits = process.env.NODE_ENV !== 'production' ? page(() => import('./components/T54AEPsLimits.js')) : null;
+const T54AAbout = page(() => import('./components/T54AAbout.js'));
+const T54AEPsLimits = page(() => import('./components/T54AEPsLimits.js'));
+const T54ABriefs = page(() => import('./components/T54ABriefs.js'));
 const BriefsPage = page(() => import('./components/briefs/BriefsPage'));
 const NIFEAbout = page(() => import('./components/NIFEAbout.js'));
 const CourseRules = page(() => import('./components/TW4CourseRules.js'));
@@ -102,6 +102,13 @@ function FlightTabRedirect() {
   return <Navigate to={tab === 'told' ? '/nife/briefs/told' : `/nife/eps-limits/${tab}`} replace />;
 }
 
+// Primary was at /tw4 until 2026-10-02. Its addresses are in the wild, and pages and syllabi on
+// the server still link to some, so every one of them lands on the same page under /primary.
+function LegacyPrimaryRedirect() {
+  const { pathname, search, hash } = useLocation();
+  return <Navigate to={`${currentPath(pathname)}${search}${hash}`} replace />;
+}
+
 function App() {
   const location = useLocation();
 
@@ -110,9 +117,10 @@ function App() {
   useEffect(preloadPages, []);
 
   return (
-    <div>
+    <div className="site-shell">
       {!isLanding && <TopNav />}
 
+      <main className="site-main">
       <Suspense fallback={<div className="route-loading" />}>
       <Routes>
       {served(<>
@@ -133,31 +141,33 @@ function App() {
         {/* The Flight page was split into those two; its addresses are in the wild. */}
         <Route path="/nife/flight" element={<Navigate to="/nife/eps-limits" replace />} />
         <Route path="/nife/flight/:tab" element={<FlightTabRedirect />} />
-        <Route path="/tw4" element={<Navigate to="/tw4/about" replace />} />
-        <Route path="/tw4/about" element={<TW4About />} />
-        <Route path="/tw4/eps-limits" element={<TW4EPsLimits />} />
-        <Route path="/tw4/eps-limits/:tab" element={<TW4EPsLimits />} />
-        <Route path="/tw4/docs" element={<TW4Docs />} />
-        <Route path="/tw4/briefs/*" element={<BriefsPage />} />
-        <Route path="/tw4/courserules" element={<CourseRules />} />
-        <Route path="/tw4/systems" element={<Systems />} />
-        <Route path="/tw4/systems/:tab" element={<Systems />} />
-        <Route path="/tw4/discuss/*" element={<Discuss />} />
-        <Route path="/tw4/jetlog" element={<TW4JetLog />} />
+        <Route path="/tw4/*" element={<LegacyPrimaryRedirect />} />
+        <Route path="/primary" element={<Navigate to="/primary/about" replace />} />
+        <Route path="/primary/about" element={<TW4About />} />
+        <Route path="/primary/eps-limits" element={<TW4EPsLimits />} />
+        <Route path="/primary/eps-limits/:tab" element={<TW4EPsLimits />} />
+        <Route path="/primary/docs" element={<TW4Docs />} />
+        <Route path="/primary/briefs/*" element={<BriefsPage />} />
+        <Route path="/primary/courserules" element={<CourseRules />} />
+        <Route path="/primary/systems" element={<Systems />} />
+        <Route path="/primary/systems/:tab" element={<Systems />} />
+        <Route path="/primary/discuss/*" element={<Discuss />} />
+        <Route path="/primary/jetlog" element={<TW4JetLog />} />
         <Route path="/t44c" element={<Navigate to="/t44c/about" replace />} />
         <Route path="/t44c/about" element={<T44CAbout />} />
         <Route path="/t44c/eps-limits" element={<T44CEPsLimits />} />
         <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />
         <Route path="/t44c/discuss/*" element={<T44CDiscuss />} />
         <Route path="/t44c/briefs/*" element={<T44CBriefs />} />
-        {/* T54A-DRAFT */}
-        {process.env.NODE_ENV !== 'production' && <Route path="/t54a" element={<Navigate to="/t54a/about" replace />} />}
-        {process.env.NODE_ENV !== 'production' && <Route path="/t54a/about" element={<T54AAbout />} />}
-        {process.env.NODE_ENV !== 'production' && <Route path="/t54a/eps-limits" element={<T54AEPsLimits />} />}
-        {process.env.NODE_ENV !== 'production' && <Route path="/t54a/eps-limits/:tab" element={<T54AEPsLimits />} />}
+        <Route path="/t54a" element={<Navigate to="/t54a/about" replace />} />
+        <Route path="/t54a/about" element={<T54AAbout />} />
+        <Route path="/t54a/eps-limits" element={<T54AEPsLimits />} />
+        <Route path="/t54a/eps-limits/:tab" element={<T54AEPsLimits />} />
+        <Route path="/t54a/briefs/*" element={<T54ABriefs />} />
       </>)}
       </Routes>
       </Suspense>
+      </main>
 
       {!isLanding && <Footer />}
     </div>

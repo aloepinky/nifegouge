@@ -3,6 +3,7 @@ import { EP_TITLES, EP_ANSWERS, EP_NWC, EP_NWC_GROUPS } from '../EPDivsData';
 import { T6B_LIMITS } from '../TW4Limits';
 import { C172_EPS, C172_LIMITS } from '../Flight/c172Data';
 import { T44C_EPS, T44C_LIMITS, T44C_EP_NWC } from '../T44C/t44cData';
+import { T54A_EPS, T54A_LIMITS } from '../T54A/t54aData';
 
 // Each program's aircraft and what its EPs/Limits exam asks, keyed by program id (programs.js):
 // [{ aircraft, eps: { eps, steps, words, nwcs }, limits }]. Counted from the EPs/Limits data
@@ -29,10 +30,5 @@ export const PLATFORMS = {
   t44c: [
     { aircraft: 'T-44C', eps: epListStats(T44C_EPS, T44C_EP_NWC), limits: Object.keys(T44C_LIMITS).length },
   ],
-  // T54A-DRAFT: required inside the gate, so the data stays out of a production build. Becomes
-  // an ordinary import, like the T-44C's, when the program goes live.
-  ...(process.env.NODE_ENV !== 'production' ? (() => {
-    const { T54A_EPS, T54A_LIMITS } = require('../T54A/t54aData');
-    return { t54a: [{ aircraft: 'T-54A', eps: epListStats(T54A_EPS), limits: Object.keys(T54A_LIMITS).length }] };
-  })() : {}),
+  t54a: [{ aircraft: 'T-54A', eps: epListStats(T54A_EPS), limits: Object.keys(T54A_LIMITS).length }],
 };

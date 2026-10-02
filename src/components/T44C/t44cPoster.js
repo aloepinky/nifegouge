@@ -31,7 +31,6 @@ import { aliasesFrom } from '../epsLimits/controlMatch';
 // REVERSE gate.
 
 export const T44C_POSTER = {
-  credit: 'Panel diagrams from the T-44C cockpit poster, NAVAIR, December 2021',
   regions: [
     {
       id: 'main',

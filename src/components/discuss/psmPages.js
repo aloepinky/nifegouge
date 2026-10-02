@@ -15,13 +15,13 @@
 import { SYSTEM_TABS } from '../systems/systemTabs';
 
 const TW4 = [
-  { path: '/tw4/eps-limits', label: 'Emergency procedures' },
-  { path: '/tw4/eps-limits/limits', label: 'T-6B operating limitations' },
-  { path: '/tw4/courserules', label: 'Course rules' },
-  { path: '/tw4/briefs', label: 'Briefs and TOLD' },
-  { path: '/tw4/jetlog', label: 'Jet log' },
-  { path: '/tw4/docs', label: 'Documents' },
-  ...SYSTEM_TABS.map((t) => ({ path: `/tw4/systems/${t.id}`, label: `${t.label} diagram` })),
+  { path: '/primary/eps-limits', label: 'Emergency procedures' },
+  { path: '/primary/eps-limits/limits', label: 'T-6B operating limitations' },
+  { path: '/primary/courserules', label: 'Course rules' },
+  { path: '/primary/briefs', label: 'Briefs and TOLD' },
+  { path: '/primary/jetlog', label: 'Jet log' },
+  { path: '/primary/docs', label: 'Documents' },
+  ...SYSTEM_TABS.map((t) => ({ path: `/primary/systems/${t.id}`, label: `${t.label} diagram` })),
 ];
 
 const NIFE = [
@@ -63,8 +63,8 @@ export function psmLinksOf(item) {
   const out = [];
   const ids = Array.isArray(item.diagram) ? item.diagram : item.diagram ? [item.diagram] : [];
   for (const id of ids) {
-    if (SYSTEM_TABS.some((t) => t.id === id)) out.push(`/tw4/systems/${id}`);
+    if (SYSTEM_TABS.some((t) => t.id === id)) out.push(`/primary/systems/${id}`);
   }
-  if (item.limits) out.push('/tw4/eps-limits/limits');
+  if (item.limits) out.push('/primary/eps-limits/limits');
   return out;
 }

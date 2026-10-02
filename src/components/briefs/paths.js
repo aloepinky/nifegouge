@@ -6,7 +6,7 @@ import { createContext, useContext } from 'react';
 // A school other than Primary mounts the same page at its own address (NIFE at /nife/briefs),
 // so every link inside the page asks where it is rather than naming Primary's address. The
 // default is Primary's, which is where the page has always been.
-export const BRIEFS_BASE = '/tw4/briefs';
+export const BRIEFS_BASE = '/primary/briefs';
 
 const BriefsBase = createContext(BRIEFS_BASE);
 

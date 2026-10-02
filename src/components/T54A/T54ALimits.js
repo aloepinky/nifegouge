@@ -12,8 +12,9 @@ import { T54A_LIMITS, T54A_LIMIT_GROUPS } from './t54aData';
 // style.css would be the one part of it a production build still carried.
 //
 // What the blank sheet prints itself is printed here: every "---", the footnote markers, and
-// notes 1 to 8 in full, which carry no blanks. Labels are the blank sheet's: it asks for V_LR
-// where the answer key prints V_LO.
+// notes 1 to 8 in full, which carry no blanks. Notes 9 and 10, which the sheet marks on the grid
+// but never prints, are added from NATOPS Figure 4.2-3, which carries them on its second page.
+// Labels are the blank sheet's: it asks for V_LR where the answer key prints V_LO.
 
 const DASH = <span className="t44c-dash">---</span>;
 
@@ -124,6 +125,14 @@ function T54ALimits({ isGameActive = false, onGameComplete }) {
           <li>High ITT at ground idle may be corrected by reducing accessory load and/or increasing N1 rpm.</li>
           <li>Cruise torque values vary with altitude and temperature.</li>
           <li>This operation is time limited to 1 minute.</li>
+          <li>
+            To account for power setting accuracy and steady state fluctuations, inadvertent propeller excursions
+            up to 2,040 rpm are time limited to 7 minutes.
+          </li>
+          <li>
+            To account for power setting accuracy and steady state fluctuations, inadvertent torque excursions up to
+            2275 ft-lb are time limited to 7 minutes.
+          </li>
         </ol>
 
         <div className="t44c-cols">

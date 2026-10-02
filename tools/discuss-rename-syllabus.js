@@ -3,7 +3,7 @@
 // Renames a syllabus in the dropdown, through the admin `rename-syllabus` operation. The rename
 // is added as a revision carrying the same document, so an editor who loaded the old name gets
 // a 409 rather than putting it back. The syllabus's id, and with it every URL under
-// /tw4/discuss/s/, is unchanged.
+// /primary/discuss/s/, is unchanged.
 //
 //   DISCUSS_ADMIN_TOKEN=... node tools/discuss-rename-syllabus.js --id=delta-primary --name="Delta Syllabus" --author=Loevinger
 //

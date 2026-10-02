@@ -330,11 +330,11 @@ function ItemRoute({ slug }) {
   return <ItemPage key={slug} record={it.record} />;
 }
 
-// Route shell. `event` distinguishes /tw4/discuss/e/:id from /tw4/discuss/:item — an item
+// Route shell. `event` distinguishes /primary/discuss/e/:id from /primary/discuss/:item — an item
 // keeps one canonical URL, and event context rides along as ?from= rather than as a path
 // segment, so there is only ever one URL to link, cite or edit.
 //
-// A generated syllabus lives under /tw4/discuss/s/:syllabus, with the same /b/ and /e/ pages
+// A generated syllabus lives under /primary/discuss/s/:syllabus, with the same /b/ and /e/ pages
 // beneath it. Item pages are never under it: every syllabus links the one canonical page.
 function DiscussBody({ mode }) {
   const { event: eventId, item: slug, block: blockId, syllabus: routeSyllabusId } = useParams();
