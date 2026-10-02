@@ -42,8 +42,8 @@ const CONTENT = {
 function T44CAbout() {
   return (
     <AboutPage
-      title={<>Welcome to <em>Advanced</em></>}
-      intro="T-44C training resources. This program is just getting started — more pages are on the way."
+      title={<>Welcome to <em>T-44C Advanced</em></>}
+      intro="T-44C training resources for E-2D Intermediate and ME Advanced."
       photo="/images/t44c.webp"
       photoAlt="A T-44C Pegasus"
       tabs={aboutTabs('t44c', CONTENT)}
