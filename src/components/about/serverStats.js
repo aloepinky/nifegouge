@@ -45,7 +45,7 @@ export const SERVER_STATS = {
       {
         "id": "delta-primary",
         "name": "Delta Syllabus",
-        "discussItems": 475
+        "discussItems": 492
       },
       {
         "id": "echo-syllabus-primary-76ae",
