@@ -463,21 +463,31 @@ function joinFoot(points, index, node) {
 // ANGLES: a branch onto a vertical trunk arrives horizontally, one onto a horizontal trunk
 // arrives from above or below. Anything else would run alongside the trunk and read as two
 // arrows drawn on top of each other. Returned box end first.
+//
+// Whether the foot is level with the box (or in line with it) is asked of the box's whole span,
+// not its exact centre: joinFoot rounds the foot onto the half-unit grid, so a box centred at
+// x 296.35 under a trunk gets a foot at 296.5, and a centre test with a 0.05 tolerance missed
+// it. The route then fell through to the "off to one side" case, which leaves the box by its
+// side at centre height and so ran from the trunk down through the middle of the box and out
+// again. Inside the span, the branch is the one straight line at the foot's own coordinate.
 function routeJoin(node, [fx, fy], hostVertical) {
   const cx = node.x + (node.w / 2);
   const cy = node.y + (node.h / 2);
+  const level = inSpan(fy, node.y, node.y + node.h);
+  const inLine = inSpan(fx, node.x, node.x + node.w);
   if (hostVertical) {
     const side = fx >= cx ? node.x + node.w : node.x;
-    if (near(cy, fy)) return [[side, cy], [fx, fy]];
-    // Dead in line with the trunk: step out of a side first, since coming straight down it
-    // would meet the trunk end-on.
-    if (near(cx, fx)) return [[side, cy], [side, fy], [fx, fy]];
+    if (level && !inLine) return [[side, fy], [fx, fy]];
+    // In line with the trunk: step out of a side first, since coming straight down it would
+    // meet the trunk end-on.
+    if (inLine) return [[side, cy], [side, fy], [fx, fy]];
     const ey = fy >= cy ? node.y + node.h : node.y;
     return [[cx, ey], [cx, fy], [fx, fy]];
   }
   const ey = fy >= cy ? node.y + node.h : node.y;
-  if (near(cx, fx)) return [[cx, ey], [fx, fy]];
-  if (near(cy, fy)) return [[cx, ey], [fx, ey], [fx, fy]];
+  if (inLine && !level) return [[fx, ey], [fx, fy]];
+  // Level with the trunk: step out of the top or bottom first, for the same reason.
+  if (level) return [[cx, ey], [fx, ey], [fx, fy]];
   const ex = fx >= cx ? node.x + node.w : node.x;
   return [[ex, cy], [fx, cy], [fx, fy]];
 }

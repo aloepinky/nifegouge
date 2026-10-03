@@ -264,6 +264,23 @@ describe('snapping', () => {
     expect(made.points[made.points.length - 1][0]).toBe(30.3);
   });
 
+  // The T-54A chart: a branch off the top trunk (y 158) to G0801-2, whose centre (x 296.35) is
+  // off the half-unit grid the foot is rounded to. It ran down through the box's middle and out
+  // of its right side; it is one straight line onto the box's top.
+  test('a branch to a box under the trunk drops straight onto its top, grid or no grid', () => {
+    const d = doc();
+    d.flow.NODES.push({ id: 'G', label: 'G', kind: 'ground', x: 272, y: 283, w: 48.7, h: 17.7 });
+    d.flow.EDGES.push({ from: 'A', to: 'C', points: [[159.2, 158], [419.9, 158]] });
+    const made = branchEdge(d, 2, [200, 158], 'G').flow.EDGES[3];
+    expect(made.points).toHaveLength(2);
+    const [[x0, y0], [x1, y1]] = made.points;
+    expect(y0).toBe(158);
+    expect(y1).toBe(283);
+    expect(x0).toBe(x1);
+    expect(x1).toBeGreaterThan(272);
+    expect(x1).toBeLessThan(272 + 48.7);
+  });
+
   test('and at the middle of the length where it cannot reach that far', () => {
     const d = doc();
     // A short length well above C: nothing on it is level with C, so the middle it is.
