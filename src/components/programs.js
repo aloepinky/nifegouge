@@ -27,7 +27,7 @@ export const PROGRAMS = [
   // Unlisted while it is tested: its pages answer on the live site, but nothing links to them.
   // Take it live by deleting `unlisted`. Named Advanced in the menu, but a school of its own:
   // its briefs carry `school`, not the T-44C's word, so neither tab shows the other's.
-  { id: 't54a', label: 'Advanced', school: 'T-54A', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', unlisted: true, briefs: true, discuss: 'draft' },
+  { id: 't54a', label: 'Advanced', school: 'T-54A', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', unlisted: true, briefs: true, discuss: true },
 ];
 
 // Whether a thing flagged `true`, `'draft'` or falsy is shown here. A draft is shown on a dev
@@ -92,7 +92,7 @@ export const PROGRAM_TABS = {
   t54a: [
     { to: '/t54a/about', label: 'About' },
     { to: '/t54a/eps-limits', label: 'EPs/Limits' },
-    { to: '/t54a/discuss', label: 'Discussion Items', draft: true },
+    { to: '/t54a/discuss', label: 'Discussion Items' },
     { to: '/t54a/briefs', label: 'Briefs' },
   ],
 };

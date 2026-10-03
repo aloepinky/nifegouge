@@ -3,7 +3,7 @@ import { EP_TITLES, EP_ANSWERS, EP_NWC, EP_NWC_GROUPS } from '../EPDivsData';
 import { T6B_LIMITS } from '../TW4Limits';
 import { C172_EPS, C172_LIMITS } from '../Flight/c172Data';
 import { T44C_EPS, T44C_LIMITS, T44C_EP_NWC } from '../T44C/t44cData';
-import { T54A_EPS, T54A_LIMITS } from '../T54A/t54aData';
+import { T54A_EPS, T54A_LIMITS, T54A_EP_NWC } from '../T54A/t54aData';
 
 // Each program's aircraft and what its EPs/Limits exam asks, keyed by program id (programs.js):
 // [{ aircraft, eps: { eps, steps, words, nwcs }, limits }]. Counted from the EPs/Limits data
@@ -30,5 +30,5 @@ export const PLATFORMS = {
   t44c: [
     { aircraft: 'T-44C', eps: epListStats(T44C_EPS, T44C_EP_NWC), limits: Object.keys(T44C_LIMITS).length },
   ],
-  t54a: [{ aircraft: 'T-54A', eps: epListStats(T54A_EPS), limits: Object.keys(T54A_LIMITS).length }],
+  t54a: [{ aircraft: 'T-54A', eps: epListStats(T54A_EPS, T54A_EP_NWC), limits: Object.keys(T54A_LIMITS).length }],
 };
