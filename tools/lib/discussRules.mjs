@@ -462,6 +462,37 @@ function sopAdvice(block, item, where, inherited, parentTitle) {
   return [['info', 'sop-section', `${where}, ${only[0]} only`]];
 }
 
+// WING AND SQUADRON SECTIONS. Whether a section is one unit's is the writer's call, marked as
+// `section.unit` ("Only for one wing or squadron" in the editor), and that mark is what folds it
+// for a reader at another unit. Advisory only: an unmarked section whose every source, or whose
+// heading, belongs to one unit, and a marked section sitting above a section for everyone
+// (Common errors excepted). The same advice as edit/validate.js, which reads units.js; that
+// file is browser ESM and cannot be imported here, hence the second, smaller copy.
+const UNIT_WORKS = {
+  'TW-4 SOP': 'TW-4', 'TW-4 Formation Supplement': 'TW-4', 'TW-4 Briefing Guide': 'TW-4',
+  'Course Rules Manual': 'TW-4', 'KNGP IFG': 'TW-4', 'TW-5 SOP': 'TW-5',
+};
+const unitOfWork = (w) => UNIT_WORKS[(w || '').trim()] || ((/^(VT-\d+)\s/.exec((w || '').trim()) || [])[1] || null);
+
+function unitAdvice(item) {
+  const out = [];
+  const sections = item.sections || [];
+  sections.forEach((s, i) => {
+    if (!s.unit) {
+      const works = [s, ...(s.subsections || [])].flatMap((b) => worksCited(b, item, null));
+      const owners = new Set(works.map(unitOfWork));
+      const byWorks = works.length && owners.size === 1 && !owners.has(null) ? [...owners][0] : null;
+      const byHeading = UNIT_WORKS[(s.title || '').trim()] || unitOfWork(`${s.title} `);
+      const unit = byWorks || byHeading;
+      if (unit) out.push(['info', 'unit-unmarked', `${s.title}: ${byWorks ? 'every source' : 'heading'} is ${unit}'s`]);
+      return;
+    }
+    const after = sections.slice(i + 1).find((x) => !x.unit && (x.title || '').trim() !== 'Common errors');
+    if (after) out.push(['info', 'unit-order', `${s.title} (${s.unit}) above ${after.title}`]);
+  });
+  return out;
+}
+
 export function structureViolations(item) {
   const out = [];
   const sections = item.sections || [];
@@ -523,6 +554,7 @@ export function structureViolations(item) {
       out.push(...sopAdvice(sub, item, `${s.title} / ${sub.title}`, s.refs, s.title));
     }
   }
+  out.push(...unitAdvice(item));
 
   out.push(...sourcingViolations(item));
   out.push(...tableViolations(item));

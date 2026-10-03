@@ -317,6 +317,11 @@ number has a stable id (`cp-04`) — **add ids, never rename or renumber them**.
   minority of local material: one section last, but before `Common errors` (which is always last).
   Local throughout: SOP sections are the top level. Fleet-wide rules an SOP repeats stay in the body.
   CNAF 3710-only rules go under `CNAF 3710`; students are held to their own publications first.
+- **The lead applies to every student** (lede, note, Numbers box); a wing's or squadron's rule goes in
+  its section. A wing or squadron section is marked `unit` (`TW-4`, `TW-5`, `VT-27`…, in
+  `discuss/units.js`) by the writer's tick, "Only for one wing or squadron"; the mark, not the
+  heading, is what the reader's **My squadron** picker folds. Sources and headings only prompt an
+  advisory (editor `validate.js`, lint `unit-unmarked` / `unit-order`), never a fold.
 - **`**bold**`** is the only inline markup (lede, paragraph and list text), for mnemonics.
 - **Numbers**: `label` + `value`, terse, must contain digits, units spelled as spoken
   (`210 knots GS`). Consecutive same labels render once. Figures recalled in the air belong; ground

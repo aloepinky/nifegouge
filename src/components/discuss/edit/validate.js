@@ -11,6 +11,7 @@
 // editor is only usable by somebody who can finish in one sitting.
 import { allIds, anchorIds } from './ids';
 import { getItemMeta } from '../registry';
+import { suggestUnit } from '../units';
 
 function dupes(list) {
   const seen = new Set();
@@ -167,6 +168,25 @@ export function validate(item, baseIds, published) {
     checkBlock(s, 'section');
     for (const sub of s.subsections || []) checkBlock(sub, 'subsection');
   }
+
+  // --- wing and squadron sections -------------------------------------------------------
+  // Whether a section is one unit's is the writer's call ("Only for one wing or squadron"),
+  // so what its sources and heading suggest, and where it sits, are advice only.
+  const sections = item.sections || [];
+  sections.forEach((s, i) => {
+    const name = s.title && s.title.trim() ? `"${s.title}"` : 'A section';
+    if (!s.unit) {
+      const hint = suggestUnit(s, item.references);
+      if (!hint) return;
+      const why = hint.why === 'sources' ? `cites only ${hint.unit} publications` : `is headed for ${hint.unit}`;
+      warnings.push(`${name} ${why}. If it applies only to ${hint.unit}, tick "Only for one wing or squadron".`);
+      return;
+    }
+    const after = sections.slice(i + 1).find((x) => !x.unit && (x.title || '').trim() !== 'Common errors');
+    if (after) {
+      warnings.push(`${name} is for ${s.unit} only but sits above "${after.title}". Wing and squadron sections go at the bottom, above Common errors.`);
+    }
+  });
 
   (item.numbers || []).forEach((n, i) => {
     if (!n.label || !n.label.trim()) warnings.push(`Numbers row ${i + 1} has no label.`);

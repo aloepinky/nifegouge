@@ -20,7 +20,7 @@ import NumbersEditor from './edit/NumbersEditor';
 import PageEditor from './edit/PageEditor';
 import { NWC_LABELS } from './nwc';
 import { citedDate } from './works';
-import { SQUADRONS, isOthers, hasSeveralUnits, ownerOf, readSquadron, writeSquadron } from './units';
+import { squadronsFor, isOthers, hasSeveralUnits, unitOf, readSquadron, writeSquadron } from './units';
 
 // The one piece of inline markup the item data carries: `**bold**`. It exists for mnemonics —
 // the C-R-A-F-T of a clearance readback, the L-D-D-H-A of an approach setup — where the point
@@ -595,16 +595,17 @@ function replaceBlock(item, id, next) {
   return { ...item, sections };
 }
 
-// Which squadron the reader flies with. Shown above the first wing or squadron section of a
-// page that has several units' sections; the other units' then fold to their headings.
-function SquadronPicker({ value, onChange }) {
+// Which squadron the reader flies with. Shown above the first section marked for a wing or
+// squadron, on a page with several units' sections; the other units' then fold to their
+// headings. Only this page's program's squadrons are offered.
+function SquadronPicker({ value, onChange, squadrons }) {
   return (
     <p className="discuss-unit-picker">
       <label>
         My squadron{' '}
         <select value={value} onChange={(e) => onChange(e.target.value)}>
           <option value="">All squadrons</option>
-          {SQUADRONS.map((q) => <option key={q.id} value={q.id}>{q.id}</option>)}
+          {squadrons.map((q) => <option key={q.id} value={q.id}>{q.id}</option>)}
         </select>
       </label>
     </p>
@@ -786,12 +787,15 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const editingPage = editing && editing.kind === 'page';
   // Nothing folds while an editor is open: the writer is looking at the whole page.
   const several = hasSeveralUnits(view.sections);
+  const squadrons = squadronsFor(view.school);
+  // A squadron picked on another program's page means nothing here.
+  const mine = squadrons.some((q) => q.id === squadron) ? squadron : '';
   const folded = new Set(
     several && !editing
-      ? (view.sections || []).filter((x) => isOthers(x.title, squadron) && !unfolded.has(x.id)).map((x) => x.id)
+      ? (view.sections || []).filter((x) => isOthers(x, mine) && !unfolded.has(x.id)).map((x) => x.id)
       : [],
   );
-  const firstLocal = several ? (view.sections || []).find((x) => ownerOf(x.title)) : null;
+  const firstLocal = several ? (view.sections || []).find((x) => unitOf(x)) : null;
 
   const head = (
     <>
@@ -951,7 +955,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
               const collapsed = sectionCite(section);
               const editingThis = editing && editing.kind === 'section' && editing.id === section.id;
               const picker = firstLocal === section && !editing
-                && <SquadronPicker value={squadron} onChange={pickSquadron} />;
+                && <SquadronPicker value={mine} onChange={pickSquadron} squadrons={squadrons} />;
               if (folded.has(section.id)) {
                 return (
                   <React.Fragment key={section.id}>

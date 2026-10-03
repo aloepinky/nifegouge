@@ -17,6 +17,7 @@ import {
 } from './fields';
 import { uploadFigure } from './figureUpload';
 import { NWC_KINDS, NWC_LABELS, toEp, fromEp } from '../nwc';
+import { unitsFor, suggestUnit } from '../units';
 
 // A figure's image comes from the upload and nowhere else: the browser converts it to WebP
 // and the address it lands at is shown, never typed. The figures that shipped with the site
@@ -389,6 +390,14 @@ function BulletRow({
   );
 }
 
+// Ticking "Only for one wing or squadron" starts on the unit the section's sources or heading
+// point to, else the first on the list.
+function firstUnit(section, references, school) {
+  const units = unitsFor(school);
+  const hint = suggestUnit(section, references);
+  return hint && units.some((u) => u.id === hint.unit) ? hint.unit : units[0].id;
+}
+
 // `check` builds the page as it would be with this section saved and validates that, rather
 // than validating the section alone — a citation of a reference that does not exist is only
 // visible from the whole page, and that is exactly the kind of break worth catching.
@@ -480,6 +489,29 @@ function SectionEditor({
         <label className="discuss-editor-label">Heading</label>
         <Line value={s.title} onChange={setTitle} />
       </div>
+
+      {/* A wing's or squadron's own rules. The mark is what folds the section for a reader at
+          another unit; a subsection goes with its section, so only a section carries one. */}
+      {!isSub && (
+        <div className="discuss-editor-field discuss-editor-field--inline">
+          <label className="discuss-editor-check">
+            <input
+              type="checkbox"
+              checked={!!s.unit}
+              onChange={(e) => set('unit', e.target.checked ? firstUnit(s, refs, item.school) : undefined)}
+            />
+            Only for one wing or squadron
+          </label>
+          {s.unit && (
+            <label className="discuss-editor-check">
+              Which
+              <select className="discuss-editor-select" value={s.unit} onChange={(e) => set('unit', e.target.value)}>
+                {unitsFor(item.school).map((u) => <option key={u.id} value={u.id}>{u.id}</option>)}
+              </select>
+            </label>
+          )}
+        </div>
+      )}
 
       <div className="discuss-editor-field discuss-editor-field--inline">
         <RefsPicker
