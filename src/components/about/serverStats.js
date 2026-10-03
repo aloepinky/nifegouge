@@ -115,5 +115,29 @@ export const SERVER_STATS = {
         "unit": "TW-4"
       }
     ]
+  },
+  "T-54A": {
+    "weeks": [
+      {
+        "weeks": 20,
+        "label": "Production Weeks",
+        "names": [
+          "T-54A"
+        ]
+      }
+    ],
+    "syllabi": [
+      {
+        "id": "t54a-me",
+        "name": "T-54A",
+        "discussItems": 383
+      }
+    ],
+    "briefs": [
+      {
+        "aircraft": "T-54A",
+        "unit": "VT-35"
+      }
+    ]
   }
 };

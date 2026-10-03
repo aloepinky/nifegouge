@@ -39,7 +39,7 @@ const OUT = path.join(__dirname, '..', 'src', 'components', 'about', 'serverStat
 
 const SRC = path.join(__dirname, '..', 'src', 'components');
 const { weekGroups, syllabusRows, briefRows, questionCount } = loadSrc(path.join(SRC, 'about', 'stats.js'));
-const { PROGRAMS, isSchool } = loadSrc(path.join(SRC, 'programs.js'));
+const { PROGRAMS, isSchool, schoolOf } = loadSrc(path.join(SRC, 'programs.js'));
 
 // Only a 404 means "nothing published", and then only where `missingOk` says it may. Any
 // other failure stops the run: a snapshot written from a half-read mirror would paint wrong
@@ -64,7 +64,9 @@ async function main() {
   const stats = {};
 
   for (const program of PROGRAMS) {
-    const school = program.label;
+    // The word the school's documents are filed under: both Advanced programs are labelled
+    // Advanced, and the T-54A's syllabi and briefs carry its own school, T-54A.
+    const school = schoolOf(program);
     const mine = ((syllabi && syllabi.syllabi) || []).filter((s) => isSchool(s, school));
     const briefRowsFor = ((briefs && briefs.briefs) || []).filter((b) => isSchool(b, school));
     // eslint-disable-next-line no-await-in-loop
