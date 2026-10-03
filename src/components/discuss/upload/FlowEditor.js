@@ -535,6 +535,11 @@ function FlowEditor({
                     }}
                   >
                     <title>{n.label}{n.block ? ` (${n.block})` : ''}</title>
+                    {/* The whole of the box's rectangle is the box's to click. An ellipse (ground
+                        training), a hexagon or a connector circle leaves its corners empty, and
+                        arrows end on its outline, so a click there fell through to an arrow's
+                        hit line and, drawing an arrow, joined onto that arrow instead. */}
+                    <rect className="discuss-floweditor-nodehit" x={n.x} y={n.y} width={n.w} height={n.h} />
                     <Shape kind={n.kind} x={n.x} y={n.y} w={n.w} h={n.h} className={nodeClass(n)} />
                     {n.kind === 'jump' ? (
                       <text className="discuss-flow-letter"

@@ -6048,6 +6048,12 @@ textarea.incorrect-answer {
   fill: #e4eff3;
 }
 
+.discuss-floweditor-nodehit {
+  fill: transparent;
+  stroke: none;
+  pointer-events: all;
+}
+
 .discuss-floweditor-edgehit {
   fill: none;
   stroke: transparent;
