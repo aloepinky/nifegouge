@@ -86,6 +86,14 @@ function citedWorks(section, references) {
   return [...ns].map((n) => byN.get(n)).filter(Boolean);
 }
 
+// The wing a whole page belongs to, from its title: "Home field arrival (TW-5)". Course rules
+// and the like are one wing's from top to bottom, so such an item has a page per wing, and on
+// it a section of that wing's is the page's own, not a unit section to mark.
+export function pageWing(item) {
+  const m = /\((TW-\d+)\)\s*$/.exec((item && item.title) || '');
+  return m && BY_ID.has(m[1]) ? m[1] : null;
+}
+
 // For an unmarked section that looks like one unit's: { unit, why } with why 'sources' (every
 // publication it cites is that unit's) or 'heading'. Null when it looks like everyone's.
 export function suggestUnit(section, references) {

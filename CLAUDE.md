@@ -322,6 +322,10 @@ number has a stable id (`cp-04`) — **add ids, never rename or renumber them**.
   `discuss/units.js`) by the writer's tick, "Only for one wing or squadron"; the mark, not the
   heading, is what the reader's **My squadron** picker folds. Sources and headings only prompt an
   advisory (editor `validate.js`, lint `unit-unmarked` / `unit-order`), never a fold.
+- **Wing pages.** An item that is one wing's throughout (course rules, OLFs, home-field arrival) has a
+  page per wing: the original slug titled `<Title> (TW-4)`, and `<slug>-tw-5` titled `<Title> (TW-5)`;
+  its syllabus row is two rows, one per page. On a page titled for a wing (`pageWing`), that wing's
+  own sections are the page and are not marked or advised on.
 - **`**bold**`** is the only inline markup (lede, paragraph and list text), for mnemonics.
 - **Numbers**: `label` + `value`, terse, must contain digits, units spelled as spoken
   (`210 knots GS`). Consecutive same labels render once. Figures recalled in the air belong; ground

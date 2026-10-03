@@ -1,4 +1,4 @@
-import { isOthers, hasSeveralUnits, unitsFor, squadronsFor, suggestUnit, unitOfWork } from './units';
+import { isOthers, hasSeveralUnits, unitsFor, squadronsFor, suggestUnit, unitOfWork, pageWing } from './units';
 
 test('only a marked section folds, and the reader\'s own wing stays open', () => {
   expect(isOthers({ title: 'VT-28 SOP' }, 'VT-27')).toBe(false); // unmarked: everyone's
@@ -34,4 +34,10 @@ test('suggestUnit reads the sources first, then the heading', () => {
   // VT-2 is not a prefix of VT-27.
   expect(unitOfWork('VT-27 SOP')).toBe('VT-27');
   expect(unitOfWork('VT-2 DCON FAM Supplement')).toBe('VT-2');
+});
+
+test('pageWing reads a wing page from its title', () => {
+  expect(pageWing({ title: 'Home field arrival (TW-5)' })).toBe('TW-5');
+  expect(pageWing({ title: 'Home field arrival' })).toBeNull();
+  expect(pageWing({ title: 'Thing (VT-2)' })).toBeNull();
 });

@@ -11,7 +11,7 @@
 // editor is only usable by somebody who can finish in one sitting.
 import { allIds, anchorIds } from './ids';
 import { getItemMeta } from '../registry';
-import { suggestUnit } from '../units';
+import { suggestUnit, pageWing } from '../units';
 
 function dupes(list) {
   const seen = new Set();
@@ -177,7 +177,8 @@ export function validate(item, baseIds, published) {
     const name = s.title && s.title.trim() ? `"${s.title}"` : 'A section';
     if (!s.unit) {
       const hint = suggestUnit(s, item.references);
-      if (!hint) return;
+      // On a page for one wing, that wing's own sections are the page.
+      if (!hint || hint.unit === pageWing(item)) return;
       const why = hint.why === 'sources' ? `cites only ${hint.unit} publications` : `is headed for ${hint.unit}`;
       warnings.push(`${name} ${why}. If it applies only to ${hint.unit}, tick "Only for one wing or squadron".`);
       return;

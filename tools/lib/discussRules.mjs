@@ -132,6 +132,8 @@ const OBJECT_MARKER = new Set([
 const PROPER = new Set([
   'Wing', 'Lead', 'Post', 'Goliad', 'Corpus', 'Capstone',
   'Ts', 'Cs', 'Xs', 'Navy', 'Texan', 'Koch', 'Beatty', 'Whiting', 'Sherman',
+  // Whiting's course-rule points and areas (TW-5 SOP).
+  'Area', 'Point', 'Jay', 'Conecuh', 'River', 'Bridge', 'Waldo', 'Easy',
 ]);
 
 const STOPWORDS = new Set(['and', 'or', 'of', 'the', 'a', 'an', 'to', 'in', 'for', 'on', 'at']);
@@ -484,7 +486,8 @@ function unitAdvice(item) {
       const byWorks = works.length && owners.size === 1 && !owners.has(null) ? [...owners][0] : null;
       const byHeading = UNIT_WORKS[(s.title || '').trim()] || unitOfWork(`${s.title} `);
       const unit = byWorks || byHeading;
-      if (unit) out.push(['info', 'unit-unmarked', `${s.title}: ${byWorks ? 'every source' : 'heading'} is ${unit}'s`]);
+      const wing = (/\((TW-\d+)\)\s*$/.exec(item.title || '') || [])[1];
+      if (unit && unit !== wing) out.push(['info', 'unit-unmarked', `${s.title}: ${byWorks ? 'every source' : 'heading'} is ${unit}'s`]);
       return;
     }
     const after = sections.slice(i + 1).find((x) => !x.unit && (x.title || '').trim() !== 'Common errors');
