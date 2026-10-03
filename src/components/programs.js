@@ -24,10 +24,9 @@ export const PROGRAMS = [
   { id: 'nife', label: 'NIFE', aircraft: 'C172', home: '/nife/about', base: '/nife', briefs: true, discuss: true },
   { id: 'tw4', label: 'Primary', aircraft: 'T-6B', home: '/primary/about', base: '/primary', briefs: true, discuss: true },
   { id: 't44c', label: 'Advanced', aircraft: 'T-44C', home: '/t44c/about', base: '/t44c', briefs: true, discuss: true },
-  // Unlisted while it is tested: its pages answer on the live site, but nothing links to them.
-  // Take it live by deleting `unlisted`. Named Advanced in the menu, but a school of its own:
-  // its briefs carry `school`, not the T-44C's word, so neither tab shows the other's.
-  { id: 't54a', label: 'Advanced', school: 'T-54A', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', unlisted: true, briefs: true, discuss: true },
+  // Named Advanced in the menu, but a school of its own: its briefs and pages carry `school`,
+  // not the T-44C's word, so neither program's tabs show the other's.
+  { id: 't54a', label: 'Advanced', school: 'T-54A', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', briefs: true, discuss: true },
 ];
 
 // Whether a thing flagged `true`, `'draft'` or falsy is shown here. A draft is shown on a dev

@@ -52,11 +52,10 @@ stored link is read through `currentPath()` (programs.js), so old `href` rows on
 resolve. The program's `id` is still `tw4` (it keys stored data). Programs and their tabs are listed in
 `src/components/programs.js` (`PROGRAMS`, `PROGRAM_TABS`), which `TopNav.js` reads.
 
-**T-54A (`/t54a/*`, "Advanced - T-54A") is `unlisted`** (programs.js): its pages are served on
-the live site so a link can be sent to testers, but the program menu and the landing tile hide it
-there (`navPrograms`, `listed`); `TopNav` still names it when you are on one of its pages. Take it
-live by deleting `unlisted`. Its images live in `src/components/T54A/images/` (imported, not
-`public/`) and its limits sheet reuses the `.t44c-*` classes; its leaderboard is `T-54A`.
+**T-54A (`/t54a/*`, "Advanced - T-54A")** has been listed since 2026-10-03 (it was `unlisted`,
+live by link only, while it was tested; `unlisted` still exists for the next program). Its images
+live in `src/components/T54A/images/` (imported, not `public/`) and its limits sheet reuses the
+`.t44c-*` classes; its leaderboard is `T-54A`.
 
 ## Architecture
 
