@@ -13,10 +13,11 @@ export function programOf(x) {
   };
 }
 
-// "T-6B Primary", or as much of it as is known.
+// "T-6B Primary", or as much of it as is known. Said once where the school is named for its
+// aircraft, as the T-54A's is.
 export function programLabel(x) {
   const p = programOf(x);
-  return [p.aircraft, p.school].filter(Boolean).join(' ');
+  return [...new Set([p.aircraft, p.school].filter(Boolean))].join(' ');
 }
 
 // The pair with the defaults filled in where `x` has nothing.
@@ -45,7 +46,7 @@ export function knownPrograms(entries) {
 // A guess from a publication's text: the first aircraft designation and the first training
 // school word on its opening pages. A JPPT's title page says "T-6B JOINT PRIMARY PILOT
 // TRAINING", which is both.
-const AIRCRAFT_RE = /\b(T-6[AB]?|T-45[A-C]?|TH-73[A]?|TH-57[BC]?|T-44[A-C]?|TC-12[B]?|T-34C|T-39[GN]?|T-38[AC]?|T-1A)\b/;
+const AIRCRAFT_RE = /\b(T-6[AB]?|T-45[A-C]?|TH-73[A]?|TH-57[BC]?|T-44[A-C]?|T-54A?|TC-12[B]?|T-34C|T-39[GN]?|T-38[AC]?|T-1A)\b/;
 const SCHOOL_RE = /\b(primary|intermediate|advanced)\b/i;
 
 export function guessProgram(text) {
@@ -54,8 +55,11 @@ export function guessProgram(text) {
   if (a) out.aircraft = a[1];
   const s = SCHOOL_RE.exec(text || '');
   if (s) out.school = s[1].charAt(0).toUpperCase() + s[1].slice(1).toLowerCase();
+  // The T-54A's MCG calls itself Advanced, but its pages are filed under a school of their own.
+  if (out.aircraft && /^T-54/.test(out.aircraft)) out.school = 'T-54A';
   return out;
 }
 
-// The schools a JPPT can be submitted for, offered as a fixed choice on the upload page.
-export const SCHOOLS = ['NIFE', 'Primary', 'Advanced'];
+// The schools a JPPT/MCG can be submitted for, offered as a fixed choice on the upload page.
+// The T-54A is filed as a school of its own so its pages stay apart from the T-44C's.
+export const SCHOOLS = ['NIFE', 'Primary', 'Advanced', 'T-54A'];

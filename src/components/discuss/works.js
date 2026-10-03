@@ -67,6 +67,12 @@ export const WORKS = [
   { work: 'T-44C NATOPS Checklist', date: '01SEP23' },
   { work: 'T-44C FMS Brief' },
   { work: 'T-44C FGP Automation Brief' },
+  // T-54A. Named for the aircraft like the T-44C's. The NATOPS is the 15 NOVEMBER 2025 issue
+  // with IC 4 (30 JULY 2026); the FTI is still a draft, numbered P-xxxx and dated only by month.
+  { work: 'T-54A NATOPS', date: '30JUL26' },
+  { work: 'T-54A NATOPS Checklist', date: '15NOV25' },
+  { work: 'T-54A FTI', date: 'AUG25' },
+  { work: 'T-54A MCG', date: '31JUL25' },
   { work: 'FIH', date: '10JUL25' },
   { work: 'AIM', date: '09JUL26' },
   { work: 'Instrument Procedures Handbook', date: '2017' },

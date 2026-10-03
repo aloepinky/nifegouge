@@ -102,7 +102,7 @@ function SyllabusPicker() {
         )}
       </div>
       <Link to={`${base}/upload`} className="discuss-syllabus-submit">
-        Submit a new JPPT
+        Submit a new JPPT/MCG
       </Link>
     </div>
   );
@@ -230,7 +230,7 @@ function Index() {
 
         <p className="discuss-syllabus-note">
           {programLabel(s) ? `${programLabel(s)}${s.sourceDate ? `, ${s.sourceDate}` : ''}. ` : ''}
-          {s.builtIn ? '' : 'Generated from an uploaded JPPT. '}
+          {s.builtIn ? '' : 'Generated from an uploaded JPPT/MCG. '}
           {hasChart && (
             <>
               If the chart does not match the publication,{' '}
@@ -318,7 +318,7 @@ function ItemRoute({ slug }) {
           <header className="discuss-head">
             <h1>No such discussion item</h1>
             <p className="discuss-lede">
-              Nothing is published at <code>{base}/{slug}</code>. If the JPPT names it, it can be
+              Nothing is published at <code>{base}/{slug}</code>. If the JPPT/MCG names it, it can be
               created here; otherwise <Link to={base}>back to all discussion items</Link>.
             </p>
           </header>

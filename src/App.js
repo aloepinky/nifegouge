@@ -50,6 +50,7 @@ const T44CEPsLimits = page(() => import('./components/T44CEPsLimits.js'));
 const T44CAbout = page(() => import('./components/T44CAbout.js'));
 const T44CDiscuss = page(() => import('./components/T44CDiscuss.js'));
 const T44CBriefs = page(() => import('./components/T44CBriefs.js'));
+const T54ADiscuss = page(() => import('./components/T54ADiscuss.js'));
 const T54AAbout = page(() => import('./components/T54AAbout.js'));
 const T54AEPsLimits = page(() => import('./components/T54AEPsLimits.js'));
 const T54ABriefs = page(() => import('./components/T54ABriefs.js'));
@@ -163,6 +164,7 @@ function App() {
         <Route path="/t54a/about" element={<T54AAbout />} />
         <Route path="/t54a/eps-limits" element={<T54AEPsLimits />} />
         <Route path="/t54a/eps-limits/:tab" element={<T54AEPsLimits />} />
+        <Route path="/t54a/discuss/*" element={<T54ADiscuss />} />
         <Route path="/t54a/briefs/*" element={<T54ABriefs />} />
       </>)}
       </Routes>

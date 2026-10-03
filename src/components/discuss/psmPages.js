@@ -32,9 +32,23 @@ const NIFE = [
   { path: '/nife/docs', label: 'Documents' },
 ];
 
+const T44C = [
+  { path: '/t44c/eps-limits', label: 'Emergency procedures' },
+  { path: '/t44c/eps-limits/limits', label: 'T-44C operating limitations' },
+  { path: '/t44c/briefs', label: 'Briefs' },
+];
+
+const T54A = [
+  { path: '/t54a/eps-limits', label: 'Emergency procedures' },
+  { path: '/t54a/eps-limits/limits', label: 'T-54A operating limitations' },
+  { path: '/t54a/briefs', label: 'Briefs' },
+];
+
 export const PSM_PAGES = [
   ...TW4.map((p) => ({ ...p, school: 'Primary' })),
   ...NIFE.map((p) => ({ ...p, school: 'NIFE' })),
+  ...T44C.map((p) => ({ ...p, school: 'Advanced' })),
+  ...T54A.map((p) => ({ ...p, school: 'T-54A' })),
 ];
 
 const byPath = new Map(PSM_PAGES.map((p) => [p.path, p]));

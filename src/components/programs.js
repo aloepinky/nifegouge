@@ -27,7 +27,7 @@ export const PROGRAMS = [
   // Unlisted while it is tested: its pages answer on the live site, but nothing links to them.
   // Take it live by deleting `unlisted`. Named Advanced in the menu, but a school of its own:
   // its briefs carry `school`, not the T-44C's word, so neither tab shows the other's.
-  { id: 't54a', label: 'Advanced', school: 'T-54A', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', unlisted: true, briefs: true },
+  { id: 't54a', label: 'Advanced', school: 'T-54A', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', unlisted: true, briefs: true, discuss: 'draft' },
 ];
 
 // Whether a thing flagged `true`, `'draft'` or falsy is shown here. A draft is shown on a dev
@@ -55,6 +55,7 @@ export const currentPath = (path) => {
 };
 
 export const programName = (p) => `${p.label} - ${p.aircraft}`;
+
 
 // The pages each program has, in the order they are offered. This is the one list: the top
 // bar's page menu renders it, and an About page's index is built from it (about/tabs.js), so
@@ -91,6 +92,7 @@ export const PROGRAM_TABS = {
   t54a: [
     { to: '/t54a/about', label: 'About' },
     { to: '/t54a/eps-limits', label: 'EPs/Limits' },
+    { to: '/t54a/discuss', label: 'Discussion Items', draft: true },
     { to: '/t54a/briefs', label: 'Briefs' },
   ],
 };

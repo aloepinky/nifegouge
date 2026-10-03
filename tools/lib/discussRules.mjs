@@ -115,7 +115,7 @@ const NOUN_ING = new Set([
   'landing', 'lighting', 'timing', 'wing', 'planning', 'training', 'servicing',
   'running', 'outlying', 'working', 'arcing', 'holding', 'troubleshooting',
   'briefing', 'warning', 'heading', 'spacing', 'icing', 'crossing', 'ceiling',
-  'bearing', 'clearing', 'everything',
+  'bearing', 'clearing', 'everything', 'windmilling',
 ]);
 
 // What turns a noun into a gerund phrase: the word after it is an object or a particle, so the
@@ -570,6 +570,7 @@ export function structureViolations(item) {
   out.push(...ledeRepeated(item));
   out.push(...natopsCitations(item));
   out.push(...gougeCited(item));
+  out.push(...wrongAircraftWork(item));
 
   return out;
 }
@@ -690,12 +691,30 @@ export function ledeRepeated(item) {
 const NATOPS_LOC = {
   NATOPS: /^Ch\. [A-Z]?\d+(-\d+)? — \S/,
   'T-44C NATOPS': /^§\d+(\.\d+)+ — \S/,
+  'T-54A NATOPS': /^§\d+(\.\d+)+ — \S/,
 };
 
 export function natopsCitations(item) {
   return (item.references || [])
     .filter((r) => NATOPS_LOC[r.work] && !NATOPS_LOC[r.work].test(r.loc || ''))
     .map((r) => ['info', 'natops-citation', `ref ${r.n}: ${r.loc}`]);
+}
+
+// WRONG AIRCRAFT. The T-44C and the T-54A brief most of the same items, each on its own page,
+// and a T-54A page starts as a copy of the T-44C's. A citation of the other aircraft's NATOPS,
+// checklist, FTI or in-flight guide is one that was not re-sourced. The shared publications
+// (TW-4 SOP, CNAF 3710, the AIM and the FAA handbooks) are either aircraft's.
+const AIRCRAFT_WORKS = {
+  'T-44C': /^(T-44C\b|ME FTI$|ADV ME IFG$|ADV ME MCG$|E-2D MCG$)/,
+  'T-54A': /^T-54A\b/,
+};
+
+export function wrongAircraftWork(item) {
+  const own = (item.aircraft || '').trim();
+  if (!AIRCRAFT_WORKS[own]) return [];
+  return (item.references || [])
+    .filter((r) => Object.entries(AIRCRAFT_WORKS).some(([a, re]) => a !== own && re.test((r.work || '').trim())))
+    .map((r) => ['error', 'wrong-aircraft-work', `ref ${r.n}: ${r.work} on a ${own} page`]);
 }
 
 // GOUGE CITED. The student gouge decides what a page covers and is never cited or named on

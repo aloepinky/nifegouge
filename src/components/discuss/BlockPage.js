@@ -91,7 +91,7 @@ function BlockPage({ block }) {
           {written.length === 0 && (
             <p className="discuss-empty">
               {!briefed
-                ? 'The JPPT lists no discuss items for this block.'
+                ? 'The JPPT/MCG lists no discuss items for this block.'
                 : 'None of this block’s events has a page yet.'}
             </p>
           )}

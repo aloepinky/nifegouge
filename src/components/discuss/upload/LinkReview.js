@@ -309,7 +309,7 @@ function LinkReview({ doc, onChange }) {
               {split && (
                 <div className="discuss-link-review-parts">
                   <p className="discuss-link-review-ask">
-                    Give each link a title. Try to adhere to the JPPT&apos;s verbiage as closely
+                    Give each link a title. Try to adhere to the JPPT/MCG&apos;s verbiage as closely
                     as possible.
                   </p>
                   {parts.map((part, i) => (

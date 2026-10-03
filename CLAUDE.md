@@ -174,6 +174,12 @@ syllabus is required).
   editor exists for. `t44c-syllabus.js` therefore has no `--replace` and stops on the server's
   409; after the seed, a correction is an ordinary revision made on the site.
   `discuss-migrate.js --overwrite` can still do this to Delta, whose chart also has hand repairs.
+- **T-54A** (`/t54a/discuss`, `T54ADiscuss.js`, syllabus `t54a-me` from 1542.198, seeded by
+  `tools/t54a-syllabus.js`) is its own school, `T-54A`, so its pages cite only T-54A
+  publications. A page both aircraft brief has the same slug in both schools; the two are not
+  linked (a T-44C | T-54A switch was built and removed 2026-10-03: the T-44C is being phased
+  out). Lint `wrong-aircraft-work` catches a T-44C citation left on a T-54A page or the reverse.
+  Match schools with `schoolOf(p)`, never `p.label` — both programs are labelled Advanced.
 
 ### Routes (`/primary/discuss` shown)
 
@@ -230,6 +236,10 @@ regenerate, don't hand-edit fixtures; the live flow is edited in the flow editor
   exactly-then-by-containment (ambiguous = none); a community with no row takes its band sibling's
   (E-6 → P-8), else shows none. `t44c.test.js` pins the published totals. Community charts have
   `LEGEND: []`, borrow the core chart's categories, and draw at the core scale.
+- **A chart continued over pages** (same title within 3 pages, not a POST page; the T-54A's I-5
+  to (A) to I-7) is traced page by page and stacked (`stackCharts`, JS only): connectors
+  renumbered across the join, the fullest legend kept, cited `pp. I-5 to I-7`. `t54a.test.js`
+  pins it; a one-page chart never reaches that code.
 - Legend captions may sit inside keys (`LEGEND[].inside`, centred and wrapped) and in multiple
   columns; `CourseFlow` widens the viewBox for captions.
 - **A label that doesn't fit its shape wraps** (`discuss/flowText.js` `fitLines`, drawn by
@@ -251,7 +261,7 @@ regenerate, don't hand-edit fixtures; the live flow is edited in the flow editor
   (`.landing-weeks`); the list is plain commas, no "and". The two groups never wrap apart — the
   rule means "between" and would start a line.
 
-### Generated syllabi (Submit a new JPPT)
+### Generated syllabi (Submit a new JPPT/MCG)
 
 - The PDF never leaves the browser; `jppt/parseJppt.js` produces the document. `pdfSource.js`
   (pdf-lib, `ParseSpeeds.Fastest`), `flowExtract.js` (line-for-line port of the Python —

@@ -64,7 +64,7 @@ function UploadPage() {
     if (!file || !school) return;
     setError(null);
     if (file.size > MAX_BYTES) {
-      setError('That file is over 25 MB. A JPPT is usually 1 to 3 MB; check it is the right PDF.');
+      setError('That file is over 25 MB. A JPPT/MCG is usually 1 to 3 MB; check it is the right PDF.');
       return;
     }
     let stop = () => {};
@@ -97,7 +97,7 @@ function UploadPage() {
     }
     const program = programOf(work.program);
     if (!program.aircraft || !program.school) {
-      setPublishError('Say which aircraft and school this JPPT is for first.');
+      setPublishError('Say which aircraft and school this JPPT/MCG is for first.');
       return;
     }
     const tagged = { ...doc, ...program };
@@ -126,9 +126,9 @@ function UploadPage() {
       <article className="discuss-page">
         <header className="discuss-head">
           <p className="discuss-crumb"><Link to={base}>Discussion Items</Link></p>
-          <h1>Submit a new JPPT</h1>
+          <h1>Submit a new JPPT/MCG</h1>
           <p className="discuss-lede">
-            Upload the JPPT PDF and its course flow chart and syllabus are generated here. Check
+            Upload the JPPT/MCG PDF and its course flow chart and syllabus are generated here. Check
             the chart against the publication, settle the items it could not link to a page, then
             publish it to the syllabus list from Preview.
           </p>
@@ -158,7 +158,7 @@ function UploadPage() {
         {!work && (
           <section className="discuss-editor discuss-upload">
             <div className="discuss-editor-field">
-              <label className="discuss-editor-label" htmlFor="jppt-file">JPPT PDF</label>
+              <label className="discuss-editor-label" htmlFor="jppt-file">JPPT/MCG PDF</label>
               <input
                 id="jppt-file"
                 type="file"
@@ -176,7 +176,7 @@ function UploadPage() {
               <label className="discuss-editor-label" htmlFor="jppt-school">
                 School <span className="discuss-editor-req">required</span>
               </label>
-              <p className="discuss-editor-hint">The school this JPPT trains for.</p>
+              <p className="discuss-editor-hint">The school this JPPT/MCG trains for.</p>
               <SchoolSelect id="jppt-school" value={school} onChange={setSchool} schools={SCHOOLS} />
             </div>
             <div className="discuss-editor-buttons">
@@ -212,7 +212,7 @@ function UploadPage() {
               idPrefix="jppt-program"
               value={work.program || {}}
               onChange={(v) => setWork((w) => ({ ...w, program: v }))}
-              hint="The aircraft and the school this JPPT trains for. The aircraft is read from the title page; check it."
+              hint="The aircraft and the school this JPPT/MCG trains for. The aircraft is read from the title page; check it."
               schools={SCHOOLS}
             />
             <FlowEditor

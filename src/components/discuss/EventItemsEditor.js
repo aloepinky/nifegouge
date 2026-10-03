@@ -93,8 +93,8 @@ function EventItemsEditor({ event, onSaved, onCancel }) {
   return (
     <div className="discuss-editor discuss-items-editor" role="group" aria-label={`Editing the items of ${event.id}`}>
       <p className="discuss-editor-hint">
-        List the discussion items for this event and what each one links to, in the JPPT&apos;s
-        order. The name is what the list shows, so start from the JPPT&apos;s wording and change
+        List the discussion items for this event and what each one links to, in the JPPT/MCG&apos;s
+        order. The name is what the list shows, so start from the JPPT/MCG&apos;s wording and change
         it where that wording reads badly on screen or where two items share a page. If the item
         should link to a PSM tab, select PSM tab and input the corresponding URL path (the part
         after pinksheetmafia.com).

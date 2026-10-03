@@ -23,6 +23,9 @@ export const NIFE_SYLLABUS_ID = 'nife-flight';
 // reached from the picker; this one opens by default because it is the larger course and by
 // far the larger community.
 export const T44C_P8_ID = 't44c-p8';
+// The T-54A's syllabus (CNATRAINST 1542.198), the built-in syllabus of the /t54a/discuss
+// mount. The T-54A is its own school, so it reads its own pages, apart from the T-44C's.
+export const T54A_SYLLABUS_ID = 't54a-me';
 
 function index(rows) {
   const out = {};

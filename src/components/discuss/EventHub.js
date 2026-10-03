@@ -78,7 +78,7 @@ function EventHub({ event }) {
                 page that had not been filled in. Say so instead. */}
             {event.items.length === 0 && (
               <p className="discuss-para">
-                The JPPT names no discuss items for this event. What is briefed comes from the
+                The JPPT/MCG names no discuss items for this event. What is briefed comes from the
                 ODO/FDO solo brief and the syllabus notes above.
               </p>
             )}

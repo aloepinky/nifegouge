@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PROGRAMS, listed, shown } from './programs';
+import { PROGRAMS, listed, schoolOf, shown } from './programs';
 import { useCourseWeeks } from './about/SchoolStats';
 import T54A_PHOTO from './T54A/images/t54a.webp';
 
@@ -43,7 +43,7 @@ const listOf = (names) => names.join(', ');
 function SchoolHighlights({ id, platforms }) {
   const program = PROGRAMS.find((p) => p.id === id);
   const hasSyllabi = shown(program.discuss);
-  const weeks = useCourseWeeks(program.label, hasSyllabi);
+  const weeks = useCourseWeeks(schoolOf(program), hasSyllabi);
   const sum = (k) => (platforms
     ? platforms.reduce((n, p) => n + (k === 'limits' ? p.limits : p.eps[k] || 0), 0)
     : null);

@@ -1,5 +1,5 @@
 import { warmMirror } from '../serverApi';
-import { PROGRAMS, schoolNs, shown } from '../programs';
+import { PROGRAMS, schoolNs, schoolOf, shown } from '../programs';
 
 // Starts the mirror reads a Discussion Items deep link will make, from the entry bundle, before
 // the tab's own chunk has downloaded. Without it the page is a waterfall: the chunk, then the
@@ -19,7 +19,8 @@ const MOUNTS = [
   { base: '/primary/discuss', school: 'Primary', syllabusId: 'delta-primary' },
   { base: '/nife/discuss', school: 'NIFE', syllabusId: 'nife-flight' },
   { base: '/t44c/discuss', school: 'Advanced', syllabusId: 't44c-p8' },
-].filter((m) => shown((PROGRAMS.find((p) => p.label === m.school) || {}).discuss));
+  { base: '/t54a/discuss', school: 'T-54A', syllabusId: 't54a-me' },
+].filter((m) => shown((PROGRAMS.find((p) => schoolOf(p) === m.school) || {}).discuss));
 
 // First path segments under a mount that are not an item's slug.
 const NOT_ITEMS = new Set(['e', 'b', 's', 'upload', 'edit']);

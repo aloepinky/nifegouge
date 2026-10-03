@@ -133,8 +133,10 @@ export async function parseJppt(data, onProgress = () => {}, { matcher = null, p
     flow = { VIEWBOX, NODES, LEGEND, EDGES };
     categories = traced.categories;
     corePage = traced.page;
-    const footer = (textPages[traced.page - 1] || []).map((l) => l.text).find((t) => /^[IVX]+-\d+$/.test(t));
-    flowPage = footer || null;
+    // A chart continued over several pages is cited from its first page to its last.
+    const footerOf = (page) => (textPages[page - 1] || []).map((l) => l.text).find((t) => /^[IVX]+-\d+$/.test(t));
+    const footers = (traced.pages || [traced.page]).map(footerOf).filter(Boolean);
+    flowPage = footers.length > 1 ? `${footers[0]} to ${footers[footers.length - 1]}` : footers[0] || null;
   } catch (err) {
     warnings.push(`${err.message} The boxes below are laid out from the syllabus text instead; arrange and connect them to match the publication.`);
     flow = scaffoldFlow(syllabus.stages, syllabus.blocks);
@@ -164,7 +166,7 @@ export async function parseJppt(data, onProgress = () => {}, { matcher = null, p
   const citation = [
     instruction,
     date && `(${date})`,
-  ].filter(Boolean).join(' ') + (flowPage ? `, p. ${flowPage}` : '');
+  ].filter(Boolean).join(' ') + (flowPage ? `, ${/ to /.test(flowPage) ? 'pp.' : 'p.'} ${flowPage}` : '');
 
   const courseLength = extractCourseLength(textPages);
   if (!courseLength) warnings.push('No course length table was found (Course Data, Course Length).');

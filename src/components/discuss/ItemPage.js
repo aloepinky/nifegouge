@@ -612,7 +612,6 @@ function SquadronPicker({ value, onChange, squadrons }) {
   );
 }
 
-
 // `record` is the published page as the mirror serves it: { slug, rev, item, author,
 // updatedAt }. `readOnly` renders it with no edit affordances, which is how an old revision
 // is shown from the history page; `banner` is that page's note above the head. The page

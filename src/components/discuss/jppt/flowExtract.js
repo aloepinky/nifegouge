@@ -1185,7 +1185,89 @@ export function extractFlow(pageContents, { knownEventIds = null } = {}) {
   if (chart.NODES.length < 2) {
     throw new Error(`"${target.title}" appears on page ${target.page}, but no boxes could be traced there.`);
   }
-  return { ...chart, warnings, page: target.page };
+
+  // A chart too long for one page is continued on the next under the same title, the two
+  // halves joined by a lettered connector: the T-54A MCG draws ground school on I-5, down to
+  // (A), and the flight stages from (A) on I-7. Each page is traced as the chart it is and the
+  // pages are stacked, top to bottom, so the course reads as one chart, as the connector says it
+  // is. Nothing here runs for a chart that fits one page.
+  const more = continuationPages(readPages(pageContents), target)
+    .map((p) => {
+      const own = [];
+      const traced = traceChart(p.paths, p.runs, { knownEventIds, warn: (m) => own.push(m) });
+      return traced.NODES.length >= 2 ? { ...traced, page: p.page, warnings: own } : null;
+    })
+    .filter(Boolean);
+  if (!more.length) return { ...chart, warnings, page: target.page, pages: [target.page] };
+  const sheets = [{ ...chart, page: target.page, warnings }, ...more].sort((a, b) => a.page - b.page);
+  return {
+    ...stackCharts(sheets),
+    warnings: sheets.flatMap((s) => s.warnings),
+    page: sheets[0].page,
+    pages: sheets.map((s) => s.page),
+  };
+}
+
+// The other pages that carry the same chart's title and a chart: near the one picked, since a
+// continuation follows its first half (a blank verso may sit between them), and never a
+// per-community page, whose title also ends COURSE FLOW.
+const CONTINUATION_SPAN = 3;
+
+function continuationPages(pages, target) {
+  const holds = (p, title) => squash(p.text).includes(squash(title));
+  return pages.filter((p) => p.page !== target.page
+    && Math.abs(p.page - target.page) <= CONTINUATION_SPAN
+    && holds(p, target.title)
+    && !POST_TITLE.every((t) => holds(p, t))
+    && p.paths.length >= 50
+    && boxesOf(p.paths).length >= MIN_REGION_BOXES);
+}
+
+// Charts traced page by page, in page order, as one: each sheet is moved down to start a little
+// below the last, its connectors renumbered so the letters still pair across the join (the
+// second sheet's (A) is `jump-A-2`), and the fullest legend kept — a continued chart repeats
+// only the keys its own page needs.
+const STACK_GAP = 24.0;
+
+function stackCharts(sheets) {
+  const viewOf = (s) => s.VIEWBOX.split(' ').map(Number);
+  const NODES = [];
+  const EDGES = [];
+  const seen = {};
+  let box = null;
+  let bottom = null;
+  let legendFrom = sheets[0];
+  sheets.forEach((s) => {
+    if (s.LEGEND.length > legendFrom.LEGEND.length) legendFrom = s;
+  });
+  let LEGEND = [];
+  sheets.forEach((s) => {
+    const [vx, vy, vw, vh] = viewOf(s);
+    const dy = bottom === null ? 0 : num(bottom + STACK_GAP - vy);
+    const ids = {};
+    s.NODES.forEach((n) => {
+      const row = { ...n, y: num(n.y + dy) };
+      if (n.letter) {
+        seen[n.letter] = (seen[n.letter] || 0) + 1;
+        row.id = `jump-${n.letter}-${seen[n.letter]}`;
+      }
+      ids[n.id] = row.id;
+      NODES.push(row);
+    });
+    s.EDGES.forEach((e) => EDGES.push({
+      ...e,
+      from: ids[e.from] || e.from,
+      to: ids[e.to] || e.to,
+      points: e.points.map(([px, py]) => [px, num(py + dy)]),
+    }));
+    if (s === legendFrom) LEGEND = s.LEGEND.map((k) => ({ ...k, y: num(k.y + dy) }));
+    const top = vy + dy;
+    box = box
+      ? [Math.min(box[0], vx), box[1], Math.max(box[0] + box[2], vx + vw) - Math.min(box[0], vx), top + vh - box[1]]
+      : [vx, top, vw, vh];
+    bottom = top + vh;
+  });
+  return { VIEWBOX: box.map(numStr).join(' '), NODES, LEGEND, EDGES, categories: legendFrom.categories };
 }
 
 // ---------------------------------------------------------------------------------------
