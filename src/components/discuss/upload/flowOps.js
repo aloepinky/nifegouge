@@ -147,10 +147,20 @@ const toMiddle = (v, lo, hi) => {
 // is the line an end has to sit on to meet its box at the middle, so this is what lets a corner
 // drag finish with the end it carries centred, without snapping the carried end itself (see
 // above). The same reach lines a dragged end up with the far end of a straight arrow.
+//
+// It also settles on the lines of the OTHER arrows: their corners and the runs of their
+// segments. Arrows that merge are drawn on top of one another from the point they meet (the
+// T-54A's G0304 and G0701 run as one into FAM2101-5, from a shared corner), and lining a corner
+// up on another arrow's corner by eye, to a tenth, was the hard part of drawing one.
 const ALIGN_SNAP = 3;
 const alignTo = (v, targets) => {
-  const hit = targets.find((t) => Math.abs(v - t) <= ALIGN_SNAP);
-  return hit === undefined ? v : hit;
+  let best = v;
+  let gap = ALIGN_SNAP;
+  for (const t of targets) {
+    const d = Math.abs(v - t);
+    if (d <= gap) { best = t; gap = d; }
+  }
+  return best;
 };
 
 function onBoxSide(node, [x, y], dragged = false) {
@@ -194,6 +204,27 @@ const withPoints = (doc, edgeIndex, points) => setFlow(doc, {
     : e)),
 });
 
+// What a corner may settle on, from every arrow but its own: each corner, at both coordinates,
+// and each segment's run (the x of a vertical one, the y of a horizontal one). An end's position
+// across its box side is not offered: it is where that arrow meets its box, and a corner pulled
+// level with it would only run a segment along the box's edge.
+function otherLines(edges, edgeIndex) {
+  const xs = [];
+  const ys = [];
+  edges.forEach((e, i) => {
+    if (i === edgeIndex) return;
+    const pts = e.points;
+    pts.forEach(([px, py], k) => {
+      if (k > 0 && k < pts.length - 1) { xs.push(px); ys.push(py); }
+      const next = pts[k + 1];
+      if (!next) return;
+      if (near(px, next[0])) xs.push(px);
+      if (near(py, next[1])) ys.push(py);
+    });
+  });
+  return { xs, ys };
+}
+
 export function movePoint(doc, edgeIndex, pointIndex, x, y) {
   const flow = doc.flow;
   const edge = flow.EDGES[edgeIndex];
@@ -204,9 +235,17 @@ export function movePoint(doc, edgeIndex, pointIndex, x, y) {
   let at = [snap(x), snap(y)];
   if (pointIndex > 0 && pointIndex < last) {
     const boxes = [edge.from, edge.to].map((id) => flow.NODES.find((n) => n.id === id)).filter(Boolean);
+    const lines = otherLines(flow.EDGES, edgeIndex);
+    // Another arrow within reach wins over a box's centre line: meeting that arrow is the
+    // point of dropping a corner beside it, and an existing trunk need not run exactly down a
+    // centre line (the T-54A's into FAM2101-5 sits half a unit off it).
+    const settle = (v, arrows, centres) => {
+      const onArrow = alignTo(v, arrows);
+      return onArrow !== v ? onArrow : alignTo(v, centres);
+    };
     at = [
-      alignTo(at[0], boxes.map((n) => n.x + (n.w / 2))),
-      alignTo(at[1], boxes.map((n) => n.y + (n.h / 2))),
+      settle(at[0], lines.xs, boxes.map((n) => n.x + (n.w / 2))),
+      settle(at[1], lines.ys, boxes.map((n) => n.y + (n.h / 2))),
     ];
   }
   pts[pointIndex] = at;

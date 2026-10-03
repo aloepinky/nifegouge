@@ -239,6 +239,26 @@ describe('snapping', () => {
     expect(edge(out, 1)[0]).toEqual([50, 17]);
   });
 
+  // The T-54A's G0304 and G0701 arrows merge at a shared corner and run as one into FAM2101-5.
+  // Drawing the second, its corner dropped near the first's lands on it exactly.
+  test('a corner dragged near another arrow’s corner lands on it', () => {
+    const d = doc();
+    d.flow.NODES.push(node('D', 100, 120), node('T', 90, 260));
+    // D's arrow into T, cornering at [110, 240].
+    d.flow.EDGES.push({ from: 'D', to: 'T', points: [[120, 134], [120, 240], [110, 240], [110, 260]] });
+    // C's arrow into T, its corner dragged to within a unit or two of that one.
+    d.flow.EDGES.push({ from: 'C', to: 'T', points: [[200, 110], [150, 110], [150, 250], [118, 250]] });
+    const out = movePoint(d, 3, 2, 111.5, 241.5);
+    expect(edge(out, 3)[2]).toEqual([110, 240]);
+  });
+
+  test('and onto the line of another arrow’s segment', () => {
+    const d = doc();
+    // Dragging the elbow of A->C to x 31.5, beside A->B's vertical run at x 30.
+    const out = movePoint(d, 1, 2, 31.5, 150);
+    expect(edge(out, 1)[2][0]).toBe(30);
+  });
+
   test('a straight arrow stays straight when its dragged end snaps to the middle', () => {
     // A over B, the head end dropped two units off the middle of B's top: it settles on the
     // middle, and the tail, carried along, follows it there rather than staying two units off.
