@@ -452,8 +452,13 @@ function worksCited(block, item, inherited) {
 // SOP SECTION. A section sourced wholly to one squadron or wing publication and not headed
 // with that publication's name. Nothing on the rendered page then says the rule is local,
 // and the reference marker at the end of the section is the only clue.
-function sopAdvice(block, item, where, inherited, parentTitle) {
+function sopAdvice(block, item, where, inherited, parentTitle, parentUnit) {
+  // A section the writer has ticked for its unit says so already, whatever its heading; on a
+  // page for one wing ("… (TW-5)"), that wing's own publication is the page.
+  if (block.unit || parentUnit) return [];
   const works = worksCited(block, item, inherited);
+  const pageWing = (/\((TW-\d+)\)\s*$/.exec(item.title || '') || [])[1];
+  if (pageWing && works.length && works.every((w) => UNIT_WORKS[(w || '').trim()] === pageWing)) return [];
   if (!works.length || !works.every((w) => LOCAL_WORKS.has(w))) return [];
   const only = [...new Set(works)];
   if (only.length !== 1) return [];
@@ -554,7 +559,7 @@ export function structureViolations(item) {
     out.push(...sopAdvice(s, item, s.title, null));
     for (const sub of s.subsections || []) {
       out.push(...proseAdvice(sub, `${s.title} / ${sub.title}`));
-      out.push(...sopAdvice(sub, item, `${s.title} / ${sub.title}`, s.refs, s.title));
+      out.push(...sopAdvice(sub, item, `${s.title} / ${sub.title}`, s.refs, s.title, s.unit));
     }
   }
   out.push(...unitAdvice(item));
