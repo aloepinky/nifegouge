@@ -415,6 +415,7 @@ function FlowEditor({
   const sel = selectedNode && (flow.NODES.find((n) => n.id === selectedNode.id) || selectedNode);
   const selEdge = selectedEdge !== null ? flow.EDGES[selectedEdge] : null;
   const HANDLE = 2.2;
+  const MIN_CORNER_ROOM = 4 * HANDLE;
 
   return (
     <div className="discuss-floweditor">
@@ -442,7 +443,9 @@ function FlowEditor({
               type="button"
               className={`discuss-editor-add discuss-floweditor-connect${mode === 'connect' ? ' is-on' : ''}`}
               aria-pressed={mode === 'connect'}
-              onClick={() => { setMode(mode === 'connect' ? 'select' : 'connect'); setConnectFrom(null); }}
+              // Starting an arrow lets go of whatever was selected, so the last arrow's handles
+              // are not left lying over the boxes the new one has to be clicked on.
+              onClick={() => { setMode(mode === 'connect' ? 'select' : 'connect'); setConnectFrom(null); setSelection(null); }}
             >
               {mode !== 'connect' ? 'Draw arrow'
                 : !connectFrom ? 'Click where it starts — a box, or an arrow'
@@ -571,13 +574,20 @@ function FlowEditor({
                   ))}
                 </g>
               )}
-              {selEdge && (
+              {/* Handles only while editing, never while drawing an arrow: between stacked boxes
+                  an arrow is under a unit long, its end dots sit on the very spot a new arrow is
+                  started from, and a click there dragged the old end (snapping it to the side's
+                  middle) or added a corner instead of picking the box. */}
+              {selEdge && mode !== 'connect' && (
                 <g className="discuss-floweditor-handles">
                   {/* A hollow handle at the middle of each segment adds a corner there; the
                       solid ones are the corners, dragged to reroute and double-clicked to take
                       out. An end is its box's and neither adds nor removes. */}
                   {selEdge.points.slice(0, -1).map(([x, y], j) => {
                     const [nx, ny] = selEdge.points[j + 1];
+                    // No room for a corner on a length shorter than a handle's reach: the dot
+                    // would only cover the boxes at either end.
+                    if (Math.hypot(nx - x, ny - y) < MIN_CORNER_ROOM) return null;
                     return (
                       <circle
                         // eslint-disable-next-line react/no-array-index-key
