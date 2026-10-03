@@ -8,6 +8,7 @@ export const KINDS = [
   ['flight', 'Flight'],
   ['check', 'Check Flight'],
   ['sim', 'Simulator'],
+  ['simcheck', 'Sim Check'],
   ['ground', 'Ground Training'],
   ['cai', 'CAI Test'],
   ['support', 'Flt Support'],
@@ -121,6 +122,7 @@ export function resizeNode(doc, id, corner, dx, dy) {
 
 const near = (a, b) => Math.abs(a - b) <= 0.05;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const inSpan = (v, lo, hi) => v >= lo && v <= hi;
 
 // An end of a connector belongs to the box it is attached to, so it slides along that box's
 // sides rather than leaving them. The side is whichever one the wanted position is nearest,
@@ -133,10 +135,22 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 // It applies only to the end somebody is DRAGGING. An end being carried along by a corner's
 // squaring has to land exactly where that leaves it, or the snap pulls it off the line it was
 // just straightened onto and puts the bend straight back.
-const MIDDLE_SNAP = 3.5;
+// The reach is capped at 40% of the side, so a short side (a box's 13-unit ends) keeps a
+// little free play either side of its middle instead of snapping everywhere.
+const MIDDLE_SNAP = 5;
 const toMiddle = (v, lo, hi) => {
   const mid = (lo + hi) / 2;
-  return Math.abs(v - mid) <= MIDDLE_SNAP ? mid : clamp(v, lo, hi);
+  return Math.abs(v - mid) <= Math.min(MIDDLE_SNAP, 0.4 * (hi - lo)) ? mid : clamp(v, lo, hi);
+};
+
+// A corner dragged close to the centre line of either box its arrow joins settles on it. That
+// is the line an end has to sit on to meet its box at the middle, so this is what lets a corner
+// drag finish with the end it carries centred, without snapping the carried end itself (see
+// above). The same reach lines a dragged end up with the far end of a straight arrow.
+const ALIGN_SNAP = 3;
+const alignTo = (v, targets) => {
+  const hit = targets.find((t) => Math.abs(v - t) <= ALIGN_SNAP);
+  return hit === undefined ? v : hit;
 };
 
 function onBoxSide(node, [x, y], dragged = false) {
@@ -187,10 +201,32 @@ export function movePoint(doc, edgeIndex, pointIndex, x, y) {
   const was = edge.points;
   const pts = was.map((p) => [...p]);
   const last = pts.length - 1;
-  pts[pointIndex] = [snap(x), snap(y)];
+  let at = [snap(x), snap(y)];
+  if (pointIndex > 0 && pointIndex < last) {
+    const boxes = [edge.from, edge.to].map((id) => flow.NODES.find((n) => n.id === id)).filter(Boolean);
+    at = [
+      alignTo(at[0], boxes.map((n) => n.x + (n.w / 2))),
+      alignTo(at[1], boxes.map((n) => n.y + (n.h / 2))),
+    ];
+  }
+  pts[pointIndex] = at;
   if (pointIndex > 0) pts[pointIndex - 1] = square(pts, pointIndex - 1, pointIndex, was);
   if (pointIndex < last) pts[pointIndex + 1] = square(pts, pointIndex + 1, pointIndex, was);
-  return withPoints(doc, edgeIndex, seatEnds(pts, edge, flow, pointIndex));
+  const out = seatEnds(pts, edge, flow, pointIndex);
+  // A straight arrow (two ends, no corner): the far end, carried along by the squaring, follows
+  // wherever the dragged end finally settled, so a middle snap on the dragged end does not leave
+  // the line slanted. It follows only as far as its own box allows, as any carried end does.
+  if (last === 1 && !edge.joinFrom && !edge.joinTo) {
+    const mine = out[pointIndex];
+    const other = out[1 - pointIndex];
+    const box = flow.NODES.find((n) => n.id === (pointIndex === 0 ? edge.to : edge.from));
+    if (box) {
+      const vertical = near(other[1], box.y) || near(other[1], box.y + box.h);
+      if (vertical && Math.abs(other[0] - mine[0]) <= ALIGN_SNAP && inSpan(mine[0], box.x, box.x + box.w)) other[0] = mine[0];
+      if (!vertical && Math.abs(other[1] - mine[1]) <= ALIGN_SNAP && inSpan(mine[1], box.y, box.y + box.h)) other[1] = mine[1];
+    }
+  }
+  return withPoints(doc, edgeIndex, out);
 }
 
 // A corner added at the middle of a segment, so a connector can be taken round something.
@@ -208,17 +244,21 @@ export function addPoint(doc, edgeIndex, segIndex) {
 // The one straight line between two boxes, where there is one: their sides can only be joined
 // without a corner where the boxes overlap on an axis, and the line runs down the middle of
 // that overlap.
+// Inside the overlap, a box's own centre line is preferred, so an arrow between a wide box and
+// a narrow one leaves or meets the narrow one at its middle, as the publication draws it.
+const lineIn = (lo, hi, a, b) => (inSpan(a, lo, hi) ? a : inSpan(b, lo, hi) ? b : (lo + hi) / 2);
+
 function straightBetween(a, b) {
   const lx = Math.max(a.x, b.x);
   const rx = Math.min(a.x + a.w, b.x + b.w);
   if (lx <= rx) {
-    const x = snap((lx + rx) / 2);
+    const x = snap(lineIn(lx, rx, a.x + (a.w / 2), b.x + (b.w / 2)));
     return b.y >= a.y + a.h ? [[x, a.y + a.h], [x, b.y]] : [[x, a.y], [x, b.y + b.h]];
   }
   const ty = Math.max(a.y, b.y);
   const by = Math.min(a.y + a.h, b.y + b.h);
   if (ty <= by) {
-    const y = snap((ty + by) / 2);
+    const y = snap(lineIn(ty, by, a.y + (a.h / 2), b.y + (b.h / 2)));
     return b.x >= a.x + a.w ? [[a.x + a.w, y], [b.x, y]] : [[a.x, y], [b.x + b.w, y]];
   }
   return null;
@@ -347,8 +387,12 @@ export function reverseEdge(doc, index) {
   });
 }
 
-// An orthogonal route between facing sides: across then down for boxes side by side, down
-// then across for boxes stacked, the way the publication draws its connectors.
+// An orthogonal route between facing sides, the way the publication draws its connectors:
+// one straight line where the boxes overlap on an axis, else out of the side facing the other
+// box, a jog in the GAP between them, and into the facing side. The route is chosen by the gap
+// between the boxes' edges, not the distance between their centres: two boxes offset sideways
+// but stacked close have centres further apart across than down, and routing across would run
+// the jog back inside the first box, drawing a line through its middle and an extra corner.
 export function connect(doc, fromId, toId) {
   const flow = doc.flow;
   const a = flow.NODES.find((n) => n.id === fromId);
@@ -356,19 +400,21 @@ export function connect(doc, fromId, toId) {
   if (!a || !b || a === b) return doc;
   const ac = [a.x + a.w / 2, a.y + a.h / 2];
   const bc = [b.x + b.w / 2, b.y + b.h / 2];
-  let points;
-  if (Math.abs(bc[0] - ac[0]) >= Math.abs(bc[1] - ac[1])) {
+  const gapX = b.x >= a.x + a.w ? b.x - (a.x + a.w) : a.x - (b.x + b.w);
+  const gapY = b.y >= a.y + a.h ? b.y - (a.y + a.h) : a.y - (b.y + b.h);
+  let points = straightBetween(a, b);
+  if (!points && gapX >= gapY) {
     const right = bc[0] >= ac[0];
     const s = [right ? a.x + a.w : a.x, ac[1]];
     const t = [right ? b.x : b.x + b.w, bc[1]];
-    const mx = (s[0] + t[0]) / 2;
-    points = s[1] === t[1] ? [s, t] : [s, [mx, s[1]], [mx, t[1]], t];
-  } else {
+    const mx = snap((s[0] + t[0]) / 2);
+    points = [s, [mx, s[1]], [mx, t[1]], t];
+  } else if (!points) {
     const down = bc[1] >= ac[1];
     const s = [ac[0], down ? a.y + a.h : a.y];
     const t = [bc[0], down ? b.y : b.y + b.h];
-    const my = (s[1] + t[1]) / 2;
-    points = s[0] === t[0] ? [s, t] : [s, [s[0], my], [t[0], my], t];
+    const my = snap((s[1] + t[1]) / 2);
+    points = [s, [s[0], my], [t[0], my], t];
   }
   const edge = { from: fromId, to: toId, points: points.map(([x, y]) => [num(x), num(y)]) };
   return setFlow(doc, { ...flow, EDGES: [...flow.EDGES, edge] });

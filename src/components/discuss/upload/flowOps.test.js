@@ -30,14 +30,15 @@ const axial = (points) => points.slice(1).every(([x, y], i) => {
 
 describe('movePoint', () => {
   test('takes the neighbours with it, so the lines either side stay straight', () => {
-    // The elbow at [120, 17] dragged right and a little down.
-    const out = movePoint(doc(), 1, 1, 143, 20);
+    // The elbow at [120, 17] dragged right and a little down (beyond the reach of A's centre
+    // line at y 17, which would otherwise take it).
+    const out = movePoint(doc(), 1, 1, 143, 22);
     const pts = edge(out, 1);
     expect(axial(pts)).toBe(true);
     // Its own position is what was asked for, on the half-unit grid.
-    expect(pts[1]).toEqual([143, 20]);
+    expect(pts[1]).toEqual([143, 22]);
     // The run into it was horizontal, so the end it came from follows on y...
-    expect(pts[0][1]).toBe(20);
+    expect(pts[0][1]).toBe(22);
     // ...and the run out of it was vertical, so the next corner follows on x.
     expect(pts[2][0]).toBe(143);
   });
@@ -106,6 +107,33 @@ test('connect routes a new arrow squarely', () => {
   const out = connect(doc(), 'B', 'C');
   const pts = out.flow.EDGES[out.flow.EDGES.length - 1].points;
   expect(axial(pts)).toBe(true);
+});
+
+// Two boxes stacked close but offset sideways have centres further apart across than down. The
+// old route went across, from D's right side to E's left, and E's left edge is under D: the jog
+// ran back through D's middle and drew an extra corner there.
+test('connect never runs a line back through a box', () => {
+  const d = doc();
+  d.flow.NODES.push(node('D', 100, 250), node('E', 125, 268));
+  const out = connect(d, 'D', 'E');
+  const pts = out.flow.EDGES[out.flow.EDGES.length - 1].points;
+  expect(axial(pts)).toBe(true);
+  // They overlap across (125..140), so it is one straight line down; neither centre line lies
+  // in the overlap, so it runs down the overlap's middle.
+  expect(pts).toHaveLength(2);
+  expect(pts[0][1]).toBe(264);
+  expect(pts[1][1]).toBe(268);
+  const inside = ([x, y], n) => x > n.x && x < n.x + n.w && y > n.y && y < n.y + n.h;
+  const [D, E] = out.flow.NODES.slice(-2);
+  pts.forEach((p) => { expect(inside(p, D) || inside(p, E)).toBe(false); });
+});
+
+test('connect leaves a narrow box at its middle where a straight line can', () => {
+  const d = doc();
+  d.flow.NODES.push({ ...node('W', 100, 250), w: 80 }, node('N', 150, 290));
+  const out = connect(d, 'W', 'N');
+  // W's centre line (x 140) is outside the overlap (150..180); N's (x 170) is in it.
+  expect(out.flow.EDGES[out.flow.EDGES.length - 1].points).toEqual([[170, 264], [170, 290]]);
 });
 
 // An arrow that meets another arrow rather than a second box. The publication draws plenty:
@@ -198,9 +226,24 @@ describe('snapping', () => {
 
   test('but an end only carried along by a corner lands where that leaves it', () => {
     // Squaring must win here, or the snap puts back the bend it just took out.
-    const out = movePoint(doc(), 1, 1, 143, 20);
-    expect(edge(out, 1)[0][1]).toBe(20);
+    const out = movePoint(doc(), 1, 1, 143, 22);
+    expect(edge(out, 1)[0][1]).toBe(22);
     expect(axial(edge(out, 1))).toBe(true);
+  });
+
+  // ...and a corner dragged close to a box's centre line settles on it, which is how a corner
+  // drag ends with the end it carries at the middle of its side.
+  test('a corner dragged near the centre line of its box settles on it', () => {
+    const out = movePoint(doc(), 1, 1, 143, 19);
+    expect(edge(out, 1)[1]).toEqual([143, 17]);
+    expect(edge(out, 1)[0]).toEqual([50, 17]);
+  });
+
+  test('a straight arrow stays straight when its dragged end snaps to the middle', () => {
+    // A over B, the head end dropped two units off the middle of B's top: it settles on the
+    // middle, and the tail, carried along, follows it there rather than staying two units off.
+    const out = movePoint(doc(), 0, 1, 32, 200);
+    expect(edge(out, 0)).toEqual([[30, 24], [30, 200]]);
   });
 
   // Where a branch meets a trunk is never the click: the click only says WHICH length.
