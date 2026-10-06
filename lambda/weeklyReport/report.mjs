@@ -6,7 +6,7 @@
 // a row keeps only its running totals. So the caller keeps the totals from the last run
 // (`counts` in the result) and passes them back as `previous`; the report shows the increase.
 
-import { ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
 const SITE = 'https://pinksheetmafia.com';
 const TIME_ZONE = 'America/Chicago';
@@ -15,11 +15,13 @@ const who = (name) => (name && name.trim() && name !== 'anonymous' ? name.trim()
 const day = (iso) => new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: TIME_ZONE });
 const short = (s, n = 80) => { const t = String(s || '').replace(/\s+/g, ' ').trim(); return t.length > n ? `${t.slice(0, n - 1)}…` : t; };
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const num = (n) => n.toLocaleString('en-US');
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 // A discuss page's stored key is `<school>/<slug>` (lambda/discussApi/namespace.mjs); the
 // school's namespace is its route prefix on the site.
 const DISCUSS_BASE = { primary: '/primary/discuss', nife: '/nife/discuss', advanced: '/t44c/discuss', 't-54a': '/t54a/discuss' };
+const SCHOOL_NAME = { primary: 'Primary', nife: 'NIFE', advanced: 'T-44C', 't-54a': 'T-54A' };
 function pageUrl(key) {
   const [ns, slug] = key.includes('/') ? key.split('/') : ['primary', key];
   return `${SITE}${DISCUSS_BASE[ns] || '/primary/discuss'}/${slug}`;
@@ -27,6 +29,18 @@ function pageUrl(key) {
 
 // `own`: author names whose activity is counted in one line per section rather than listed
 // (yours and the seed tools'), so what other people did is what the report shows.
+// As the leaderboard shows it (src/components/leaderboard/leaderboardApi.js formatTime).
+function formatTime(ms) {
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}.${String(Math.floor((ms % 1000) / 10)).padStart(2, '0')}`;
+}
+// One player on the leaderboard: name, designator and class together (scores.mjs playerKey).
+const playerKey = (r) => [r.playerName, r.designator || '', r.trainingClass || ''].join('-');
+// The docs Lambda stops listing an entry once its obsolete votes lead by this many
+// (lambda/submitDoc/index.mjs REMOVE_AT).
+const REMOVE_AT = 3;
+const obsoleteLead = (e) => Math.max(0, e.outdatedObsolete || 0) - Math.max(0, e.outdatedUseful || 0);
+
 // `since` (ISO) overrides `days`: the Lambda starts where the last sent report ended, so a week
 // whose email failed is reported by the next one.
 export async function buildReport({ db, days = 7, since = null, until = new Date(), own = ['Loevinger', 'migration'], previous = null }) {
@@ -54,13 +68,15 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
 
   // Every revisioned table has the same two-row shape: rev 0 is the meta row with the title, each
   // rev >= 1 a revision with author, summary and createdAt (lambda/discussApi/store.mjs).
+  // Returns the week's revisions, with the meta rows as `meta` for the running totals.
   async function revisions(TableName, key, extra = []) {
-    const rows = await scanAll(TableName, [key, 'rev', 'title', 'author', 'summary', 'createdAt', ...extra]);
-    const titles = new Map(rows.filter((r) => r.rev === 0).map((r) => [r[key], r.title]));
+    const rows = await scanAll(TableName, [key, 'rev', 'title', 'author', 'summary', 'createdAt', 'hidden', ...extra]);
+    const meta = rows.filter((r) => r.rev === 0);
+    const titles = new Map(meta.map((r) => [r[key], r.title]));
     // A discuss page moved from its bare slug to `<school>/<slug>` keeps a copy of its history
     // under both keys (namespace.mjs), so one save can appear twice. Keep the namespaced one.
     const seen = new Set();
-    return rows
+    const list = rows
       .filter((r) => r.rev > 0 && inWeek(r.createdAt))
       .sort((a, b) => Number(String(b[key]).includes('/')) - Number(String(a[key]).includes('/')))
       .filter((r) => {
@@ -71,6 +87,7 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
       })
       .map((r) => ({ id: r[key], rev: r.rev, title: titles.get(r[key]) || r.name || r[key], author: who(r.author), summary: r.summary || '', at: r.createdAt }))
       .sort((a, b) => a.at.localeCompare(b.at));
+    return Object.assign(list, { meta });
   }
 
   // Other people's revisions one per line; yours as a count.
@@ -85,10 +102,41 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
     return lines;
   }
 
+  // The site's own page counts (lambda/discussApi/pageviews.mjs): one partition per Central day,
+  // `#total` holding the day's totals. Read for the last seven whole days. A role without
+  // access to the table, or no table yet, leaves the section saying so rather than failing the
+  // report.
+  async function traffic() {
+    const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' });
+    const days = [];
+    for (let i = 7; i >= 1; i -= 1) days.push(ymd.format(new Date(until.getTime() - i * 864e5)));
+    try {
+      const rows = await Promise.all(days.map(async (d) => {
+        const out = [];
+        let ExclusiveStartKey;
+        do {
+          const page = await db.send(new QueryCommand({
+            TableName: 'PageViews',
+            KeyConditionExpression: '#d = :d',
+            ExpressionAttributeNames: { '#d': 'day' },
+            ExpressionAttributeValues: { ':d': d },
+            ExclusiveStartKey,
+          }));
+          out.push(...(page.Items || []));
+          ExclusiveStartKey = page.LastEvaluatedKey;
+        } while (ExclusiveStartKey);
+        return out;
+      }));
+      return { days, rows: rows.flat() };
+    } catch (error) {
+      return { days, error: error.name || 'error' };
+    }
+  }
+
   // ---------------------------------------------------------------------------------------------
   // Gather
 
-  const [items, syllabi, briefs, jetLogs, sections, questions, docs, links, scores] = await Promise.all([
+  const [items, syllabi, briefs, jetLogs, sections, questions, docs, links, scores, views] = await Promise.all([
     revisions('DiscussItems', 'slug'),
     revisions('DiscussSyllabi', 'syllabusId', ['name']),
     revisions('Briefs', 'briefId'),
@@ -101,7 +149,8 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
       'upvotes', 'downvotes', 'outdatedUseful', 'outdatedObsolete', 'outdatedAt', 'outdatedNote']),
     scanAll('NIFELinks', ['linkId', 'title', 'url', 'topic', 'program', 'submittedAt', 'submittedBy',
       'upvotes', 'downvotes', 'outdatedUseful', 'outdatedObsolete', 'outdatedAt', 'outdatedNote']),
-    scanAll('EPsLimitsScores', ['board', 'runId', 'school', 'mode', 'playerName', 'createdAt', 'split']),
+    scanAll('EPsLimitsScores', ['board', 'runId', 'playerName', 'designator', 'trainingClass', 'createdAt', 'split', 'elapsedTime']),
+    traffic(),
   ]);
 
   // ---------------------------------------------------------------------------------------------
@@ -131,10 +180,101 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
   const linkVotes = votesSince('l:');
 
   // ---------------------------------------------------------------------------------------------
+  // Running totals, kept in the snapshot beside the vote counts so each report shows the change.
+
+  // A page moved to `<school>/<slug>` keeps its old bare key too (namespace.mjs); bare keys were
+  // all Primary's, so both name one page.
+  const pagesBySchool = {};
+  for (const key of new Set(items.meta.filter((m) => !m.hidden).map((m) => (String(m.slug).includes('/') ? m.slug : `primary/${m.slug}`)))) {
+    const ns = key.split('/')[0];
+    pagesBySchool[ns] = (pagesBySchool[ns] || 0) + 1;
+  }
+  const totals = {
+    pages: Object.values(pagesBySchool).reduce((a, b) => a + b, 0),
+    questions: questions.filter((q) => q.status === 'approved').length,
+    docs: docs.filter((d) => obsoleteLead(d) < REMOVE_AT).length,
+    links: links.filter((l) => obsoleteLead(l) < REMOVE_AT).length,
+    players: new Set(scores.map(playerKey)).size,
+  };
+  const was = previous && previous.totals;
+  const change = (k) => {
+    if (!was || was[k] === undefined) return '';
+    const d = totals[k] - was[k];
+    return d ? ` (${d > 0 ? '+' : '−'}${num(Math.abs(d))})` : ' (no change)';
+  };
+
+  // ---------------------------------------------------------------------------------------------
   // Build the report as sections of lines, rendered twice: plain text and HTML.
 
   const report = [];
   const section = (title, lines, empty) => report.push({ title, lines: lines.length ? lines : [{ text: empty, quiet: true }] });
+
+  // Needs you: what only an admin can put right, or would want to know before it is too late.
+  {
+    const lines = [];
+    const entryName = (e) => short(e.fileName || e.title, 70);
+    const entryWhere = (e) => `${e.fileName ? 'document' : 'link'}, ${e.program === 'tw4primary' ? 'Primary' : 'NIFE'}`;
+    for (const e of [...docs, ...links].filter((x) => obsoleteLead(x) >= REMOVE_AT && inWeek(x.outdatedAt))) {
+      lines.push({ text: `Removed by votes: ${entryName(e)} (${entryWhere(e)}). tools/docs-status.js puts it back.` });
+    }
+    for (const e of [...docs, ...links].filter((x) => obsoleteLead(x) === REMOVE_AT - 1)) {
+      lines.push({ text: `One vote from removal: ${entryName(e)} (${entryWhere(e)})${e.outdatedNote ? ` — ${short(e.outdatedNote, 80)}` : ''}` });
+    }
+    for (const q of questions.filter((x) => x.status === 'approved' && (x.upvotes || 0) - (x.downvotes || 0) <= -10)) {
+      lines.push({ text: `Live question at ${(q.upvotes || 0) - (q.downvotes || 0)}: ${short(q.question, 90)}`, href: `${SITE}/nife/questions/q/${q.questionId}` });
+    }
+    const pending = questions.filter((q) => q.status === 'pending').sort((a, b) => String(a.submittedAt).localeCompare(String(b.submittedAt)));
+    if (pending.length) {
+      lines.push({ text: `${plural(pending.length, 'pending question')} waiting for votes, the oldest since ${day(pending[0].submittedAt)}`, href: `${SITE}/nife/questions?admin` });
+    }
+    section('Needs you', lines, 'Nothing.');
+  }
+
+  // Totals
+  {
+    const bySchool = Object.entries(pagesBySchool)
+      .sort((a, b) => b[1] - a[1])
+      .map(([ns, n]) => `${SCHOOL_NAME[ns] || ns} ${num(n)}`)
+      .join(', ');
+    const lines = [
+      { text: `Discussion pages: ${num(totals.pages)}${change('pages')}: ${bySchool}` },
+      { text: `Live NIFE questions: ${num(totals.questions)}${change('questions')}` },
+      { text: `Docs: ${num(totals.docs)}${change('docs')}; useful links: ${num(totals.links)}${change('links')}` },
+      { text: `Leaderboard players: ${num(totals.players)}${change('players')}` },
+    ];
+    if (!was) lines.push({ text: 'Changes are shown from next week.', quiet: true });
+    section('Totals', lines, '');
+  }
+
+  // Site traffic
+  {
+    const lines = [];
+    const span = `${day(`${views.days[0]}T12:00:00Z`)} to ${day(`${views.days[views.days.length - 1]}T12:00:00Z`)}`;
+    if (views.error) {
+      lines.push({ text: `Page counts unavailable (${views.error}).`, quiet: true });
+    } else {
+      const totals = views.rows.filter((r) => r.path === '#total');
+      const viewCount = totals.reduce((n, r) => n + (r.views || 0), 0);
+      const visitorDays = totals.reduce((n, r) => n + (r.visitors || 0), 0);
+      if (viewCount) {
+        lines.push({ text: `${span}: ${plural(viewCount, 'page view')}, ${Math.round(visitorDays / views.days.length)} visitors a day on average` });
+        const pages = new Map();
+        const programs = new Map();
+        const PROGRAM = { nife: 'NIFE', primary: 'Primary', tw4: 'Primary', t44c: 'T-44C', t54a: 'T-54A' };
+        for (const r of views.rows) {
+          if (r.path === '#total') continue;
+          pages.set(r.path, (pages.get(r.path) || 0) + (r.views || 0));
+          const program = r.path === '/' ? 'Landing page' : PROGRAM[r.path.split('/')[1]] || 'Other';
+          programs.set(program, (programs.get(program) || 0) + (r.views || 0));
+        }
+        lines.push({ text: [...programs].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(', '), quiet: true });
+        for (const [path, n] of [...pages].sort((a, b) => b[1] - a[1]).slice(0, 10)) {
+          lines.push({ text: `${n}  ${path}`, href: path.startsWith('/(') ? undefined : `${SITE}${path}` });
+        }
+      }
+    }
+    section('Site traffic', lines, `No page views counted, ${span}.`);
+  }
 
   // Discussion pages
   {
@@ -227,6 +367,20 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
       }
       for (const [k, v] of Object.entries(bySchool)) lines.push({ text: `${k}: ${plural(v.runs, 'run')} by ${plural(v.players.size, 'player')}` });
     }
+    // A board's all-time first place set this week. A combined run's splits are runs on the EPs
+    // and Limits boards too (scores.mjs), so they can take those records.
+    const boards = {};
+    for (const r of scores) (boards[r.board] = boards[r.board] || []).push(r);
+    const faster = (a, b) => a.elapsedTime < b.elapsedTime || (a.elapsedTime === b.elapsedTime && a.createdAt < b.createdAt);
+    const fastest = (rows) => rows.reduce((a, b) => (faster(b, a) ? b : a));
+    for (const [board, rows] of Object.entries(boards).sort()) {
+      const best = fastest(rows);
+      if (!inWeek(best.createdAt)) continue;
+      const before = rows.filter((r) => r.createdAt < SINCE);
+      const old = before.length ? fastest(before) : null;
+      const [school, mode] = board.split('#');
+      lines.push({ text: `New record, ${school} ${String(mode).replace(/_/g, ' ')}: ${best.playerName} ${formatTime(best.elapsedTime)}${old ? `, beating ${old.playerName}'s ${formatTime(old.elapsedTime)}` : ', the first run on the board'}` });
+    }
     section('EP and limits leaderboard', lines, 'No runs.');
   }
 
@@ -250,5 +404,5 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
   </div></body></html>
   `;
 
-  return { subject: `PSM community activity, ${range}`, range, text, html, counts };
+  return { subject: `PSM community activity, ${range}`, range, text, html, counts, totals };
 }

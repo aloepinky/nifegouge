@@ -1,8 +1,11 @@
 # weeklyReport
 
-Emails the weekly community-activity report every Sunday at 1800 Central: discussion-page,
-syllabus, brief and jet log edits, NIFE questions submitted and decided, documents and links
-added, leaderboard runs, and the votes cast since the last report. Your own saves and the seed
+Emails the weekly community-activity report every Sunday at 1800 Central: what needs the admin
+(entries removed or one vote from removal, live questions at −10, pending questions), running
+totals with the change since the last report, discussion-page, syllabus, brief and jet log edits,
+NIFE questions submitted and decided, documents and links added, leaderboard runs and new
+all-time records, and the votes cast since the last report. Totals and vote counts are kept in
+the snapshot. Your own saves and the seed
 tools' (`REPORT_OWN`, default `Loevinger,migration`) are counted, not listed. The report itself is
 `report.mjs`, shared with `tools/weekly-report.mjs`, which prints it locally.
 
@@ -12,6 +15,8 @@ Deployed by `.github/workflows/deploy-lambda.yml` like the others. Created by ha
 - **Function** `weeklyReport`, nodejs22.x, handler `index.handler`, 512 MB, 120 s. Environment:
   `REPORT_TO` (drew.loevinger@gmail.com), `REPORT_FROM` (`PSM Reports <reports@pinksheetmafia.com>`),
   `REPORT_BUCKET`.
+  The Site traffic section reads `PageViews` with `dynamodb:Query` (added for it); without that
+  grant the section says the counts are unavailable and the rest of the report goes out.
 - **Role** `weeklyReport-role`, inline policy `weeklyReport`: `dynamodb:Scan` on the nine tables it
   reads, get/put on `pinksheetmafia-reports/weekly/*`, `ses:SendEmail` on the two identities below, logs.
   It cannot write to any table.

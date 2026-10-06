@@ -63,7 +63,7 @@ export const handler = async (event = {}) => {
   await s3.send(new PutObjectCommand({
     Bucket: BUCKET,
     Key: SNAPSHOT_KEY,
-    Body: JSON.stringify({ at: until.toISOString(), counts: report.counts }),
+    Body: JSON.stringify({ at: until.toISOString(), counts: report.counts, totals: report.totals }),
     ContentType: 'application/json',
   }));
   return { sent: report.subject };

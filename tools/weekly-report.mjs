@@ -55,6 +55,6 @@ console.log(`HTML: ${HTML_OUT}`);
 
 if (!flag('no-snapshot')) {
   mkdirSync(STATE_DIR, { recursive: true });
-  writeFileSync(SNAPSHOT, JSON.stringify({ at: until.toISOString(), counts: report.counts }), 'utf8');
+  writeFileSync(SNAPSHOT, JSON.stringify({ at: until.toISOString(), counts: report.counts, totals: report.totals }), 'utf8');
   console.log(`Vote totals saved for the next local run${previous ? ` (last saved ${new Date(previous.at).toDateString()})` : ''}.`);
 }
