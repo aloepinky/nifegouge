@@ -41,7 +41,10 @@ export const handler = async (event = {}) => {
   if (!TO) throw new Error('REPORT_TO is not set');
   const until = new Date();
   const previous = await readSnapshot();
-  const report = await buildReport({ db, days: Number(event.days) || 7, until, own: OWN, previous });
+  // Pick up where the last sent report ended, unless that was over five weeks ago (a broken
+  // schedule fixed late) or the invocation asks for a number of days.
+  const since = !event.days && previous?.at && until - new Date(previous.at) < 35 * 864e5 ? previous.at : null;
+  const report = await buildReport({ db, days: Number(event.days) || 7, since, until, own: OWN, previous });
   if (event.dryRun) return { subject: report.subject, text: report.text };
 
   await ses.send(new SendEmailCommand({

@@ -19,7 +19,7 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 // A discuss page's stored key is `<school>/<slug>` (lambda/discussApi/namespace.mjs); the
 // school's namespace is its route prefix on the site.
-const DISCUSS_BASE = { primary: '/primary/discuss', nife: '/nife/discuss', advanced: '/t44c/discuss' };
+const DISCUSS_BASE = { primary: '/primary/discuss', nife: '/nife/discuss', advanced: '/t44c/discuss', 't-54a': '/t54a/discuss' };
 function pageUrl(key) {
   const [ns, slug] = key.includes('/') ? key.split('/') : ['primary', key];
   return `${SITE}${DISCUSS_BASE[ns] || '/primary/discuss'}/${slug}`;
@@ -27,8 +27,10 @@ function pageUrl(key) {
 
 // `own`: author names whose activity is counted in one line per section rather than listed
 // (yours and the seed tools'), so what other people did is what the report shows.
-export async function buildReport({ db, days = 7, until = new Date(), own = ['Loevinger', 'migration'], previous = null }) {
-  const SINCE = new Date(until.getTime() - days * 864e5).toISOString();
+// `since` (ISO) overrides `days`: the Lambda starts where the last sent report ended, so a week
+// whose email failed is reported by the next one.
+export async function buildReport({ db, days = 7, since = null, until = new Date(), own = ['Loevinger', 'migration'], previous = null }) {
+  const SINCE = since || new Date(until.getTime() - days * 864e5).toISOString();
   const OWN = new Set(own.map((n) => n.trim().toLowerCase()).filter(Boolean));
   const isOwn = (name) => OWN.has(String(name || '').trim().toLowerCase());
   const inWeek = (iso) => Boolean(iso) && iso >= SINCE;
@@ -194,7 +196,8 @@ export async function buildReport({ db, days = 7, until = new Date(), own = ['Lo
     const docsPath = (p) => (p === 'tw4primary' ? '/primary/docs' : '/nife/docs');
     const newDocs = docs.filter((d) => inWeek(d.uploadedAt)).sort((a, b) => a.uploadedAt.localeCompare(b.uploadedAt));
     const newLinks = links.filter((l) => inWeek(l.submittedAt)).sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
-    const flagged = [...docs, ...links].filter((e) => inWeek(e.outdatedAt));
+    // Counts cleared by hand (tools/docs-status.js) leave outdatedAt behind; nothing is flagged.
+    const flagged = [...docs, ...links].filter((e) => inWeek(e.outdatedAt) && (e.outdatedUseful || e.outdatedObsolete));
     const lines = [];
     for (const d of newDocs) lines.push({ text: `${day(d.uploadedAt)}  ${who(d.uploadedBy)}  uploaded ${d.fileName} (${programName(d.program)}, ${d.topic || 'no topic'})`, href: `${SITE}${docsPath(d.program)}` });
     for (const l of newLinks) lines.push({ text: `${day(l.submittedAt)}  ${who(l.submittedBy)}  added link ${short(l.title, 70)} (${programName(l.program)})`, href: l.url });

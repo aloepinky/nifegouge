@@ -26,6 +26,9 @@ Deployed by `.github/workflows/deploy-lambda.yml` like the others. Created by ha
   `America/Chicago`, invoking through role `weeklyReport-scheduler-role`.
 - **Deploy** the ARN is in `github-lambda-deploy`'s inline policy `deploy-pinksheetmafia-lambdas`.
 
+Each report starts where the last sent one ended (the snapshot's `at`), so a Sunday whose send
+failed is covered by the next; past five weeks it falls back to the last 7 days.
+
 Invoke with `{"dryRun": true}` (optionally `"days": 14`) to get the report back without sending it
 or moving the vote snapshot. A plain invoke sends it and saves the totals, so it resets what the
 next Sunday's vote counts cover.
