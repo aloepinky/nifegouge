@@ -17,6 +17,7 @@
 //      for permission to edit the spreadsheet and reach an outside address; allow both.
 //   4. Pick `updatePageViews` and Run once to fill the tabs now.
 //
+// Only whole days are copied, through yesterday; today arrives with the next morning's run.
 // Every run re-reads the last DAYS_BACK whole days and rewrites them, so a day the trigger
 // missed is filled in by the next run, and nothing is entered twice. `backfill` rewrites any
 // range (the server keeps every day).
@@ -108,7 +109,9 @@ function writeRange_(from, to) {
   for (var start = from; start <= to;) {
     var end = dayString_(new Date(Utilities.parseDate(start, ZONE, 'yyyy-MM-dd').getTime() + 91 * 864e5));
     if (end > to) end = to;
-    days = days.concat(fetchDays_(start, end));
+    // A day with no views is before counting began (2026-10-06), not a quiet day: the site
+    // never has one. Leaving it out keeps it from reading as a zero beside Netlify's figure.
+    days = days.concat(fetchDays_(start, end).filter(function (d) { return d.views > 0; }));
     start = dayString_(new Date(Utilities.parseDate(end, ZONE, 'yyyy-MM-dd').getTime() + 36 * 3600e3));
   }
   var asDate = function (d) { return Utilities.parseDate(d, tz, 'yyyy-MM-dd'); };
