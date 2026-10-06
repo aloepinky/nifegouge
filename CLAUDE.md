@@ -582,6 +582,16 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   follows NATOPS over the exam sheet in two places (`Firewall Valve`, `Prop Lever - Full Forward`);
   otherwise reproduces the sheet's style. 118 limits verified; three stored as min/max pairs.
 
+## Page views
+
+The site counts its own views; Netlify sees only a visit's first page. `src/components/pageviews.js`
+(hooked in `App.js`) sends the page once the address settles (a redirect is one view), from
+pinksheetmafia.com only; a visitor is a browser per Central day, kept in localStorage, and nothing
+identifying is sent. `lambda/discussApi/pageviews.mjs` adds to table `PageViews` (PK `day`, SK
+`path`, `#total` row); `page-stats` reads it with `X-Stats-Token`. The Google Sheet pulls it via
+`tools/pageviews-sheet.gs` (Apps Script, pasted into the sheet); the weekly report has a Site
+traffic section.
+
 ## About pages and stats
 
 `about/SchoolStats.js` + `about/stats.js`; each tab's `stats` in the page's `CONTENT`. Everything is

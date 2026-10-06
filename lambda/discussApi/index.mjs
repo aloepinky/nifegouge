@@ -33,6 +33,7 @@ import {
   importSectionsHandler, remirrorSections,
 } from './questionSections.mjs';
 import { namespaceItemsHandler } from './namespaceOp.mjs';
+import { pageviewHandler, pageStatsHandler } from './pageviews.mjs';
 
 // The Discuss tab's API: item pages, syllabus documents, figure uploads, the jet log and
 // brief corpora, and the admin operations behind X-Admin-Token. One API Gateway resource,
@@ -100,6 +101,8 @@ import { namespaceItemsHandler } from './namespaceOp.mjs';
 //   GET  question-sections-revision?rev=                                             -> { revision }
 //   POST restore-question-sections         { rev, author?, summary? }                    -> { rev }
 //   POST import-question-sections (admin)  { doc }                                       -> { rev: 1 }; 409
+//   POST pageview                          { path, newDay, newPage } (text/plain beacon)  -> 204
+//   GET  page-stats?from=&to=  (stats)     X-Stats-Token or X-Admin-Token              -> { days: [{ day, views, visitors, pages }] }
 //   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'questions'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs, questions }
 //   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
 
@@ -189,6 +192,8 @@ const ROUTES = {
   'question-sections-revision': { method: 'GET', run: sectionsRevisionHandler },
   'restore-question-sections': { method: 'POST', run: restoreSectionsHandler },
   'import-question-sections': { method: 'POST', admin: true, run: importSectionsHandler },
+  'pageview': { method: 'POST', run: pageviewHandler },
+  'page-stats': { method: 'GET', run: pageStatsHandler },
   'rebuild-index': { method: 'POST', admin: true, run: rebuildIndexHandler },
   'tag-program': { method: 'POST', admin: true, run: tagProgramHandler },
 };

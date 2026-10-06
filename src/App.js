@@ -5,6 +5,7 @@ import LandingPage from './components/LandingPage.js';
 import Footer from './components/Footer.js';
 import TopNav from './components/TopNav.js';
 import { warmDiscuss } from './components/discuss/warm';
+import { usePageViews } from './components/pageviews';
 import { DRAFT, PROGRAMS, PROGRAM_TABS, shown, currentPath } from './components/programs';
 
 const loaders = [];
@@ -116,6 +117,7 @@ function App() {
   const isLanding = location.pathname === '/';
 
   useEffect(preloadPages, []);
+  usePageViews();
 
   return (
     <div className="site-shell">

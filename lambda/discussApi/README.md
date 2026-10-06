@@ -17,7 +17,7 @@ below is created once, by hand, in the AWS console for `us-east-2`.
 
 ## 1. DynamoDB
 
-Seven tables, on-demand capacity, everything else default. Create whichever does not exist yet:
+Eight tables, on-demand capacity, everything else default. Create whichever does not exist yet:
 
 | Table | Partition key | Sort key |
 |---|---|---|
@@ -28,10 +28,14 @@ Seven tables, on-demand capacity, everything else default. Create whichever does
 | `EPsLimitsScores` | `board` (String) | `runId` (String) |
 | `NIFEQuestions` | `questionId` (String) | (none) |
 | `QuestionSections` | `listId` (String) | `rev` (Number) |
+| `PageViews` | `day` (String) | `path` (String) |
 
 `EPsLimitsScores` is the EPs/Limits leaderboard (`scores.mjs`): one row per finished run, keyed
 `NIFE#EPs`, `Primary#Limits` and so on, never deleted. Its sort key is a String, unlike the
 others.
+
+`PageViews` is the site's own page counter (`pageviews.mjs`): one row per page per Central
+day, plus a `#total` row, with `views` and `visitors`. Its sort key is a String too.
 
 ## 2. S3
 
@@ -99,7 +103,8 @@ of that page (`arn:aws:iam::ACCOUNT_ID:role/...`), and the bucket name if you ch
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/Briefs",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/EPsLimitsScores",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/NIFEQuestions",
-        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/QuestionSections"
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/QuestionSections",
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/PageViews"
       ]
     },
     {
@@ -136,6 +141,8 @@ Configuration → Environment variables:
 | `SCORES_TABLE` | `EPsLimitsScores` (optional; this is the default) |
 | `QUESTIONS_TABLE` | `NIFEQuestions` (optional; this is the default) |
 | `QUESTION_SECTIONS_TABLE` | `QuestionSections` (optional; this is the default) |
+| `PAGEVIEWS_TABLE` | `PageViews` (optional; this is the default) |
+| `STATS_TOKEN` | a second long random string, which can only read the page counts (the Google Sheet holds it) |
 | `DISCUSS_BUCKET` | `pinksheetmafia-discuss` |
 | `DISCUSS_ADMIN_TOKEN` | a long random string (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`) |
 
@@ -210,6 +217,23 @@ new edition goes in, as a new revision of each brief.
   `DISCUSS_ADMIN_TOKEN=... node tools/discuss-set-author.js --from="Old" --to="New" --slugs=a,b`
   (or `--all`) rewrites the name on every revision of those pages that carries it. The
   documents are untouched.
+
+## Page views
+
+The site counts its own page views (`pageviews.mjs`, browser side `src/components/pageviews.js`)
+because Netlify Analytics sees only the first page of a visit. `POST pageview` is a text/plain
+beacon, a simple request, so it needs no CORS preflight and no API Gateway change: the proxy
+resource already routes it. Only pinksheetmafia.com counts; a local copy does not, unless started
+with `REACT_APP_PAGEVIEWS=on` against the dev server.
+
+`GET page-stats?from=YYYY-MM-DD&to=YYYY-MM-DD` (at most 92 days) reads them back with
+`X-Stats-Token` (or the admin token). The Google Sheet pulls it every morning through
+`tools/pageviews-sheet.gs`; setup is in that file's header. The weekly report reads the table
+directly.
+
+```
+curl -H "X-Stats-Token: $STATS_TOKEN"   "https://ms8qwr3ond.execute-api.us-east-2.amazonaws.com/prod/discuss/page-stats?from=2026-10-06"
+```
 
 ## Local development
 
