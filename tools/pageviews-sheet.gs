@@ -3,7 +3,7 @@
 // pasted into the spreadsheet, as below.
 //
 //   PSM Daily   Date | Visitors | Page views                    one row per day
-//   PSM Pages   Date | Section | Page | Views | Visitors        one row per page per day
+//   PSM Pages   Date | Section | Page | Views | Visitors | School   one row per page per day
 //
 // Your existing tabs are not touched. Point formulas at these, e.g. next to a Netlify row:
 //   =IFERROR(VLOOKUP(A2, 'PSM Daily'!A:C, 2, FALSE), "")
@@ -26,6 +26,13 @@ var DAILY = 'PSM Daily';
 var PAGES = 'PSM Pages';
 var DAYS_BACK = 10;
 var ZONE = 'America/Chicago'; // the server's days are Central days
+// The school a page belongs to, by the first part of its address. /tw4 is Primary's old address.
+var SCHOOLS = { nife: 'NIFE', primary: 'Primary', tw4: 'Primary', t44c: 'T-44C', t54a: 'T-54A' };
+
+function schoolOf_(path) {
+  if (path === '/') return 'Landing page';
+  return SCHOOLS[path.split('/')[1]] || 'Other';
+}
 
 function updatePageViews() {
   var to = dayString_(new Date(Date.now() - 864e5));
@@ -65,28 +72,41 @@ function fetchDays_(from, to) {
   return body.days;
 }
 
+// The tab, created if missing. The header is rewritten every run, so a column added to the
+// script appears on a tab made before it.
 function sheet_(ss, name, header) {
   var sh = ss.getSheetByName(name);
   if (!sh) {
     sh = ss.insertSheet(name);
-    sh.appendRow(header);
     sh.setFrozenRows(1);
-    sh.getRange(1, 1, 1, header.length).setFontWeight('bold');
   }
+  sh.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold');
   return sh;
+}
+
+// The last row with a date in column A. Not getLastRow(): a formula someone adds in another
+// column (an ARRAYFORMULA fills to the bottom) would make every empty row look like data.
+function lastDataRow_(sh) {
+  var n = sh.getMaxRows();
+  if (n < 2) return 1;
+  var col = sh.getRange(2, 1, n - 1, 1).getValues();
+  for (var i = col.length - 1; i >= 0; i -= 1) {
+    if (col[i][0] !== '' && col[i][0] !== null) return i + 2;
+  }
+  return 1;
 }
 
 // Rewrites the rows of `sh` whose date is in `days` with `rows`, keeping every other row, sorted
 // by date and then as given.
 function replaceDays_(sh, days, rows, width, tz) {
   var keep = [];
-  var last = sh.getLastRow();
+  var last = lastDataRow_(sh);
   if (last > 1) {
     var drop = {};
     days.forEach(function (d) { drop[d] = true; });
     sh.getRange(2, 1, last - 1, width).getValues().forEach(function (r) {
       var d = r[0] instanceof Date ? Utilities.formatDate(r[0], tz, 'yyyy-MM-dd') : String(r[0]);
-      if (!drop[d]) keep.push(r);
+      if (r[0] !== '' && !drop[d]) keep.push(r);
     });
     sh.getRange(2, 1, last - 1, width).clearContent();
   }
@@ -122,12 +142,12 @@ function writeRange_(from, to) {
     return [asDate(d.day), d.visitors, d.views];
   }), 3, tz);
 
-  var pages = sheet_(ss, PAGES, ['Date', 'Section', 'Page', 'Views', 'Visitors']);
+  var pages = sheet_(ss, PAGES, ['Date', 'Section', 'Page', 'Views', 'Visitors', 'School']);
   var rows = [];
   days.forEach(function (d) {
     d.pages.forEach(function (p) {
-      rows.push([asDate(d.day), p.path.split('/').slice(0, 3).join('/') || '/', p.path, p.views, p.visitors]);
+      rows.push([asDate(d.day), p.path.split('/').slice(0, 3).join('/') || '/', p.path, p.views, p.visitors, schoolOf_(p.path)]);
     });
   });
-  replaceDays_(pages, names, rows, 5, tz);
+  replaceDays_(pages, names, rows, 6, tz);
 }
