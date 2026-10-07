@@ -588,7 +588,8 @@ The site counts its own views; Netlify sees only a visit's first page. `src/comp
 (hooked in `App.js`) sends the page once the address settles (a redirect is one view), from
 pinksheetmafia.com only; a visitor is a browser per Central day, kept in localStorage, and nothing
 identifying is sent. `lambda/discussApi/pageviews.mjs` adds to table `PageViews` (PK `day`, SK
-`path`, `#total` row); `page-stats` reads it with `X-Stats-Token`. The Google Sheet pulls it via
+`path`; `#total`, `#school/<school>` and `#section/<section>` rows, since visitors can't be summed
+from pages); `page-stats` reads it with `X-Stats-Token`. Any `#` row is not a page. The Google Sheet pulls it via
 `tools/pageviews-sheet.gs` (Apps Script, pasted into the sheet); the weekly report has a Site
 traffic section.
 

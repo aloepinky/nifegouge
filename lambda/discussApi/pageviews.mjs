@@ -9,12 +9,16 @@ import { HEADERS, HttpError, headerOf, parseBody, reply } from './http.mjs';
 // (src/components/pageviews.js) reports each page it settles on instead.
 //
 // Table PageViews: partition `day` ("2026-10-06", Central time, as the weekly report keeps it),
-// sort `path`. One row per page per day holds `views` and `visitors`; the row whose path is
-// TOTAL holds the day's totals. Every count is an atomic ADD, so nothing is read on the way in.
+// sort `path`. One row per page per day holds `views` and `visitors`. Rows whose key starts
+// with `#` are not pages: `#total` holds the day's totals, `#school/<school>` and
+// `#section/<section>` each school's and section's (since 2026-10-07). Every count is an
+// atomic ADD, so nothing is read on the way in.
 //
 // A visitor is a browser on a day, decided in the browser: it says whether this is its first
-// page of the day (`newDay`) and its first view of this page today (`newPage`). Nothing that
-// identifies anyone is sent or stored, not even an IP address.
+// page of the day (`newDay`), its first view of this page today (`newPage`), and its first in
+// this section and school (`newSection`, `newSchool`). Visitors can't be added up from pages
+// (one reader of three Discuss pages is one Discuss visitor), which is why each level is
+// counted. Nothing that identifies anyone is sent or stored, not even an IP address.
 //
 // The beacon is a text/plain POST, a "simple" request, so no CORS preflight is needed and API
 // Gateway's OPTIONS answer is not involved. Nobody reads its response.
@@ -31,6 +35,8 @@ const MAX_DAYS = 92;
 // counted under one row rather than making a row of its own.
 const PREFIXES = new Set(['nife', 'primary', 't44c', 't54a', 'tw4']);
 const OTHER = '/(other)';
+// Primary's old address is still Primary.
+const SCHOOL_OF_PREFIX = { tw4: 'primary' };
 const BOT = /bot|crawl|spider|slurp|headless|lighthouse|preview|facebookexternalhit|embedly|prerender/i;
 
 const db = () => getDynamo();
@@ -55,6 +61,21 @@ export function cleanPath(raw) {
   return p;
 }
 
+// A page's section, its first two parts (/primary/discuss), and its school (primary). The
+// browser works out the same two to say whether they are new to it today
+// (src/components/pageviews.js); keep them alike.
+export function sectionOf(path) {
+  if (path === '/' || path === OTHER) return path;
+  return path.split('/').slice(0, 3).join('/');
+}
+
+export function schoolOf(path) {
+  if (path === '/') return 'landing';
+  if (path === OTHER) return 'other';
+  const prefix = path.split('/')[1];
+  return SCHOOL_OF_PREFIX[prefix] || prefix;
+}
+
 async function add(day, path, views, visitors) {
   await db().send(new UpdateCommand({
     TableName: CONFIG.pageViewsTable,
@@ -65,7 +86,7 @@ async function add(day, path, views, visitors) {
   }));
 }
 
-// POST pageview { path, newDay, newPage }. Always answers 204: a beacon has nobody to tell.
+// POST pageview { path, newDay, newPage, newSection, newSchool }. Always answers 204: a beacon has nobody to tell.
 export async function pageviewHandler(event) {
   let body = {};
   try { body = parseBody(event); } catch (e) { return NOTHING; }
@@ -76,6 +97,8 @@ export async function pageviewHandler(event) {
   await Promise.all([
     add(day, path, 1, body.newPage ? 1 : 0),
     add(day, TOTAL, 1, body.newDay ? 1 : 0),
+    add(day, `#section${sectionOf(path)}`, 1, body.newSection ? 1 : 0),
+    add(day, `#school/${schoolOf(path)}`, 1, body.newSchool ? 1 : 0),
   ]);
   return NOTHING;
 }
@@ -106,8 +129,8 @@ export function daysBetween(from, to) {
   return out;
 }
 
-// One day's rows: { day, views, visitors, pages: [{ path, views, visitors }] }, pages most
-// viewed first.
+// One day's rows: { day, views, visitors, pages, sections, schools }, each list most viewed
+// first. `sections` and `schools` are empty for a day before they were counted.
 export async function readDay(day) {
   const rows = [];
   let start;
@@ -123,11 +146,18 @@ export async function readDay(day) {
     start = out.LastEvaluatedKey;
   } while (start);
   const total = rows.find((r) => r.path === TOTAL) || {};
-  const pages = rows
-    .filter((r) => r.path !== TOTAL)
-    .map((r) => ({ path: r.path, views: r.views || 0, visitors: r.visitors || 0 }))
-    .sort((a, b) => b.views - a.views || (a.path < b.path ? -1 : 1));
-  return { day, views: total.views || 0, visitors: total.visitors || 0, pages };
+  const level = (test, name, key) => rows
+    .filter(test)
+    .map((r) => ({ [name]: key(r.path), views: r.views || 0, visitors: r.visitors || 0 }))
+    .sort((a, b) => b.views - a.views || (a[name] < b[name] ? -1 : 1));
+  return {
+    day,
+    views: total.views || 0,
+    visitors: total.visitors || 0,
+    pages: level((r) => !r.path.startsWith('#'), 'path', (p) => p),
+    sections: level((r) => r.path.startsWith('#section/'), 'section', (p) => p.slice('#section'.length)),
+    schools: level((r) => r.path.startsWith('#school/'), 'school', (p) => p.slice('#school/'.length)),
+  };
 }
 
 // GET page-stats?from=YYYY-MM-DD&to=YYYY-MM-DD (to defaults to from; at most 92 days).

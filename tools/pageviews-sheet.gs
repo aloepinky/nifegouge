@@ -3,7 +3,13 @@
 // pasted into the spreadsheet, as below.
 //
 //   PSM Daily   Date | Visitors | Page views                    one row per day
+//   PSM Sections Date | School | Section | Views | Visitors         one row per school (Section
+//                                                                "All") and per section, per day
 //   PSM Pages   Date | Section | Page | Views | Visitors | School   one row per page per day
+//
+// Visitors are counted at each level, not added up: one reader of three Discuss pages is one
+// visitor to the section. Until the push that began them only pages were counted, so those days'
+// section and school views are added up from their pages and their visitors are left blank.
 //
 // Your existing tabs are not touched. Point formulas at these, e.g. next to a Netlify row:
 //   =IFERROR(VLOOKUP(A2, 'PSM Daily'!A:C, 2, FALSE), "")
@@ -24,6 +30,7 @@
 
 var DAILY = 'PSM Daily';
 var PAGES = 'PSM Pages';
+var SECTIONS = 'PSM Sections';
 var DAYS_BACK = 10;
 var ZONE = 'America/Chicago'; // the server's days are Central days
 // The school a page belongs to, by the first part of its address. /tw4 is Primary's old address.
@@ -32,6 +39,49 @@ var SCHOOLS = { nife: 'NIFE', primary: 'Primary', tw4: 'Primary', t44c: 'T-44C',
 function schoolOf_(path) {
   if (path === '/') return 'Landing page';
   return SCHOOLS[path.split('/')[1]] || 'Other';
+}
+
+// The server's school key (lambda/discussApi/pageviews.mjs schoolOf) as the sheet names it.
+function schoolName_(key) {
+  if (key === 'landing') return 'Landing page';
+  return SCHOOLS[key] || 'Other';
+}
+
+function sectionOf_(path) {
+  if (path === '/' || path === '/(other)') return path;
+  return path.split('/').slice(0, 3).join('/');
+}
+
+// One day's school and section rows. A day from before they were counted has only pages, and
+// the day they began has them for part of the day only (their views fall short of the site's):
+// either way its views are added up from pages and its visitors left blank, since those can't be.
+function sectionRows_(d, date) {
+  var schools = d.schools || [];
+  var sections = d.sections || [];
+  var counted = schools.reduce(function (n, s) { return n + s.views; }, 0);
+  var blank = !schools.length || counted !== d.views;
+  if (blank) {
+    var bySchool = {};
+    var bySection = {};
+    d.pages.forEach(function (p) {
+      var school = schoolOf_(p.path);
+      var section = sectionOf_(p.path);
+      bySchool[school] = (bySchool[school] || 0) + p.views;
+      bySection[section] = (bySection[section] || 0) + p.views;
+    });
+    schools = Object.keys(bySchool).map(function (k) { return { name: k, views: bySchool[k], visitors: '' }; });
+    sections = Object.keys(bySection).map(function (k) { return { section: k, views: bySection[k], visitors: '' }; });
+  } else {
+    schools = schools.map(function (s) { return { name: schoolName_(s.school), views: s.views, visitors: s.visitors }; });
+  }
+  var rows = [];
+  schools.sort(function (a, b) { return b.views - a.views; }).forEach(function (s) {
+    rows.push([date, s.name, 'All', s.views, s.visitors]);
+    sections.filter(function (x) { return schoolOf_(x.section) === s.name; })
+      .sort(function (a, b) { return b.views - a.views; })
+      .forEach(function (x) { rows.push([date, s.name, x.section, x.views, x.visitors]); });
+  });
+  return rows;
 }
 
 function updatePageViews() {
@@ -141,6 +191,11 @@ function writeRange_(from, to) {
   replaceDays_(daily, names, days.map(function (d) {
     return [asDate(d.day), d.visitors, d.views];
   }), 3, tz);
+
+  var sectionsSheet = sheet_(ss, SECTIONS, ['Date', 'School', 'Section', 'Views', 'Visitors']);
+  var sectionRows = [];
+  days.forEach(function (d) { sectionRows = sectionRows.concat(sectionRows_(d, asDate(d.day))); });
+  replaceDays_(sectionsSheet, names, sectionRows, 5, tz);
 
   var pages = sheet_(ss, PAGES, ['Date', 'Section', 'Page', 'Views', 'Visitors', 'School']);
   var rows = [];

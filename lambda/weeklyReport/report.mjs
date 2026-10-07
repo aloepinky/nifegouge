@@ -262,7 +262,7 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
         const programs = new Map();
         const PROGRAM = { nife: 'NIFE', primary: 'Primary', tw4: 'Primary', t44c: 'T-44C', t54a: 'T-54A' };
         for (const r of views.rows) {
-          if (r.path === '#total') continue;
+          if (r.path.startsWith('#')) continue; // the day's, schools' and sections' own rows
           pages.set(r.path, (pages.get(r.path) || 0) + (r.views || 0));
           const program = r.path === '/' ? 'Landing page' : PROGRAM[r.path.split('/')[1]] || 'Other';
           programs.set(program, (programs.get(program) || 0) + (r.views || 0));

@@ -11,8 +11,9 @@ import { API_BASE_URL } from './serverApi';
 // server: /primary/discuss/x?from=N3101 is a view of /primary/discuss/x.
 //
 // A visitor is this browser on this day (Central time), remembered in localStorage: the first
-// page of the day says `newDay`, the first view of each page that day `newPage`. Nothing else
-// about the reader is sent.
+// page of the day says `newDay`, the first view of each page that day `newPage`, and the first
+// in each section (/primary/discuss) and school (primary) `newSection` and `newSchool`, worked
+// out as lambda/discussApi/pageviews.mjs does. Nothing else about the reader is sent.
 //
 // Only the live site counts. A local copy talks to the live server, and its views would land in
 // the real numbers; REACT_APP_PAGEVIEWS=on turns counting on locally, for the dev server.
@@ -20,7 +21,8 @@ import { API_BASE_URL } from './serverApi';
 const LIVE = ['pinksheetmafia.com', 'www.pinksheetmafia.com'];
 const SETTLE_MS = 800;
 const KEY = 'psm-pageviews';
-const MAX_PATHS = 300;
+const MAX_PATHS = 400;
+const PREFIXES = ['nife', 'primary', 't44c', 't54a', 'tw4'];
 
 const enabled = () => typeof window !== 'undefined'
   && (LIVE.includes(window.location.hostname) || process.env.REACT_APP_PAGEVIEWS === 'on')
@@ -38,17 +40,33 @@ function today() {
 // per load rather than on every page.
 let memory = null;
 
+// The section and school a path counts under, as the server has them. An address outside the
+// site's prefixes is the server's one (other) row.
+function levels(path) {
+  if (path === '/') return { section: '/', school: 'landing' };
+  const parts = path.split('/');
+  if (!PREFIXES.includes(parts[1])) return { section: '/(other)', school: 'other' };
+  return { section: parts.slice(0, 3).join('/'), school: parts[1] === 'tw4' ? 'primary' : parts[1] };
+}
+
 function seen(path) {
   const day = today();
+  const { section, school } = levels(path);
   let state = memory;
   try { state = JSON.parse(localStorage.getItem(KEY)) || state; } catch (e) { /* private mode */ }
   if (!state || state.day !== day || !Array.isArray(state.paths)) state = { day, paths: [] };
   const newDay = state.paths.length === 0;
-  const newPage = !state.paths.includes(path);
-  if (newPage && state.paths.length < MAX_PATHS) state.paths.push(path);
+  const fresh = (key) => {
+    if (state.paths.includes(key)) return false;
+    if (state.paths.length < MAX_PATHS) state.paths.push(key);
+    return true;
+  };
+  const newPage = fresh(path);
+  const newSection = fresh(`section:${section}`);
+  const newSchool = fresh(`school:${school}`);
   memory = state;
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* private mode */ }
-  return { newDay, newPage };
+  return { newDay, newPage, newSection, newSchool };
 }
 
 function send(pathname) {
