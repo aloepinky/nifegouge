@@ -20,6 +20,13 @@ const CONTENT = {
       'The Limits tab is the T-44C operating limits sheet to fill in from memory, with the answers a click away when you are stuck.',
     ],
   },
+  '/t44c/docs': {
+    icon: 'docs',
+    blurb: 'Gouge, study guides and references shared by fellow students.',
+    more: [
+      'The Docs page is a community-driven library of T-44C study materials. Find gouge, study guides, and useful references shared by fellow students.',
+    ],
+  },
   '/t44c/discuss': {
     stats: <SyllabusStats school="Advanced" />,
     icon: 'discuss',

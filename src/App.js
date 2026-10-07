@@ -51,10 +51,12 @@ const T44CEPsLimits = page(() => import('./components/T44CEPsLimits.js'));
 const T44CAbout = page(() => import('./components/T44CAbout.js'));
 const T44CDiscuss = page(() => import('./components/T44CDiscuss.js'));
 const T44CBriefs = page(() => import('./components/T44CBriefs.js'));
+const T44CDocs = page(() => import('./components/T44CDocs.js'));
 const T54ADiscuss = page(() => import('./components/T54ADiscuss.js'));
 const T54AAbout = page(() => import('./components/T54AAbout.js'));
 const T54AEPsLimits = page(() => import('./components/T54AEPsLimits.js'));
 const T54ABriefs = page(() => import('./components/T54ABriefs.js'));
+const T54ADocs = page(() => import('./components/T54ADocs.js'));
 const BriefsPage = page(() => import('./components/briefs/BriefsPage'));
 const NIFEAbout = page(() => import('./components/NIFEAbout.js'));
 const CourseRules = page(() => import('./components/TW4CourseRules.js'));
@@ -160,12 +162,14 @@ function App() {
         <Route path="/t44c/about" element={<T44CAbout />} />
         <Route path="/t44c/eps-limits" element={<T44CEPsLimits />} />
         <Route path="/t44c/eps-limits/:tab" element={<T44CEPsLimits />} />
+        <Route path="/t44c/docs" element={<T44CDocs />} />
         <Route path="/t44c/discuss/*" element={<T44CDiscuss />} />
         <Route path="/t44c/briefs/*" element={<T44CBriefs />} />
         <Route path="/t54a" element={<Navigate to="/t54a/about" replace />} />
         <Route path="/t54a/about" element={<T54AAbout />} />
         <Route path="/t54a/eps-limits" element={<T54AEPsLimits />} />
         <Route path="/t54a/eps-limits/:tab" element={<T54AEPsLimits />} />
+        <Route path="/t54a/docs" element={<T54ADocs />} />
         <Route path="/t54a/discuss/*" element={<T54ADiscuss />} />
         <Route path="/t54a/briefs/*" element={<T54ABriefs />} />
       </>)}

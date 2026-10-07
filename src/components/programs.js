@@ -85,12 +85,14 @@ export const PROGRAM_TABS = {
   t44c: [
     { to: '/t44c/about', label: 'About' },
     { to: '/t44c/eps-limits', label: 'EPs/Limits' },
+    { to: '/t44c/docs', label: 'Docs', draft: true },
     { to: '/t44c/discuss', label: 'Discussion Items' },
     { to: '/t44c/briefs', label: 'Briefs' },
   ],
   t54a: [
     { to: '/t54a/about', label: 'About' },
     { to: '/t54a/eps-limits', label: 'EPs/Limits' },
+    { to: '/t54a/docs', label: 'Docs', draft: true },
     { to: '/t54a/discuss', label: 'Discussion Items' },
     { to: '/t54a/briefs', label: 'Briefs' },
   ],

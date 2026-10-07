@@ -19,6 +19,13 @@ const CONTENT = {
       'The Limits tab is the T-54A operating limits sheet to fill in from memory, with the answers a click away when you are stuck.',
     ],
   },
+  '/t54a/docs': {
+    icon: 'docs',
+    blurb: 'Gouge, study guides and references shared by fellow students.',
+    more: [
+      'The Docs page is a community-driven library of T-54A study materials. Find gouge, study guides, and useful references shared by fellow students.',
+    ],
+  },
   '/t54a/discuss': {
     stats: <SyllabusStats school="T-54A" />,
     icon: 'discuss',
