@@ -20,10 +20,12 @@ import { openStep, clickOutcome, FILL } from './stepFlow';
 // against the reply, shown beside the box and never typed. `num` prints a number the publication
 // gives in place of the running count, and a procedure's `start` is its first step's number.
 //
-// `sets` turns the page into Primary's EPs / Full EPs / Quadfold switch: several lists of
-// procedures, `[{ id, label, eps, title, footnote, nwc, normal }]`, chosen by the dots under the
-// buttons. `normal` draws the card as a normal checklist (black title, as the checklist card
-// prints it). A game always runs the first set, the EPs, and the dots are hidden for it.
+// `sets` turns the page into Primary's EPs / Quadfold switch: several lists of procedures,
+// `[{ id, label, eps, title, footnote, nwc, normal, read, sequential, extra }]`, chosen by the
+// dots under the buttons. `normal` draws the card as a normal checklist (black title, as the
+// checklist card prints it). `read` is the Quadfold's way of working: the steps are printed, not
+// typed; clicking one opens its `action` and `replies`, and a step is done by clicking its
+// control or by Skip. A game always runs the first set, the EPs, and the dots are hidden for it.
 //
 // The controls come in through `top`, `left` and `right`, render functions given
 // `{ fill, hint, reveal, resetKey }`:
@@ -226,7 +228,7 @@ function NWCModal({ group, current, nwc, hints, onClose }) {
   );
 }
 
-function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, onClose }) {
+function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, read, extraLabel, onClose }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -239,7 +241,15 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, onClose })
         <h2>How to Use the EPs Page</h2>
         <h3>How It Works</h3>
         <ul>
-          <li>One EP is shown at a time. Type each step exactly as the checklist prints it, item and setting together: "Mixture - IDLE CUTOFF". EPs are verbatim!</li>
+          {read ? (
+            <>
+              <li>One checklist is shown at a time, printed as on the checklist card, with who replies beside each step. <strong>*</strong> is done from memory, <strong>#</strong> is an abbreviated checklist item</li>
+              <li>Click a step to see what the FTI says to do and say for it. What you say is in bold; what the instructor says is highlighted</li>
+              {hasPanel && <li>In Full Mode, click the control each step names, in order. A step with no control on the poster is passed with Skip</li>}
+            </>
+          ) : (
+            <li>One EP is shown at a time. Type each step exactly as the checklist prints it, item and setting together: "Mixture - IDLE CUTOFF". EPs are verbatim!</li>
+          )}
           {hasPanel && <li>In Full Mode you can click the matching control instead of typing. A click fills the next empty step with that step's whole answer</li>}
           {hasBand && <li>The cockpit poster is drawn above and beside the EP. Hint and Skip ring the control a step names and scroll it into view; where the poster shows one panel at a time, they bring up the panel it is on</li>}
           <li>Clicking on the ## of ## indicator will display a dropdown from which a specific EP can be selected</li>
@@ -247,7 +257,6 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, onClose })
           <li>A <span className="epl-swatch epl-swatch--yellow">yellow</span> box has only part of the answer</li>
           <li>A <span className="epl-swatch epl-swatch--green">green</span> box is correct</li>
           {hasNWC && <li>An <strong>NWC</strong> button beside a step or the EP title opens the notes, warnings and cautions the publication prints there. A step with nothing printed against it has no button</li>}
-          {hasModes && <li>Normal checklists are typed as challenge and reply: "Parking Brake - SET". Who replies is shown beside the box. <strong>*</strong> is done from memory, <strong>#</strong> is an abbreviated checklist item</li>}
         </ul>
         <h3>Buttons &amp; Controls</h3>
         <ul>
@@ -255,7 +264,9 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, onClose })
           {hasPanel && <li><strong>Hint:</strong> Highlights the control for the next step. Found {hasLeft ? 'under the left panel' : 'in the button row'}</li>}
           <li><strong>Skip:</strong> Fills the next unanswered step. Found under the right panel (bottom row in Simple Mode)</li>
           <li><strong>All Answers:</strong> Completes all remaining steps</li>
-          <li><strong>Check:</strong> Validates your answers. Enter in any box does the same</li>
+          {!read && <li><strong>Check:</strong> Validates your answers. Enter in any box does the same</li>}
+          {read && <li><strong>Auto Expanded:</strong> Shows the next step's action and response, and follows along as you go</li>}
+          {extraLabel && <li><strong>{extraLabel}:</strong> Adds the normal procedures done from memory (engine start, the full anti-ice/deice check, waveoff, pre-stall checks) to the EPs, typed the same way. Game Mode leaves them out</li>}
           <li><strong>Reset:</strong> Clears all answers and feedback</li>
           <li><strong>Random/Sequential Order:</strong> Toggle between a shuffled order and the checklist's own</li>
           {hasNWC && <li><strong>Auto NWC:</strong> Opens a step's notes, warnings and cautions as soon as you get that step right</li>}
@@ -292,22 +303,91 @@ function ModeDots({ sets, current, onPick }) {
 // With `sets`, the drill is remounted on each switch (keyed by the set), so the order, the
 // answers and the card sizing all start again for the new list, as Primary's switch resets them.
 // Simple/Full Mode is the one choice that carries across.
+//
+// A set's `extra` (`{ label, eps }`) is a button beside Auto NWC that adds more procedures to the
+// set's own: the EPs page's "Normal Memory Items", the normal procedures done from memory. A game
+// leaves them out, so every leaderboard time is the same EPs.
 function EPDrill({ sets, isGameActive = false, ...props }) {
   const [current, setCurrent] = useState(sets ? sets[0].id : null);
   const [full, setFull] = useState(null);
+  const [withExtra, setWithExtra] = useState(false);
   if (!sets) return <Drill {...props} isGameActive={isGameActive} />;
   const set = isGameActive ? sets[0] : sets.find((s) => s.id === current) || sets[0];
-  const { id, label, ...overrides } = set;
+  const { id, label, extra, ...overrides } = set;
+  const adding = !!extra && withExtra && !isGameActive;
   return (
-    <Drill key={id} {...props} {...overrides} isGameActive={isGameActive}
+    <Drill key={`${id}${adding ? '+' : ''}`} {...props} {...overrides} isGameActive={isGameActive}
+      eps={adding ? [...overrides.eps, ...extra.eps] : overrides.eps}
       initialFull={full} onFull={setFull}
+      extraToggle={extra && !isGameActive ? { label: extra.label, on: withExtra, toggle: () => setWithExtra((v) => !v) } : null}
       modes={isGameActive ? null : <ModeDots sets={sets} current={set.id} onPick={setCurrent} />} />
+  );
+}
+
+// A step's line as the checklist card prints it: challenge, a leader, reply.
+function ReadLine({ row }) {
+  return (
+    <span className="epl-read-line">
+      <span className="epl-read-challenge">{row.challenge}</span>
+      <span className="epl-read-dots" />
+      <span className="epl-read-reply">{row.reply}</span>
+    </span>
+  );
+}
+
+const hasAction = (row) => !!((row.action && row.action.length) || (row.replies && row.replies.length));
+
+const NWC_WORDS = { note: 'NOTE', caution: 'CAUTION', warning: 'WARNING' };
+
+// A normal checklist step expanded, as Primary's Quadfold opens one over the card: the FTI's
+// ACTION column, then its RESPONSE column, then the step itself, marked as it stands. What the
+// student says is bold, what the instructor says is highlighted, as the FTI prints them.
+function ActionPanel({ row, label, mark, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return (
+    <div className="epl-action-overlay" onClick={onClose}>
+      <div className="epl-action" role="dialog" aria-label={`${row.challenge}: action and response`} onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="epl-action-close" onClick={onClose} aria-label="Close">&times;</button>
+        {row.action && row.action.length > 0 && (
+          <div className="epl-action-bubble">
+            {row.action.map((line, i) => {
+              if (typeof line === 'string') return <p key={i}>{line}</p>;
+              const kind = Object.keys(NWC_WORDS).find((k) => line[k]);
+              return (
+                <div key={i} className="epl-action-nwc">
+                  <div className="epl-action-nwc-label">{NWC_WORDS[kind]}</div>
+                  <p>{line[kind]}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {row.replies && row.replies.length > 0 && (
+          <div className="epl-action-bubble epl-action-replies">
+            {row.replies.map((reply, i) => (
+              <p key={i} className={reply.act ? 'epl-say--act' : reply.ip ? 'epl-say--ip' : 'epl-say'}>
+                {reply.act ? reply.text : <span>&ldquo;{reply.text}&rdquo;</span>}
+                {reply.who ? ` (${reply.who})` : ''}
+              </p>
+            ))}
+          </div>
+        )}
+        <div className="epl-action-step">
+          <span className={`epl-read ${mark}`}>{label} <ReadLine row={row} /></span>
+        </div>
+      </div>
+    </div>
   );
 }
 
 function Drill({
   eps, title, footnote, top, above, left, right, sideWidth = 200,
-  aliases = DEFAULT_ALIASES, normal = false, sequential = false, modes = null, initialFull = null, onFull,
+  aliases = DEFAULT_ALIASES, normal = false, read = false, sequential = false, modes = null, extraToggle = null,
+  initialFull = null, onFull,
   nwc, nwcHints, isGameActive = false, onGameComplete,
 }) {
   // One number sets both columns; a pair sets them separately, which a bespoke layout needs —
@@ -341,6 +421,10 @@ function Drill({
   const [fit, setFit] = useState({});
   const wasCorrect = useRef({});
   const advanceRef = useRef(null);
+  // `read`: the step whose action is open, and Primary's Auto Expanded, which keeps the next
+  // open step's action showing as the steps are done.
+  const [openAction, setOpenAction] = useState(null);
+  const [autoExpand, setAutoExpand] = useState(false);
 
   const ep = eps[order[pos]];
   const steps = useMemo(() => ep.rows.filter((r) => r.id), [ep]);
@@ -405,6 +489,7 @@ function Drill({
     setReveal(null);
     setShowList(false);
     setOpenNWC(null);
+    setOpenAction(null);
     wasCorrect.current = {};
     parts.current = {};
     setResetKey((k) => k + 1);
@@ -530,6 +615,7 @@ function Drill({
     setHint(null);
     setReveal(null);
     setOpenNWC(null);
+    setOpenAction(null);
     wasCorrect.current = {};
     parts.current = {};
     setResetKey((k) => k + 1);
@@ -553,6 +639,16 @@ function Drill({
     const r = results[f];
     const mark = r === 'correct' ? ' correct-answer' : r === 'partial' ? ' partial-answer' : r === 'incorrect' ? ' incorrect-answer' : '';
     return `epl-input${mark}`;
+  };
+
+  // A read step is marked like a typed box, and a skipped one, filled but not yet checked, is
+  // shown as done so the place in the checklist is never lost.
+  const readMark = (f) => {
+    const r = results[f];
+    if (r === 'correct') return 'correct-answer';
+    if (r === 'partial') return 'partial-answer';
+    if (r === 'incorrect') return 'incorrect-answer';
+    return data[f] ? 'epl-read--done' : '';
   };
 
   const onKeyDown = (e) => { if (e.key === 'Enter') check(); };
@@ -594,6 +690,15 @@ function Drill({
           if (row.decision) return <div key={i} className="epl-decision">{row.decision}</div>;
           if (row.note) return <div key={i} className="epl-note">{row.note}</div>;
           if (counts(row)) k += 1;
+          if (read) {
+            return (
+              <div key={row.id} className="epl-step epl-step--read">
+                <span className="epl-num">{stepLabel(row, k)}</span>
+                <span className="epl-read"><ReadLine row={row} /></span>
+                {row.who && <span className="epl-who">{row.who}</span>}
+              </div>
+            );
+          }
           return (
             <div key={row.id} className="epl-step">
               <span className="epl-num">{stepLabel(row, k)}</span>
@@ -603,9 +708,10 @@ function Drill({
             </div>
           );
         })}
+        {e.done && <div className="epl-done">{e.done}</div>}
       </div>
     );
-  }), [eps, nwc, cardClass]);
+  }), [eps, nwc, cardClass, read]);
 
   // Two measurements off the sizer, both re-run whenever the column changes width.
   // `useLayoutEffect` so they are in place before the browser paints rather than a frame later.
@@ -671,6 +777,21 @@ function Drill({
         // A lettered sub-step ({ sub: 'a' }) is numbered with its letter and does not advance
         // the count, as the T-54A sheet prints "† a." under step 4.
         if (counts(row)) n += 1;
+        if (read) {
+          const label = stepLabel(row, n);
+          const open = hasAction(row) ? () => { setAutoExpand(false); setOpenAction(row.id); } : null;
+          return (
+            <div key={row.id} className={`epl-step epl-step--read${open ? ' epl-step--open' : ''}`}
+              role={open ? 'button' : undefined} tabIndex={open ? 0 : undefined}
+              title={open ? 'Show the action and response' : undefined}
+              onClick={open || undefined}
+              onKeyDown={open ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } : undefined}>
+              <span className="epl-num">{label}</span>
+              <span className={`epl-read ${readMark(row.id)}`}><ReadLine row={row} /></span>
+              {row.who && <span className="epl-who">{row.who}</span>}
+            </div>
+          );
+        }
         return (
           <div key={row.id} className="epl-step">
             <span className="epl-num">{stepLabel(row, n)}</span>
@@ -682,8 +803,22 @@ function Drill({
           </div>
         );
       })}
+      {ep.done && <div className="epl-done">{ep.done}</div>}
     </div>
   );
+
+  // The open action: the clicked step's, or with Auto Expanded the next step still to do.
+  const actionId = read ? (autoExpand ? (nextOpen() || {}).id : openAction) : null;
+  const actionRow = actionId ? steps.find((s2) => s2.id === actionId && hasAction(s2)) : null;
+  const actionLabel = (() => {
+    if (!actionRow) return '';
+    let k = (ep.start || 1) - 1;
+    for (const row of steps) {
+      if (counts(row)) k += 1;
+      if (row === actionRow) return stepLabel(row, k);
+    }
+    return '';
+  })();
 
   return (
     <div className="limits-eps-container epl-page" ref={pageRef}>
@@ -696,7 +831,8 @@ function Drill({
           </button>
         ) : <span className="epl-mode-spacer" />}
       </div>
-      {showHelp && <Instructions hasPanel={hasPanel} hasBand={!!top} hasLeft={!!left} hasNWC={hasNWC} hasModes={!!modes} onClose={() => setShowHelp(false)} />}
+      {showHelp && <Instructions hasPanel={hasPanel} hasBand={!!top} hasLeft={!!left} hasNWC={hasNWC} hasModes={!!modes} read={read}
+        extraLabel={extraToggle && extraToggle.label} onClose={() => setShowHelp(false)} />}
       {openNWC && (
         <NWCModal key={openNWC} group={nwcGroup} current={openNWC} nwc={nwc} hints={nwcHints}
           onClose={() => setOpenNWC(null)} />
@@ -730,6 +866,10 @@ function Drill({
                 below sits at the same place whichever procedure is showing. */}
             <div className="epl-card-slot" style={cardMin ? { minHeight: cardMin } : undefined}>
               {card}
+              {actionRow && (
+                <ActionPanel row={actionRow} label={actionLabel} mark={readMark(actionRow.id)}
+                  onClose={() => { setOpenAction(null); setAutoExpand(false); }} />
+              )}
             </div>
             {showTools && (
               <div className="navigation-buttons">
@@ -769,8 +909,20 @@ function Drill({
               {showTools && full && top && !left && <button type="button" onClick={pressHint}>Hint</button>}
               {showTools && (!full || !right) && <button type="button" onClick={skip}>Skip</button>}
               {showTools && <button type="button" onClick={allAnswers}>All Answers</button>}
-              <button type="button" onClick={() => check()}>Check</button>
+              {!read && <button type="button" onClick={() => check()}>Check</button>}
               {showTools && <button type="button" onClick={reset}>Reset</button>}
+              {showTools && read && (
+                <button type="button" className={`epl-auto-nwc${autoExpand ? ' active' : ''}`} aria-pressed={autoExpand}
+                  onClick={() => { setOpenAction(null); setAutoExpand((v) => !v); }}>
+                  Auto Expanded
+                </button>
+              )}
+              {showTools && extraToggle && (
+                <button type="button" className={`epl-auto-nwc${extraToggle.on ? ' active' : ''}`} aria-pressed={extraToggle.on}
+                  onClick={extraToggle.toggle}>
+                  {extraToggle.label}
+                </button>
+              )}
               {showTools && hasNWC && (
                 <button type="button" className={`epl-auto-nwc${autoNWC ? ' active' : ''}`} aria-pressed={autoNWC}
                   onClick={() => setAutoNWC((v) => !v)}>

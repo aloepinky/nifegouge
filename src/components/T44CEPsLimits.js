@@ -71,10 +71,10 @@ function LeftSide(api) {
   );
 }
 
-// The EPs, then the normal procedures the publications say are done from memory (start, the
-// full anti-ice/deice check, waveoff, pre-stall checks), then every normal checklist as the
-// FTI's Appendix F "Hollywood Checklist" runs them. See T44C/t44cNormals.js for the sources.
-const NORMAL_FOOTNOTE = '* PERFORMED FROM MEMORY · # ABBREVIATED CHECKLIST ITEM';
+// The EPs, with a button that adds the normal procedures the publications say are done from
+// memory (start, the full anti-ice/deice check, waveoff, pre-stall checks), and every normal
+// checklist read as the FTI's Appendix F "Hollywood Checklist" runs them, the way Primary reads
+// its Quadfold. See T44C/t44cNormals.js for the sources.
 const SETS = [
   {
     id: 'eps',
@@ -83,14 +83,11 @@ const SETS = [
     nwc: T44C_EP_NWC,
     title: 'T-44C EMERGENCY PROCEDURES',
     footnote: '* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS',
+    extra: { label: 'Normal Memory Items', eps: T44C_MEMORY_NORMALS },
   },
   {
-    id: 'memory', label: 'Memory Normals', eps: T44C_MEMORY_NORMALS, nwc: null, normal: true,
-    title: 'T-44C NORMAL MEMORY ITEMS', footnote: NORMAL_FOOTNOTE,
-  },
-  {
-    id: 'hollywood', label: 'Hollywood', eps: T44C_HOLLYWOOD, nwc: null, normal: true, sequential: true,
-    title: 'T-44C NORMAL PROCEDURES', footnote: NORMAL_FOOTNOTE,
+    id: 'hollywood', label: 'Hollywood', eps: T44C_HOLLYWOOD, nwc: null, normal: true, read: true, sequential: true,
+    title: 'T-44C NORMAL PROCEDURES', footnote: '* PERFORMED FROM MEMORY · # ABBREVIATED CHECKLIST ITEM',
   },
 ];
 

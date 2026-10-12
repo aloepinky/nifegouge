@@ -7018,8 +7018,165 @@ textarea.incorrect-answer {
    is what holds the height, so Previous/Next and the control row under it sit at the same place
    whichever procedure is showing. The minimum comes from the sizer above, measured. */
 .epl-card-slot {
+  position: relative;
   display: flex;
   flex-direction: column;
+}
+
+/* A normal checklist read, not typed (EPDrill `read`), printed as the checklist card prints it:
+   challenge, a dotted leader, reply. A step that has an action to show is clickable. */
+.epl-step--read {
+  font-weight: normal;
+  font-size: 11px;
+}
+
+.epl-step--open {
+  cursor: pointer;
+}
+
+.epl-step--open:hover .epl-read {
+  background-color: #eef4f6;
+}
+
+.epl-read {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  line-height: 14px;
+}
+
+.epl-read-line {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.epl-read-challenge {
+  text-transform: uppercase;
+}
+
+.epl-read-dots {
+  flex: 1;
+  min-width: 8px;
+  border-bottom: 1px dotted #888;
+}
+
+.epl-read-reply {
+  text-align: right;
+  text-transform: uppercase;
+}
+
+/* Skipped: filled, not yet checked. */
+.epl-read--done {
+  background-color: #eee;
+}
+
+/* The PM's closing call under a checklist. */
+.epl-done {
+  padding: 4px 6px;
+  font-size: 10px;
+  font-style: italic;
+  text-align: center;
+  background-color: #fff;
+}
+
+/* A step's action and response over the card, as Primary's Quadfold opens one: two bubbles,
+   then the step. The overlay scrolls when the FTI's action is longer than the card. */
+.epl-action-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 8px;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.epl-action {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.limits-eps-container button.epl-action-close {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  z-index: 1;
+  min-width: 0;
+  padding: 0 4px;
+  font-size: 16px;
+  line-height: 1;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  cursor: pointer;
+}
+
+.epl-action-bubble {
+  padding: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  background-color: #fff;
+  border: 2px solid #333;
+  border-radius: 12px;
+}
+
+.epl-action-bubble p {
+  margin: 0 0 4px;
+}
+
+.epl-action-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.epl-action-nwc {
+  margin: 6px 0;
+}
+
+.epl-action-nwc-label {
+  font-weight: bold;
+  text-align: center;
+}
+
+.epl-action-replies {
+  text-align: center;
+}
+
+/* What the student says is bold; what the instructor says is highlighted and italic, as the FTI
+   prints them; a stage direction is plain. */
+.epl-say span {
+  font-weight: bold;
+}
+
+.epl-say--ip span {
+  font-style: italic;
+  background-color: #ffff00;
+}
+
+.epl-say--act {
+  font-size: 10px;
+  color: #444;
+}
+
+.epl-action-step {
+  padding: 10px;
+  font-size: 11px;
+  background-color: #f0f0f0;
+  border: 2px solid #666;
+  border-radius: 8px;
+}
+
+.epl-action-step .epl-read {
+  display: flex;
+  gap: 4px;
 }
 
 /* The control row in its new home under Previous/Next. It wraps rather than forcing the middle
