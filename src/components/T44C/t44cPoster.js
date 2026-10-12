@@ -50,7 +50,7 @@ export const T44C_POSTER = {
           // The Vx climb takes BOTH this tape and the terrain warning lights below, because the
           // step is "climb at Vx UNTIL the warnings cease" and you are working both. Each supplies
           // its own half of the step's text and the box stays yellow until the other arrives.
-          actions: ['Airspeed', 'Continue Climb at Vx Until All Visual And Voice Warnings Cease', 'Flight Instruments', 'PFDs/FGP/ESIS'],
+          actions: ['Airspeed', 'Continue Climb at Vx Until All Visual And Voice Warnings Cease', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'],
           values: { Airspeed: ['As Required (VXSE Or VYSE)', 'As Required'] },
           fills: { 'Continue Climb at Vx Until All Visual And Voice Warnings Cease': 'Continue Climb at Vx' } },
         // One target, two controls, and a settings list for each — see `valuesFor` in
@@ -62,7 +62,7 @@ export const T44C_POSTER = {
           // back out: you do not fly off the attitude indicator outside real IMC, so standing it
           // in for the yoke is an abstraction too far. The yoke is not drawn, so those steps are
           // buttons.
-          actions: ['Pitch', 'Wings', 'Flight Instruments', 'PFDs/FGP/ESIS'],
+          actions: ['Pitch', 'Wings', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'],
           values: {
             Pitch: ['As Required to set and maintain VX', 'Set and Hold Approximately 15° Noseup'],
             Wings: ['Level'],
@@ -119,7 +119,7 @@ export const T44C_POSTER = {
         // CABIN ALT and differential, beside CABIN CLIMB. The cruise Pressurization/Oxygen check
         // reads cabin altitude and differential here and oxygen pressure on the side panel, so
         // each gauge supplies its half and the step needs both.
-        { box: [0.512, 0.86, 0.041, 0.09], label: 'Cabin altitude and differential',
+        { box: [0.512, 0.859, 0.04, 0.086], label: 'Cabin altitude and differential',
           action: 'Pressurization/Oxygen', fills: 'Pressurization/', values: ['CHECKED'] },
         { box: [0.335, 0.143, 0.333, 0.078], label: 'Autopilot (FGP)',
           action: 'Autopilot/Yaw Damp', actions: ['Autopilot/Yaw Damp', 'Flight Instruments', 'PFDs/FGP/ESIS'], also: ['Yaw damp'], values: ['CHECKED/DISENGAGED', 'Off'] },
@@ -131,17 +131,17 @@ export const T44C_POSTER = {
         // The four boxes split the one the user tuned for the whole column, 2026-10-12.
         { id: 'gauge-itt', box: [0.319, 0.234, 0.086, 0.091], label: 'ITT',
           action: 'ITT', also: ['Right Engine'],
-          actions: ['ITT', 'ITT and N1', 'Engine Instruments'],
+          actions: ['ITT', 'ITT and N1', 'Engine Instruments', 'Instruments/Nacelles'],
           values: { ITT: ['Monitor ITT'], 'ITT and N1': ['Light-off, N1 stable above 50%'], 'Engine Instruments': ['CHECKED'] },
           fills: { 'ITT and N1': 'ITT and N1 - Light-off,' } },
         { id: 'gauge-trq', box: [0.319, 0.334, 0.085, 0.087], label: 'Torque',
-          action: 'Torque', actions: ['Torque', 'Engine Instruments'],
+          action: 'Torque', actions: ['Torque', 'Engine Instruments', 'Instruments/Nacelles'],
           values: { 'Engine Instruments': ['CHECKED'] } },
         { id: 'gauge-np', box: [0.319, 0.429, 0.085, 0.089], label: 'Prop RPM (Np)',
-          action: 'Prop RPM', actions: ['Prop RPM', 'Engine Instruments'],
+          action: 'Prop RPM', actions: ['Prop RPM', 'Engine Instruments', 'Instruments/Nacelles'],
           values: { 'Engine Instruments': ['CHECKED'] } },
         { id: 'gauge-n1', box: [0.319, 0.528, 0.085, 0.084], label: 'N1 (NG)',
-          action: 'N1', actions: ['N1', 'ITT and N1', 'Engine Instruments'],
+          action: 'N1', actions: ['N1', 'ITT and N1', 'Engine Instruments', 'Instruments/Nacelles'],
           values: {
             N1: ['Above 12 percent', '70 percent (both engines)', 'IDLE (both engines)'],
             'ITT and N1': ['Light-off, N1 stable above 50%'],
@@ -149,18 +149,25 @@ export const T44C_POSTER = {
           },
           fills: { 'ITT and N1': 'N1 stable above 50%' } },
         { box: [0.415, 0.278, 0.069, 0.154], label: 'ESIS',
-          action: 'ESIS', actions: ['ESIS', 'Flight Instruments', 'PFDs/FGP/ESIS'], values: ['ON', 'OFF', 'CHECKED/SET', 'SET'] },
+          action: 'ESIS', actions: ['ESIS', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'], values: ['ON', 'OFF', 'CHECKED/SET', 'SET'] },
         { box: [0.226, 0.285, 0.027, 0.143], label: 'Altimeter (pilot PFD)',
-          action: 'Altimeters', also: ['Altitude'], actions: ['Altimeters', 'Flight Instruments', 'PFDs/FGP/ESIS'], values: ['CHECKED/SET', 'SET', '___.___ SET', '____.____ SET', '5000 feet AGL minimum'] },
+          action: 'Altimeters', also: ['Altitude'], actions: ['Altimeters', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'], values: ['CHECKED/SET', 'SET', '___.___ SET', '____.____ SET', '5000 feet AGL minimum'] },
+        // The pilot's display control panel (DCP), the strip between the PFD and the engine
+        // gauges. NATOPS §20.3: the altimeter is set on its BARO knob, and minimums by pushing
+        // REFS and turning the MENU knob. Rough, 2026-10-12: tune with ?spots.
+        { id: 'dcp-baro', box: [0.288, 0.28, 0.027, 0.055], label: 'DCP BARO knob',
+          action: 'Altimeters', values: ['CHECKED/SET', 'SET', '___.___ SET', '____.____ SET'] },
+        { id: 'dcp-refs', box: [0.288, 0.36, 0.027, 0.09], label: 'DCP REFS and menu knob',
+          action: 'Minimums', values: ['____ SET'] },
         { box: [0.417, 0.442, 0.133, 0.177], label: 'MFD',
           action: 'MFD', values: ['CHECKED/SET'] },
         { box: [0.552, 0.262, 0.127, 0.325], label: 'Radio tuning unit',
           action: 'Radios/NAVAIDs', values: ['SET'] },
         { box: [0.32, 0.626, 0.084, 0.088], label: 'Oil pressure and temperature',
-          action: 'Oil Pressure', actions: ['Oil Pressure', 'Engine Instruments'],
+          action: 'Oil Pressure', actions: ['Oil Pressure', 'Engine Instruments', 'Instruments/Nacelles'],
           values: { 'Oil Pressure': ['Thumbs up to lineman'], 'Engine Instruments': ['CHECKED'] } },
         { box: [0.406, 0.625, 0.085, 0.089], label: 'Fuel flow',
-          action: 'Fuel Flow', actions: ['Fuel Flow', 'Engine Instruments'],
+          action: 'Fuel Flow', actions: ['Fuel Flow', 'Engine Instruments', 'Instruments/Nacelles'],
           values: { 'Fuel Flow': ['Note'], 'Engine Instruments': ['CHECKED'] } },
         { box: [0.099, 0.693, 0.09, 0.066], label: 'Generator volt-loadmeters',
           action: 'Generator Voltages', also: ['Generator Load'], values: ['CHECKED'] },
@@ -259,10 +266,10 @@ export const T44C_POSTER = {
         { box: [0.811, 0.473, 0.048, 0.072], label: 'Crossfeed',
           action: 'Crossfeed', actions: ['Crossfeed', 'Fuel Panel'], values: ['CHECKED/AUTO', 'CLOSED'] },
         { id: 'fuel-qty-left', box: [0.201, 0.261, 0.203, 0.258], label: 'Left fuel quantity',
-          action: 'Fuel Quantity', also: ['Fuel Quantity Indicators', 'Fuel Quantity (Current Limiters)'],
+          action: 'Fuel Quantity', actions: ['Fuel Quantity', 'Instruments/Nacelles'], also: ['Fuel Quantity Indicators', 'Fuel Quantity (Current Limiters)'],
           values: ['___ LBS, ___ LBS REQUIRED', 'Checked', 'CHECKED'] },
         { id: 'fuel-qty-right', box: [0.581, 0.264, 0.205, 0.255], label: 'Right fuel quantity',
-          action: 'Fuel Quantity', also: ['Fuel Quantity Indicators', 'Fuel Quantity (Current Limiters)'],
+          action: 'Fuel Quantity', actions: ['Fuel Quantity', 'Instruments/Nacelles'], also: ['Fuel Quantity Indicators', 'Fuel Quantity (Current Limiters)'],
           values: ['___ LBS, ___ LBS REQUIRED', 'Checked', 'CHECKED'] },
       ],
     },
@@ -377,8 +384,14 @@ export const T44C_POSTER = {
     { label: 'Announce "Abort"', action: 'Announce "Abort"', ep: true },
     { label: 'Brakes', action: 'Brakes', values: ['As Required', 'CHECKED'] },
     { label: 'Crew', action: 'Crew', values: ['Alerted', 'BRIEFED'] },
-    { label: 'Control Wheel', action: 'Control Wheel', also: ['Controls'], values: ['Rapidly Forward', 'Pull Out Of Dive By Exerting Smooth, Steady Back Pressure', 'CHECKED'] },
-    { label: 'A/P Trim Disconnect', action: 'A/P/Trim Disconnect (control wheel)', values: ['Depress Fully and Hold.'], ep: true },
+    // Everything done on or to the control wheel, which the sheet does not draw: flying it (the
+    // spin recovery), checking it (Controls), the AP/YD/trim disconnect switch on its grip
+    // (NATOPS §2.12.1) and the control lock pinned through its column. One button for the wheel,
+    // the user's ruling 2026-10-12, rather than one per thing on it.
+    { label: 'Control Wheel', action: 'Control Wheel',
+      also: ['Controls', 'A/P/Trim Disconnect (control wheel)', 'Control Lock'],
+      values: ['Rapidly Forward', 'Pull Out Of Dive By Exerting Smooth, Steady Back Pressure', 'CHECKED',
+        'Depress Fully and Hold.', 'INSTALLED'] },
     { label: 'Descend', action: 'Descend', values: ['As Required'], ep: true },
     { label: 'Evacuate Aircraft', action: 'Evacuate Aircraft', ep: true },
     { label: 'Land ASAP', action: 'Land as soon as possible.', ep: true },
@@ -386,18 +399,13 @@ export const T44C_POSTER = {
     { label: 'Alt Prop Feather Checklist', action: 'Alternate Prop Feather Checklist', values: ['As Required'], ep: true },
 
     // The normal checklists' steps with nothing on the sheet to point at: a briefing item (spin
-    // recovery, loose gear, stall speeds), a control the sheet does not draw (seatbelts, the
-    // oxygen push-pull knob behind the overhead, the control lock, the chocks), the PFD minimums
-    // (set on a knob not yet checked in NATOPS), and the nacelle walk-round half of
-    // Instruments/Nacelles. Everything else a normal checklist names is a target: a check of a
+    // recovery, loose gear, stall speeds) or something the sheet does not draw (seatbelts, the
+    // oxygen push-pull knob behind the overhead, the chocks). Everything else a normal checklist names is a target: a check of a
     // whole panel (Electrical Panel, Fuel Panel, Anti-Ice/Deice...) is answered by any control on
     // it, through those records' `actions`. `normal` keeps these off the EPs, which never name
     // them. Control Wheel serves both, since the normal Controls check is the wheel and pedals.
     { label: 'Seatbelts', action: 'Seatbelts', values: ['FASTENED'], normal: true },
-    { label: 'Minimums', action: 'Minimums', values: ['____ SET'], normal: true },
-    { label: 'Instruments/Nacelles', action: 'Instruments/Nacelles', values: ['CHECKED'], normal: true },
     { label: 'Oxygen', action: 'Oxygen', values: ['CLOSED'], normal: true },
-    { label: 'Control Lock', action: 'Control Lock', values: ['INSTALLED'], normal: true },
     { label: 'Wheels', action: 'Wheels', values: ['CHOCKED'], normal: true },
     { label: 'Spin Recovery', action: 'Spin Recovery Procedures', values: ['Briefed per NATOPS'], normal: true },
     { label: 'Loose Gear', action: 'Loose gear', values: ['Stowed'], normal: true },
