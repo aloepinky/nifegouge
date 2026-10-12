@@ -227,6 +227,8 @@ const START_LEFT = {
   id: 'start-left',
   title: 'Start Procedure - Left Engine',
   normal: true,
+  // One procedure in two cards: in a random order the left engine still follows the right.
+  after: 'start-right',
   start: 11,
   rows: [
     { note: 'Brief: "This will be a generator assisted start of the left engine. Left side\'s clear." (PF) "Right side\'s clear." (PM) One finger in the windshield.' },

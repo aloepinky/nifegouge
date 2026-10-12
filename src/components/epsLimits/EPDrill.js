@@ -80,6 +80,28 @@ function shuffled(n) {
   return a;
 }
 
+// A random order that keeps bundles together. A procedure with `after: '<id>'` is the second
+// half of the one with that id (the T-44C start: left engine after right), so it always comes
+// straight after it, random or not. The bundles are shuffled as units, then flattened.
+function shuffledEps(eps) {
+  const at = Object.fromEntries(eps.map((e, i) => [e.id, i]));
+  const units = [];
+  const placed = new Set();
+  eps.forEach((e, i) => {
+    if (placed.has(i) || (e.after && at[e.after] !== undefined)) return;
+    const unit = [i];
+    placed.add(i);
+    // Follow the chain: whatever comes after this one, and after that.
+    for (let k = 0; k < unit.length; k += 1) {
+      eps.forEach((f, j) => {
+        if (!placed.has(j) && f.after === eps[unit[k]].id) { unit.push(j); placed.add(j); }
+      });
+    }
+    units.push(unit);
+  });
+  return shuffled(units.length).flatMap((u) => units[u]);
+}
+
 // Whether a step advances the running count: a lettered sub-step does not, and nor does a step
 // printed with a number of its own.
 const counts = (row) => !row.sub && !row.num;
@@ -405,7 +427,7 @@ function Drill({
   const aimSeq = useRef(0);
   // A set of normal checklists opens in the order they are run, as Primary's Quadfold does.
   const [random, setRandom] = useState(!sequential);
-  const [order, setOrder] = useState(() => (sequential ? eps.map((_, i) => i) : shuffled(eps.length)));
+  const [order, setOrder] = useState(() => (sequential ? eps.map((_, i) => i) : shuffledEps(eps)));
   const [pos, setPos] = useState(0);
   const [data, setData] = useState({});
   const [results, setResults] = useState({});
@@ -626,7 +648,7 @@ function Drill({
   const toggleOrder = () => {
     const nextRandom = !random;
     setRandom(nextRandom);
-    setOrder(nextRandom ? shuffled(eps.length) : eps.map((_, i) => i));
+    setOrder(nextRandom ? shuffledEps(eps) : eps.map((_, i) => i));
     setData({});
     go(0);
   };

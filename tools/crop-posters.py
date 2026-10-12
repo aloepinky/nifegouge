@@ -13,10 +13,10 @@ Two sources, two different problems:
     is unreadable at any size a browser will show it. Each sub-panel crops out perfectly legible,
     so the page draws them separately and this script cuts them apart. It is vector, so it renders
     as sharply as asked; 200 dpi gives 7200x4800 and every region has pixels to spare.
-    Only the panels the EPs actually touch are cut - four of the six. The overhead is lights,
-    wiper and a placard; the oxygen panel carries supply pressure and gyro suction. No EP step
-    names anything on either, and a region nothing can be clicked on is a region that teaches
-    nothing.
+    Only the panels a checklist touches are cut - five of the six. The overhead is lights, wiper
+    and a placard, and no step names anything on it; a region nothing can be clicked on is a region
+    that teaches nothing. The side gauge panel (suction, pneumatic and oxygen pressure) was left
+    out while only the EPs were drilled, and cut when the normal checklists arrived.
 
     EVERY CUT IS A WHOLE SUB-PANEL. A crop that takes half a schematic is not allowed here, however
     much easier it makes a hotspot to hit: a student who has studied the real panel recognises it
@@ -111,6 +111,11 @@ T44C_REGIONS = {
     "quadrant": (0.246, 0.590, 0.468, 0.980),   # power quadrant / pedestal
     "fuel":     (0.026, 0.625, 0.251, 0.851),   # fuel control panel
     "elec":     (0.743, 0.449, 0.988, 0.944),   # start, electrical, radios and CB stack
+    # The right side panel: gyro suction, pneumatic pressure and oxygen supply gauges, the hour
+    # meter, the emergency static air lever and the engine breaker block. No EP touches it; the
+    # normal checklists do (suction and pneumatic pressure, oxygen pressure), so it was cut on
+    # 2026-10-12.
+    "gauges":   (0.470, 0.682, 0.725, 0.846),
 }
 
 # The T-54A poster is a 24.9x36.9" portrait Illustrator sheet of thirteen numbered items, drawn as

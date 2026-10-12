@@ -39,6 +39,10 @@ const TABS = [
 
 const MAIN = t44cRegion('main');
 const FUEL = t44cRegion('fuel');
+// The side gauge panel (suction, pneumatic and oxygen pressure). It is on the right side of the
+// cockpit; it hangs under the fuel panel here because that is where the page has room, and a
+// gauge on screen in the wrong corner teaches more than a button with its name on.
+const GAUGES = t44cRegion('gauges');
 const CONSOLE = ['quadrant', 'elec'].map(t44cRegion);
 
 // Each slot is its own component, not a call inside one render function: EPDrill renders a slot
@@ -63,9 +67,11 @@ function Console(api) {
 }
 
 function LeftSide(api) {
+  const view = useT44CPoster(api);
   return (
     <div className="t44c-console">
-      <PosterRegion region={FUEL} view={useT44CPoster(api)} className="epl-band-frame--fluid" />
+      <PosterRegion region={FUEL} view={view} className="epl-band-frame--fluid" />
+      <PosterRegion region={GAUGES} view={view} className="epl-band-frame--fluid" />
       <ActionButtons actions={T44C_POSTER.actions.filter((a) => api.mixed || (api.normalProcedure ? !a.ep : !a.normal))}
         aliases={T44C_ALIASES} {...api} />
     </div>
