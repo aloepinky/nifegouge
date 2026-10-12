@@ -397,7 +397,9 @@ function Drill({
   const [full, setFull] = useState(() => hasPanel && (initialFull ?? window.innerWidth >= 750));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { onFull?.(full); }, [full]);
-  const cardClass = `epl-card${normal ? ' epl-card--normal' : ''}`;
+  // A normal checklist's card takes the black title, and so does a normal procedure added to
+  // the EPs (`e.normal`), so it is never mistaken for an EP.
+  const cardClassFor = (e) => `epl-card${normal || e.normal ? ' epl-card--normal' : ''}`;
   const [showHelp, setShowHelp] = useState(false);
   const [reveal, setReveal] = useState(null);
   const aimSeq = useRef(0);
@@ -681,7 +683,7 @@ function Drill({
     let k = (e.start || 1) - 1;
     const has = (key) => !!nwcFor(nwc, key);
     return (
-      <div className={cardClass} key={e.id}>
+      <div className={cardClassFor(e)} key={e.id}>
         <div className="epl-card-title">
           {e.title}
           {has(e.id) && <button type="button" className="epl-nwc-btn epl-nwc-btn--title" tabIndex={-1}>NWC</button>}
@@ -711,7 +713,8 @@ function Drill({
         {e.done && <div className="epl-done">{e.done}</div>}
       </div>
     );
-  }), [eps, nwc, cardClass, read]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [eps, nwc, normal, read]);
 
   // Two measurements off the sizer, both re-run whenever the column changes width.
   // `useLayoutEffect` so they are in place before the browser paints rather than a frame later.
@@ -766,7 +769,7 @@ function Drill({
 
   let n = (ep.start || 1) - 1;
   const card = (
-    <div className={cardClass}>
+    <div className={cardClassFor(ep)}>
       <div className="epl-card-title">
         {ep.title}
         {nwcButton(ep.id, 'epl-nwc-btn epl-nwc-btn--title')}

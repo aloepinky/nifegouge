@@ -13,7 +13,9 @@
 //                      left seat says (bold in the FTI), `ip: true` for what the instructor says
 //                      (highlighted), `act: true` for a stage direction that is not spoken.
 //
-// `critical` (the asterisk) marks a step performed from memory. A procedure's `start` is its
+// A procedure's `normal` draws its card with the checklist card's black title, so a normal
+// memory procedure added to the EPs is never mistaken for one. `critical` (the asterisk) marks
+// a step performed from memory. A procedure's `start` is its
 // first step's number, so the two halves of the start procedure keep the FTI's 1 to 24, and
 // `done` is the PM's closing call.
 //
@@ -25,8 +27,11 @@
 //   * the waveoff: NATOPS §7.18, every step asterisked, "shall be committed to memory";
 //   * the pre-stall checks: ME FTI §104.4a, p. 1-17, "from memory".
 //
-// Where the card and the FTI differ, the line follows the card and the response bubble the FTI
-// (the card's "AS REQUIRED" for the control lock is the FTI's "INSTALLED"). The card's blanks
+// Where they disagree, NATOPS rules the FTI and the FTI rules the checklist card (the user's
+// ruling, 2026-10-12). So a line takes the FTI's reply where the card prints only "AS REQUIRED"
+// (Secure 18, Control Lock: "INSTALLED"), the FTI's crewmember (Engine Runup 5 and 7: LS, where
+// the card prints PF) and the FTI's pound sign (Descent 2); the full anti-ice/deice check is
+// NATOPS §19.1.4's, not the FTI's (N1 70 percent and IDLE, pitot ON). The card's blanks
 // ("___ LBS") are kept as printed; normalizeAnswer drops underscores.
 
 const item = (id, challenge, reply, who, extra = {}) => ({ id, challenge, reply, text: `${challenge} - ${reply}`, who, ...extra });
@@ -138,6 +143,7 @@ const OIL_PRESSURE = [
 const START_RIGHT = {
   id: 'start-right',
   title: 'Start Procedure - Right Engine',
+  normal: true,
   rows: [
     { note: 'Brief: "This will be a battery start of the right engine. The left side is clear." (PF) "Right side clear." (PM) Two fingers in the windshield.' },
     memory('sr1', 'Right Starter', 'On, Ignition, rotation', 'PF', {
@@ -220,6 +226,7 @@ const GENERATOR_ON = (side) => [`PF turns on ${side} generator, notes ${side ===
 const START_LEFT = {
   id: 'start-left',
   title: 'Start Procedure - Left Engine',
+  normal: true,
   start: 11,
   rows: [
     { note: 'Brief: "This will be a generator assisted start of the left engine. Left side\'s clear." (PF) "Right side\'s clear." (PM) One finger in the windshield.' },
@@ -320,7 +327,7 @@ const AFTER_START = {
       ],
       replies: [say('ICS check', 'PF'), ip('Loud and clear, how me?', 'PM'), say('Loud and clear, CHECKED/ON', 'PF')],
     }),
-    item('as4', 'Oxygen Mask Mic', 'CHECKED, OPEN', 'PM, OBS', {
+    item('as4', 'Oxygen Mask Mic', 'CHECKED/OPEN', 'PM, OBS', {
       action: [
         'a. PM set MIC switches to MASK on all audio control panels (ACP).',
         'b. PM momentarily set each Oxygen mask to EMER, then return to 100%.',
@@ -382,7 +389,7 @@ const AFTER_START = {
       replies: [say('Switch Channel 1, copy ATIS.'), say('CHECKED/SET', 'PF')],
     }),
     // The FTI hangs the brake check and the taxi out of the line on this step.
-    item('as10', 'Transponder', 'AS REQUIRED', 'RS', {
+    item('as10', 'Transponder', 'STANDBY', 'RS', {
       action: [
         'Position transponder switch on reversionary panel as required. At most airfields the transponder will be in STBY.',
         'Brief the PM to "Hold the checklist. Keep me clear on the right during all taxi and ground ops. Let base know we are out of the chocks." Signal "brake check" to the lineman.',
@@ -461,7 +468,7 @@ const ENGINE_RUNUP = {
       ],
       replies: [say('CHECKED', 'PF')],
     }),
-    item('er5', 'Suction & Pneumatic Pressure', 'CHECKED', 'PF', {
+    item('er5', 'Suction & Pneumatic Pressure', 'CHECKED', 'LS', {
       action: [
         'LS ensures suction 4.3-5.9 inches Hg (5.1 ±0.8) and pneumatic pressure 12-20 PSI (16 ±4).',
         'a. Condition levers — HIGH IDLE',
@@ -481,7 +488,7 @@ const ENGINE_RUNUP = {
       ],
       replies: [say('CHECKED', 'LS')],
     }),
-    item('er7', 'Primary Governors', 'CHECKED', 'PF', {
+    item('er7', 'Primary Governors', 'CHECKED', 'LS', {
       action: [
         'a. Check power levers to set 1900 prop RPM.',
         'b. Smoothly move both prop levers aft until reaching the feather detent. This will be felt as increased resistance. Be careful not to allow prop levers to enter into the FEATHER position. If FEATHER is inadvertently selected, bring the props forward immediately.',
@@ -581,7 +588,7 @@ const BEFORE_TAKEOFF = {
       ],
       replies: [ip('SET', 'PM')],
     }),
-    item('bt8', 'Bleed Air Valves', 'AS REQUIRED', 'RS', {
+    item('bt8', 'Bleed Air Valves', 'OPEN or CLOSED', 'RS', {
       action: ['RS sets bleed air valves as required.'],
       replies: [ip('OPEN or CLOSED', 'RS'), act('(as required)')],
     }),
@@ -727,23 +734,27 @@ const BEFORE_TAKEOFF = {
   ],
 };
 
-// ME FTI §F105 item 6, the full check (p. F-15). Required when icing is anticipated and on the
-// first leg of a cross-country; otherwise the reply to item 6 is "Pitot heat checked". The FTI
-// gives no crewmember against these steps.
+// The full check. NATOPS §19.1.4 (p. 19.1-2), which ME FTI §F105 item 6 (p. F-15) calls for and
+// says "must be memorized"; NATOPS rules where the FTI differs (its "Condition levers — HIGH /
+// LOW IDLE", pitot "checked during preflight", fuel control heat left on, the last two steps
+// swapped). The responses are the FTI's, which NATOPS does not give. Required when icing is
+// forecast (NATOPS) and on the first leg of a cross-country (FTI); otherwise the reply to Before
+// Takeoff item 6 is "Pitot heat checked". Neither publication gives a crewmember for these steps.
 const ANTI_ICE_CHECK = {
   id: 'anti-ice-check',
   title: 'Full Anti-Ice/Deice Check',
+  normal: true,
   rows: [
     memory('ai1', 'Propeller deicer', 'ON', undefined, {
       action: [
-        'Commence timing. Assure PROP AMPS indicate 14 to 18 during each of the 4 phases. The timer will switch phases approximately every 30 seconds. Momentary needle deflection may be visible as propeller heat cycles between phases. Secure the system after amperage is checked during the fourth phase (2 minute minimum). Additional anti-ice and deice checks may be performed while the propeller is being checked.',
-        caution('Monitor load meters during anti-icing equipment checks to prevent Exceeding operating limits. Increase N1 if required in accordance with Figure 4.3-1.'),
+        'Commence timing. Assure PROP AMPS indicate 14 to 18 during each of the 4 phases. The timer will switch phases approximately every 30 seconds. Momentary needle deflection may be visible as propeller heat cycles between phases. Secure the system after amperage is checked during the fourth phase (2 minutes minimum). Additional anti-ice and deice checks may be performed while the propeller is being checked.',
+        caution('Monitor load meters during anti-icing equipment checks to prevent exceeding operating limits. Increase N1 if required in accordance with Figure 4.3-1.'),
       ],
       replies: [say('Give 30 second intervals', 'PF'), ip('30 seconds x4', 'PM')],
     }),
     { note: 'PM calls "30 seconds" x4. PROP AMPS 14 to 18 in each of the 4 phases, 2 minute minimum.' },
     { decision: '2. Place the following anti-icing systems ON and monitor load for proper indication:' },
-    memory('ai2a', 'LEFT & RIGHT PITOT', '(checked during preflight)', undefined, { sub: 'a' }),
+    memory('ai2a', 'LEFT & RIGHT PITOT', 'ON', undefined, { sub: 'a' }),
     memory('ai2b', 'Stall Heat', 'ON', undefined, { sub: 'b' }),
     memory('ai2c', 'LEFT & RIGHT ENG LIP BOOT', 'ON', undefined, {
       sub: 'c',
@@ -751,13 +762,12 @@ const ANTI_ICE_CHECK = {
     }),
     memory('ai2d', 'LEFT & RIGHT FUEL VENT', 'ON', undefined, { sub: 'd' }),
     memory('ai2e', 'WSHLD ANTI-ICE', 'BOTH, Then PILOT', undefined, { sub: 'e' }),
-    { note: '3. Upon completion of anti-ice checks, place all switches OFF. FUEL CONTROL HEAT remains ON.' },
-    memory('ai4', 'Condition levers', 'HIGH IDLE', undefined, { num: 4 }),
+    { note: '3. Upon completion of anti-ice checks, place all switches OFF.' },
+    memory('ai4', 'N1', '70 percent (both engines)', undefined, { num: 4 }),
     memory('ai5', 'DE-ICE CYCLE', 'SINGLE, Then MANUAL', undefined, {
       num: 5,
       action: [
-        'Check wing and tail boot automatically inflate, then deflate in 7 to 8 seconds when SINGLE is selected.',
-        'Check pneumatic pressure is 12 to 20 psi. Repeat the same check in MANUAL, disregarding cycle time.',
+        'Check wing and tail boot automatically inflate, then deflate in 7 to 8 seconds when SINGLE is selected. Check pneumatic pressure is 12 to 20 psi. Repeat the same check in MANUAL, disregarding cycle time.',
       ],
       replies: [
         act('(At DE-ICE CYCLE– SINGLE)'),
@@ -770,8 +780,8 @@ const ANTI_ICE_CHECK = {
       ],
     }),
     { note: 'Boots inflate, then deflate in 7 to 8 seconds in SINGLE. Pneumatic pressure 12 to 20 psi.' },
-    memory('ai6', 'Condition levers', 'LOW IDLE', undefined, { num: 6 }),
-    memory('ai7', 'Propeller deice', 'OFF (if not previously secured)', undefined, {
+    memory('ai6', 'Propeller deice', 'OFF (if not previously secured)', undefined, { num: 6 }),
+    memory('ai7', 'N1', 'IDLE (both engines)', undefined, {
       num: 7,
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
     }),
@@ -807,11 +817,11 @@ const CLIMB = {
       action: ['LS turns landing, taxi, and ice lights OFF.', '(PM reports "Abbreviated Climb Checklist complete" or continues with full checklist.)'],
       replies: [say('SET', 'LS')],
     }),
-    item('cl5', 'Autofeather', 'AS REQUIRED', 'LS', {
+    item('cl5', 'Autofeather', 'OFF', 'LS', {
       action: ['LS selects AUTO-FEATHER switch OFF, unless low altitude operations requiring auto-feather are planned.'],
       replies: [say('OFF', 'LS'), act('(as required)')],
     }),
-    item('cl6', 'Prop Sync', 'AS REQUIRED', 'PF', {
+    item('cl6', 'Prop Sync', 'OFF', 'PF', {
       action: ['PF sets 1900 RPM on left propeller RPM, then fine-tunes the right (PF) propeller to minimize audible modulation, then selects prop sync ON (as required) if desired. Prop sync is not typically used for high-work, and as such is typically left off for most flights.'],
       replies: [say('OFF', 'PF'), act('(as required)')],
     }),
@@ -835,7 +845,7 @@ const CRUISE = {
       action: INSTRUMENTS_NACELLES,
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
     }),
-    item('cr2', 'Altimeters', '____.____ SET', 'PF, PM', {
+    item('cr2', 'Altimeters', 'SET', 'PF, PM', {
       action: ['If below FL 180, ensure current altimeter setting (within 100 NM) is set. If FL 180 or above, set STD by depressing the BARO knob center.'],
       replies: [say('SET', 'PF'), ip('SET', 'PM')],
     }),
@@ -851,14 +861,14 @@ const DESCENT = {
   title: 'Descent',
   done: '"DESCENT CHECKLIST COMPLETE" (PM)',
   rows: [
-    item('de1', 'Altimeters', 'SET', 'PF, PM', {
+    item('de1', 'Altimeters', '___.___ SET', 'PF, PM', {
       action: [
         note('Approximately 75 percent N1 (single engine 85 percent N1) is required to maintain the pressurization schedule during descent.'),
         'Set regional altimeter setting (within 100 NM). If still above FL 180, you may leave STD set until descending through FL 180, then set regional altimeter. If proceeding to an uncontrolled field, set the ASOS altimeter setting within 25 NM of the field.',
       ],
       replies: [say('___.___ SET', 'PF'), ip('___.___ SET', 'PM')],
     }),
-    item('de2', 'Pressurization', 'SET', 'PM', {
+    abbrev('de2', 'Pressurization', 'SET', 'PM', {
       action: ['PM sets pressurization controller to the destination elevation plus 500 feet (corrected for reported altimeter setting). Refer to NATOPS Figure 2.18-5.'],
       replies: [ip('SET', 'PM')],
     }),
@@ -885,7 +895,7 @@ const APPROACH = {
       action: ['PF selects prop sync OFF.', '(PM commences Abbreviated Approach Checklist at Step 4 if appropriate.)'],
       replies: [say('OFF', 'PF')],
     }),
-    abbrev('ap4', 'FMS', 'AS REQUIRED', 'PF, PM', {
+    abbrev('ap4', 'FMS', 'SET', 'PF, PM', {
       action: ['PF directs PM to set appropriate destination and airways in the active FPLN page. PM also loads the current approach for the destination Airport.'],
       replies: [say('SET', 'PF'), ip('SET', 'PM')],
     }),
@@ -929,7 +939,7 @@ const LANDING = {
   title: 'Landing',
   done: '"LANDING CHECKLIST COMPLETE" (PM)',
   rows: [
-    item('la1', 'Flaps', 'AS REQUIRED', 'PF, PM', {
+    item('la1', 'Flaps', 'Up/Approach/Down', 'PF, PM', {
       action: ['PF checks that the flap handle and flap indicator agree and reports position. A visual check of flap position is not required unless experiencing a malfunction.'],
       replies: [say('Up/Approach/Down', 'PF'), act('(as required)'), ip('Up/Approach/Down', 'PM')],
     }),
@@ -962,7 +972,7 @@ const AFTER_LANDING = {
       ],
       replies: [say('LOW IDLE', 'PF')],
     }),
-    item('al2', 'Transponder', 'AS REQUIRED', 'RS', {
+    item('al2', 'Transponder', 'STANDBY', 'RS', {
       action: [
         'RS selects transponder to STBY. (as required)',
         note('Busier airports may incorporate ASDE-X and require transponders to remain on for taxi. Consideration should be given to checking appropriate publications for transponder requirements prior to taxiing.'),
@@ -981,11 +991,11 @@ const AFTER_LANDING = {
       action: ['PM checks cabin altitude indicating field elevation (approximately same as barometric altimeter) and differential indicating zero. This ensures the cabin is not pressurized. If cabin is still pressurized, select DUMP.'],
       replies: [ip('CHECKED/DEPRESSURIZED', 'PM')],
     }),
-    item('al6', 'Bleed Air Valves', 'AS REQUIRED', 'RS', {
+    item('al6', 'Bleed Air Valves', 'CLOSED', 'RS', {
       action: ['RS closes bleed air valves. If PF desires for the valves to remain open, PF briefs PM to leave the valves open. This would only be applicable if taxiing back for takeoff and the cabin door is not to be opened.'],
       replies: [ip('CLOSED', 'RS'), act('(as required)')],
     }),
-    item('al7', 'Lights', 'AS REQUIRED', 'LS', {
+    item('al7', 'Lights', 'SET', 'LS', {
       action: [
         'LS places the following switches OFF:',
         'a. LEFT and RIGHT LANDING',
@@ -1053,7 +1063,7 @@ const SECURE = {
       replies: [say('OFF', 'LS')],
     }),
     item('se17', 'Gangbar', 'OFF', 'LS', { replies: [say('OFF', 'LS')] }),
-    item('se18', 'Control Lock', 'AS REQUIRED', 'LS', {
+    item('se18', 'Control Lock', 'INSTALLED', 'LS', {
       action: [
         'LS installs control lock. Ensure chain is not tangled, then:',
         'a. Place guard around engine prop controls, open side facing aft.',
@@ -1063,7 +1073,7 @@ const SECURE = {
       replies: [say('INSTALLED', 'LS'), act('(as required)')],
     }),
     item('se19', 'Wheels', 'CHOCKED', 'LS', { replies: [say('CHOCKED', 'LS')] }),
-    item('se20', 'Parking Brake', 'AS REQUIRED', 'LS', {
+    item('se20', 'Parking Brake', 'RELEASED', 'LS', {
       action: ['Release the parking brake upon receiving confirmation that the wheels are chocked. Consideration should be given to keeping the parking brake set if parked on an icy or inclined ramp and/or prop wash/jet blast are present.'],
       replies: [say('RELEASED', 'LS'), act('(as required)')],
     }),
@@ -1078,6 +1088,7 @@ const SECURE = {
 const WAVEOFF = {
   id: 'waveoff',
   title: 'Waveoff/Missed Approach',
+  normal: true,
   rows: [
     memory('wo1', 'Power', 'As required, Establish Positive Rate of Climb (VX minimum)'),
     memory('wo2', 'Flaps', 'APPROACH (unless already UP)'),
@@ -1091,6 +1102,7 @@ const WAVEOFF = {
 const PRE_STALL = {
   id: 'pre-stall',
   title: 'Pre-Stall Checks',
+  normal: true,
   rows: [
     memory('ps1', 'Spin Recovery Procedures', 'Briefed per NATOPS'),
     memory('ps2', 'Loose gear', 'Stowed'),

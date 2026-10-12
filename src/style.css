@@ -7488,23 +7488,23 @@ textarea.incorrect-answer {
   background-color: #000;
 }
 
-/* The switch between lists, copied from TW4Cockpit.js's EPs / Full EPs / Quadfold dots: a
-   300px line with a labelled dot at each end and one in the middle, the chosen one filled. */
+/* The switch between lists, after TW4Cockpit.js's EPs / Full EPs / Quadfold dots, drawn smaller:
+   a short line with a labelled dot at each end, the chosen one filled. */
 .epl-modes {
   position: relative;
   display: flex;
   justify-content: space-between;
-  width: 300px;
+  width: 150px;
   max-width: 100%;
-  height: 60px;
-  margin: 10px auto 0;
+  height: 38px;
+  margin: 4px auto 0;
 }
 
 .epl-modes-line {
   position: absolute;
-  top: 32px;
-  left: 10px;
-  right: 10px;
+  top: 25px;
+  left: 7px;
+  right: 7px;
   height: 2px;
   background-color: #333;
 }
@@ -7514,11 +7514,11 @@ textarea.incorrect-answer {
 .limits-eps-container button.epl-modes-stop {
   position: relative;
   align-self: flex-start;
-  margin-top: 23px;
+  margin-top: 19px;
   padding: 0;
   min-width: 0;
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   background: none;
   border: none;
   color: inherit;
@@ -7527,10 +7527,10 @@ textarea.incorrect-answer {
 
 .epl-modes-label {
   position: absolute;
-  bottom: 25px;
+  bottom: 18px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 14px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -7547,8 +7547,8 @@ textarea.incorrect-answer {
 
 .epl-modes-dot {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   box-sizing: border-box;
   border-radius: 50%;
   border: 2px solid #333;
