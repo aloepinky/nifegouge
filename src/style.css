@@ -7358,8 +7358,13 @@ textarea.incorrect-answer {
   cursor: crosshair;
 }
 
+/* border-box, so the outline IS the target: with the default content-box the border was added
+   outside the box on the right and bottom only, a control centred in the outline landed 1px
+   (2px when selected) right of and below the real target, and every box drawn by eye came out
+   up and to the left. The live targets (button.epl-spot) have no border at all. */
 .epl-spot-box {
   position: absolute;
+  box-sizing: border-box;
   border: 1px solid rgba(0, 59, 79, 0.9);
   background-color: rgba(0, 59, 79, 0.18);
 }
