@@ -1121,5 +1121,5 @@ export const T44C_HOLLYWOOD = [
 ];
 
 // The normal procedures the publications say are done from memory, typed like the EPs. The EPs
-// page adds them to the EPs when its "Normal Memory Items" button is on.
+// page adds them to the EPs when its "All Memory Procedures" button is on.
 export const T44C_MEMORY_NORMALS = [START_RIGHT, START_LEFT, ANTI_ICE_CHECK, WAVEOFF, PRE_STALL];

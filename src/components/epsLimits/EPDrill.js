@@ -305,7 +305,7 @@ function ModeDots({ sets, current, onPick }) {
 // Simple/Full Mode is the one choice that carries across.
 //
 // A set's `extra` (`{ label, eps }`) is a button beside Auto NWC that adds more procedures to the
-// set's own: the EPs page's "Normal Memory Items", the normal procedures done from memory. A game
+// set's own: the EPs page's "All Memory Procedures", the normal procedures done from memory. A game
 // leaves them out, so every leaderboard time is the same EPs.
 function EPDrill({ sets, isGameActive = false, ...props }) {
   const [current, setCurrent] = useState(sets ? sets[0].id : null);
@@ -660,7 +660,10 @@ function Drill({
   // `normalProcedure` says the card is a normal checklist rather than an EP, so a poster can
   // show the buttons only normal checklists use (T-44C's `normal` actions) and keep them off the
   // EPs, which never name them.
-  const api = { fill, hint, reveal, next: controlOf((nextOpen() || {}).text), resetKey, normalProcedure: normal || !!ep.normal };
+  const api = { fill, hint, reveal, next: controlOf((nextOpen() || {}).text), resetKey, normalProcedure: normal || !!ep.normal,
+    // With the set's `extra` procedures added, a page can show both kinds of button on every card,
+    // so the column does not change (and give the procedure away) as the cards go by.
+    mixed: !!(extraToggle && extraToggle.on) };
 
   // The NWC affordance: a step or a title only grows one when the publication prints something
   // against it, so its presence is itself information.

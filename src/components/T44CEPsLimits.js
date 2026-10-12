@@ -66,16 +66,17 @@ function LeftSide(api) {
   return (
     <div className="t44c-console">
       <PosterRegion region={FUEL} view={useT44CPoster(api)} className="epl-band-frame--fluid" />
-      <ActionButtons actions={T44C_POSTER.actions.filter((a) => (api.normalProcedure ? !a.ep : !a.normal))}
+      <ActionButtons actions={T44C_POSTER.actions.filter((a) => api.mixed || (api.normalProcedure ? !a.ep : !a.normal))}
         aliases={T44C_ALIASES} {...api} />
     </div>
   );
 }
 
-// The EPs, with a button that adds the normal procedures the publications say are done from
-// memory (start, the full anti-ice/deice check, waveoff, pre-stall checks), and every normal
-// checklist read as the FTI's Appendix F "Hollywood Checklist" runs them, the way Primary reads
-// its Quadfold. See T44C/t44cNormals.js for the sources.
+// The EPs, with a button ("All Memory Procedures") that adds the normal procedures the
+// publications say are done from memory (start, the full anti-ice/deice check, waveoff,
+// pre-stall checks), and every normal checklist read as the FTI's Appendix F "Hollywood
+// Checklist" runs them, the way Primary reads its Quadfold. With that button on, every card
+// shows both kinds of cockpit button. See T44C/t44cNormals.js for the sources.
 const SETS = [
   {
     id: 'eps',
@@ -84,7 +85,7 @@ const SETS = [
     nwc: T44C_EP_NWC,
     title: 'T-44C EMERGENCY PROCEDURES',
     footnote: '* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS',
-    extra: { label: 'Normal Memory Items', eps: T44C_MEMORY_NORMALS },
+    extra: { label: 'All Memory Procedures', eps: T44C_MEMORY_NORMALS },
   },
   {
     id: 'hollywood', label: 'Hollywood', eps: T44C_HOLLYWOOD, nwc: null, normal: true, read: true, sequential: true,
