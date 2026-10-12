@@ -732,7 +732,7 @@ function Drill({
           return (
             <div key={row.id} className="epl-step">
               <span className="epl-num">{stepLabel(row, k)}</span>
-              <input type="text" className="epl-input" readOnly tabIndex={-1} defaultValue="" />
+              <input type="text" className="epl-input" readOnly tabIndex={-1} defaultValue="" data-step={row.id} />
               {row.who && <span className="epl-who">{row.who}</span>}
               {has(row.id) && <button type="button" className="epl-nwc-btn" tabIndex={-1}>NWC</button>}
             </div>
@@ -765,25 +765,31 @@ function Drill({
       // EPDivsData.js, a size picked by eye per step — and hand-picked sizes go stale the moment
       // a checklist is reissued with a longer wording. Measuring the real font against the real
       // box costs one canvas and cannot go stale.
-      const input = el.querySelector('.epl-input');
-      if (!input) return;
-      const css = window.getComputedStyle(input);
+      // Each step against ITS OWN box. A row with an NWC button, or a crewmember beside it, has a
+      // narrower box than a bare one; measuring one box and applying its width to every step
+      // left those rows overflowing (Unscheduled Electric Trim Activation, whose one step carries
+      // an NWC). The sizer draws every row with its own buttons, so its inputs are the real widths.
+      const boxes = el.querySelectorAll('.epl-input[data-step]');
+      if (!boxes.length) return;
+      const css = window.getComputedStyle(boxes[0]);
       const base = parseFloat(css.fontSize);
-      const room = input.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
-      if (!(room > 0) || !(base > 0)) return;
+      if (!(base > 0)) return;
+      const pad = parseFloat(css.paddingLeft) + parseFloat(css.paddingRight);
       if (!rulerRef.current) rulerRef.current = document.createElement('canvas');
       const pen = rulerRef.current.getContext('2d');
       pen.font = `${css.fontStyle} ${css.fontWeight} ${base}px ${css.fontFamily}`;
+      const textOf = {};
+      for (const e of eps) for (const row of e.rows) if (row.id) textOf[row.id] = row.text;
       const sized = {};
-      for (const e of eps) {
-        for (const row of e.rows) {
-          if (!row.id) continue;
-          const wide = pen.measureText(row.text).width;
-          // MIN_STEP_FONT is a floor, not a target: below it the answer is unreadable and a
-          // scrolling box is the better failure.
-          if (wide > room) sized[row.id] = Math.max(MIN_STEP_FONT, (base * room) / wide);
-        }
-      }
+      boxes.forEach((box) => {
+        const id = box.dataset.step;
+        const room = box.clientWidth - pad;
+        if (!(room > 0) || !textOf[id]) return;
+        const wide = pen.measureText(textOf[id]).width;
+        // MIN_STEP_FONT is a floor, not a target: below it the answer is unreadable and a
+        // scrolling box is the better failure.
+        if (wide > room) sized[id] = Math.max(MIN_STEP_FONT, (base * room) / wide);
+      });
       setFit(sized);
     };
     measure();
