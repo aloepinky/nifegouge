@@ -26,13 +26,19 @@ const commas = (s) => s.split(',').map((x) => x.trim()).filter(Boolean);
 
 const BLANK = { action: '', also: [], values: [], label: '', box: [0, 0, 0, 0] };
 
-// The poster object, printed as the source of its own data file.
+// The poster object, printed as the source of its own data file. Every field a record has is
+// written back, not just the ones this form edits: a record can carry an `id` (one control drawn
+// twice), `actions` and `fills` (one target answering two controls, or half a step), and
+// `values` kept per control as an object. An earlier version wrote only five fields and a paste
+// of its output silently dropped the rest. Comments cannot survive the round trip through an
+// object; tools/merge-spot-boxes.js puts pasted boxes back into the committed file instead.
+const FIRST = ['box', 'id', 'label', 'action', 'also', 'values'];
 function serialise(poster, spotsByRegion) {
   const spot = (s) => {
-    const bits = [`box: [${s.box.map(r4).join(', ')}]`, `label: ${JSON.stringify(s.label)}`,
-      `action: ${JSON.stringify(s.action)}`];
-    if (s.also && s.also.length) bits.push(`also: [${s.also.map((a) => JSON.stringify(a)).join(', ')}]`);
-    if (s.values && s.values.length) bits.push(`values: [${s.values.map((v) => JSON.stringify(v)).join(', ')}]`);
+    const keys = [...FIRST.filter((k) => k in s), ...Object.keys(s).filter((k) => !FIRST.includes(k))];
+    const bits = keys
+      .filter((k) => s[k] !== undefined && !(k !== 'box' && Array.isArray(s[k]) && !s[k].length))
+      .map((k) => (k === 'box' ? `box: [${s.box.map(r4).join(', ')}]` : `${k}: ${JSON.stringify(s[k])}`));
     return `      { ${bits.join(', ')} },`;
   };
   const region = (rg) => [
@@ -122,7 +128,7 @@ export default function SpotEditor({ poster, region }) {
   const copy = () => {
     const text = serialise(poster, byRegion);
     navigator.clipboard.writeText(text).then(
-      () => setSaid('copied — paste over the regions array'),
+      () => setSaid('copied: paste over the regions array, or run tools/merge-spot-boxes.js to keep the comments'),
       () => { console.log(text); setSaid('clipboard refused; written to the console'); },   // eslint-disable-line no-console
     );
     setTimeout(() => setSaid(''), 4000);
@@ -162,10 +168,18 @@ export default function SpotEditor({ poster, region }) {
               <label>Other wordings for the same control, comma separated
                 <input value={(current.also || []).join(', ')} onChange={(e) => edit({ also: commas(e.target.value) })} />
               </label>
-              <label>Every setting the EPs put this control to, one per line
-                <textarea rows={3} value={(current.values || []).join('\n')}
-                  onChange={(e) => edit({ values: lines(e.target.value) })} />
-              </label>
+              {/* A target answering two controls keeps a settings list per control (the attitude
+                  indicator: Pitch and Wings), which one list cannot show. The form leaves it alone
+                  rather than flattening it; it is changed in the data file. */}
+              {current.values && !Array.isArray(current.values) ? (
+                <p className="box">Settings are kept per control for this spot
+                  ({Object.keys(current.values).join(', ')}); change them in the data file.</p>
+              ) : (
+                <label>Every setting the EPs put this control to, one per line
+                  <textarea rows={3} value={(current.values || []).join('\n')}
+                    onChange={(e) => edit({ values: lines(e.target.value) })} />
+                </label>
+              )}
               <p className="box">box: [{current.box.map(r4).join(', ')}] — arrows nudge, with alt resize</p>
               <button type="button" onClick={() => { put(spots.filter((_, i) => i !== sel)); setSel(null); }}>
                 Remove this spot

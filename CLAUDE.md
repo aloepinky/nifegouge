@@ -577,7 +577,9 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   targets; an instrument the step is worked against may be a target, but never as a stand-in for an
   undrawn control. Check NATOPS before deciding a control isn't drawn. Boxes go on the control,
   not its region.
-- `?spots[=region]` (dev) opens `SpotEditor`; `?boxes` outlines targets.
+- `?spots[=region]` (dev) opens `SpotEditor`; `?boxes` outlines targets. Its "Copy data file"
+  loses the comments in the regions array: after a paste, `node tools/merge-spot-boxes.js <poster
+  file> <EXPORT>` puts the committed file back with only the boxes moved.
 - T-44C: critical-action steps only, checked against NATOPS. Site
   follows NATOPS over the exam sheet in two places (`Firewall Valve`, `Prop Lever - Full Forward`);
   otherwise reproduces the sheet's style. 118 limits verified; three stored as min/max pairs.

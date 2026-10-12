@@ -52,6 +52,10 @@ const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').tr
 const SCHOOLS = [
   { name: 'C172', data: 'components/Flight/c172Data.js', eps: 'C172_EPS', poster: 'components/Flight/c172Poster.js', key: 'C172_POSTER' },
   { name: 'T-44C', data: 'components/T44C/t44cData.js', eps: 'T44C_EPS', poster: 'components/T44C/t44cPoster.js', key: 'T44C_POSTER' },
+  // The normal checklists ride on the same poster: every Hollywood and Normal Memory Items step
+  // must be clickable too, and a step two targets answer in halves ("ITT and N1") must add up.
+  { name: 'T-44C Hollywood', data: 'components/T44C/t44cNormals.js', eps: 'T44C_HOLLYWOOD', poster: 'components/T44C/t44cPoster.js', key: 'T44C_POSTER' },
+  { name: 'T-44C memory normals', data: 'components/T44C/t44cNormals.js', eps: 'T44C_MEMORY_NORMALS', poster: 'components/T44C/t44cPoster.js', key: 'T44C_POSTER' },
   { name: 'T-54A', data: 'components/T54A/t54aData.js', eps: 'T54A_EPS', poster: 'components/T54A/t54aPoster.js', key: 'T54A_POSTER' },
 ];
 
@@ -126,7 +130,10 @@ for (const school of SCHOOLS) {
       const setting = step.text.includes(' - ') ? step.text.split(' - ').slice(1).join(' - ') : '';
       // Through valuesFor, because a target standing for two controls carries a settings list per
       // control and reading `values` straight would compare this step against the other one's.
-      const values = valuesFor(rec, control, aliases);
+      // Every record claiming the control counts: Pressurization is both the dump switch and the
+      // cabin controller, and a setting either one lists is a setting the poster covers.
+      const values = records.filter((r) => matches(r, control, aliases))
+        .flatMap((r) => valuesFor(r, control, aliases));
       if (setting && !values.some((v) => norm(v) === norm(setting))) {
         noSetting.push(`${ep.title} :: ${step.text}\n          record lists: ${values.join(' | ') || '(nothing)'}`);
       }
