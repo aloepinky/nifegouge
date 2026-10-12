@@ -305,39 +305,28 @@ function SectionBody({ block, showCite, collapsed }) {
         </p>
       ))}
       {block.items && block.items.length > 0 && (
-        block.ep ? (
-          <EpList items={block.items} showCite={showCite} />
-        ) : block.numbered ? (
-          <ol className="discuss-list">
-            {block.items.map((entry) => (
-              <Bullet key={entry.id} item={entry} showCite={showCite} />
-            ))}
-          </ol>
-        ) : (
-          <ul className="discuss-list">
-            {block.items.map((entry) => (
-              <Bullet key={entry.id} item={entry} showCite={showCite} />
-            ))}
-          </ul>
-        )
+        <StepList items={block.items} numbered={!!(block.ep || block.numbered)} showCite={showCite} />
       )}
     </>
   );
 }
 
-// An emergency procedure: numbered steps, with its notes, warnings and cautions drawn as they are
-// on the EPs/Limits page. Every step carries an explicit `value` because an NWC at the top level
-// is an <li> of the same list and must not take a number.
-function EpList({ items, showCite }) {
+// A list, numbered or not, with any notes, warnings and cautions in it drawn as they are on the
+// EPs/Limits page. An entry with a `kind` is an NWC in every list, not only an EP's (`ep: true`):
+// a numbered list once counted a caution as a step, and a bulleted one dropped its label, on
+// every page that wrote a procedure without the EP flag. In a numbered list every step carries
+// an explicit `value`, because an NWC is an <li> of the same list and must not take a number.
+function StepList({ items, numbered, showCite }) {
   let step = 0;
+  const List = numbered ? 'ol' : 'ul';
   return (
-    <ol className="discuss-list discuss-ep">
+    <List className="discuss-list discuss-ep">
       {items.map((entry) => (
         entry.kind
           ? <Nwc key={entry.id} entry={entry} showCite={showCite} />
-          : <Bullet key={entry.id} item={entry} showCite={showCite} value={++step} ep />
+          : <Bullet key={entry.id} item={entry} showCite={showCite} value={numbered ? ++step : undefined} />
       ))}
-    </ol>
+    </List>
   );
 }
 
@@ -351,7 +340,7 @@ function Nwc({ entry, showCite }) {
   );
 }
 
-function Bullet({ item, showCite, value, ep }) {
+function Bullet({ item, showCite, value }) {
   return (
     <li className="discuss-bullet" value={value}>
       {inline(item.text)}
@@ -359,7 +348,7 @@ function Bullet({ item, showCite, value, ep }) {
       {item.sub && item.sub.length > 0 && (
         <ul className="discuss-sublist">
           {item.sub.map((s) => (
-            ep && s.kind
+            s.kind
               ? <Nwc key={s.id} entry={s} showCite={showCite} />
               : <Bullet key={s.id} item={s} showCite={showCite} />
           ))}
