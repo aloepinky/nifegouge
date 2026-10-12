@@ -114,7 +114,7 @@ export const T44C_POSTER = {
         // The CABIN DOOR OPEN light in the annunciator row: Before Start item 11 is to ensure the
         // door is locked and this light is out. It sits inside the annunciator panel's box and is
         // drawn over it.
-        { box: [0.482, 0.04, 0.026, 0.024], label: 'CABIN DOOR OPEN light',
+        { box: [0.48, 0.038, 0.032, 0.026], label: 'CABIN DOOR OPEN light',
           action: 'Cabin Door', values: ['LOCKED'] },
         // CABIN ALT and differential, beside CABIN CLIMB. The cruise Pressurization/Oxygen check
         // reads cabin altitude and differential here and oxygen pressure on the side panel, so
@@ -155,9 +155,9 @@ export const T44C_POSTER = {
         // The pilot's display control panel (DCP), the strip between the PFD and the engine
         // gauges. NATOPS §20.3: the altimeter is set on its BARO knob, and minimums by pushing
         // REFS and turning the MENU knob. Rough, 2026-10-12: tune with ?spots.
-        { id: 'dcp-baro', box: [0.288, 0.28, 0.027, 0.055], label: 'DCP BARO knob',
+        { id: 'dcp-baro', box: [0.295, 0.299, 0.013, 0.029], label: 'DCP BARO knob',
           action: 'Altimeters', values: ['CHECKED/SET', 'SET', '___.___ SET', '____.____ SET'] },
-        { id: 'dcp-refs', box: [0.288, 0.36, 0.027, 0.09], label: 'DCP REFS and menu knob',
+        { id: 'dcp-refs', box: [0.291, 0.376, 0.021, 0.07], label: 'DCP REFS and menu knob',
           action: 'Minimums', values: ['____ SET'] },
         { box: [0.417, 0.442, 0.133, 0.177], label: 'MFD',
           action: 'MFD', values: ['CHECKED/SET'] },
