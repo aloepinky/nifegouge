@@ -146,10 +146,11 @@ export default function SpotEditor({ poster, region }) {
             key={i}                                      // eslint-disable-line react/no-array-index-key
             className={`epl-spot-box${i === sel ? ' sel' : ''}${s.action ? '' : ' unnamed'}`}
             style={pct(s.box)}
+            // No tag on the box: the captions crowded every switch row and covered the controls
+            // being lined up. Hover names a box; the form names the selected one.
+            title={s.label || s.action || 'unnamed'}
             onMouseDown={(e) => { e.stopPropagation(); setSel(i); }}
-          >
-            <span>{s.label || s.action || '?'}</span>
-          </div>
+          />
         ))}
         {dragBox && <div className="epl-spot-box sel" style={pct(dragBox)} />}
       </div>
