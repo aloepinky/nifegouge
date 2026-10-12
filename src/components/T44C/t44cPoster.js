@@ -314,9 +314,9 @@ export const T44C_POSTER = {
         // percent)", and this is the MIC switches half. The 100-percent half is the diluter-demand
         // regulator on the side console (§2.19.2), which the sheet does not draw — a named control
         // that is drawn gets a target even when its partner is missing.
-        { id: 'mic-pilot', box: [0.359, 0.47, 0.028, 0.03], label: "Pilot's MIC MASK/BOOM",
+        { id: 'mic-pilot', box: [0.363, 0.478, 0.025, 0.022], label: "Pilot's MIC MASK/BOOM",
           action: 'Oxygen Mask/MIC Switches (100 Percent)', also: ['Oxygen Mask Mic'], values: ['As Required', 'CHECKED/OPEN'] },
-        { id: 'mic-copilot', box: [0.841, 0.47, 0.028, 0.03], label: "Copilot's MIC MASK/BOOM",
+        { id: 'mic-copilot', box: [0.847, 0.478, 0.022, 0.024], label: "Copilot's MIC MASK/BOOM",
           action: 'Oxygen Mask/MIC Switches (100 Percent)', values: ['As Required'] },
         { box: [0.376, 0.232, 0.044, 0.036], label: 'Auxiliary battery',
           action: 'AUX BATT Switch', actions: ['AUX BATT Switch', 'Electrical Panel'], values: ['OFF'] },
