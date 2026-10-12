@@ -1,6 +1,7 @@
 import React from 'react';
 import T44CLimits from './T44C/T44CLimits';
 import { T44C_EPS, T44C_EP_NWC } from './T44C/t44cData';
+import { T44C_HOLLYWOOD, T44C_MEMORY_NORMALS } from './T44C/t44cNormals';
 import { T44C_POSTER, T44C_ALIASES, t44cRegion } from './T44C/t44cPoster';
 import ActionButtons from './epsLimits/ActionButtons';
 import { PosterRegion, usePoster } from './epsLimits/CockpitPoster';
@@ -70,19 +71,39 @@ function LeftSide(api) {
   );
 }
 
+// The EPs, then the normal procedures the publications say are done from memory (start, the
+// full anti-ice/deice check, waveoff, pre-stall checks), then every normal checklist as the
+// FTI's Appendix F "Hollywood Checklist" runs them. See T44C/t44cNormals.js for the sources.
+const NORMAL_FOOTNOTE = '* PERFORMED FROM MEMORY · # ABBREVIATED CHECKLIST ITEM';
+const SETS = [
+  {
+    id: 'eps',
+    label: 'EPs',
+    eps: T44C_EPS,
+    nwc: T44C_EP_NWC,
+    title: 'T-44C EMERGENCY PROCEDURES',
+    footnote: '* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS',
+  },
+  {
+    id: 'memory', label: 'Memory Normals', eps: T44C_MEMORY_NORMALS, nwc: null, normal: true,
+    title: 'T-44C NORMAL MEMORY ITEMS', footnote: NORMAL_FOOTNOTE,
+  },
+  {
+    id: 'hollywood', label: 'Hollywood', eps: T44C_HOLLYWOOD, nwc: null, normal: true, sequential: true,
+    title: 'T-44C NORMAL PROCEDURES', footnote: NORMAL_FOOTNOTE,
+  },
+];
+
 function T44CEPs(game) {
   return (
     <EPDrill
       {...game}
-      eps={T44C_EPS}
-      nwc={T44C_EP_NWC}
-      title="T-44C EMERGENCY PROCEDURES"
+      sets={SETS}
       aliases={T44C_ALIASES}
       sideWidth={[300, 300]}
       top={(api) => <MainPanel {...api} />}
       left={(api) => <LeftSide {...api} />}
       right={(api) => <Console {...api} />}
-      footnote="* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS"
     />
   );
 }

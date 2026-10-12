@@ -15,7 +15,15 @@ import { openStep, clickOutcome, FILL } from './stepFlow';
 // A step is one box, answered as the checklist prints it ("Mixture - IDLE CUTOFF"), the way
 // Primary's are. It carries the markers its publication prints beside the step number, and
 // nothing about them is one school's: `critical` is the asterisk (a memory item) and `concur`
-// the dagger (NATOPS §12.1, "requires concurrence of both pilots").
+// the dagger (NATOPS §12.1, "requires concurrence of both pilots"). A normal checklist adds the
+// pound sign (`abbrev`, an abbreviated-checklist item) and `who`, the crewmember the card prints
+// against the reply, shown beside the box and never typed. `num` prints a number the publication
+// gives in place of the running count, and a procedure's `start` is its first step's number.
+//
+// `sets` turns the page into Primary's EPs / Full EPs / Quadfold switch: several lists of
+// procedures, `[{ id, label, eps, title, footnote, nwc, normal }]`, chosen by the dots under the
+// buttons. `normal` draws the card as a normal checklist (black title, as the checklist card
+// prints it). A game always runs the first set, the EPs, and the dots are hidden for it.
 //
 // The controls come in through `top`, `left` and `right`, render functions given
 // `{ fill, hint, reveal, resetKey }`:
@@ -69,6 +77,14 @@ function shuffled(n) {
   }
   return a;
 }
+
+// Whether a step advances the running count: a lettered sub-step does not, and nor does a step
+// printed with a number of its own.
+const counts = (row) => !row.sub && !row.num;
+
+const stepLabel = (row, n) => (
+  `${row.concur ? '†' : ''}${row.critical ? '*' : ''}${row.abbrev ? '#' : ''}${row.sub || row.num || n}.`
+);
 
 // The NWCs for a step or, keyed by the EP's own id, the ones the publication prints before
 // the procedure. A record with nothing in it opens nothing.
@@ -210,7 +226,7 @@ function NWCModal({ group, current, nwc, hints, onClose }) {
   );
 }
 
-function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, onClose }) {
+function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, onClose }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -231,6 +247,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, onClose }) {
           <li>A <span className="epl-swatch epl-swatch--yellow">yellow</span> box has only part of the answer</li>
           <li>A <span className="epl-swatch epl-swatch--green">green</span> box is correct</li>
           {hasNWC && <li>An <strong>NWC</strong> button beside a step or the EP title opens the notes, warnings and cautions the publication prints there. A step with nothing printed against it has no button</li>}
+          {hasModes && <li>Normal checklists are typed as challenge and reply: "Parking Brake - SET". Who replies is shown beside the box. <strong>*</strong> is done from memory, <strong>#</strong> is an abbreviated checklist item</li>}
         </ul>
         <h3>Buttons &amp; Controls</h3>
         <ul>
@@ -247,6 +264,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, onClose }) {
         <ul>
           <li>Use <strong>Previous/Next</strong> to move between EPs</li>
           <li><strong>Game Mode</strong>, in the bar above, times you through every EP; each one moves on when it is all correct</li>
+          {hasModes && <li>Switch between the EPs and the normal checklists with the dots under the buttons. Game Mode always runs the EPs</li>}
         </ul>
       </div>
     </div>,
@@ -254,21 +272,58 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, onClose }) {
   );
 }
 
-function EPDrill({
+// Primary's switch between its EP lists and the Quadfold: a line with a dot per set, the
+// chosen one filled. Styled as `.epl-modes`, copied from TW4Cockpit.js's inline styles.
+function ModeDots({ sets, current, onPick }) {
+  return (
+    <div className="epl-modes" role="radiogroup" aria-label="Checklists">
+      <div className="epl-modes-line" />
+      {sets.map((set) => (
+        <button key={set.id} type="button" role="radio" aria-checked={set.id === current}
+          className={`epl-modes-stop${set.id === current ? ' active' : ''}`} onClick={() => onPick(set.id)}>
+          <span className="epl-modes-label">{set.label}</span>
+          <span className="epl-modes-dot" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// With `sets`, the drill is remounted on each switch (keyed by the set), so the order, the
+// answers and the card sizing all start again for the new list, as Primary's switch resets them.
+// Simple/Full Mode is the one choice that carries across.
+function EPDrill({ sets, isGameActive = false, ...props }) {
+  const [current, setCurrent] = useState(sets ? sets[0].id : null);
+  const [full, setFull] = useState(null);
+  if (!sets) return <Drill {...props} isGameActive={isGameActive} />;
+  const set = isGameActive ? sets[0] : sets.find((s) => s.id === current) || sets[0];
+  const { id, label, ...overrides } = set;
+  return (
+    <Drill key={id} {...props} {...overrides} isGameActive={isGameActive}
+      initialFull={full} onFull={setFull}
+      modes={isGameActive ? null : <ModeDots sets={sets} current={set.id} onPick={setCurrent} />} />
+  );
+}
+
+function Drill({
   eps, title, footnote, top, above, left, right, sideWidth = 200,
-  aliases = DEFAULT_ALIASES,
+  aliases = DEFAULT_ALIASES, normal = false, sequential = false, modes = null, initialFull = null, onFull,
   nwc, nwcHints, isGameActive = false, onGameComplete,
 }) {
   // One number sets both columns; a pair sets them separately, which a bespoke layout needs —
   // Advanced hangs a column of buttons on the left and a stack of three panels on the right.
   const [leftWidth, rightWidth] = Array.isArray(sideWidth) ? sideWidth : [sideWidth, sideWidth];
   const hasPanel = !!(top || above || left || right);
-  const [full, setFull] = useState(() => hasPanel && window.innerWidth >= 750);
+  const [full, setFull] = useState(() => hasPanel && (initialFull ?? window.innerWidth >= 750));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { onFull?.(full); }, [full]);
+  const cardClass = `epl-card${normal ? ' epl-card--normal' : ''}`;
   const [showHelp, setShowHelp] = useState(false);
   const [reveal, setReveal] = useState(null);
   const aimSeq = useRef(0);
-  const [random, setRandom] = useState(true);
-  const [order, setOrder] = useState(() => shuffled(eps.length));
+  // A set of normal checklists opens in the order they are run, as Primary's Quadfold does.
+  const [random, setRandom] = useState(!sequential);
+  const [order, setOrder] = useState(() => (sequential ? eps.map((_, i) => i) : shuffled(eps.length)));
   const [pos, setPos] = useState(0);
   const [data, setData] = useState({});
   const [results, setResults] = useState({});
@@ -527,10 +582,10 @@ function EPDrill({
   // against a `button` there, which is 0.29px shorter per row — two rows of Aborting Takeoff, one
   // rounded pixel of card, and the navigation row it is supposed to hold still moved.
   const sizerCards = useMemo(() => eps.map((e) => {
-    let k = 0;
+    let k = (e.start || 1) - 1;
     const has = (key) => !!nwcFor(nwc, key);
     return (
-      <div className="epl-card" key={e.id}>
+      <div className={cardClass} key={e.id}>
         <div className="epl-card-title">
           {e.title}
           {has(e.id) && <button type="button" className="epl-nwc-btn epl-nwc-btn--title" tabIndex={-1}>NWC</button>}
@@ -538,18 +593,19 @@ function EPDrill({
         {e.rows.map((row, i) => {
           if (row.decision) return <div key={i} className="epl-decision">{row.decision}</div>;
           if (row.note) return <div key={i} className="epl-note">{row.note}</div>;
-          if (!row.sub) k += 1;
+          if (counts(row)) k += 1;
           return (
             <div key={row.id} className="epl-step">
-              <span className="epl-num">{row.concur ? '†' : ''}{row.critical ? '*' : ''}{row.sub || k}.</span>
+              <span className="epl-num">{stepLabel(row, k)}</span>
               <input type="text" className="epl-input" readOnly tabIndex={-1} defaultValue="" />
+              {row.who && <span className="epl-who">{row.who}</span>}
               {has(row.id) && <button type="button" className="epl-nwc-btn" tabIndex={-1}>NWC</button>}
             </div>
           );
         })}
       </div>
     );
-  }), [eps, nwc]);
+  }), [eps, nwc, cardClass]);
 
   // Two measurements off the sizer, both re-run whenever the column changes width.
   // `useLayoutEffect` so they are in place before the browser paints rather than a frame later.
@@ -602,9 +658,9 @@ function EPDrill({
     return () => watch.disconnect();
   }, [sizerCards, eps, full]);
 
-  let n = 0;
+  let n = (ep.start || 1) - 1;
   const card = (
-    <div className="epl-card">
+    <div className={cardClass}>
       <div className="epl-card-title">
         {ep.title}
         {nwcButton(ep.id, 'epl-nwc-btn epl-nwc-btn--title')}
@@ -614,13 +670,14 @@ function EPDrill({
         if (row.note) return <div key={i} className="epl-note">{row.note}</div>;
         // A lettered sub-step ({ sub: 'a' }) is numbered with its letter and does not advance
         // the count, as the T-54A sheet prints "† a." under step 4.
-        if (!row.sub) n += 1;
+        if (counts(row)) n += 1;
         return (
           <div key={row.id} className="epl-step">
-            <span className="epl-num">{row.concur ? '†' : ''}{row.critical ? '*' : ''}{row.sub || n}.</span>
-            <input type="text" aria-label={`Step ${n}${row.sub || ''}`} className={cls(row.id)}
+            <span className="epl-num">{stepLabel(row, n)}</span>
+            <input type="text" aria-label={`Step ${row.num || n}${row.sub || ''}`} className={cls(row.id)}
               style={fit[row.id] ? { fontSize: `${fit[row.id]}px` } : undefined}
               value={data[row.id] || ''} onChange={(e) => change(row.id, e.target.value)} onKeyDown={onKeyDown} />
+            {row.who && <span className="epl-who" title="Who replies">{row.who}</span>}
             {nwcButton(row.id)}
           </div>
         );
@@ -639,7 +696,7 @@ function EPDrill({
           </button>
         ) : <span className="epl-mode-spacer" />}
       </div>
-      {showHelp && <Instructions hasPanel={hasPanel} hasBand={!!top} hasLeft={!!left} hasNWC={hasNWC} onClose={() => setShowHelp(false)} />}
+      {showHelp && <Instructions hasPanel={hasPanel} hasBand={!!top} hasLeft={!!left} hasNWC={hasNWC} hasModes={!!modes} onClose={() => setShowHelp(false)} />}
       {openNWC && (
         <NWCModal key={openNWC} group={nwcGroup} current={openNWC} nwc={nwc} hints={nwcHints}
           onClose={() => setOpenNWC(null)} />
@@ -721,6 +778,7 @@ function EPDrill({
                 </button>
               )}
             </div>
+            {modes}
           </div>
 
           {full && right && (

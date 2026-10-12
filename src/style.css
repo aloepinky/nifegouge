@@ -7314,6 +7314,95 @@ textarea.incorrect-answer {
   min-width: 20px;
 }
 
+/* Who replies to a normal checklist item, as the checklist card prints it: "PF, PM". */
+.epl-who {
+  flex: none;
+  /* A fixed column, the width of the longest ("PF, PM, OBS"), so every box on the card lines up. */
+  width: 50px;
+  margin-left: 4px;
+  font-size: 9px;
+  font-weight: normal;
+  color: #555;
+}
+
+/* A normal checklist's card takes the checklist card's black title bar, as Primary's Quadfold
+   does, so it is never mistaken for an emergency procedure. */
+.epl-card--normal .epl-card-title {
+  background-color: #000;
+}
+
+/* The switch between lists, copied from TW4Cockpit.js's EPs / Full EPs / Quadfold dots: a
+   300px line with a labelled dot at each end and one in the middle, the chosen one filled. */
+.epl-modes {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  width: 300px;
+  max-width: 100%;
+  height: 60px;
+  margin: 10px auto 0;
+}
+
+.epl-modes-line {
+  position: absolute;
+  top: 32px;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  background-color: #333;
+}
+
+/* Each stop is its dot; the label hangs centred above it, so the end dots sit on the ends of the
+   line however long their labels are. */
+.limits-eps-container button.epl-modes-stop {
+  position: relative;
+  align-self: flex-start;
+  margin-top: 23px;
+  padding: 0;
+  min-width: 0;
+  width: 20px;
+  height: 20px;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.epl-modes-label {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.epl-modes-stop:first-of-type .epl-modes-label {
+  left: 0;
+  transform: none;
+}
+
+.epl-modes-stop:last-of-type .epl-modes-label {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.epl-modes-dot {
+  display: block;
+  width: 20px;
+  height: 20px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid #333;
+  background-color: #fff;
+  transition: background-color 0.2s;
+}
+
+.epl-modes-stop.active .epl-modes-dot {
+  background-color: #333;
+}
+
 .epl-input {
   padding: 2px;
   font-size: 11px;

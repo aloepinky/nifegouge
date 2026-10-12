@@ -30,7 +30,9 @@ export function normalizeAnswer(str, keep) {
   // The degree sign drops out rather than becoming a space, so "790°C" is "790C" and nobody has
   // to find the symbol on a keyboard to answer a temperature limit.
   s = s.replace(/°/g, '');
-  s = s.replace(/[,\-–;()./]/g, ' ');
+  // An ampersand drops out like the "and" it stands for, and a checklist's blanks ("___ LBS")
+  // drop out too, so the words around them are the answer.
+  s = s.replace(/[,\-–;()./&_]/g, ' ');
   s = s.replace(/\s+/g, ' ').trim();
   if (!s) return '';
   let words = s.split(' ');
