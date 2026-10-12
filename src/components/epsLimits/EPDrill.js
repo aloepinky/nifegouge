@@ -349,17 +349,17 @@ function ActionPanel({ row, label, mark, onClose }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
   return (
-    <div className="epl-action-overlay" onClick={onClose}>
-      <div className="epl-action" role="dialog" aria-label={`${row.challenge}: action and response`} onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="epl-action-close" onClick={onClose} aria-label="Close">&times;</button>
+    <div className="epl-expand-overlay" onClick={onClose}>
+      <div className="epl-expand" role="dialog" aria-label={`${row.challenge}: action and response`} onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="epl-expand-close" onClick={onClose} aria-label="Close">&times;</button>
         {row.action && row.action.length > 0 && (
-          <div className="epl-action-bubble">
+          <div className="epl-expand-bubble">
             {row.action.map((line, i) => {
               if (typeof line === 'string') return <p key={i}>{line}</p>;
               const kind = Object.keys(NWC_WORDS).find((k) => line[k]);
               return (
-                <div key={i} className="epl-action-nwc">
-                  <div className="epl-action-nwc-label">{NWC_WORDS[kind]}</div>
+                <div key={i} className="epl-expand-nwc">
+                  <div className="epl-expand-nwc-label">{NWC_WORDS[kind]}</div>
                   <p>{line[kind]}</p>
                 </div>
               );
@@ -367,7 +367,7 @@ function ActionPanel({ row, label, mark, onClose }) {
           </div>
         )}
         {row.replies && row.replies.length > 0 && (
-          <div className="epl-action-bubble epl-action-replies">
+          <div className="epl-expand-bubble epl-expand-replies">
             {row.replies.map((reply, i) => (
               <p key={i} className={reply.act ? 'epl-say--act' : reply.ip ? 'epl-say--ip' : 'epl-say'}>
                 {reply.act ? reply.text : <span>&ldquo;{reply.text}&rdquo;</span>}
@@ -376,7 +376,7 @@ function ActionPanel({ row, label, mark, onClose }) {
             ))}
           </div>
         )}
-        <div className="epl-action-step">
+        <div className="epl-expand-step">
           <span className={`epl-read ${mark}`}>{label} <ReadLine row={row} /></span>
         </div>
       </div>
@@ -657,7 +657,10 @@ function Drill({
   // The control the checklist is asking for next, every render rather than only on Hint. A
   // target carrying more than one step reads it to pick which one to fill; nothing uses it to
   // move the poster, which stays the job of `reveal`.
-  const api = { fill, hint, reveal, next: controlOf((nextOpen() || {}).text), resetKey };
+  // `normalProcedure` says the card is a normal checklist rather than an EP, so a poster can
+  // show the buttons only normal checklists use (T-44C's `normal` actions) and keep them off the
+  // EPs, which never name them.
+  const api = { fill, hint, reveal, next: controlOf((nextOpen() || {}).text), resetKey, normalProcedure: normal || !!ep.normal };
 
   // The NWC affordance: a step or a title only grows one when the publication prints something
   // against it, so its presence is itself information.

@@ -77,7 +77,7 @@ export const T44C_POSTER = {
 
         // The step names this instrument: "Full Deflection Opposite Direction Of Turn Needle".
         { box: [0.490, 0.294, 0.056, 0.118], label: 'Turn needle',
-          action: 'Rudder',
+          action: 'Rudder', also: ['Turn Indicator'],
           values: ['Full Deflection Opposite Direction Of Turn Needle', 'Neutralize After Rotation Stops'] },
         // All three lights under one box. The step is to keep climbing until the visual warnings
         // cease, and these are the visual warnings.
@@ -87,13 +87,13 @@ export const T44C_POSTER = {
           fills: 'Until All Visual And Voice Warnings Cease' },
 
         { box: [0.275, 0.826, 0.013, 0.025], label: 'Windshield anti-ice',
-          action: 'Windshield Heat', values: ['As Required'] },
+          action: 'Windshield Heat', also: ['WSHLD ANTI-ICE'], values: ['As Required'] },
         // The knurled knob on the yellow housing that hangs below the bottom edge of the sub-panel,
         // which is where the PARKING BRAKE placard's leader arrow points — down and to the right of
         // the placard. The first cut of this box was on the placard and the arrow instead, which is
         // the label for the control rather than the control.
         { box: [0.361, 0.944, 0.027, 0.051], label: 'Parking brake',
-          action: 'Stop the aircraft and set the parking brake.' },
+          action: 'Stop the aircraft and set the parking brake.', also: ['Parking Brake'] },
 
         { box: [0.592, 0.759, 0.019, 0.126], label: 'Landing gear handle',
           action: 'Landing Gear', also: ['Landing gear', 'Gear'], values: ['UP', 'As Required'] },
@@ -106,6 +106,57 @@ export const T44C_POSTER = {
         // where one thing everybody can hit says the same.
         { box: [0.626, 0.839, 0.031, 0.036], label: 'Bleed air valves',
           action: 'Bleed air valve', values: ['Closed'] },
+
+        // ---- For the normal checklists (Hollywood). Boxes ROUGH, placed 2026-10-12 off a grid
+        // and not yet checked by eye: tune them with ?spots before trusting them. ----
+        { box: [0.26, 0.03, 0.49, 0.09], label: 'Annunciator panel',
+          action: 'Annunciator Panel', values: ['CHECKED'] },
+        { box: [0.335, 0.14, 0.37, 0.06], label: 'Autopilot (FGP)',
+          action: 'Autopilot/Yaw Damp', also: ['Yaw damp'], values: ['CHECKED/DISENGAGED', 'Off'] },
+        { box: [0.315, 0.22, 0.09, 0.40], label: 'Engine instruments',
+          action: 'Engine Instruments', also: ['ITT and N1', 'N1', 'Right Engine'],
+          values: ['CHECKED', 'Light-off, N1 stable above 50%', 'Above 12 percent', 'Monitor ITT',
+            '70 percent (both engines)', 'IDLE (both engines)'] },
+        { box: [0.415, 0.27, 0.075, 0.14], label: 'ESIS',
+          action: 'ESIS', values: ['ON', 'OFF'] },
+        { box: [0.228, 0.27, 0.026, 0.16], label: 'Altimeter (pilot PFD)',
+          action: 'Altimeters', values: ['CHECKED/SET', 'SET', '___.___ SET', '____.____ SET'] },
+        { box: [0.42, 0.44, 0.13, 0.18], label: 'MFD',
+          action: 'MFD', values: ['CHECKED/SET'] },
+        { box: [0.555, 0.26, 0.115, 0.31], label: 'Radio tuning unit',
+          action: 'Radios/NAVAIDs', values: ['SET'] },
+        { box: [0.32, 0.62, 0.085, 0.08], label: 'Oil pressure and temperature',
+          action: 'Oil Pressure', values: ['Thumbs up to lineman'] },
+        { box: [0.405, 0.62, 0.075, 0.08], label: 'Fuel flow',
+          action: 'Fuel Flow', values: ['Note'] },
+        { box: [0.10, 0.68, 0.10, 0.08], label: 'Generator volt-loadmeters',
+          action: 'Generator Voltages', also: ['Generator Load'], values: ['CHECKED'] },
+        { box: [0.258, 0.735, 0.17, 0.065], label: 'Lights switches',
+          action: 'Lights', values: ['SET', 'OFF'] },
+        { box: [0.256, 0.81, 0.018, 0.045], label: 'De-ice cycle',
+          action: 'DE-ICE CYCLE', values: ['SINGLE, Then MANUAL'] },
+        { box: [0.349, 0.81, 0.017, 0.045], label: 'Autofeather',
+          action: 'Autofeather', also: ['Autofeather/Autoignition'], values: ['ARMED', 'OFF', 'CHECKED/OFF'] },
+        { box: [0.379, 0.81, 0.017, 0.045], label: 'Prop governor test',
+          action: 'Overspeed Governors', values: ['CHECKED'] },
+        { box: [0.446, 0.815, 0.016, 0.03], label: 'Prop sync',
+          action: 'Prop Sync', values: ['OFF'] },
+        { box: [0.257, 0.87, 0.032, 0.045], label: 'Pitot heat',
+          action: 'LEFT & RIGHT PITOT', values: ['ON'] },
+        { box: [0.293, 0.87, 0.03, 0.045], label: 'Fuel control heat',
+          action: 'Fuel Control Heat', values: ['ON', 'OFF'] },
+        { box: [0.325, 0.87, 0.013, 0.045], label: 'Prop deice',
+          action: 'Propeller deicer', also: ['Propeller deice'], values: ['ON', 'OFF (if not previously secured)'] },
+        { box: [0.340, 0.87, 0.013, 0.045], label: 'Stall heat',
+          action: 'Stall Heat', values: ['ON'] },
+        { box: [0.365, 0.87, 0.03, 0.045], label: 'Engine lip boots',
+          action: 'LEFT & RIGHT ENG LIP BOOT', values: ['ON'] },
+        { box: [0.398, 0.87, 0.03, 0.045], label: 'Fuel vent heat',
+          action: 'LEFT & RIGHT FUEL VENT', values: ['ON'] },
+        { box: [0.455, 0.73, 0.03, 0.07], label: 'Fire detection test',
+          action: 'Fire Detectors', values: ['CHECKED'] },
+        { box: [0.574, 0.665, 0.02, 0.055], label: 'Transponder',
+          action: 'Transponder', values: ['STANDBY', 'SET'] },
       ],
     },
     {
@@ -127,16 +178,27 @@ export const T44C_POSTER = {
           // The last of these is a step phrased as a sentence rather than "control - setting", so
           // it reads as its own control until it is said here that it is this lever.
           also: ['Prop Lever (Failed Engine)', 'Prop', 'Props',
-            'Attempt To Adjust Prop RPM to Normal Operating Range'],
+            'Attempt To Adjust Prop RPM to Normal Operating Range',
+            // The normal checklists' prop-lever checks: feathering by hand and the primary
+            // governor check are both done on these levers.
+            'Manual Feather', 'Primary Governors'],
           values: ['FEATHER', 'Full Forward', '1900 RPM'] },
         { box: [0.71, 0.07, 0.26, 0.26], label: 'Condition levers',
           action: 'Condition Lever',
-          also: ['Condition Levers', 'Condition Lever (Failed Engine)'],
+          also: ['Condition Levers', 'Condition Lever (Failed Engine)', 'Right Condition Lever'],
           values: ['FUEL CUTOFF', 'LOW IDLE', 'FUEL CUTOFF (Dec. Below 790°C)'] },
         { box: [0.65, 0.46, 0.17, 0.13], label: 'Flap handle',
           action: 'Flaps',
           values: ['UP', 'APPROACH (Unless Already UP)', 'Approach (Unless Already Up)',
             'As Required', 'Maintain Current Setting'] },
+
+        // Normal checklists. Rough, 2026-10-12: tune with ?spots. Three wheels, one step.
+        { id: 'trim-elevator', box: [0.12, 0.12, 0.08, 0.52], label: 'Elevator trim',
+          action: 'Trim', values: ['CHECKED/SET', 'SET ZERO'] },
+        { id: 'trim-aileron', box: [0.21, 0.62, 0.29, 0.26], label: 'Aileron trim',
+          action: 'Trim', values: ['CHECKED/SET', 'SET ZERO'] },
+        { id: 'trim-rudder', box: [0.6, 0.7, 0.28, 0.28], label: 'Rudder trim',
+          action: 'Trim', values: ['CHECKED/SET', 'SET ZERO'] },
       ],
     },
     {
@@ -155,6 +217,20 @@ export const T44C_POSTER = {
           action: 'Boost Pumps', values: ['OFF'] },
         { id: 'boost-right', box: [0.812, 0.33, 0.05, 0.09], label: 'Right boost pump',
           action: 'Boost Pumps', values: ['OFF'] },
+
+        // Normal checklists. Rough, 2026-10-12: tune with ?spots.
+        { id: 'transfer-left', box: [0.125, 0.19, 0.06, 0.1], label: 'Left transfer pump',
+          action: 'Transfer Pumps', values: ['CHECKED/AUTO', 'OFF'] },
+        { id: 'transfer-right', box: [0.805, 0.19, 0.06, 0.1], label: 'Right transfer pump',
+          action: 'Transfer Pumps', values: ['CHECKED/AUTO', 'OFF'] },
+        { box: [0.805, 0.47, 0.06, 0.09], label: 'Crossfeed',
+          action: 'Crossfeed', values: ['CHECKED/AUTO', 'CLOSED'] },
+        { id: 'fuel-qty-left', box: [0.2, 0.26, 0.2, 0.25], label: 'Left fuel quantity',
+          action: 'Fuel Quantity', also: ['Fuel Quantity Indicators', 'Fuel Quantity (Current Limiters)'],
+          values: ['___ LBS, ___ LBS REQUIRED', 'Checked', 'CHECKED'] },
+        { id: 'fuel-qty-right', box: [0.585, 0.26, 0.2, 0.25], label: 'Right fuel quantity',
+          action: 'Fuel Quantity', also: ['Fuel Quantity Indicators', 'Fuel Quantity (Current Limiters)'],
+          values: ['___ LBS, ___ LBS REQUIRED', 'Checked', 'CHECKED'] },
       ],
     },
     {
@@ -168,7 +244,7 @@ export const T44C_POSTER = {
         // Abnormal Start names the starter on two steps running. Both are answered by clicking
         // it twice: a click fills the open step and the next click moves to the next open one.
         { box: [0.16, 0.04, 0.15, 0.04], label: 'Ignition and engine start',
-          action: 'Starter',
+          action: 'Starter', also: ['Right Starter', 'Left Starter'],
           values: ['Starter Only (For The Remainder Of The 40 Seconds)', 'Off (at 40 seconds)'] },
         { box: [0.16, 0.14, 0.15, 0.04], label: 'Engine auto ignition',
           action: 'Autoignition', values: ['ARMED'] },
@@ -179,15 +255,33 @@ export const T44C_POSTER = {
         // regulator on the side console (§2.19.2), which the sheet does not draw — a named control
         // that is drawn gets a target even when its partner is missing.
         { id: 'mic-pilot', box: [0.359, 0.47, 0.028, 0.03], label: "Pilot's MIC MASK/BOOM",
-          action: 'Oxygen Mask/MIC Switches (100 Percent)', values: ['As Required'] },
+          action: 'Oxygen Mask/MIC Switches (100 Percent)', also: ['Oxygen Mask Mic'], values: ['As Required'] },
         { id: 'mic-copilot', box: [0.841, 0.47, 0.028, 0.03], label: "Copilot's MIC MASK/BOOM",
           action: 'Oxygen Mask/MIC Switches (100 Percent)', values: ['As Required'] },
         { box: [0.37, 0.23, 0.05, 0.04], label: 'Auxiliary battery',
           action: 'AUX BATT Switch', values: ['OFF'] },
         { box: [0.0855, 0.323, 0.3, 0.06], label: 'Master switch gang bar',
-          action: 'Gang Bar', values: ['OFF'] },
+          action: 'Gang Bar', also: ['Gangbar'], values: ['OFF'] },
         { box: [0.36, 0.9, 0.05, 0.04], label: 'Cabin pressurization dump',
           action: 'Pressurization', values: ['DUMP'] },
+
+        // Normal checklists. Rough, 2026-10-12: tune with ?spots. The two generator switches sit
+        // on the master-switch bar, inside the gang bar's box, so they come after it and are drawn
+        // over it; the gang bar's own box is left as it was.
+        { box: [0.04, 0.22, 0.06, 0.06], label: 'Avionics master',
+          action: 'Avionics Master', also: ['AUX/BATT/Avionics Master', 'AUX BATT/Avionics Master'],
+          values: ['CHECKED/ON', 'OFF'] },
+        { box: [0.205, 0.335, 0.06, 0.045], label: 'GEN NO 1 (left)',
+          action: 'Left Generator', values: ['RESET, ON. Switch, light, load'] },
+        { box: [0.305, 0.335, 0.06, 0.045], label: 'GEN NO 2 (right)',
+          action: 'Right Generator',
+          values: ['Reset, On. Switch, Light, Load', 'Load below .5, OFF', 'Reset, On', 'OFF', 'RESET, ON. Switch, light, load'] },
+        { box: [0.49, 0.01, 0.47, 0.39], label: 'FMS',
+          action: 'FMS', values: ['CHECKED/SET', 'SET'] },
+        { id: 'tacan', box: [0.0, 0.53, 0.47, 0.12], label: 'TACAN',
+          action: 'Radios/NAVAIDs', values: ['SET'] },
+        { id: 'cabin-controller', box: [0.1, 0.87, 0.14, 0.11], label: 'Cabin pressure controller',
+          action: 'Pressurization', values: ['SET', 'CHECKED', 'CHECKED/DEPRESSURIZED'] },
       ],
     },
   ],
@@ -224,17 +318,47 @@ export const T44C_POSTER = {
   //   Control Wheel - Rapidly Forward       the attitude indicator was tried as a stand-in and
   //                                         rejected: you do not fly off it outside real IMC.
   //                                         Button.
+  // `ep` marks a button only the EPs use and `normal` one only the normal checklists use, so each
+  // card shows only its own (T44CEPsLimits.js); Brakes and Crew serve both.
   actions: [
-    { label: 'Announce "Abort"', action: 'Announce "Abort"' },
+    { label: 'Announce "Abort"', action: 'Announce "Abort"', ep: true },
     { label: 'Brakes', action: 'Brakes', values: ['As Required'] },
     { label: 'Crew', action: 'Crew', values: ['Alerted'] },
-    { label: 'Control Wheel', action: 'Control Wheel', values: ['Rapidly Forward', 'Pull Out Of Dive By Exerting Smooth, Steady Back Pressure'] },
-    { label: 'A/P Trim Disconnect', action: 'A/P/Trim Disconnect (control wheel)', values: ['Depress Fully and Hold.'] },
-    { label: 'Descend', action: 'Descend', values: ['As Required'] },
-    { label: 'Evacuate Aircraft', action: 'Evacuate Aircraft' },
-    { label: 'Land ASAP', action: 'Land as soon as possible.' },
-    { label: 'Emer Shutdown Checklist', action: 'Emergency Shutdown Checklist', values: ['Execute'] },
-    { label: 'Alt Prop Feather Checklist', action: 'Alternate Prop Feather Checklist', values: ['As Required'] },
+    { label: 'Control Wheel', action: 'Control Wheel', values: ['Rapidly Forward', 'Pull Out Of Dive By Exerting Smooth, Steady Back Pressure'], ep: true },
+    { label: 'A/P Trim Disconnect', action: 'A/P/Trim Disconnect (control wheel)', values: ['Depress Fully and Hold.'], ep: true },
+    { label: 'Descend', action: 'Descend', values: ['As Required'], ep: true },
+    { label: 'Evacuate Aircraft', action: 'Evacuate Aircraft', ep: true },
+    { label: 'Land ASAP', action: 'Land as soon as possible.', ep: true },
+    { label: 'Emer Shutdown Checklist', action: 'Emergency Shutdown Checklist', values: ['Execute'], ep: true },
+    { label: 'Alt Prop Feather Checklist', action: 'Alternate Prop Feather Checklist', values: ['As Required'], ep: true },
+
+    // The normal checklists' steps with nothing on the sheet to point at: a check of the whole
+    // aircraft or crew, a control the sheet does not draw (the cabin door, the oxygen supply,
+    // the control lock, the engine gauge panel's suction gauge), or a group too spread out to
+    // box. `normal` keeps them off the EPs, which never name them; EPDrill shows them only on a
+    // normal procedure's card.
+    { label: 'Electrical Panel', action: 'Electrical Panel', values: ['SET'], normal: true },
+    { label: 'Power Quadrant', action: 'Power Quadrant', values: ['SET'], normal: true },
+    { label: 'Fuel Panel', action: 'Fuel Panel', values: ['CHECKED/SET'], normal: true },
+    { label: 'Anti-Ice/Deice', action: 'Anti-Ice/Deice', also: ['Anti-Ice/Deice/Radar'],
+      values: ['OFF', 'SET', 'CHECKED AS REQUIRED'], normal: true },
+    { label: 'Cabin Door', action: 'Cabin Door', values: ['LOCKED'], normal: true },
+    { label: 'Environmental Controls', action: 'Environmental Controls', values: ['SET'], normal: true },
+    { label: 'Seatbelts', action: 'Seatbelts', values: ['FASTENED'], normal: true },
+    { label: 'Controls', action: 'Controls', values: ['CHECKED'], normal: true },
+    { label: 'Suction & Pneumatic', action: 'Suction & Pneumatic Pressure', values: ['CHECKED'], normal: true },
+    { label: 'Flight Instruments', action: 'Flight Instruments', also: ['PFDs/FGP/ESIS'],
+      values: ['CHECKED/SET', 'SET'], normal: true },
+    { label: 'Minimums', action: 'Minimums', values: ['____ SET'], normal: true },
+    { label: 'Instruments/Nacelles', action: 'Instruments/Nacelles', values: ['CHECKED'], normal: true },
+    { label: 'Pressurization/Oxygen', action: 'Pressurization/Oxygen', values: ['CHECKED'], normal: true },
+    { label: 'Oxygen', action: 'Oxygen', values: ['CLOSED'], normal: true },
+    { label: 'Control Lock', action: 'Control Lock', values: ['INSTALLED'], normal: true },
+    { label: 'Wheels', action: 'Wheels', values: ['CHOCKED'], normal: true },
+    { label: 'Spin Recovery', action: 'Spin Recovery Procedures', values: ['Briefed per NATOPS'], normal: true },
+    { label: 'Loose Gear', action: 'Loose gear', values: ['Stowed'], normal: true },
+    { label: 'Altitude', action: 'Altitude', values: ['5000 feet AGL minimum'], normal: true },
+    { label: 'Stall Speeds', action: 'Stall Speeds', values: ['Reviewed'], normal: true },
   ],
 };
 

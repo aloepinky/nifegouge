@@ -7084,7 +7084,7 @@ textarea.incorrect-answer {
 
 /* A step's action and response over the card, as Primary's Quadfold opens one: two bubbles,
    then the step. The overlay scrolls when the FTI's action is longer than the card. */
-.epl-action-overlay {
+.epl-expand-overlay {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -7096,7 +7096,7 @@ textarea.incorrect-answer {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
-.epl-action {
+.epl-expand {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -7105,7 +7105,7 @@ textarea.incorrect-answer {
   max-width: 420px;
 }
 
-.limits-eps-container button.epl-action-close {
+.limits-eps-container button.epl-expand-close {
   position: absolute;
   top: 3px;
   right: 2px;
@@ -7120,7 +7120,7 @@ textarea.incorrect-answer {
   cursor: pointer;
 }
 
-.epl-action-bubble {
+.epl-expand-bubble {
   padding: 8px;
   font-size: 11px;
   line-height: 1.4;
@@ -7129,24 +7129,24 @@ textarea.incorrect-answer {
   border-radius: 12px;
 }
 
-.epl-action-bubble p {
+.epl-expand-bubble p {
   margin: 0 0 4px;
 }
 
-.epl-action-bubble p:last-child {
+.epl-expand-bubble p:last-child {
   margin-bottom: 0;
 }
 
-.epl-action-nwc {
+.epl-expand-nwc {
   margin: 6px 0;
 }
 
-.epl-action-nwc-label {
+.epl-expand-nwc-label {
   font-weight: bold;
   text-align: center;
 }
 
-.epl-action-replies {
+.epl-expand-replies {
   text-align: center;
 }
 
@@ -7166,7 +7166,7 @@ textarea.incorrect-answer {
   color: #444;
 }
 
-.epl-action-step {
+.epl-expand-step {
   padding: 10px;
   font-size: 11px;
   background-color: #f0f0f0;
@@ -7174,7 +7174,7 @@ textarea.incorrect-answer {
   border-radius: 8px;
 }
 
-.epl-action-step .epl-read {
+.epl-expand-step .epl-read {
   display: flex;
   gap: 4px;
 }

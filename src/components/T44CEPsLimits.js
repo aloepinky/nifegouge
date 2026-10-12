@@ -66,7 +66,8 @@ function LeftSide(api) {
   return (
     <div className="t44c-console">
       <PosterRegion region={FUEL} view={useT44CPoster(api)} className="epl-band-frame--fluid" />
-      <ActionButtons actions={T44C_POSTER.actions} aliases={T44C_ALIASES} {...api} />
+      <ActionButtons actions={T44C_POSTER.actions.filter((a) => (api.normalProcedure ? !a.ep : !a.normal))}
+        aliases={T44C_ALIASES} {...api} />
     </div>
   );
 }
