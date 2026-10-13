@@ -570,7 +570,9 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   deliberately. Modal shows the whole procedure's numbered, closed chips; `nwcHints` optional.
   Modal is portalled — CSS hangs off `.epl-nwc-modal`. Three copies of the NWC box styles
   (`NWC_BUBBLE_STYLES`, `.epl-nwc--*`, `.discuss-nwc--*`) — change together.
-- **Limits tables are bespoke per school**; behaviour via `useLimitsDrill(answers, groups)`. Sheets
+- **Limits tables are bespoke per school**; behaviour via `useLimitsDrill(answers, groups)`. Arrow
+  keys walk the blanks by screen position (`epsLimits/arrowKeys.js`, Primary's sheet too), so a
+  sheet needs no markup for it. Sheets
   never reflow and never scroll sideways: fluid, no min/fixed width or nowrap; alignment read off
   `pdftohtml -xml` coordinates. `gradeLimit` keeps minus signs and reads ranges; `gradeAnswer`
   ignores order/stop words (stop-word-only keys compared literally).

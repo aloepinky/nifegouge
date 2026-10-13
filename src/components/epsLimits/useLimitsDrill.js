@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { gradeLimit } from '../../utils/answerUtils';
+import arrowMove from './arrowKeys';
 
 // The behaviour every school's limits table shares: Random mode, live checking, Next Answer,
 // All Answers, Reset, and the game hand-off. What the table *looks* like stays bespoke to its
@@ -136,8 +137,10 @@ export default function useLimitsDrill(answers, groups = [], { isGameActive = fa
     return '';
   };
 
-  // Enter in any answer box checks, on every EPs and limits page.
+  // Enter in any answer box checks, on every EPs and limits page; the arrow keys walk the blanks
+  // (arrowKeys.js).
   const onKeyDown = (e) => {
+    if (arrowMove(e)) return;
     if (e.key === 'Enter' && e.target.tagName === 'INPUT') check();
   };
 

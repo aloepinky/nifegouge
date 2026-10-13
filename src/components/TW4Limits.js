@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { normalizeAnswer, gradeLimit } from '../utils/answerUtils';
+import arrowMove from './epsLimits/arrowKeys';
 
 // T-6B Limits Answer Keys. Module scope and exported so the About page can count them.
 export const T6B_LIMITS = {
@@ -483,8 +484,10 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     fontFamily: 'inherit'
   };
 
-  // Enter in any answer box checks, on every EPs and limits page.
+  // Enter in any answer box checks, on every EPs and limits page; the arrow keys walk the blanks
+  // (epsLimits/arrowKeys.js, shared with the other schools' sheets).
   const onKeyDown = (e) => {
+    if (arrowMove(e)) return;
     if (e.key === 'Enter' && e.target.tagName === 'INPUT') checkAnswers();
   };
 
