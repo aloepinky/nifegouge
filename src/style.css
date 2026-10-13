@@ -4060,13 +4060,63 @@ textarea.incorrect-answer {
 
 /* ---- random gouge ---- */
 
-/* The informal block under the lead. Its facts are an ordinary list; the add box is the one
-   input on a reading page, so it is drawn in the editor's quiet idiom rather than as a form. */
+/* The informal block under the lead: a closed disclosure, quieter than a section, with none
+   of a section's furniture. Its facts are an ordinary list; the add box is the one input on a
+   reading page, so it is drawn in the editor's quiet idiom rather than as a form. */
+.discuss-gouge {
+  margin: 0 0 22px;
+  border: 1px solid #e3eaee;
+  border-radius: 4px;
+  background: rgba(0, 59, 79, 0.025);
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.discuss-gouge-summary {
+  cursor: pointer;
+  padding: 7px 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #5a7481;
+  list-style: none;
+  user-select: none;
+}
+
+.discuss-gouge-summary::-webkit-details-marker { display: none; }
+
+.discuss-gouge-summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 14px;
+  color: #93a8b1;
+}
+
+.discuss-gouge[open] > .discuss-gouge-summary::before { content: '▾'; }
+.discuss-gouge[open] > .discuss-gouge-summary { border-bottom: 1px solid #e3eaee; }
+.discuss-gouge-summary:hover { color: #003B4F; }
+
+.discuss-gouge-count {
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: #e3eaee;
+  color: #33505d;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.discuss-gouge-body { padding: 10px 0 12px; }
+.discuss-gouge-body .discuss-editor { margin: 0; }
+
 .discuss-gouge-hint {
   margin: 0 0 10px;
   font-size: 13px;
   color: #5a7481;
 }
+
+.discuss-gouge-hint .discuss-edit-link { font-size: 1em; }
 
 .discuss-gouge-list { margin-bottom: 10px; }
 

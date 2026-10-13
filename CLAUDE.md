@@ -311,8 +311,9 @@ An item page: `lede`, `numbers` infobox, `sections`, optional `seeAlso`, `refere
 `note`, optional `gouge`. Sections may have `subsections` (H3, same fields; two levels max). Every section, item and
 number has a stable id (`cp-04`) — **add ids, never rename or renumber them**.
 
-- **Random gouge** (`gouge: [{ id, text }]`, ids `gg-01`…) is the informal block under the lead:
-  facts students were asked or heard in a brief, **uncited by design** and outside the MOS, the
+- **Random gouge** (`gouge: [{ id, text }]`, ids `gg-01`…) is the informal block under the lead,
+  a closed `<details>` with a count, not a section (no heading rule, no contents-rail row; the
+  browser remembers it open): facts students were asked or heard in a brief, **uncited by design** and outside the MOS, the
   sourcing rules and the prose lint (`idsOf` tracks its ids; `textsOf` never reads it). The box
   on the page publishes a fact at once as its own revision (summary `Added gouge: "…"`, author
   the browser's saved name, no name box; with a draft open the fact joins the draft instead; a

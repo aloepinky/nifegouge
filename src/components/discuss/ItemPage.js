@@ -482,7 +482,7 @@ function genTitle(g, many) {
 
 // Left rail, section headings only. Sticky on wide screens; collapses above the article
 // on a phone. The lead is not a numbered section, so its row is not numbered either.
-function Contents({ item, extra, hasGouge, hasSeeAlso, hasRefs, folded, onUnfold }) {
+function Contents({ item, extra, hasSeeAlso, hasRefs, folded, onUnfold }) {
   return (
     <nav className="discuss-toc" aria-label="Contents">
       <RandomPage current={item.slug} />
@@ -491,11 +491,6 @@ function Contents({ item, extra, hasGouge, hasSeeAlso, hasRefs, folded, onUnfold
         <li>
           <a href="#top">(top)</a>
         </li>
-        {hasGouge && (
-          <li>
-            <a href="#gouge">Random gouge</a>
-          </li>
-        )}
         {/* A generated item has no sections of its own — its whole body is `extra`, the
             generated lists. Tolerate the absence rather than making every such item
             carry an empty array. */}
@@ -625,37 +620,72 @@ function GougeAdd({ onAdd, disabled }) {
   );
 }
 
-// The block: heading, the facts, and the add box. `editor` is the list editor when it is open
-// in place of the facts. A read-only rendering (an old revision) shows the facts and nothing
-// else, and nothing at all when there are none.
+// Whether the reader last left the block open. A per-browser convenience, nothing more: the
+// block is closed by default so a page reads as the page, and a reader who wants the gouge
+// in view does not have to open it on every page.
+const GOUGE_OPEN_KEY = 'discussGougeOpen';
+const readGougeOpen = () => {
+  try {
+    return localStorage.getItem(GOUGE_OPEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+const writeGougeOpen = (open) => {
+  try {
+    if (open) localStorage.setItem(GOUGE_OPEN_KEY, '1');
+    else localStorage.removeItem(GOUGE_OPEN_KEY);
+  } catch {
+    // Private mode; the choice lasts for this page.
+  }
+};
+
+// The block: a closed disclosure under the lead, not a section. It is bespoke, so it takes
+// none of a section's furniture — no heading rule, no number, no row in the contents rail —
+// and the toggle line says only that it exists and how much is in it. Open, it shows the
+// facts, the add box and the way into the list editor; `editor` is that editor when it is
+// open in place of the facts, and holds the block open. A read-only rendering (an old
+// revision) shows the facts and nothing else, and nothing at all when there are none.
 function GougeBox({ facts, readOnly, busy, editor, onEdit, onAdd }) {
+  const [open, setOpen] = useState(readGougeOpen);
   if (readOnly && !facts.length) return null;
+  const toggle = (e) => {
+    const next = e.currentTarget.open;
+    setOpen(next);
+    writeGougeOpen(next);
+  };
   return (
-    <section className="discuss-section discuss-gouge" id="gouge">
-      <h2>
+    <details
+      className="discuss-gouge"
+      id="gouge"
+      open={open || !!editor}
+      onToggle={toggle}
+    >
+      <summary className="discuss-gouge-summary">
         Random gouge
-        {!readOnly && !editor && facts.length > 0 && (
-          <EditLink onClick={onEdit} what="Random gouge" disabled={busy} />
+        {facts.length > 0 && <span className="discuss-gouge-count">{facts.length}</span>}
+      </summary>
+      <div className="discuss-gouge-body">
+        {editor || (
+          <>
+            {!readOnly && (
+              <p className="discuss-gouge-hint">
+                Anything you were asked or heard in a brief. Add puts it on the site right away.
+                {facts.length > 0 && <EditLink onClick={onEdit} what="Random gouge" disabled={busy} />}
+              </p>
+            )}
+            {facts.length > 0 && (
+              <ul className="discuss-list discuss-gouge-list">
+                {facts.map((g) => (
+                  <li className="discuss-bullet" key={g.id}>{inline(g.text)}</li>
+                ))}
+              </ul>
+            )}
+            {!readOnly && <GougeAdd onAdd={onAdd} disabled={busy} />}
+          </>
         )}
-      </h2>
-      {editor || (
-        <>
-          {!readOnly && (
-            <p className="discuss-gouge-hint">
-              Anything you were asked or heard in a brief. Add puts it on the site right away.
-            </p>
-          )}
-          {facts.length > 0 && (
-            <ul className="discuss-list discuss-gouge-list">
-              {facts.map((g) => (
-                <li className="discuss-bullet" key={g.id}>{inline(g.text)}</li>
-              ))}
-            </ul>
-          )}
-          {!readOnly && <GougeAdd onAdd={onAdd} disabled={busy} />}
-        </>
-      )}
-    </section>
+      </div>
+    </details>
   );
 }
 
@@ -1063,7 +1093,6 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       <Contents
         item={view}
         extra={(genGroups || []).map((g) => ({ id: genId(g), title: genTitle(g, genGroups.length > 1) }))}
-        hasGouge={!readOnly || gouge.length > 0}
         hasSeeAlso={seeAlso.length > 0}
         hasRefs={!!(view.references && view.references.length)}
         folded={folded}
