@@ -16,7 +16,12 @@ const ALLOWED_KEYS = new Set([
   // carried before that list existed; the page editor reads them and writes `psmLinks`, so a
   // page converts on its next save and both spellings have to be accepted meanwhile.
   'psmLinks', 'diagram', 'limits',
+  // Random gouge: the informal facts students add from the page itself. Uncited by design.
+  'gouge',
 ]);
+
+// A gouge fact is one short plain-text line.
+export const MAX_GOUGE_CHARS = 500;
 
 export function checkSlug(slug) {
   if (typeof slug !== 'string' || !SLUG_RE.test(slug) || slug.length > 80) {
@@ -31,6 +36,7 @@ const isStr = (v) => typeof v === 'string';
 // Every id on the page, and the refs each block carries. Mirrors edit/ids.js's allIds.
 function walk(item, onId, onRefs) {
   for (const n of item.numbers || []) { onId(n.id, `numbers row`); onRefs(n.refs, `numbers row ${n.id}`); }
+  for (const g of item.gouge || []) onId(g.id, 'gouge fact');
   const block = (b, where) => {
     onId(b.id, where);
     onRefs(b.refs, where);
@@ -62,9 +68,13 @@ export function checkItem(item, slug) {
   for (const key of Object.keys(item)) {
     if (!ALLOWED_KEYS.has(key)) bad(`Unknown field "${key}"`);
   }
-  for (const key of ['numbers', 'sections', 'seeAlso', 'references']) {
+  for (const key of ['numbers', 'sections', 'seeAlso', 'references', 'gouge']) {
     if (item[key] !== undefined && !isArr(item[key])) bad(`${key} must be an array`);
   }
+  (item.gouge || []).forEach((g, i) => {
+    if (!g || typeof g !== 'object' || !isStr(g.text) || !g.text.trim()) bad(`Gouge fact ${i + 1} is empty`);
+    if (g.text.length > MAX_GOUGE_CHARS) bad(`Gouge fact ${i + 1} is longer than ${MAX_GOUGE_CHARS} characters`);
+  });
   for (const key of ['lede', 'note', 'sourcingLead']) {
     if (item[key] !== undefined && !isStr(item[key])) bad(`${key} must be a string`);
   }

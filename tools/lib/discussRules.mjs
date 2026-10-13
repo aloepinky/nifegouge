@@ -18,6 +18,9 @@
 export function idsOf(item) {
   const out = [];
   for (const n of item.numbers || []) out.push(`numbers/${n.id}`);
+  // Random gouge facts have ids so the editor can tell them apart; their text is informal and
+  // is deliberately not in textsOf(), so no prose rule reads it.
+  for (const g of item.gouge || []) out.push(`gouge/${g.id}`);
   // A subsection id is an anchor in its own right — it is on the rendered <section> and the
   // contents rail links to it — so it is recorded bare, like a section's, and losing one is
   // an error rather than an advisory.

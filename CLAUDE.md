@@ -308,8 +308,17 @@ regenerate, don't hand-edit fixtures; the live flow is edited in the flow editor
 ### Page content model and Manual of Style
 
 An item page: `lede`, `numbers` infobox, `sections`, optional `seeAlso`, `references`, optional
-`note`. Sections may have `subsections` (H3, same fields; two levels max). Every section, item and
+`note`, optional `gouge`. Sections may have `subsections` (H3, same fields; two levels max). Every section, item and
 number has a stable id (`cp-04`) — **add ids, never rename or renumber them**.
+
+- **Random gouge** (`gouge: [{ id, text }]`, ids `gg-01`…) is the informal block under the lead:
+  facts students were asked or heard in a brief, **uncited by design** and outside the MOS, the
+  sourcing rules and the prose lint (`idsOf` tracks its ids; `textsOf` never reads it). The box
+  on the page publishes a fact at once as its own revision (summary `Added gouge: "…"`, author
+  the browser's saved name, no name box; with a draft open the fact joins the draft instead; a
+  409 retries once onto the newest revision). Rewording and removal go through `[edit]` →
+  Save → Publish (`edit/GougeEditor.js`, also embedded in `PageEditor`). Shown on stubs too.
+  Never move gouge into sections, cite it, or lint it.
 
 - **Lede** summarizes the page, no heading, and is not repeated in the body.
 - **Headings**: sentence case, noun phrases, unique, unnumbered, no questions/second person/markup,
