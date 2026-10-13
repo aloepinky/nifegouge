@@ -1,6 +1,6 @@
 import React, { Suspense, useMemo, useRef, useState } from 'react';
 import { DRAFT } from '../programs';
-import { actionFor, aliasesFrom, fillsFor, matches } from './controlMatch';
+import { actionFor, aliasesFrom, fillsFor, matches, settingsFor } from './controlMatch';
 
 // The cockpit poster: a photograph or a panel diagram with a click target on every control the
 // EPs name. Clicking one fills the step, the way Primary's poster does.
@@ -47,9 +47,11 @@ export function usePoster({ poster, aliases, fill, hint, next }) {
   // `actionFor` is what a target standing for two controls needs: it answers with whichever of
   // them the checklist is asking for next. A plain target answers with its own. `fillsFor` is the
   // other way round — the step that takes two controls, where this one supplies only its piece.
+  // `settingsFor` is the settings this target lists for that control, which is how two targets
+  // sharing a control divide its steps between them (the T-44C's two Pressurization controls).
   const press = (spot) => {
     const action = actionFor(spot, next, alias);
-    fill(action, fillsFor(spot, action, alias));
+    fill(action, fillsFor(spot, action, alias), settingsFor(spot, action, alias));
   };
 
   // Two development-only views, and they are not the same thing. `?spots` swaps the targets for
@@ -124,7 +126,7 @@ export default function CockpitPoster({ poster, fill, hint, reveal, next, aliase
   // silently not scrolling. Adjusting state during render puts the ring in the same commit.
   if (reveal && reveal.at !== seen.current) {
     seen.current = reveal.at;
-    const found = regions.find((r) => (r.spots || []).some((s) => matches(s, reveal.control, view.alias)));
+    const found = regions.find((r) => (r.spots || []).some((s) => matches(s, reveal.step, view.alias)));
     if (found && found.id !== regionId) setRegionId(found.id);
   }
 

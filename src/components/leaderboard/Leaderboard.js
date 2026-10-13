@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  MODES, PERIODS, fetchBoard, submitScore, playerKey, savedPlayer, savePlayer, formatTime,
+  MODES, PERIODS, fetchBoard, submitScore, playerKey, forSchool, asksDesignator, savedPlayer,
+  savePlayer, formatTime,
 } from './leaderboardApi';
 
 // The EPs/Limits leaderboard, one modal for every school. Arcade rules: type a name and your
@@ -8,6 +9,10 @@ import {
 //
 // `pendingResult` is a finished run ({ mode, elapsedTime, epsTime?, limitsTime? }); with one,
 // the modal opens on the submit form, and without one it opens on the board.
+//
+// The designator is asked for on NIFE only, where SNAs, SNFOs and AVPs share a board. Everyone
+// on Primary and Advanced is an SNA, so those boards neither ask for it nor show it
+// (`asksDesignator`; the server blanks it too, scores.mjs).
 
 const COUNTRIES = ['USA', 'ITA', 'GBR', 'CAN', 'AUS', 'GER', 'FRA', 'NED', 'KSA', 'SWE'];
 const BRANCHES = ['USN', 'USMC', 'USCG', 'NAVY'];
@@ -112,7 +117,7 @@ function Leaderboard({ school, pendingResult, onClose }) {
   const [player, setPlayer] = useState(() => ({ ...EMPTY_PLAYER, ...(savedPlayer() || {}) }));
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
-  const me = playerKey(savedPlayer());
+  const me = playerKey(forSchool(savedPlayer(), school));
 
   // Each board is fetched once per opening; a submit clears the lot so they refetch.
   const requested = useRef(new Set());
@@ -120,7 +125,7 @@ function Leaderboard({ school, pendingResult, onClose }) {
     const key = `${m}|${p}`;
     if (requested.current.has(key)) return;
     requested.current.add(key);
-    fetchBoard(school, m, p, playerKey(savedPlayer()))
+    fetchBoard(school, m, p, playerKey(forSchool(savedPlayer(), school)))
       .then((data) => setBoards((b) => ({ ...b, [key]: data })))
       .catch((err) => {
         // A failed board is fetched again the next time its pill is chosen.
@@ -141,17 +146,18 @@ function Leaderboard({ school, pendingResult, onClose }) {
 
   const set = (field) => (value) => { setPlayer((p) => ({ ...p, [field]: value })); setError(''); };
 
+  const designator = asksDesignator(school);
   const missing = !/^[A-Z0-9]{1,5}$/.test(player.playerName) ? 'a name of 1 to 5 letters'
     : !player.country ? 'a country'
       : !player.branch ? 'a branch'
-        : !player.designator ? 'a designator'
+        : designator && !player.designator ? 'a designator'
           : !player.trainingClass.trim() ? 'a class' : '';
 
   const submit = async () => {
     if (missing) { setError(`Add ${missing}.`); return; }
     setStatus('sending');
     setError('');
-    const clean = { ...player, trainingClass: player.trainingClass.trim().toUpperCase() };
+    const clean = forSchool({ ...player, trainingClass: player.trainingClass.trim().toUpperCase() }, school);
     savePlayer(clean);
     try {
       await submitScore({ school, ...pendingResult, ...clean });
@@ -203,7 +209,9 @@ function Leaderboard({ school, pendingResult, onClose }) {
               <ChoiceField id="lb-branch" label="Branch" options={BRANCHES} value={player.branch} onChange={set('branch')} max={4} />
             </div>
             <div className="lb-form-row">
-              <ChoiceField id="lb-designator" label="Designator" options={DESIGNATORS} value={player.designator} onChange={set('designator')} max={5} />
+              {designator && (
+                <ChoiceField id="lb-designator" label="Designator" options={DESIGNATORS} value={player.designator} onChange={set('designator')} max={5} />
+              )}
               <div className="lb-field">
                 <label htmlFor="lb-class">Class</label>
                 <input

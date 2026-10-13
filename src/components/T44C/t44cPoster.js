@@ -75,10 +75,12 @@ export const T44C_POSTER = {
         { id: 'fire-ext-right', box: [0.73, 0.168, 0.026, 0.045], label: 'RH fire extinguisher',
           action: 'Fire Extinguisher', also: ['Fire Extinguisher(s)'], values: ['As Required'] },
 
-        // The step names this instrument: "Full Deflection Opposite Direction Of Turn Needle".
+        // The normal Turn Indicator check only. The spin recovery's two Rudder steps were here
+        // because the first names this needle, and were moved to the Rudder Pedals button
+        // (the user's ruling, 2026-10-13): the needle is what you read, the pedals are what you
+        // move, and "Neutralize After Rotation Stops" is not read off anything.
         { box: [0.492, 0.294, 0.054, 0.117], label: 'Turn needle',
-          action: 'Rudder', also: ['Turn Indicator'],
-          values: ['Full Deflection Opposite Direction Of Turn Needle', 'Neutralize After Rotation Stops', 'CHECKED'] },
+          action: 'Turn Indicator', values: ['CHECKED'] },
         // All three lights under one box. The step is to keep climbing until the visual warnings
         // cease, and these are the visual warnings.
         { id: 'terrain-warnings', box: [0.496, 0.252, 0.047, 0.035],
@@ -316,13 +318,20 @@ export const T44C_POSTER = {
         // that is drawn gets a target even when its partner is missing.
         { id: 'mic-pilot', box: [0.363, 0.478, 0.025, 0.022], label: "Pilot's MIC MASK/BOOM",
           action: 'Oxygen Mask/MIC Switches (100 Percent)', also: ['Oxygen Mask Mic'], values: ['As Required', 'CHECKED/OPEN'] },
+        // The same control drawn twice, so the same settings: a record answers only the settings
+        // it lists (controlMatch.js `settingsFor`), and the copilot's listing one fewer made it
+        // refuse the Oxygen Mask Mic check the pilot's answered.
         { id: 'mic-copilot', box: [0.847, 0.478, 0.022, 0.024], label: "Copilot's MIC MASK/BOOM",
-          action: 'Oxygen Mask/MIC Switches (100 Percent)', values: ['As Required'] },
+          action: 'Oxygen Mask/MIC Switches (100 Percent)', values: ['As Required', 'CHECKED/OPEN'] },
         { box: [0.376, 0.232, 0.044, 0.036], label: 'Auxiliary battery',
           action: 'AUX BATT Switch', actions: ['AUX BATT Switch', 'Electrical Panel'], values: ['OFF'] },
         { box: [0.0855, 0.32, 0.306, 0.022], label: 'Master switch gang bar',
           action: 'Gang Bar', actions: ['Gang Bar', 'Electrical Panel'], also: ['Gangbar'], values: ['OFF'] },
-        { box: [0.36, 0.902, 0.048, 0.037], label: 'Cabin pressurization dump',
+        // NATOPS §2.18.11.1's cabin pressure control switch (TEST / PRESS / DUMP). It shares the
+        // control word with the cabin pressure controller below, and the two divide the
+        // Pressurization steps by setting (controlMatch.js `settingOk`): DUMP is this switch
+        // alone, SET and CHECKED the controller alone. The user's ruling, 2026-10-13.
+        { box: [0.36, 0.902, 0.048, 0.037], label: 'Cabin pressure control switch',
           action: 'Pressurization', values: ['DUMP'] },
 
         // Normal checklists. Rough, 2026-10-12: tune with ?spots. The two generator switches sit
@@ -358,8 +367,11 @@ export const T44C_POSTER = {
   //                                       switch is worse than no target. Worth revisiting if the
   //                                       side consoles are ever cut as a region.
   //   Brakes - As Required                toe brakes, on rudder pedals the sheet does not draw.
-  //                                       The RUDDER TAB wheel on the pedestal is trim, and the
-  //                                       parking brake is a different control.
+  //   Rudder - Full Deflection… /         The RUDDER TAB wheel on the pedestal is trim, and the
+  //   Rudder - Neutralize…                parking brake is a different control. NATOPS §2.12.2
+  //                                       calls them rudder pedals ("adjustable rudder/brake
+  //                                       pedals", §2.12), so one Rudder Pedals button takes
+  //                                       every rudder and brake input (the user, 2026-10-13).
   //   Evacuate Aircraft                   no door or exit on the sheet.
   //   Land as soon as possible.           a decision, not a control.
   //   Emergency Shutdown Checklist        cross-references to another checklist.
@@ -379,19 +391,30 @@ export const T44C_POSTER = {
   //                                         rejected: you do not fly off it outside real IMC.
   //                                         Button.
   // `ep` marks a button only the EPs use and `normal` one only the normal checklists use, so each
-  // card shows only its own (T44CEPsLimits.js); Brakes and Crew serve both.
+  // card shows only its own (T44CEPsLimits.js); Rudder Pedals and Crew serve both.
   actions: [
     { label: 'Announce "Abort"', action: 'Announce "Abort"', ep: true },
-    { label: 'Brakes', action: 'Brakes', values: ['As Required', 'CHECKED'] },
+    // Rudder and toe brakes are the one pair of pedals, so this answers both the spin recovery's
+    // Rudder steps and the Brakes steps. `Brakes` is in `also` rather than `actions` because the
+    // step's own text is what gets written, so the button never has to choose between them.
+    { label: 'Rudder Pedals', action: 'Rudder', also: ['Brakes'],
+      values: ['Full Deflection Opposite Direction Of Turn Needle', 'Neutralize After Rotation Stops',
+        'As Required', 'CHECKED'] },
     { label: 'Crew', action: 'Crew', values: ['Alerted', 'BRIEFED'] },
     // Everything done on or to the control wheel, which the sheet does not draw: flying it (the
     // spin recovery), checking it (Controls), the AP/YD/trim disconnect switch on its grip
     // (NATOPS §2.12.1) and the control lock pinned through its column. One button for the wheel,
-    // the user's ruling 2026-10-12, rather than one per thing on it.
+    // the user's ruling 2026-10-12, rather than one per thing on it. "Wings - Level" is a second
+    // control on the same button (the user, 2026-10-13): you level them with the wheel and read
+    // them off the attitude indicator, so both answer it.
     { label: 'Control Wheel', action: 'Control Wheel',
+      actions: ['Control Wheel', 'Wings'],
       also: ['Controls', 'A/P/Trim Disconnect (control wheel)', 'Control Lock'],
-      values: ['Rapidly Forward', 'Pull Out Of Dive By Exerting Smooth, Steady Back Pressure', 'CHECKED',
-        'Depress Fully and Hold.', 'INSTALLED'] },
+      values: {
+        'Control Wheel': ['Rapidly Forward', 'Pull Out Of Dive By Exerting Smooth, Steady Back Pressure', 'CHECKED',
+          'Depress Fully and Hold.', 'INSTALLED'],
+        Wings: ['Level'],
+      } },
     { label: 'Descend', action: 'Descend', values: ['As Required'], ep: true },
     { label: 'Evacuate Aircraft', action: 'Evacuate Aircraft', ep: true },
     { label: 'Land ASAP', action: 'Land as soon as possible.', ep: true },

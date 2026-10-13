@@ -1,8 +1,22 @@
 import { call, post } from '../serverApi';
 
-// The EPs/Limits leaderboard both schools share (lambda/discussApi/scores.mjs). No accounts:
+// The EPs/Limits leaderboard every school shares (lambda/discussApi/scores.mjs). No accounts:
 // a player is the name, designator and class they type, remembered in this browser so the
 // next submit is one click.
+
+// NIFE's board asks for a designator because SNAs, SNFOs and AVPs all sit it. Everyone on the
+// Primary and Advanced boards is an SNA, so those neither collect nor show one, and the player
+// key there is name and class alone. The server applies the same rule (scores.mjs), so a row
+// an old form submitted with a designator still keys the same way as a new one.
+const DESIGNATOR_SCHOOLS = ['NIFE'];
+export const asksDesignator = (school) => DESIGNATOR_SCHOOLS.includes(school);
+
+// The player as a school's board knows them: the saved designator is dropped where the board
+// does not ask for one, so the key and the submit agree with the server.
+export function forSchool(p, school) {
+  if (!p) return p;
+  return asksDesignator(school) ? p : { ...p, designator: '' };
+}
 
 export const MODES = [
   { id: 'EPs', label: 'EPs' },

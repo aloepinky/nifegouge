@@ -13,13 +13,13 @@
 //
 //   NO CONTROL      no record claims that control. The step can only be typed, and nothing on
 //                   screen says so.
-//   NO SETTING      a record claims the control but does not list that setting. This no longer
-//                   breaks the page — a click writes the step's own answer whatever the record
-//                   says (src/components/epsLimits/stepFlow.js) — so it is an authoring check:
-//                   a record whose settings do not cover the steps it claims is a record written
-//                   against the wrong control, and this is what catches that. Compared the way
-//                   gradeAnswer compares, which is to say case and punctuation are ignored —
-//                   "CLOSED" answers a step written "Closed".
+//   NO SETTING      a record claims the control but does not list that setting. A record
+//                   answers only the settings it lists (src/components/epsLimits/controlMatch.js
+//                   `settingOk`, which is how the T-44C's two Pressurization controls divide
+//                   DUMP from SET), so this step cannot be clicked either; it is reported apart
+//                   from NO CONTROL because the fix is a settings list, not a new record.
+//                   Compared the way gradeAnswer compares, which is to say case and punctuation
+//                   are ignored — "CLOSED" answers a step written "Closed".
 //   CANNOT FINISH   the EP cannot be clicked through end to end. NO CONTROL says every step has
 //                   something that claims it; this walks the page's own rule and says the
 //                   sequence actually works.
@@ -41,7 +41,9 @@ const load = (rel) => loadSrc(path.join(SRC, rel));
 // The real matcher and the real step rule the page uses, not copies of them. A second
 // implementation here would drift from the first and then this check would be confirming its own
 // idea of what matches.
-const { controlOf, sameControl, actionFor, matches, aliasesFrom, valuesFor, fillsFor } = load('components/epsLimits/controlMatch.js');
+const {
+  controlOf, sameControl, settingOk, settingsFor, actionFor, matches, aliasesFrom, valuesFor, fillsFor,
+} = load('components/epsLimits/controlMatch.js');
 const { openStep, clickOutcome, FILL } = load('components/epsLimits/stepFlow.js');
 
 // gradeAnswer lowercases and strips punctuation before comparing, so a record writing "CLOSED"
@@ -89,11 +91,15 @@ for (const school of SCHOOLS) {
     for (let click = 0; click <= steps.length; click += 1) {
       const target = openStep(ids, { value: (f) => data[f], result: () => '', answer: (f) => answers[f] });
       if (!target) break;
-      const want = controlOf(answers[target]);
-      const rec = records.find((r) => matches(r, want, aliases));
-      if (!rec) return `${ep.title} :: nothing claims "${want}"`;
+      // The whole step, setting included: a record answers only the settings it lists for a
+      // control (`matches` → `settingOk`), which is how two targets share one control word.
+      const text = answers[target];
+      const want = controlOf(text);
+      const rec = records.find((r) => matches(r, text, aliases));
+      if (!rec) return `${ep.title} :: nothing claims "${text}"`;
       const action = actionFor(rec, want, aliases);
-      if (clickOutcome(sameControl(answers[target], action, aliases) ? 1 : 0, 1) !== FILL) {
+      const ok = sameControl(text, action, aliases) && settingOk(settingsFor(rec, action, aliases), text);
+      if (clickOutcome(ok ? 1 : 0, 1) !== FILL) {
         return `${ep.title} :: clicking ${rec.label || rec.action} answers "${action}", not "${want}"`;
       }
       // A step answered in pieces needs one click per piece, so the walk collects every record
@@ -101,7 +107,7 @@ for (const school of SCHOOLS) {
       const piece = fillsFor(rec, action, aliases);
       if (!piece) { data[target] = answers[target]; continue; }
       const pieces = records
-        .filter((r) => matches(r, want, aliases))
+        .filter((r) => matches(r, text, aliases))
         .map((r) => fillsFor(r, actionFor(r, want, aliases), aliases))
         .filter(Boolean);
       const whole = [...new Set(pieces)]
@@ -121,20 +127,20 @@ for (const school of SCHOOLS) {
 
     const steps = ep.rows.filter((r) => r.id);
     steps.forEach((step) => {
+      // On the bare control first, then on the whole step. A record answers only the settings it
+      // lists for a control, so a step whose control is claimed but whose setting nobody lists is
+      // NO SETTING, and since the page's own matcher refuses it, it is as unclickable as NO
+      // CONTROL; the two are told apart only so the finding says which file to open.
       const control = controlOf(step.text);
-      const rec = records.find((r) => matches(r, control, aliases));
-      if (!rec) {
+      const claimants = records.filter((r) => matches(r, control, aliases));
+      if (!claimants.length) {
         noControl.push(`${ep.title} :: ${step.text}`);
         return;
       }
-      const setting = step.text.includes(' - ') ? step.text.split(' - ').slice(1).join(' - ') : '';
-      // Through valuesFor, because a target standing for two controls carries a settings list per
-      // control and reading `values` straight would compare this step against the other one's.
-      // Every record claiming the control counts: Pressurization is both the dump switch and the
-      // cabin controller, and a setting either one lists is a setting the poster covers.
-      const values = records.filter((r) => matches(r, control, aliases))
-        .flatMap((r) => valuesFor(r, control, aliases));
-      if (setting && !values.some((v) => norm(v) === norm(setting))) {
+      if (!claimants.some((r) => matches(r, step.text, aliases))) {
+        // Through valuesFor, because a target standing for two controls carries a settings list
+        // per control and reading `values` straight would compare this step against the other's.
+        const values = claimants.flatMap((r) => valuesFor(r, actionFor(r, control, aliases), aliases));
         noSetting.push(`${ep.title} :: ${step.text}\n          record lists: ${values.join(' | ') || '(nothing)'}`);
       }
     });

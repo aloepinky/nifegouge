@@ -1441,50 +1441,47 @@ iframe {
 
 /* Flight Component Styles */
 /* Zoomed out to 80% */
+/* The EPs and Limits pages are drawn at 80% (smaller on narrower screens). This is `zoom`, not
+   `transform: scale()`: a transform only paints smaller and leaves the layout box full size, so
+   the page kept a fifth of its height as blank space under the content and the footer sat a
+   screen below where the content ended. `zoom` lays the page out at the smaller size, so the
+   footer follows the content. Lengths in px inside are zoomed too, so the 1125px cap shows as
+   900px, as the old 125%-wide transform did. */
 .limits-eps-container {
   margin: 20px auto;
   padding: 0 20px;
-  transform: scale(0.8);
-  transform-origin: top center;
-  width: 125%; /* Compensate for the 80% scale (100/80 = 125) */
-  max-width: 1125px; /* 900px * 1.25 */
+  zoom: 0.8;
+  width: 100%;
+  max-width: 1125px; /* shows as 900px */
 }
 
-/* Responsive behavior for scaled container */
+/* Responsive behavior for the zoomed container */
 @media (max-width: 1200px) {
   .limits-eps-container {
-    width: 100%;
     max-width: 900px;
-    transform: scale(0.8);
-    transform-origin: top center;
+    zoom: 0.8;
   }
 }
 
 @media (max-width: 900px) {
   .limits-eps-container {
-    width: 100%;
     max-width: 100%;
-    transform: scale(0.75);
-    transform-origin: top center;
+    zoom: 0.75;
   }
 }
 
 @media (max-width: 768px) {
   .limits-eps-container {
-    width: 100%;
     max-width: 100%;
-    transform: scale(0.7);
-    transform-origin: top center;
+    zoom: 0.7;
     padding: 0 10px;
   }
 }
 
 @media (max-width: 600px) {
   .limits-eps-container {
-    width: 100%;
     max-width: 100%;
-    transform: scale(0.6);
-    transform-origin: top center;
+    zoom: 0.6;
     padding: 0 5px;
   }
 }

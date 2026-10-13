@@ -15,8 +15,31 @@
 // step with the publication. `fill` in EPDrill.js resolves the spelling at the point of use
 // instead.
 
-// A step's control is the text before " - ".
+// A step's control is the text before " - ", and its setting everything after it. A bare control
+// name has no setting, so either half of the pair can be given a whole step or just its control.
 export const controlOf = (text) => String(text || '').split(' - ')[0].trim();
+export const settingOf = (text) => {
+  const s = String(text || '');
+  const i = s.indexOf(' - ');
+  return i < 0 ? '' : s.slice(i + 3).trim();
+};
+
+// Settings compare the way gradeAnswer compares: case and punctuation are the sheet's own
+// inconsistency, so a record listing "CLOSED" answers a step printed "Closed".
+const normSetting = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
+// Does a record that lists settings for a control list the one this step asks for? A record
+// lists every setting the checklist moves its control to (that is what `values` is for, and
+// tools/check-posters.js holds it to that), so a setting it does not list is a step it does not
+// answer. The T-44C's CABIN PRESS switch and cabin pressure controller are both `Pressurization`:
+// the switch lists DUMP and the controller SET and CHECKED, so "Pressurization - DUMP" is the
+// switch alone and "Pressurization - SET" the controller alone, the way the aeroplane has it. A
+// record with no list, or a step with no setting, is answered on the control alone.
+export const settingOk = (values, step) => {
+  const want = normSetting(settingOf(step));
+  if (!want || !values || !values.length) return true;
+  return values.some((v) => normSetting(v) === want);
+};
 
 // Case and a trailing plural are a sheet's own inconsistency, not a different control:
 // `Landing Gear`/`Landing gear`, `Firewall Valve`/`Firewall Valves`, `Fire Extinguisher(s)`.
@@ -51,11 +74,16 @@ export const wordingsOf = (record) => [
   ...(record.actions || []),
 ].filter(Boolean);
 
-// Does this control record answer for `name`? Used to ring a hotspot or a button on Hint.
-export const matches = (record, name, aliases) => {
-  if (!record || !name) return false;
-  const want = canon(name, aliases);
-  return wordingsOf(record).some((a) => canon(a, aliases) === want);
+// Does this control record answer for `step`? Used to ring a hotspot or a button on Hint and to
+// find the panel a control is on. `step` is a whole step ("Pressurization - DUMP"), in which case
+// the record must list that setting too (`settingOk`), or a bare control name, answered on the
+// control alone.
+export const matches = (record, step, aliases) => {
+  if (!record || !step) return false;
+  const want = canon(controlOf(step), aliases);
+  const wording = wordingsOf(record).find((a) => canon(a, aliases) === want);
+  if (!wording) return false;
+  return settingOk(settingsFor(record, wording, aliases), step);
 };
 
 // Which of a multi-action record's actions to write. A yoke carries two steps, so it fills
@@ -86,6 +114,19 @@ const perAction = (v, action, aliases) => {
 
 export const valuesFor = (record, action, aliases) =>
   perAction((record || {}).values, action, aliases) || [];
+
+// The settings a record LISTS for `wording`, for deciding whether it answers a step at all
+// (`settingOk`); undefined where it lists none, which answers every setting. A map speaks for
+// each control it names. A plain list speaks only for the record's own control — `action` and
+// its `also` spellings — because the other entries in `actions` are different controls sharing
+// the target: a whole-panel check like "Electrical Panel - SET" is answered by any switch on the
+// panel, and the autoignition switch's own ARMED/OFF list has nothing to say about it.
+export const settingsFor = (record, wording, aliases) => {
+  const v = (record || {}).values;
+  if (!v) return undefined;
+  if (!Array.isArray(v)) return perAction(v, wording, aliases);
+  return canon(wording, aliases) === canon(record.action, aliases) ? v : undefined;
+};
 
 // The part of a step's answer this control supplies, for a step that takes more than one control.
 // Undefined where a control answers the whole step, which is almost all of them: only the T-44C's

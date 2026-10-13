@@ -1,5 +1,5 @@
 import React from 'react';
-import { matches } from './controlMatch';
+import { actionFor, fillsFor, matches, settingsFor } from './controlMatch';
 
 // The steps no control performs. Every checklist has them — Declare MAYDAY, Evacuate Aircraft,
 // Land As Soon As Possible, Maintain Directional Control — and a poster has nowhere to put them,
@@ -18,7 +18,9 @@ import { matches } from './controlMatch';
 // the two it is. `label` is the caption, deliberately shorter than what gets written: the button
 // reading MAYDAY fills in "Declare - MAYDAY". Pressing one answers the open step with that
 // step's own text if it names this control, and marks it red if it does not — stepFlow.js, the
-// same rule as a hotspot and the same rule as Primary.
+// same rule as a hotspot and the same rule as Primary. A button standing for two controls
+// (`actions`) answers with whichever the checklist asks for next, as a hotspot does: the T-44C's
+// control wheel is "Control Wheel" in the spin recovery and "Wings" in the trim-tab waveoff.
 //
 // One column by default, because the two side slots are narrow and a two-column grid there makes
 // every caption wrap. A school with a long list passes `columns={2}` and keeps one side.
@@ -29,8 +31,12 @@ import { matches } from './controlMatch';
 // "Fire Extinguisher".
 
 export default function ActionButtons({
-  title = null, actions, columns = 1, fill, hint, aliases,
+  title = null, actions, columns = 1, fill, hint, next, aliases,
 }) {
+  const press = (rec) => {
+    const action = actionFor(rec, next, aliases);
+    fill(action, fillsFor(rec, action, aliases), settingsFor(rec, action, aliases));
+  };
   return (
     <div className="epl-action-group">
       {title && <h4>{title}</h4>}
@@ -41,7 +47,7 @@ export default function ActionButtons({
             type="button"
             className={`action-button epl-action${matches(rec, hint, aliases) ? ' epl-hint' : ''}`}
             title={rec.action}
-            onClick={() => fill(rec.action, rec.fills)}
+            onClick={() => press(rec)}
           >
             {rec.label}
           </button>

@@ -29,6 +29,14 @@ const MAX_IMPORT = 500;
 // cabinet. The name takes five so the imported Primary usernames fit.
 const FIELDS = { playerName: 5, country: 4, branch: 4, designator: 12, trainingClass: 12 };
 
+// Only NIFE's board takes a designator: SNAs, SNFOs and AVPs all sit it. Everyone on Primary and
+// Advanced is an SNA, so those boards neither store one nor show one, and a row an older form
+// sent with a designator is read as if it had none (`withoutDesignator`), so it keys and ranks
+// like every other. The site's form asks the same way (leaderboardApi.js `asksDesignator`).
+const DESIGNATOR_SCHOOLS = ['NIFE'];
+const asksDesignator = (school) => DESIGNATOR_SCHOOLS.includes(school);
+const withoutDesignator = (r) => (r.designator ? { ...r, designator: '' } : r);
+
 const db = () => getDynamo();
 
 function boardOf(school, mode) {
@@ -43,7 +51,7 @@ function cleanPlayer(body) {
     out[field] = cleanText(body[field], max).toUpperCase();
   }
   if (!/^[A-Z0-9]{1,5}$/.test(out.playerName)) throw new HttpError(400, 'A name is 1 to 5 letters or digits');
-  return out;
+  return asksDesignator(body.school) ? out : withoutDesignator(out);
 }
 
 function millis(value, what, { optional = false } = {}) {
@@ -131,7 +139,8 @@ export async function leaderboardHandler(event) {
   const q = event.queryStringParameters || {};
   const board = boardOf(q.school, q.mode);
   const period = PERIODS.includes(q.period) ? q.period : 'all';
-  const all = standings(await runsOf(board), periodStart(period));
+  const rows = await runsOf(board);
+  const all = standings(asksDesignator(q.school) ? rows : rows.map(withoutDesignator), periodStart(period));
   const player = typeof q.player === 'string' ? q.player.toUpperCase() : '';
   const mine = player ? all.find((e) => e.player === player) : null;
   return reply(200, {

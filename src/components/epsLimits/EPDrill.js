@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { gradeAnswer } from '../../utils/answerUtils';
-import { controlOf, sameControl, DEFAULT_ALIASES } from './controlMatch';
+import { controlOf, sameControl, settingOk, DEFAULT_ALIASES } from './controlMatch';
 import { openStep, clickOutcome, FILL } from './stepFlow';
 
 // One EP at a time, from a plain list (see Flight/c172Data.js for the shape), laid out and
@@ -552,14 +552,19 @@ function Drill({
   // spells it. A sheet spells one control several ways - the T-44C prints both "Condition Lever"
   // and "Condition Levers" - and a target can only carry one of them; `normalizeAnswer` does not
   // singularise, so without this a correct click grades red.
-  const fill = (action, fragment) => {
+  //
+  // `values` is the settings the clicked record lists for this control. Two targets can share a
+  // control and divide its settings between them (the T-44C's CABIN PRESS switch and cabin
+  // pressure controller are both "Pressurization"), so a click on one that does not list the
+  // step's setting is the wrong control, not a near miss - controlMatch.js `settingOk`.
+  const fill = (action, fragment, values) => {
     setHint(null);
     const step = nextOpen();
     if (!step) return;
     const target = step.id;
     const answer = answers[target];
 
-    const names = sameControl(answer, action, aliases);
+    const names = sameControl(answer, action, aliases) && settingOk(values, answer);
     if (clickOutcome(names ? 1 : 0, 1) !== FILL) {
       setResults((r) => ({ ...r, [target]: 'incorrect' }));
       return;
@@ -602,15 +607,19 @@ function Drill({
   // the same control twice still fires; a bare `hint` string would not, and `skip` clears it.
   // Nothing else moves the band: which panel the crossfeed is on is itself the lesson, and a
   // band that walks you there unasked removes it.
+  //
+  // Both carry the whole step, setting and all, because a control shared by two targets is told
+  // apart by its setting (controlMatch.js `matches`): Hint on "Pressurization - DUMP" rings the
+  // CABIN PRESS switch and not the controller beside it.
   const aim = (step) => {
     aimSeq.current += 1;
-    setReveal(step ? { control: controlOf(step.text), at: aimSeq.current } : null);
+    setReveal(step ? { step: step.text, at: aimSeq.current } : null);
   };
 
   const pressHint = () => {
     const open = nextOpen();
     aim(open);
-    setHint(open ? controlOf(open.text) : null);
+    setHint(open ? open.text : null);
   };
 
   const skip = () => {
