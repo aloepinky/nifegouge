@@ -276,38 +276,35 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
     section('Site traffic', lines, `No page views counted, ${span}.`);
   }
 
-  // A fact added from a page's Random gouge box is a revision of its own, with the summary the
-  // page writes for it (src/components/discuss/ItemPage.js, addGouge). Those are reported under
-  // their own heading, fact by fact, and not counted as page edits. A fact reworded or removed
-  // through the list editor is an ordinary edit with the editor's own summary, and stays one.
-  const GOUGE_RE = /^Added gouge: "([\s\S]*?)"?$/;
-  const gougeFact = (r) => { const m = GOUGE_RE.exec(r.summary || ''); return m ? m[1] : null; };
-  const gougeAdds = items.filter((r) => gougeFact(r) !== null);
-  const pageEdits = items.filter((r) => gougeFact(r) === null);
-
-  // Discussion pages
+  // Discussion pages. A fact added from a page's Random gouge box is a revision of its own,
+  // with the summary the page writes for it (src/components/discuss/ItemPage.js, addGouge),
+  // so it is listed as the fact rather than as an edit with a summary. A fact reworded or
+  // removed through the list editor is an ordinary edit with the editor's own summary.
   {
-    const theirs = pageEdits.filter((r) => !isOwn(r.author));
+    const GOUGE_RE = /^Added gouge: "([\s\S]*?)"?$/;
+    const gougeFact = (r) => { const m = GOUGE_RE.exec(r.summary || ''); return m ? m[1] : null; };
+    const theirs = items.filter((r) => !isOwn(r.author));
+    const edits = theirs.filter((r) => gougeFact(r) === null);
+    const facts = theirs.filter((r) => gougeFact(r) !== null);
     const lines = [];
     if (theirs.length) {
-      const people = new Set(theirs.map((r) => r.author));
-      lines.push({ text: `${plural(theirs.length, 'edit')} to ${plural(new Set(theirs.map((r) => r.id)).size, 'page')} by ${plural(people.size, 'person', 'people')}, ${theirs.filter((r) => r.rev === 1).length} new` });
+      const parts = [];
+      if (edits.length) parts.push(`${plural(edits.length, 'edit')} to ${plural(new Set(edits.map((r) => r.id)).size, 'page')}`);
+      if (facts.length) parts.push(`${plural(facts.length, 'gouge fact')} added to ${plural(new Set(facts.map((r) => r.id)).size, 'page')}`);
+      lines.push({ text: `${parts.join(' and ')} by ${plural(new Set(theirs.map((r) => r.author)).size, 'person', 'people')}, ${edits.filter((r) => r.rev === 1).length} new` });
     }
-    lines.push(...editLines(pageEdits, { noun: 'page', made: 'created', changed: 'edited', href: (r) => pageUrl(r.id) }));
+    for (const r of theirs) {
+      const fact = gougeFact(r);
+      lines.push({
+        text: fact !== null
+          ? `${day(r.at)}  ${r.author}  gouge on ${r.title}: ${short(fact, 120)}`
+          : `${day(r.at)}  ${r.author}  ${r.rev === 1 ? 'created' : 'edited'} ${r.title}${r.summary ? ` — ${short(r.summary, 100)}` : ''}`,
+        href: pageUrl(r.id),
+      });
+    }
+    const mine = items.filter((r) => isOwn(r.author));
+    if (mine.length) lines.push({ text: `Your own: ${plural(mine.length, 'edit')} to ${plural(new Set(mine.map((r) => r.id)).size, 'page')}.`, quiet: true });
     section('Discussion pages', lines, 'No edits.');
-  }
-
-  // Random gouge: the facts themselves, since each one is the whole of its revision.
-  {
-    const theirs = gougeAdds.filter((r) => !isOwn(r.author));
-    const lines = [];
-    if (theirs.length) {
-      lines.push({ text: `${plural(theirs.length, 'fact')} added to ${plural(new Set(theirs.map((r) => r.id)).size, 'page')} by ${plural(new Set(theirs.map((r) => r.author)).size, 'person', 'people')}` });
-    }
-    for (const r of theirs) lines.push({ text: `${day(r.at)}  ${r.author}  ${r.title}: ${short(gougeFact(r), 120)}`, href: pageUrl(r.id) });
-    const mine = gougeAdds.length - theirs.length;
-    if (mine) lines.push({ text: `Your own: ${plural(mine, 'fact')}.`, quiet: true });
-    section('Random gouge', lines, 'Nothing added.');
   }
 
   // Syllabi, briefs, jet logs
