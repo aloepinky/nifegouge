@@ -12,7 +12,7 @@ import { programLabel, withDefaultProgram } from './program';
 import { getDraft, getRecord, saveDraft, clearDraft, clone } from './edit/draft';
 import { allIds, newGougeId } from './edit/ids';
 import { validate } from './edit/validate';
-import { SlugOptions, ConfirmButton, resolveLink } from './edit/fields';
+import { SlugOptions, ConfirmButton, Grow, resolveLink } from './edit/fields';
 import { EditLink, HeadLink, DraftBanner } from './edit/EditLink';
 import PublishDialog from './edit/PublishDialog';
 import SectionEditor from './edit/SectionEditor';
@@ -593,12 +593,20 @@ function GougeAdd({ onAdd, disabled }) {
   };
   return (
     <form className="discuss-gouge-add" onSubmit={submit}>
-      <input
-        type="text"
+      {/* A textarea that grows, so a long fact is read whole rather than scrolled through a
+          one-line window. Enter still adds; the box is for one fact, not a paragraph. */}
+      <Grow
         className="discuss-gouge-input"
+        rows={1}
         value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Something you were asked or heard in a brief"
+        onChange={setText}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            submit(e);
+          }
+        }}
+        placeholder="Random Gouge"
         aria-label="A fact to add"
         maxLength={500}
         disabled={disabled || adding}
@@ -670,7 +678,7 @@ function GougeBox({ facts, readOnly, busy, editor, onEdit, onAdd }) {
           <>
             {!readOnly && (
               <p className="discuss-gouge-hint">
-                Anything you were asked or heard in a brief. Add puts it on the site right away.
+                Anything that came up during the brief.
                 {facts.length > 0 && <EditLink onClick={onEdit} what="Random gouge" disabled={busy} />}
               </p>
             )}

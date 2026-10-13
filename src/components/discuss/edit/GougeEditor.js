@@ -27,7 +27,7 @@ function GougeEditor({ item, onSave, onCancel, check, embedded, onChange }) {
       aria-label="Editing Random gouge"
     >
       <p className="discuss-editor-hint">
-        Informal facts people were asked or heard in a brief. One per row, no sources needed. {BOLD_HINT}
+        One per row, no sources needed. {BOLD_HINT}
       </p>
 
       {rows.map((g, i) => (
