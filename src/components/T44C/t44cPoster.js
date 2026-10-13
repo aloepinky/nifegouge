@@ -75,12 +75,16 @@ export const T44C_POSTER = {
         { id: 'fire-ext-right', box: [0.73, 0.168, 0.026, 0.045], label: 'RH fire extinguisher',
           action: 'Fire Extinguisher', also: ['Fire Extinguisher(s)'], values: ['As Required'] },
 
-        // The normal Turn Indicator check only. The spin recovery's two Rudder steps were here
-        // because the first names this needle, and were moved to the Rudder Pedals button
-        // (the user's ruling, 2026-10-13): the needle is what you read, the pedals are what you
-        // move, and "Neutralize After Rotation Stops" is not read off anything.
+        // Its own check, and the spin recovery's two Rudder steps as a second control: the first
+        // names this needle ("opposite direction of turn needle"), and in IMC the needle is also
+        // what says rotation has stopped, so the second is read here too. The Rudder Pedals button
+        // answers both as well, as what you move (the user, 2026-10-13).
         { box: [0.492, 0.294, 0.054, 0.117], label: 'Turn needle',
-          action: 'Turn Indicator', values: ['CHECKED'] },
+          action: 'Turn Indicator', actions: ['Turn Indicator', 'Rudder'],
+          values: {
+            'Turn Indicator': ['CHECKED'],
+            Rudder: ['Full Deflection Opposite Direction Of Turn Needle', 'Neutralize After Rotation Stops'],
+          } },
         // All three lights under one box. The step is to keep climbing until the visual warnings
         // cease, and these are the visual warnings.
         { id: 'terrain-warnings', box: [0.496, 0.252, 0.047, 0.035],
@@ -372,6 +376,7 @@ export const T44C_POSTER = {
   //                                       calls them rudder pedals ("adjustable rudder/brake
   //                                       pedals", §2.12), so one Rudder Pedals button takes
   //                                       every rudder and brake input (the user, 2026-10-13).
+  //                                       The spin recovery's two are also on the turn needle.
   //   Evacuate Aircraft                   no door or exit on the sheet.
   //   Land as soon as possible.           a decision, not a control.
   //   Emergency Shutdown Checklist        cross-references to another checklist.
