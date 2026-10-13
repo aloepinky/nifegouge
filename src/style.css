@@ -4146,20 +4146,31 @@ textarea.incorrect-answer {
 .discuss-gouge-input:focus { outline: 2px solid #003B4F; outline-offset: 1px; }
 .discuss-gouge-input:disabled { background: #f4f7f9; color: #93a8b1; }
 
+/* The one button on a reading page, so it is the site's solid button (the editor's Save),
+   not the dashed "+ row" idiom, which reads as disabled. Greys out only while empty. */
 .discuss-gouge-button {
   flex: 0 0 auto;
-  background: none;
-  border: 1px dashed #a8bcc5;
+  background: #003B4F;
+  border: 1px solid #003B4F;
   border-radius: 3px;
-  padding: 6px 14px;
+  padding: 7px 18px;
   font: inherit;
   font-size: 13px;
-  color: #003B4F;
+  font-weight: 700;
+  color: #ffffff;
   cursor: pointer;
+  transition: background 0.1s, transform 0.05s;
 }
 
-.discuss-gouge-button:hover:not(:disabled) { background: rgba(0, 59, 79, 0.05); border-color: #003B4F; }
-.discuss-gouge-button:disabled { color: #93a8b1; cursor: default; }
+.discuss-gouge-button:hover:not(:disabled) { background: #01202C; border-color: #01202C; }
+.discuss-gouge-button:active:not(:disabled) { transform: translateY(1px); }
+.discuss-gouge-button:focus-visible { outline: 2px solid #003B4F; outline-offset: 2px; }
+.discuss-gouge-button:disabled {
+  background: #e3eaee;
+  border-color: #e3eaee;
+  color: #93a8b1;
+  cursor: default;
+}
 
 .discuss-gouge-add .discuss-gouge-status,
 .discuss-gouge-add .discuss-editor-warn {
