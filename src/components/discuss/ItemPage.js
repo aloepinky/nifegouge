@@ -5,18 +5,19 @@ import { getItemMeta } from './registry';
 import { rowName, useSyllabus } from './SyllabusContext';
 import { useDiscussBase } from './paths';
 import RandomPage, { SelectedSyllabusContext } from './RandomPage';
-import { rememberItem, refreshItem } from './discussApi';
+import { rememberItem, refreshItem, saveItem, getAuthor } from './discussApi';
 import ItemLink from './ItemLink';
 import { psmPage, psmLinksOf } from './psmPages';
 import { programLabel, withDefaultProgram } from './program';
 import { getDraft, getRecord, saveDraft, clearDraft, clone } from './edit/draft';
-import { allIds } from './edit/ids';
+import { allIds, newGougeId } from './edit/ids';
 import { validate } from './edit/validate';
 import { SlugOptions, ConfirmButton, resolveLink } from './edit/fields';
 import { EditLink, HeadLink, DraftBanner } from './edit/EditLink';
 import PublishDialog from './edit/PublishDialog';
 import SectionEditor from './edit/SectionEditor';
 import NumbersEditor from './edit/NumbersEditor';
+import GougeEditor from './edit/GougeEditor';
 import PageEditor from './edit/PageEditor';
 import { NWC_LABELS } from './nwc';
 import { citedDate } from './works';
@@ -481,7 +482,7 @@ function genTitle(g, many) {
 
 // Left rail, section headings only. Sticky on wide screens; collapses above the article
 // on a phone. The lead is not a numbered section, so its row is not numbered either.
-function Contents({ item, extra, hasSeeAlso, hasRefs, folded, onUnfold }) {
+function Contents({ item, extra, hasGouge, hasSeeAlso, hasRefs, folded, onUnfold }) {
   return (
     <nav className="discuss-toc" aria-label="Contents">
       <RandomPage current={item.slug} />
@@ -490,6 +491,11 @@ function Contents({ item, extra, hasSeeAlso, hasRefs, folded, onUnfold }) {
         <li>
           <a href="#top">(top)</a>
         </li>
+        {hasGouge && (
+          <li>
+            <a href="#gouge">Random gouge</a>
+          </li>
+        )}
         {/* A generated item has no sections of its own — its whole body is `extra`, the
             generated lists. Tolerate the absence rather than making every such item
             carry an empty array. */}
@@ -559,6 +565,97 @@ function NumbersBox({ numbers, onEdit, busy }) {
         </tbody>
       </table>
     </aside>
+  );
+}
+
+// Random gouge: the informal facts students were asked or heard at the table, kept apart from
+// the compiled page. The rules of the page — sources, the Manual of Style, the lint — stop at
+// this block's border. It is the one thing a page shows that nobody has to cite.
+//
+// The box publishes straight to the site. Everything else on the page goes draft → Save →
+// Publish because an edit to compiled content wants a second look and a summary; a one-line
+// fact wants neither, and a three-step path is how a fact stays in somebody's head. `onAdd`
+// resolves to a note to show (or nothing) and rejects with the server's message.
+function GougeAdd({ onAdd, disabled }) {
+  const [text, setText] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [status, setStatus] = useState(null);
+  const submit = async (e) => {
+    e.preventDefault();
+    const fact = text.trim();
+    if (!fact || adding) return;
+    setAdding(true);
+    setStatus(null);
+    try {
+      const note = await onAdd(fact);
+      setText('');
+      setStatus(note ? { kind: 'ok', text: note } : null);
+    } catch (err) {
+      setStatus({ kind: 'error', text: `Not added. ${err.message}` });
+    } finally {
+      setAdding(false);
+    }
+  };
+  return (
+    <form className="discuss-gouge-add" onSubmit={submit}>
+      <input
+        type="text"
+        className="discuss-gouge-input"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Something you were asked or heard in a brief"
+        aria-label="A fact to add"
+        maxLength={500}
+        disabled={disabled || adding}
+      />
+      <button
+        type="submit"
+        className="discuss-gouge-button"
+        disabled={disabled || adding || !text.trim()}
+        title={disabled ? 'Finish or cancel the open editor first' : undefined}
+      >
+        {adding ? 'Adding…' : 'Add'}
+      </button>
+      {status && (
+        <p className={status.kind === 'error' ? 'discuss-editor-warn' : 'discuss-gouge-status'}>
+          {status.text}
+        </p>
+      )}
+    </form>
+  );
+}
+
+// The block: heading, the facts, and the add box. `editor` is the list editor when it is open
+// in place of the facts. A read-only rendering (an old revision) shows the facts and nothing
+// else, and nothing at all when there are none.
+function GougeBox({ facts, readOnly, busy, editor, onEdit, onAdd }) {
+  if (readOnly && !facts.length) return null;
+  return (
+    <section className="discuss-section discuss-gouge" id="gouge">
+      <h2>
+        Random gouge
+        {!readOnly && !editor && facts.length > 0 && (
+          <EditLink onClick={onEdit} what="Random gouge" disabled={busy} />
+        )}
+      </h2>
+      {editor || (
+        <>
+          {!readOnly && (
+            <p className="discuss-gouge-hint">
+              Anything you were asked or heard in a brief. Add puts it on the site right away.
+            </p>
+          )}
+          {facts.length > 0 && (
+            <ul className="discuss-list discuss-gouge-list">
+              {facts.map((g) => (
+                <li className="discuss-bullet" key={g.id}>{inline(g.text)}</li>
+              ))}
+            </ul>
+          )}
+          {!readOnly && <GougeAdd onAdd={onAdd} disabled={busy} />}
+        </>
+      )}
+    </section>
   );
 }
 
@@ -716,6 +813,45 @@ function ItemPage({ record, readOnly = false, banner = null }) {
 
   const cancel = () => setEditing(null);
 
+  // A Random gouge fact, typed into the box on the page. With a draft open in this browser the
+  // fact joins it, since publishing the page would otherwise carry the fact and the draft's
+  // other edits in two directions at once. Otherwise it is published now, as its own revision
+  // with a summary written for it, under whatever name this browser last published with. A
+  // 409 means someone else published first; an append merges onto any newer revision, so the
+  // newest is fetched and the fact goes on once more. A second refusal is reported.
+  const addGouge = async (text) => {
+    if (draft) {
+      const next = { ...view, gouge: [...(view.gouge || []), { id: newGougeId(view), text }] };
+      saveDraft(item.slug, next, item, draftBase);
+      setDraft(clone(next));
+      setDraftRecord(getRecord(item.slug));
+      return 'Added to your unpublished edits. Publish them to put it on the site.';
+    }
+    const author = getAuthor();
+    const summary = `Added gouge: "${text}"`.slice(0, 200);
+    const publish = async (base) => {
+      const page = base.item;
+      const next = {
+        ...page,
+        ...withDefaultProgram(page, s),
+        gouge: [...(page.gouge || []), { id: newGougeId(page), text }],
+      };
+      const result = await saveItem(item.slug, base.rev, next, { author, summary });
+      rememberItem({
+        slug: item.slug, rev: result.rev, updatedAt: result.updatedAt, author, summary, item: next,
+      });
+    };
+    try {
+      await publish(record);
+    } catch (err) {
+      if (err.status !== 409) throw err;
+      const newest = await refreshItem(item.slug);
+      if (!newest) throw err;
+      await publish(newest);
+    }
+    return null;
+  };
+
   // The draft has gone out: forget it here and let the store carry the new revision.
   const onPublished = (result) => {
     clearDraft(item.slug);
@@ -773,6 +909,24 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const seeAlso = (view.seeAlso || []).map(resolveLink).filter(Boolean);
   const genGroups = view.stub ? null : generatedFor(view, params.get('from'), gs);
   const editingPage = editing && editing.kind === 'page';
+  const gouge = view.gouge || [];
+  const gougeBox = (
+    <GougeBox
+      facts={gouge}
+      readOnly={readOnly}
+      busy={busy}
+      onEdit={() => open({ kind: 'gouge' })}
+      onAdd={addGouge}
+      editor={editing && editing.kind === 'gouge' ? (
+        <GougeEditor
+          item={view}
+          onSave={(rows) => commit({ ...view, gouge: rows })}
+          onCancel={cancel}
+          check={(rows) => check({ ...view, gouge: rows })}
+        />
+      ) : null}
+    />
+  );
   // Nothing folds while an editor is open: the writer is looking at the whole page.
   const several = hasSeveralUnits(view.sections);
   const squadrons = squadronsFor(view.school);
@@ -874,25 +1028,30 @@ function ItemPage({ record, readOnly = false, banner = null }) {
           {editingPage ? (
             pageEditor
           ) : (
-            <section className="discuss-stub">
-              <h2>No page written</h2>
-              {view.sourcingLead && (
-                <>
-                  <p>Where an author could look:</p>
-                  <p className="discuss-stub-lead">{view.sourcingLead}</p>
-                </>
-              )}
-              {!readOnly && (
-                <p className="discuss-page-edit">
-                  <Edit
-                    onClick={() => open({ kind: 'page' })}
-                    what="the page"
-                    label="write this page"
-                    disabled={busy}
-                  />
-                </p>
-              )}
-            </section>
+            <>
+              <section className="discuss-stub">
+                <h2>No page written</h2>
+                {view.sourcingLead && (
+                  <>
+                    <p>Where an author could look:</p>
+                    <p className="discuss-stub-lead">{view.sourcingLead}</p>
+                  </>
+                )}
+                {!readOnly && (
+                  <p className="discuss-page-edit">
+                    <Edit
+                      onClick={() => open({ kind: 'page' })}
+                      what="the page"
+                      label="write this page"
+                      disabled={busy}
+                    />
+                  </p>
+                )}
+              </section>
+              {/* A page nobody has written yet is where loose gouge collects, so the box is
+                  here too. */}
+              {gougeBox}
+            </>
           )}
         </article>
       </div>
@@ -904,6 +1063,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       <Contents
         item={view}
         extra={(genGroups || []).map((g) => ({ id: genId(g), title: genTitle(g, genGroups.length > 1) }))}
+        hasGouge={!readOnly || gouge.length > 0}
         hasSeeAlso={seeAlso.length > 0}
         hasRefs={!!(view.references && view.references.length)}
         folded={folded}
@@ -934,6 +1094,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
             {view.lede && <p className="discuss-lede-para">{inline(view.lede)}</p>}
             <PsmLinks item={view} />
             {view.note && <p className="discuss-note">{view.note}</p>}
+            {gougeBox}
             <GeneratedLists
               groups={genGroups}
               syllabusName={gs.builtIn ? null : gs.name}

@@ -16,6 +16,7 @@ import { withDefaultProgram } from '../program';
 import { workDate } from '../works';
 import SectionEditor from './SectionEditor';
 import NumbersEditor from './NumbersEditor';
+import GougeEditor from './GougeEditor';
 
 // References are numbered 1..N in list order and nothing else is coherent: `n` is the printed
 // marker, the `<li value>` and the anchor `#ref-n` all at once. So a removal or a reorder
@@ -325,6 +326,13 @@ function PageEditor({ item, onSave, onCancel, check }) {
           school={p.school}
           links={p.psmLinks || []}
           onChange={(next) => set('psmLinks', next.length ? next : undefined)}
+        />
+
+        <h3>Random gouge</h3>
+        <GougeEditor
+          embedded
+          item={p}
+          onChange={(rows) => set('gouge', rows && rows.length ? rows : undefined)}
         />
 
         <h3>Numbers</h3>

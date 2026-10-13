@@ -48,6 +48,7 @@ const headingOf = (b, label) => (b.title && b.title.trim() ? `"${b.title}"` : `a
 function parts(item) {
   const out = [];
   (item.numbers || []).forEach((n, i) => out.push({ node: n, name: `Numbers row ${i + 1}` }));
+  (item.gouge || []).forEach((g, i) => out.push({ node: g, name: `Gouge fact ${i + 1}` }));
   const block = (b, label) => {
     const name = headingOf(b, label);
     // An untitled one reads "An untitled section", never "The section a section".
@@ -192,6 +193,9 @@ export function validate(item, baseIds, published) {
   (item.numbers || []).forEach((n, i) => {
     if (!n.label || !n.label.trim()) warnings.push(`Numbers row ${i + 1} has no label.`);
     if (!n.value || !n.value.trim()) warnings.push(`Numbers row ${i + 1} has no value.`);
+  });
+  (item.gouge || []).forEach((g, i) => {
+    if (!g.text || !g.text.trim()) warnings.push(`Gouge fact ${i + 1} is empty.`);
   });
 
   const refNums = new Set((item.references || []).map((r) => r.n));

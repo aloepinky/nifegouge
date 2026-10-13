@@ -33,6 +33,7 @@ function initials(sectionId) {
 export function allIds(item) {
   const out = [];
   for (const n of item.numbers || []) out.push(n.id);
+  for (const g of item.gouge || []) out.push(g.id);
   const body = (b) => {
     for (const p of b.paras || []) out.push(p.id);
     for (const f of b.figures || []) out.push(f.id);
@@ -119,6 +120,11 @@ export function newNumberId(item) {
   return mint(item.numbers, 'num-', 2, allIds(item));
 }
 
+// A Random gouge fact. Its id exists only so the editor can tell two facts apart.
+export function newGougeId(item) {
+  return mint(item.gouge, 'gg-', 2, allIds(item));
+}
+
 // Sub-bullets take their parent's id and a letter, as the corpus does: cc-01 → cc-01a.
 export function newSubBulletId(item, parent) {
   const taken = allIds(item);
@@ -147,7 +153,7 @@ export function slugify(text) {
 export function newSectionId(item, title, excludeId) {
   const taken = allIds(item)
     .filter((id) => id !== excludeId)
-    .concat(['top', 'numbers', 'see-also', 'references']);
+    .concat(['top', 'numbers', 'gouge', 'see-also', 'references']);
   const base = slugify(title) || 'section';
   if (!taken.includes(base)) return base;
   let n = 2;

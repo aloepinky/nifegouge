@@ -4061,6 +4061,65 @@ textarea.incorrect-answer {
   color: #4a6674;
 }
 
+/* ---- random gouge ---- */
+
+/* The informal block under the lead. Its facts are an ordinary list; the add box is the one
+   input on a reading page, so it is drawn in the editor's quiet idiom rather than as a form. */
+.discuss-gouge-hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #5a7481;
+}
+
+.discuss-gouge-list { margin-bottom: 10px; }
+
+.discuss-gouge-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.discuss-gouge-input {
+  flex: 1 1 240px;
+  min-width: 0;
+  border: 1px solid #cfdbe0;
+  border-radius: 3px;
+  background: #ffffff;
+  padding: 6px 9px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #01202C;
+}
+
+.discuss-gouge-input:focus { outline: 2px solid #003B4F; outline-offset: 1px; }
+.discuss-gouge-input:disabled { background: #f4f7f9; color: #93a8b1; }
+
+.discuss-gouge-button {
+  flex: 0 0 auto;
+  background: none;
+  border: 1px dashed #a8bcc5;
+  border-radius: 3px;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 13px;
+  color: #003B4F;
+  cursor: pointer;
+}
+
+.discuss-gouge-button:hover:not(:disabled) { background: rgba(0, 59, 79, 0.05); border-color: #003B4F; }
+.discuss-gouge-button:disabled { color: #93a8b1; cursor: default; }
+
+.discuss-gouge-add .discuss-gouge-status,
+.discuss-gouge-add .discuss-editor-warn {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: 13px;
+}
+
+.discuss-gouge-status { color: #5a7481; }
+
 /* ---- numbers infobox ---- */
 
 /* Sized to its content, not to a fixed width: auto table columns then let every
