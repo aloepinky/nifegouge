@@ -190,9 +190,9 @@ function T54ALimits({ isGameActive = false, onGameComplete }) {
                   40 seconds on, 60 seconds off twice, then 30 MINUTES, and a bare 30 would grade
                   "30 seconds" right. */}
               <li>STARTER DUTY CYCLE IS LIMITED TO THREE: {b('starterCycle', 'Starter cycle length')} SECOND CYCLES</li>
-              <li>COOLING PERIOD AFTER 1ST STARTER CYCLE: {b('starterCool1', 'Cooling period after first cycle')} SECONDS</li>
-              <li>COOLING PERIOD AFTER 2ND STARTER CYCLE: {b('starterCool2', 'Cooling period after second cycle')} SECONDS</li>
-              <li>COOLING PERIOD AFTER THIRD STARTER CYCLE: {b('starterCool3', 'Cooling period after third cycle')} MINUTES</li>
+              <li>COOLING PERIOD AFTER 1ST STARTER CYCLE: {b('starterCool1', 'Cooling period after first cycle')} SECS</li>
+              <li>COOLING PERIOD AFTER 2ND STARTER CYCLE: {b('starterCool2', 'Cooling period after second cycle')} SECS</li>
+              <li>COOLING PERIOD AFTER THIRD STARTER CYCLE: {b('starterCool3', 'Cooling period after third cycle')} MINS</li>
             </ul>
 
             <div className="t44c-banner t44c-banner--section">ELECTRICAL LIMITATIONS</div>
