@@ -90,8 +90,13 @@ export default function useLimitsDrill(answers, groups = [], { isGameActive = fa
     focusHint();
   };
 
+  // A blank that has turned green in Random mode stays shut for the rest of the run. The 300 ms
+  // lock below covers the moment it turns green; this covers the moment after, when the queue
+  // has moved on but the focus has not yet, and a fast typist's next figures were landing in
+  // the box they had just got right.
   const onChange = (field, value) => {
     if (locked.current === field) return;
+    if (queue && results[field] === 'correct') return;
     setData((d) => ({ ...d, [field]: value }));
     if (field === current && gradeLimit(value, answers[field]) === 'correct') {
       locked.current = field;

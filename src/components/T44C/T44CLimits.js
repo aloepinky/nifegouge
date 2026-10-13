@@ -199,9 +199,13 @@ function T44CLimits({ isGameActive = false, onGameComplete }) {
             <div className="t44c-banner t44c-banner--section">STARTER CYCLE LIMITATIONS</div>
             <ul className="t44c-rows">
               <li>STARTER DUTY CYCLE IS LIMITED TO THREE {b('starterCycleLength', 'Starter cycle length', 'wide')} CYCLES</li>
-              <li>COOLING PERIOD AFTER FIRST STARTER CYCLE: {b('starterCool1', 'Cooling period after first cycle')}</li>
-              <li>COOLING PERIOD AFTER SECOND STARTER CYCLE: {b('starterCool2', 'Cooling period after second cycle')}</li>
-              <li>COOLING PERIOD AFTER THIRD STARTER CYCLE: {b('starterCool3', 'Cooling period after third cycle')}</li>
+              {/* The sheet prints no unit on the cooling periods, and its key reads 60, 60, 30.
+                  NATOPS §4.2.3 has 60 seconds, 60 seconds, then 30 MINUTES, and a bare number is
+                  graded on its digits alone, so the unit goes on the page as the electrical box
+                  prints VDC (the user, 2026-10-13). */}
+              <li>COOLING PERIOD AFTER FIRST STARTER CYCLE: {b('starterCool1', 'Cooling period after first cycle')} SECONDS</li>
+              <li>COOLING PERIOD AFTER SECOND STARTER CYCLE: {b('starterCool2', 'Cooling period after second cycle')} SECONDS</li>
+              <li>COOLING PERIOD AFTER THIRD STARTER CYCLE: {b('starterCool3', 'Cooling period after third cycle')} MINUTES</li>
             </ul>
 
             <div className="t44c-banner t44c-banner--section">ELECTRICAL LIMITATIONS</div>
