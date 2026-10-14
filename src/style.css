@@ -8027,6 +8027,8 @@ button.epl-modal-close:hover {
 .t44c-blank--md { width: 5em; }
 .t44c-blank--wide { width: 6em; }
 .t44c-blank--lg { width: 13em; }
+/* The whole row: the T-54A's "LANDING RATES GREATER THAN 600 FPM" was clipped in a 13em box. */
+.t44c-blank--xl { width: 100%; box-sizing: border-box; }
 
 /* In the grid a blank fills its column, so "CONTINUOUS" is not clipped to "CONTII"; the cells
    that print a "(Min)" or a footnote beside the answer keep a fixed, narrower box. */

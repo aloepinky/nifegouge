@@ -205,9 +205,9 @@ function T54ALimits({ isGameActive = false, onGameComplete }) {
 
             <div className="t44c-banner t44c-banner--section">PROHIBITED MANEUVERS</div>
             <ol className="t44c-rows t44c-rows--numbered">
-              <li>{b('prohib1', 'Prohibited maneuver 1', 'lg')}</li>
-              <li>{b('prohib2', 'Prohibited maneuver 2', 'lg')}</li>
-              <li>{b('prohib3', 'Prohibited maneuver 3', 'lg')}</li>
+              <li>{b('prohib1', 'Prohibited maneuver 1', 'xl')}</li>
+              <li>{b('prohib2', 'Prohibited maneuver 2', 'xl')}</li>
+              <li>{b('prohib3', 'Prohibited maneuver 3', 'xl')}</li>
             </ol>
 
             <div className="t44c-banner t44c-banner--section">ACCELERATION LIMITATIONS</div>
