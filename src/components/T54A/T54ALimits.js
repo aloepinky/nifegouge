@@ -192,7 +192,7 @@ function T54ALimits({ isGameActive = false, onGameComplete }) {
               <li>STARTER DUTY CYCLE IS LIMITED TO THREE: {b('starterCycle', 'Starter cycle length')} SECOND CYCLES</li>
               <li>COOLING PERIOD AFTER 1ST STARTER CYCLE: {b('starterCool1', 'Cooling period after first cycle')} SECS</li>
               <li>COOLING PERIOD AFTER 2ND STARTER CYCLE: {b('starterCool2', 'Cooling period after second cycle')} SECS</li>
-              <li>COOLING PERIOD AFTER THIRD STARTER CYCLE: {b('starterCool3', 'Cooling period after third cycle')} MINS</li>
+              <li>COOLING PERIOD AFTER 3RD STARTER CYCLE: {b('starterCool3', 'Cooling period after third cycle')} MINS</li>
             </ul>
 
             <div className="t44c-banner t44c-banner--section">ELECTRICAL LIMITATIONS</div>

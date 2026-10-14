@@ -203,9 +203,9 @@ function T44CLimits({ isGameActive = false, onGameComplete }) {
                   NATOPS §4.2.3 has 60 seconds, 60 seconds, then 30 MINUTES, and a bare number is
                   graded on its digits alone, so the unit goes on the page as the electrical box
                   prints VDC (the user, 2026-10-13). */}
-              <li>COOLING PERIOD AFTER FIRST STARTER CYCLE: {b('starterCool1', 'Cooling period after first cycle')} SECS</li>
-              <li>COOLING PERIOD AFTER SECOND STARTER CYCLE: {b('starterCool2', 'Cooling period after second cycle')} SECS</li>
-              <li>COOLING PERIOD AFTER THIRD STARTER CYCLE: {b('starterCool3', 'Cooling period after third cycle')} MINS</li>
+              <li>COOLING PERIOD AFTER 1ST STARTER CYCLE: {b('starterCool1', 'Cooling period after first cycle')} SECS</li>
+              <li>COOLING PERIOD AFTER 2ND STARTER CYCLE: {b('starterCool2', 'Cooling period after second cycle')} SECS</li>
+              <li>COOLING PERIOD AFTER 3RD STARTER CYCLE: {b('starterCool3', 'Cooling period after third cycle')} MINS</li>
             </ul>
 
             <div className="t44c-banner t44c-banner--section">ELECTRICAL LIMITATIONS</div>
