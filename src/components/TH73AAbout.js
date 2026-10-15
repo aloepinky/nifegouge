@@ -30,9 +30,9 @@ function TH73AAbout() {
       intro="TH-73A training resources for drilling the fundamentals."
       photo={photo}
       photoAlt="Two TH-73As in formation over the coast"
-      // The lead aircraft flies nose-down over the trees, low in the frame: show the lower part,
-      // nose included, and give up the sky.
-      photoCrop="center 82%"
+      // The lead aircraft flies nose-down over the trees, low in the frame: the banner's bottom
+      // edge sits at the belly, so the body is whole and the skids are cut off.
+      photoCrop="center 67%"
       tabs={aboutTabs('th73a', content())}
       explainer={
         <>

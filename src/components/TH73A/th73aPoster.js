@@ -35,6 +35,10 @@ import cyclicSrc from './images/th73a-cyclic.webp';
 // (`?spots=<region>` does that).
 
 export const TH73A_POSTER = {
+  // `?spots=<region>` and `?boxes` work on the live site for this poster while its boxes are
+  // first-pass: a tester with the link tunes them and pastes the data file back. Delete this
+  // once the boxes are settled.
+  publicSpots: true,
   regions: [
     {
       id: 'panel',

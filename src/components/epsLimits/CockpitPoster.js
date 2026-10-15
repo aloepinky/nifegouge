@@ -34,8 +34,8 @@ import { actionFor, aliasesFrom, fillsFor, matches, settingsFor } from './contro
 // settings would be telling you the answer before you clicked.
 const tipFor = (spot, action) => (spot.actions ? `${spot.label}: ${action}` : spot.label);
 
-// Loaded only in a development build, and only when asked for. See SpotEditor.js: it is how the
-// boxes below were drawn in the first place, and it is not something to ship.
+// Loaded only when asked for, and only in a development build unless the poster says
+// `publicSpots`. See SpotEditor.js: it is how the boxes below were drawn in the first place.
 const SpotEditor = React.lazy(() => import('./SpotEditor'));
 
 // Everything a poster does that is not markup. A page calls this once with EPDrill's slot api and
@@ -61,10 +61,14 @@ export function usePoster({ poster, aliases, fill, hint, next }) {
   // clicking them normally — which is what you want when nudging coordinates by hand. It draws no
   // captions: they cluster on one switch row and the tags covered the controls being checked.
   // Hovering a box still names it, through the `title` every target already carries.
+  //
+  // A poster flagged `publicSpots` opens both on the live site too, so a tester with the link
+  // can tune a new aircraft's boxes without a checkout: the TH-73A's while it is unlisted.
   const params = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search) : new URLSearchParams();
-  const editing = DRAFT && params.has('spots') ? (params.get('spots') || '') : null;
-  const showBoxes = DRAFT && params.has('boxes');
+  const open = DRAFT || !!poster.publicSpots;
+  const editing = open && params.has('spots') ? (params.get('spots') || '') : null;
+  const showBoxes = open && params.has('boxes');
 
   return { poster, alias, press, hint, next, editing, showBoxes };
 }

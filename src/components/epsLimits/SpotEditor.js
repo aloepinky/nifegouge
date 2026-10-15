@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-// How the click targets on a cockpit poster get drawn. Development builds only, behind ?spots —
-// CockpitPoster lazy-imports it, so the chunk is never even fetched on the live site.
+// How the click targets on a cockpit poster get drawn. Behind ?spots, in development builds
+// and on the live site for a poster flagged `publicSpots` (CockpitPoster.js); it is
+// lazy-imported, so the chunk is fetched only when asked for.
 //
 // Drag a box over a control, name it, say what it writes, and take the whole data file to the
 // clipboard. It exists because the alternative is typing a hundred percentage rectangles by
