@@ -238,7 +238,7 @@ function Leaderboard({ school, pendingResult, onClose }) {
 
         {view === 'board' && (
           <div>
-            {status === 'sent' && <p className="lb-sent">Submitted. Your best time in each window is the one that counts.</p>}
+            {status === 'sent' && <p className="lb-sent">Submitted. Your best time is shown.</p>}
             <div className="lb-pills" role="tablist" aria-label="Test">
               {MODES.map((m) => (
                 <button type="button" key={m.id} role="tab" aria-selected={mode === m.id}
