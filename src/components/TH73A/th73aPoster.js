@@ -56,6 +56,16 @@ export const TH73A_POSTER = {
         { box: [0.56, 0.25, 0.17, 0.55], label: "Pilot's MFD, engine page",
           action: 'Monitor engine parameters.',
           actions: ['Monitor engine parameters.', 'Monitor transmission parameters.'] },
+        // The pilot's PFD's attitude display (the PFI area, Figure 2.14-3): regaining flight
+        // parameters is flown against it.
+        { box: [0.80, 0.27, 0.085, 0.2], label: 'Attitude indicator',
+          action: 'Regain Desired Flight Parameters.' },
+        // The slip indicator: the mechanical ball built into the bottom of each display bezel
+        // (§2.14.1.2, item 4; §11.1.3.3 "the integral slip indicator"). Centring the ball and
+        // slipping or skidding are read off it; the pedals button answers them too.
+        { box: [0.815, 0.825, 0.035, 0.045], label: 'Slip indicator',
+          action: 'Center Ball.',
+          actions: ['Center Ball.', 'Slip or skid aircraft to eliminate smoke and fumes.'] },
         // The EMERG FREQ annunciator switch sets both radios to guard AND the transponder to
         // 7700 (§2.2.2.1, item 2). Drawn at each end of the glareshield; the pilot's is on the
         // right. Same `action`, different `id`.
@@ -165,10 +175,12 @@ export const TH73A_POSTER = {
           actions: ['Attempt to raise hoist.', 'Pay out cable and attempt to free hang up.',
             'Cease hoisting.'] },
         // The grip. Attitude and airspeed are the cyclic in a helicopter, so the unusual
-        // attitude recovery's wings, nose and airspeed steps are here.
+        // attitude recovery's wings, nose and airspeed steps are here, and so is handling it
+        // gently (the hydraulic loss and lightning strike steps).
         { box: [0.065, 0.295, 0.651, 0.67], label: 'Cyclic',
           action: 'Cyclic',
-          actions: ['Cyclic', 'Level Wings.', 'Level the Nose.', 'Control Airspeed.'],
+          actions: ['Cyclic', 'Level Wings.', 'Level the Nose.', 'Control Airspeed.',
+            'Avoid rapid movement of flight controls.', 'Maneuver smoothly.'],
           values: {
             Cyclic: ['Adjust to obtain skid level attitude', 'Forward to increase airspeed',
               'Adjust to desired airspeed', 'Flare to reduce forward speed',
@@ -182,21 +194,24 @@ export const TH73A_POSTER = {
   // other reason is accepted:
   //
   //   not drawn      the control exists but the poster does not draw it. Only the pedals: the
-  //                  sheet stops at the pedestal. "Center Ball." is the pedals too.
+  //                  sheet stops at the pedestal. Centring the ball and slipping or skidding
+  //                  are the pedals too (and the slip indicator on the PFD answers them as well).
   //   cabin          equipment that is not on a panel: the doors and windows, the harness, the
   //                  ICS cords, the SEBD, the cockpit fire extinguisher (a stowed bottle, §7).
-  //   spoken         said, not switched: alerting the crew, the aircrewman notifying the pilot.
-  //   decided        a judgment or a flight condition with no one control: the landing criteria
-  //                  (§12.1.1), which electrical equipment is unnecessary, whether a fire is
-  //                  confirmed (looked at, not switched), whether the indications of a chip are
-  //                  there (§12.5: noise, vibration and fumes as much as gauges), establishing
-  //                  VMC, flying smoothly or slowly, regaining parameters, slipping (pedals and
-  //                  cyclic together, and the pedals are not drawn), and the egress actions a
-  //                  body does.
+  //   spoken         said, not switched: one button for alerting the crew and passengers and
+  //                  for the aircrewman notifying the pilot.
+  //   decided        a judgment with no one control: the landing criteria (§12.1.1, one button
+  //                  that writes whichever of "Land immediately" or "Land as soon as possible"
+  //                  the step asks for), which electrical equipment is unnecessary, whether a
+  //                  fire is confirmed (looked at, not switched), whether the indications of a
+  //                  chip are there (§12.5: noise, vibration and fumes as much as gauges),
+  //                  establishing VMC, and the egress actions a body does (one Evacuate button
+  //                  for leaving the helicopter, on land or under water).
   //   cross-ref      a step that names another procedure to go and do.
   actions: [
     // not drawn
-    { label: 'Pedals', action: 'Pedals', actions: ['Pedals', 'Center Ball.'],
+    { label: 'Pedals', action: 'Pedals',
+      actions: ['Pedals', 'Center Ball.', 'Slip or skid aircraft to eliminate smoke and fumes.'],
       values: { Pedals: ['Control yaw rate', 'Maintain direction'] } },
     // cabin
     { label: 'Doors / Windows', action: 'Doors/Windows', also: ['Doors'],
@@ -206,22 +221,20 @@ export const TH73A_POSTER = {
     { label: 'Communication cords', action: 'Communication cords', values: ['Disconnect'] },
     { label: 'SEBD', action: 'SEBD', values: ['Don, as required'] },
     // spoken
-    { label: 'Crew and passengers', action: 'Crew and passengers', values: ['Alert'] },
-    { label: 'Notify pilot', action: 'Notify Pilot.' },
+    { label: 'Alert crew', action: 'Crew and passengers',
+      actions: ['Crew and passengers', 'Notify Pilot.'],
+      values: { 'Crew and passengers': ['Alert'] } },
     // decided
-    { label: 'Land immediately', action: 'Land immediately.' },
-    { label: 'Land as soon as possible', action: 'Land as soon as possible.' },
+    { label: 'Land ASAP', action: 'Land as soon as possible.',
+      actions: ['Land as soon as possible.', 'Land immediately.'] },
     { label: 'Electrical equipment', action: 'Unnecessary electrical equipment', values: ['Secure'] },
     { label: 'Confirm fire', action: 'Confirm fire.' },
     { label: 'Secondary indications', action: 'Check for secondary indications.' },
     { label: 'Establish VMC', action: 'Establish VMC.' },
-    { label: 'Avoid rapid movement', action: 'Avoid rapid movement of flight controls.' },
-    { label: 'Maneuver smoothly', action: 'Maneuver smoothly.' },
-    { label: 'Slip or skid', action: 'Slip or skid aircraft to eliminate smoke and fumes.' },
-    { label: 'Regain parameters', action: 'Regain Desired Flight Parameters.' },
-    { label: 'Helicopter', action: 'Helicopter', values: ['Egress'] },
+    { label: 'Evacuate', action: 'Helicopter',
+      actions: ['Helicopter', 'Exit helicopter.'],
+      values: { Helicopter: ['Egress'] } },
     { label: 'Place hand', action: 'Place hand on known reference point.' },
-    { label: 'Exit helicopter', action: 'Exit helicopter.' },
     { label: 'Swim clear', action: 'Swim clear and inflate LPU.' },
     // cross-ref
     { label: 'Autorotative Landing', action: 'Autorotative Landing', values: ['Complete'] },
