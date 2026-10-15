@@ -73,6 +73,12 @@ export const WORKS = [
   { work: 'T-54A NATOPS Checklist', date: '15NOV25' },
   { work: 'T-54A FTI', date: 'AUG25' },
   { work: 'T-54A MCG', date: '31JUL25' },
+  // The general NATOPS manuals, shared by every program (so no aircraft in the name). The
+  // Instrument Flight Manual is NAVAIR 00-80T-112, Aircraft Signals 00-80T-113 and Aircrew
+  // Systems 00-80T-123; each is dated by its cover.
+  { work: 'NATOPS Instrument Flight Manual', date: '01OCT22' },
+  { work: 'Aircraft Signals NATOPS', date: '01APR18' },
+  { work: 'Aircrew Systems NATOPS', date: '15APR20' },
   { work: 'FIH', date: '10JUL25' },
   { work: 'AIM', date: '09JUL26' },
   { work: 'Instrument Procedures Handbook', date: '2017' },

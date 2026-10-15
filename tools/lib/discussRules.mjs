@@ -695,6 +695,10 @@ const NATOPS_LOC = {
   NATOPS: /^Ch\. [A-Z]?\d+(-\d+)? — \S/,
   'T-44C NATOPS': /^§\d+(\.\d+)+ — \S/,
   'T-54A NATOPS': /^§\d+(\.\d+)+ — \S/,
+  // The general NATOPS manuals number every section the same way (§19.8 — Holding, p. 19-9).
+  'NATOPS Instrument Flight Manual': /^§\d+(\.\d+)+ — \S/,
+  'Aircraft Signals NATOPS': /^§\d+(\.\d+)+ — \S/,
+  'Aircrew Systems NATOPS': /^§\d+(\.\d+)+ — \S/,
 };
 
 export function natopsCitations(item) {
