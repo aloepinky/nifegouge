@@ -73,6 +73,9 @@ T54A_PDF = os.path.join(REF, "T-54A Advanced", "T_54 Poster.pdf")
 # whereas everything in public/ ships to the live site. Move them to public/images/ (and the
 # poster's `src` to a plain path) when the program goes live.
 T54A_OUT = os.path.join(REPO, "src", "components", "T54A", "images")
+# The TH-73A is unlisted (programs.js), so its crops are imported from src/ the same way.
+TH73A_PDF = os.path.join(REF, "TH-73A Advanced", "TH-73A Cockpit Poster - Rev_1B.pdf")
+TH73A_OUT = os.path.join(REPO, "src", "components", "TH73A", "images")
 
 # The page is rendered once at this and every region cut from it. The sheet is 2592x1728 pt, so
 # 200 dpi is 7200x4800 - the narrowest region still has ~1500 px across before downscaling.
@@ -137,6 +140,26 @@ T54A_REGIONS = {
     "pedestal": (0.376, 0.474, 0.622, 0.940),
     "fuel":     (0.055, 0.578, 0.366, 0.737),
     "cb":       (0.624, 0.580, 0.946, 0.752),
+}
+
+# The TH-73A poster is Leonardo's one A0 portrait sheet (2384x3370 pt) of the cockpit drawn as
+# separate sub-panels floating on white. Four are cut, every one whole:
+#   overhead  the overhead panel with its two NVG lamps, the rotor brake handle on its right and
+#             the small panel beside it: electrical (BUS, GEN, BAT), IGN, CHIP BURN, the heater
+#             and vent group, VENT CKPT
+#   panel     the instrument panel, glareshield to the bottom of the bezels: both PFDs and MFDs,
+#             the ESIS and clock, MASTER WARNING/CAUTION
+#   pedestal  the whole centre column under the panel: audio panels and transponder, the
+#             AFCS/helipilot panel, the miscellaneous panel (SERVO), the FUEL panel, and the
+#             collective with its head (START) and twist grip, which is drawn from the pedestal
+#             down and cannot be cut off it without halving one or the other
+#   cyclic    the right-hand cyclic grip, the pilot's; the left one is a duplicate
+# Left out: the Vne placard under the overhead and the ICS cord/jack at the bottom left.
+TH73A_REGIONS = {
+    "overhead": (0.370, 0.008, 0.670, 0.320),
+    "panel":    (0.125, 0.383, 0.850, 0.570),
+    "pedestal": (0.400, 0.568, 0.605, 0.998),
+    "cyclic":   (0.655, 0.648, 0.765, 0.762),
 }
 
 # The C172P drawing is 1637x1355 and every part of it is wanted, so there is nothing to crop -
@@ -220,6 +243,34 @@ def crop_t54a(only, dry):
             save(page.crop(box), f"t54a-{name}.webp", dry, T54A_OUT)
 
 
+def crop_th73a(only, dry):
+    if only and only not in TH73A_REGIONS:
+        return
+    if not os.path.exists(TH73A_PDF):
+        print(f"! missing {TH73A_PDF}", file=sys.stderr)
+        return
+    if not shutil.which("pdftoppm"):
+        sys.exit("pdftoppm (poppler) is required on the PATH")
+    print(f"TH-73A: rendering {os.path.basename(TH73A_PDF)} at {DPI} dpi")
+    os.makedirs(TH73A_OUT, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        stem = os.path.join(tmp, "page")
+        subprocess.run(
+            ["pdftoppm", "-r", str(DPI), "-png", "-singlefile", TH73A_PDF, stem],
+            check=True, capture_output=True,
+        )
+        Image.MAX_IMAGE_PIXELS = None   # 6622x9362 at 200 dpi, a known file
+        page = Image.open(stem + ".png").convert("RGB")
+        page.load()
+        W, H = page.size
+        print(f"  page {W}x{H}")
+        for name, (l, t, r, b) in TH73A_REGIONS.items():
+            if only and only != name:
+                continue
+            box = (round(l * W), round(t * H), round(r * W), round(b * H))
+            save(page.crop(box), f"th73a-{name}.webp", dry, TH73A_OUT)
+
+
 def crop_c172(only, dry):
     if only and only != "c172":
         return
@@ -234,7 +285,7 @@ def crop_c172(only, dry):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     ap.add_argument("--dry-run", action="store_true", help="report only, write nothing")
-    ap.add_argument("--only", metavar="REGION", help="one of: c172, " + ", ".join([*T44C_REGIONS, *T54A_REGIONS]))
+    ap.add_argument("--only", metavar="REGION", help="one of: c172, " + ", ".join([*T44C_REGIONS, *T54A_REGIONS, *TH73A_REGIONS]))
     args = ap.parse_args()
 
     if args.dry_run:
@@ -242,6 +293,7 @@ def main():
     crop_c172(args.only, args.dry_run)
     crop_t44c(args.only, args.dry_run)
     crop_t54a(args.only, args.dry_run)
+    crop_th73a(args.only, args.dry_run)
 
 
 if __name__ == "__main__":

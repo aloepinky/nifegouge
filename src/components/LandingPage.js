@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PROGRAMS, listed, schoolOf, shown } from './programs';
 import { useCourseWeeks } from './about/SchoolStats';
 import T54A_PHOTO from './T54A/images/t54a.webp';
+import TH73A_PHOTO from './TH73A/images/th73a.webp';
 
 // The biggest numbers of each school, under its tile: how long the course is and what its
 // EPs/Limits exam asks. Counted from the data (about/platforms.js, the syllabi on the mirror),
@@ -182,6 +183,21 @@ function LandingPage() {
               <div className="landing-button-label">T-54A Advanced</div>
             </div>
             <SchoolHighlights id="t54a" platforms={platforms && platforms.t54a} />
+          </div>
+        )}
+
+        {/* Unlisted on the live site (programs.js): reached by link only. */}
+        {listed(PROGRAMS.find((p) => p.id === 'th73a')) && (
+          <div className="landing-school">
+            <div
+              className="landing-button"
+              onClick={() => navigate('/th73a/about')}
+            >
+              <div className="landing-button-fallback">TH-73A Advanced</div>
+              <img src={TH73A_PHOTO} alt="TH-73A Advanced - Thrasher" />
+              <div className="landing-button-label">TH-73A Advanced</div>
+            </div>
+            <SchoolHighlights id="th73a" platforms={platforms && platforms.th73a} />
           </div>
         )}
       </div>

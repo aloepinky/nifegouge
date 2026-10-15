@@ -15,9 +15,9 @@ import { HttpError, cleanText, parseBody, reply } from './http.mjs';
 // boards are small, so the window and the best-per-player are worked out here rather than in a
 // FilterExpression.
 
-// 'T-54A' is its own board, not Advanced's: the T-44C's board is the Advanced one. The T-54A
-// page is a draft (src/components/programs.js, T54A-DRAFT), so nothing on the live site reads it.
-const SCHOOLS = ['NIFE', 'Primary', 'Advanced', 'T-54A'];
+// 'T-54A' and 'TH-73A' are their own boards, not Advanced's: the T-44C's board is the Advanced
+// one. The TH-73A page is unlisted (src/components/programs.js), reached by link only.
+const SCHOOLS = ['NIFE', 'Primary', 'Advanced', 'T-54A', 'TH-73A'];
 const MODES = ['EPs', 'Limits', 'EPs_and_Limits'];
 const PERIODS = ['month', 'year', 'all'];
 const MIN_MS = 1000;

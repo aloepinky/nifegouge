@@ -57,6 +57,8 @@ const T54AAbout = page(() => import('./components/T54AAbout.js'));
 const T54AEPsLimits = page(() => import('./components/T54AEPsLimits.js'));
 const T54ABriefs = page(() => import('./components/T54ABriefs.js'));
 const T54ADocs = page(() => import('./components/T54ADocs.js'));
+const TH73AAbout = page(() => import('./components/TH73AAbout.js'));
+const TH73AEPsLimits = page(() => import('./components/TH73AEPsLimits.js'));
 const BriefsPage = page(() => import('./components/briefs/BriefsPage'));
 const NIFEAbout = page(() => import('./components/NIFEAbout.js'));
 const CourseRules = page(() => import('./components/TW4CourseRules.js'));
@@ -172,6 +174,10 @@ function App() {
         <Route path="/t54a/docs" element={<T54ADocs />} />
         <Route path="/t54a/discuss/*" element={<T54ADiscuss />} />
         <Route path="/t54a/briefs/*" element={<T54ABriefs />} />
+        <Route path="/th73a" element={<Navigate to="/th73a/about" replace />} />
+        <Route path="/th73a/about" element={<TH73AAbout />} />
+        <Route path="/th73a/eps-limits" element={<TH73AEPsLimits />} />
+        <Route path="/th73a/eps-limits/:tab" element={<TH73AEPsLimits />} />
       </>)}
       </Routes>
       </Suspense>

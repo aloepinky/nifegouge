@@ -53,9 +53,18 @@ resolve. The program's `id` is still `tw4` (it keys stored data). Programs and t
 `src/components/programs.js` (`PROGRAMS`, `PROGRAM_TABS`), which `TopNav.js` reads.
 
 **T-54A (`/t54a/*`, "Advanced - T-54A")** has been listed since 2026-10-03 (it was `unlisted`,
-live by link only, while it was tested; `unlisted` still exists for the next program). Its images
+live by link only, while it was tested). Its images
 live in `src/components/T54A/images/` (imported, not `public/`) and its limits sheet reuses the
 `.t44c-*` classes; its leaderboard is `T-54A`.
+
+**TH-73A (`/th73a/*`, "Advanced - TH-73A", school `TH-73A`)** is `unlisted` since 2026-10-15:
+served by link, hidden from the program menu, the landing page and the other About pages. Two
+tabs, About and EPs/Limits; no briefs or discussion items yet. There is no TH-73A exam sheet, so
+its EPs are the 37 NATOPS Ch. 12 procedures with asterisked (memory) steps, memory steps only,
+and its limits sheet is the site's own selection from NATOPS Ch. 4 (`TH73A/th73aData.js` says
+which; the page says so too). Same layout as the T-54A: images in `src/components/TH73A/images/`,
+`.t44c-*` sheet classes, leaderboard `TH-73A`. The poster is Leonardo's training-academy sheet,
+cut by `tools/crop-posters.py`.
 
 ## Architecture
 
@@ -553,7 +562,8 @@ Shared parts in `src/components/epsLimits/` (`EPsLimitsShell`, `EPDrill`, `useLi
 `CockpitPoster`, `ActionButtons`, `controlMatch`, `stepFlow`, `SpotEditor`), leaderboard in
 `src/components/leaderboard/` + `lambda/discussApi/scores.mjs` (table `EPsLimitsScores`; add new
 schools to `SCHOOLS` and redeploy). Data: NIFE `Flight/c172Data.js`, `c172Poster.js`,
-`C172Limits.js`; Advanced `T44C/t44cData.js`, `t44cPoster.js`, `T44CLimits.js`. Grading in
+`C172Limits.js`; Advanced `T44C/t44cData.js`, `t44cPoster.js`, `T44CLimits.js`; T-54A and
+TH-73A likewise under `T54A/` and `TH73A/`. Grading in
 `utils/answerUtils.js`. Tools: `tools/crop-posters.py`, `tools/check-posters.js` (acceptance test —
 run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
 

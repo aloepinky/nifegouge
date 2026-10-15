@@ -22,7 +22,7 @@ const LIVE = ['pinksheetmafia.com', 'www.pinksheetmafia.com'];
 const SETTLE_MS = 800;
 const KEY = 'psm-pageviews';
 const MAX_PATHS = 400;
-const PREFIXES = ['nife', 'primary', 't44c', 't54a', 'tw4'];
+const PREFIXES = ['nife', 'primary', 't44c', 't54a', 'th73a', 'tw4'];
 
 const enabled = () => typeof window !== 'undefined'
   && (LIVE.includes(window.location.hostname) || process.env.REACT_APP_PAGEVIEWS === 'on')

@@ -33,7 +33,7 @@ const MAX_PATH = 160;
 const MAX_DAYS = 92;
 // The top of every address the site serves. Anything else (a mistyped link, a probe) is
 // counted under one row rather than making a row of its own.
-const PREFIXES = new Set(['nife', 'primary', 't44c', 't54a', 'tw4']);
+const PREFIXES = new Set(['nife', 'primary', 't44c', 't54a', 'th73a', 'tw4']);
 const OTHER = '/(other)';
 // Primary's old address is still Primary.
 const SCHOOL_OF_PREFIX = { tw4: 'primary' };

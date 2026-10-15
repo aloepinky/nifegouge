@@ -59,6 +59,7 @@ const SCHOOLS = [
   { name: 'T-44C Hollywood', data: 'components/T44C/t44cNormals.js', eps: 'T44C_HOLLYWOOD', poster: 'components/T44C/t44cPoster.js', key: 'T44C_POSTER' },
   { name: 'T-44C memory normals', data: 'components/T44C/t44cNormals.js', eps: 'T44C_MEMORY_NORMALS', poster: 'components/T44C/t44cPoster.js', key: 'T44C_POSTER' },
   { name: 'T-54A', data: 'components/T54A/t54aData.js', eps: 'T54A_EPS', poster: 'components/T54A/t54aPoster.js', key: 'T54A_POSTER' },
+  { name: 'TH-73A', data: 'components/TH73A/th73aData.js', eps: 'TH73A_EPS', poster: 'components/TH73A/th73aPoster.js', key: 'TH73A_POSTER' },
 ];
 
 let findings = 0;
