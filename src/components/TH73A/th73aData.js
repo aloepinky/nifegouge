@@ -614,6 +614,21 @@ export const TH73A_LIMITS = {
   rotorBrakeNr: '40',
   chipBurnerMax: '3',
 
+  // The figures in the grid's notes (TH73ALimits.js numbers them on the cells), as the T-44C
+  // sheet asks the figures in its notes. The N2 caution's five percentages are five blanks.
+  note2N1Idle: '60',
+  note3N2Indicated: '103',
+  note3ActualMin: '102.50',
+  note3ActualMax: '103.49',
+  note3TransientBegins: '103.01',
+  note3Protracted: '103',
+  note4IttTen: '870',
+  note4IttTwo: '980',
+  note5Split: '1',
+  note6N1: '72',
+  note7OilPress: '110',
+  note8N1: '61',
+
   // §4.24 PROHIBITED MANEUVERS and §4.23 PROHIBITED OPERATIONS
   prohib1: 'AEROBATIC MANEUVERS',
   prohib2: 'PROTRACTED OPERATIONS IN THE AVOID AREAS OF THE HEIGHT VELOCITY DIAGRAM',
@@ -652,6 +667,8 @@ export const TH73A_LIMIT_GROUPS = [
   ['muhAttentive', 'muhManual', 'muhOneInop'],
   ['fdMuhCruise', 'fdMuhApproach'],
   ['ilsGradient', 'ilsDescent'],
+  ['note3N2Indicated', 'note3ActualMin', 'note3ActualMax', 'note3TransientBegins', 'note3Protracted'],
+  ['note4IttTen', 'note4IttTwo'],
   ['prohib1', 'prohib2', 'prohib3'],
   ['prohibOp1', 'prohibOp2'],
 ];

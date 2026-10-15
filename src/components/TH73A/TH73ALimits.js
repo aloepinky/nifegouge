@@ -24,24 +24,25 @@ const DASH = <span className="t44c-dash">---</span>;
 // A row of the grid: the label, then its eight cells in column order, the NATOPS's own headings
 // (§4.3 to §4.11): minimum, cautionary, continuous, take-off (5 minutes), maximum take-off
 // (5 minutes), maximum, transient, and the transient's time limit. A cell is a field key,
-// `[key, marker]` for a blank the NATOPS qualifies in its heading ("Cautionary (autorotation
-// only)", "with N1 <72%", "5 minutes with N1 at 61 ±1%"), or one of the sheet's own printed
-// cells. Every transient's time limit is asked, with its unit.
+// `[key, marker]` for a blank the sheet hangs a note on, or one of the sheet's own printed
+// cells; a note's number is also printed on a row label, as the T-54A sheet prints "(8)" on
+// Max Reverse. Every note has its number somewhere on the grid, and only those notes are
+// printed. Every transient's time limit is asked, with its unit.
 const GRID = [
   // §4.3
-  ['N1 %', 'n1Min', ['n1Caut', 'AUTO ONLY'], 'n1Cont', 'n1Takeoff', 'n1Max', DASH, 'n1Trans', 'n1TransTime'],
-  ['N2 %', 'n2Min', 'n2Caut', 'n2Cont', DASH, DASH, 'n2Max', 'n2Trans', 'n2TransTime'],
+  ['N1 % (2)', 'n1Min', ['n1Caut', '(1)'], 'n1Cont', 'n1Takeoff', 'n1Max', DASH, 'n1Trans', 'n1TransTime'],
+  ['N2 % (3)', 'n2Min', 'n2Caut', 'n2Cont', DASH, DASH, 'n2Max', 'n2Trans', 'n2TransTime'],
   ['ITT °C', DASH, DASH, 'ittCont', 'ittTakeoff', 'ittMax', DASH, 'ittTrans', 'ittTransTime'],
-  ['ITT STARTING °C', DASH, DASH, DASH, DASH, DASH, 'ittStartMax', 'ittStartTrans', 'ittStartTransTime'],
+  ['ITT STARTING °C (4)', DASH, DASH, DASH, DASH, DASH, 'ittStartMax', 'ittStartTrans', 'ittStartTransTime'],
   ['TORQUE %', DASH, DASH, 'trqCont', 'trqTakeoff', 'trqMax', DASH, 'trqTrans', 'trqTransTime'],
   // §4.4
   ['NR POWER-ON %', 'nrOnMin', 'nrOnCaut', 'nrOnCont', DASH, DASH, 'nrOnMax', 'nrOnTrans', 'nrOnTransTime'],
-  ['NR POWER-OFF %', 'nrOffMin', DASH, 'nrOffCont', DASH, DASH, 'nrOffMax', 'nrOffTrans', 'nrOffTransTime'],
+  ['NR POWER-OFF % (5)', 'nrOffMin', DASH, 'nrOffCont', DASH, DASH, 'nrOffMax', 'nrOffTrans', 'nrOffTransTime'],
   // §4.5
   ['FUEL PRESS PSI', DASH, 'fuelPressCaut', 'fuelPressCont', DASH, DASH, 'fuelPressMax', DASH, DASH],
   // §4.6
-  ['ENG OIL PRESS PSI', 'engOilPMin', ['engOilPCaut', 'N1 <72%'], 'engOilPCont', DASH, DASH, 'engOilPMax', DASH, DASH],
-  ['ENG OIL TEMP °C', DASH, DASH, 'engOilTCont', DASH, DASH, 'engOilTMax', 'engOilTTrans', ['engOilTTransTime', 'N1 61 ±1%']],
+  ['ENG OIL PRESS PSI', 'engOilPMin', ['engOilPCaut', '(6)'], 'engOilPCont', DASH, DASH, ['engOilPMax', '(7)'], DASH, DASH],
+  ['ENG OIL TEMP °C', DASH, DASH, 'engOilTCont', DASH, DASH, 'engOilTMax', 'engOilTTrans', ['engOilTTransTime', '(8)']],
   // §4.7
   ['XMSN OIL PRESS PSI', 'xmsnOilPMin', 'xmsnOilPCaut', 'xmsnOilPCont', DASH, DASH, 'xmsnOilPMax', DASH, DASH],
   ['XMSN OIL TEMP °C', DASH, DASH, 'xmsnOilTCont', DASH, DASH, 'xmsnOilTMax', DASH, DASH],
@@ -71,7 +72,7 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
   const cell = (spec, rowLabel, colLabel) => {
     if (Array.isArray(spec)) {
       const [key, marker] = spec;
-      return <>{b(key, `${rowLabel} ${colLabel}`, 'xs')}<sup> {marker}</sup></>;
+      return <>{b(key, `${rowLabel} ${colLabel}`, 'sm')}<sup> {marker}</sup></>;
     }
     if (typeof spec === 'string') return b(spec, `${rowLabel} ${colLabel}`, 'fill');
     return spec;
@@ -121,23 +122,37 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
         </div>
 
         <div className="t44c-banner t44c-banner--section">NOTES</div>
-        {/* The NATOPS's own notes on these limits, verbatim (§4.3.1 to §4.5.2), the N2 one a
-            caution. Not here: §4.6.1's note on cold-start oil pressure, which states the oil
-            pressure maximum the row above asks for. */}
+        {/* The NATOPS's notes on these limits, verbatim, each numbered where it applies on the
+            grid: 1, 6 and 8 are the qualifiers the NATOPS puts in the heading itself
+            ("Cautionary (autorotation only)", "Cautionary (with N1 <72%)", "Transient (5 minutes
+            with N1 at 61 ±1%)"); 3 is a caution. The figures in them are blanks, as the T-44C
+            sheet asks the figures in its notes. A NATOPS note with no cell to hang on (§4.5.2's,
+            on planned reserve and minimum fuel) is not printed. */}
         <ol className="t44c-notes">
-          <li>Transient must not be used intentionally.</li>
-          <li>IDLE N1 may decrease below 60% when the generator and other aircraft systems are turned on. This is normal.</li>
+          <li>Autorotation only.</li>
           <li>
-            Caution: An N2 indication of 103% corresponds with an actual N2 value of 102.50% to 103.49%. The N2
-            transient region begins at 103.01%. Protracted operation at N2 values of 103% should be avoided to
-            minimize the possibility of N2 overspeed.
+            IDLE N1 may decrease below {b('note2N1Idle', 'Note 2 N1', 'sm')}% when the generator and other aircraft
+            systems are turned on. This is normal.
           </li>
-          <li>A linear variation applies above 870 °C, ten seconds, and 980 °C, two seconds.</li>
-          <li>Power-Off is an N2/NR split by 1% or more.</li>
           <li>
-            No requirement exists to sum planned fuel reserve and minimum fuel together. The first is a planning
-            function; the second is an absolute minimum.
+            Caution: An N2 indication of {b('note3N2Indicated', 'Note 3 indicated N2', 'sm')}% corresponds with an
+            actual N2 value of {b('note3ActualMin', 'Note 3 actual N2 minimum', 'sm')}% to{' '}
+            {b('note3ActualMax', 'Note 3 actual N2 maximum', 'sm')}%. The N2 transient region begins at{' '}
+            {b('note3TransientBegins', 'Note 3 N2 transient region', 'sm')}%. Protracted operation at N2 values of{' '}
+            {b('note3Protracted', 'Note 3 protracted N2', 'sm')}% should be avoided to minimize the possibility of N2
+            overspeed.
           </li>
+          <li>
+            A linear variation applies above {b('note4IttTen', 'Note 4 ITT ten seconds', 'sm')} °C, ten seconds, and{' '}
+            {b('note4IttTwo', 'Note 4 ITT two seconds', 'sm')} °C, two seconds.
+          </li>
+          <li>Power-Off is an N2/NR split by {b('note5Split', 'Note 5 N2/NR split', 'xs')}% or more.</li>
+          <li>With N1 &lt;{b('note6N1', 'Note 6 N1', 'xs')}%.</li>
+          <li>
+            During cold starting conditions the oil pressure can temporarily exceed{' '}
+            {b('note7OilPress', 'Note 7 oil pressure', 'sm')} psi; it reduces as oil temperature increases.
+          </li>
+          <li>With N1 at {b('note8N1', 'Note 8 N1', 'xs')} ±1%.</li>
         </ol>
 
         <div className="t44c-cols">
