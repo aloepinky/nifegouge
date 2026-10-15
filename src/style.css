@@ -7371,6 +7371,13 @@ textarea.incorrect-answer {
   margin: 0 auto 10px;
 }
 
+/* The TH-73A's cyclic grip in that slot: a portrait drawing, so at the slot's full width it would
+   stand taller than the EP card it sits over. Narrowed to about a grip's width on the page. */
+.epl-above-cyclic {
+  max-width: 200px;
+  margin: 0 auto;
+}
+
 .t44c-console {
   display: flex;
   flex-direction: column;

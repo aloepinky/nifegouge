@@ -15,13 +15,21 @@ import cyclicSrc from './images/th73a-cyclic.webp';
 // Four regions, every one a whole sub-panel off the sheet: the overhead panel (with the rotor
 // brake handle beside it), the instrument panel, the whole centre pedestal with the collective
 // rising out of it, and the pilot's cyclic grip. Where the memory items name a control, the
-// NATOPS (01-H73A-1, Ch. 2) says which panel it is on: the GEN, BAT and IGN switches, CHIP BURN,
-// the heater group and VENT CKPT on the overhead (§2.9, §2.19); the fresh air vent knob on the
-// front console (§2.2, Figure 2.2-4, item 6; §2.19.1); the SERVO switch on the miscellaneous
-// panel (§2.11); the start button, MAN/NOR switch, twist grip and the LDG LT / SRCH LT switches
-// on the collective (§2.6, §2.20); the HOIST CUT (CABLE CUT) guarded switch on the pilot's
-// cyclic (§2.21). The pilot flies from the right seat (§4.21), so Airspeed is the right PFD's
-// tape.
+// NATOPS (01-H73A-1) says which panel it is on: the GEN, BAT and IGN switches, CHIP BURN, the
+// heater group and VENT CKPT on the overhead (§2.9, §2.19); the fresh air vent knob on the front
+// console (§2.2, Figure 2.2-4, item 6; §2.19.1); the SERVO switch on the miscellaneous panel
+// (§2.11); the start button, MAN/NOR switch, twist grip and the LDG LT / SRCH LT switches on the
+// collective (§2.6, §2.20); the HOIST CUT (CABLE CUT) guarded switch and the HOIST control switch
+// on the pilot's cyclic (§2.21, §7); the EMERG FREQ annunciator switch, which also sets the
+// transponder to 7700 (§2.2); the ICS/TX switch on each audio control panel, one of the three
+// PTTs (§14.2). The pilot flies from the right seat (§4.21), so Airspeed is the right PFD's tape
+// and the engine page the right MFD.
+//
+// The rule for what is a target and what is a button: a step is a target wherever the control
+// that does it is drawn, and a button only where nothing on the sheet does it. So "Reduce
+// power." is the collective (power is the collective in a helicopter), "Level Wings." the
+// cyclic, "Monitor engine parameters." the MFD engine page, and "Attempt to raise hoist." the
+// HOIST switch on the cyclic. The buttons that remain are listed with their reasons at the foot.
 //
 // Every box was read off a 5% grid over the region image; none has been tuned on the page yet
 // (`?spots=<region>` does that).
@@ -34,13 +42,27 @@ export const TH73A_POSTER = {
       src: panelSrc,
       alt: 'TH-73A instrument panel: the copilot\'s PFD and MFD on the left, the standby '
         + 'instrument and clock in the centre, the pilot\'s MFD and PFD on the right, with the '
-        + 'MASTER CAUTION and MASTER WARNING lights at each end of the glareshield',
+        + 'MASTER CAUTION and MASTER WARNING lights and the EMERG FREQ switch at each end of '
+        + 'the glareshield',
       spots: [
         // The pilot's PFD only: the airspeed tape down its left side.
         { box: [0.762, 0.245, 0.03, 0.26], label: 'Airspeed indicator',
           action: 'Airspeed',
           values: ['60-70 KIAS level flight', 'Adjust to reach a suitable landing site',
             'Reduce smoothly below 90 KIAS', 'Adjust, as required', 'Reduce below 80 KIAS'] },
+        // The pilot's MFD, on the FULL ENGINE page the checklist sets it to (3710.30B, step 30):
+        // the engine and transmission gauges a "monitor" step is read off. An instrument the
+        // step is worked against, as the T-54A's engine strip is.
+        { box: [0.56, 0.25, 0.17, 0.55], label: "Pilot's MFD, engine page",
+          action: 'Monitor engine parameters.',
+          actions: ['Monitor engine parameters.', 'Monitor transmission parameters.'] },
+        // The EMERG FREQ annunciator switch sets both radios to guard AND the transponder to
+        // 7700 (§2.2.2.1, item 2). Drawn at each end of the glareshield; the pilot's is on the
+        // right. Same `action`, different `id`.
+        { id: 'emerg-freq-pilot', box: [0.94, 0.84, 0.035, 0.07], label: 'EMERG FREQ switch',
+          action: 'Transponder', values: ['7700'] },
+        { id: 'emerg-freq-copilot', box: [0.408, 0.085, 0.028, 0.07], label: 'EMERG FREQ switch',
+          action: 'Transponder', values: ['7700'] },
       ],
     },
     {
@@ -75,12 +97,18 @@ export const TH73A_POSTER = {
       id: 'pedestal',
       label: 'Pedestal and Collective',
       src: pedestalSrc,
-      alt: 'TH-73A centre pedestal: the two audio panels, the flight director mode panel, the '
-        + 'ELT and fresh air vent knob, the SERVO and AWG switches on the miscellaneous panel, '
-        + 'the helipilot panel with SAS 1, SAS 2 and ATTD HOLD, the FUEL panel with PUMP 1, '
-        + 'PUMP 2, XFER and the red FUEL VALVE switch, the CVRT panel, and the collective rising '
-        + 'from the right with its head, START button, MAN/NOR switch and twist grip',
+      alt: 'TH-73A centre pedestal: the two audio control panels, the flight director mode '
+        + 'panel, the ELT and fresh air vent knob, the SERVO and AWG switches on the '
+        + 'miscellaneous panel, the helipilot panel with SAS 1, SAS 2 and ATTD HOLD, the FUEL '
+        + 'panel with PUMP 1, PUMP 2, XFER and the red FUEL VALVE switch, the CVRT panel, and the '
+        + 'collective rising from the right with its head, START button, MAN/NOR switch and '
+        + 'twist grip',
       spots: [
+        // Both audio control panels, for their ICS/TX switch: one of the pilots' three PTTs
+        // (§14.2.4), and the only one the sheet draws (the cyclic trigger is on the front of
+        // the grip, out of view). A MAYDAY is a radio transmission, keyed here.
+        { box: [0.05, 0.005, 0.5, 0.17], label: 'Audio control panels, ICS/TX',
+          action: 'MAYDAY', values: ['Transmit'] },
         { box: [0.62, 0.17, 0.09, 0.05], label: 'Fresh air vent knob',
           action: 'Vent knob', values: ['Push', 'Pull'] },
         { box: [0.19, 0.283, 0.08, 0.04], label: 'Servo switch',
@@ -101,9 +129,12 @@ export const TH73A_POSTER = {
           action: 'Twist grip',
           values: ['OFF', 'IDLE', 'FLT', 'Reduce until NR/N2 are in normal range',
             'Slowly rotate toward MAX, as required', 'OFF prior to touchdown'] },
+        // The collective lever. Power is the collective in a helicopter, so "Reduce power." is
+        // here; so are entering autorotation (collective down) and stopping a climb or descent.
         { box: [0.6, 0.615, 0.3, 0.37], label: 'Collective',
           action: 'Collective',
-          actions: ['Collective', 'Collective/Twist grip'],
+          actions: ['Collective', 'Collective/Twist grip', 'Reduce power.', 'Autorotate.',
+            'Stop any climb/descent.'],
           values: {
             Collective: ['Maintain initially then increase to cushion the touchdown',
               'Lower immediately to stop NR decay', 'Increase to reduce rate of descent',
@@ -120,72 +151,79 @@ export const TH73A_POSTER = {
       alt: "TH-73A pilot's cyclic grip: the trim hat, WIPER and HOIST switches, FD STBY, the "
         + 'guarded CARGO REL and HOIST CUT switches, HOOK LOAD, FTR and MASTER RESET',
       spots: [
-        { box: [0.67, 0.185, 0.12, 0.15], label: 'HOIST CUT switch',
+        { box: [0.745, 0.088, 0.174, 0.214], label: 'HOIST CUT switch',
           action: 'HOIST CUT pushbutton',
           actions: ['HOIST CUT pushbutton', 'HOIST CUT pushbutton guard'],
           values: {
             'HOIST CUT pushbutton': ['Press'],
             'HOIST CUT pushbutton guard': ['Lift. Verify HOIST CUT ARMD CAS message appears'],
           } },
-        { box: [0.19, 0.17, 0.47, 0.63], label: 'Cyclic',
+        // The HOIST control switch (UP/DN) on the pilot's cyclic (§7, hoist checks): raising,
+        // paying out, and ceasing are all this switch.
+        { box: [0.441, 0.06, 0.217, 0.121], label: 'HOIST control switch',
+          action: 'Attempt to raise hoist.',
+          actions: ['Attempt to raise hoist.', 'Pay out cable and attempt to free hang up.',
+            'Cease hoisting.'] },
+        // The grip. Attitude and airspeed are the cyclic in a helicopter, so the unusual
+        // attitude recovery's wings, nose and airspeed steps are here.
+        { box: [0.065, 0.295, 0.651, 0.67], label: 'Cyclic',
           action: 'Cyclic',
-          values: ['Adjust to obtain skid level attitude', 'Forward to increase airspeed',
-            'Adjust to desired airspeed', 'Flare to reduce forward speed',
-            'Forward to obtain skid level attitude', 'Eliminate drift'] },
+          actions: ['Cyclic', 'Level Wings.', 'Level the Nose.', 'Control Airspeed.'],
+          values: {
+            Cyclic: ['Adjust to obtain skid level attitude', 'Forward to increase airspeed',
+              'Adjust to desired airspeed', 'Flare to reduce forward speed',
+              'Forward to obtain skid level attitude', 'Eliminate drift'],
+          } },
       ],
     },
   ],
 
-  // The steps with nothing on the poster to point at.
+  // The steps nothing on the sheet performs. Each one is here for one of five reasons, and no
+  // other reason is accepted:
   //
-  //   Pedals                                 on the floor, which the poster does not draw.
-  //   Doors/Windows, Fire extinguisher, SEBD, Communication cords, Harness
-  //                                          cabin equipment, not on a panel.
-  //   Transponder                            set through the PFD menus, not a control head.
-  //   Unnecessary electrical equipment       no one switch.
-  //   MAYDAY, Crew and passengers, Notify Pilot, Land, Reduce power, Monitor, Check, Confirm,
-  //   Autorotate, Establish VMC, Maneuver, Level, Center, Stop, Control, Regain, Slip or skid,
-  //   Cease hoisting, Pay out cable, Attempt to raise hoist, Exit, Swim clear, Place hand
-  //                                          spoken, flown or decided, not actuated.
-  //   Complete / Perform / Execute           cross-references to another procedure.
+  //   not drawn      the control exists but the poster does not draw it. Only the pedals: the
+  //                  sheet stops at the pedestal. "Center Ball." is the pedals too.
+  //   cabin          equipment that is not on a panel: the doors and windows, the harness, the
+  //                  ICS cords, the SEBD, the cockpit fire extinguisher (a stowed bottle, §7).
+  //   spoken         said, not switched: alerting the crew, the aircrewman notifying the pilot.
+  //   decided        a judgment or a flight condition with no one control: the landing criteria
+  //                  (§12.1.1), which electrical equipment is unnecessary, whether a fire is
+  //                  confirmed (looked at, not switched), whether the indications of a chip are
+  //                  there (§12.5: noise, vibration and fumes as much as gauges), establishing
+  //                  VMC, flying smoothly or slowly, regaining parameters, slipping (pedals and
+  //                  cyclic together, and the pedals are not drawn), and the egress actions a
+  //                  body does.
+  //   cross-ref      a step that names another procedure to go and do.
   actions: [
-    { label: 'Pedals', action: 'Pedals', values: ['Control yaw rate', 'Maintain direction'] },
+    // not drawn
+    { label: 'Pedals', action: 'Pedals', actions: ['Pedals', 'Center Ball.'],
+      values: { Pedals: ['Control yaw rate', 'Maintain direction'] } },
+    // cabin
     { label: 'Doors / Windows', action: 'Doors/Windows', also: ['Doors'],
       values: ['Close', 'Open', 'Open/Jettison, as required', 'Open/Jettison'] },
-    { label: 'Transponder', action: 'Transponder', values: ['7700'] },
-    { label: 'MAYDAY', action: 'MAYDAY', values: ['Transmit'] },
     { label: 'Fire extinguisher', action: 'Fire extinguisher', values: ['As required'] },
-    { label: 'Electrical equipment', action: 'Unnecessary electrical equipment', values: ['Secure'] },
-    { label: 'Crew and passengers', action: 'Crew and passengers', values: ['Alert'] },
-    { label: 'Helicopter', action: 'Helicopter', values: ['Egress'] },
-    { label: 'SEBD', action: 'SEBD', values: ['Don, as required'] },
-    { label: 'Communication cords', action: 'Communication cords', values: ['Disconnect'] },
     { label: 'Harness', action: 'Harness', values: ['Release'] },
+    { label: 'Communication cords', action: 'Communication cords', values: ['Disconnect'] },
+    { label: 'SEBD', action: 'SEBD', values: ['Don, as required'] },
+    // spoken
+    { label: 'Crew and passengers', action: 'Crew and passengers', values: ['Alert'] },
+    { label: 'Notify pilot', action: 'Notify Pilot.' },
+    // decided
     { label: 'Land immediately', action: 'Land immediately.' },
     { label: 'Land as soon as possible', action: 'Land as soon as possible.' },
-    { label: 'Reduce power', action: 'Reduce power.' },
-    { label: 'Monitor engine', action: 'Monitor engine parameters.' },
-    { label: 'Monitor transmission', action: 'Monitor transmission parameters.' },
-    { label: 'Secondary indications', action: 'Check for secondary indications.' },
+    { label: 'Electrical equipment', action: 'Unnecessary electrical equipment', values: ['Secure'] },
     { label: 'Confirm fire', action: 'Confirm fire.' },
-    { label: 'Autorotate', action: 'Autorotate.' },
+    { label: 'Secondary indications', action: 'Check for secondary indications.' },
     { label: 'Establish VMC', action: 'Establish VMC.' },
     { label: 'Avoid rapid movement', action: 'Avoid rapid movement of flight controls.' },
-    { label: 'Slip or skid', action: 'Slip or skid aircraft to eliminate smoke and fumes.' },
     { label: 'Maneuver smoothly', action: 'Maneuver smoothly.' },
-    { label: 'Level wings', action: 'Level Wings.' },
-    { label: 'Level nose', action: 'Level the Nose.' },
-    { label: 'Center ball', action: 'Center Ball.' },
-    { label: 'Stop climb/descent', action: 'Stop any climb/descent.' },
-    { label: 'Control airspeed', action: 'Control Airspeed.' },
+    { label: 'Slip or skid', action: 'Slip or skid aircraft to eliminate smoke and fumes.' },
     { label: 'Regain parameters', action: 'Regain Desired Flight Parameters.' },
+    { label: 'Helicopter', action: 'Helicopter', values: ['Egress'] },
     { label: 'Place hand', action: 'Place hand on known reference point.' },
     { label: 'Exit helicopter', action: 'Exit helicopter.' },
     { label: 'Swim clear', action: 'Swim clear and inflate LPU.' },
-    { label: 'Notify pilot', action: 'Notify Pilot.' },
-    { label: 'Raise hoist', action: 'Attempt to raise hoist.' },
-    { label: 'Cease hoisting', action: 'Cease hoisting.' },
-    { label: 'Pay out cable', action: 'Pay out cable and attempt to free hang up.' },
+    // cross-ref
     { label: 'Autorotative Landing', action: 'Autorotative Landing', values: ['Complete'] },
     { label: 'Engine Restart in Flight', action: 'Engine Restart in Flight', values: ['As required'] },
     { label: 'Emergency Shutdown', action: 'Emergency Shutdown', values: ['Complete'] },

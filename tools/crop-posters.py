@@ -159,7 +159,8 @@ TH73A_REGIONS = {
     "overhead": (0.370, 0.008, 0.670, 0.320),
     "panel":    (0.125, 0.383, 0.850, 0.570),
     "pedestal": (0.400, 0.568, 0.605, 0.998),
-    "cyclic":   (0.655, 0.648, 0.765, 0.762),
+    # Cut close: it is drawn over the EP card, where a white margin is height the card loses.
+    "cyclic":   (0.672, 0.662, 0.748, 0.742),
 }
 
 # The C172P drawing is 1637x1355 and every part of it is wanted, so there is nothing to crop -

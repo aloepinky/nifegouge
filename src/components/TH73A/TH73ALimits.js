@@ -9,7 +9,11 @@ import { TH73A_LIMITS, TH73A_LIMIT_GROUPS } from './th73aData';
 // section is named in each banner), laid out like the Advanced sheets. The answers are data
 // (th73aData.js) and the behaviour is the shared drill.
 //
-// It wears the T-44C sheet's classes (`.t44c-*` in style.css), as the T-54A's does.
+// It wears the T-44C sheet's classes (`.t44c-*` in style.css), as the T-54A's does. The engine
+// grid runs across the top; below it the left column is the systems (rotor, fuel, oils, starter,
+// generators, hydraulics), slope, weight and the rotor brake and chip burner rules, and the right
+// the airspeeds, altitude and temperature, helipilot and flight director, and the prohibited
+// lists, split so the two columns run to about the same length.
 //
 // Left out on purpose: the CG envelopes (charts), the hoist and cargo hook limits, the baggage
 // compartment, minimum crew and the IFR equipment list.
@@ -189,6 +193,27 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
                 </span>
               </li>
             </ul>
+
+            <div className="t44c-banner t44c-banner--section">SLOPE TAKEOFF AND LANDING (§4.15)</div>
+            <ul className="t44c-rows">
+              <li>NOSE-UP: {b('slopeNoseUp', 'Nose-up slope limit', 'xs')} DEG</li>
+              <li>SIDE-UP: {b('slopeSideUp', 'Side-up slope limit', 'xs')} DEG</li>
+              <li>NOSE-DOWN: {b('slopeNoseDown', 'Nose-down slope limit', 'xs')} DEG</li>
+              <li>NOSE-DOWN (UNOBSTRUCTED TAIL): {b('slopeNoseDownClear', 'Nose-down slope limit with unobstructed tail', 'xs')} DEG</li>
+            </ul>
+
+            <div className="t44c-banner t44c-banner--section">WEIGHT LIMITATIONS (§4.16)</div>
+            <ul className="t44c-rows">
+              <li>MAX GROSS WEIGHT FOR GROUND OPERATIONS: {b('gwGround', 'Maximum gross weight for ground operations')} LB</li>
+              <li>MAXIMUM GROSS WEIGHT: {b('gwMax', 'Maximum gross weight')} LB</li>
+              <li>MINIMUM GROSS WEIGHT FOR FLIGHT: {b('gwMin', 'Minimum gross weight for flight')} LB</li>
+              <li>MAX GROSS WEIGHT WITH EXTERNAL LOAD ON CARGO HOOK: {b('gwExternal', 'Maximum gross weight with external load')} LB</li>
+            </ul>
+            <div className="t44c-banner t44c-banner--section">ROTOR BRAKE AND CHIP BURNER (§4.20)</div>
+            <ul className="t44c-rows">
+              <li>ROTOR BRAKE ONLY AFTER SHUTDOWN WITH NR BELOW: {b('rotorBrakeNr', 'Rotor brake NR limit', 'xs')} %</li>
+              <li>MAX CHIPS CLEARED PER DETECTION SYSTEM PER FLIGHT: {b('chipBurnerMax', 'Maximum chip burner activations per flight', 'xs')}</li>
+            </ul>
           </section>
 
           <section className="t44c-box">
@@ -221,22 +246,6 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
               </li>
             </ul>
 
-            <div className="t44c-banner t44c-banner--section">SLOPE TAKEOFF AND LANDING (§4.15)</div>
-            <ul className="t44c-rows">
-              <li>NOSE-UP: {b('slopeNoseUp', 'Nose-up slope limit', 'xs')} DEG</li>
-              <li>SIDE-UP: {b('slopeSideUp', 'Side-up slope limit', 'xs')} DEG</li>
-              <li>NOSE-DOWN: {b('slopeNoseDown', 'Nose-down slope limit', 'xs')} DEG</li>
-              <li>NOSE-DOWN (UNOBSTRUCTED TAIL): {b('slopeNoseDownClear', 'Nose-down slope limit with unobstructed tail', 'xs')} DEG</li>
-            </ul>
-
-            <div className="t44c-banner t44c-banner--section">WEIGHT LIMITATIONS (§4.16)</div>
-            <ul className="t44c-rows">
-              <li>MAX GROSS WEIGHT FOR GROUND OPERATIONS: {b('gwGround', 'Maximum gross weight for ground operations')} LB</li>
-              <li>MAXIMUM GROSS WEIGHT: {b('gwMax', 'Maximum gross weight')} LB</li>
-              <li>MINIMUM GROSS WEIGHT FOR FLIGHT: {b('gwMin', 'Minimum gross weight for flight')} LB</li>
-              <li>MAX GROSS WEIGHT WITH EXTERNAL LOAD ON CARGO HOOK: {b('gwExternal', 'Maximum gross weight with external load')} LB</li>
-            </ul>
-
             <div className="t44c-banner t44c-banner--section">HELIPILOT AND FLIGHT DIRECTOR (§4.18, §4.19)</div>
             <ul className="t44c-rows">
               <li>
@@ -251,12 +260,6 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
               <li>
                 ILS: STEEPEST GRADIENT {b('ilsGradient', 'Steepest ILS approach gradient', 'xs')} DEG MAX RATE OF DESCENT {b('ilsDescent', 'Maximum ILS rate of descent', 'sm')} FT/MIN
               </li>
-            </ul>
-
-            <div className="t44c-banner t44c-banner--section">ROTOR BRAKE AND CHIP BURNER (§4.20)</div>
-            <ul className="t44c-rows">
-              <li>ROTOR BRAKE ONLY AFTER SHUTDOWN WITH NR BELOW: {b('rotorBrakeNr', 'Rotor brake NR limit', 'xs')} %</li>
-              <li>MAX CHIPS CLEARED PER DETECTION SYSTEM PER FLIGHT: {b('chipBurnerMax', 'Maximum chip burner activations per flight', 'xs')}</li>
             </ul>
 
             <div className="t44c-banner t44c-banner--section">PROHIBITED MANEUVERS (§4.24)</div>
