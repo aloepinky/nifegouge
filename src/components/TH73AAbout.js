@@ -7,11 +7,13 @@ import photo from './TH73A/images/th73a.webp';
 
 // The TH-73A's About page. Its EP figures (NWCs included) come from about/platforms.js, as the
 // other schools' do, so the landing tile and this page count the same way.
-const PLATFORMS = ALL_PLATFORMS.th73a;
-
-const CONTENT = {
+//
+// The table is read when the page renders, not when the module loads: under the dev server's
+// hot reload an update to platforms.js can re-run this module before that table is initialised
+// ("Cannot access 'PLATFORMS' before initialization"), and a read at module scope is what hit it.
+const content = () => ({
   '/th73a/eps-limits': {
-    stats: <EpStats platforms={PLATFORMS} byAircraft />,
+    stats: <EpStats platforms={ALL_PLATFORMS.th73a} byAircraft />,
     icon: 'eps',
     blurb: 'The TH-73A NATOPS memory items, and an operating limits sheet.',
     more: [
@@ -19,7 +21,7 @@ const CONTENT = {
       'The Limits tab is an operating limits sheet to fill in from memory, with the answers a click away when you are stuck. There is no TH-73A limits exam sheet, so this one is our selection from NATOPS Chapter 4.',
     ],
   },
-};
+});
 
 function TH73AAbout() {
   return (
@@ -30,7 +32,7 @@ function TH73AAbout() {
       photoAlt="Two TH-73As in formation over the coast"
       // The lead aircraft sits centre-right; keep it in the banner.
       photoCrop="center 55%"
-      tabs={aboutTabs('th73a', CONTENT)}
+      tabs={aboutTabs('th73a', content())}
       explainer={
         <>
           <p>This section is for the TH-73A: the emergency procedure memory items and the operating limits you are held to from memory.</p>
