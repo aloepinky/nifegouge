@@ -209,38 +209,46 @@ export const TH73A_POSTER = {
   //                  (one Evacuate button for leaving the helicopter, on land or under water).
   //                  Checking a chip's secondary indications is the MFD engine page.
   //   cross-ref      a step that names another procedure to go and do.
+  //
+  // Order: the buttons a step names most often come first, and the cross-references sit at the
+  // bottom in their own run, sorted the same way; a tie keeps the order the steps first appear
+  // in. The count beside each is the number of memory steps it answers (tools/check-posters.js
+  // pairs them; the counts here were read off that pairing on 2026-10-15).
   actions: [
-    // not drawn
+    // 18
+    { label: 'Land ASAP', action: 'Land as soon as possible.' },
+    // 7: not drawn
     { label: 'Pedals', action: 'Pedals',
       actions: ['Pedals', 'Center Ball.', 'Slip or skid aircraft to eliminate smoke and fumes.'],
       values: { Pedals: ['Control yaw rate', 'Maintain direction'] } },
-    // cabin
+    // 5
+    { label: 'Land immediately', action: 'Land immediately.' },
+    // 4: cabin
     { label: 'Doors / Windows', action: 'Doors/Windows', also: ['Doors'],
       values: ['Close', 'Open', 'Open/Jettison, as required', 'Open/Jettison'] },
-    { label: 'Fire extinguisher', action: 'Fire extinguisher', values: ['As required'] },
-    { label: 'Harness', action: 'Harness', values: ['Release'] },
-    { label: 'Communication cords', action: 'Communication cords', values: ['Disconnect'] },
-    { label: 'SEBD', action: 'SEBD', values: ['Don, as required'] },
-    // spoken
-    { label: 'Alert crew', action: 'Crew and passengers',
-      actions: ['Crew and passengers', 'Notify Pilot.'],
-      values: { 'Crew and passengers': ['Alert'] } },
-    // decided
-    { label: 'Land immediately', action: 'Land immediately.' },
-    { label: 'Land ASAP', action: 'Land as soon as possible.' },
-    { label: 'Electrical equipment', action: 'Unnecessary electrical equipment', values: ['Secure'] },
-    { label: 'Confirm fire', action: 'Confirm fire.' },
-    { label: 'Establish VMC', action: 'Establish VMC.' },
+    // 2
     { label: 'Evacuate', action: 'Helicopter',
       actions: ['Helicopter', 'Exit helicopter.'],
       values: { Helicopter: ['Egress'] } },
-    { label: 'Place hand', action: 'Place hand on known reference point.' },
+    // 2: spoken
+    { label: 'Alert crew', action: 'Crew and passengers',
+      actions: ['Crew and passengers', 'Notify Pilot.'],
+      values: { 'Crew and passengers': ['Alert'] } },
+    // 1 each, in order of first appearance
+    { label: 'Establish VMC', action: 'Establish VMC.' },
+    { label: 'Confirm fire', action: 'Confirm fire.' },
+    { label: 'Unnecessary electrical equipment', action: 'Unnecessary electrical equipment', values: ['Secure'] },
+    { label: 'Fire extinguisher', action: 'Fire extinguisher', values: ['As required'] },
+    { label: 'SEBD', action: 'SEBD', values: ['Don, as required'] },
+    { label: 'Communication cords', action: 'Communication cords', values: ['Disconnect'] },
+    { label: 'Place hand on reference', action: 'Place hand on known reference point.' },
+    { label: 'Harness', action: 'Harness', values: ['Release'] },
     { label: 'Swim clear', action: 'Swim clear and inflate LPU.' },
-    // cross-ref
-    { label: 'Autorotative Landing', action: 'Autorotative Landing', values: ['Complete'] },
-    { label: 'Engine Restart in Flight', action: 'Engine Restart in Flight', values: ['As required'] },
+    // cross-ref: 6, 3, 2, then 1 each
     { label: 'Emergency Shutdown', action: 'Emergency Shutdown', values: ['Complete'] },
+    { label: 'Autorotative Landing', action: 'Autorotative Landing', values: ['Complete'] },
     { label: 'Transmission Malfunction EP', action: 'Transmission Malfunction emergency procedure', values: ['Perform'] },
+    { label: 'Engine Restart in Flight', action: 'Engine Restart in Flight', values: ['As required'] },
     { label: 'Underwater egress', action: 'Underwater egress', values: ['Execute'] },
   ],
 };
