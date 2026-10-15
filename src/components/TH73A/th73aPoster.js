@@ -51,11 +51,13 @@ export const TH73A_POSTER = {
           values: ['60-70 KIAS level flight', 'Adjust to reach a suitable landing site',
             'Reduce smoothly below 90 KIAS', 'Adjust, as required', 'Reduce below 80 KIAS'] },
         // The pilot's MFD, on the FULL ENGINE page the checklist sets it to (3710.30B, step 30):
-        // the engine and transmission gauges a "monitor" step is read off. An instrument the
-        // step is worked against, as the T-54A's engine strip is.
+        // the engine and transmission gauges a "monitor" step is read off, and where the chip
+        // EPs' secondary indications (oil pressure and temperature, §12.5) are looked for. An
+        // instrument the step is worked against, as the T-54A's engine strip is.
         { box: [0.56, 0.25, 0.17, 0.55], label: "Pilot's MFD, engine page",
           action: 'Monitor engine parameters.',
-          actions: ['Monitor engine parameters.', 'Monitor transmission parameters.'] },
+          actions: ['Monitor engine parameters.', 'Monitor transmission parameters.',
+            'Check for secondary indications.'] },
         // The pilot's PFD's attitude display (the PFI area, Figure 2.14-3): regaining flight
         // parameters is flown against it.
         { box: [0.80, 0.27, 0.085, 0.2], label: 'Attitude indicator',
@@ -200,13 +202,12 @@ export const TH73A_POSTER = {
   //                  ICS cords, the SEBD, the cockpit fire extinguisher (a stowed bottle, §7).
   //   spoken         said, not switched: one button for alerting the crew and passengers and
   //                  for the aircrewman notifying the pilot.
-  //   decided        a judgment with no one control: the landing criteria (§12.1.1, one button
-  //                  that writes whichever of "Land immediately" or "Land as soon as possible"
-  //                  the step asks for), which electrical equipment is unnecessary, whether a
-  //                  fire is confirmed (looked at, not switched), whether the indications of a
-  //                  chip are there (§12.5: noise, vibration and fumes as much as gauges),
-  //                  establishing VMC, and the egress actions a body does (one Evacuate button
-  //                  for leaving the helicopter, on land or under water).
+  //   decided        a judgment with no one control: the two landing criteria (§12.1.1, a
+  //                  button each, since which one applies is what several EPs test), which
+  //                  electrical equipment is unnecessary, whether a fire is confirmed (looked
+  //                  at, not switched), establishing VMC, and the egress actions a body does
+  //                  (one Evacuate button for leaving the helicopter, on land or under water).
+  //                  Checking a chip's secondary indications is the MFD engine page.
   //   cross-ref      a step that names another procedure to go and do.
   actions: [
     // not drawn
@@ -225,11 +226,10 @@ export const TH73A_POSTER = {
       actions: ['Crew and passengers', 'Notify Pilot.'],
       values: { 'Crew and passengers': ['Alert'] } },
     // decided
-    { label: 'Land ASAP', action: 'Land as soon as possible.',
-      actions: ['Land as soon as possible.', 'Land immediately.'] },
+    { label: 'Land immediately', action: 'Land immediately.' },
+    { label: 'Land ASAP', action: 'Land as soon as possible.' },
     { label: 'Electrical equipment', action: 'Unnecessary electrical equipment', values: ['Secure'] },
     { label: 'Confirm fire', action: 'Confirm fire.' },
-    { label: 'Secondary indications', action: 'Check for secondary indications.' },
     { label: 'Establish VMC', action: 'Establish VMC.' },
     { label: 'Evacuate', action: 'Helicopter',
       actions: ['Helicopter', 'Exit helicopter.'],
