@@ -20,38 +20,39 @@ import { TH73A_LIMITS, TH73A_LIMIT_GROUPS } from './th73aData';
 // compartment, minimum crew and the IFR equipment list.
 
 const DASH = <span className="t44c-dash">---</span>;
-// A time limit the sheet prints itself, where the row's transient is not asked in seconds.
-const printed = (text) => <span className="t44c-unit">{text}</span>;
 
-// A row of the grid: the label, then its seven cells in column order. A cell is a field key,
-// `[key, marker]` for a blank the sheet hangs a note on, or one of the sheet's own printed
-// cells. The last column is the transient's time limit: a blank where it is asked (in seconds),
-// printed where the row's limit is not a number of seconds to memorise on its own.
+// A row of the grid: the label, then its eight cells in column order, the NATOPS's own headings
+// (§4.3 to §4.11): minimum, cautionary, continuous, take-off (5 minutes), maximum take-off
+// (5 minutes), maximum, transient, and the transient's time limit. A cell is a field key,
+// `[key, marker]` for a blank the NATOPS qualifies in its heading ("Cautionary (autorotation
+// only)", "with N1 <72%", "5 minutes with N1 at 61 ±1%"), or one of the sheet's own printed
+// cells. Every transient's time limit is asked, with its unit.
 const GRID = [
   // §4.3
-  ['N1 %', 'n1Min', 'n1Caut', 'n1Cont', 'n1Takeoff', 'n1Max', 'n1Trans', 'n1TransSec'],
-  ['N2 %', 'n2Min', 'n2Caut', 'n2Cont', DASH, 'n2Max', 'n2Trans', 'n2TransSec'],
-  ['ITT °C', DASH, DASH, 'ittCont', 'ittTakeoff', 'ittMax', 'ittTrans', 'ittTransSec'],
-  ['TORQUE %', DASH, DASH, 'trqCont', 'trqTakeoff', 'trqMax', 'trqTrans', 'trqTransSec'],
+  ['N1 %', 'n1Min', ['n1Caut', 'AUTO ONLY'], 'n1Cont', 'n1Takeoff', 'n1Max', DASH, 'n1Trans', 'n1TransTime'],
+  ['N2 %', 'n2Min', 'n2Caut', 'n2Cont', DASH, DASH, 'n2Max', 'n2Trans', 'n2TransTime'],
+  ['ITT °C', DASH, DASH, 'ittCont', 'ittTakeoff', 'ittMax', DASH, 'ittTrans', 'ittTransTime'],
+  ['ITT STARTING °C', DASH, DASH, DASH, DASH, DASH, 'ittStartMax', 'ittStartTrans', 'ittStartTransTime'],
+  ['TORQUE %', DASH, DASH, 'trqCont', 'trqTakeoff', 'trqMax', DASH, 'trqTrans', 'trqTransTime'],
   // §4.4
-  ['NR POWER-ON %', 'nrOnMin', 'nrOnCaut', 'nrOnCont', DASH, 'nrOnMax', 'nrOnTrans', printed('10 SEC')],
-  ['NR POWER-OFF %', 'nrOffMin', DASH, 'nrOffCont', DASH, 'nrOffMax', 'nrOffTrans', printed('10 SEC')],
+  ['NR POWER-ON %', 'nrOnMin', 'nrOnCaut', 'nrOnCont', DASH, DASH, 'nrOnMax', 'nrOnTrans', 'nrOnTransTime'],
+  ['NR POWER-OFF %', 'nrOffMin', DASH, 'nrOffCont', DASH, DASH, 'nrOffMax', 'nrOffTrans', 'nrOffTransTime'],
   // §4.5
-  ['FUEL PRESS PSI', DASH, 'fuelPressCaut', 'fuelPressCont', DASH, 'fuelPressMax', DASH, DASH],
+  ['FUEL PRESS PSI', DASH, 'fuelPressCaut', 'fuelPressCont', DASH, DASH, 'fuelPressMax', DASH, DASH],
   // §4.6
-  ['ENG OIL PRESS PSI', 'engOilPMin', ['engOilPCaut', '(4)'], 'engOilPCont', DASH, 'engOilPMax', DASH, DASH],
-  ['ENG OIL TEMP °C', DASH, DASH, 'engOilTCont', DASH, 'engOilTMax', 'engOilTTrans', printed('5 MIN (5)')],
+  ['ENG OIL PRESS PSI', 'engOilPMin', ['engOilPCaut', 'N1 <72%'], 'engOilPCont', DASH, DASH, 'engOilPMax', DASH, DASH],
+  ['ENG OIL TEMP °C', DASH, DASH, 'engOilTCont', DASH, DASH, 'engOilTMax', 'engOilTTrans', ['engOilTTransTime', 'N1 61 ±1%']],
   // §4.7
-  ['XMSN OIL PRESS PSI', 'xmsnOilPMin', 'xmsnOilPCaut', 'xmsnOilPCont', DASH, 'xmsnOilPMax', DASH, DASH],
-  ['XMSN OIL TEMP °C', DASH, DASH, 'xmsnOilTCont', DASH, 'xmsnOilTMax', DASH, DASH],
+  ['XMSN OIL PRESS PSI', 'xmsnOilPMin', 'xmsnOilPCaut', 'xmsnOilPCont', DASH, DASH, 'xmsnOilPMax', DASH, DASH],
+  ['XMSN OIL TEMP °C', DASH, DASH, 'xmsnOilTCont', DASH, DASH, 'xmsnOilTMax', DASH, DASH],
   // §4.9, §4.10
-  ['GENERATOR A', DASH, DASH, 'genCont', DASH, 'genMax', 'genTrans', printed('5 SEC')],
-  ['AUX GENERATOR A', DASH, DASH, 'auxGenCont', DASH, 'auxGenMax', 'auxGenTrans', printed('5 SEC')],
+  ['GENERATOR A', DASH, DASH, 'genCont', DASH, DASH, 'genMax', 'genTrans', 'genTransTime'],
+  ['AUX GENERATOR A', DASH, DASH, 'auxGenCont', DASH, DASH, 'auxGenMax', 'auxGenTrans', 'auxGenTransTime'],
   // §4.11
-  ['HYDRAULIC PSI', 'hydMin', 'hydCaut', 'hydCont', DASH, 'hydMax', DASH, DASH],
+  ['HYDRAULIC PSI', 'hydMin', 'hydCaut', 'hydCont', DASH, DASH, 'hydMax', DASH, DASH],
 ];
 
-const COLUMNS = ['Minimum', 'Cautionary', 'Continuous', 'Take-off', 'Maximum', 'Transient', 'Transient time limit'];
+const COLUMNS = ['Minimum', 'Cautionary', 'Continuous', 'Take-off', 'Maximum take-off', 'Maximum', 'Transient', 'Transient time limit'];
 
 function TH73ALimits({ isGameActive = false, onGameComplete }) {
   const drill = useLimitsDrill(TH73A_LIMITS, TH73A_LIMIT_GROUPS, { isGameActive, onGameComplete });
@@ -70,7 +71,7 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
   const cell = (spec, rowLabel, colLabel) => {
     if (Array.isArray(spec)) {
       const [key, marker] = spec;
-      return <>{b(key, `${rowLabel} ${colLabel}`, 'wide')}<sup> {marker}</sup></>;
+      return <>{b(key, `${rowLabel} ${colLabel}`, 'xs')}<sup> {marker}</sup></>;
     }
     if (typeof spec === 'string') return b(spec, `${rowLabel} ${colLabel}`, 'fill');
     return spec;
@@ -80,8 +81,9 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
     <div className="limits-eps-container t44c-page" onKeyDown={drill.onKeyDown}>
       <h1>TH-73A Operating Limits</h1>
       <p className="page-subtitle">
-        Do not include units, just numbers. For values with a range use the format "min-max" or "min to max".
-        There is no TH-73A limits exam sheet: this is pinksheetmafia's selection from NATOPS Chapter 4.
+        Do not include units, just numbers, except a time limit, which is written with its unit ("30 SECONDS",
+        "5 MINUTES"). For values with a range use the format "min-max" or "min to max".
+        There is no TH-73A limits exam sheet. This is a custom selection from NATOPS Chapter 4.
       </p>
 
       <div className="t44c-sheet">
@@ -89,7 +91,7 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
           <table className="t44c-grid">
             <thead>
               <tr>
-                <th colSpan={8} className="t44c-banner">
+                <th colSpan={9} className="t44c-banner">
                   POWERPLANT, ROTOR, FUEL, OIL, ELECTRICAL AND HYDRAULIC LIMITATIONS (NATOPS §4.3 TO §4.11)
                 </th>
               </tr>
@@ -99,8 +101,9 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
                 <th>CAUTIONARY</th>
                 <th>CONTINUOUS</th>
                 <th>TAKE-OFF<br />(5 MIN)</th>
-                <th>MAXIMUM<br />(1)</th>
-                <th>TRANSIENT<br />(2)</th>
+                <th>MAX TAKE-OFF<br />(5 MIN)</th>
+                <th>MAXIMUM</th>
+                <th>TRANSIENT</th>
                 <th>TRANSIENT<br />TIME LIMIT</th>
               </tr>
             </thead>
@@ -118,15 +121,23 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
         </div>
 
         <div className="t44c-banner t44c-banner--section">NOTES</div>
+        {/* The NATOPS's own notes on these limits, verbatim (§4.3.1 to §4.5.2), the N2 one a
+            caution. Not here: §4.6.1's note on cold-start oil pressure, which states the oil
+            pressure maximum the row above asks for. */}
         <ol className="t44c-notes">
-          <li>N1, ITT and torque: maximum take-off, 5 minutes. Every other row: maximum.</li>
-          <li>Transient must not be used intentionally. N1, N2, ITT and torque: the time limit is asked, in seconds.</li>
+          <li>Transient must not be used intentionally.</li>
+          <li>IDLE N1 may decrease below 60% when the generator and other aircraft systems are turned on. This is normal.</li>
           <li>
-            Starting ITT: maximum {b('ittStartMax', 'Starting ITT maximum', 'sm')} °C, transient{' '}
-            {b('ittStartTrans', 'Starting ITT transient', 'sm')} °C (2 seconds between 980 °C and the transient limit).
+            Caution: An N2 indication of 103% corresponds with an actual N2 value of 102.50% to 103.49%. The N2
+            transient region begins at 103.01%. Protracted operation at N2 values of 103% should be avoided to
+            minimize the possibility of N2 overspeed.
           </li>
-          <li>With N1 below 72%.</li>
-          <li>With N1 at 61 ±1%.</li>
+          <li>A linear variation applies above 870 °C, ten seconds, and 980 °C, two seconds.</li>
+          <li>Power-Off is an N2/NR split by 1% or more.</li>
+          <li>
+            No requirement exists to sum planned fuel reserve and minimum fuel together. The first is a planning
+            function; the second is an absolute minimum.
+          </li>
         </ol>
 
         <div className="t44c-cols">

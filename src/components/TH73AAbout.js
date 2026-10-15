@@ -18,7 +18,7 @@ const content = () => ({
     blurb: 'The TH-73A NATOPS memory items, and an operating limits sheet.',
     more: [
       'The EPs tab tests you on every TH-73A emergency procedure that has memory items: the asterisked steps of NATOPS Chapter 12, with the conditions the NATOPS prints between them.',
-      'The Limits tab is an operating limits sheet to fill in from memory, with the answers a click away when you are stuck. There is no TH-73A limits exam sheet, so this one is our selection from NATOPS Chapter 4.',
+      'The Limits tab is an operating limits sheet to fill in from memory, with the answers a click away when you are stuck. There is no TH-73A limits exam sheet. This is a custom selection from NATOPS Chapter 4.',
     ],
   },
 });

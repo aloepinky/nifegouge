@@ -466,8 +466,10 @@ export const TH73A_EPS = [
 ];
 
 // Field key to answer, one per blank on the limits sheet (TH73ALimits.js lays it out). Ranges are
-// written "min-max"; the checker accepts "min to max" too, and ignores units. Every figure is
-// NATOPS Chapter 4's, read off the rendered page; the section is named beside each group.
+// written "min-max"; the checker accepts "min to max" too, and ignores units. A transient's time
+// limit is written with its unit ("30 SECONDS", "5 MINUTES"), as the T-44C sheet's time column
+// is; the checker folds "sec" and "min" onto those words. Every figure is NATOPS Chapter 4's,
+// read off the rendered page; the section is named beside each group.
 export const TH73A_LIMITS = {
   // §4.3 POWERPLANT LIMITATIONS: Figures 4.3-1 to 4.3-4
   n1Min: '51',
@@ -476,29 +478,30 @@ export const TH73A_LIMITS = {
   n1Takeoff: '100.1-103.2',
   n1Max: '103.2',
   n1Trans: '103.8',
-  n1TransSec: '30',
+  n1TransTime: '30 SECONDS',
 
   n2Min: '95',
   n2Caut: '95-101',
   n2Cont: '101-103',
   n2Max: '103',
   n2Trans: '108',
-  n2TransSec: '10',
+  n2TransTime: '10 SECONDS',
 
   ittCont: '755',
   ittTakeoff: '755-810',
   ittMax: '810',
   ittTrans: '860',
-  ittTransSec: '5',
+  ittTransTime: '5 SECONDS',
 
   trqCont: '100',
   trqTakeoff: '100-108.5',
   trqMax: '108.5',
   trqTrans: '115',
-  trqTransSec: '6',
+  trqTransTime: '6 SECONDS',
 
   ittStartMax: '870',
   ittStartTrans: '1090',
+  ittStartTransTime: '2 SECONDS',
 
   // §4.4 ROTOR LIMITATIONS (NR)
   nrOnMin: '95',
@@ -506,11 +509,13 @@ export const TH73A_LIMITS = {
   nrOnCont: '101-103',
   nrOnMax: '103',
   nrOnTrans: '108',
+  nrOnTransTime: '10 SECONDS',
 
   nrOffTrans: '80',
   nrOffMin: '90',
   nrOffCont: '90-110',
   nrOffMax: '110',
+  nrOffTransTime: '10 SECONDS',
 
   // §4.5 FUEL SYSTEM LIMITATIONS
   fuelPressCaut: '0-7',
@@ -528,6 +533,7 @@ export const TH73A_LIMITS = {
   engOilTCont: '10-115',
   engOilTMax: '115',
   engOilTTrans: '127',
+  engOilTTransTime: '5 MINUTES',
 
   // §4.7 MAIN TRANSMISSION LUBRICATION SYSTEM LIMITATIONS
   xmsnOilPMin: '30',
@@ -549,9 +555,11 @@ export const TH73A_LIMITS = {
   genCont: '0-200',
   genMax: '200',
   genTrans: '300',
+  genTransTime: '5 SECONDS',
   auxGenCont: '0-150',
   auxGenMax: '150',
   auxGenTrans: '150',
+  auxGenTransTime: '5 SECONDS',
 
   // §4.11 HYDRAULIC SYSTEM LIMITATIONS
   hydMin: '1200',
@@ -617,23 +625,23 @@ export const TH73A_LIMITS = {
 // Blanks asked together in Random mode: one row of the engine grid, one NR column, one system's
 // pressures or temperatures, the two ends of a pair. Everything else is asked on its own.
 export const TH73A_LIMIT_GROUPS = [
-  ['n1Min', 'n1Caut', 'n1Cont', 'n1Takeoff', 'n1Max', 'n1Trans', 'n1TransSec'],
-  ['n2Min', 'n2Caut', 'n2Cont', 'n2Max', 'n2Trans', 'n2TransSec'],
-  ['ittCont', 'ittTakeoff', 'ittMax', 'ittTrans', 'ittTransSec'],
-  ['trqCont', 'trqTakeoff', 'trqMax', 'trqTrans', 'trqTransSec'],
-  ['ittStartMax', 'ittStartTrans'],
-  ['nrOnMin', 'nrOnCaut', 'nrOnCont', 'nrOnMax', 'nrOnTrans'],
-  ['nrOffTrans', 'nrOffMin', 'nrOffCont', 'nrOffMax'],
+  ['n1Min', 'n1Caut', 'n1Cont', 'n1Takeoff', 'n1Max', 'n1Trans', 'n1TransTime'],
+  ['n2Min', 'n2Caut', 'n2Cont', 'n2Max', 'n2Trans', 'n2TransTime'],
+  ['ittCont', 'ittTakeoff', 'ittMax', 'ittTrans', 'ittTransTime'],
+  ['trqCont', 'trqTakeoff', 'trqMax', 'trqTrans', 'trqTransTime'],
+  ['ittStartMax', 'ittStartTrans', 'ittStartTransTime'],
+  ['nrOnMin', 'nrOnCaut', 'nrOnCont', 'nrOnMax', 'nrOnTrans', 'nrOnTransTime'],
+  ['nrOffMin', 'nrOffCont', 'nrOffMax', 'nrOffTrans', 'nrOffTransTime'],
   ['fuelPressCaut', 'fuelPressCont', 'fuelPressMax'],
   ['fuelReserve', 'fuelMinLanding', 'fuelSideward'],
   ['engOilPMin', 'engOilPCaut', 'engOilPCont', 'engOilPMax'],
-  ['engOilTCont', 'engOilTMax', 'engOilTTrans'],
+  ['engOilTCont', 'engOilTMax', 'engOilTTrans', 'engOilTTransTime'],
   ['xmsnOilPMin', 'xmsnOilPCont', 'xmsnOilPCaut', 'xmsnOilPMax'],
   ['xmsnOilTCont', 'xmsnOilTMax'],
   ['battOn', 'battOff', 'battCool'],
   ['extOn', 'extOff', 'extCool'],
-  ['genCont', 'genMax', 'genTrans'],
-  ['auxGenCont', 'auxGenMax', 'auxGenTrans'],
+  ['genCont', 'genMax', 'genTrans', 'genTransTime'],
+  ['auxGenCont', 'auxGenMax', 'auxGenTrans', 'auxGenTransTime'],
   ['hydMin', 'hydCaut', 'hydCont', 'hydMax'],
   ['vmini', 'vminApp', 'vmaxApp'],
   ['vDoorsOpen', 'vDoorsMoving'],
