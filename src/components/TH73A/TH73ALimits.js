@@ -26,7 +26,8 @@ const DASH = <span className="t44c-dash">---</span>;
 // (5 minutes), maximum, transient, and the transient's time limit. A cell is a field key,
 // `[key, marker]` for a blank the sheet hangs a note on, or one of the sheet's own printed
 // cells; a note's number is also printed on a row label, as the T-54A sheet prints "(8)" on
-// Max Reverse. Every note has its number somewhere on the grid, and only those notes are
+// Max Reverse. A marked cell may give its blank a width of its own (`[key, marker, size]`):
+// the oil temperature's time limit holds "5 MINUTES", which the usual narrow blank cuts off. Every note has its number somewhere on the grid, and only those notes are
 // printed. Every transient's time limit is asked, with its unit.
 const GRID = [
   // §4.3
@@ -42,7 +43,7 @@ const GRID = [
   ['FUEL PRESS PSI', DASH, 'fuelPressCaut', 'fuelPressCont', DASH, DASH, 'fuelPressMax', DASH, DASH],
   // §4.6
   ['ENG OIL PRESS PSI', 'engOilPMin', ['engOilPCaut', '(6)'], 'engOilPCont', DASH, DASH, ['engOilPMax', '(7)'], DASH, DASH],
-  ['ENG OIL TEMP °C', DASH, DASH, 'engOilTCont', DASH, DASH, 'engOilTMax', 'engOilTTrans', ['engOilTTransTime', '(8)']],
+  ['ENG OIL TEMP °C', DASH, DASH, 'engOilTCont', DASH, DASH, 'engOilTMax', 'engOilTTrans', ['engOilTTransTime', '(8)', 'wide']],
   // §4.7
   ['XMSN OIL PRESS PSI', 'xmsnOilPMin', 'xmsnOilPCaut', 'xmsnOilPCont', DASH, DASH, 'xmsnOilPMax', DASH, DASH],
   ['XMSN OIL TEMP °C', DASH, DASH, 'xmsnOilTCont', DASH, DASH, 'xmsnOilTMax', DASH, DASH],
@@ -71,8 +72,8 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
 
   const cell = (spec, rowLabel, colLabel) => {
     if (Array.isArray(spec)) {
-      const [key, marker] = spec;
-      return <>{b(key, `${rowLabel} ${colLabel}`, 'sm')}<sup> {marker}</sup></>;
+      const [key, marker, size = 'sm'] = spec;
+      return <>{b(key, `${rowLabel} ${colLabel}`, size)}<sup> {marker}</sup></>;
     }
     if (typeof spec === 'string') return b(spec, `${rowLabel} ${colLabel}`, 'fill');
     return spec;
@@ -82,8 +83,7 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
     <div className="limits-eps-container t44c-page" onKeyDown={drill.onKeyDown}>
       <h1>TH-73A Operating Limits</h1>
       <p className="page-subtitle">
-        Do not include units, just numbers, except a time limit, which is written with its unit ("30 SECONDS",
-        "5 MINUTES"). For values with a range use the format "min-max" or "min to max".
+        Do not include units, just numbers. For values with a range use the format "min-max" or "min to max".
         There is no TH-73A limits exam sheet. This is a custom selection from NATOPS Chapter 4.
       </p>
 

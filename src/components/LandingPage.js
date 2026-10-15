@@ -194,7 +194,7 @@ function LandingPage() {
               onClick={() => navigate('/th73a/about')}
             >
               <div className="landing-button-fallback">TH-73A Advanced</div>
-              <img src={TH73A_PHOTO} alt="TH-73A Advanced - Thrasher" className="landing-photo--low" />
+              <img src={TH73A_PHOTO} alt="TH-73A Advanced - Thrasher" />
               <div className="landing-button-label">TH-73A Advanced</div>
             </div>
             <SchoolHighlights id="th73a" platforms={platforms && platforms.th73a} />

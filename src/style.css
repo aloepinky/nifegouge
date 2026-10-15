@@ -3389,12 +3389,6 @@ textarea.incorrect-answer {
     object-position: right center;
   }
 
-  /* A photo whose aircraft sits low in the frame (the TH-73A, nose down over the trees): show
-     the lower part, give up the sky. */
-  .landing-button img.landing-photo--low {
-    object-position: center 78%;
-  }
-
   .landing-button-label {
     position: absolute;
     bottom: 0;
