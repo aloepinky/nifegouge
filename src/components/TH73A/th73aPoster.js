@@ -208,11 +208,12 @@ export const TH73A_POSTER = {
   //                  at, not switched), establishing VMC, and the egress actions a body does
   //                  (one Evacuate button for leaving the helicopter, on land or under water).
   //                  Checking a chip's secondary indications is the MFD engine page.
-  //   cross-ref      a step that names another procedure to go and do.
+  //   cross-ref      a step that names another procedure to go and do. Flagged `xref`, and the
+  //                  page draws them in the right column under the pedestal, apart from the
+  //                  rest.
   //
-  // Order: the buttons a step names most often come first, and the cross-references sit at the
-  // bottom in their own run, sorted the same way; a tie keeps the order the steps first appear
-  // in. The count beside each is the number of memory steps it answers (tools/check-posters.js
+  // Order: the buttons a step names most often come first, and the cross-references in their
+  // own run, sorted the same way; a tie keeps the order the steps first appear in. The count beside each is the number of memory steps it answers (tools/check-posters.js
   // pairs them; the counts here were read off that pairing on 2026-10-15).
   actions: [
     // 18
@@ -245,11 +246,11 @@ export const TH73A_POSTER = {
     { label: 'Harness', action: 'Harness', values: ['Release'] },
     { label: 'Swim clear', action: 'Swim clear and inflate LPU.' },
     // cross-ref: 6, 3, 2, then 1 each
-    { label: 'Emergency Shutdown', action: 'Emergency Shutdown', values: ['Complete'] },
-    { label: 'Autorotative Landing', action: 'Autorotative Landing', values: ['Complete'] },
-    { label: 'Transmission Malfunction EP', action: 'Transmission Malfunction emergency procedure', values: ['Perform'] },
-    { label: 'Engine Restart in Flight', action: 'Engine Restart in Flight', values: ['As required'] },
-    { label: 'Underwater egress', action: 'Underwater egress', values: ['Execute'] },
+    { label: 'Emergency Shutdown', action: 'Emergency Shutdown', values: ['Complete'], xref: true },
+    { label: 'Autorotative Landing', action: 'Autorotative Landing', values: ['Complete'], xref: true },
+    { label: 'Transmission Malfunction EP', action: 'Transmission Malfunction emergency procedure', values: ['Perform'], xref: true },
+    { label: 'Engine Restart in Flight', action: 'Engine Restart in Flight', values: ['As required'], xref: true },
+    { label: 'Underwater egress', action: 'Underwater egress', values: ['Execute'], xref: true },
   ],
 };
 

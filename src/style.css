@@ -7999,6 +7999,13 @@ button.epl-modal-close:hover {
   width: 15%;
 }
 
+/* A grid inside one of the two boxes (the TH-73A's systems and starter grids): at half the
+   sheet's width a 15% label column wraps "XMSN OIL PRESS PSI" onto two lines. */
+.t44c-box .t44c-grid th:first-child,
+.t44c-box .t44c-grid td:first-child {
+  width: 27%;
+}
+
 .t44c-dash {
   color: #666;
   letter-spacing: 0.08em;

@@ -10,26 +10,53 @@ import { TH73A_LIMITS, TH73A_LIMIT_GROUPS } from './th73aData';
 // (th73aData.js) and the behaviour is the shared drill.
 //
 // It wears the T-44C sheet's classes (`.t44c-*` in style.css), as the T-54A's does. The engine
-// grid runs across the top; below it the left column is the systems (rotor, fuel, oils, starter,
-// generators, hydraulics), slope, weight and the rotor brake and chip burner rules, and the right
-// the airspeeds, altitude and temperature, helipilot and flight director, and the prohibited
-// lists, split so the two columns run to about the same length.
+// grid runs across the top. Below it the left column is the systems, and because the rotor,
+// fuel pressure, oil, generator and hydraulic limits all share the NATOPS's five headings
+// (minimum, cautionary, continuous, maximum, transient) they are one grid rather than a run of
+// prose rows, with the starter duty cycle a small grid under it; then slope, weight, and the
+// rotor brake and chip burner rules. The right column is the airspeeds, altitude and
+// temperature, helipilot and flight director, and the prohibited lists. A list of one-blank
+// rows is right-aligned, as the T-44C's airspeed list is, so the blanks line up.
 //
 // Left out on purpose: the CG envelopes (charts), the hoist and cargo hook limits, the baggage
 // compartment, minimum crew and the IFR equipment list.
 
 const DASH = <span className="t44c-dash">---</span>;
 
-// A row of the engine grid: the label, then its seven cells in column order. A cell is a field
-// key or one of the sheet's own printed cells.
-const GRID = [
+// A row of a grid: the label, then its cells in column order. A cell is a field key,
+// `[key, marker]` for a blank with a note printed beside it, or one of the sheet's own printed
+// cells.
+const ENGINE = [
   ['N1 %', 'n1Min', 'n1Caut', 'n1Cont', 'n1Takeoff', 'n1Max', 'n1Trans', 'n1TransSec'],
   ['N2 %', 'n2Min', 'n2Caut', 'n2Cont', DASH, 'n2Max', 'n2Trans', 'n2TransSec'],
   ['ITT °C', DASH, DASH, 'ittCont', 'ittTakeoff', 'ittMax', 'ittTrans', 'ittTransSec'],
   ['TORQUE %', DASH, DASH, 'trqCont', 'trqTakeoff', 'trqMax', 'trqTrans', 'trqTransSec'],
 ];
+const ENGINE_COLUMNS = ['Minimum', 'Cautionary', 'Continuous', 'Take-off', 'Maximum', 'Transient', 'Transient seconds'];
 
-const COLUMNS = ['Minimum', 'Cautionary', 'Continuous', 'Take-off', 'Maximum', 'Transient', 'Transient seconds'];
+// The systems whose limits the NATOPS prints under the same headings (§4.4 to §4.11). A
+// transient's time limit, and the one cautionary band with a condition, are footnotes under
+// the grid, numbered on the cell as the T-54A sheet numbers its own.
+const SYSTEMS = [
+  ['NR POWER-ON %', 'nrOnMin', 'nrOnCaut', 'nrOnCont', 'nrOnMax', ['nrOnTrans', '(1)']],
+  ['NR POWER-OFF %', 'nrOffMin', DASH, 'nrOffCont', 'nrOffMax', ['nrOffTrans', '(1)']],
+  ['FUEL PRESS PSI', DASH, 'fuelPressCaut', 'fuelPressCont', 'fuelPressMax', DASH],
+  ['ENG OIL PRESS PSI', 'engOilPMin', ['engOilPCaut', '(2)'], 'engOilPCont', 'engOilPMax', DASH],
+  ['ENG OIL TEMP °C', DASH, DASH, 'engOilTCont', 'engOilTMax', ['engOilTTrans', '(3)']],
+  ['XMSN OIL PRESS PSI', 'xmsnOilPMin', 'xmsnOilPCaut', 'xmsnOilPCont', 'xmsnOilPMax', DASH],
+  ['XMSN OIL TEMP °C', DASH, DASH, 'xmsnOilTCont', 'xmsnOilTMax', DASH],
+  ['GENERATOR A', DASH, DASH, 'genCont', 'genMax', ['genTrans', '(4)']],
+  ['AUX GENERATOR A', DASH, DASH, 'auxGenCont', 'auxGenMax', ['auxGenTrans', '(4)']],
+  ['HYDRAULIC PSI', 'hydMin', 'hydCaut', 'hydCont', 'hydMax', DASH],
+];
+const SYSTEMS_COLUMNS = ['Minimum', 'Cautionary', 'Continuous', 'Maximum', 'Transient'];
+
+// §4.8: three cycles, each so many seconds on and off, then a long cool after the third.
+const STARTER = [
+  ['ON BATTERY', 'battOn', 'battOff', 'battCool'],
+  ['WITH EXTERNAL POWER', 'extOn', 'extOff', 'extCool'],
+];
+const STARTER_COLUMNS = ['Seconds on', 'Seconds off', 'Minutes off after the third cycle'];
 
 function TH73ALimits({ isGameActive = false, onGameComplete }) {
   const drill = useLimitsDrill(TH73A_LIMITS, TH73A_LIMIT_GROUPS, { isGameActive, onGameComplete });
@@ -46,9 +73,33 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
   );
 
   const cell = (spec, rowLabel, colLabel) => {
+    if (Array.isArray(spec)) {
+      const [key, marker] = spec;
+      return <>{b(key, `${rowLabel} ${colLabel}`, 'sm')}<sup> {marker}</sup></>;
+    }
     if (typeof spec === 'string') return b(spec, `${rowLabel} ${colLabel}`, 'fill');
     return spec;
   };
+
+  const grid = (rows, columns, head) => (
+    <div className="t44c-gridwrap">
+      <table className="t44c-grid">
+        <thead>
+          {head}
+        </thead>
+        <tbody>
+          {rows.map(([label, ...cells]) => (
+            <tr key={label}>
+              <th scope="row">{label}</th>
+              {cells.map((spec, i) => (
+                <td key={columns[i]}>{cell(spec, label, columns[i])}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 
   return (
     <div className="limits-eps-container t44c-page" onKeyDown={drill.onKeyDown}>
@@ -59,35 +110,23 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
       </p>
 
       <div className="t44c-sheet">
-        <div className="t44c-gridwrap">
-          <table className="t44c-grid">
-            <thead>
-              <tr>
-                <th colSpan={8} className="t44c-banner">POWERPLANT LIMITATIONS (NATOPS §4.3)</th>
-              </tr>
-              <tr>
-                <th>PARAMETER</th>
-                <th>MINIMUM</th>
-                <th>CAUTIONARY</th>
-                <th>CONTINUOUS</th>
-                <th>TAKE-OFF<br />(5 MIN)</th>
-                <th>MAXIMUM<br />(1)</th>
-                <th>TRANSIENT<br />(2)</th>
-                <th>TRANSIENT<br />LIMIT (SEC)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {GRID.map(([label, ...cells]) => (
-                <tr key={label}>
-                  <th scope="row">{label}</th>
-                  {cells.map((spec, i) => (
-                    <td key={COLUMNS[i]}>{cell(spec, label, COLUMNS[i])}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {grid(ENGINE, ENGINE_COLUMNS, (
+          <>
+            <tr>
+              <th colSpan={8} className="t44c-banner">POWERPLANT LIMITATIONS (NATOPS §4.3)</th>
+            </tr>
+            <tr>
+              <th>PARAMETER</th>
+              <th>MINIMUM</th>
+              <th>CAUTIONARY</th>
+              <th>CONTINUOUS</th>
+              <th>TAKE-OFF<br />(5 MIN)</th>
+              <th>MAXIMUM<br />(1)</th>
+              <th>TRANSIENT<br />(2)</th>
+              <th>TRANSIENT<br />LIMIT (SEC)</th>
+            </tr>
+          </>
+        ))}
 
         <div className="t44c-banner t44c-banner--section">NOTES</div>
         <ol className="t44c-notes">
@@ -101,101 +140,51 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
 
         <div className="t44c-cols">
           <section className="t44c-box">
-            <div className="t44c-banner t44c-banner--section">ROTOR LIMITATIONS, NR (§4.4)</div>
-            <ul className="t44c-rows">
-              <li>
-                POWER-ON: MINIMUM {b('nrOnMin', 'NR power-on minimum', 'xs')} CAUTIONARY {b('nrOnCaut', 'NR power-on cautionary', 'sm')}
-                <span className="t44c-subrow">
-                  CONTINUOUS {b('nrOnCont', 'NR power-on continuous', 'sm')} MAXIMUM {b('nrOnMax', 'NR power-on maximum', 'xs')}{' '}
-                  TRANSIENT (10 SEC) {b('nrOnTrans', 'NR power-on transient', 'xs')}
-                </span>
-              </li>
-              <li>
-                POWER-OFF: TRANSIENT (10 SEC) {b('nrOffTrans', 'NR power-off transient', 'xs')} MINIMUM {b('nrOffMin', 'NR power-off minimum', 'xs')}
-                <span className="t44c-subrow">
-                  CONTINUOUS {b('nrOffCont', 'NR power-off continuous', 'sm')} MAXIMUM {b('nrOffMax', 'NR power-off maximum', 'xs')}
-                </span>
-              </li>
-            </ul>
+            {/* The banner sits outside the table: the grid is `table-layout: fixed`, which sizes
+                its columns from the first row, and a banner spanning them all would leave the
+                label column an equal share, too narrow for "XMSN OIL PRESS PSI". */}
+            <div className="t44c-banner t44c-banner--section">ROTOR, FUEL, OIL, ELECTRICAL AND HYDRAULIC LIMITATIONS (§4.4 TO §4.11)</div>
+            {grid(SYSTEMS, SYSTEMS_COLUMNS, (
+              <>
+                <tr>
+                  <th>SYSTEM</th>
+                  <th>MINIMUM</th>
+                  <th>CAUTIONARY</th>
+                  <th>CONTINUOUS</th>
+                  <th>MAXIMUM</th>
+                  <th>TRANSIENT</th>
+                </tr>
+              </>
+            ))}
 
-            <div className="t44c-banner t44c-banner--section">FUEL SYSTEM LIMITATIONS (§4.5)</div>
-            <ul className="t44c-rows">
-              <li>
-                FUEL PRESSURE (PSI): CAUTIONARY {b('fuelPressCaut', 'Fuel pressure cautionary', 'sm')}{' '}
-                CONTINUOUS {b('fuelPressCont', 'Fuel pressure continuous', 'sm')} MAXIMUM {b('fuelPressMax', 'Fuel pressure maximum', 'xs')}
-              </li>
+            <ol className="t44c-notes">
+              <li>Transient, 10 seconds.</li>
+              <li>With N1 below 72%.</li>
+              <li>Transient, 5 minutes with N1 at 61 ±1%.</li>
+              <li>Transient, 5 seconds.</li>
+            </ol>
+
+            <div className="t44c-banner t44c-banner--section">FUEL QUANTITY (§4.5)</div>
+            <ul className="t44c-rows t44c-rows--right">
               <li>PLANNED FUEL RESERVE (NO. 1 CELL): {b('fuelReserve', 'Planned fuel reserve', 'sm')} LB</li>
               <li>MINIMUM FUEL ON LANDING (NO. 1 CELL): {b('fuelMinLanding', 'Minimum fuel on landing', 'sm')} LB</li>
-              <li>
-                SIDEWARD FLIGHT / CROSSWIND HOVER MAY FLAME OUT BELOW: {b('fuelSideward', 'Sideward flight flameout fuel', 'sm')} LB
-              </li>
+              <li>SIDEWARD FLIGHT OR CROSSWIND HOVER MAY FLAME OUT BELOW: {b('fuelSideward', 'Sideward flight flameout fuel', 'sm')} LB</li>
             </ul>
 
-            <div className="t44c-banner t44c-banner--section">ENGINE OIL (§4.6)</div>
-            <ul className="t44c-rows">
-              <li>
-                PRESSURE (PSI): MINIMUM {b('engOilPMin', 'Engine oil pressure minimum', 'xs')} CAUTIONARY (N1 &lt;72%) {b('engOilPCaut', 'Engine oil pressure cautionary', 'sm')}
-                <span className="t44c-subrow">
-                  CONTINUOUS {b('engOilPCont', 'Engine oil pressure continuous', 'sm')} MAXIMUM {b('engOilPMax', 'Engine oil pressure maximum', 'xs')}
-                </span>
-              </li>
-              <li>
-                TEMPERATURE (°C): CONTINUOUS {b('engOilTCont', 'Engine oil temperature continuous', 'sm')} MAXIMUM {b('engOilTMax', 'Engine oil temperature maximum', 'xs')}
-                <span className="t44c-subrow">
-                  TRANSIENT (5 MIN WITH N1 AT 61 ±1%) {b('engOilTTrans', 'Engine oil temperature transient', 'xs')}
-                </span>
-              </li>
-            </ul>
-
-            <div className="t44c-banner t44c-banner--section">MAIN TRANSMISSION OIL (§4.7)</div>
-            <ul className="t44c-rows">
-              <li>
-                PRESSURE (PSI): MINIMUM {b('xmsnOilPMin', 'Transmission oil pressure minimum', 'xs')} CONTINUOUS {b('xmsnOilPCont', 'Transmission oil pressure continuous', 'sm')}
-                <span className="t44c-subrow">
-                  CAUTIONARY {b('xmsnOilPCaut', 'Transmission oil pressure cautionary', 'sm')} MAXIMUM {b('xmsnOilPMax', 'Transmission oil pressure maximum', 'xs')}
-                </span>
-              </li>
-              <li>
-                TEMPERATURE (°C): CONTINUOUS {b('xmsnOilTCont', 'Transmission oil temperature continuous', 'sm')} MAXIMUM {b('xmsnOilTMax', 'Transmission oil temperature maximum', 'xs')}
-              </li>
-            </ul>
-
-            <div className="t44c-banner t44c-banner--section">ENGINE STARTER LIMITATIONS (§4.8)</div>
-            <ul className="t44c-rows">
-              <li>
-                ON BATTERY: {b('battOn', 'Battery start seconds on', 'xs')} SEC ON, {b('battOff', 'Battery start seconds off', 'xs')} SEC OFF, TWICE,
-                <span className="t44c-subrow">THEN {b('battCool', 'Battery start cooling minutes', 'xs')} MINUTES OFF</span>
-              </li>
-              <li>
-                WITH EXTERNAL POWER: {b('extOn', 'External power start seconds on', 'xs')} SEC ON, {b('extOff', 'External power start seconds off', 'xs')} SEC OFF, TWICE,
-                <span className="t44c-subrow">THEN {b('extCool', 'External power start cooling minutes', 'xs')} MINUTES OFF</span>
-              </li>
-            </ul>
-
-            <div className="t44c-banner t44c-banner--section">GENERATOR LOAD LIMITATIONS (§4.9, §4.10)</div>
-            <ul className="t44c-rows">
-              <li>
-                GENERATOR (A): CONTINUOUS {b('genCont', 'Generator load continuous', 'sm')} MAXIMUM {b('genMax', 'Generator load maximum', 'xs')}{' '}
-                TRANSIENT (5 SEC) {b('genTrans', 'Generator load transient', 'xs')}
-              </li>
-              <li>
-                AUXILIARY GENERATOR (A): CONTINUOUS {b('auxGenCont', 'Auxiliary generator load continuous', 'sm')} MAXIMUM {b('auxGenMax', 'Auxiliary generator load maximum', 'xs')}{' '}
-                TRANSIENT (5 SEC) {b('auxGenTrans', 'Auxiliary generator load transient', 'xs')}
-              </li>
-            </ul>
-
-            <div className="t44c-banner t44c-banner--section">HYDRAULIC SYSTEM LIMITATIONS (§4.11)</div>
-            <ul className="t44c-rows">
-              <li>
-                FLUID PRESSURE (PSI): MINIMUM {b('hydMin', 'Hydraulic pressure minimum', 'sm')} CAUTIONARY {b('hydCaut', 'Hydraulic pressure cautionary', 'wide')}
-                <span className="t44c-subrow">
-                  CONTINUOUS {b('hydCont', 'Hydraulic pressure continuous', 'wide')} MAXIMUM {b('hydMax', 'Hydraulic pressure maximum', 'sm')}
-                </span>
-              </li>
-            </ul>
+            <div className="t44c-banner t44c-banner--section">ENGINE STARTER DUTY CYCLE, THREE CYCLES (§4.8)</div>
+            {grid(STARTER, STARTER_COLUMNS, (
+              <>
+                <tr>
+                  <th>START</th>
+                  <th>SEC ON</th>
+                  <th>SEC OFF</th>
+                  <th>MIN OFF AFTER<br />THE THIRD</th>
+                </tr>
+              </>
+            ))}
 
             <div className="t44c-banner t44c-banner--section">SLOPE TAKEOFF AND LANDING (§4.15)</div>
-            <ul className="t44c-rows">
+            <ul className="t44c-rows t44c-rows--right">
               <li>NOSE-UP: {b('slopeNoseUp', 'Nose-up slope limit', 'xs')} DEG</li>
               <li>SIDE-UP: {b('slopeSideUp', 'Side-up slope limit', 'xs')} DEG</li>
               <li>NOSE-DOWN: {b('slopeNoseDown', 'Nose-down slope limit', 'xs')} DEG</li>
@@ -203,65 +192,57 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
             </ul>
 
             <div className="t44c-banner t44c-banner--section">WEIGHT LIMITATIONS (§4.16)</div>
-            <ul className="t44c-rows">
+            <ul className="t44c-rows t44c-rows--right">
               <li>MAX GROSS WEIGHT FOR GROUND OPERATIONS: {b('gwGround', 'Maximum gross weight for ground operations')} LB</li>
               <li>MAXIMUM GROSS WEIGHT: {b('gwMax', 'Maximum gross weight')} LB</li>
               <li>MINIMUM GROSS WEIGHT FOR FLIGHT: {b('gwMin', 'Minimum gross weight for flight')} LB</li>
-              <li>MAX GROSS WEIGHT WITH EXTERNAL LOAD ON CARGO HOOK: {b('gwExternal', 'Maximum gross weight with external load')} LB</li>
+              <li>MAX GROSS WEIGHT WITH LOAD ON CARGO HOOK: {b('gwExternal', 'Maximum gross weight with external load')} LB</li>
             </ul>
-            <div className="t44c-banner t44c-banner--section">ROTOR BRAKE AND CHIP BURNER (§4.20)</div>
-            <ul className="t44c-rows">
-              <li>ROTOR BRAKE ONLY AFTER SHUTDOWN WITH NR BELOW: {b('rotorBrakeNr', 'Rotor brake NR limit', 'xs')} %</li>
-              <li>MAX CHIPS CLEARED PER DETECTION SYSTEM PER FLIGHT: {b('chipBurnerMax', 'Maximum chip burner activations per flight', 'xs')}</li>
+
+            <div className="t44c-banner t44c-banner--section">ALTITUDE AND TEMPERATURE (§4.13, §4.14)</div>
+            <ul className="t44c-rows t44c-rows--right">
+              <li>MAXIMUM OPERATING ALTITUDE: {b('maxAltitude', 'Maximum operating altitude')} FT HP</li>
+              <li>MINIMUM AMBIENT AIR TEMPERATURE: {b('oatMin', 'Minimum ambient air temperature', 'xs')} °C</li>
+              <li>MAXIMUM SEA LEVEL AMBIENT AIR TEMPERATURE: {b('oatMax', 'Maximum sea level ambient air temperature', 'xs')} °C</li>
+              <li>MAXIMUM DECREASES EVERY 1000 FT BY: {b('oatLapse', 'Temperature lapse per 1000 feet', 'xs')} °C</li>
             </ul>
           </section>
 
           <section className="t44c-box">
             <div className="t44c-banner t44c-banner--section">AIRSPEED LIMITATIONS, KIAS (§4.12)</div>
-            <ul className="t44c-rows">
+            <ul className="t44c-rows t44c-rows--right">
               <li>V<sub>NE</sub> PLACARD, SEA LEVEL: {b('vnePlacard', 'VNE placard at sea level', 'sm')}</li>
               <li>V<sub>NE</sub> MAX IFR AIRSPEED (LESSER OF V<sub>NE</sub> POWER ON OR): {b('vneIfr', 'Maximum IFR airspeed', 'sm')}</li>
               <li>V<sub>MINI</sub> MIN IFR AIRSPEED: {b('vmini', 'Minimum IFR airspeed', 'sm')}</li>
               <li>V<sub>MIN APP</sub> MIN IFR APPROACH AIRSPEED: {b('vminApp', 'Minimum IFR approach airspeed', 'sm')}</li>
               <li>V<sub>MAX APP</sub> MAX IFR APPROACH AIRSPEED: {b('vmaxApp', 'Maximum IFR approach airspeed', 'sm')}</li>
-              <li>MIN AIRSPEED IN AUTOROTATION (NO CLOSE EXTERNAL REFERENCES): {b('vMinAuto', 'Minimum airspeed in autorotation', 'sm')}</li>
+              <li>MIN AUTOROTATION AIRSPEED (NO EXTERNAL REFS): {b('vMinAuto', 'Minimum airspeed in autorotation', 'sm')}</li>
               <li>MAX AIRSPEED WITH TORQUE 100 TO 108.5%: {b('vTakeoffPower', 'Maximum airspeed in the take-off power range', 'sm')}</li>
               <li>V<sub>NE</sub> ONE OR BOTH DOORS OPEN OR REMOVED: {b('vDoorsOpen', 'VNE with doors open or removed', 'sm')}</li>
               <li>V<sub>NE</sub> DURING DOORS OPENING AND CLOSING: {b('vDoorsMoving', 'VNE during door opening and closing', 'sm')}</li>
-              <li>MAX SPEED FOR SEARCHLIGHT EXTENSION, ORIENTATION AND RETRACTION: {b('vSearchlight', 'Maximum speed for searchlight operation', 'sm')}</li>
-              <li>MAX FORWARD SPEED AT TOUCHDOWN AFTER ENGINE FAILURE: {b('vTouchdown', 'Maximum touchdown speed after engine failure', 'sm')} KT</li>
-              <li>
-                ONE HELIPILOT INOPERATIVE: MAX AIRSPEED {b('vOneHelipilot', 'Maximum airspeed with one helipilot inoperative', 'sm')}{' '}
-                MAX RATE OF CLIMB {b('rocOneHelipilot', 'Maximum rate of climb with one helipilot inoperative', 'sm')} FPM
-              </li>
-              <li>FD ENGAGED OR COUPLED WITH ANY HELIPILOT INOPERATIVE: MAX AIRSPEED {b('vFdHelipilotInop', 'Maximum airspeed with flight director and a helipilot inoperative', 'sm')}</li>
-            </ul>
-
-            <div className="t44c-banner t44c-banner--section">ALTITUDE AND TEMPERATURE (§4.13, §4.14)</div>
-            <ul className="t44c-rows">
-              <li>MAXIMUM OPERATING ALTITUDE: {b('maxAltitude', 'Maximum operating altitude')} FT HP</li>
-              <li>
-                AMBIENT AIR TEMPERATURE (°C): MINIMUM {b('oatMin', 'Minimum ambient air temperature', 'xs')} MAXIMUM AT SEA LEVEL {b('oatMax', 'Maximum sea level ambient air temperature', 'xs')}
-                <span className="t44c-subrow">MAXIMUM DECREASES {b('oatLapse', 'Temperature lapse per 1000 feet', 'xs')} °C EVERY 1000 FT</span>
-              </li>
+              <li>MAX SPEED, SEARCHLIGHT EXTENSION/RETRACTION: {b('vSearchlight', 'Maximum speed for searchlight operation', 'sm')}</li>
+              <li>MAX TOUCHDOWN SPEED AFTER ENGINE FAILURE: {b('vTouchdown', 'Maximum touchdown speed after engine failure', 'sm')} KT</li>
+              <li>ONE HELIPILOT INOPERATIVE, MAX AIRSPEED: {b('vOneHelipilot', 'Maximum airspeed with one helipilot inoperative', 'sm')}</li>
+              <li>ONE HELIPILOT INOPERATIVE, MAX RATE OF CLIMB: {b('rocOneHelipilot', 'Maximum rate of climb with one helipilot inoperative', 'sm')} FPM</li>
+              <li>FD ENGAGED, ANY HELIPILOT INOP, MAX AIRSPEED: {b('vFdHelipilotInop', 'Maximum airspeed with flight director and a helipilot inoperative', 'sm')}</li>
             </ul>
 
             <div className="t44c-banner t44c-banner--section">HELIPILOT AND FLIGHT DIRECTOR (§4.18, §4.19)</div>
-            <ul className="t44c-rows">
-              <li>
-                BOTH HELIPILOTS: FLY ATTENTIVE BELOW {b('muhAttentive', 'Fly attentive below, both helipilots', 'sm')} FT AGL
-                <span className="t44c-subrow">FLY MANUALLY BELOW {b('muhManual', 'Fly manually below, both helipilots', 'sm')} FT AGL</span>
-              </li>
-              <li>ONE HELIPILOT INOPERATIVE: FLY MANUALLY BELOW {b('muhOneInop', 'Fly manually below, one helipilot inoperative', 'sm')} FT AGL</li>
-              <li>
-                FD MINIMUM USE HEIGHT: CRUISE, CLIMB AND DESCENT {b('fdMuhCruise', 'Flight director minimum use height in cruise', 'sm')} FT AGL
-                <span className="t44c-subrow">APPROACH {b('fdMuhApproach', 'Flight director minimum use height on approach', 'sm')} FT AGL</span>
-              </li>
-              <li>
-                ILS: STEEPEST GRADIENT {b('ilsGradient', 'Steepest ILS approach gradient', 'xs')} DEG MAX RATE OF DESCENT {b('ilsDescent', 'Maximum ILS rate of descent', 'sm')} FT/MIN
-              </li>
+            <ul className="t44c-rows t44c-rows--right">
+              <li>BOTH HELIPILOTS, FLY ATTENTIVE BELOW: {b('muhAttentive', 'Fly attentive below, both helipilots', 'sm')} FT AGL</li>
+              <li>BOTH HELIPILOTS, FLY MANUALLY BELOW: {b('muhManual', 'Fly manually below, both helipilots', 'sm')} FT AGL</li>
+              <li>ONE HELIPILOT INOP, FLY MANUALLY BELOW: {b('muhOneInop', 'Fly manually below, one helipilot inoperative', 'sm')} FT AGL</li>
+              <li>FD MIN USE HEIGHT, CRUISE/CLIMB/DESCENT: {b('fdMuhCruise', 'Flight director minimum use height in cruise', 'sm')} FT AGL</li>
+              <li>FD MIN USE HEIGHT, APPROACH: {b('fdMuhApproach', 'Flight director minimum use height on approach', 'sm')} FT AGL</li>
+              <li>ILS STEEPEST APPROACH GRADIENT: {b('ilsGradient', 'Steepest ILS approach gradient', 'xs')} DEG</li>
+              <li>ILS MAXIMUM RATE OF DESCENT: {b('ilsDescent', 'Maximum ILS rate of descent', 'sm')} FT/MIN</li>
             </ul>
 
+            <div className="t44c-banner t44c-banner--section">ROTOR BRAKE AND CHIP BURNER (§4.20)</div>
+            <ul className="t44c-rows t44c-rows--right">
+              <li>ROTOR BRAKE ONLY AFTER SHUTDOWN WITH NR BELOW: {b('rotorBrakeNr', 'Rotor brake NR limit', 'xs')} %</li>
+              <li>MAX CHIPS CLEARED PER DETECTION SYSTEM PER FLIGHT: {b('chipBurnerMax', 'Maximum chip burner activations per flight', 'xs')}</li>
+            </ul>
             <div className="t44c-banner t44c-banner--section">PROHIBITED MANEUVERS (§4.24)</div>
             <ol className="t44c-rows t44c-rows--numbered">
               <li>{b('prohib1', 'Prohibited maneuver 1', 'xl')}</li>

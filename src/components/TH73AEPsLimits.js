@@ -14,7 +14,8 @@ import EPsLimitsShell from './epsLimits/EPsLimitsShell';
 // card in the middle, where it is in front of the pilot. Down the left is the overhead panel,
 // which hangs over the pilot's head and has nowhere truer to go on a flat page, with the steps
 // no panel performs as buttons beneath it; down the right, the pedestal with the collective
-// rising out of it.
+// rising out of it, and beneath that the buttons that hand off to another procedure
+// (`xref` in th73aPoster.js), kept apart from the rest and balancing the two columns.
 //
 // `nwc` gives the page its NWC buttons and Auto NWC toggle, from the NATOPS (th73aData.js).
 
@@ -48,7 +49,7 @@ function LeftSide(api) {
   return (
     <div className="t44c-console">
       <PosterRegion region={OVERHEAD} view={useTH73APoster(api)} className="epl-band-frame--fluid" />
-      <ActionButtons actions={TH73A_POSTER.actions} aliases={TH73A_ALIASES} {...api} />
+      <ActionButtons actions={TH73A_POSTER.actions.filter((a) => !a.xref)} aliases={TH73A_ALIASES} {...api} />
     </div>
   );
 }
@@ -57,6 +58,7 @@ function RightSide(api) {
   return (
     <div className="t44c-console">
       <PosterRegion region={PEDESTAL} view={useTH73APoster(api)} className="epl-band-frame--fluid" />
+      <ActionButtons actions={TH73A_POSTER.actions.filter((a) => a.xref)} aliases={TH73A_ALIASES} {...api} />
     </div>
   );
 }
