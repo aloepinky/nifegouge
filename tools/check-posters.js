@@ -24,6 +24,10 @@
 //                   something that claims it; this walks the page's own rule and says the
 //                   sequence actually works.
 //
+// A normal checklist step's `watch` list (the gauges and lights it is checked against, which
+// must be clicked as well) is held to the same: a watched wording no target answers for is NO
+// CONTROL, and a step may not both watch and be split between targets with `fills`.
+//
 // Node, not part of the build. Exits non-zero on any finding.
 //
 //     node tools/check-posters.js
@@ -103,6 +107,15 @@ for (const school of SCHOOLS) {
       if (clickOutcome(ok ? 1 : 0, 1) !== FILL) {
         return `${ep.title} :: clicking ${rec.label || rec.action} answers "${action}", not "${want}"`;
       }
+      // A watched step is the control plus one click on each gauge or light it names.
+      const step = steps.find((s) => s.id === target);
+      if (step.watch) {
+        if (fillsFor(rec, action, aliases)) return `${ep.title} :: "${want}" both watches and is split with fills`;
+        const unseen = step.watch.filter((w) => !records.some((r) => matches(r, w, aliases)));
+        if (unseen.length) return `${ep.title} :: "${want}" watches ${unseen.join(', ')}, which nothing on the poster answers`;
+        data[target] = answers[target];
+        continue;
+      }
       // A step answered in pieces needs one click per piece, so the walk collects every record
       // that supplies part of it and fails if the pieces do not add up to the step's own text.
       const piece = fillsFor(rec, action, aliases);
@@ -132,6 +145,9 @@ for (const school of SCHOOLS) {
       // lists for a control, so a step whose control is claimed but whose setting nobody lists is
       // NO SETTING, and since the page's own matcher refuses it, it is as unclickable as NO
       // CONTROL; the two are told apart only so the finding says which file to open.
+      for (const w of step.watch || []) {
+        if (!records.some((r) => matches(r, w, aliases))) noControl.push(`${ep.title} :: ${step.text} (watches ${w})`);
+      }
       const control = controlOf(step.text);
       const claimants = records.filter((r) => matches(r, control, aliases));
       if (!claimants.length) {

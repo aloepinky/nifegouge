@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { gradeAnswer } from '../../utils/answerUtils';
-import { controlOf, sameControl, settingOk, DEFAULT_ALIASES } from './controlMatch';
+import { canon, controlOf, sameControl, settingOk, DEFAULT_ALIASES } from './controlMatch';
 import { openStep, clickOutcome, FILL } from './stepFlow';
 
 // One EP at a time, from a plain list (see Flight/c172Data.js for the shape), laid out and
@@ -35,7 +35,8 @@ import { openStep, clickOutcome, FILL } from './stepFlow';
 //                        does NOT choose the setting: clicking the right one hands over the
 //                        whole step. `part` is for the rare step that takes SEVERAL controls: it
 //                        is the piece of the step's text this one supplies, and the box stays
-//                        yellow until every piece is in.
+//                        yellow until every piece is in. `wordings` is every control the clicked
+//                        target answers for, which a step's `watch` list is matched against.
 //   hint                 the action of the next unanswered step once Hint is pressed, else null;
 //                        a panel rings the control that does it
 //   reveal               `{ control, at }` each time Hint or Skip names a step, `at` counting
@@ -126,6 +127,9 @@ function nwcFor(nwc, key) {
 // measurement in EPDrill: the box is a fixed width and the text gives way, which is Primary's
 // rule for a 73-character step in a 350px card.
 const MIN_STEP_FONT = 6;
+
+// The piece of a `watch` step that is the step's own control rather than an instrument.
+const CONTROL = '(control)';
 
 const NWC_KINDS = [
   ['warnings', 'warning', 'Warning'],
@@ -250,7 +254,7 @@ function NWCModal({ group, current, nwc, hints, onClose }) {
   );
 }
 
-function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, read, extraLabel, onClose }) {
+function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, read, extraLabel, onClose }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -268,11 +272,13 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, read, extr
               <li>One checklist is shown at a time, printed as on the checklist card, with who replies beside each step. <strong>*</strong> is done from memory, <strong>#</strong> is an abbreviated checklist item</li>
               <li>Click a step to see what the FTI says to do and say for it. What you say is in bold; what the instructor says is highlighted</li>
               {hasPanel && <li>In Full Mode, click the control each step names, in order. A step with no control on the poster is passed with Skip</li>}
+              {hasPanel && hasWatch && <li>A step you check gauges or lights for also needs each of them clicked, in any order. It stays yellow until the last one is in</li>}
             </>
           ) : (
             <li>One EP is shown at a time. Type each step exactly as the checklist prints it, item and setting together: "Mixture - IDLE CUTOFF". EPs are verbatim!</li>
           )}
           {hasPanel && <li>In Full Mode you can click the matching control instead of typing. A click fills the next empty step with that step's whole answer</li>}
+          {hasPanel && hasWatch && !read && <li>A normal procedure step you check gauges or lights for also needs each of them clicked, in any order. It stays yellow until the last one is in</li>}
           {hasBand && <li>The cockpit poster is drawn above and beside the EP. Hint and Skip ring the control a step names and scroll it into view; where the poster shows one panel at a time, they bring up the panel it is on</li>}
           <li>Clicking on the ## of ## indicator will display a dropdown from which a specific EP can be selected</li>
           <li>A <span className="epl-swatch epl-swatch--red">red</span> box is wrong</li>
@@ -440,6 +446,8 @@ function Drill({
   const pageRef = useRef(null);
   const sizerRef = useRef(null);
   const parts = useRef({});
+  // The pieces of a `watch` step clicked so far, by step id; see watchClick.
+  const watched = useRef({});
   const rulerRef = useRef(null);
   const [cardMin, setCardMin] = useState(0);
   const [fit, setFit] = useState({});
@@ -516,10 +524,12 @@ function Drill({
     setOpenAction(null);
     wasCorrect.current = {};
     parts.current = {};
+    watched.current = {};
     setResetKey((k) => k + 1);
   };
 
   const change = (field, value) => {
+    delete watched.current[field];
     setData((d) => ({ ...d, [field]: value }));
     setResults((r) => ({ ...r, [field]: '' }));
     setHint(null);
@@ -557,7 +567,7 @@ function Drill({
   // control and divide its settings between them (the T-44C's CABIN PRESS switch and cabin
   // pressure controller are both "Pressurization"), so a click on one that does not list the
   // step's setting is the wrong control, not a near miss - controlMatch.js `settingOk`.
-  const fill = (action, fragment, values) => {
+  const fill = (action, fragment, values, wordings) => {
     setHint(null);
     const step = nextOpen();
     if (!step) return;
@@ -565,6 +575,10 @@ function Drill({
     const answer = answers[target];
 
     const names = sameControl(answer, action, aliases) && settingOk(values, answer);
+    if (step.watch) {
+      watchClick(step, names, wordings || [action]);
+      return;
+    }
     if (clickOutcome(names ? 1 : 0, 1) !== FILL) {
       setResults((r) => ({ ...r, [target]: 'incorrect' }));
       return;
@@ -592,14 +606,59 @@ function Drill({
     else setResults((r) => ({ ...r, [target]: mark }));
   };
 
-  // The step a click, Hint and Skip all act on. See stepFlow.js.
+  // A normal checklist step also names what it is checked against: the FTI's action column for
+  // Right Starter is to see the RH IGN IND light come on and N1 rise, and `watch` lists those
+  // gauges and lights. The step is the control plus every one of them, clicked in any order, and
+  // stays yellow until the last arrives, as Primary's Engine Start - MONITOR does. The box shows
+  // the control's name once it is in (gradeAnswer reads a bare control as partial, so Check
+  // agrees) and the checklist's whole line at the end. A click that adds nothing marks it red and
+  // keeps what is already in.
+  const missingOf = (step) => {
+    if (!step || !step.watch) return [];
+    const have = watched.current[step.id] || [];
+    return [CONTROL, ...step.watch].filter((p) => !have.includes(p));
+  };
+
+  const watchClick = (step, names, wordings) => {
+    const target = step.id;
+    const answer = answers[target];
+    const said = wordings.map((w) => canon(w, aliases));
+    const have = watched.current[target] || [];
+    const got = [
+      ...(names ? [CONTROL] : []),
+      ...step.watch.filter((w) => said.includes(canon(w, aliases))),
+    ].filter((p) => !have.includes(p));
+    if (!got.length) {
+      setResults((r) => ({ ...r, [target]: 'incorrect' }));
+      return;
+    }
+    watched.current[target] = [...have, ...got];
+    const done = !missingOf(step).length;
+    const line = done ? answer : (watched.current[target].includes(CONTROL) ? controlOf(answer) : '');
+    const next = { ...data, [target]: line };
+    setData(next);
+    if (done) delete watched.current[target];
+    if (done && target === steps[steps.length - 1].id) check(next);
+    else setResults((r) => ({ ...r, [target]: done ? gradeAnswer(line, answer) : 'partial' }));
+  };
+
+  // The step a click, Hint and Skip all act on. See stepFlow.js. A step still missing a watched
+  // instrument stays open even after a wrong click has marked it red.
   const nextOpen = () => {
     const id = openStep(fields, {
       value: (f) => data[f],
-      result: (f) => results[f],
+      result: (f) => (watched.current[f] ? 'partial' : results[f]),
       answer: (f) => answers[f],
     });
     return steps.find((s) => s.id === id);
+  };
+
+  // What Hint points at: the step itself, or for a step with a `watch` list the first piece not
+  // yet clicked, the control before the instruments.
+  const hintFor = (step) => {
+    const missing = missingOf(step);
+    if (!missing.length || missing[0] === CONTROL) return step.text;
+    return missing[0];
   };
 
   // Hint and Skip are the two affordances that say where a control is, so they are the two that
@@ -611,21 +670,23 @@ function Drill({
   // Both carry the whole step, setting and all, because a control shared by two targets is told
   // apart by its setting (controlMatch.js `matches`): Hint on "Pressurization - DUMP" rings the
   // CABIN PRESS switch and not the controller beside it.
-  const aim = (step) => {
+  const aim = (text) => {
     aimSeq.current += 1;
-    setReveal(step ? { step: step.text, at: aimSeq.current } : null);
+    setReveal(text ? { step: text, at: aimSeq.current } : null);
   };
 
   const pressHint = () => {
     const open = nextOpen();
-    aim(open);
-    setHint(open ? open.text : null);
+    const text = open ? hintFor(open) : null;
+    aim(text);
+    setHint(text);
   };
 
   const skip = () => {
     const open = nextOpen();
     if (!open) return;
-    aim(open);
+    aim(open.text);
+    delete watched.current[open.id];
     const next = { ...data, [open.id]: open.text };
     setData(next);
     setHint(null);
@@ -635,6 +696,7 @@ function Drill({
   };
 
   const allAnswers = () => {
+    watched.current = {};
     const next = { ...data, ...answers };
     setData(next);
     check(next);
@@ -651,6 +713,7 @@ function Drill({
     setOpenAction(null);
     wasCorrect.current = {};
     parts.current = {};
+    watched.current = {};
     setResetKey((k) => k + 1);
   };
 
@@ -877,7 +940,8 @@ function Drill({
           </button>
         ) : <span className="epl-mode-spacer" />}
       </div>
-      {showHelp && <Instructions hasPanel={hasPanel} hasBand={!!top} hasLeft={!!left} hasNWC={hasNWC} hasModes={!!modes} read={read}
+      {showHelp && <Instructions hasPanel={hasPanel} hasBand={!!top} hasLeft={!!left} hasNWC={hasNWC} hasModes={!!modes}
+        hasWatch={eps.some((e) => e.rows.some((r) => r.watch))} read={read}
         extraLabel={extraToggle && extraToggle.label} onClose={() => setShowHelp(false)} />}
       {openNWC && (
         <NWCModal key={openNWC} group={nwcGroup} current={openNWC} nwc={nwc} hints={nwcHints}

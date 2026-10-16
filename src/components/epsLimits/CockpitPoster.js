@@ -1,6 +1,6 @@
 import React, { Suspense, useMemo, useRef, useState } from 'react';
 import { DRAFT } from '../programs';
-import { actionFor, aliasesFrom, fillsFor, matches, settingsFor } from './controlMatch';
+import { actionFor, aliasesFrom, fillsFor, matches, settingsFor, wordingsOf } from './controlMatch';
 
 // The cockpit poster: a photograph or a panel diagram with a click target on every control the
 // EPs name. Clicking one fills the step, the way Primary's poster does.
@@ -49,9 +49,11 @@ export function usePoster({ poster, aliases, fill, hint, next }) {
   // other way round — the step that takes two controls, where this one supplies only its piece.
   // `settingsFor` is the settings this target lists for that control, which is how two targets
   // sharing a control divide its steps between them (the T-44C's two Pressurization controls).
+  // `wordingsOf` is everything the target answers for, which a step's `watch` list of gauges and
+  // lights is matched against: the left fuel gauge is `Fuel Quantity` and `Left Fuel Quantity`.
   const press = (spot) => {
     const action = actionFor(spot, next, alias);
-    fill(action, fillsFor(spot, action, alias), settingsFor(spot, action, alias));
+    fill(action, fillsFor(spot, action, alias), settingsFor(spot, action, alias), wordingsOf(spot));
   };
 
   // Two development-only views, and they are not the same thing. `?spots` swaps the targets for

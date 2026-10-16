@@ -12,6 +12,12 @@
 //   replies            its RESPONSE column, in order: { text, who } for what the student in the
 //                      left seat says (bold in the FTI), `ip: true` for what the instructor says
 //                      (highlighted), `act: true` for a stage direction that is not spoken.
+//   watch              the gauges and lights the action says to check, note, observe, verify or
+//                      monitor, as poster wordings (t44cPoster.js). Clicking the control leaves
+//                      the step yellow until each of them is clicked too, in any order, as
+//                      Primary's Engine Start - MONITOR does (epsLimits/EPDrill.js `watchClick`).
+//                      Only what the action names and the poster draws: never the elapsed-time
+//                      clock, PFD flags or audio tones.
 //
 // A procedure's `normal` draws its card with the checklist card's black title, so a normal
 // memory procedure added to the EPs is never mistaken for one. `critical` (the asterisk) marks
@@ -95,6 +101,7 @@ const BEFORE_START = {
       replies: [say('OFF', 'LS')],
     }),
     item('bs8', 'Fuel Panel', 'CHECKED/SET', 'LS', {
+      watch: ['FUEL CROSSFEED', 'Battery Ammeter', 'L FUEL PRESSURE', 'R FUEL PRESSURE'],
       action: [
         'LS performs the following checks:',
         'a. Fuel panel circuit breakers — Set.',
@@ -106,6 +113,7 @@ const BEFORE_START = {
       replies: [say('CHECKED/SET', 'LS')],
     }),
     item('bs9', 'Annunciator Panel', 'CHECKED', 'PF', {
+      watch: ['FAULT WARNING'],
       action: [
         'a. RS presses and holds Press-to-Test button. LS ensures all annunciator lights, "Terrain," "Pull Up," "Terrain NA," "ESIS On/Off" lights, and EMER 121.5 illuminated, and FAULT WARN light is flashing.',
         'b. LS presses the flashing FAULT WARN light to extinguish.',
@@ -113,6 +121,7 @@ const BEFORE_START = {
       replies: [say('CHECKED', 'PF')],
     }),
     item('bs10', 'Fire Detectors', 'CHECKED', 'PF, PM', {
+      watch: ['FAULT WARNING', 'LH FIRE', 'RH FIRE', 'LH FIRE EXT', 'RH FIRE EXT'],
       action: ['Rotate the Fire Detector Test switch clockwise and ensure illumination of the FAULT WARN, LH and RH FIRE annunciator, and LH and RH FIRE EXT PUSH TO EXT lights. LS first reports "Three" and RS responds "Two" at each selector position. Wait 3 seconds after positioning the switch to each zone to confirm a proper check, then switch to the next zone. Do not cancel the Fault Warning until switch is rotated back to the off position and the FIRE and FIRE EXT lights extinguish.'],
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
     }),
@@ -147,6 +156,7 @@ const START_RIGHT = {
   rows: [
     { note: 'Brief: "This will be a battery start of the right engine. The left side is clear." (PF) "Right side clear." (PM) Two fingers in the windshield.' },
     memory('sr1', 'Right Starter', 'On, Ignition, rotation', 'PF', {
+      watch: ['RH IGN IND', 'N1'],
       action: [
         'PF engages right starter with right hand (Keep hand on starter) while simultaneously starting elapsed time clock with left hand. Ensure RH IGN IND annunciator light is on and call "ignition." Call "rotation" when N1 increases, not when the prop begins to turn outside. Leave right hand anchored on the starter until moving it to the condition lever to introduce fuel.',
         'Starter use is time limited to 40 seconds on and 60 seconds off for two cycles, then 40 seconds on and 30 minutes off.',
@@ -159,6 +169,7 @@ const START_RIGHT = {
       replies: [say('Above 12 percent')],
     }),
     memory('sr3', 'Condition Lever', 'LOW IDLE', 'PF', {
+      watch: ['Generator Voltages', 'N1'],
       action: [
         'Check battery voltage above 18 volts.',
         note('Battery voltage should be 18 volts or greater prior to moving the condition lever to LOW IDLE. If less than 18 volts, consideration should be given to terminating the start attempt. If residual voltage remains less than 18 volts a battery change or battery charging is needed before attempting a subsequent start.'),
@@ -177,18 +188,22 @@ const START_RIGHT = {
       replies: [say('Light-off'), say('N1 stable above 50%')],
     }),
     memory('sr6', 'Starter', 'OFF', 'PF', {
+      watch: ['N1'],
       action: ['Turn starter off when N1 greater than 50%.', 'Stop elapsed clock.', STARTER_LIMITS],
       replies: [say('OFF')],
     }),
     memory('sr7', 'Oil Pressure', 'Thumbs up to lineman', 'PF', {
+      watch: ['ITT', 'N1'],
       action: OIL_PRESSURE,
       replies: [act('Thumbs up to lineman')],
     }),
     memory('sr8', 'Right Condition Lever', 'High Idle', 'PF', {
+      watch: ['N1'],
       action: ['Advance to High Idle. Ensure N1 within High Idle limits.', 'Observe N1 gauge within 70-73% before responding.'],
       replies: [say('High Idle')],
     }),
     memory('sr9', 'Right Generator', 'Reset, On. Switch, Light, Load', 'PF', {
+      watch: ['RH GEN OUT', 'Generator Load'],
       action: [
         'PF turns on right generator, notes RH GEN OUT annunciator light extinguished and load indication.',
         'Perform flight control and flap checks while allowing the battery to Recharge. Normal generator load will be 0.5 to 1.0 while the battery ammeter will read approximately 60 amp charge and battery voltage will read 28 VDC (Volts-Direct Current).',
@@ -215,6 +230,7 @@ const START_RIGHT = {
     }),
     { note: 'Control check and flap check.' },
     memory('sr10', 'Right Generator', 'Load below .5, OFF', 'PF', {
+      watch: ['Generator Load'],
       action: ['PF checks right generator load and secures generator when load is below 0.5.'],
       replies: [say('Load below .5', 'PF'), say('OFF', 'PF')],
     }),
@@ -233,6 +249,7 @@ const START_LEFT = {
   rows: [
     { note: 'Brief: "This will be a generator assisted start of the left engine. Left side\'s clear." (PF) "Right side\'s clear." (PM) One finger in the windshield.' },
     memory('sl11', 'Left Starter', 'On, Ignition, rotation', 'PF', {
+      watch: ['LH IGN IND', 'N1'],
       action: ['PF engages left starter with right hand while simultaneously starting elapsed time clock with left hand. Ensure LH IGN IND annunciator light on and call "ignition." Call "rotation" when N1 increases, not when the prop begins to turn outside. Leave right hand anchored on the starter until moving it to the condition lever to introduce fuel.'],
       replies: [act('(start clock)'), say('ON ignition, rotation')],
     }),
@@ -241,6 +258,7 @@ const START_LEFT = {
       replies: [say('Above 12 percent')],
     }),
     memory('sl13', 'Right Generator', 'Reset, On', 'PF', {
+      watch: ['RH GEN OUT'],
       action: ['PF turns on right generator and notes RH GEN OUT annunciator light extinguished.'],
       replies: [say('Reset, On')],
     }),
@@ -249,6 +267,7 @@ const START_LEFT = {
       replies: [say('Monitor ITT')],
     }),
     memory('sl15', 'Condition Lever', 'LOW IDLE', 'PF', {
+      watch: ['N1'],
       action: ['PF moves left condition lever to LOW IDLE after N1 reaches 12% and the right generator has been turned on. PF mentally counts 10 seconds as timing back-up. PM commences timing for 10 seconds when PF moves condition lever to LOW IDLE. Leave right hand anchored on the condition lever until moving it to turn the starter off.'],
       replies: [say('LOW IDLE')],
     }),
@@ -263,10 +282,12 @@ const START_LEFT = {
       replies: [say('Light-off'), say('N1 stable above 50%')],
     }),
     memory('sl18', 'Left Starter', 'OFF', 'PF', {
+      watch: ['N1'],
       action: ['(50% N1 minimum)', 'Stop elapsed time clock.', STARTER_LIMITS],
       replies: [say('OFF')],
     }),
     memory('sl19', 'Oil Pressure', 'Thumbs up to lineman', 'PF', {
+      watch: ['ITT', 'N1'],
       action: OIL_PRESSURE,
       replies: [act('Thumbs up to lineman')],
     }),
@@ -275,6 +296,7 @@ const START_LEFT = {
       replies: [say('OFF')],
     }),
     memory('sl21', 'Fuel Quantity Indicators', 'Checked', 'PF', {
+      watch: ['Left Fuel Quantity', 'Right Fuel Quantity'],
       action: [
         'PF ensures both fuel quantity indicators normal.',
         note('An absence of fuel quantity indications for either wing is indicative of a failure of the corresponding current limiter.'),
@@ -282,15 +304,18 @@ const START_LEFT = {
       replies: [say('Checked')],
     }),
     memory('sl22', 'Right Generator', 'RESET, ON. Switch, light, load', 'PF', {
+      watch: ['RH GEN OUT', 'Generator Load'],
       action: GENERATOR_ON('right'),
       replies: [say('RESET, ON'), act('("Switch, light, load")')],
     }),
     memory('sl22b', 'Left Generator', 'RESET, ON. Switch, light, load', 'PF', {
+      watch: ['LH GEN OUT', 'Generator Load'],
       num: 22,
       action: [...GENERATOR_ON('left'), 'Check that generator loads are within 0.1.'],
       replies: [say('RESET, ON'), act('("Switch, light, load")')],
     }),
     memory('sl23', 'Right Condition Lever', 'LOW IDLE', 'PF', {
+      watch: ['N1'],
       action: ['Move to LOW IDLE position. Verify N1 gauge between 51-54%.'],
       replies: [say('LOW IDLE')],
     }),
@@ -343,6 +368,7 @@ const AFTER_START = {
       replies: [say('FASTENED', 'PF'), ip('FASTENED', 'OBS'), ip('FASTENED', 'PM')],
     }),
     item('as6', 'Transfer Pumps', 'CHECKED/AUTO', 'LS', {
+      watch: ['LH NO FUEL TRANSFER', 'RH NO FUEL TRANSFER'],
       action: [
         'LS performs the following checks:',
         'a. LS holds TRANSFER TEST switch in L position and places left TRANSFER PUMP switch to AUTO. Check for a momentary flicker of LH NO FUEL TRANSFER annunciator light. Reset FAULT WARNING if illuminated.',
@@ -353,6 +379,7 @@ const AFTER_START = {
       replies: [say('CHECKED/AUTO', 'LS')],
     }),
     item('as7', 'Crossfeed', 'CHECKED/AUTO', 'LS', {
+      watch: ['L FUEL PRESSURE', 'R FUEL PRESSURE', 'FUEL CROSSFEED'],
       action: [
         'LS performs the following checks:',
         'a. Crossfeed valve – AUTO',
@@ -447,6 +474,7 @@ const ENGINE_RUNUP = {
       replies: [say('ON', 'PF')],
     }),
     abbrev('er3', 'Engine Instruments', 'CHECKED', 'PF', {
+      watch: ['ITT', 'Torque', 'Prop RPM', 'N1', 'Fuel Flow', 'Oil Pressure'],
       action: [
         'LS ensures both power levers are at IDLE and condition levers are at LOW IDLE. The main point of this check is to ensure N1 is at LOW IDLE to commence Engine Runup if previously increased to support a high generator load after starting engines.',
         warning('Whenever moving the condition levers to LOW IDLE, pinch the levers together, and then move the levers very slowly. If a LOW IDLE stop is weak, or a lever is moved rapidly, flameout may result. Should flameout occur, do not move the condition lever back to LOW IDLE bring it fully into FUEL CUTOFF. The engine may be restarted using the appropriate checklist.'),
@@ -463,6 +491,7 @@ const ENGINE_RUNUP = {
       replies: [say('CHECKED', 'PF')],
     }),
     abbrev('er4', 'Manual Feather', 'CHECKED', 'PF', {
+      watch: ['Prop RPM'],
       action: [
         'LS performs the following checks:',
         'Power levers – IDLE, prop RPM stabilized. (Power must be at idle). Pull prop levers aft through detent to FEATHER. Check that props will feather, then advance to FULL FORWARD. Prop rpm should return to 900 to 1,100 rpm.',
@@ -479,6 +508,7 @@ const ENGINE_RUNUP = {
       replies: [say('CHECKED', 'LS')],
     }),
     item('er6', 'Overspeed Governors', 'CHECKED', 'LS', {
+      watch: ['Prop RPM', 'ITT', 'Torque'],
       action: [
         'a. Prop levers – full forward',
         'b. Adjust power levers to ensure prop RPM less than 1900 RPM.',
@@ -491,6 +521,7 @@ const ENGINE_RUNUP = {
       replies: [say('CHECKED', 'LS')],
     }),
     item('er7', 'Primary Governors', 'CHECKED', 'LS', {
+      watch: ['Prop RPM'],
       action: [
         'a. Check power levers to set 1900 prop RPM.',
         'b. Smoothly move both prop levers aft until reaching the feather detent. This will be felt as increased resistance. Be careful not to allow prop levers to enter into the FEATHER position. If FEATHER is inadvertently selected, bring the props forward immediately.',
@@ -501,6 +532,7 @@ const ENGINE_RUNUP = {
       replies: [say('CHECKED', 'LS')],
     }),
     item('er8', 'Autofeather/Autoignition', 'CHECKED/OFF', 'LS', {
+      watch: ['LH AUTO IGNITION ARMED', 'RH AUTO IGNITION ARMED', 'LH AUTOFEATHER ARMED', 'RH AUTOFEATHER ARMED', 'LH IGN IND', 'RH IGN IND', 'Torque', 'Prop RPM'],
       action: [
         'LS performs the following checks:',
         'a. Condition levers - LOW IDLE',
@@ -560,6 +592,7 @@ const BEFORE_TAKEOFF = {
       replies: [say('ARMED', 'LS')],
     }),
     item('bt6', 'Anti-Ice/Deice/Radar', 'CHECKED AS REQUIRED', 'PF, PM', {
+      watch: ['Generator Load'],
       action: [
         'Full anti-ice/deice checks are practiced during cockpit procedures trainers (CPTs) and must be memorized.',
         'If flight into icing conditions is anticipated and/or on the first leg of a cross-country flight, full anti-ice/deice checks must be completed. Monitor load meter to ensure each system is operational and minimum N1 is maintained for the load condition. When required, conduct anti-ice/deice checks per NATOPS Chapter 19. If not required, PF and PM respond, "Pitot heat checked" since this was previously checked during the Preflight Inspection NATOPS 7.2.1.2',
@@ -607,10 +640,12 @@ const BEFORE_TAKEOFF = {
       replies: [say('CHECKED/SET', 'PF'), ip('CHECKED/SET', 'PM')],
     }),
     abbrev('bt10', 'Flaps', 'CHECKED/UP', 'PF, PM', {
+      watch: ['Flap Position Indicator'],
       action: ['Check as previously described, if not already checked. Visually confirm the flap handle, flap position indicator, and flaps are all in the UP position.'],
       replies: [say('CHECKED/UP', 'PF'), ip('CHECKED/UP', 'PM')],
     }),
     abbrev('bt11', 'Altimeters', 'CHECKED/SET', 'PF, PM', {
+      watch: ['ESIS'],
       action: [
         'PF and PM perform the following checks:',
         'a. Barometric Altimeter (BA): Set the current altimeter setting on both PFDs and ESIS. Ensure no comparators or warning flags visible on PFD. Ensure the barometric altimeter indicates within ±75 feet of airport elevation and compare LS, RS and ESIS altimeter readings. See the airport diagram for specific field elevations.',
@@ -646,6 +681,7 @@ const BEFORE_TAKEOFF = {
       ],
     }),
     abbrev('bt13', 'Flight Instruments', 'CHECKED/SET', 'PF, PM', {
+      watch: ['PFD', 'ESIS'],
       action: [
         'PF and PM check flight instruments for proper indications:',
         'a. Compare flight information on both Primary Flight Displays (PFDs) and the Electronic Standby Instrument System (ESIS). Note any comparators or warning flags.',
@@ -661,6 +697,7 @@ const BEFORE_TAKEOFF = {
       replies: [say('CHECKED/SET', 'PF'), ip('CHECKED/SET', 'PM')],
     }),
     item('bt14', 'Fuel Quantity', '___ LBS, ___ LBS REQUIRED', 'PF', {
+      watch: ['Left Fuel Quantity', 'Right Fuel Quantity'],
       action: [
         'Compare actual fuel load with preflight fuel calculations requirements in accordance with SOP and CNAF M-3710.7 minima.',
         note('With full fuel tanks left and right, quantity indicators with TOTAL selected should indicate within 100 pounds of each other. With NACELLE selected, the maximum difference should be 50 pounds. In either case, quantity shall be outside the yellow arcs and the discrepancy must be noted on the appropriate maintenance form for correction prior to the next flight.'),
@@ -727,6 +764,7 @@ const BEFORE_TAKEOFF = {
       replies: [ip('ARMED', 'PM')],
     }),
     abbrev('bt20', 'Condition Levers', 'HIGH IDLE', 'PF', {
+      watch: ['N1'],
       action: [
         'PF places both condition levers full forward and verifies 70-73% N1 with power levers at idle.',
         'When lined up and ready for takeoff: Check left wing/nacelle for fuel caps in place, panels secure, and no fluid leaks. Check PFD and ESIS headings aligned with the runway, no abnormal flags, and engine instruments/props stabilized. Confirm there are no malfunctions and ready for takeoff, report "checked left." The RS will do the same for the right wing/instruments and report "checked right." Release the brakes and place both feet on the lower portion of the rudder pedals. Commence takeoff roll per NATOPS.',
@@ -748,6 +786,7 @@ const ANTI_ICE_CHECK = {
   normal: true,
   rows: [
     memory('ai1', 'Propeller deicer', 'ON', undefined, {
+      watch: ['Prop Amps'],
       action: [
         'Commence timing. Assure PROP AMPS indicate 14 to 18 during each of the 4 phases. The timer will switch phases approximately every 30 seconds. Momentary needle deflection may be visible as propeller heat cycles between phases. Secure the system after amperage is checked during the fourth phase (2 minutes minimum). Additional anti-ice and deice checks may be performed while the propeller is being checked.',
         caution('Monitor load meters during anti-icing equipment checks to prevent exceeding operating limits. Increase N1 if required in accordance with Figure 4.3-1.'),
@@ -756,17 +795,19 @@ const ANTI_ICE_CHECK = {
     }),
     { note: 'PM calls "30 seconds" x4. PROP AMPS 14 to 18 in each of the 4 phases, 2 minute minimum.' },
     { decision: '2. Place the following anti-icing systems ON and monitor load for proper indication:' },
-    memory('ai2a', 'LEFT & RIGHT PITOT', 'ON', undefined, { sub: 'a' }),
-    memory('ai2b', 'Stall Heat', 'ON', undefined, { sub: 'b' }),
+    memory('ai2a', 'LEFT & RIGHT PITOT', 'ON', undefined, { watch: ['Generator Load'], sub: 'a' }),
+    memory('ai2b', 'Stall Heat', 'ON', undefined, { watch: ['Generator Load'], sub: 'b' }),
     memory('ai2c', 'LEFT & RIGHT ENG LIP BOOT', 'ON', undefined, {
+      watch: ['Generator Load'],
       sub: 'c',
       action: ['No rise in load should be evident during ground activation of engine lip boots. A rise in load indicates a malfunction in squat switch circuitry.'],
     }),
-    memory('ai2d', 'LEFT & RIGHT FUEL VENT', 'ON', undefined, { sub: 'd' }),
-    memory('ai2e', 'WSHLD ANTI-ICE', 'BOTH, Then PILOT', undefined, { sub: 'e' }),
+    memory('ai2d', 'LEFT & RIGHT FUEL VENT', 'ON', undefined, { watch: ['Generator Load'], sub: 'd' }),
+    memory('ai2e', 'WSHLD ANTI-ICE', 'BOTH, Then PILOT', undefined, { watch: ['Generator Load'], sub: 'e' }),
     { note: '3. Upon completion of anti-ice checks, place all switches OFF.' },
     memory('ai4', 'N1', '70 percent (both engines)', undefined, { num: 4 }),
     memory('ai5', 'DE-ICE CYCLE', 'SINGLE, Then MANUAL', undefined, {
+      watch: ['Pneumatic Pressure', 'Gyro Suction'],
       num: 5,
       action: [
         'Check wing and tail boot automatically inflate, then deflate in 7 to 8 seconds when SINGLE is selected. Check pneumatic pressure is 12 to 20 psi. Repeat the same check in MANUAL, disregarding cycle time.',
@@ -804,14 +845,17 @@ const CLIMB = {
   done: '"CLIMB CHECKLIST COMPLETE" (PM)',
   rows: [
     abbrev('cl1', 'Landing Gear', 'UP', 'PM', {
+      watch: ['Gear Down Lights'],
       action: ['PM ensures landing gear handle up, light in landing gear handle extinguished, and three green lights out.'],
       replies: [ip('UP', 'PM')],
     }),
     abbrev('cl2', 'Flaps', 'UP', 'PM', {
+      watch: ['Flap Position Indicator'],
       action: ['PM ensures flap handle UP and flap gauge indicating UP. A visual check of flap position is not required unless experiencing a malfunction.'],
       replies: [ip('UP', 'PM')],
     }),
     abbrev('cl3', 'Instruments/Nacelles', 'CHECKED', 'PF, PM', {
+      watch: ['Engine Instruments', 'PFD', 'Left Fuel Quantity', 'Right Fuel Quantity'],
       action: INSTRUMENTS_NACELLES,
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
     }),
@@ -828,6 +872,7 @@ const CLIMB = {
       replies: [say('OFF', 'PF'), act('(as required)')],
     }),
     item('cl7', 'Pressurization', 'CHECKED', 'PM', {
+      watch: ['Cabin Altitude', 'Cabin Climb'],
       action: [
         'Once airborne, pressurization setting is at the discretion of the PIC.',
         'Pressurized, PM checks: - Depending on ambient altitude and system efficiency, the differential (short needle) should increase from zero as the cabin pressurizes. The long needle will indicate cabin altitude. If desired cabin pressure indications are not correct, call for the Loss of Pressurization checklist.',
@@ -844,6 +889,7 @@ const CRUISE = {
   done: '"CRUISE CHECKLIST COMPLETE" (PM)',
   rows: [
     item('cr1', 'Instruments/Nacelles', 'CHECKED', 'PF, PM', {
+      watch: ['Engine Instruments', 'PFD', 'Left Fuel Quantity', 'Right Fuel Quantity'],
       action: INSTRUMENTS_NACELLES,
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
     }),
@@ -914,6 +960,7 @@ const APPROACH = {
       replies: [say('SET', 'PF'), ip('SET', 'PM')],
     }),
     abbrev('ap7', 'Altimeters', '____.____ SET', 'PF, PM', {
+      watch: ['ESIS'],
       action: ['PF and PM set destination altimeter setting in PFDs and ESIS.'],
       replies: [say('___.___ SET', 'PF'), ip('___.___ SET', 'PM')],
     }),
@@ -942,10 +989,12 @@ const LANDING = {
   done: '"LANDING CHECKLIST COMPLETE" (PM)',
   rows: [
     item('la1', 'Flaps', 'Up/Approach/Down', 'PF, PM', {
+      watch: ['Flap Position Indicator'],
       action: ['PF checks that the flap handle and flap indicator agree and reports position. A visual check of flap position is not required unless experiencing a malfunction.'],
       replies: [say('Up/Approach/Down', 'PF'), act('(as required)'), ip('Up/Approach/Down', 'PM')],
     }),
     item('la2', 'Landing Gear', 'DOWN/LOCKED', 'PF, PM', {
+      watch: ['Gear Down Lights'],
       action: ['PF waits for all three indicators to turn green and the light in the landing gear handle to go out, then reports "Down/locked." PM verifies three green lights and landing gear handle down with no red light, then responds "Down/locked."'],
       replies: [say('DOWN/LOCKED', 'PF'), ip('DOWN/LOCKED', 'PM')],
     }),
@@ -968,6 +1017,7 @@ const AFTER_LANDING = {
   done: '"AFTER LANDING CHECKLIST COMPLETE" (PM)',
   rows: [
     item('al1', 'Condition Levers', 'LOW IDLE', 'PF', {
+      watch: ['N1'],
       action: [
         'PF slowly places condition levers to LOW IDLE. Whenever moving condition levers to LOW IDLE pinch the levers together to prevent inadvertent FUEL CUTOFF. Observe N1 between 51-54% prior to responding.',
         caution('If low idle stop is worn and/or condition levers are moved rapidly back to low idle, a flameout may occur. Returning the condition lever to low idle immediately or adding power with the power levers can result in an overtemp or explosion. If flameout occurs, execute Emergency Shutdown On Deck Checklist, Paragraph 13.2.'),
@@ -982,6 +1032,7 @@ const AFTER_LANDING = {
       replies: [ip('STANDBY', 'RS')],
     }),
     item('al3', 'Flaps', 'UP', 'PM', {
+      watch: ['Flap Position Indicator'],
       action: ['PM selects flaps UP and/or verifies flaps are UP by checking flap indicator. A visual check of flap position is not required unless experiencing a malfunction.'],
       replies: [ip('UP', 'PM')],
     }),
@@ -990,6 +1041,7 @@ const AFTER_LANDING = {
       replies: [ip('OFF', 'PM')],
     }),
     item('al5', 'Pressurization', 'CHECKED/DEPRESSURIZED', 'PM', {
+      watch: ['Cabin Altitude'],
       action: ['PM checks cabin altitude indicating field elevation (approximately same as barometric altimeter) and differential indicating zero. This ensures the cabin is not pressurized. If cabin is still pressurized, select DUMP.'],
       replies: [ip('CHECKED/DEPRESSURIZED', 'PM')],
     }),
@@ -1044,15 +1096,18 @@ const SECURE = {
     abbrev('se9', 'Cabin Temperature Mode', 'OFF', 'RS', { action: ['RS selects cabin temperature mode OFF.'], replies: [ip('OFF', 'RS')] }),
     abbrev('se10', 'Vent Blower', 'AUTO', 'RS', { action: ['RS selects vent blower AUTO.'], replies: [ip('AUTO', 'RS')] }),
     abbrev('se11', 'Prop(s)', 'FEATHER', 'PF', {
+      watch: ['Prop RPM'],
       action: ['PF ensures both power levers at flight idle then pulls both prop levers into FEATHER and ensures prop RPM immediately starts to decrease. There is no need to wait for the Props to fully feather before continuing the checklist.'],
       replies: [say('FEATHER', 'PF')],
     }),
     abbrev('se12', 'Condition Lever(s)', 'FUEL CUTOFF', 'PF', {
+      watch: ['ITT'],
       action: ['PF ensures ITT has been below 650 °C for at least 1 minute. PF places both hands on condition levers and selects FUEL CUTOFF. PF notes ITT decrease and monitors engine instruments for a normal shutdown.'],
       replies: [say('FUEL CUTOFF', 'PF')],
     }),
     item('se13', 'Boost Pumps', 'OFF', 'LS', { action: ['LS selects both boost pumps OFF.'], replies: [say('OFF', 'LS')] }),
     item('se14', 'Fuel Quantity (Current Limiters)', 'CHECKED', 'LS', {
+      watch: ['Left Fuel Quantity', 'Right Fuel Quantity'],
       action: ['LS notes normal indication on left and right fuel quantity indicators. If either indicator reads zero, a current limiter is blown.'],
       replies: [say('CHECKED', 'LS')],
     }),

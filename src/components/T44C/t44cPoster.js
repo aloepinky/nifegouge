@@ -50,7 +50,7 @@ export const T44C_POSTER = {
           // The Vx climb takes BOTH this tape and the terrain warning lights below, because the
           // step is "climb at Vx UNTIL the warnings cease" and you are working both. Each supplies
           // its own half of the step's text and the box stays yellow until the other arrives.
-          actions: ['Airspeed', 'Continue Climb at Vx Until All Visual And Voice Warnings Cease', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'],
+          actions: ['Airspeed', 'Continue Climb at Vx Until All Visual And Voice Warnings Cease', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles', 'PFD'],
           values: { Airspeed: ['As Required (VXSE Or VYSE)', 'As Required'] },
           fills: { 'Continue Climb at Vx Until All Visual And Voice Warnings Cease': 'Continue Climb at Vx' } },
         // One target, two controls, and a settings list for each — see `valuesFor` in
@@ -62,7 +62,7 @@ export const T44C_POSTER = {
           // back out: you do not fly off the attitude indicator outside real IMC, so standing it
           // in for the yoke is an abstraction too far. The yoke is not drawn, so those steps are
           // buttons.
-          actions: ['Pitch', 'Wings', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'],
+          actions: ['Pitch', 'Wings', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles', 'PFD'],
           values: {
             Pitch: ['As Required to set and maintain VX', 'Set and Hold Approximately 15° Noseup'],
             Wings: ['Level'],
@@ -71,9 +71,9 @@ export const T44C_POSTER = {
         // One step, one control, drawn at each end of the glareshield. Same `action`, different
         // `id` — the same arrangement as the firewall valves on the fuel panel.
         { id: 'fire-ext-left', box: [0.244, 0.167, 0.027, 0.045], label: 'LH fire extinguisher',
-          action: 'Fire Extinguisher', also: ['Fire Extinguisher(s)'], values: ['As Required'] },
+          action: 'Fire Extinguisher', actions: ['Fire Extinguisher', 'LH FIRE EXT'], also: ['Fire Extinguisher(s)'], values: ['As Required'] },
         { id: 'fire-ext-right', box: [0.73, 0.168, 0.026, 0.045], label: 'RH fire extinguisher',
-          action: 'Fire Extinguisher', also: ['Fire Extinguisher(s)'], values: ['As Required'] },
+          action: 'Fire Extinguisher', actions: ['Fire Extinguisher', 'RH FIRE EXT'], also: ['Fire Extinguisher(s)'], values: ['As Required'] },
 
         // Its own check, and the spin recovery's two Rudder steps as a second control: the first
         // names this needle ("opposite direction of turn needle"), and in IMC the needle is also
@@ -121,12 +121,51 @@ export const T44C_POSTER = {
         // door is locked and this light is out. It sits inside the annunciator panel's box and is
         // drawn over it.
         { box: [0.48, 0.038, 0.032, 0.026], label: 'CABIN DOOR OPEN light',
-          action: 'Cabin Door', values: ['LOCKED'] },
+          action: 'Cabin Door', actions: ['Cabin Door', 'Annunciator Panel'], values: ['LOCKED'] },
+        // The lights a normal checklist step is checked against (a row's `watch` in
+        // t44cNormals.js): the Right Starter step is RH IGN IND on and N1 rising, so both are
+        // clicked as well as the starter. Each sits inside the annunciator panel's box and is drawn
+        // over it, so each also answers Before Start 9, as a click anywhere on the panel did before
+        // they were cut. Rough, 2026-10-16, off the panel's 15-column grid: tune with ?spots.
+        { id: 'ann-lh-gen-out', box: [0.265, 0.039, 0.027, 0.022], label: 'LH GEN OUT light',
+          action: 'LH GEN OUT', actions: ['LH GEN OUT', 'Annunciator Panel'] },
+        { id: 'ann-l-fuel-pressure', box: [0.296, 0.039, 0.027, 0.022], label: 'L FUEL PRESSURE light',
+          action: 'L FUEL PRESSURE', actions: ['L FUEL PRESSURE', 'Annunciator Panel'] },
+        { id: 'ann-lh-no-fuel-transfer', box: [0.327, 0.039, 0.027, 0.022], label: 'LH NO FUEL TRANSFER light',
+          action: 'LH NO FUEL TRANSFER', actions: ['LH NO FUEL TRANSFER', 'Annunciator Panel'] },
+        { id: 'ann-fuel-crossfeed', box: [0.511, 0.039, 0.027, 0.022], label: 'FUEL CROSSFEED light',
+          action: 'FUEL CROSSFEED', actions: ['FUEL CROSSFEED', 'Annunciator Panel'] },
+        { id: 'ann-rh-no-fuel-transfer', box: [0.634, 0.039, 0.027, 0.022], label: 'RH NO FUEL TRANSFER light',
+          action: 'RH NO FUEL TRANSFER', actions: ['RH NO FUEL TRANSFER', 'Annunciator Panel'] },
+        { id: 'ann-r-fuel-pressure', box: [0.664, 0.039, 0.027, 0.022], label: 'R FUEL PRESSURE light',
+          action: 'R FUEL PRESSURE', actions: ['R FUEL PRESSURE', 'Annunciator Panel'] },
+        { id: 'ann-rh-gen-out', box: [0.695, 0.039, 0.027, 0.022], label: 'RH GEN OUT light',
+          action: 'RH GEN OUT', actions: ['RH GEN OUT', 'Annunciator Panel'] },
+        { id: 'ann-lh-fire', box: [0.265, 0.063, 0.027, 0.022], label: 'LH FIRE light',
+          action: 'LH FIRE', actions: ['LH FIRE', 'Annunciator Panel'] },
+        { id: 'ann-lh-ign-ind', box: [0.296, 0.063, 0.027, 0.022], label: 'LH IGN IND light',
+          action: 'LH IGN IND', actions: ['LH IGN IND', 'Annunciator Panel'] },
+        { id: 'ann-lh-autofeather-armed', box: [0.327, 0.063, 0.027, 0.022], label: 'LH AUTOFEATHER ARMED light',
+          action: 'LH AUTOFEATHER ARMED', actions: ['LH AUTOFEATHER ARMED', 'Annunciator Panel'] },
+        { id: 'ann-lh-auto-ignition-armed', box: [0.388, 0.063, 0.027, 0.022], label: 'LH AUTO IGNITION ARMED light',
+          action: 'LH AUTO IGNITION ARMED', actions: ['LH AUTO IGNITION ARMED', 'Annunciator Panel'] },
+        { id: 'ann-rh-auto-ignition-armed', box: [0.572, 0.063, 0.027, 0.022], label: 'RH AUTO IGNITION ARMED light',
+          action: 'RH AUTO IGNITION ARMED', actions: ['RH AUTO IGNITION ARMED', 'Annunciator Panel'] },
+        { id: 'ann-rh-autofeather-armed', box: [0.634, 0.063, 0.027, 0.022], label: 'RH AUTOFEATHER ARMED light',
+          action: 'RH AUTOFEATHER ARMED', actions: ['RH AUTOFEATHER ARMED', 'Annunciator Panel'] },
+        { id: 'ann-rh-ign-ind', box: [0.664, 0.063, 0.027, 0.022], label: 'RH IGN IND light',
+          action: 'RH IGN IND', actions: ['RH IGN IND', 'Annunciator Panel'] },
+        { id: 'ann-rh-fire', box: [0.695, 0.063, 0.027, 0.022], label: 'RH FIRE light',
+          action: 'RH FIRE', actions: ['RH FIRE', 'Annunciator Panel'] },
+        // FAULT WARNING sits apart, left of the panel. Pressing it is how Before Start 9 ends and
+        // seeing it flash is part of Before Start 10, so it does not answer for the panel.
+        { id: 'ann-fault-warning', box: [0.228, 0.039, 0.021, 0.049], label: 'FAULT WARNING light',
+          action: 'FAULT WARNING' },
         // CABIN ALT and differential, beside CABIN CLIMB. The cruise Pressurization/Oxygen check
         // reads cabin altitude and differential here and oxygen pressure on the side panel, so
         // each gauge supplies its half and the step needs both.
         { box: [0.512, 0.859, 0.04, 0.086], label: 'Cabin altitude and differential',
-          action: 'Pressurization/Oxygen', fills: 'Pressurization/', values: ['CHECKED'] },
+          action: 'Pressurization/Oxygen', actions: ['Pressurization/Oxygen', 'Cabin Altitude'], fills: 'Pressurization/', values: ['CHECKED'] },
         { box: [0.335, 0.143, 0.333, 0.078], label: 'Autopilot (FGP)',
           action: 'Autopilot/Yaw Damp', actions: ['Autopilot/Yaw Damp', 'Flight Instruments', 'PFDs/FGP/ESIS'], also: ['Yaw damp'], values: ['CHECKED/DISENGAGED', 'Off'] },
         // The engine gauges, one target per row: each row is the pair, left engine and right, so
@@ -157,7 +196,7 @@ export const T44C_POSTER = {
         { box: [0.415, 0.278, 0.069, 0.154], label: 'ESIS',
           action: 'ESIS', actions: ['ESIS', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'], values: ['ON', 'OFF', 'CHECKED/SET', 'SET'] },
         { box: [0.226, 0.285, 0.027, 0.143], label: 'Altimeter (pilot PFD)',
-          action: 'Altimeters', also: ['Altitude'], actions: ['Altimeters', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'], values: ['CHECKED/SET', 'SET', '___.___ SET', '____.____ SET', '5000 feet AGL minimum'] },
+          action: 'Altimeters', also: ['Altitude'], actions: ['Altimeters', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles', 'PFD'], values: ['CHECKED/SET', 'SET', '___.___ SET', '____.____ SET', '5000 feet AGL minimum'] },
         // The pilot's display control panel (DCP), the strip between the PFD and the engine
         // gauges. NATOPS §20.3: the altimeter is set on its BARO knob, and minimums by pushing
         // REFS and turning the MENU knob. Rough, 2026-10-12: tune with ?spots.
@@ -175,8 +214,22 @@ export const T44C_POSTER = {
         { box: [0.406, 0.625, 0.085, 0.089], label: 'Fuel flow',
           action: 'Fuel Flow', actions: ['Fuel Flow', 'Engine Instruments', 'Instruments/Nacelles'],
           values: { 'Fuel Flow': ['Note'], 'Engine Instruments': ['CHECKED'] } },
+        // NATOPS §2.10.5: each shows its generator's load, and bus voltage while its pushbutton is
+        // pressed, which before a generator is on is the battery voltage Start step 3 checks.
         { box: [0.099, 0.693, 0.09, 0.066], label: 'Generator volt-loadmeters',
           action: 'Generator Voltages', also: ['Generator Load'], values: ['CHECKED'] },
+        // Gauges and lights the normal checklists read and nothing names as a control. Rough,
+        // 2026-10-16: tune with ?spots.
+        { id: 'batt-ammeter', box: [0.057, 0.704, 0.037, 0.065], label: 'Battery ammeter',
+          action: 'Battery Ammeter' },
+        { id: 'prop-amps', box: [0.055, 0.817, 0.042, 0.062], label: 'Prop deice ammeter',
+          action: 'Prop Amps' },
+        { id: 'flap-indicator', box: [0.489, 0.752, 0.039, 0.081], label: 'Flap position indicator',
+          action: 'Flap Position Indicator' },
+        { id: 'gear-lights', box: [0.532, 0.775, 0.025, 0.053], label: 'Gear down lights',
+          action: 'Gear Down Lights' },
+        { id: 'cabin-climb', box: [0.46, 0.861, 0.037, 0.083], label: 'Cabin rate of climb',
+          action: 'Cabin Climb' },
         { box: [0.259, 0.748, 0.152, 0.035], label: 'Lights switches',
           action: 'Lights', values: ['SET', 'OFF'] },
         { box: [0.258, 0.823, 0.012, 0.024], label: 'De-ice cycle',
@@ -272,10 +325,10 @@ export const T44C_POSTER = {
         { box: [0.811, 0.473, 0.048, 0.072], label: 'Crossfeed',
           action: 'Crossfeed', actions: ['Crossfeed', 'Fuel Panel'], values: ['CHECKED/AUTO', 'CLOSED'] },
         { id: 'fuel-qty-left', box: [0.201, 0.261, 0.203, 0.258], label: 'Left fuel quantity',
-          action: 'Fuel Quantity', actions: ['Fuel Quantity', 'Instruments/Nacelles'], also: ['Fuel Quantity Indicators', 'Fuel Quantity (Current Limiters)'],
+          action: 'Fuel Quantity', actions: ['Fuel Quantity', 'Instruments/Nacelles', 'Left Fuel Quantity'], also: ['Fuel Quantity Indicators', 'Fuel Quantity (Current Limiters)'],
           values: ['___ LBS, ___ LBS REQUIRED', 'Checked', 'CHECKED'] },
         { id: 'fuel-qty-right', box: [0.581, 0.264, 0.205, 0.255], label: 'Right fuel quantity',
-          action: 'Fuel Quantity', actions: ['Fuel Quantity', 'Instruments/Nacelles'], also: ['Fuel Quantity Indicators', 'Fuel Quantity (Current Limiters)'],
+          action: 'Fuel Quantity', actions: ['Fuel Quantity', 'Instruments/Nacelles', 'Right Fuel Quantity'], also: ['Fuel Quantity Indicators', 'Fuel Quantity (Current Limiters)'],
           values: ['___ LBS, ___ LBS REQUIRED', 'Checked', 'CHECKED'] },
       ],
     },
@@ -292,9 +345,9 @@ export const T44C_POSTER = {
       spots: [
         // Suction & Pneumatic Pressure names two gauges, so it needs both: each supplies its half.
         { box: [0.06, 0.12, 0.155, 0.37], label: 'Gyro suction',
-          action: 'Suction & Pneumatic Pressure', fills: 'Suction &', values: ['CHECKED'] },
+          action: 'Suction & Pneumatic Pressure', actions: ['Suction & Pneumatic Pressure', 'Gyro Suction'], fills: 'Suction &', values: ['CHECKED'] },
         { box: [0.255, 0.12, 0.155, 0.37], label: 'Pneumatic pressure',
-          action: 'Suction & Pneumatic Pressure', fills: 'Pneumatic Pressure - CHECKED', values: ['CHECKED'] },
+          action: 'Suction & Pneumatic Pressure', actions: ['Suction & Pneumatic Pressure', 'Pneumatic Pressure'], fills: 'Pneumatic Pressure - CHECKED', values: ['CHECKED'] },
         { box: [0.425, 0.13, 0.15, 0.36], label: 'Oxygen supply pressure',
           action: 'Pressurization/Oxygen', fills: 'Oxygen - CHECKED', values: ['CHECKED'] },
       ],
