@@ -58,8 +58,9 @@ live in `src/components/T54A/images/` (imported, not `public/`) and its limits s
 `.t44c-*` classes; its leaderboard is `T-54A`.
 
 **TH-73A (`/th73a/*`, "Advanced - TH-73A", school `TH-73A`)** is `unlisted` since 2026-10-15:
-served by link, hidden from the program menu, the landing page and the other About pages. Three
-tabs, About, EPs/Limits and Briefs; no discussion items yet. There is no TH-73A exam sheet, so
+served by link, hidden from the program menu, the landing page and the other About pages. Four
+tabs, About, EPs/Limits, Discussion Items (494 pages and three syllabi, published 2026-10-17 for
+outside review while the program stays unlisted) and Briefs. There is no TH-73A exam sheet, so
 its EPs are the 37 NATOPS Ch. 12 procedures with asterisked (memory) steps, memory steps only,
 and its limits sheet is the site's own selection from NATOPS Ch. 4 (`TH73A/th73aData.js` says
 which; the page says so too). Same layout as the T-54A: images in `src/components/TH73A/images/`,

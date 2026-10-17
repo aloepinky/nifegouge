@@ -139,5 +139,61 @@ export const SERVER_STATS = {
         "unit": "VT-35"
       }
     ]
+  },
+  "TH-73A": {
+    "weeks": [
+      {
+        "weeks": 39,
+        "label": "Production Weeks",
+        "names": [
+          "COPT-R/CORPS"
+        ]
+      },
+      {
+        "weeks": 37,
+        "label": "Production Weeks",
+        "names": [
+          "SNA"
+        ]
+      },
+      {
+        "weeks": 19,
+        "label": "Production Weeks",
+        "names": [
+          "Tilt-Rotor"
+        ]
+      }
+    ],
+    "syllabi": [
+      {
+        "id": "th73a-coptr",
+        "name": "TH-73A COPT-R/CORPS",
+        "discussItems": 685
+      },
+      {
+        "id": "th73a-sna",
+        "name": "TH-73A SNA",
+        "discussItems": 660
+      },
+      {
+        "id": "th73a-tr",
+        "name": "TH-73A Tilt-Rotor",
+        "discussItems": 346
+      }
+    ],
+    "briefs": [
+      {
+        "aircraft": "TH-73A",
+        "unit": "TW-5"
+      },
+      {
+        "aircraft": "TH-73A",
+        "unit": "TW-5"
+      },
+      {
+        "aircraft": "TH-73A",
+        "unit": "TW-5"
+      }
+    ]
   }
 };
