@@ -133,7 +133,10 @@ function LandingPage() {
         </p>
       </div>
 
+      {/* Two rows, each centred: the three fixed-wing schools, then the Advanced schools
+          that came later (the TH-73A's tile appears once the program is listed). */}
       <div className="landing-buttons">
+        <div className="landing-row">
         <div className="landing-school">
           <div
             className="landing-button"
@@ -170,7 +173,9 @@ function LandingPage() {
           </div>
           <SchoolHighlights id="t44c" platforms={platforms && platforms.t44c} />
         </div>
+        </div>
 
+        <div className="landing-row">
         {/* Unlisted on the live site (programs.js): reached by link only. */}
         {listed(PROGRAMS.find((p) => p.id === 't54a')) && (
           <div className="landing-school">
@@ -200,6 +205,7 @@ function LandingPage() {
             <SchoolHighlights id="th73a" platforms={platforms && platforms.th73a} />
           </div>
         )}
+        </div>
       </div>
     </div>
   );

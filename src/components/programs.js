@@ -28,8 +28,8 @@ export const PROGRAMS = [
   // not the T-44C's word, so neither program's tabs show the other's.
   { id: 't54a', label: 'Advanced', school: 'T-54A', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', briefs: true, discuss: true },
   // The helicopter Advanced program, unlisted since 2026-10-15 while it is tested: its pages are
-  // served, so a link to one works, and the menus and the landing page do not show it. Three
-  // tabs so far (About, EPs/Limits and Briefs); no discussion items yet, so no `discuss` flag.
+  // served, so a link to one works, and the menus and the landing page do not show it. Four
+  // tabs (About, EPs/Limits, Discussion Items and Briefs), all live by link.
   { id: 'th73a', label: 'Advanced', school: 'TH-73A', aircraft: 'TH-73A', home: '/th73a/about', base: '/th73a', briefs: true, unlisted: true, discuss: true },
 ];
 

@@ -3220,13 +3220,26 @@ textarea.incorrect-answer {
     margin: 0;
   }
 
+  /* The tiles sit in rows the page lays out itself (NIFE, Primary, T-44C; then the later
+     Advanced schools), each row centred on its own. */
   .landing-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 60px;
+  }
+
+  .landing-row {
     display: flex;
     gap: 60px;
     justify-content: center;
     /* Top, not centre: a tile with a line fewer of highlights must not sit lower than the rest. */
     align-items: flex-start;
     flex-wrap: wrap;
+  }
+
+  .landing-row:empty {
+    display: none;
   }
 
   /* A school's tile with its highlights under it. */
@@ -3408,8 +3421,10 @@ textarea.incorrect-answer {
 
   /* Responsive design for landing page */
   @media (max-width: 900px) {
-    .landing-buttons {
+    .landing-buttons,
+    .landing-row {
       flex-direction: column;
+      align-items: center;
       gap: 40px;
     }
 
