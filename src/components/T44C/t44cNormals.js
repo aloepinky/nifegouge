@@ -16,8 +16,8 @@
 //                      monitor, as poster wordings (t44cPoster.js). Clicking the control leaves
 //                      the step yellow until each of them is clicked too, in any order, as
 //                      Primary's Engine Start - MONITOR does (epsLimits/EPDrill.js `watchClick`).
-//                      Only what the action names and the poster draws: never the elapsed-time
-//                      clock, PFD flags or audio tones.
+//                      Only what the action names and the poster draws: never PFD flags or audio
+//                      tones.
 //
 // A procedure's `normal` draws its card with the checklist card's black title, so a normal
 // memory procedure added to the EPs is never mistaken for one. `critical` (the asterisk) marks
@@ -156,7 +156,7 @@ const START_RIGHT = {
   rows: [
     { note: 'Brief: "This will be a battery start of the right engine. The left side is clear." (PF) "Right side clear." (PM) Two fingers in the windshield.' },
     memory('sr1', 'Right Starter', 'On, Ignition, rotation', 'PF', {
-      watch: ['RH IGN IND', 'N1'],
+      watch: ['RH IGN IND', 'N1', 'Elapsed Time Clock'],
       action: [
         'PF engages right starter with right hand (Keep hand on starter) while simultaneously starting elapsed time clock with left hand. Ensure RH IGN IND annunciator light is on and call "ignition." Call "rotation" when N1 increases, not when the prop begins to turn outside. Leave right hand anchored on the starter until moving it to the condition lever to introduce fuel.',
         'Starter use is time limited to 40 seconds on and 60 seconds off for two cycles, then 40 seconds on and 30 minutes off.',
@@ -188,7 +188,7 @@ const START_RIGHT = {
       replies: [say('Light-off'), say('N1 stable above 50%')],
     }),
     memory('sr6', 'Starter', 'OFF', 'PF', {
-      watch: ['N1'],
+      watch: ['N1', 'Elapsed Time Clock'],
       action: ['Turn starter off when N1 greater than 50%.', 'Stop elapsed clock.', STARTER_LIMITS],
       replies: [say('OFF')],
     }),
@@ -249,7 +249,7 @@ const START_LEFT = {
   rows: [
     { note: 'Brief: "This will be a generator assisted start of the left engine. Left side\'s clear." (PF) "Right side\'s clear." (PM) One finger in the windshield.' },
     memory('sl11', 'Left Starter', 'On, Ignition, rotation', 'PF', {
-      watch: ['LH IGN IND', 'N1'],
+      watch: ['LH IGN IND', 'N1', 'Elapsed Time Clock'],
       action: ['PF engages left starter with right hand while simultaneously starting elapsed time clock with left hand. Ensure LH IGN IND annunciator light on and call "ignition." Call "rotation" when N1 increases, not when the prop begins to turn outside. Leave right hand anchored on the starter until moving it to the condition lever to introduce fuel.'],
       replies: [act('(start clock)'), say('ON ignition, rotation')],
     }),
@@ -282,7 +282,7 @@ const START_LEFT = {
       replies: [say('Light-off'), say('N1 stable above 50%')],
     }),
     memory('sl18', 'Left Starter', 'OFF', 'PF', {
-      watch: ['N1'],
+      watch: ['N1', 'Elapsed Time Clock'],
       action: ['(50% N1 minimum)', 'Stop elapsed time clock.', STARTER_LIMITS],
       replies: [say('OFF')],
     }),
