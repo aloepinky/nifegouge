@@ -20,6 +20,7 @@ const MOUNTS = [
   { base: '/nife/discuss', school: 'NIFE', syllabusId: 'nife-flight' },
   { base: '/t44c/discuss', school: 'Advanced', syllabusId: 't44c-p8' },
   { base: '/t54a/discuss', school: 'T-54A', syllabusId: 't54a-me' },
+  { base: '/th73a/discuss', school: 'TH-73A', syllabusId: 'th73a-sna' },
 ].filter((m) => shown((PROGRAMS.find((p) => schoolOf(p) === m.school) || {}).discuss));
 
 // First path segments under a mount that are not an item's slug.

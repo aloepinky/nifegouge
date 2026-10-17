@@ -1,7 +1,7 @@
 import React from 'react';
 import AboutPage from './about/AboutPage.js';
 import { aboutTabs } from './about/tabs.js';
-import { EpStats } from './about/SchoolStats.js';
+import { BriefStats, EpStats, SyllabusStats } from './about/SchoolStats.js';
 import { PLATFORMS as ALL_PLATFORMS } from './about/platforms.js';
 import photo from './TH73A/images/th73a.webp';
 
@@ -21,6 +21,24 @@ const content = () => ({
       'The Limits tab is an operating limits sheet to fill in from memory, with the answers a click away when you are stuck. There is no TH-73A limits exam sheet. This is a custom selection from NATOPS Chapter 4.',
     ],
   },
+  '/th73a/discuss': {
+    stats: <SyllabusStats school="TH-73A" />,
+    icon: 'discuss',
+    blurb: 'What to say at the brief table, for every discuss item the syllabi name.',
+    more: [
+      'Every discuss item in the TH-73A syllabi (the SNA MCG, the Tilt-Rotor MCG and the COPT-R/CORPS syllabus) has a page, written from the TH-73A NATOPS, its pocket checklist, the stage FTIs and the RWOP, with a citation on every block so you can check it yourself.',
+      'Find an item through the course flow chart, its event, or the search box. Anyone can fix a page with [edit].',
+    ],
+  },
+  '/th73a/briefs': {
+    stats: <BriefStats school="TH-73A" />,
+    icon: 'brief',
+    blurb: 'The NATOPS brief and the TW-5 mission and formation briefs, for quick reference.',
+    more: [
+      'The NATOPS brief follows the briefing guide in NATOPS Chapter 6, with the words from the TW-5 example brief under each item and the night items from the Night FAM FTI. The Mission and Formation briefs are the TW-5 briefing guides from the Navigation and Formation FTIs, with the FTI’s example wording under each item.',
+      'Open an item to see what to say; first letter mode leaves only the first letter of each word, for practising from memory. Anyone can fix a brief with [edit].',
+    ],
+  },
 });
 
 function TH73AAbout() {
@@ -36,7 +54,7 @@ function TH73AAbout() {
       tabs={aboutTabs('th73a', content())}
       explainer={
         <>
-          <p>This section is for the TH-73A: the emergency procedure memory items and the operating limits you are held to from memory.</p>
+          <p>This section is for the TH-73A: the emergency procedure memory items, the operating limits you are held to from memory, and the briefs.</p>
           <p>
             Everything here is built by students, so it is only as good as what gets contributed. If you
             see something wrong, or want to help write a page, reach out at pinksheetmafia@gmail.com.

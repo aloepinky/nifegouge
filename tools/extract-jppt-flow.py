@@ -293,7 +293,7 @@ STROKE_OPS = {'S', 's', 'B', 'B*', 'b', 'b*'}
 
 
 class Path(object):
-    __slots__ = ('ops', 'pts', 'paint', 'clip', 'lw', 'order')
+    __slots__ = ('ops', 'pts', 'paint', 'clip', 'lw', 'dashed', 'order')
 
     def __init__(self):
         self.ops = []
@@ -301,6 +301,7 @@ class Path(object):
         self.paint = None
         self.clip = False
         self.lw = 0.0
+        self.dashed = False
         self.order = 0
 
     @property
@@ -326,6 +327,8 @@ def interpret(buf):
     """Walk the content stream, returning (paths, runs)."""
     ctm = IDENTITY
     lw = 1.0
+    # Whether the current dash pattern draws a broken line: a legend keys its optional flow to one.
+    dashed = False
     stack = []
     paths, runs = [], []
     cur = Path()
@@ -341,6 +344,7 @@ def interpret(buf):
             cur.paint = paint
             cur.clip = pending_clip
             cur.lw = lw * scale_of(ctm)
+            cur.dashed = dashed
             cur.order = order
             order += 1
             paths.append(cur)
@@ -358,10 +362,10 @@ def interpret(buf):
         op = tok
 
         if op == 'q':
-            stack.append((ctm, lw))
+            stack.append((ctm, lw, dashed))
         elif op == 'Q':
             if stack:
-                ctm, lw = stack.pop()
+                ctm, lw, dashed = stack.pop()
         elif op == 'cm':
             v = nums(6)
             if v:
@@ -370,6 +374,10 @@ def interpret(buf):
             v = nums(1)
             if v:
                 lw = v[0]
+        elif op == 'd':
+            # `[3.96 2.83] 0 d` dashes, `[] 0 d` is solid: the last number is the phase.
+            vals = [o for o in operands if isinstance(o, float)]
+            dashed = any(v > 0 for v in vals[:-1])
         elif op == 'gs':
             pass
 
@@ -466,6 +474,9 @@ SHAPE_SIG = {
     'm c c c c h': 'ellipse',
     'm l l l l l l h': 'hex6',
     'm l l l l l l l l h': 'oct8',
+    # The START and END capsules of the TH-73A's charts: a stadium, two straight sides and two
+    # half-circles, which the figure draws in the flow like a box.
+    'm l c c l c c h': 'capsule',
 }
 
 
@@ -489,6 +500,58 @@ def shape_of(path):
     return name
 
 
+def hull_of(pts_in):
+    pts = sorted(pts_in)
+
+    def cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    def half(seq):
+        out = []
+        for q in seq:
+            while len(out) >= 2 and cross(out[-2], out[-1], q) <= 0:
+                out.pop()
+            out.append(q)
+        return out
+
+    lower = half(pts)
+    upper = half(pts[::-1])
+    return lower[:-1] + upper[:-1]
+
+
+def ring_of(p):
+    """A key drawn as a filled ring rather than a stroked outline.
+
+    The TH-73A legends' Self Study octagon is the outline's fill, nested octagons in one MCG
+    and one long seam-joined subpath in another. Neither matches a stroked signature, so the
+    shape is read off the fill's convex hull (its vertex count, and whether the outline is
+    curved) and the ring's thickness, the hull's inset to the points inside it, stands in for
+    the stroke weight.
+    """
+    if len(p.pts) < 12:
+        return None
+    hull = hull_of(p.pts)
+    corners = []
+    for i, q in enumerate(hull):
+        a = hull[(i + len(hull) - 1) % len(hull)]
+        b = hull[(i + 1) % len(hull)]
+        if dist(a, q) < 0.3:
+            continue
+        turn = (q[0] - a[0]) * (b[1] - q[1]) - (q[1] - a[1]) * (b[0] - q[0])
+        if abs(turn) > 0.2 * dist(a, q) * dist(q, b):
+            corners.append(q)
+    curved = 'c' in p.ops
+    shape = ({4: 'ellipse', 8: 'roundrect'} if curved else {4: 'rect', 6: 'hex6', 8: 'oct8'}).get(len(corners))
+    if shape is None:
+        return None
+    inner = [q for q in p.pts if not any(dist(h, q) < 0.05 for h in hull)]
+    if len(inner) < 3:
+        return None
+    ow = p.bbox[2]
+    iw = max(q[0] for q in inner) - min(q[0] for q in inner)
+    return {'shape': shape, 'lw': (ow - iw) / 2}
+
+
 def classify(paths):
     nodes, arrows, connectors, other = [], [], [], []
     for p in paths:
@@ -498,6 +561,15 @@ def classify(paths):
         if p.paint in FILL_OPS and max(w, h) <= ARROWHEAD_MAX:
             arrows.append(p)
             continue
+        if p.paint in FILL_OPS:
+            ring = ring_of(p)
+            if ring and 10.0 <= w <= 60.0 and 9.5 <= h <= 25.0:
+                q = Path()
+                q.ops, q.pts, q.paint, q.clip, q.lw, q.order = (
+                    list(p.ops), list(p.pts), p.paint, p.clip, ring['lw'], p.order)
+                q.dashed = p.dashed
+                nodes.append((q, ring['shape']))
+                continue
         if p.paint in STROKE_OPS:
             shape = shape_of(p)
             if shape and 10.0 <= w <= 60.0 and 10.0 <= h <= 25.0:
@@ -508,7 +580,7 @@ def classify(paths):
                 continue
             # A connector that hops over another with a little arc: the arc's two ends sit
             # on the line and its midpoint off it. Flatten the hop and keep the line.
-            if set(p.ops) <= {'m', 'l', 'c'} and 'l' in p.ops and len(p.pts) >= 3:
+            if set(p.ops) <= {'m', 'l', 'c', 'h'} and 'l' in p.ops and len(p.pts) >= 3:
                 pts = straighten(p.pts)
                 if len(pts) >= 2:
                     q = Path()
@@ -581,11 +653,29 @@ CATEGORY_SLUG = {
     'Flight Support': 'support',
     'P/P Exam': 'exam',
     'Flow Connector': 'jump',
+    # The TH-73A's MCGs key their legend inside the shapes: a thin octagon is a CAI lesson and
+    # a thick one an exam; Self Study is a thin octagon too, so a box on the chart can only
+    # ever read as CAI (the upper of the two in the legend); MIL is the thin hexagon Delta
+    # keys as Flt Support.
+    'Ground Trng': 'ground',
+    'CAI': 'lesson',
+    'Exam': 'test',
+    'Self Study': 'study',
+    'MIL': 'support',
+}
+# Captions keyed to something other than a box: a dashed line for the optional flow, and a
+# filled capsule for the START and END markers. Neither keys a box category, but both are
+# part of the legend the publication prints, and are drawn in the chart's legend as such.
+SAMPLE_SLUG = {
+    'Opt Flow': 'opt',
+    'Alternate Flow': 'opt',
+    'Start / End': 'terminal',
+    'Start/End': 'terminal',
 }
 # The same, with the spaces taken out and folded to lower case, which is the shape a label
 # reaches us in: attach_labels joins a box's text runs without spaces.
 CAPTION_INSIDE = {t.replace(' ', '').lower(): t for t in CATEGORY_SLUG}
-LEGEND_TEXTS = set(CATEGORY_SLUG)
+LEGEND_TEXTS = set(CATEGORY_SLUG) | set(SAMPLE_SLUG)
 
 
 def inside(bbox, x, y, pad=0.0):
@@ -607,17 +697,20 @@ def attach_labels(nodes, runs):
     return labelled, leftover
 
 
-def derive_categories(labelled, leftover):
+def derive_categories(labelled, leftover, samples=()):
     """Pair each unlabelled key shape with its legend caption, giving (shape, weight) -> kind.
 
     This is what makes the categories evidence rather than guesswork: the publication draws
     its own key, so the mapping comes out of the page instead of out of the event ids.
+    `samples` are the paths that are not boxes (the connectors and everything else drawn),
+    among which a caption of SAMPLE_SLUG finds its key; the third value returned lists the
+    samples taken as keys, so the caller can keep them out of the chart's connectors.
     """
     captions, used = [], set()
     for i, r in enumerate(leftover):
         t = r.text.strip()
         if t in LEGEND_TEXTS:
-            captions.append((r.y, t, r.x))
+            captions.append((r.y, t, r.x, None))
             used.add(i)
     # A caption printed on two lines ("Flow" over "Connector"): the run directly beneath,
     # left-aligned with it.
@@ -627,16 +720,19 @@ def derive_categories(labelled, leftover):
         for j, q in enumerate(leftover):
             if j == i or j in used or i in used:
                 continue
-            if abs(q.x - r.x) > 2.0 or r.y - q.y <= 0 or r.y - q.y > 12.0:
+            # Left-aligned within a hair, or centred one over the other (the TH-73A's "Flow"
+            # over "Connector"); only a pair that reads as a known caption is taken either way.
+            if abs(q.x - r.x) > 12.0 or r.y - q.y <= 0 or r.y - q.y > 12.0:
                 continue
             t = re.sub(r'\s+', ' ', '%s %s' % (r.text.strip(), q.text.strip())).strip()
             if t not in LEGEND_TEXTS:
                 continue
-            captions.append(((r.y + q.y) / 2.0, t, r.x))
+            # The two lines are kept, so the legend can print the caption as the publication did.
+            captions.append(((r.y + q.y) / 2.0, t, min(r.x, q.x), [r.text.strip(), q.text.strip()]))
             used.add(i)
             used.add(j)
     keys = [n for n in labelled if not n['label']]
-    mapping, pairs = {}, []
+    mapping, pairs, taken = {}, [], []
 
     # A legend may print its caption INSIDE the key instead of beside it - the T-44C E-2D
     # chart does, while Delta and the T-44C Advanced chart set theirs alongside. Such a key
@@ -649,26 +745,66 @@ def derive_categories(labelled, leftover):
         if text is None:
             continue
         n['is_legend_key'] = True
+        n['caption_inside'] = True
         kind = CATEGORY_SLUG[text]
         mapping[key_of(n['shape'], n['path'].lw)] = kind
-        pairs.append((text, kind, n))
+        pairs.append((text, kind, n, None))
 
-    for y, text, x in captions:
+    for y, text, x, lines in captions:
         best, bestd = None, 1e9
-        for k in keys:
+        if text in SAMPLE_SLUG:
+            kind = SAMPLE_SLUG[text]
+            # The optional-flow key is a short dashed line; the START/END key a filled capsule
+            # (curved, which tells it from the white rectangle printed behind a caption).
+            if kind == 'opt':
+                wanted = lambda p: p.dashed and p.paint in STROKE_OPS and len(p.pts) == 2
+            else:
+                wanted = lambda p: p.paint in FILL_OPS and 'c' in p.ops and p.bbox[2] >= 10.0 and p.bbox[3] >= 6.0
+            for p in samples:
+                if not wanted(p):
+                    continue
+                kx, ky, kw, kh = p.bbox
+                d = abs((ky + kh / 2.0) - y)
+                if kx > x or d >= bestd:
+                    continue
+                best, bestd = p, d
+            if best is None or bestd > 12.0:
+                print('  WARNING: legend caption %r found no key shape' % text, file=sys.stderr)
+                continue
+            bb = best.bbox
+            # The key and anything drawn over it (a capsule is filled, then stroked).
+            for p in samples:
+                if all(abs(v - bb[k]) <= 0.5 for k, v in enumerate(p.bbox)):
+                    taken.append(p)
+            pairs.append((text, kind, {'path': best, 'shape': 'line' if kind == 'opt' else 'capsule'}, lines))
+            continue
+        # The Flow Connector key is a circle with a letter in it on the TH-73A's charts, so for
+        # that caption a lettered circle is a key too.
+        pool = [n for n in labelled if not n['label'] or re.match(r'^[A-Z]$', n['label'])] if text == 'Flow Connector' else keys
+        # The key is the shape on the caption's row immediately to its left: nearest by the
+        # gap to the caption, then by height. The Tilt-Rotor MCG's chart connectors B and D
+        # share the legend circle's row, and B's height is the nearer.
+        best_gap = 1e9
+        for k in pool:
             kx, ky, kw, kh = k['path'].bbox
             d = abs((ky + kh / 2.0) - y)
-            if kx > x:            # the key sits left of its caption
+            if kx > x or d > 12.0:
                 continue
-            if d < bestd:
-                best, bestd = k, d
-        if best is None or bestd > 12.0:
+            gap = x - (kx + kw)
+            if gap < best_gap - 2.0 or (abs(gap - best_gap) <= 2.0 and d < bestd):
+                best, bestd, best_gap = k, d, gap
+        if best is None:
             print('  WARNING: legend caption %r found no key shape' % text, file=sys.stderr)
             continue
         kind = CATEGORY_SLUG[text]
+        if best['label']:
+            best['is_legend_key'] = True
+            # A lettered circle keeps its letter, which the legend prints inside it.
+            if re.match(r'^[A-Z]$', best['label']):
+                best['letter'] = best['label']
         mapping[key_of(best['shape'], best['path'].lw)] = kind
-        pairs.append((text, kind, best))
-    return mapping, pairs
+        pairs.append((text, kind, best, lines))
+    return mapping, pairs, taken
 
 
 def category_mapper(mapping, pairs, labelled):
@@ -681,7 +817,7 @@ def category_mapper(mapping, pairs, labelled):
     that shape in order, thin to thick: the publication lists the lighter stroke first.
     """
     by_shape = {}
-    for text, kind, key in pairs:
+    for text, kind, key, _lines in pairs:
         kx, ky, kw, kh = key['path'].bbox
         by_shape.setdefault(key['shape'], []).append({
             'text': text, 'kind': kind, 'y': ky + kh / 2.0,
@@ -707,9 +843,19 @@ def category_mapper(mapping, pairs, labelled):
         if shape not in ranked:
             bands = [b for b in BANDS if b in bands_of.get(shape, set())]
             ranked[shape] = {}
-            for i, b in enumerate(bands):
-                ranked[shape][b] = entries[min(i, len(entries) - 1)]['kind']
-            names = ' and '.join('"%s"' % e['text'] for e in entries)
+            # A caption whose shape and weight no other caption shares keys its own band
+            # outright, and only the captions drawn alike (the TH-73A's CAI and Self Study,
+            # both the thin octagon) are sorted into the bands left over, upper caption first.
+            unique = [e for e in entries if sum(1 for o in entries if o['key'] == e['key']) == 1]
+            shared = [e for e in entries if e not in unique]
+            free = [b for b in bands if not any(e['key'][1] == b for e in unique)] if shared else bands
+            pool = shared if shared else entries
+            if shared:
+                for e in unique:
+                    ranked[shape][e['key'][1]] = e['kind']
+            for i, b in enumerate(free):
+                ranked[shape][b] = pool[min(i, len(pool) - 1)]['kind']
+            names = ' and '.join('"%s"' % e['text'] for e in pool)
             print('  WARNING: the legend does not tell %s apart by stroke weight; the '
                   "chart's %s were sorted by weight, lightest first"
                   % (names, 'ellipses' if shape == 'ellipse' else '%s boxes' % shape),
@@ -723,7 +869,8 @@ def category_mapper(mapping, pairs, labelled):
 # Label -> event ids
 # ---------------------------------------------------------------------------------------
 
-RANGE_RE = re.compile(r'^([A-Z]+)(\d+)([A-Z]?)(?:-(\d+))?$')
+# A student letter may follow the range too: the TH-73A's charts print "NAV0101-2A".
+RANGE_RE = re.compile(r'^([A-Z]+)(\d+)([A-Z]?)(?:-(\d+)[A-Z]?)?$')
 
 
 def expand(label):
@@ -1169,14 +1316,22 @@ def render(nodes, legend, edges, viewbox, source):
     L.append('export const LEGEND = [')
     for k in legend:
         x, y, w, h = k['bbox']
-        L.append("  { kind: '%s', label: '%s', shape: '%s', x: %s, y: %s, w: %s, h: %s },"
-                 % (k['kind'], k['label'], k['shape'], num(x), num(flip(y, h)), num(w), num(h)))
+        row = "  { kind: '%s', label: '%s', shape: '%s', x: %s, y: %s, w: %s, h: %s" % (
+            k['kind'], k['label'], k['shape'], num(x), num(flip(y, h)), num(w), num(h))
+        if k.get('inside'):
+            row += ', inside: true'
+        if k.get('letter'):
+            row += ", letter: '%s'" % k['letter']
+        if k.get('lines'):
+            row += ', lines: [%s]' % ', '.join("'%s'" % t for t in k['lines'])
+        L.append(row + ' },')
     L.append('];')
     L.append('')
     L.append('export const EDGES = [')
     for e in edges:
         pts = ', '.join('[%s, %s]' % (num(px), num(flip(py, 0))) for px, py in e['points'])
-        L.append("  { from: '%s', to: '%s', points: [%s] }," % (e['from'], e['to'], pts))
+        L.append("  { from: '%s', to: '%s', points: [%s]%s }," % (
+            e['from'], e['to'], pts, ', dashed: true' if e.get('dashed') else ''))
     L.append('];')
     L.append('')
     return '\n'.join(L)
@@ -1231,24 +1386,39 @@ def main():
           % (len(nodes_raw), len(arrows), len(connectors), len(other)), file=sys.stderr)
 
     labelled, leftover = attach_labels(nodes_raw, runs)
-    mapping, pairs = derive_categories(labelled, leftover)
+    mapping, pairs, taken = derive_categories(labelled, leftover, connectors + other)
+    connectors = [c for c in connectors if c not in taken]
     print('  legend: %d of 8 categories keyed' % len(pairs), file=sys.stderr)
-    for text, kind, key in sorted(pairs, key=lambda p: p[0]):
+    for text, kind, key, _lines in sorted(pairs, key=lambda p: p[0]):
         print('    %-16s %-10s lw %.3f -> %s'
               % (text, key['shape'], key['path'].lw, kind), file=sys.stderr)
 
     legend = []
-    for text, kind, key in pairs:
+    for text, kind, key, lines in pairs:
         legend.append({'kind': kind, 'label': text, 'shape': key['shape'],
-                       'bbox': key['path'].bbox})
+                       'bbox': key['path'].bbox, 'inside': bool(key.get('caption_inside')),
+                       'letter': key.get('letter'), 'lines': lines})
 
     known = syllabus_event_ids()
     kind_for = category_mapper(mapping, pairs, labelled)
     nodes, jump_seen, tally, missing = [], {}, {}, []
+    terminals = {}
     for n in labelled:
         if not n['label'] or n.get('is_legend_key'):
             continue                                    # a legend key, handled above
-        kind = kind_for(n['shape'], n['path'].lw)
+        # The START and END capsules are the figure's own notation, not events: drawn, and
+        # the arrows out of START and into END read like any other, but they open nothing.
+        term = re.match(r'^(START|END)(TRAINING)?$', n['label'])
+        if term:
+            terminals[term.group(1)] = terminals.get(term.group(1), 0) + 1
+            nodes.append({
+                'id': '%s-%d' % (term.group(1).lower(), terminals[term.group(1)]),
+                'label': '%s %s' % term.groups() if term.group(2) else term.group(1),
+                'kind': 'terminal', 'bbox': n['path'].bbox})
+            continue
+        # A box stroked as a capsule but labelled as an event (the SNA MCG's NGT3001-2A, a
+        # rounded box with two straight sides) is the rounded box it looks like.
+        kind = kind_for('roundrect' if n['shape'] == 'capsule' else n['shape'], n['path'].lw)
         if kind is None:
             print('  WARNING: %s (%s, lw %.3f) matches no legend key'
                   % (n['label'], n['shape'], n['path'].lw), file=sys.stderr)
@@ -1265,6 +1435,16 @@ def main():
             # A box may carry a footnote marker the publication prints beside it, as the T-44C
             # Advanced chart's `T0101-2*` does. The label keeps it; the ids are read without it.
             spanned = expand(n['label'].rstrip('*†‡'))
+            # A caption printed hard against a box ("DAY4390A Check Flight") can start inside
+            # it and join its label. The event token is then the label, and the rest is the
+            # caption.
+            if not spanned:
+                m = re.match(r'^([A-Z]{1,3}\d{4}[A-Z]?(?:-\d{1,2}[A-Z]?)?)[A-Za-z-]', n['label'])
+                if m and expand(m.group(1)):
+                    print('  WARNING: box %r read as %s; the rest is a caption printed beside it'
+                          % (n['label'], m.group(1)), file=sys.stderr)
+                    rec['label'] = rec['id'] = m.group(1)
+                    spanned = expand(m.group(1))
             if not spanned:
                 print('  WARNING: cannot expand label %r' % n['label'], file=sys.stderr)
             # A label spans the block's NUMBERING, not a run of events that all exist. Keep the
@@ -1300,6 +1480,21 @@ def main():
     for r, src, dst in unresolved:
         print('  WARNING: unresolved connector %s -> %s  %s' % (
             src, dst, ' '.join('(%.1f,%.1f)' % p for p in r['pts'])), file=sys.stderr)
+
+    # An arrow that runs mostly along dashed lines is the optional flow the legend keys as
+    # "Opt Flow", and is drawn dashed.
+    dashed_lines = [p for p in connectors if p.dashed]
+    if dashed_lines:
+        for e in edges:
+            total = on = 0.0
+            for a, q in zip(e['points'], e['points'][1:]):
+                length = dist(a, q)
+                total += length
+                mid = ((a[0] + q[0]) / 2, (a[1] + q[1]) / 2)
+                if any(point_on_path(mid, p.pts, 1.0) for p in dashed_lines):
+                    on += length
+            if total > 0 and on * 2 >= total:
+                e['dashed'] = True
 
     # A jump circle is an entrance or an exit depending on which way its arrows run. Derived,
     # not asserted: which circles pair with which is the publication's business, and this file

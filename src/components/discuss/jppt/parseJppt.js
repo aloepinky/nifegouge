@@ -129,8 +129,9 @@ export async function parseJppt(data, onProgress = () => {}, { matcher = null, p
   try {
     const traced = extractFlow(contents, { knownEventIds: known });
     warnings.push(...traced.warnings);
-    const { VIEWBOX, NODES, LEGEND, EDGES } = traced;
-    flow = { VIEWBOX, NODES, LEGEND, EDGES };
+    const { VIEWBOX, NODES, LEGEND, EDGES, sheets } = traced;
+    // `sheets` is there for a chart printed over several pages: its bands and captions.
+    flow = { VIEWBOX, NODES, LEGEND, EDGES, ...(sheets ? { sheets } : {}) };
     categories = traced.categories;
     corePage = traced.page;
     // A chart continued over several pages is cited from its first page to its last.
@@ -171,7 +172,9 @@ export async function parseJppt(data, onProgress = () => {}, { matcher = null, p
   const courseLength = extractCourseLength(textPages);
   if (!courseLength) warnings.push('No course length table was found (Course Data, Course Length).');
 
-  const opening = textPages.slice(0, 3).flat().map((l) => l.text).join(' ');
+  // The first match wins, so reading on past the title page changes nothing for a publication
+  // that names its aircraft there; the TH-73A SNA MCG first does on its Course Data page.
+  const opening = textPages.slice(0, 24).flat().map((l) => l.text).join(' ');
   const doc = {
     version: DOC_VERSION,
     ...guessProgram(opening),

@@ -695,6 +695,7 @@ const NATOPS_LOC = {
   NATOPS: /^Ch\. [A-Z]?\d+(-\d+)? — \S/,
   'T-44C NATOPS': /^§\d+(\.\d+)+ — \S/,
   'T-54A NATOPS': /^§\d+(\.\d+)+ — \S/,
+  'TH-73A NATOPS': /^§\d+(\.\d+)+ — \S/,
   // The general NATOPS manuals number every section the same way (§19.8 — Holding, p. 19-9).
   'NATOPS Instrument Flight Manual': /^§\d+(\.\d+)+ — \S/,
   'Aircraft Signals NATOPS': /^§\d+(\.\d+)+ — \S/,
@@ -714,6 +715,7 @@ export function natopsCitations(item) {
 const AIRCRAFT_WORKS = {
   'T-44C': /^(T-44C\b|ME FTI$|ADV ME IFG$|ADV ME MCG$|E-2D MCG$)/,
   'T-54A': /^T-54A\b/,
+  'TH-73A': /^TH-73A\b/,
 };
 
 export function wrongAircraftWork(item) {

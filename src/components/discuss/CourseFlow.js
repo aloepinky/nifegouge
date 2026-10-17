@@ -25,6 +25,12 @@ export const SHAPE = {
   cai: 'oct8',
   support: 'hex6',
   exam: 'ellipse',
+  // The TH-73A's MCGs: a CAI lesson is a thin octagon and an exam a thick one.
+  lesson: 'oct8',
+  test: 'oct8',
+  // Self Study is the thin octagon too; the START and END markers are filled capsules.
+  study: 'oct8',
+  terminal: 'capsule',
   jump: 'circle',
 };
 
@@ -55,6 +61,8 @@ export function Shape({ kind, x, y, w, h, className }) {
         <rect className={className} x={x} y={y} width={w} height={h}
               rx={round(w * ROUND_RX)} ry={round(h * ROUND_RY)} />
       );
+    case 'capsule':
+      return <rect className={className} x={x} y={y} width={w} height={h} rx={round(h / 2)} ry={round(h / 2)} />;
     case 'hex6':
       return (
         <polygon className={className} points={poly([
@@ -125,7 +133,7 @@ function buildChrome(s, flow) {
   const edgeEls = (flow.EDGES || []).map((e, i) => (
     <polyline
       key={`${e.from}>${e.to}>${i}`}
-      className="discuss-flow-edge"
+      className={`discuss-flow-edge${e.dashed ? ' discuss-flow-edge--opt' : ''}`}
       points={poly(e.points)}
       markerEnd="url(#discuss-flow-arrow)"
     />
@@ -142,13 +150,16 @@ function buildChrome(s, flow) {
       // Three states, and they must stay distinguishable: a block that carries no discuss items
       // is context and reads as complete; a block that carries them but has no page yet is a
       // gap and reads as one. Collapsing the two would make the coverage map lie.
+      // The START and END markers are the figure's own notation: drawn as the publication
+      // fills them, named for what they are, and never a link or a gap.
+      const terminal = n.kind === 'terminal';
       const cls = [
         'discuss-flow-node',
         `discuss-flow-node--${n.kind}`,
-        !to ? 'discuss-flow-node--inert' : '',
+        !to && !terminal ? 'discuss-flow-node--inert' : '',
         to && writtenCount(s, n) === 0 ? 'discuss-flow-node--thin' : '',
       ].join(' ');
-      const text = describe(s, n);
+      const text = terminal ? `${n.label === 'END' ? 'End' : 'Start'} of the course flow` : describe(s, n);
       const body = (
         <>
           {/* <title> is the hover tooltip; aria-label is the accessible name. Both are needed —
@@ -185,6 +196,14 @@ const LEGEND_CAPTION = 62;
 // whole legend stacks every caption of the narrower column on top of the wider one's.
 const LEGEND_COLUMN = 24;
 
+// A caption the publication printed on two lines is drawn on two, and reaches only as far as
+// its longer line; the estimate is the legend type's width per character.
+const LEGEND_CHAR = 3.4;
+const captionWidth = (k) => (k.lines ? Math.max(...k.lines.map((l) => l.length)) * LEGEND_CHAR + 2 : LEGEND_CAPTION);
+
+// Where a column's captions start: beside the column's widest key, unless a key is set at the
+// column's left edge and is narrower than the column (the TH-73A's lettered Flow Connector
+// circle), when its caption sits beside the key itself, as the publication sets it.
 function legendColumns(legend) {
   const columns = [];
   [...legend].sort((a, b) => a.x - b.x).forEach((k) => {
@@ -192,17 +211,20 @@ function legendColumns(legend) {
     if (open && k.x - open.x <= LEGEND_COLUMN) open.keys.push(k);
     else columns.push({ x: k.x, keys: [k] });
   });
-  return columns.map((c) => ({
-    keys: c.keys,
-    captionX: round(Math.max(...c.keys.map((k) => k.x + k.w)) + LEGEND_GAP),
-  }));
+  return columns.map((c) => {
+    const right = Math.max(...c.keys.map((k) => k.x + k.w));
+    return {
+      keys: c.keys,
+      captionX: (k) => round((Math.abs(k.x - c.x) <= 1 && k.x + k.w < right - LEGEND_GAP ? k.x + k.w : right) + LEGEND_GAP),
+    };
+  });
 }
 
 // How far right the legend reaches. A column whose captions are printed inside the keys needs
 // no room beside them, which is what keeps the frame off the rest of the chart.
-const legendRight = (legend) => Math.max(...legendColumns(legend).map((c) => (
-  c.keys.some((k) => !k.inside) ? c.captionX + LEGEND_CAPTION : Math.max(...c.keys.map((k) => k.x + k.w))
-)));
+const legendRight = (legend) => Math.max(...legendColumns(legend).flatMap((c) => c.keys.map((k) => (
+  k.inside ? k.x + k.w : c.captionX(k) + captionWidth(k)
+))));
 
 // A label centred in its shape, on as many lines as it takes (`fitLines` decides where it
 // breaks). The first line is lifted by half the block's height so the whole of it is centred
@@ -247,20 +269,36 @@ export function Legend({ legend }) {
     <g className="discuss-flow-legend">
       <rect className="discuss-flow-legend-frame"
             x={round(x)} y={round(y)} width={round(legendRight(legend) - x)} height={round(bottom - y)} />
-      {legendColumns(legend).flatMap((c) => c.keys.map((k) => (
-        <g key={k.kind}>
-          <Shape kind={k.kind} x={k.x} y={k.y} w={k.w} h={k.h}
-                 className={`discuss-flow-node discuss-flow-node--${k.kind}`} />
-          {k.inside ? (
-            <Label text={k.label} w={k.w} shape={k.shape}
-                   x={round(k.x + k.w / 2)} y={round(k.y + k.h / 2)} />
-          ) : (
-            <text className="discuss-flow-legend-label" x={c.captionX} y={round(k.y + k.h / 2)}>
-              {k.label}
-            </text>
-          )}
-        </g>
-      )))}
+      {legendColumns(legend).flatMap((c) => c.keys.map((k) => {
+        const cx = c.captionX(k);
+        const cy = round(k.y + k.h / 2);
+        return (
+          <g key={`${k.kind}:${k.label}`}>
+            {k.shape === 'line' ? (
+              <line className="discuss-flow-legend-line" x1={k.x} y1={cy} x2={round(k.x + k.w)} y2={cy} />
+            ) : (
+              <Shape kind={k.kind} x={k.x} y={k.y} w={k.w} h={k.h}
+                     className={`discuss-flow-node discuss-flow-node--${k.kind}`} />
+            )}
+            {k.letter && (
+              <text className="discuss-flow-letter" x={round(k.x + k.w / 2)} y={cy}>{k.letter}</text>
+            )}
+            {k.inside && (
+              <Label text={k.label} w={k.w} shape={k.shape} x={round(k.x + k.w / 2)} y={cy} />
+            )}
+            {!k.inside && k.lines && (
+              <text className="discuss-flow-legend-label" x={cx} y={cy}>
+                {k.lines.map((line, i) => (
+                  <tspan key={line} x={cx} dy={i === 0 ? `${-((k.lines.length - 1) / 2)}em` : '1em'}>{line}</tspan>
+                ))}
+              </text>
+            )}
+            {!k.inside && !k.lines && (
+              <text className="discuss-flow-legend-label" x={cx} y={cy}>{k.label}</text>
+            )}
+          </g>
+        );
+      }))}
     </g>
   );
 }
@@ -291,9 +329,16 @@ export function ArrowDefs() {
 // both.
 function CourseFlow({ flow: flowProp = null, label = null, titleId = 'discuss-flow-title' }) {
   const s = useSyllabus();
-  const flow = flowProp || s.flow;
+  const whole = flowProp || s.flow;
   const [letter, setLetter] = useState(null);
+  // A chart the publication prints over several sheets is shown one sheet at a time, in the
+  // sheet's own frame with the publication's caption under it, the way a figure with several
+  // images is shown on an item page; a chart on one sheet is shown as it is.
+  const sheets = !label && whole && whole.sheets && whole.sheets.length > 1 ? whole.sheets : null;
+  const [at, setAt] = useState(0);
+  const flow = useMemo(() => (sheets ? sheetFlow(whole, sheets[Math.min(at, sheets.length - 1)]) : whole), [whole, sheets, at]);
   const chrome = useMemo(() => buildChrome(s, flow || {}), [s, flow]);
+  const step = (d) => setAt((i) => (i + d + sheets.length) % sheets.length);
 
   const toggle = useCallback((next) => {
     setLetter((cur) => (cur === next ? null : next));
@@ -308,7 +353,7 @@ function CourseFlow({ flow: flowProp = null, label = null, titleId = 'discuss-fl
     }
   }, [toggle]);
 
-  if (!flow || !flow.NODES || !flow.NODES.length) return null;
+  if (!whole || !whole.NODES || !whole.NODES.length) return null;
 
   const viewBox = fitLegend(flow.VIEWBOX, flow.LEGEND);
   // A community chart is a smaller figure than the course flow, and is drawn to the same scale
@@ -318,8 +363,8 @@ function CourseFlow({ flow: flowProp = null, label = null, titleId = 'discuss-fl
   const mine = Number(viewBox.split(/\s+/)[2]);
   const scaled = label && wide > 0 && mine > 0 && mine < wide;
 
-  return (
-    <div className="discuss-flow">
+  const sheet = sheets ? sheets[Math.min(at, sheets.length - 1)] : null;
+  const svg = (
       <svg
         className={`discuss-flow-svg${scaled ? ' discuss-flow-svg--community' : ''}`}
         style={scaled ? { '--flow-scale': round(mine / wide) } : undefined}
@@ -363,6 +408,31 @@ function CourseFlow({ flow: flowProp = null, label = null, titleId = 'discuss-fl
 
         {chrome.legendEls}
       </svg>
+  );
+
+  return (
+    <div className={`discuss-flow${sheet ? ' discuss-flow--sheets' : ''}`}>
+      {sheet ? (
+        <div
+          className="discuss-flow-sheet"
+          role="group"
+          aria-roledescription="carousel"
+          aria-label="Course flow sheets"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+          }}
+        >
+          <div className="discuss-flow-sheet-view">{svg}</div>
+          <button type="button" className="discuss-flow-sheet-arrow discuss-flow-sheet-arrow--prev" onClick={() => step(-1)} aria-label="Previous sheet">‹</button>
+          <button type="button" className="discuss-flow-sheet-arrow discuss-flow-sheet-arrow--next" onClick={() => step(1)} aria-label="Next sheet">›</button>
+          <div className="discuss-flow-sheet-foot" aria-live="polite">
+            <span className="discuss-flow-sheet-caption">{sheet.caption}</span>
+            <span className="discuss-flow-sheet-count">{at + 1} / {sheets.length}</span>
+          </div>
+        </div>
+      ) : svg}
 
       {/* The publication the chart was traced from, and nothing else. A legend explaining that
           links are links and faded boxes are not told the reader what the chart had already
@@ -370,6 +440,23 @@ function CourseFlow({ flow: flowProp = null, label = null, titleId = 'discuss-fl
       {!label && s.source && <p className="discuss-flow-source">{s.source}.</p>}
     </div>
   );
+}
+
+// One sheet of a stacked chart: the boxes, arrows and legend keys that lie in its band, framed
+// by the band. Arrows never cross a sheet (the connectors pair across them), so an arrow is
+// in the band when its first point is.
+function sheetFlow(flow, sheet) {
+  const [vx, , vw] = (flow.VIEWBOX || '0 0 0 0').split(/\s+/).map(Number);
+  const lo = sheet.y;
+  const hi = sheet.y + sheet.h;
+  const inBand = (y) => y >= lo - 0.5 && y <= hi + 0.5;
+  return {
+    ...flow,
+    VIEWBOX: [vx, sheet.y, vw, sheet.h].map(round).join(' '),
+    NODES: (flow.NODES || []).filter((n) => inBand(n.y + n.h / 2)),
+    EDGES: (flow.EDGES || []).filter((e) => e.points && e.points.length && inBand(e.points[0][1])),
+    LEGEND: (flow.LEGEND || []).filter((k) => inBand(k.y + k.h / 2)),
+  };
 }
 
 export default CourseFlow;

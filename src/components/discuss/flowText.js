@@ -19,7 +19,9 @@ const CHAR_W = 6.6 * 0.5;
 // How much of a shape a line of text can use is not its full width: an ellipse curves away
 // from its own bounding box and a hexagon's ends are cut off, which is why the publication
 // wraps "Flight Support" inside a hexagon wider than the box holding "Check Flight".
-const USABLE = { ellipse: 0.78, hex6: 0.7, oct8: 0.78, circle: 0.7 };
+// A capsule's rounded ends take a half-circle each, so a box of the START/END capsules'
+// proportions keeps about three fifths of its width for the words.
+const USABLE = { ellipse: 0.78, hex6: 0.7, oct8: 0.78, circle: 0.7, capsule: 0.62 };
 
 // Break where the two halves come out most even, which is how the publication breaks its own
 // two-line labels, then break again where a half is still too long. A SINGLE WORD is never

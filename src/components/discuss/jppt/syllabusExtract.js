@@ -21,12 +21,15 @@ import { expand, blockOf } from './flowExtract';
 
 const EVENT_ID = /^[A-Z]{1,3}\d{4}[A-Z]?$/;
 const BLOCK_ID = /^[A-Z]{1,3}\d{2}$/;
-const EVENT_TOKEN = /\b([A-Z]{1,3}\d{4})[A-Z]?(?:-(\d{1,2}))?\b/g;
+// The TH-73A's MCGs put the student letter after a range too: "NAV0101-2A".
+const EVENT_TOKEN = /\b([A-Z]{1,3}\d{4})[A-Z]?(?:-(\d{1,2})[A-Z]?)?\b/g;
 const THROUGH = /\b([A-Z]{1,3})(\d{4})[A-Z]?\s+through\s+\1(\d{4})\b/g;
 
 // Running heads and feet: the instruction number, its date, the page number, blank pages.
 const FURNITURE = [
-  /^CNATRAINST\s+\S+(?:\s+CH-\d+)?$/,
+  /^(?:CNATRAINST|CNATRAMCG)\s+\S+(?:\s+CH-\d+)?$/,
+  // The COPT-R/CORPS syllabus is a wing notice, headed "TH-73A COPT-R/CORPS ADV (SGTO) 2.0".
+  /\(SGTO\)\s+[\d.]+$/,
   /^\d{1,2}\s+[A-Z][a-z]{2}\s+\d{4}$/,
   /^[IVX]+-\d+$/,
   /^BLANK PAGE$/i,
@@ -39,6 +42,9 @@ const SECTION = /^(\d)\.\s*(Prerequisites|Events|Syllabus Notes|Special Syllabus
 const MEDIA_WORDS = new Set([
   'Class', 'Sqdn', 'Lect', 'CAI', 'MIL', 'Offline', 'UTD', 'OFT', 'VTD', 'T-6B', 'UTD/ER',
   'CAI/MIL', 'CAI/MIL/', '/Lect', 'Lect/CAI', 'Flt', 'Sim',
+  // The TH-73A's MCGs: flight training devices, the aircraft, the part-task trainer, an issue
+  // event, exams and the NITE lab.
+  'FTD-6', 'FTD-7', 'TH-73A', 'PTT', 'CAI/PTT/', 'Issue', 'Exam', 'Lab', 'Sqdn/',
 ]);
 
 const isFurniture = (text) => FURNITURE.some((re) => re.test(text));
@@ -52,6 +58,12 @@ let PROTECTED = [];
 // whether a segment is already a wording some page answers to.
 let MATCHER = null;
 const matchDetail = (label) => (MATCHER ? MATCHER.matchDetail(label) : { target: null, how: null });
+
+// "DAY FAMILIARIZATION TRAINING" as a chapter title prints it: "Day Familiarization Training".
+function titleCase(text) {
+  return text.toLowerCase().replace(/(^|[\s/(-])([a-z])/g, (m, pre, ch) => pre + ch.toUpperCase())
+    .replace(/\b(And|Of|The|To)\b/g, (w) => w.toLowerCase());
+}
 
 function joinLines(lines) {
   return lines.reduce((out, t) => {
@@ -87,8 +99,16 @@ function splitItems(sentence) {
   text = text.replace(/^discuss\s+/i, '');
   // A lead-in before the list: "Discussion items will be at the discretion of the squadron.
   // Some examples may include inflight split, ..., etc." Keep the last sentence, less its opener.
-  const sentences = text.split(/\.\s+(?=[A-Z])/);
-  if (sentences.length > 1) text = sentences[sentences.length - 1];
+  // The TH-73A's DAY2001A prints the student's list and then "The following items are to be
+  // discussed by the Instructor: ...": the sentence with the most separators is the list.
+  // An abbreviation's stop is not a sentence's: "(PFD vs. MFD, display options, ...)".
+  const ABBR = /\b(vs|etc|e\.g|i\.e|CH|Ch|No)\./g;
+  const STOP = '\u0003';
+  const sentences = text.replace(ABBR, `$1${STOP}`).split(/\.\s+(?=[A-Z])/).map((x) => x.split(STOP).join('.'));
+  if (sentences.length > 1) {
+    const seps = (s) => (s.match(/[,;]/g) || []).length;
+    text = sentences.reduce((best, s) => (seps(s) > seps(best) ? s : best), sentences[sentences.length - 1]);
+  }
   text = text.replace(/^(?:some\s+)?examples\s+(?:may\s+)?include\s+/i, '').replace(/,?\s*etc\.?$/i, '');
   if (!text) return [];
 
@@ -441,7 +461,14 @@ function discussItems(section, eventIds) {
   const inline = section.inline.trim();
   if (/^none\.?$/i.test(inline)) return { briefed: false, byEvent: {} };
 
-  const { byEvent, blockWide } = linesByEvent(section);
+  // The Tilt-Rotor MCG prints one event's list on the heading's own line, led by the event id:
+  // "4. Discuss Items. DAY0304T. Flight schedule, ...". That is the event's paragraph, not the
+  // block's.
+  const led = /^([A-Z]{1,3}\d{4})[A-Z]?\.\s+(.+)$/.exec(inline);
+  const read = linesByEvent(led ? { ...section, inline: '' } : section);
+  // The lines that follow the heading's own, up to the next event's, continue that paragraph.
+  const blockWide = led ? [] : read.blockWide;
+  const byEvent = led ? { ...read.byEvent, [led[1]]: [led[2], ...read.blockWide, ...(read.byEvent[led[1]] || [])] } : read.byEvent;
 
   const out = {};
   const toItems = (parts) => {
@@ -490,10 +517,29 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
     }));
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t)[0] || null;
   };
-  const instruction = commonest(/^CNATRAINST\s+[\d.]+[A-Z]?$/)
+  // An MCG's head says CNATRAMCG where its cover says CNATRAINST; the cover's word is kept.
+  // The COPT-R/CORPS syllabus is a wing notice with no instruction number: its head is its name.
+  const head = commonest(/^(?:CNATRAINST|CNATRAMCG)\s+[\d.]+[A-Z]?$/);
+  const instruction = (head && head.replace(/^CNATRAMCG/, 'CNATRAINST'))
+    || commonest(/\(SGTO\)\s+[\d.]+$/)
     || (pages.flat().map((l) => l.text).join('\n').match(/CNATRAINST\s+[\d.]+[A-Z]?/) || [])[0]
     || null;
   const date = commonest(/^\d{1,2}\s+[A-Z][a-z]{2}\s+\d{4}$/);
+
+  // The table of contents names every chapter ("CHAPTER III. DAY FAMILIARIZATION TRAINING"),
+  // and every page's footer says which chapter it is in ("III-6"). The TH-73A's MCGs print
+  // their body heading "Chapter III" in a way that leaves no text behind, so where a block
+  // header turns up on a page whose chapter has no heading of its own, the chapter is opened
+  // from these instead. A publication whose headings do print is read as before.
+  const tocTitles = {};
+  pages.flat().forEach((l) => {
+    const m = /^CHAPTER\s+([IVX]+)\.\s+(.+?)\s*$/.exec(l.text.trim());
+    if (m && !tocTitles[m[1]]) tocTitles[m[1]] = titleCase(m[2]);
+  });
+  const pageRoman = pages.map((pg) => {
+    const foot = pg.map((l) => l.text.trim()).find((t) => /^[IVX]+-\d+$/.test(t));
+    return foot ? foot.split('-')[0] : null;
+  });
 
   // Chapters, then blocks within each chapter.
   const chapters = [];
@@ -508,12 +554,31 @@ export function extractSyllabus(pages, { phrases = [], matcher = null } = {}) {
       block = null;
       return;
     }
-    if (!chapter) return;
     if (/^Blk\s*#/.test(line.text)) {
+      const roman = pageRoman[line.page - 1];
+      if (roman && (!chapter || chapter.roman !== roman)) {
+        chapter = chapters.find((c) => c.roman === roman);
+        if (!chapter) {
+          // A chapter the contents do not list (the COPT-R/CORPS syllabus has no line for its
+          // ground training) is titled by what sits in the header line where "Title" should:
+          // the TH-73A's layout leaves the chapter title there.
+          const inHeader = line.text.replace(/^Blk\s*#\s*Media\s*/, '').replace(/\s*Events?\b.*$/, '').trim();
+          // Or on the line above it, where the heading's title line prints on its own.
+          const above = lines.slice(Math.max(0, i - 3), i).reverse()
+            .find((l) => l.page === line.page && /^[A-Z][A-Za-z/ -]{3,40}$/.test(l.text.trim()) && !/^Chapter\b/.test(l.text.trim()));
+          const title = tocTitles[roman]
+            || (inHeader && inHeader !== 'Title' ? inHeader : '')
+            || (above ? above.text.trim() : `Chapter ${roman}`);
+          chapter = { roman, title, blocks: [] };
+          chapters.push(chapter);
+        }
+      }
+      if (!chapter) return;
       block = { header: line, lines: [] };
       chapter.blocks.push(block);
       return;
     }
+    if (!chapter) return;
     if (block) block.lines.push(line);
   });
 

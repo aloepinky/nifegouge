@@ -260,7 +260,7 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
         lines.push({ text: `${span}: ${plural(viewCount, 'page view')}, ${Math.round(visitorDays / views.days.length)} visitors a day on average` });
         const pages = new Map();
         const programs = new Map();
-        const PROGRAM = { nife: 'NIFE', primary: 'Primary', tw4: 'Primary', t44c: 'T-44C', t54a: 'T-54A' };
+        const PROGRAM = { nife: 'NIFE', primary: 'Primary', tw4: 'Primary', t44c: 'T-44C', t54a: 'T-54A', th73a: 'TH-73A' };
         for (const r of views.rows) {
           if (r.path.startsWith('#')) continue; // the day's, schools' and sections' own rows
           pages.set(r.path, (pages.get(r.path) || 0) + (r.views || 0));

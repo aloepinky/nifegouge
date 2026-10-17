@@ -181,12 +181,12 @@ const FILL_OPS = new Set(['f', 'F', 'f*', 'B', 'B*', 'b', 'b*']);
 const STROKE_OPS = new Set(['S', 's', 'B', 'B*', 'b', 'b*']);
 
 function newPath() {
-  return { ops: [], pts: [], paint: null, clip: false, lw: 0.0, order: 0 };
+  return { ops: [], pts: [], paint: null, clip: false, lw: 0.0, dashed: false, order: 0 };
 }
 
 const sigOf = (p) => p.ops.join(' ');
 
-function bboxOf(p) {
+export function bboxOf(p) {
   const xs = p.pts.map((q) => q[0]);
   const ys = p.pts.map((q) => q[1]);
   const minX = Math.min(...xs);
@@ -199,6 +199,8 @@ const TEXT_OPS = new Set(['Tj', 'TJ', "'", '"']);
 function interpret(buf) {
   let ctm = IDENTITY;
   let lw = 1.0;
+  // Whether the current dash pattern draws a broken line: a legend keys its optional flow to one.
+  let dashed = false;
   const stack = [];
   const paths = [];
   const runs = [];
@@ -215,6 +217,7 @@ function interpret(buf) {
       cur.paint = paint;
       cur.clip = pendingClip;
       cur.lw = lw * scaleOf(ctm);
+      cur.dashed = dashed;
       cur.order = order;
       order += 1;
       paths.push(cur);
@@ -244,15 +247,19 @@ function interpret(buf) {
     const op = tok;
 
     if (op === 'q') {
-      stack.push([ctm, lw]);
+      stack.push([ctm, lw, dashed]);
     } else if (op === 'Q') {
-      if (stack.length) [ctm, lw] = stack.pop();
+      if (stack.length) [ctm, lw, dashed] = stack.pop();
     } else if (op === 'cm') {
       const v = nums(6);
       if (v) ctm = mul(v, ctm);
     } else if (op === 'w') {
       const v = nums(1);
       if (v) lw = v[0];
+    } else if (op === 'd') {
+      // `[3.96 2.83] 0 d` dashes, `[] 0 d` is solid: the last number is the phase.
+      const vals = operands.filter((o) => typeof o === 'number');
+      dashed = vals.slice(0, -1).some((v) => v > 0);
     } else if (op === 'm' || op === 'l') {
       const v = nums(2);
       if (v) {
@@ -347,6 +354,9 @@ const SHAPE_SIG = {
   'm c c c c h': 'ellipse',
   'm l l l l l l h': 'hex6',
   'm l l l l l l l l h': 'oct8',
+  // The START and END capsules of the TH-73A's charts: a stadium, two straight sides and two
+  // half-circles, which the figure draws in the flow like a box.
+  'm l c c l c c h': 'capsule',
 };
 
 // `s` and `b` close the subpath before painting it — they are `h S` and `h B` written as one
@@ -358,8 +368,11 @@ const CLOSING_PAINT = new Set(['s', 'b', 'b*']);
 
 function shapeOf(path) {
   const sig = sigOf(path);
-  const name = SHAPE_SIG[sig]
+  let name = SHAPE_SIG[sig]
     || (CLOSING_PAINT.has(path.paint) ? SHAPE_SIG[`${sig} h`] : undefined);
+  // A box drawn as four straight lines back to its first point, which the TH-73A's charts do
+  // for one box per sheet.
+  if (!name && /^m l l l l( h)?$/.test(sig) && path.pts.length === 5 && dist(path.pts[0], path.pts[4]) < 0.1) name = 'rect';
   if (!name) return null;
   if (name === 'ellipse') {
     const [, , w, h] = bboxOf(path);
@@ -368,7 +381,52 @@ function shapeOf(path) {
   return name;
 }
 
-function classify(paths) {
+// A key drawn as a filled ring rather than a stroked outline: the TH-73A legends' Self Study
+// octagon is the outline's fill, nested octagons in one MCG and one long seam-joined subpath
+// in another. Neither matches a stroked signature, so the shape is read off the fill's convex
+// hull (its vertex count, and whether the outline is curved) and the ring's thickness, the
+// hull's inset to the points inside it, stands in for the stroke weight.
+function hullOf(ptsIn) {
+  const pts = [...ptsIn].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const half = (list) => {
+    const out = [];
+    list.forEach((q) => {
+      while (out.length >= 2 && cross(out[out.length - 2], out[out.length - 1], q) <= 0) out.pop();
+      out.push(q);
+    });
+    return out;
+  };
+  const lower = half(pts);
+  const upper = half([...pts].reverse());
+  return lower.slice(0, -1).concat(upper.slice(0, -1));
+}
+
+function ringOf(p) {
+  if (p.pts.length < 12) return null;
+  const hull = hullOf(p.pts);
+  // Vertices a hair apart, or on a straight run, are one corner.
+  const corners = hull.filter((q, i) => {
+    const a = hull[(i + hull.length - 1) % hull.length];
+    const b = hull[(i + 1) % hull.length];
+    if (dist(a, q) < 0.3) return false;
+    const turn = (q[0] - a[0]) * (b[1] - q[1]) - (q[1] - a[1]) * (b[0] - q[0]);
+    return Math.abs(turn) > 0.2 * dist(a, q) * dist(q, b);
+  });
+  const curved = p.ops.includes('c');
+  const shape = curved
+    ? ({ 4: 'ellipse', 8: 'roundrect' })[corners.length]
+    : ({ 4: 'rect', 6: 'hex6', 8: 'oct8' })[corners.length];
+  if (!shape) return null;
+  // The points the hull does not pass through are the ring's inner edge.
+  const inner = p.pts.filter((q) => !hull.some((h) => dist(h, q) < 0.05));
+  if (inner.length < 3) return null;
+  const [, , ow] = bboxOf(p);
+  const [, , iw] = bboxOf({ pts: inner });
+  return { shape, lw: (ow - iw) / 2 };
+}
+
+export function classify(paths) {
   const nodes = [];
   const arrows = [];
   const connectors = [];
@@ -380,9 +438,16 @@ function classify(paths) {
       arrows.push(p);
       return;
     }
+    if (FILL_OPS.has(p.paint)) {
+      const ring = ringOf(p);
+      if (ring && w >= 10.0 && w <= 60.0 && h >= 9.5 && h <= 25.0) {
+        nodes.push([{ ...p, lw: ring.lw }, ring.shape]);
+        return;
+      }
+    }
     if (STROKE_OPS.has(p.paint)) {
       const shape = shapeOf(p);
-      if (shape && w >= 10.0 && w <= 60.0 && h >= 10.0 && h <= 25.0) {
+      if (shape && w >= 10.0 && w <= 60.0 && h >= 9.5 && h <= 25.0) {
         nodes.push([p, shape]);
         return;
       }
@@ -391,8 +456,9 @@ function classify(paths) {
         return;
       }
       // A connector that hops over another with a little arc: the arc's two ends sit on the
-      // line and its midpoint off it. Flatten the hop and keep the line.
-      if (p.ops.every((o) => o === 'm' || o === 'l' || o === 'c') && p.ops.includes('l') && p.pts.length >= 3) {
+      // line and its midpoint off it. Flatten the hop and keep the line. A closed one (`h`) is
+      // a box drawn with a seam in its outline, which `promoteBoxes` reads by the id inside it.
+      if (p.ops.every((o) => o === 'm' || o === 'l' || o === 'c' || o === 'h') && p.ops.includes('l') && p.pts.length >= 3) {
         const pts = straighten(p.pts);
         if (pts.length >= 2) {
           connectors.push({ ...p, pts });
@@ -456,6 +522,25 @@ const CATEGORY_SLUG = {
   'Flight Support': 'support',
   'P/P Exam': 'exam',
   'Flow Connector': 'jump',
+  // The TH-73A's MCGs key their legend inside the shapes: a thin octagon is a CAI lesson and
+  // a thick one an exam; Self Study is a thin octagon too, so a box on the chart can only ever
+  // read as CAI (the upper of the two in the legend); MIL is the thin hexagon Delta keys as
+  // Flt Support.
+  'Ground Trng': 'ground',
+  CAI: 'lesson',
+  Exam: 'test',
+  'Self Study': 'study',
+  MIL: 'support',
+};
+
+// Captions keyed to something other than a box: a dashed line for the optional flow, and a
+// filled capsule for the START and END markers. Neither keys a box category, but both are
+// part of the legend the publication prints, and are drawn in the chart's legend as such.
+const SAMPLE_SLUG = {
+  'Opt Flow': 'opt',
+  'Alternate Flow': 'opt',
+  'Start / End': 'terminal',
+  'Start/End': 'terminal',
 };
 
 // The same, with the spaces taken out and folded to lower case, which is the shape a label
@@ -470,7 +555,7 @@ function inside(bbox, x, y, pad = 0.0) {
   return bx - pad <= x && x <= bx + bw + pad && by - pad <= y && y <= by + bh + pad;
 }
 
-function attachLabels(nodes, runs) {
+export function attachLabels(nodes, runs) {
   const labelled = [];
   const used = new Set();
   nodes.forEach(([path, shape]) => {
@@ -488,10 +573,14 @@ function attachLabels(nodes, runs) {
   return [labelled, leftover];
 }
 
-function deriveCategories(labelled, leftover, warn) {
+// `samples` are the paths that are not boxes (the connectors and everything else drawn),
+// among which a caption of SAMPLE_SLUG finds its key. The third value returned lists the
+// samples taken as keys, so the caller can keep them out of the chart's connectors.
+export function deriveCategories(labelled, leftover, warn, samples = []) {
   const captions = [];
   const used = new Set();
-  const isCaption = (t) => Object.prototype.hasOwnProperty.call(CATEGORY_SLUG, t);
+  const has = (o, t) => Object.prototype.hasOwnProperty.call(o, t);
+  const isCaption = (t) => has(CATEGORY_SLUG, t) || has(SAMPLE_SLUG, t);
   leftover.forEach((r, i) => {
     const t = pyStrip(r.text);
     if (isCaption(t)) {
@@ -505,10 +594,13 @@ function deriveCategories(labelled, leftover, warn) {
     if (used.has(i)) return;
     leftover.forEach((q, j) => {
       if (j === i || used.has(j) || used.has(i)) return;
-      if (Math.abs(q.x - r.x) > 2.0 || r.y - q.y <= 0 || r.y - q.y > 12.0) return;
+      // Left-aligned within a hair, or centred one over the other (the TH-73A's "Flow" over
+      // "Connector"); only a pair that reads as a known caption is taken either way.
+      if (Math.abs(q.x - r.x) > 12.0 || r.y - q.y <= 0 || r.y - q.y > 12.0) return;
       const t = pyStrip(`${pyStrip(r.text)} ${pyStrip(q.text)}`.replace(PY_SPACE, ' '));
       if (!isCaption(t)) return;
-      captions.push([(r.y + q.y) / 2.0, t, r.x]);
+      // The two lines are kept, so the legend can print the caption as the publication did.
+      captions.push([(r.y + q.y) / 2.0, t, Math.min(r.x, q.x), [pyStrip(r.text), pyStrip(q.text)]]);
       used.add(i);
       used.add(j);
     });
@@ -516,6 +608,7 @@ function deriveCategories(labelled, leftover, warn) {
   const keys = labelled.filter((n) => !n.label);
   const mapping = {};
   const pairs = [];
+  const taken = [];
 
   // A legend may print its caption INSIDE the key instead of beside it — the T-44C E-2D chart
   // does, while Delta and the T-44C Advanced chart set theirs alongside. Such a key arrives as
@@ -526,32 +619,75 @@ function deriveCategories(labelled, leftover, warn) {
     const text = CAPTION_INSIDE[n.label.toLowerCase()];
     if (!text) return;
     n.isLegendKey = true;
+    n.captionInside = true;
     const kind = CATEGORY_SLUG[text];
     mapping[keyOf(n.shape, n.path.lw)] = kind;
     pairs.push([text, kind, n]);
   });
 
-  captions.forEach(([y, text, x]) => {
+  captions.forEach(([y, text, x, lines]) => {
     let best = null;
     let bestd = 1e9;
-    keys.forEach((k) => {
-      const [kx, ky, , kh] = bboxOf(k.path);
+    if (has(SAMPLE_SLUG, text)) {
+      const kind = SAMPLE_SLUG[text];
+      // The optional-flow key is a short dashed line; the START/END key a filled capsule
+      // (curved, which tells it from the white rectangle printed behind a caption).
+      const wanted = kind === 'opt'
+        ? (p) => p.dashed && STROKE_OPS.has(p.paint) && p.pts.length === 2
+        : (p) => FILL_OPS.has(p.paint) && p.ops.includes('c') && bboxOf(p)[2] >= 10.0 && bboxOf(p)[3] >= 6.0;
+      samples.forEach((p) => {
+        if (!wanted(p)) return;
+        const [kx, ky, , kh] = bboxOf(p);
+        const d = Math.abs((ky + kh / 2.0) - y);
+        if (kx > x || d >= bestd) return;
+        best = p;
+        bestd = d;
+      });
+      if (best === null || bestd > 12.0) {
+        warn(`Legend caption "${text}" found no key shape.`);
+        return;
+      }
+      const bb = bboxOf(best);
+      // The key and anything drawn over it (a capsule is filled, then stroked).
+      samples.forEach((p) => {
+        const pb = bboxOf(p);
+        if (pb.every((v, k) => Math.abs(v - bb[k]) <= 0.5)) taken.push(p);
+      });
+      pairs.push([text, kind, { path: best, shape: kind === 'opt' ? 'line' : 'capsule' }, lines]);
+      return;
+    }
+    // The Flow Connector key is a circle with a letter in it on the TH-73A's charts, so for
+    // that caption a lettered circle is a key too.
+    const pool = text === 'Flow Connector' ? labelled.filter((n) => !n.label || /^[A-Z]$/.test(n.label)) : keys;
+    // The key is the shape on the caption's row immediately to its left: nearest by the gap to
+    // the caption, then by height. The Tilt-Rotor MCG's chart connectors B and D share the
+    // legend circle's row, and B's height is the nearer, so height alone picks the wrong one.
+    let bestGap = 1e9;
+    pool.forEach((k) => {
+      const [kx, ky, kw, kh] = bboxOf(k.path);
       const d = Math.abs((ky + kh / 2.0) - y);
-      if (kx > x) return;
-      if (d < bestd) {
+      if (kx > x || d > 12.0) return;
+      const gap = x - (kx + kw);
+      if (gap < bestGap - 2.0 || (Math.abs(gap - bestGap) <= 2.0 && d < bestd)) {
         best = k;
         bestd = d;
+        bestGap = gap;
       }
     });
-    if (best === null || bestd > 12.0) {
+    if (best === null) {
       warn(`Legend caption "${text}" found no key shape.`);
       return;
     }
     const kind = CATEGORY_SLUG[text];
+    if (best.label) {
+      best.isLegendKey = true;
+      // A lettered circle keeps its letter, which the legend prints inside it.
+      if (/^[A-Z]$/.test(best.label)) best.letter = best.label;
+    }
     mapping[keyOf(best.shape, best.path.lw)] = kind;
-    pairs.push([text, kind, best]);
+    pairs.push([text, kind, best, lines]);
   });
-  return [mapping, pairs];
+  return [mapping, pairs, taken];
 }
 
 // The kind of a chart box, from the legend. A box whose shape and stroke weight the legend
@@ -560,7 +696,7 @@ function deriveCategories(labelled, leftover, warn) {
 // a weight the legend never draws — the shape's captions are taken in legend order, top to
 // bottom, and the chart's weights for that shape in order, thin to thick: the publication
 // lists the lighter stroke first.
-function categoryMapper(mapping, pairs, labelled, warn) {
+export function categoryMapper(mapping, pairs, labelled, warn) {
   const byShape = {};
   pairs.forEach(([text, kind, key]) => {
     const [, ky, , kh] = bboxOf(key.path);
@@ -584,8 +720,17 @@ function categoryMapper(mapping, pairs, labelled, warn) {
     if (!ranked[shape]) {
       const bands = BANDS.filter((b) => (bandsOf[shape] || new Set()).has(b));
       ranked[shape] = {};
-      bands.forEach((b, i) => { ranked[shape][b] = entries[Math.min(i, entries.length - 1)].kind; });
-      const names = entries.map((e) => `"${e.text}"`).join(' and ');
+      // A caption whose shape and weight no other caption shares keys its own band outright,
+      // and only the captions drawn alike (the TH-73A's CAI and Self Study, both the thin
+      // octagon) are sorted into the bands left over, upper caption first.
+      const bandOf = (e) => e.key.split('|')[1];
+      const unique = entries.filter((e) => entries.filter((o) => o.key === e.key).length === 1);
+      const shared = entries.filter((e) => !unique.includes(e));
+      const free = shared.length ? bands.filter((b) => !unique.some((e) => bandOf(e) === b)) : bands;
+      const pool = shared.length ? shared : entries;
+      if (shared.length) unique.forEach((e) => { ranked[shape][bandOf(e)] = e.kind; });
+      free.forEach((b, i) => { ranked[shape][b] = pool[Math.min(i, pool.length - 1)].kind; });
+      const names = pool.map((e) => `"${e.text}"`).join(' and ');
       warn(`The legend does not tell ${names} apart by stroke weight; the chart's ${shape === 'ellipse' ? 'ellipses' : `${shape} boxes`} were sorted by weight, lightest first.`);
     }
     return ranked[shape][keyOf(shape, lw).split('|')[1]];
@@ -596,7 +741,8 @@ function categoryMapper(mapping, pairs, labelled, warn) {
 // Label -> event ids
 // ---------------------------------------------------------------------------------------
 
-const RANGE_RE = /^([A-Z]+)(\d+)([A-Z]?)(?:-(\d+))?$/;
+// A student letter may follow the range too: the TH-73A's charts print "NAV0101-2A".
+const RANGE_RE = /^([A-Z]+)(\d+)([A-Z]?)(?:-(\d+)[A-Z]?)?$/;
 
 // `FAM4301-4` -> the four events it covers. Also used by the flow editor's events field.
 export function expand(label) {
@@ -684,7 +830,10 @@ function pointOnPath(point, pts, tol) {
   return segmentOn(point, pts, tol) !== -1;
 }
 
-function chain(segsIn, nodeMids) {
+// `headBases` (the bus reading only): a line end an arrowhead sits on is a head end, not a
+// continuation, so two lines meeting there stay two lines. The Tilt-Rotor MCG runs two lines
+// into one head on LND0201T's frame; chained, the head would sit mid-line and name nothing.
+function chain(segsIn, nodeMids, headBases = null) {
   let segs = segsIn;
   let joins = 0;
   let changed = true;
@@ -694,6 +843,7 @@ function chain(segsIn, nodeMids) {
       for (const ei of [0, -1]) {
         const pt = ei === 0 ? segs[i][0] : segs[i][segs[i].length - 1];
         if (nearestNode(pt, nodeMids, EDGE_SNAP)) continue;
+        if (headBases && headBases.some((b) => dist(b, pt) <= HEAD_BASE_SNAP)) continue;
         const partners = [];
         for (let j = 0; j < segs.length; j += 1) {
           if (j === i) continue;
@@ -731,7 +881,7 @@ const ring = (pts) => (
     : pts
 );
 
-function resolveEdges(nodes, connectors, arrows) {
+export function resolveEdges(nodes, connectors, arrows) {
   const nodeMids = nodes.map((n) => [n.id, edgeMidpoints(n.bbox)]);
   const headPts = arrows.map((a) => ring(a.pts));
   const heads = headPts.map((pts) => [
@@ -990,6 +1140,376 @@ function resolveEdges(nodes, connectors, arrows) {
 }
 
 // ---------------------------------------------------------------------------------------
+// Bus edges (JS only; the Python regenerates Delta, which never needs this)
+// ---------------------------------------------------------------------------------------
+//
+// The TH-73A's MCGs draw their flow as buses rather than as one arrow per pair of boxes: a box
+// leaves by a headless stub onto a shared line, the shared line carries one head per
+// destination (a dashed bus has heads at both ends), a head may point into a junction on
+// another line rather than into a box, a line may leave a block's frame rather than its last
+// box, and START/END capsules sit in the middle of a route. Read as one source end and one
+// target end per connector, that inverts every bus and strands every stub, so such a chart is
+// read as a graph instead: every arrowhead names a target, every headless end on a box names a
+// source, and the sources of a target are the boxes reached by walking back from its head
+// through the junctions, never forward along another head. Every source then gets its own edge
+// to the target, drawn along the route the walk took, so a bus with four sources and two
+// destinations is eight edges that overlap on the bus, which is what the figure draws.
+//
+// Used only when the pairwise reading leaves many connectors unresolved (traceChart), so the
+// JPPTs and the T-54A MCG keep the reading their fixtures and live charts were made with.
+
+const HEAD_BASE_SNAP = 3.0;
+const HEAD_BOX_SNAP = 8.0;
+const BUS_JOIN_SNAP = 3.5;
+
+// A head read against the line it may sit on: its tip is the vertex farthest along the line's
+// direction of travel, its base the middle of the other two. A squat head (4 wide, 3.4 tall on
+// the Tilt-Rotor MCG's third sheet) puts its base corners farther from its centroid than its
+// tip, so the centroid cannot say which vertex is the tip; the line can.
+function headGeometry(head, out) {
+  const pts = ring(head.pts);
+  const along = (q) => q[0] * out[0] + q[1] * out[1];
+  let apex = pts[0];
+  pts.forEach((q) => { if (along(q) > along(apex)) apex = q; });
+  const rest = pts.filter((q) => q !== apex);
+  const base = rest.length
+    ? [rest.reduce((s, p) => s + p[0], 0) / rest.length, rest.reduce((s, p) => s + p[1], 0) / rest.length]
+    : apex;
+  // The base runs square to the line; read the other way round, a neighbouring head's corner
+  // would pass for a tip with a slanting base.
+  let square = true;
+  if (rest.length === 2) {
+    const bx = rest[1][0] - rest[0][0];
+    const by = rest[1][1] - rest[0][1];
+    const cos = (bx * out[0] + by * out[1]) / ((Math.hypot(bx, by) || 1) * (Math.hypot(out[0], out[1]) || 1));
+    square = Math.abs(cos) < 0.35;
+  }
+  return { apex, base, dir: [apex[0] - base[0], apex[1] - base[1]], square };
+}
+
+// The points of `pts` from the point `p` to the point `q`, both of which lie on it. On a
+// closed outline (a START/END capsule) the route cuts straight across.
+function alongPath(pts, p, q, closed) {
+  if (closed) return [p, q];
+  const ip = segmentOn(p, pts, BUS_JOIN_SNAP);
+  const iq = segmentOn(q, pts, BUS_JOIN_SNAP);
+  if (ip === -1 || iq === -1) return [p, q];
+  if (ip < iq) return [p, ...pts.slice(ip + 1, iq + 1), q];
+  if (ip > iq) return [p, ...pts.slice(iq + 1, ip + 1).reverse(), q];
+  return [p, q];
+}
+
+// Where two orthogonal polylines cross, each in the middle of one of its own segments.
+function crossingOf(aPts, bPts) {
+  const level = (p, q, k) => Math.abs(p[k] - q[k]) < 0.5;
+  const within = (v, p, q) => v >= Math.min(p, q) - 0.5 && v <= Math.max(p, q) + 0.5;
+  for (let i = 0; i < aPts.length - 1; i += 1) {
+    for (let j = 0; j < bPts.length - 1; j += 1) {
+      const [a1, a2] = [aPts[i], aPts[i + 1]];
+      const [b1, b2] = [bPts[j], bPts[j + 1]];
+      let x;
+      if (level(a1, a2, 0) && level(b1, b2, 1)) x = [a1[0], b1[1]];
+      else if (level(a1, a2, 1) && level(b1, b2, 0)) x = [b1[0], a1[1]];
+      else continue;
+      if (!within(x[0], a1[0], a2[0]) || !within(x[1], a1[1], a2[1]) || !within(x[0], b1[0], b2[0]) || !within(x[1], b1[1], b2[1])) continue;
+      if ([a1, a2, b1, b2].some((p) => dist(p, x) <= BUS_JOIN_SNAP)) continue;
+      return x;
+    }
+  }
+  return null;
+}
+
+// Whether a direction points into a box through the side named, or out of it.
+const intoSide = (side, [dx, dy]) => (side === 'L' ? dx > 0 : side === 'R' ? dx < 0 : side === 'T' ? dy < 0 : dy > 0);
+
+export function resolveBusEdges(nodes, connectors, arrows, frames = []) {
+  const nodeMids = nodes.map((n) => [n.id, edgeMidpoints(n.bbox)]);
+  const bboxOfNode = Object.fromEntries(nodes.map((n) => [n.id, n.bbox]));
+  const heads = arrows;
+  const closed = (pts) => pts.length > 3 && dist(pts[0], pts[pts.length - 1]) < 0.1;
+  const headBases = arrows.map((a) => {
+    const pts = ring(a.pts);
+    return [pts.reduce((t, q) => t + q[0], 0) / pts.length, pts.reduce((t, q) => t + q[1], 0) / pts.length];
+  });
+  const [chained] = chain(connectors.filter((p) => !closed(p.pts)).map((p) => [...p.pts]), nodeMids, headBases);
+  const segs = [
+    ...chained.map((pts) => ({ pts, ends: [], closed: false })),
+    ...connectors.filter((p) => closed(p.pts)).map((p) => ({ pts: [...p.pts], ends: [], closed: true })),
+  ];
+
+  // The box a point is on, through a side its direction agrees with: a head points into the
+  // box, a tail leaves it. Then the box inside a frame whose side the point is on, nearest the
+  // point: a line leaving a block's frame leaves its last event.
+  const boxAt = (pt, dir, tol) => {
+    let best = null;
+    nodeMids.forEach(([id, mids]) => mids.forEach(([side, m]) => {
+      const d = dist(pt, m);
+      if (d > tol || !intoSide(side, dir)) return;
+      if (!best || d < best.d) best = { d, hit: [id, side] };
+    }));
+    return best ? best.hit : null;
+  };
+  const onFrameSide = (pt, [x, y, w, h]) => {
+    const nearX = Math.abs(pt[0] - x) <= EDGE_SNAP || Math.abs(pt[0] - (x + w)) <= EDGE_SNAP;
+    const nearY = Math.abs(pt[1] - y) <= EDGE_SNAP || Math.abs(pt[1] - (y + h)) <= EDGE_SNAP;
+    const withinX = pt[0] >= x - EDGE_SNAP && pt[0] <= x + w + EDGE_SNAP;
+    const withinY = pt[1] >= y - EDGE_SNAP && pt[1] <= y + h + EDGE_SNAP;
+    return (nearX && withinY) || (nearY && withinX);
+  };
+  const frameBoxes = frames.map((f) => {
+    const [fx, fy, fw, fh] = f;
+    return { bbox: f, inside: nodes.filter((n) => n.bbox[0] >= fx - 1 && n.bbox[1] >= fy - 1 && n.bbox[0] + n.bbox[2] <= fx + fw + 1 && n.bbox[1] + n.bbox[3] <= fy + fh + 1) };
+  });
+  const frameBoxAt = (pt) => {
+    for (const f of frameBoxes) {
+      if (!f.inside.length || !onFrameSide(pt, f.bbox)) continue;
+      let best = null;
+      f.inside.forEach((n) => edgeMidpoints(n.bbox).forEach(([side, m]) => {
+        const d = dist(pt, m);
+        if (!best || d < best.d) best = { d, hit: [n.id, side] };
+      }));
+      if (best) return best.hit;
+    }
+    return null;
+  };
+  // Every other segment the point sits on: a point where three lines meet is on all of them.
+  const joinsAt = (pt, self) => {
+    const out = [];
+    segs.forEach((s, j) => {
+      if (j === self) return;
+      const at = segmentOn(pt, s.pts, BUS_JOIN_SNAP);
+      if (at !== -1) { out.push({ seg: j, foot: footOn(pt, s.pts[at], s.pts[at + 1]) }); return; }
+      if (s.closed) {
+        // A START/END capsule's rounded ends were flattened to their chords by the hop
+        // straightener, so a line that met the arc now stops short of the outline by the arc's
+        // radius: a point within that reach of the outline's box is on the capsule.
+        const xs = s.pts.map((q) => q[0]);
+        const ys = s.pts.map((q) => q[1]);
+        const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+        const reach = (y1 - y0) / 2 + BUS_JOIN_SNAP;
+        if (pt[0] >= x0 - reach && pt[0] <= x1 + reach && pt[1] >= y0 - BUS_JOIN_SNAP && pt[1] <= y1 + BUS_JOIN_SNAP) out.push({ seg: j, foot: pt });
+        return;
+      }
+      const first = s.pts[0];
+      const last = s.pts[s.pts.length - 1];
+      if (dist(pt, first) <= BUS_JOIN_SNAP) out.push({ seg: j, foot: first });
+      else if (dist(pt, last) <= BUS_JOIN_SNAP) out.push({ seg: j, foot: last });
+    });
+    return out;
+  };
+
+  // Each end: its head (the head whose base sits at the end, pointing on along the line),
+  // the box it is on, else the segments it joins, else the frame it leaves.
+  segs.forEach((s, i) => {
+    if (s.closed) return;
+    [0, 1].forEach((k) => {
+      const pt = k === 0 ? s.pts[0] : s.pts[s.pts.length - 1];
+      const prev = k === 0 ? s.pts[1] : s.pts[s.pts.length - 2];
+      const out = [pt[0] - prev[0], pt[1] - prev[1]];
+      let head = null;
+      heads.forEach((a) => {
+        const h = headGeometry(a, out);
+        if (!h.square || dist(h.base, pt) > HEAD_BASE_SNAP) return;
+        if (h.dir[0] * out[0] + h.dir[1] * out[1] <= 0) return;
+        if (!head || dist(h.base, pt) < dist(head.base, pt)) head = h;
+      });
+      // A box the point touches wins; then a line it sits on; then, for a head, a box a
+      // little further off (a hand-drawn box that stops short of its arrow); then a frame.
+      const probe = head ? head.apex : pt;
+      let box = head ? boxAt(probe, head.dir, EDGE_SNAP) : boxAt(probe, out, EDGE_SNAP);
+      let joins = [];
+      // A head on a block's frame points into the block whether or not another line ends at
+      // that head too: the Tilt-Rotor MCG runs two lines into one head on LND0201T's frame.
+      let viaFrame = false;
+      if (!box && head) {
+        box = frameBoxAt(probe);
+        viaFrame = !!box;
+      }
+      if (!box) {
+        joins = joinsAt(probe, i);
+        if (!joins.length && head) box = boxAt(probe, head.dir, HEAD_BOX_SNAP);
+        if (!joins.length && !box) {
+          box = frameBoxAt(probe);
+          viaFrame = !!box;
+        }
+      }
+      // A head end whose base sits on another line is also fed by that line: a dashed bus
+      // starts on the stub it branches from and puts its own head beside the stub's.
+      const feeders = head ? joinsAt(pt, i) : [];
+      s.ends.push({ pt, head, box, joins, viaFrame, feeders });
+    });
+    // A headless line from a junction to a box flows downstream: into the box when the box
+    // lies below the junction (the Tilt-Rotor MCG draws its exit connectors so, and a sheet or
+    // two drops a head), out of it when the box lies above.
+    s.ends.forEach((e, k) => {
+      const o = s.ends[1 - k];
+      if (e.head || !e.box || o.head || o.box || !o.joins.length || e.pt[1] >= o.pt[1] - 2) return;
+      e.head = { apex: e.pt, base: e.pt, dir: [0, 0], square: true };
+    });
+    // A stub too short to clear its box snaps both ends to it: the tail is then on nothing.
+    const [a, b] = s.ends;
+    if (a.box && b.box && a.box[0] === b.box[0]) {
+      const tail = a.head ? b : b.head ? a : null;
+      if (tail) {
+        tail.box = null;
+        tail.joins = joinsAt(tail.pt, i);
+        tail.feeders = [];
+      }
+    }
+  });
+
+  // Links between segments. A head on another segment feeds it. A headless end on another
+  // segment is fed by it when this segment carries a head somewhere, and is a bus joint
+  // (either way) when it does not.
+  const into = segs.map(() => []);
+  const both = segs.map(() => []);
+  segs.forEach((s, i) => {
+    const hasHead = s.ends.some((e) => e.head);
+    s.ends.forEach((e) => {
+      e.joins.forEach((j) => {
+        if (e.head) into[j.seg].push({ seg: i, at: j.foot, from: e.pt });
+        else if (hasHead) into[i].push({ seg: j.seg, at: e.pt, from: j.foot });
+        else {
+          both[i].push({ seg: j.seg, at: e.pt, from: j.foot });
+          both[j.seg].push({ seg: i, at: j.foot, from: e.pt });
+        }
+      });
+      // Not the line this head points into, and not a line that leaves the box it points
+      // into: those are the head's own target and the box's own exit, within a hair of its base.
+      e.feeders
+        .filter((j) => !e.joins.some((x) => x.seg === j.seg))
+        .filter((j) => !(e.box && segs[j.seg].ends.some((x) => x.box && x.box[0] === e.box[0])))
+        .forEach((j) => into[i].push({ seg: j.seg, at: e.pt, from: j.foot }));
+    });
+  });
+
+  // A line with a head, no source box and nothing arriving at its ends is fed where another
+  // line crosses it: a dashed bus drawn straight across the stub it branches from. The figure
+  // hops a line over one it does not join, so a flat crossing is a junction.
+  segs.forEach((s, i) => {
+    if (s.closed || !s.ends.some((e) => e.head) || into[i].length || s.ends.some((e) => !e.head && e.box)) return;
+    segs.forEach((t, j) => {
+      if (j === i || t.closed) return;
+      const x = crossingOf(s.pts, t.pts);
+      if (x) into[i].push({ seg: j, at: x, from: x });
+    });
+  });
+
+  const onSide = (pt, id, side) => {
+    const [x, y, w, h] = bboxOfNode[id];
+    if (side === 'L') return [x, pt[1]];
+    if (side === 'R') return [x + w, pt[1]];
+    if (side === 'T') return [pt[0], y + h];
+    return [pt[0], y];
+  };
+  const bends = (pt, moved, next) => {
+    if (!next) return false;
+    const near = (u, v) => Math.abs(u - v) <= 0.05;
+    if (!near(moved[1], pt[1]) && near(next[1], pt[1])) return true;
+    if (!near(moved[0], pt[0]) && near(next[0], pt[0])) return true;
+    return false;
+  };
+
+  const edges = [];
+  const unresolved = [];
+  // An end on a block's frame carries on from the frame's edge to the middle of the box's side
+  // with a square corner: the frame is not drawn, so an arrow stopping at it would float.
+  const jog = (pt, id, side) => {
+    const [x, y, w, h] = bboxOfNode[id];
+    const mid = side === 'L' ? [x, y + h / 2] : side === 'R' ? [x + w, y + h / 2] : side === 'T' ? [x + w / 2, y + h] : [x + w / 2, y];
+    return side === 'L' || side === 'R' ? [[pt[0], mid[1]], mid] : [[mid[0], pt[1]], mid];
+  };
+  const finish = (points, src, target, srcFrame = false) => {
+    let order = points.filter((q, k) => k === 0 || dist(q, points[k - 1]) > 0.05);
+    if (srcFrame) {
+      order = [...jog(order[0], src[0], src[1]).reverse(), ...order];
+    } else {
+      const movedA = onSide(order[0], src[0], src[1]);
+      order = bends(order[0], movedA, order[1]) ? [movedA, ...order] : [movedA, ...order.slice(1)];
+    }
+    const last = order.length - 1;
+    if (target.viaFrame) {
+      order = [...order, ...jog(order[last], target.id, target.side)];
+    } else {
+      const movedB = onSide(order[last], target.id, target.side);
+      order = bends(order[last], movedB, order[last - 1]) ? [...order, movedB] : [...order.slice(0, last), movedB];
+    }
+    order = order.filter((q, k) => k === 0 || dist(q, order[k - 1]) > 0.05);
+    // The figure's lines run straight up and down and straight across; one drawn a point or
+    // two off true, or a route that meets a junction a point off its line, gets a corner at
+    // its end instead of a slant.
+    const squared = [order[0]];
+    for (let k = 1; k < order.length; k += 1) {
+      const a = squared[squared.length - 1];
+      const b = order[k];
+      if (Math.abs(a[0] - b[0]) > 0.6 && Math.abs(a[1] - b[1]) > 0.6) {
+        squared.push(Math.abs(a[0] - b[0]) < Math.abs(a[1] - b[1]) ? [a[0], b[1]] : [b[0], a[1]]);
+      }
+      squared.push(b);
+    }
+    return squared.filter((q, k) => k === 0 || dist(q, squared[k - 1]) > 0.05);
+  };
+  // A sheet drawn with no arrowheads at all (the Tilt-Rotor MCG's third) flows down the page:
+  // a line between two boxes runs from the higher one.
+  if (!heads.length) {
+    segs.forEach((s) => {
+      const [a, b] = s.ends;
+      if (!a || !a.box || !b.box || a.box[0] === b.box[0]) return;
+      const down = a.pt[1] >= b.pt[1];
+      const src = down ? a.box : b.box;
+      const target = down ? { id: b.box[0], side: b.box[1] } : { id: a.box[0], side: a.box[1] };
+      if (edges.some((x) => x.from === src[0] && x.to === target.id)) return;
+      edges.push({ from: src[0], to: target.id, points: finish(down ? [...s.pts] : [...s.pts].reverse(), src, target) });
+    });
+    return [edges, unresolved, segs];
+  }
+  // Walk back from a target's head: `at` is where the flow leaves segment i towards the
+  // target; `route` the points from there to the target. Every source box found gets an edge.
+  const walk = (i, at, route, seen, target, found, viaJoint = false) => {
+    if (seen.has(i)) return;
+    seen.add(i);
+    const s = segs[i];
+    s.ends.forEach((e) => {
+      if (e.head || !e.box || e.box[0] === target.id) return;
+      found.push({ src: e.box, points: [...alongPath(s.pts, e.pt, at, s.closed), ...route], viaJoint, srcFrame: e.viaFrame });
+    });
+    into[i].forEach((l) => walk(l.seg, l.from, [...alongPath(s.pts, l.at, at, s.closed), ...route], seen, target, found, viaJoint));
+    both[i].forEach((l) => walk(l.seg, l.from, [...alongPath(s.pts, l.at, at, s.closed), ...route], seen, target, found, true));
+  };
+  // The figure flows down the page. A source reached only through a headless joint, with no
+  // head to say which way the joint runs, is not one when the target sits above it: a line
+  // that stops a hair short of a bus it does not join reads as joined otherwise.
+  const centreY = (id) => bboxOfNode[id][1] + bboxOfNode[id][3] / 2;
+  const upstream = (src, target) => centreY(target.id) > centreY(src[0]) + 6;
+  segs.forEach((s, i) => {
+    s.ends.forEach((e) => {
+      if (!e.head || !e.box) return;
+      const target = { id: e.box[0], side: e.box[1], viaFrame: e.viaFrame };
+      const found = [];
+      walk(i, e.pt, [e.head.apex], new Set(), target, found);
+      if (!found.length) {
+        unresolved.push([null, null, target.id, e.head.apex]);
+        return;
+      }
+      found.forEach(({ src, points, viaJoint, srcFrame }) => {
+        if (src[0] === target.id || edges.some((x) => x.from === src[0] && x.to === target.id)) return;
+        if (viaJoint && upstream(src, target)) return;
+        edges.push({ from: src[0], to: target.id, points: finish(points, src, target, srcFrame) });
+      });
+    });
+  });
+  // A segment with a box at one end and nothing at the other is a line the figure drew to
+  // nowhere this reading knows: say so, as the pairwise reading does.
+  segs.forEach((s) => {
+    const boxed = s.ends.filter((e) => e.box).map((e) => e.box[0]);
+    const loose = s.ends.some((e) => !e.box && !e.joins.length);
+    if (loose && boxed.length === 1 && !edges.some((x) => x.from === boxed[0] || x.to === boxed[0])) unresolved.push([null, boxed[0], null, s.pts[0]]);
+  });
+  // The reading itself rides along third, for a debugging harness; callers take the first two.
+  return [edges, unresolved, segs];
+}
+
+// ---------------------------------------------------------------------------------------
 // Emit
 // ---------------------------------------------------------------------------------------
 
@@ -1021,7 +1541,7 @@ const squash = (s) => s.replace(/ /g, '');
 // The core chart and the per-community charts are looked for in the same contents, so the pages
 // are kept per contents array and the second search reuses the first's. Neither pass changes them.
 const readCache = new WeakMap();
-function readPages(pageContents) {
+export function readPages(pageContents) {
   if (readCache.has(pageContents)) return readCache.get(pageContents);
   const pages = pageContents.map((buf, index) => {
     const [paths, runs] = interpret(buf);
@@ -1051,14 +1571,45 @@ function findChartPage(pages, titles) {
   return null;
 }
 
+// A box the figure draws as a closed line rather than a shape (the SNA MCG's NGT3001-2A is a
+// rounded box with two straight sides, stroked as one closed path) reaches here as a closed
+// connector. One of box size with an event id inside it is a box.
+const EVENT_TEXT = /^[A-Z]{1,3}\d{4}[A-Z]?(-\d{1,2}[A-Z]?)?\*?$/;
+function promoteBoxes(nodes, connectors, runs) {
+  const keep = [];
+  connectors.forEach((p) => {
+    const { pts } = p;
+    const closed = dist(pts[0], pts[pts.length - 1]) < 0.1 || p.ops.includes('h') || CLOSING_PAINT.has(p.paint);
+    const closedShape = pts.length >= 4 && pts.length <= 12 && closed;
+    const bbox = bboxOf(p);
+    const [, , w, h] = bbox;
+    const text = closedShape && w >= 10 && w <= 60 && h >= 9.5 && h <= 25
+      ? runs.filter((r) => inside(bbox, r.x, r.y, 4)).sort((a, b) => a.order - b.order).map((r) => r.text).join('').replace(PY_SPACE, '')
+      : '';
+    if (text && EVENT_TEXT.test(text)) nodes.push([{ ...p, promoted: true }, 'roundrect']);
+    else keep.push(p);
+  });
+  return keep;
+}
+
 // One chart, from the paths and text runs of a page or of one region of a page.
 //
 // `categories` is the { mapping, pairs } another chart derived from its legend. A chart drawn
 // without a legend of its own — the per-community charts share the core chart's — cannot key
 // its own shapes, so it borrows them and reports no legend of its own to draw.
-function traceChart(paths, runs, { knownEventIds = null, categories = null, warn }) {
-  const [nodesRaw, arrows, connectors] = classify(paths);
-  const [labelled, leftover] = attachLabels(nodesRaw, runs);
+function traceChart(paths, runs, { knownEventIds = null, categories = null, warn, resolver = 'auto' }) {
+  const [nodesRaw0, arrows, connectors0, other] = classify(paths);
+  const nodesRaw = [...nodesRaw0];
+  let connectors = promoteBoxes(nodesRaw, connectors0, runs);
+  const [labelled, leftover0] = attachLabels(nodesRaw, runs);
+  // A promoted box is drawn narrower than its label, which starts a hair outside it.
+  let leftover = leftover0;
+  labelled.filter((n) => !n.label && n.path.promoted).forEach((n) => {
+    const bbox = bboxOf(n.path);
+    const mine = leftover.filter((r) => inside(bbox, r.x, r.y, 4));
+    n.label = mine.sort((a, b) => a.order - b.order).map((r) => r.text).join('').replace(PY_SPACE, '');
+    leftover = leftover.filter((r) => !mine.includes(r));
+  });
   let mapping;
   let pairs;
   if (categories) {
@@ -1066,23 +1617,47 @@ function traceChart(paths, runs, { knownEventIds = null, categories = null, warn
   } else {
     // A caption that found no key already warns for itself in deriveCategories, and the
     // legends differ in how many captions they print, so there is no count to check here.
-    [mapping, pairs] = deriveCategories(labelled, leftover, warn);
+    let taken;
+    [mapping, pairs, taken] = deriveCategories(labelled, leftover, warn, [...connectors, ...other]);
+    connectors = connectors.filter((p) => !taken.includes(p));
   }
 
   // `inside` marks a key whose caption the publication prints INSIDE the shape rather than
   // beside it. The renderer has to know: a caption drawn beside a key of a legend laid out in
   // two columns lands on top of the next column's shapes.
-  const legend = categories ? [] : pairs.map(([text, kind, key]) => ({
-    kind, label: text, shape: key.shape, bbox: bboxOf(key.path), inside: !!key.isLegendKey,
+  const legend = categories ? [] : pairs.map(([text, kind, key, lines]) => ({
+    kind,
+    label: text,
+    shape: key.shape,
+    bbox: bboxOf(key.path),
+    inside: !!key.captionInside,
+    ...(key.letter ? { letter: key.letter } : {}),
+    ...(lines ? { lines } : {}),
   }));
 
   const kindFor = categoryMapper(mapping, pairs, labelled, warn);
   const nodes = [];
   const jumpSeen = {};
   const missing = [];
+  const terminals = {};
   labelled.forEach((n) => {
     if (!n.label || n.isLegendKey) return;
-    let kind = kindFor(n.shape, n.path.lw);
+    // The START and END capsules are the figure's own notation, not events: drawn, and the
+    // arrows out of START and into END read like any other, but they open nothing.
+    const term = /^(START|END)(TRAINING)?$/.exec(n.label);
+    if (term) {
+      terminals[term[1]] = (terminals[term[1]] || 0) + 1;
+      nodes.push({
+        id: `${term[1].toLowerCase()}-${terminals[term[1]]}`,
+        label: term[2] ? `${term[1]} ${term[2]}` : term[1],
+        kind: 'terminal',
+        bbox: bboxOf(n.path),
+      });
+      return;
+    }
+    // A box stroked as a capsule but labelled as an event (the SNA MCG's NGT3001-2A, a rounded
+    // box with two straight sides) is the rounded box it looks like, not a START/END marker.
+    let kind = kindFor(n.shape === 'capsule' ? 'roundrect' : n.shape, n.path.lw);
     if (kind === undefined) {
       warn(`${n.label} matches no legend key.`);
       kind = 'other';
@@ -1098,14 +1673,29 @@ function traceChart(paths, runs, { knownEventIds = null, categories = null, warn
       // A box may carry a footnote marker the publication prints beside it, as the T-44C
       // Advanced chart's `T0101-2*` does. The label keeps it, because that is what the figure
       // prints; the event ids are read from the label without it.
-      const spanned = expand(n.label.replace(/[*†‡]+$/, ''));
+      let spanned = expand(n.label.replace(/[*†‡]+$/, ''));
+      // A caption printed hard against a box ("DAY4390A Check Flight") can start inside it
+      // and join its label. The event token is then the label, and the rest is the caption.
+      if (!spanned.length) {
+        const m = /^([A-Z]{1,3}\d{4}[A-Z]?(?:-\d{1,2}[A-Z]?)?)[A-Za-z-]/.exec(n.label);
+        if (m && expand(m[1]).length) {
+          warn(`Box "${n.label}" read as ${m[1]}; the rest is a caption printed beside it.`);
+          rec.label = m[1];
+          rec.id = m[1];
+          spanned = expand(m[1]);
+        }
+      }
       if (!spanned.length) warn(`Cannot read box label "${n.label}" as event ids.`);
       // A label spans the block's NUMBERING, not a run of events that all exist. The T-44C
       // chart's `G1001-90` covers G1001 to G1090, where the block holds seven — G1001 to G1006
       // and the exam, G1090 — so the other 83 numbers are not events and must not be carried
       // as if they were. Keep the ones the syllabus lists; a label that matches none of them is
       // kept whole, because then the mismatch is real and the warning below has to name it.
-      const listed = knownEventIds ? spanned.filter((e) => knownEventIds.has(e)) : spanned;
+      // The TH-73A's charts print the student letter on every box ("GND0301A"), which the
+      // syllabus text drops from the event id; a lettered id the syllabus does not list is read
+      // as the id it does list without the letter.
+      const unlettered = (e) => (knownEventIds && !knownEventIds.has(e) && knownEventIds.has(e.replace(/[A-Z]$/, '')) ? e.replace(/[A-Z]$/, '') : e);
+      const listed = knownEventIds ? spanned.map(unlettered).filter((e) => knownEventIds.has(e)) : spanned;
       const events = listed.length ? listed : spanned;
       rec.events = events;
       if (events.length) rec.block = blockOf(events[0]);
@@ -1115,10 +1705,43 @@ function traceChart(paths, runs, { knownEventIds = null, categories = null, warn
   });
   missing.forEach(([label, e]) => warn(`Box ${label} names ${e}, which the syllabus text does not list.`));
 
-  const [edges, unresolved] = resolveEdges(nodes, connectors, arrows);
+  // A chart drawn as buses (the TH-73A's) leaves the pairwise reading with a long list of
+  // connectors it could not place. The graph reading is tried then, and kept when it does
+  // better; extractFlow then asks for it on every sheet of that chart (`resolver: 'bus'`), since
+  // a sheet with few connectors would otherwise be read the other way.
+  let [edges, unresolved] = resolver === 'bus' ? [[], []] : resolveEdges(nodes, connectors, arrows);
+  let usedBus = false;
+  if (resolver === 'bus' || (resolver === 'auto' && unresolved.length > BUS_THRESHOLD)) {
+    const frames = other
+      .filter((p) => STROKE_OPS.has(p.paint) && p.ops.every((o) => o === 'm' || o === 're'))
+      .map((p) => bboxOf(p))
+      .filter(([, , w, h]) => w > 60 || h > 25);
+    const alt = resolveBusEdges(nodes, connectors, arrows, frames);
+    if (resolver === 'bus' || alt[1].length < unresolved.length) {
+      [edges, unresolved] = alt;
+      usedBus = true;
+    }
+  }
   unresolved.forEach(([, src, dst]) => {
     warn(`A connector could not be resolved (${src || '?'} to ${dst || '?'}). Draw it in the editor.`);
   });
+
+  // An arrow that runs mostly along dashed lines is the optional flow the legend keys as
+  // "Opt Flow", and is drawn dashed.
+  const dashedLines = connectors.filter((p) => p.dashed);
+  if (dashedLines.length) {
+    edges.forEach((e) => {
+      let total = 0;
+      let on = 0;
+      e.points.slice(1).forEach((q, k) => {
+        const a = e.points[k];
+        const len = dist(a, q);
+        total += len;
+        if (dashedLines.some((p) => pointOnPath([(a[0] + q[0]) / 2, (a[1] + q[1]) / 2], p.pts, 1.0))) on += len;
+      });
+      if (total > 0 && on * 2 >= total) e.dashed = true;
+    });
+  }
 
   nodes.forEach((n) => {
     if (n.kind !== 'jump') return;
@@ -1156,16 +1779,25 @@ function traceChart(paths, runs, { knownEventIds = null, categories = null, warn
     const [x, y, w, h] = k.bbox;
     const row = { kind: k.kind, label: k.label, shape: k.shape, x: num(x), y: num(flip(y, h)), w: num(w), h: num(h) };
     if (k.inside) row.inside = true;
+    if (k.letter) row.letter = k.letter;
+    if (k.lines) row.lines = k.lines;
     return row;
   });
   const EDGES = edges.map((e) => ({
     from: e.from,
     to: e.to,
     points: e.points.map(([px, py]) => [num(px), num(flip(py, 0))]),
+    ...(e.dashed ? { dashed: true } : {}),
   }));
 
-  return { VIEWBOX, NODES, LEGEND, EDGES, categories: { mapping, pairs } };
+  return { VIEWBOX, NODES, LEGEND, EDGES, categories: { mapping, pairs }, usedBus, unresolvedCount: unresolved.length };
 }
+
+// How many connectors the pairwise reading may leave unresolved before a chart is read as buses:
+// counted on one sheet, or over every sheet of a chart printed on several, since a bus chart
+// whose sheets each fall short of this together fall well past it (the SNA MCG's leave 6 to 9
+// a sheet, 30 in all; the T-54A's two sheets leave 4, the T-44C's one sheet 7).
+const BUS_THRESHOLD = 10;
 
 // -> { VIEWBOX, NODES, LEGEND, EDGES, warnings, page, categories } or throws with a reason
 // to show.
@@ -1195,11 +1827,32 @@ export function extractFlow(pageContents, { knownEventIds = null } = {}) {
     .map((p) => {
       const own = [];
       const traced = traceChart(p.paths, p.runs, { knownEventIds, warn: (m) => own.push(m) });
-      return traced.NODES.length >= 2 ? { ...traced, page: p.page, warnings: own } : null;
+      return traced.NODES.length >= 2 ? { ...traced, page: p.page, warnings: own, source: p } : null;
     })
     .filter(Boolean);
   if (!more.length) return { ...chart, warnings, page: target.page, pages: [target.page] };
-  const sheets = [{ ...chart, page: target.page, warnings }, ...more].sort((a, b) => a.page - b.page);
+  let sheets = [{ ...chart, page: target.page, warnings, source: target }, ...more].sort((a, b) => a.page - b.page);
+  // One chart, one reading: a sheet read as buses makes the others buses too, and so does a
+  // chart whose sheets together leave more unresolved than one sheet is allowed.
+  const pairwiseLeft = sheets.reduce((n, s) => n + (s.usedBus ? 0 : s.unresolvedCount), 0);
+  if (sheets.some((s) => s.usedBus) || pairwiseLeft > BUS_THRESHOLD) {
+    sheets = sheets.map((s) => {
+      if (s.usedBus) return s;
+      const own = [];
+      const traced = traceChart(s.source.paths, s.source.runs, { knownEventIds, categories: s.LEGEND.length ? null : null, warn: (m) => own.push(m), resolver: 'bus' });
+      return { ...traced, page: s.page, warnings: own, source: s.source };
+    });
+  }
+  // A sheet with no legend of its own keys its shapes by the fullest legend among the sheets:
+  // the TH-73A MCG prints its legend on the first of five sheets only. Such a sheet is traced
+  // again with that legend's categories, so its boxes are not all "other".
+  const legendFrom = sheets.reduce((a, b) => (b.LEGEND.length > a.LEGEND.length ? b : a));
+  sheets = sheets.map((s) => {
+    if (s.LEGEND.length || !legendFrom.LEGEND.length) return s;
+    const own = [];
+    const traced = traceChart(s.source.paths, s.source.runs, { knownEventIds, categories: legendFrom.categories, warn: (m) => own.push(m), resolver: s.usedBus ? 'bus' : 'auto' });
+    return { ...traced, page: s.page, warnings: own, source: s.source };
+  });
   return {
     ...stackCharts(sheets),
     warnings: sheets.flatMap((s) => s.warnings),
@@ -1215,12 +1868,24 @@ const CONTINUATION_SPAN = 3;
 
 function continuationPages(pages, target) {
   const holds = (p, title) => squash(p.text).includes(squash(title));
-  return pages.filter((p) => p.page !== target.page
-    && Math.abs(p.page - target.page) <= CONTINUATION_SPAN
+  const sheets = pages.filter((p) => p.page !== target.page
     && holds(p, target.title)
     && !POST_TITLE.every((t) => holds(p, t))
-    && p.paths.length >= 50
+    // The TH-73A MCG's last sheet draws six boxes and a connector and little else.
+    && p.paths.length >= 20
     && boxesOf(p.paths).length >= MIN_REGION_BOXES);
+  // A chart over many sheets (the TH-73A MCG's runs to five, each a blank verso apart) is
+  // walked sheet by sheet from the one picked, forward and back: a sheet counts when it sits
+  // within the span of the last one counted, so the whole run is found whichever sheet the
+  // picker chose, and a chart further off is still another chart.
+  const found = [];
+  const nearest = (from, dir) => sheets
+    .filter((p) => !found.includes(p) && Math.sign(p.page - from) === dir && Math.abs(p.page - from) <= CONTINUATION_SPAN)
+    .sort((a, b) => Math.abs(a.page - from) - Math.abs(b.page - from))[0];
+  [1, -1].forEach((dir) => {
+    for (let next = nearest(target.page, dir); next; next = nearest(next.page, dir)) found.push(next);
+  });
+  return found;
 }
 
 // Charts traced page by page, in page order, as one: each sheet is moved down to start a little
@@ -1241,15 +1906,22 @@ function stackCharts(sheets) {
     if (s.LEGEND.length > legendFrom.LEGEND.length) legendFrom = s;
   });
   let LEGEND = [];
+  const bands = [];
   sheets.forEach((s) => {
     const [vx, vy, vw, vh] = viewOf(s);
     const dy = bottom === null ? 0 : num(bottom + STACK_GAP - vy);
+    bands.push({ caption: captionOf(s.source), y: num(vy + dy), h: num(vh) });
     const ids = {};
     s.NODES.forEach((n) => {
       const row = { ...n, y: num(n.y + dy) };
       if (n.letter) {
         seen[n.letter] = (seen[n.letter] || 0) + 1;
         row.id = `jump-${n.letter}-${seen[n.letter]}`;
+      } else if (n.kind === 'terminal') {
+        // END is printed on every sheet the course can end on; each capsule keeps its own id.
+        const base = n.id.replace(/-\d+$/, '');
+        seen[base] = (seen[base] || 0) + 1;
+        row.id = `${base}-${seen[base]}`;
       }
       ids[n.id] = row.id;
       NODES.push(row);
@@ -1267,7 +1939,23 @@ function stackCharts(sheets) {
       : [vx, top, vw, vh];
     bottom = top + vh;
   });
-  return { VIEWBOX: box.map(numStr).join(' '), NODES, LEGEND, EDGES, categories: legendFrom.categories };
+  // The sheets, in the stacked chart's own coordinates, each with the caption the publication
+  // prints over it: CourseFlow shows them one at a time, captioned so.
+  return { VIEWBOX: box.map(numStr).join(' '), NODES, LEGEND, EDGES, sheets: bands, categories: legendFrom.categories };
+}
+
+// The title the publication prints over a chart sheet ("AHTS COURSE FLOW (1 OF 5)"): the text
+// runs on the line that holds "COURSE FLOW", in reading order.
+function captionOf(page) {
+  if (!page || !page.runs) return '';
+  const holds = (t) => squash(t).toUpperCase().includes('COURSEFLOW');
+  const hit = page.runs.find((r) => holds(r.text))
+    || page.runs.find((r, i) => holds(page.runs.slice(i, i + 4).map((q) => q.text).join('')));
+  if (!hit) return '';
+  const line = page.runs.filter((r) => Math.abs(r.y - hit.y) < 1.5 && !r.turned).sort((a, b) => a.x - b.x);
+  // Runs carry no widths, so a title set in two runs is joined without its space; the one
+  // word boundary every caption has is put back.
+  return pyStrip(line.map((r) => r.text).join('').replace(PY_SPACE, ' ')).replace(/(\S)COURSE FLOW/, '$1 COURSE FLOW');
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1318,7 +2006,7 @@ function separatorCuts(runs, turned) {
 
 // The boxes a chart is built from: the shapes `classify` would take as nodes, by size alone,
 // since a region is being found rather than read.
-function boxesOf(paths) {
+export function boxesOf(paths) {
   return paths.filter((p) => {
     if (p.clip || p.paint === 'n' || !STROKE_OPS.has(p.paint)) return false;
     const [, , w, h] = bboxOf(p);

@@ -73,6 +73,31 @@ export const WORKS = [
   { work: 'T-54A NATOPS Checklist', date: '15NOV25' },
   { work: 'T-54A FTI', date: 'AUG25' },
   { work: 'T-54A MCG', date: '31JUL25' },
+  // TH-73A. Named for the aircraft; its FTIs are one per stage, so each carries the aircraft and
+  // the stage. The NATOPS and the pocket checklist are the 15 FEBRUARY 2026 issue; the Night FAM
+  // FTI is dated by its CH-1. The RWOP is COMTRAWINGFIVEINST 3710.8W CH-1, the Hollywood
+  // Checklist COMTRAWINGFIVEINST 3710.30B (the TH-73A Supplementary Student Study Aide). The
+  // HT-18 SOP file on hand has no signature page, so it carries no date yet.
+  { work: 'TH-73A NATOPS', date: '15FEB26' },
+  { work: 'TH-73A NATOPS Checklist', date: '15FEB26' },
+  { work: 'TH-73A Day FAM FTI', date: '11DEC25' },
+  { work: 'TH-73A Night FAM FTI', date: '29JAN24' },
+  { work: 'TH-73A Navigation FTI', date: '04APR26' },
+  { work: 'TH-73A BI/RI FTI', date: '23JAN26' },
+  { work: 'TH-73A Instrument Workbook', date: '02MAR26' },
+  { work: 'TH-73A Sea Logistics and SAR FTI', date: '11MAR26' },
+  { work: 'TH-73A Land Logistics FTI', date: '06FEB25' },
+  { work: 'TH-73A Formation FTI', date: '06MAR26' },
+  { work: 'TH-73A Aeromedical FTI', date: '11JAN23' },
+  { work: 'Helicopter Aero Reference Book', date: '28MAR24' },
+  { work: 'RWOP', date: '01JUL26' },
+  { work: 'HT-8 SOP', date: '14JUN24' },
+  { work: 'HT-18 SOP' },
+  { work: 'HT-28 SOP', date: '01MAR26' },
+  { work: 'TW-5 Hollywood Checklist', date: '25SEP26' },
+  { work: 'TH-73A SNA MCG', date: '16JAN26' },
+  { work: 'TH-73A Tilt-Rotor MCG', date: '12FEB26' },
+  { work: 'COPT-R/CORPS SGTO', date: '26JAN26' },
   // The general NATOPS manuals, shared by every program (so no aircraft in the name). The
   // Instrument Flight Manual is NAVAIR 00-80T-112, Aircraft Signals 00-80T-113 and Aircrew
   // Systems 00-80T-123; each is dated by its cover.

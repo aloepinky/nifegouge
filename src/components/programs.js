@@ -28,9 +28,9 @@ export const PROGRAMS = [
   // not the T-44C's word, so neither program's tabs show the other's.
   { id: 't54a', label: 'Advanced', school: 'T-54A', aircraft: 'T-54A', home: '/t54a/about', base: '/t54a', briefs: true, discuss: true },
   // The helicopter Advanced program, unlisted since 2026-10-15 while it is tested: its pages are
-  // served, so a link to one works, and the menus and the landing page do not show it. Two tabs
-  // so far (About and EPs/Limits); no briefs or discussion items yet, so neither flag.
-  { id: 'th73a', label: 'Advanced', school: 'TH-73A', aircraft: 'TH-73A', home: '/th73a/about', base: '/th73a', unlisted: true },
+  // served, so a link to one works, and the menus and the landing page do not show it. Three
+  // tabs so far (About, EPs/Limits and Briefs); no discussion items yet, so no `discuss` flag.
+  { id: 'th73a', label: 'Advanced', school: 'TH-73A', aircraft: 'TH-73A', home: '/th73a/about', base: '/th73a', briefs: true, unlisted: true, discuss: 'draft' },
 ];
 
 // Whether a thing flagged `true`, `'draft'` or falsy is shown here. A draft is shown on a dev
@@ -103,6 +103,8 @@ export const PROGRAM_TABS = {
   th73a: [
     { to: '/th73a/about', label: 'About' },
     { to: '/th73a/eps-limits', label: 'EPs/Limits' },
+    { to: '/th73a/discuss', label: 'Discussion Items', draft: true },
+    { to: '/th73a/briefs', label: 'Briefs' },
   ],
 };
 

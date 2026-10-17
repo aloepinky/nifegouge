@@ -27,14 +27,14 @@ where to look, not what to fix.
 | `href` rows (not items) | 5 |
 | Label-only rows (no page yet) | 17 |
 | Tables | 44 (in 37 items) |
-| Cited blocks | 5063 |
+| Cited blocks | 5077 |
 | Uncited blocks | 0 (in 0 items) |
 
 ## Publications cited
 
 | Work | Items |
 |---|---|
-| ME FTI | 209 |
+| ME FTI | 210 |
 | T-44C NATOPS | 155 |
 | AIM | 66 |
 | Tilt-Rotor Low-Level FTI | 35 |
@@ -85,7 +85,7 @@ figures with no reference marker and no section-level `refs`.
 | Airport diagrams and symbols | `airport-diagrams-and-symbols` | I | I4203 I4302 | AIM, Instrument Procedures Handbook, ME FTI |  |  |
 | Airspace and RVSM | `airspace-and-rvsm` | I | I4401 | AIM, ME FTI |  |  |
 | Annunciator panel analysis | `annunciator-panel-analysis` | FAM | FAM2101 | T-44C NATOPS, T-44C Systems Handout |  |  |
-| Anti-ice and deice systems | `anti-ice-and-deice-systems` | FAM, I | FAM2103 FAM2103 FAM4203 I2103 I4202 I4303 | T-44C NATOPS |  |  |
+| Anti-ice and deice systems | `anti-ice-and-deice-systems` | FAM, I | FAM2103 FAM2103 FAM4203 I2103 I4202 I4303 | ME FTI, T-44C NATOPS |  |  |
 | AP-1B (Chapter 4) track procedures | `ap-1b-chapter-4-track-procedures` | F | F4201 | ME FTI |  |  |
 | Approach and landing minimums | `approach-and-landing-minimums` | I | I3202 I4202 | ME FTI, TW-4 SOP |  |  |
 | Approach lighting | `approach-lighting` | I | I3401 | AIM, FIH, ME FTI |  |  |
@@ -425,7 +425,7 @@ the item, and its section headings. Longest first.
 - `airport-diagrams-and-symbols` — airfield diagrams and symbols · Airport diagrams and symbols · Airport diagram · Airport sketch · Approach brief · Hot spots
 - `airspace-and-rvsm` — Reduced vertical separation minimum · Airspace and RVSM · Class A · Class B · Class C · Class D
 - `annunciator-panel-analysis` — annunciator panel and analysis · Annunciator panel analysis · Lights, causes and actions · Colors and fault warning · Annunciator test · DIM control
-- `anti-ice-and-deice-systems` — Airspeed in icing conditions · Abnormal prop deice ammeter · Anti-ice and deice systems · anti-ice and deice system · Fuel system anti-icing · Engine ice protection · Pitot and stall heat · Windshield anti-ice · anti-icing systems · anti-icing system · Propeller deice · Surface deice · Boot failure
+- `anti-ice-and-deice-systems` — Airspeed in icing conditions · Abnormal prop deice ammeter · Anti-ice and deice systems · anti-ice and deice system · Fuel system anti-icing · Engine ice protection · Pitot and stall heat · Windshield anti-ice · anti-icing systems · anti-icing system · Propeller deice · Surface deice · Ground check · Boot failure
 - `ap-1b-chapter-4-track-procedures` — AP-1B (Chapter 4) track procedures · Air refueling brief · AP-1B track entry · Flight plan entry · Track points
 - `approach-and-landing-minimums` — Single-piloted approach criteria · Multi-piloted approach criteria · Approach and landing minimums · landing minimums · Visibility · TW-4 SOP
 - `approach-lighting` — Runway end identifier lights · Runway environment · Approach lighting · Charted lighting · Configuration · System types
@@ -507,7 +507,7 @@ the item, and its section headings. Longest first.
 - `engine-fire-on-deck` — Engine fire on deck · Fire extinguisher · Procedure
 - `engine-instruments-and-switches` — Engine instruments and switches · Interstage turbine temperature · Oil pressure and temperature · Propeller tachometers · Engine start switches · Autoignition switches · Fuel flow indicators · Turbine tachometers · Circuit protection · Torquemeters
 - `engine-secure-and-restart` — Return to dual-engine flight · Engine secure and restart · Procedure · Restart
-- `engine-start-procedures` — Engine start procedures · Battery start · Crew duties · Night start
+- `engine-start-procedures` — Engine start procedures · Battery start · Crew duties · Start brief · Night start
 - `engine-system-malfunctions` — engine system malfunctions (engine failure or fire after takeoff) · Engine failure and flameout · Engine system malfunctions · Uncontrollable power · Chip detector light · Oil system failure · Procedure · Airstart
 - `engine-system` — Combustion chamber and turbines · Engine fuel control system · Ignition and autoignition · Principles of operation · Reduction gear box · Condition levers · Engine system · Compressor
 - `escape` — Syllabus standard · Egress routing · Red light · Escape

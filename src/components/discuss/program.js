@@ -57,9 +57,12 @@ export function guessProgram(text) {
   if (s) out.school = s[1].charAt(0).toUpperCase() + s[1].slice(1).toLowerCase();
   // The T-54A's MCG calls itself Advanced, but its pages are filed under a school of their own.
   if (out.aircraft && /^T-54/.test(out.aircraft)) out.school = 'T-54A';
+  // The TH-73A's MCGs name the aircraft "TH-73" (Course Data: "TH-73 Advanced Helicopter
+  // Training System") and call themselves Advanced; its pages are filed under TH-73A.
+  if (out.aircraft && /^TH-73/.test(out.aircraft)) { out.aircraft = 'TH-73A'; out.school = 'TH-73A'; }
   return out;
 }
 
 // The schools a JPPT/MCG can be submitted for, offered as a fixed choice on the upload page.
 // The T-54A is filed as a school of its own so its pages stay apart from the T-44C's.
-export const SCHOOLS = ['NIFE', 'Primary', 'Advanced', 'T-54A'];
+export const SCHOOLS = ['NIFE', 'Primary', 'Advanced', 'T-54A', 'TH-73A'];

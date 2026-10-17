@@ -59,6 +59,8 @@ const T54ABriefs = page(() => import('./components/T54ABriefs.js'));
 const T54ADocs = page(() => import('./components/T54ADocs.js'));
 const TH73AAbout = page(() => import('./components/TH73AAbout.js'));
 const TH73AEPsLimits = page(() => import('./components/TH73AEPsLimits.js'));
+const TH73ABriefs = page(() => import('./components/TH73ABriefs.js'));
+const TH73ADiscuss = page(() => import('./components/TH73ADiscuss.js'));
 const BriefsPage = page(() => import('./components/briefs/BriefsPage'));
 const NIFEAbout = page(() => import('./components/NIFEAbout.js'));
 const CourseRules = page(() => import('./components/TW4CourseRules.js'));
@@ -178,6 +180,8 @@ function App() {
         <Route path="/th73a/about" element={<TH73AAbout />} />
         <Route path="/th73a/eps-limits" element={<TH73AEPsLimits />} />
         <Route path="/th73a/eps-limits/:tab" element={<TH73AEPsLimits />} />
+        <Route path="/th73a/briefs/*" element={<TH73ABriefs />} />
+        <Route path="/th73a/discuss/*" element={<TH73ADiscuss />} />
       </>)}
       </Routes>
       </Suspense>

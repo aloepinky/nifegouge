@@ -10,7 +10,7 @@
     "tableItems": 37,
     "uncitedItems": 0,
     "uncitedBlocks": 0,
-    "citedBlocks": 5063,
+    "citedBlocks": 5077,
     "events": 78,
     "hrefRows": 5,
     "unwrittenRows": 17
@@ -31,6 +31,7 @@
       "airfield-markings-and-lighting",
       "airport-diagrams-and-symbols",
       "airspace-and-rvsm",
+      "anti-ice-and-deice-systems",
       "ap-1b-chapter-4-track-procedures",
       "approach-and-landing-minimums",
       "approach-lighting",
@@ -3619,6 +3620,17 @@
           "further": null
         },
         {
+          "id": "ground-check",
+          "title": "Ground check",
+          "refs": null,
+          "paras": 2,
+          "items": 8,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "prop-deice-ammeter",
           "title": "Abnormal prop deice ammeter",
           "refs": [
@@ -3689,6 +3701,7 @@
         }
       ],
       "works": [
+        "ME FTI",
         "T-44C NATOPS"
       ],
       "references": [
@@ -3781,10 +3794,22 @@
           "work": "T-44C NATOPS",
           "loc": "§2.20.2 — Windshield Anti-Ice",
           "pages": "p. 2.20-1"
+        },
+        {
+          "n": 16,
+          "work": "T-44C NATOPS",
+          "loc": "§19.1.4 — Deicing and Anti-Icing Systems Ground Check",
+          "pages": "p. 19.1-2"
+        },
+        {
+          "n": 17,
+          "work": "ME FTI",
+          "loc": "§F105 — Before Takeoff Checklist",
+          "pages": "p. F-14"
         }
       ],
       "coverage": {
-        "cited": 31,
+        "cited": 41,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -3807,6 +3832,7 @@
         "anti-icing system",
         "Propeller deice",
         "Surface deice",
+        "Ground check",
         "Boot failure"
       ]
     },
@@ -15917,6 +15943,17 @@
           "further": null
         },
         {
+          "id": "start-brief",
+          "title": "Start brief",
+          "refs": null,
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "battery-start",
           "title": "Battery start",
           "refs": [
@@ -16003,10 +16040,16 @@
           "work": "ME FTI",
           "loc": "§302 — Night Ground Operations",
           "pages": "p. 3-4"
+        },
+        {
+          "n": 4,
+          "work": "ME FTI",
+          "loc": "§F100 — Introduction",
+          "pages": "p. F-1"
         }
       ],
       "coverage": {
-        "cited": 45,
+        "cited": 49,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -16020,6 +16063,7 @@
         "Engine start procedures",
         "Battery start",
         "Crew duties",
+        "Start brief",
         "Night start"
       ]
     },

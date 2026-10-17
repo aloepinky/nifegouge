@@ -26,6 +26,10 @@ export const T44C_P8_ID = 't44c-p8';
 // The T-54A's syllabus (CNATRAINST 1542.198), the built-in syllabus of the /t54a/discuss
 // mount. The T-54A is its own school, so it reads its own pages, apart from the T-44C's.
 export const T54A_SYLLABUS_ID = 't54a-me';
+// The TH-73A's SNA syllabus (CNATRAMCG 1542.186D), the built-in syllabus of the /th73a/discuss
+// mount. The Tilt-Rotor MCG and the COPT-R/CORPS SGTO are two more documents of the same school,
+// reached from the picker; all three read the one TH-73A page corpus.
+export const TH73A_SYLLABUS_ID = 'th73a-sna';
 
 function index(rows) {
   const out = {};

@@ -58,8 +58,8 @@ live in `src/components/T54A/images/` (imported, not `public/`) and its limits s
 `.t44c-*` classes; its leaderboard is `T-54A`.
 
 **TH-73A (`/th73a/*`, "Advanced - TH-73A", school `TH-73A`)** is `unlisted` since 2026-10-15:
-served by link, hidden from the program menu, the landing page and the other About pages. Two
-tabs, About and EPs/Limits; no briefs or discussion items yet. There is no TH-73A exam sheet, so
+served by link, hidden from the program menu, the landing page and the other About pages. Three
+tabs, About, EPs/Limits and Briefs; no discussion items yet. There is no TH-73A exam sheet, so
 its EPs are the 37 NATOPS Ch. 12 procedures with asterisked (memory) steps, memory steps only,
 and its limits sheet is the site's own selection from NATOPS Ch. 4 (`TH73A/th73aData.js` says
 which; the page says so too). Same layout as the T-54A: images in `src/components/TH73A/images/`,
@@ -188,6 +188,18 @@ syllabus is required).
   linked (a T-44C | T-54A switch was built and removed 2026-10-03: the T-44C is being phased
   out). Lint `wrong-aircraft-work` catches a T-44C citation left on a T-54A page or the reverse.
   Match schools with `schoolOf(p)`, never `p.label` — both programs are labelled Advanced.
+- **TH-73A** (`/th73a/discuss`, `TH73ADiscuss.js`, school `TH-73A`) has three syllabi on one
+  corpus, like the T-44C's pair: `th73a-sna` (CNATRAMCG 1542.186D, the built-in), `th73a-tr`
+  (1542.188C Tilt-Rotor) and `th73a-coptr` (the wing's COPT-R/CORPS SGTO 2.0, a notice with no
+  instruction number). Seeded by `tools/th73a-syllabus.js`; `jppt/th73a.test.js` pins the
+  parse. Their quirks the parser now reads: a `CNATRAMCG` running head, body chapter headings
+  missing from the text layer (the chapter comes off the page footer and the contents), the
+  student letter on every event and chart box (`DAY2001A`, `NAV0101-2A`), a chart over five
+  sheets with the legend on the first only (captions inside the keys; `lesson`/`test` kinds
+  for its thin and thick octagons, `study` for Self Study, whose key is a filled ring; an
+  Opt Flow dashed line and a Start / End capsule as keys; START/END capsules drawn as
+  `terminal` boxes), and an event id leading the Discuss Items line. The pass
+  lives in `_reference-docs/TH-73A Advanced/discuss-pass/` (repairs, groups, inventory, stubs).
 
 ### Routes (`/primary/discuss` shown)
 
@@ -248,8 +260,39 @@ regenerate, don't hand-edit fixtures; the live flow is edited in the flow editor
   to (A) to I-7) is traced page by page and stacked (`stackCharts`, JS only): connectors
   renumbered across the join, the fullest legend kept, cited `pp. I-5 to I-7`. `t54a.test.js`
   pins it; a one-page chart never reaches that code.
+- **A chart drawn as buses** (the TH-73A's three): a box leaves by a headless stub onto a
+  shared line, heads sit at the destinations (a dashed bus has heads at both ends), a head may
+  point into a junction or a block's frame, and START/END capsules sit mid-route. The pairwise
+  resolver inverts such a chart, so `resolveBusEdges` (flowExtract.js, **JS only**, not in the
+  Python) reads it as a graph: every head names a target, every headless end on a box a source,
+  sources found by walking back through junctions, one edge per source. Chosen per chart when
+  the pairwise reading leaves more than `BUS_THRESHOLD` (10) connectors unresolved on any
+  sheet or over all its sheets together (the SNA's leave 6 to 9 a sheet, 30 in all); Delta,
+  the T-44C (7) and the T-54A (4) keep the pairwise reading. An arrow that runs mostly along
+  dashed lines carries `dashed: true` and is drawn dashed (the legend's Opt Flow). Its rules the charts forced: a head's tip is
+  the vertex farthest along its line (squat heads fool the centroid) with a base square to the
+  line; a touching box beats a junction beats a box 8 pt off beats a frame (a head on a frame
+  takes the frame before a junction); a point on three
+  lines joins all three; a feeder-less headed line is fed where another crosses it; a headless
+  stub flows into a box below the junction and out of one above; a sheet with no heads at all
+  flows down the page; a source reached only through a headless joint never sits below its
+  target; a closed line of box size holding an event id is a box (`promoteBoxes`, a seamed
+  outline closed by `h` included); two lines meeting under one arrowhead stay two lines (the
+  chainer never joins at a head's base); a legend key is the shape immediately left of its
+  caption, not the nearest in height; slants are squared with a corner at the end. New kinds `lesson` (thin octagon) and `test` (thick) for
+  the helicopter legends.
+- **Sheets**: a chart over several pages is still stacked in `flow` (every consumer reads one
+  chart), and `flow.sheets[]` records each page's band (`y`, `h`) and the publication's own
+  caption (`AHTS COURSE FLOW (2 OF 5)`). `CourseFlow` shows such a chart one sheet at a time in a
+  carousel (`.discuss-flow-sheet`, arrows and keyboard, caption and count in the foot), the
+  figure gallery's idiom; the flow editor edits the stacked whole. A syllabus seeded before
+  `sheets` existed (the T-54A's) stays stacked until its document gains the key.
 - Legend captions may sit inside keys (`LEGEND[].inside`, centred and wrapped) and in multiple
-  columns; `CourseFlow` widens the viewBox for captions.
+  columns; `CourseFlow` widens the viewBox for captions. A caption beside a key sits beside the
+  column's widest key, or beside the key itself when the key is narrower and set at the
+  column's left (the TH-73A's lettered circle, `letter`); a caption the publication prints on
+  two lines keeps them (`lines`). Keys of `shape: 'line'` (dashed sample) and `'capsule'`
+  (filled START/END) are drawn by `Legend` and key no box.
 - **A label that doesn't fit its shape wraps** (`discuss/flowText.js` `fitLines`, drawn by
   `CourseFlow`'s `Label`), breaking where the halves come out evenest, as the publication breaks
   SERVICE-SPECIFIC / COURSE FLOW and its inside captions. A **single word never breaks** — an
@@ -526,6 +569,10 @@ Lambda, so a new op is a console change — or a new `voteType` on an existing p
 `/primary/briefs` (and `/nife/briefs` via `BriefsPage` with `base`, `school`, `told`). Code in
 `src/components/briefs/`, ops in `lambda/discussApi/briefs.mjs` (table `Briefs`, PK `briefId`,
 SK `rev`); same revision/409/history model. No seed — briefs come from uploading the guide.
+The one exception is the TH-73A, which has no uploadable guide: its three briefs (NATOPS,
+Mission, Formation) were compiled from NATOPS Ch. 6 §6.4, the TW-5 example NATOPS brief and
+the Navigation, Night FAM and Formation FTIs, and published once by `tools/th73a-briefs.mjs`
+(seeds once, refuses an id already on the index); every later change is an edit on the site.
 - Document: `{ id, title, short, aircraft, school, order, note, source, sections: [{ id, title,
   column, break?, fixed?, text?, items: [{ id, label, fixed?, subtext?, text }] }] }`. Plain text;
   nesting is two-space indentation; `**bold**` only.

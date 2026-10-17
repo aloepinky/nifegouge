@@ -13,6 +13,10 @@ export const KINDS = [
   ['cai', 'CAI Test'],
   ['support', 'Flt Support'],
   ['exam', 'P/P Exam'],
+  ['lesson', 'CAI'],
+  ['test', 'Exam'],
+  ['study', 'Self Study'],
+  ['terminal', 'Start / End'],
 ];
 
 const snap = (v) => Math.round(v * 2) / 2;

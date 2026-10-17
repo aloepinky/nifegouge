@@ -44,11 +44,18 @@ const T54A = [
   { path: '/t54a/briefs', label: 'Briefs' },
 ];
 
+const TH73A = [
+  { path: '/th73a/eps-limits', label: 'Emergency procedures' },
+  { path: '/th73a/eps-limits/limits', label: 'TH-73A operating limitations' },
+  { path: '/th73a/briefs', label: 'Briefs' },
+];
+
 export const PSM_PAGES = [
   ...TW4.map((p) => ({ ...p, school: 'Primary' })),
   ...NIFE.map((p) => ({ ...p, school: 'NIFE' })),
   ...T44C.map((p) => ({ ...p, school: 'Advanced' })),
   ...T54A.map((p) => ({ ...p, school: 'T-54A' })),
+  ...TH73A.map((p) => ({ ...p, school: 'TH-73A' })),
 ];
 
 const byPath = new Map(PSM_PAGES.map((p) => [p.path, p]));

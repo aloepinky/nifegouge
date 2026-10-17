@@ -19,6 +19,9 @@ export const UNITS = [
   { id: 'VT-6', wing: 'TW-5', school: 'Primary' },
   { id: 'VT-31', wing: 'TW-4', school: 'Advanced' },
   { id: 'VT-35', wing: 'TW-4', school: 'Advanced' },
+  { id: 'HT-8', wing: 'TW-5', school: 'TH-73A' },
+  { id: 'HT-18', wing: 'TW-5', school: 'TH-73A' },
+  { id: 'HT-28', wing: 'TW-5', school: 'TH-73A' },
 ];
 
 const BY_ID = new Map(UNITS.map((u) => [u.id, u]));
