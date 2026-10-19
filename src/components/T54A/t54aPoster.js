@@ -15,9 +15,9 @@ import cbSrc from './images/t54a-cb.webp';
 //
 // Every box was read off a grid over the region image, then checked on an overlay against the
 // control the NATOPS (A1-T54A-NFM-000, IC 04) names, then tuned by hand. The NATOPS settled two
-// the placards could not: the autothrottles disconnect at the AT button on the right power lever
-// (§2.17.2.7), which the power lever box stands for, and the autopilot at the AP/TRIM MASTER
-// switch or the YD/AP DISC bar (§15.15.1).
+// the placards could not: the autothrottles disconnect at the AT button on the right power lever,
+// which the power lever box stands for, or at the SDU's A/T PWR key (§2.17.2.7), and the
+// autopilot at the AP/TRIM MASTER switch or the YD/AP DISC bar (§15.15.1).
 //
 // Five regions, every one a whole sub-panel off the sheet: the main instrument panel, the
 // pilot's control wheel, the whole centre pedestal (power quadrant to the RUDDER BOOST switch),
@@ -119,6 +119,11 @@ export const T54A_POSTER = {
           action: 'Master Warning' },
         { box: [0.445, 0.07, 0.088, 0.145], label: 'Standby display unit (SDU)',
           action: 'SDU', values: ['Aligned', 'Checked, On'] },
+        // The A/T PWR key on the SDU bezel "engages/disengages the autothrottle system" (§2.9.5.1),
+        // the second of the two disconnects §2.17.2.7 names; the power levers stand for the first.
+        { box: [0.539, 0.058, 0.010, 0.017], label: 'A/T PWR button',
+          action: 'Autothrottles', also: ['Autothrottle', 'A/T Power'],
+          values: ['Disengage', 'As required'] },
         // The MFD engine strip, a target per row. The strip-wide Engine Instruments box above
         // stays for its EP steps; each gauge answers for it too.
         { box: [0.374, 0.373, 0.040, 0.030], label: 'Torque',
