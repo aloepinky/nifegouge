@@ -315,7 +315,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, 
 // chosen one filled. Styled as `.epl-modes`, copied from TW4Cockpit.js's inline styles.
 function ModeDots({ sets, current, onPick }) {
   return (
-    <div className="epl-modes" role="radiogroup" aria-label="Checklists">
+    <div className={`epl-modes${sets.length > 2 ? ' epl-modes--wide' : ''}`} role="radiogroup" aria-label="Checklists">
       <div className="epl-modes-line" />
       {sets.map((set) => (
         <button key={set.id} type="button" role="radio" aria-checked={set.id === current}

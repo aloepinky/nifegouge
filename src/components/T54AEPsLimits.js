@@ -1,6 +1,7 @@
 import React from 'react';
 import T54ALimits from './T54A/T54ALimits';
 import { T54A_EPS, T54A_EP_NWC } from './T54A/t54aData';
+import { T54A_CHECKLISTS, T54A_FLOWS } from './T54A/t54aNormals';
 import { T54A_POSTER, T54A_ALIASES, t54aRegion } from './T54A/t54aPoster';
 import ActionButtons from './epsLimits/ActionButtons';
 import { PosterRegion, usePoster } from './epsLimits/CockpitPoster';
@@ -16,6 +17,11 @@ import EPsLimitsShell from './epsLimits/EPsLimitsShell';
 // the right, the pedestal and then the circuit breaker panel.
 //
 // `nwc` gives the page its NWC buttons and Auto NWC toggle, from the NATOPS (t54aData.js).
+//
+// Three sets, as the T-44C page has its EPs and Hollywood: the EPs; the NATOPS Ch. 7 flows,
+// done from memory and typed like the EPs (and added to the EPs by "All Memory Procedures");
+// and the Ch. 7 checklists, read off and clicked. NATOPS §7.2 keeps flows and checklists apart,
+// so the page does too: only the flows carry the asterisk. See T54A/t54aNormals.js.
 
 const TABS = [
   { id: 'eps', label: 'EPs' },
@@ -43,7 +49,8 @@ function LeftSide(api) {
   return (
     <div className="t44c-console">
       <PosterRegion region={FUEL} view={useT54APoster(api)} className="epl-band-frame--fluid" />
-      <ActionButtons actions={T54A_POSTER.actions} aliases={T54A_ALIASES} {...api} />
+      <ActionButtons actions={T54A_POSTER.actions.filter((a) => api.mixed || (api.normalProcedure ? !a.ep : !a.normal))}
+        aliases={T54A_ALIASES} {...api} />
     </div>
   );
 }
@@ -59,20 +66,37 @@ function RightSide(api) {
   );
 }
 
+const SETS = [
+  {
+    id: 'eps',
+    label: 'EPs',
+    eps: T54A_EPS,
+    nwc: T54A_EP_NWC,
+    title: 'T-54A EMERGENCY PROCEDURES',
+    footnote: '* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS',
+    extra: { label: 'All Memory Procedures', eps: T54A_FLOWS },
+  },
+  {
+    id: 'flows', label: 'Flows', eps: T54A_FLOWS, nwc: null, normal: true, sequential: true,
+    title: 'T-54A FLOWS', footnote: '* EXECUTED FROM MEMORY',
+  },
+  {
+    id: 'checklists', label: 'Checklists', eps: T54A_CHECKLISTS, nwc: null, normal: true, read: true, sequential: true,
+    title: 'T-54A CHECKLISTS', footnote: '# ABBREVIATED CHECKLIST ITEM · LS/RS LEFT/RIGHT SEAT · PF/PM PILOT FLYING/MONITORING',
+  },
+];
+
 function T54AEPs(game) {
   return (
     <EPDrill
       {...game}
-      eps={T54A_EPS}
-      nwc={T54A_EP_NWC}
-      title="T-54A EMERGENCY PROCEDURES"
+      sets={SETS}
       aliases={T54A_ALIASES}
       sideWidth={[300, 300]}
       top={(api) => <MainPanel {...api} />}
       above={(api) => <Yoke {...api} />}
       left={(api) => <LeftSide {...api} />}
       right={(api) => <RightSide {...api} />}
-      footnote="* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS"
     />
   );
 }
