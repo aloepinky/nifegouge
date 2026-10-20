@@ -24,13 +24,32 @@ import cbSrc from './images/t54a-cb.webp';
 // the fuel control and fuel breaker panel, and the circuit breaker panel.
 //
 // The normal flows and checklists (T54A/t54aNormals.js) ride on the same poster. Their targets
-// sit in each region's "rough, tune with ?spots" block, drawn after the tuned ones so a small
-// target inside a larger one (a gauge on the MFD's engine strip) wins the click. A tuned record
-// that a normal step also names carries the step's wording in `also` (another spelling of the
-// same control) or `actions` (another control on the same target) and the step's setting in
-// `values`; its box is unchanged. The engine strip is one target per gauge, each also answering
-// for `Engine Instruments`, so the EP steps worked against the whole strip still answer anywhere
-// on it.
+// sit in each region's "rough, tune with ?spots" block. A tuned record that a normal step also
+// names carries the step's wording in `also` (another spelling of the same control) or `actions`
+// (another control on the same target) and the step's setting in `values`; its box is unchanged.
+//
+// No target covers a whole panel. A step that checks a panel ("Engine Instruments", "Fuel
+// Panel", "Lights", "Anti-Ice/De-Ice") is answered by any control or gauge on it, each boxed
+// tight on its own, as on the T-44C's.
+
+// The wordings that name the whole engine strip, and the settings the steps give them. Each
+// gauge on the strip answers all of them.
+const ENGINE_INSTRUMENTS = ['Engine Instruments', 'Right Engine Instruments', 'Left Engine Instruments',
+  'Engine Instruments/Fuel Quantity'];
+const ENGINE_INSTRUMENT_VALUES = {
+  'Engine Instruments': ['Monitor (1000 C Maximum) (PF, PM)', 'Monitor', 'Checked', 'Check'],
+  'Right Engine Instruments': ['Monitor', 'Checked'],
+  'Left Engine Instruments': ['Monitor', 'Checked'],
+  'Engine Instruments/Fuel Quantity': ['Checked'],
+};
+const gauge = (box, label, action, more = [], values = {}) => ({
+  id: `gauge-${action.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`, box, label, action,
+  actions: [action, ...more, ...ENGINE_INSTRUMENTS],
+  values: { ...ENGINE_INSTRUMENT_VALUES, ...values },
+});
+
+// The fuel control panel's "Checked, Auto": any switch or gauge on it.
+const FUEL_PANEL = { 'Fuel Panel': ['Checked, Auto'] };
 
 export const T54A_POSTER = {
   regions: [
@@ -59,17 +78,6 @@ export const T54A_POSTER = {
             Wings: ['Level'],
             Roll: ['Continue planned lateral path'],
           } },
-        // The engine strip down the left of the MFD. "Verify feathered" is read off it (prop
-        // rpm), as the monitor step is: an instrument the step is worked against.
-        { box: [0.373, 0.368, 0.043, 0.22], label: 'Engine instruments',
-          action: 'Engine Instruments',
-          also: ['Right Engine Instruments', 'Left Engine Instruments'],
-          actions: ['Engine Instruments', 'Propeller (inoperative engine)', 'Engine Instruments/Fuel Quantity'],
-          values: {
-            'Engine Instruments': ['Monitor (1000 C Maximum) (PF, PM)', 'Monitor', 'Checked', 'Check'],
-            'Propeller (inoperative engine)': ['Verify feathered'],
-          } },
-
         // One step, one control, drawn at each end of the glareshield. Same `action`, different `id`.
         { id: 'fire-ext-left', box: [0.343, 0.11, 0.026, 0.045], label: 'LH engine fire push button',
           action: 'Fire Extinguisher', values: ['As required', 'As required (LS, RS)'] },
@@ -117,74 +125,117 @@ export const T54A_POSTER = {
           action: 'Master Warning' },
         { id: 'master-warning-right', box: [0.781, 0.103, 0.024, 0.035], label: 'MASTER WARNING light (copilot)',
           action: 'Master Warning' },
-        { box: [0.445, 0.07, 0.088, 0.145], label: 'Standby display unit (SDU)',
+        { box: [0.445, 0.060, 0.088, 0.098], label: 'Standby display unit (SDU)',
           action: 'SDU', values: ['Aligned', 'Checked, On'] },
         // The A/T PWR key on the SDU bezel "engages/disengages the autothrottle system" (§2.9.5.1),
         // the second of the two disconnects §2.17.2.7 names; the power levers stand for the first.
         { box: [0.539, 0.058, 0.010, 0.017], label: 'A/T PWR button',
           action: 'Autothrottles', also: ['Autothrottle', 'A/T Power'],
           values: ['Disengage', 'As required'] },
-        // The MFD engine strip, a target per row. The strip-wide Engine Instruments box above
-        // stays for its EP steps; each gauge answers for it too.
-        { box: [0.374, 0.373, 0.040, 0.030], label: 'Torque',
-          action: 'Torque', actions: ['Torque', 'Engine Instruments', 'Engine Instruments/Fuel Quantity'] },
-        { box: [0.374, 0.405, 0.040, 0.028], label: 'ITT',
-          action: 'ITT', actions: ['ITT', 'Right ITT and N1', 'Left ITT and N1', 'Engine Instruments', 'Engine Instruments/Fuel Quantity'] },
-        { box: [0.374, 0.435, 0.040, 0.024], label: 'Prop RPM',
-          action: 'Prop RPM',
-          actions: ['Prop RPM', 'Propeller (inoperative engine)', 'Engine Instruments', 'Engine Instruments/Fuel Quantity'],
-          values: { 'Propeller (inoperative engine)': ['Verify feathered'] } },
-        { box: [0.374, 0.460, 0.040, 0.010], label: 'N1',
-          action: 'N1', actions: ['N1', 'Right ITT and N1', 'Left ITT and N1', 'Engine Instruments', 'Engine Instruments/Fuel Quantity'] },
-        { box: [0.374, 0.472, 0.040, 0.010], label: 'Oil pressure',
-          action: 'Oil Pressure', also: ['Right Oil Pressure', 'Left Oil Pressure'],
-          actions: ['Oil Pressure', 'Engine Instruments', 'Engine Instruments/Fuel Quantity'] },
-        { box: [0.374, 0.482, 0.040, 0.010], label: 'Oil temperature',
-          action: 'Oil Temperature', actions: ['Oil Temperature', 'Engine Instruments', 'Engine Instruments/Fuel Quantity'] },
-        { box: [0.374, 0.492, 0.040, 0.010], label: 'Fuel flow',
-          action: 'Fuel Flow', actions: ['Fuel Flow', 'Engine Instruments', 'Engine Instruments/Fuel Quantity'] },
-        { box: [0.374, 0.504, 0.040, 0.018], label: 'Cabin altitude and rate',
+        // The MFD engine strip, a target per row, each answering for the whole strip. "Verify
+        // feathered" is read off the prop rpm, an instrument the step is worked against.
+        gauge([0.374, 0.376, 0.040, 0.028], 'Torque', 'Torque'),
+        gauge([0.374, 0.406, 0.040, 0.028], 'ITT', 'ITT', ['Right ITT and N1', 'Left ITT and N1']),
+        gauge([0.374, 0.436, 0.040, 0.024], 'Prop RPM', 'Prop RPM', ['Propeller (inoperative engine)'],
+          { 'Propeller (inoperative engine)': ['Verify feathered'] }),
+        gauge([0.374, 0.461, 0.040, 0.010], 'N1', 'N1', ['Right ITT and N1', 'Left ITT and N1']),
+        { ...gauge([0.374, 0.473, 0.040, 0.009], 'Oil pressure', 'Oil Pressure'),
+          also: ['Right Oil Pressure', 'Left Oil Pressure'] },
+        gauge([0.374, 0.483, 0.040, 0.009], 'Oil temperature', 'Oil Temperature'),
+        gauge([0.374, 0.493, 0.040, 0.010], 'Fuel flow', 'Fuel Flow'),
+        { box: [0.374, 0.505, 0.040, 0.017], label: 'Cabin altitude and rate',
           action: 'Cabin Altitude' },
-        { box: [0.374, 0.524, 0.040, 0.023], label: 'Flap position indicator',
+        { box: [0.374, 0.525, 0.040, 0.022], label: 'Flap position indicator',
           action: 'Flap Indicator' },
-        { box: [0.374, 0.550, 0.040, 0.048], label: 'CAS messages',
+        { box: [0.374, 0.552, 0.040, 0.031], label: 'CAS messages',
           action: 'CAS Messages', values: ['Checked'] },
         // The lower sub-panel, left to right.
         { box: [0.026, 0.812, 0.016, 0.026], label: 'BAT switch',
           action: 'Battery', values: ['Verify ON'] },
         { box: [0.076, 0.753, 0.014, 0.03], label: 'Avionics master power',
           action: 'Avionics Master', values: ['ON', 'OFF'] },
-        { id: 'engine-anti-ice', box: [0.124, 0.80, 0.040, 0.10], label: 'Engine anti-ice',
+        // ENGINE ANTI-ICE, LEFT and RIGHT over the two ACTUATORS switches; any is Anti-Ice/De-Ice.
+        { id: 'engine-anti-ice-left', box: [0.128, 0.818, 0.009, 0.026], label: 'Left engine anti-ice',
           action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
-        { box: [0.121, 0.902, 0.018, 0.04], label: 'Autofeather switch',
+        { id: 'engine-anti-ice-right', box: [0.150, 0.818, 0.010, 0.026], label: 'Right engine anti-ice',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'actuators-left', box: [0.127, 0.862, 0.011, 0.025], label: 'Left engine anti-ice actuators',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'actuators-right', box: [0.149, 0.862, 0.011, 0.025], label: 'Right engine anti-ice actuators',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { box: [0.126, 0.908, 0.011, 0.027], label: 'Autofeather switch',
           action: 'Autofeather', actions: ['Autofeather', 'Autofeather/Autoignition'],
           values: { Autofeather: ['ARM', 'OFF', 'As required'] } },
-        { box: [0.155, 0.905, 0.016, 0.035], label: 'Prop governor test switch',
+        { box: [0.155, 0.910, 0.010, 0.027], label: 'Prop governor test switch',
           action: 'Governors and Rudder Boost' },
-        { box: [0.297, 0.739, 0.020, 0.032], label: 'Prop sync',
+        { box: [0.297, 0.745, 0.016, 0.029], label: 'Prop sync',
           action: 'Prop Sync', values: ['As required', 'On'] },
-        // The exterior lights are two groups, LANDING to RECOG and BEACON with STROBE; either is
-        // Lights. The beacon toggle inside the second is a target of its own.
-        { id: 'lights-row', box: [0.244, 0.794, 0.090, 0.043], label: 'Exterior lights',
+        // The exterior lights, LANDING (left and right) to RECOG, then BEACON and STROBE: any is
+        // Lights, and the beacon is also its own step.
+        { id: 'light-landing-left', box: [0.247, 0.809, 0.009, 0.028], label: 'Left landing light',
           action: 'Lights', values: ['Set', 'As required', 'Off'] },
-        { id: 'ice-protection', box: [0.244, 0.840, 0.090, 0.11], label: 'Ice protection',
-          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
-        { id: 'lights-beacon-strobe', box: [0.369, 0.793, 0.031, 0.052], label: 'Beacon and strobe lights',
+        { id: 'light-landing-right', box: [0.262, 0.809, 0.009, 0.028], label: 'Right landing light',
           action: 'Lights', values: ['Set', 'As required', 'Off'] },
-        { box: [0.374, 0.799, 0.012, 0.035], label: 'Beacon',
+        { id: 'light-taxi', box: [0.277, 0.809, 0.009, 0.028], label: 'Taxi light',
+          action: 'Lights', values: ['Set', 'As required', 'Off'] },
+        { id: 'light-ice', box: [0.292, 0.809, 0.009, 0.028], label: 'Ice light',
+          action: 'Lights', values: ['Set', 'As required', 'Off'] },
+        { id: 'light-nav', box: [0.307, 0.809, 0.009, 0.028], label: 'Navigation lights',
+          action: 'Lights', values: ['Set', 'As required', 'Off'] },
+        { id: 'light-recog', box: [0.322, 0.809, 0.009, 0.028], label: 'Recognition lights',
+          action: 'Lights', values: ['Set', 'As required', 'Off'] },
+        { box: [0.374, 0.805, 0.009, 0.029], label: 'Beacon',
           action: 'Beacon', actions: ['Beacon', 'Lights'],
           values: { Beacon: ['Cycled, ON'], Lights: ['Set', 'As required', 'Off'] } },
-        { box: [0.376, 0.856, 0.012, 0.024], label: 'GEAR DOWN light',
+        { id: 'light-strobe', box: [0.388, 0.809, 0.009, 0.030], label: 'Strobe lights',
+          action: 'Lights', values: ['Set', 'As required', 'Off'] },
+        // ICE PROTECTION: windshield, prop, fuel vent, deice cycle, stall warn and pitot heat; any
+        // is Anti-Ice/De-Ice.
+        { id: 'wshld-pilot', box: [0.251, 0.869, 0.009, 0.020], label: 'Windshield anti-ice (pilot)',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'wshld-copilot', box: [0.266, 0.869, 0.009, 0.020], label: 'Windshield anti-ice (copilot)',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'prop-deice-auto', box: [0.282, 0.870, 0.009, 0.030], label: 'Prop deice AUTO',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'prop-deice-manual', box: [0.295, 0.871, 0.009, 0.017], label: 'Prop deice MANUAL',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'fuel-vent-left', box: [0.308, 0.871, 0.009, 0.017], label: 'Fuel vent heat (left)',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'fuel-vent-right', box: [0.322, 0.871, 0.009, 0.017], label: 'Fuel vent heat (right)',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'deice-cycle', box: [0.262, 0.924, 0.009, 0.020], label: 'Deice cycle',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'stall-warn-heat', box: [0.277, 0.923, 0.009, 0.028], label: 'Stall warning heat',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'pitot-left', box: [0.290, 0.923, 0.008, 0.028], label: 'Pitot heat (left)',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { id: 'pitot-right', box: [0.302, 0.923, 0.009, 0.028], label: 'Pitot heat (right)',
+          action: 'Anti-Ice/De-Ice', values: ['Checked, as required', 'Set', 'As required'] },
+        { box: [0.372, 0.861, 0.012, 0.024], label: 'GEAR DOWN light',
           action: 'Landing Gear Indicator' },
-        { box: [0.572, 0.79, 0.09, 0.10], label: 'Environmental controls',
+        // ENVIRONMENTAL: the cockpit and cabin blower and temperature knobs, the MODE knob (the
+        // one that turns it OFF) and MAN TEMP.
+        { id: 'env-mode', box: [0.645, 0.830, 0.019, 0.039], label: 'Environmental mode',
           action: 'Environmental System', also: ['ECS', 'ECS Mode'], values: ['Set', 'OFF'] },
-        { box: [0.640, 0.900, 0.014, 0.03], label: 'Envir bleed air switch',
+        { id: 'env-cockpit-blower', box: [0.572, 0.822, 0.027, 0.051], label: 'Cockpit blower',
+          action: 'Environmental System', values: ['Set'] },
+        { id: 'env-cockpit-temp', box: [0.603, 0.822, 0.027, 0.051], label: 'Cockpit temperature',
+          action: 'Environmental System', values: ['Set'] },
+        { id: 'env-cabin-blower', box: [0.572, 0.898, 0.027, 0.051], label: 'Cabin blower',
+          action: 'Environmental System', values: ['Set'] },
+        { id: 'env-cabin-temp', box: [0.603, 0.898, 0.027, 0.051], label: 'Cabin temperature',
+          action: 'Environmental System', values: ['Set'] },
+        { id: 'env-man-temp', box: [0.687, 0.837, 0.009, 0.019], label: 'Manual temperature',
+          action: 'Environmental System', values: ['Set'] },
+        { box: [0.642, 0.904, 0.010, 0.023], label: 'Envir bleed air switch',
           action: 'Envir Bleed Air switch', values: ['As required'] },
-        { box: [0.709, 0.913, 0.029, 0.03], label: 'Engine fire test switches',
+        { id: 'fire-test-left', box: [0.710, 0.919, 0.009, 0.019], label: 'Engine fire test (left)',
           action: 'Engine Fire Test', values: ['Checked'] },
-        { box: [0.821, 0.771, 0.036, 0.073], label: 'Vacuum gauge',
+        { id: 'fire-test-right', box: [0.728, 0.919, 0.009, 0.019], label: 'Engine fire test (right)',
+          action: 'Engine Fire Test', values: ['Checked'] },
+        { box: [0.822, 0.754, 0.038, 0.077], label: 'Vacuum gauge',
           action: 'Vacuum', actions: ['Vacuum', 'Vacuum and Pneumatic Pressure'] },
-        { box: [0.912, 0.771, 0.036, 0.073], label: 'Pneumatic pressure gauge',
+        { box: [0.910, 0.754, 0.040, 0.078], label: 'Pneumatic pressure gauge',
           action: 'Pneumatic Pressure', actions: ['Pneumatic Pressure', 'Vacuum and Pneumatic Pressure'] },
       ],
     },
@@ -269,23 +320,30 @@ export const T54A_POSTER = {
         // Rough, tune with ?spots: the targets the normal flows and checklists add.
         { id: 'trim-elevator', box: [0.028, 0.155, 0.11, 0.17], label: 'Elevator trim wheel',
           action: 'Trim' },
-        { id: 'trim-aileron', box: [0.161, 0.30, 0.31, 0.12], label: 'Aileron trim',
+        { id: 'trim-aileron', box: [0.164, 0.303, 0.304, 0.114], label: 'Aileron trim',
           action: 'Trim' },
-        { id: 'trim-rudder', box: [0.517, 0.348, 0.328, 0.115], label: 'Rudder tab',
+        { id: 'trim-rudder', box: [0.530, 0.353, 0.297, 0.105], label: 'Rudder tab',
           action: 'Trim' },
         // The crew oxygen handle, PULL ON / SYSTEM READY.
-        { box: [0.05, 0.481, 0.894, 0.014], label: 'Oxygen',
+        { box: [0.05, 0.484, 0.894, 0.012], label: 'Oxygen',
           action: 'Oxygen', values: ['Open, 100%', 'Closed'] },
         // The pilot's cursor control panel: TAWS is tested from its PFD and MENU keys, TCAS from TFC.
-        { box: [0.033, 0.506, 0.206, 0.101], label: 'Cursor control panel',
-          action: 'TAWS', actions: ['TAWS', 'TCAS/Transponder'] },
+        { id: 'ccp-pfd', box: [0.186, 0.509, 0.046, 0.011], label: 'CCP PFD key',
+          action: 'TAWS' },
+        { id: 'ccp-menu', box: [0.041, 0.534, 0.046, 0.011], label: 'CCP MENU key',
+          action: 'TAWS' },
+        { box: [0.041, 0.521, 0.046, 0.012], label: 'CCP TFC key',
+          action: 'TCAS/Transponder' },
         { box: [0.25, 0.508, 0.50, 0.099], label: 'FMS keypad',
           action: 'FMS' },
         { id: 'baro-left', box: [0.117, 0.652, 0.055, 0.022], label: 'BARO knob (pilot)',
           action: 'Altimeters' },
         { id: 'baro-right', box: [0.813, 0.652, 0.055, 0.022], label: 'BARO knob (copilot)',
           action: 'Altimeters' },
-        { box: [0.061, 0.787, 0.133, 0.038], label: 'Pressurization controls',
+        // CABIN PRESS (DUMP, PRESS, TEST) and PRESS MODE (ALT, NORM): either is Pressurization.
+        { id: 'cabin-press', box: [0.073, 0.802, 0.039, 0.019], label: 'Cabin press switch',
+          action: 'Pressurization' },
+        { id: 'press-mode', box: [0.134, 0.802, 0.055, 0.019], label: 'Press mode switch',
           action: 'Pressurization' },
       ],
     },
@@ -305,16 +363,29 @@ export const T54A_POSTER = {
           action: 'Firewall shutoff valve', also: ['Firewall Shutoff Valves (both)'],
           values: ['CLOSE', 'CLOSE (LS)', 'OPEN (LS)'] },
 
-        // Rough, tune with ?spots. The fuel control panel as a whole, then the controls on it,
-        // each of which answers for the whole panel too.
-        { box: [0.081, 0.132, 0.827, 0.381], label: 'Fuel control panel',
+        // Rough, tune with ?spots. Every switch and gauge on the fuel control panel, each of which
+        // answers for the whole panel.
+        { id: 'standby-pump-left', box: [0.130, 0.187, 0.042, 0.054], label: 'Left standby pump',
           action: 'Fuel Panel', values: ['Checked, Auto'] },
-        { box: [0.473, 0.173, 0.039, 0.056], label: 'Crossfeed flow switch',
-          action: 'Crossfeed', actions: ['Crossfeed', 'Fuel Panel'], values: { Crossfeed: ['OFF'] } },
-        { id: 'fuel-qty-left', box: [0.2, 0.229, 0.2, 0.238], label: 'Left fuel quantity',
-          action: 'Fuel Quantity', actions: ['Fuel Quantity', 'Fuel Panel'] },
-        { id: 'fuel-qty-right', box: [0.585, 0.229, 0.2, 0.238], label: 'Right fuel quantity',
-          action: 'Fuel Quantity', actions: ['Fuel Quantity', 'Fuel Panel'] },
+        { id: 'standby-pump-right', box: [0.815, 0.187, 0.042, 0.054], label: 'Right standby pump',
+          action: 'Fuel Panel', values: ['Checked, Auto'] },
+        { id: 'aux-transfer-left', box: [0.130, 0.304, 0.042, 0.057], label: 'Left aux transfer override',
+          action: 'Fuel Panel', values: ['Checked, Auto'] },
+        { id: 'aux-transfer-right', box: [0.815, 0.304, 0.042, 0.057], label: 'Right aux transfer override',
+          action: 'Fuel Panel', values: ['Checked, Auto'] },
+        { id: 'no-transfer-left', box: [0.128, 0.418, 0.046, 0.062], label: 'Left NO TRANSFER light',
+          action: 'Fuel Panel', values: ['Checked, Auto'] },
+        { id: 'no-transfer-right', box: [0.813, 0.418, 0.046, 0.062], label: 'Right NO TRANSFER light',
+          action: 'Fuel Panel', values: ['Checked, Auto'] },
+        { id: 'fuel-qty-switch', box: [0.476, 0.421, 0.033, 0.059], label: 'Fuel quantity MAIN/AUXILIARY switch',
+          action: 'Fuel Panel', values: ['Checked, Auto'] },
+        { box: [0.476, 0.177, 0.033, 0.044], label: 'Crossfeed flow switch',
+          action: 'Crossfeed', actions: ['Crossfeed', 'Fuel Panel'],
+          values: { Crossfeed: ['OFF'], ...FUEL_PANEL } },
+        { id: 'fuel-qty-left', box: [0.200, 0.233, 0.200, 0.228], label: 'Left fuel quantity',
+          action: 'Fuel Quantity', actions: ['Fuel Quantity', 'Fuel Panel'], values: FUEL_PANEL },
+        { id: 'fuel-qty-right', box: [0.586, 0.233, 0.198, 0.228], label: 'Right fuel quantity',
+          action: 'Fuel Quantity', actions: ['Fuel Quantity', 'Fuel Panel'], values: FUEL_PANEL },
       ],
     },
     {
