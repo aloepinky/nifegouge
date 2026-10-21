@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 // and a Keep. Never window.confirm, which cannot say what is about to happen and belongs to no
 // row. The same idea as ConfirmButton in discuss/edit/fields.js, styled for this page.
 
-export const smallButton = (bg, fg = 'white', border = 'none') => ({
+export const smallButton = (bg, fg = 'var(--on-brand)', border = 'none') => ({
   padding: '5px 12px',
   backgroundColor: bg,
   color: fg,
@@ -21,10 +21,10 @@ export default function Confirm({ label, question, confirmLabel, onConfirm, styl
     return <button type="button" style={style} disabled={disabled} onClick={() => setAsking(true)}>{label}</button>;
   }
   return (
-    <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', fontSize: '13px', color: '#333' }}>
+    <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center', fontSize: '13px', color: 'var(--ink)' }}>
       <span>{question}</span>
       <button type="button" style={style} onClick={() => { setAsking(false); onConfirm(); }}>{confirmLabel}</button>
-      <button type="button" style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => setAsking(false)}>Keep</button>
+      <button type="button" style={smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-brand)')} onClick={() => setAsking(false)}>Keep</button>
     </span>
   );
 }

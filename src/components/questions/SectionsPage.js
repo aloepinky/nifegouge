@@ -25,11 +25,11 @@ const strip = (sections) => sections.map(({ isNew, _k, ...s }) => ({
   lectures: s.lectures.map(({ isNew: _, ...l }) => l),
 }));
 
-const input = { padding: '6px 8px', fontSize: '15px', border: '1px solid #bbb', borderRadius: '5px', minWidth: 0 };
-const faint = { fontSize: '12px', color: '#777' };
+const input = { padding: '6px 8px', fontSize: '15px', border: '1px solid var(--line-bbbbbb)', borderRadius: '5px', minWidth: 0 };
+const faint = { fontSize: '12px', color: 'var(--ink-777777)' };
 
 function Arrows({ index, count, onMove }) {
-  const arrow = { ...smallButton('white', '#01202C', '1px solid #bbb'), padding: '2px 8px' };
+  const arrow = { ...smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-bbbbbb)'), padding: '2px 8px' };
   return (
     <span style={{ display: 'inline-flex', gap: '4px' }}>
       <button type="button" style={arrow} disabled={index === 0} title="Move up" onClick={() => onMove(index, index - 1)}>↑</button>
@@ -157,18 +157,18 @@ export default function SectionsPage() {
 
   return (
     <div className="questions-container" style={{ textAlign: 'left' }}>
-      <Link to="/nife/questions" style={{ color: '#003B4F', fontSize: '14px' }}>← Back to the questions</Link>
-      <h2 style={{ color: '#01202C', margin: '10px 0 6px' }}>Topics and lectures</h2>
-      <p style={{ fontSize: '14px', color: '#333', marginTop: 0 }}>
+      <Link to="/nife/questions" style={{ color: 'var(--ink-accent)', fontSize: '14px' }}>← Back to the questions</Link>
+      <h2 style={{ color: 'var(--ink-strong)', margin: '10px 0 6px' }}>Topics and lectures</h2>
+      <p style={{ fontSize: '14px', color: 'var(--ink)', marginTop: 0 }}>
         The topics and lectures the questions are sorted into. Anyone can change them when the
         syllabus changes, and every change is kept in History, where it can be undone.
       </p>
 
       {message && (
-        <div style={{ padding: '8px 12px', borderRadius: '6px', margin: '10px 0', fontSize: '14px', background: message.kind === 'error' ? '#fdecea' : '#e6f2f5', color: message.kind === 'error' ? '#8e1c12' : '#003B4F' }}>
+        <div style={{ padding: '8px 12px', borderRadius: '6px', margin: '10px 0', fontSize: '14px', background: message.kind === 'error' ? 'var(--bad-bg-fdecea)' : 'var(--surface-e6f2f5)', color: message.kind === 'error' ? 'var(--bad-text-8e1c12)' : 'var(--ink-accent)' }}>
           {message.text}
           {message.conflict && (
-            <button type="button" style={{ ...smallButton('#01202C'), marginLeft: '10px' }} onClick={() => { setMessage(null); load(); }}>
+            <button type="button" style={{ ...smallButton('var(--btn)'), marginLeft: '10px' }} onClick={() => { setMessage(null); load(); }}>
               Load the newest
             </button>
           )}
@@ -182,43 +182,43 @@ export default function SectionsPage() {
         const c = counts[s.id] || { total: 0 };
         const isOpen = open.has(s._k);
         return (
-          <div key={s._k} style={{ border: '1px solid #d5dde0', borderRadius: '8px', padding: '10px 12px', marginBottom: '10px', background: s.retired ? '#f4f4f4' : 'white' }}>
+          <div key={s._k} style={{ border: '1px solid var(--line-d5dde0)', borderRadius: '8px', padding: '10px 12px', marginBottom: '10px', background: s.retired ? 'var(--surface-f4f4f4)' : 'var(--surface)' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               <Arrows index={i} count={draft.length} onMove={(from, to) => setDraft((d) => moved(d, from, to))} />
-              <input aria-label="Topic name" style={{ ...input, flex: '1 1 160px', fontWeight: 'bold', color: s.retired ? '#888' : '#01202C' }} value={s.name} maxLength={40} onChange={(e) => renameSection(i, e.target.value)} />
+              <input aria-label="Topic name" style={{ ...input, flex: '1 1 160px', fontWeight: 'bold', color: s.retired ? 'var(--ink-888888)' : 'var(--ink-strong)' }} value={s.name} maxLength={40} onChange={(e) => renameSection(i, e.target.value)} />
               <span style={faint}>
                 {c.total} question{c.total === 1 ? '' : 's'}{s.retired ? ' • retired, hidden from view' : ''}{s.isNew ? ' • new' : ''}
               </span>
-              <button type="button" style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => toggle(s._k)}>
+              <button type="button" style={smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-brand)')} onClick={() => toggle(s._k)}>
                 {isOpen ? 'Hide lectures' : `Lectures (${s.lectures.length})`}
               </button>
               {s.isNew ? (
-                <button type="button" style={smallButton('white', '#8e1c12', '1px solid #8e1c12')} onClick={() => setDraft((d) => d.filter((_, j) => j !== i))}>Remove</button>
+                <button type="button" style={smallButton('var(--surface)', 'var(--bad-text-8e1c12)', '1px solid #8e1c12')} onClick={() => setDraft((d) => d.filter((_, j) => j !== i))}>Remove</button>
               ) : (
-                <button type="button" style={smallButton(s.retired ? '#01202C' : 'white', s.retired ? 'white' : '#5a0000', '1px solid #5a0000')} onClick={() => setSection(i, { retired: s.retired ? undefined : true })}>
+                <button type="button" style={smallButton(s.retired ? 'var(--btn)' : 'var(--surface)', s.retired ? 'var(--on-brand)' : 'var(--bad-text-5a0000)', '1px solid #5a0000')} onClick={() => setSection(i, { retired: s.retired ? undefined : true })}>
                   {s.retired ? 'Restore' : 'Retire'}
                 </button>
               )}
             </div>
 
             {isOpen && (
-              <div style={{ marginTop: '10px', paddingLeft: '12px', borderLeft: '3px solid #e3eaec' }}>
+              <div style={{ marginTop: '10px', paddingLeft: '12px', borderLeft: '3px solid var(--line-e3eaec)' }}>
                 {s.lectures.length === 0 && <div style={faint}>No lectures. Questions in this topic are not split by lecture.</div>}
                 {s.lectures.map((l, k) => (
                   <div key={`${l.id}-${k}`} style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
                     <Arrows index={k} count={s.lectures.length} onMove={(from, to) => setSection(i, { lectures: moved(s.lectures, from, to) })} />
-                    <input aria-label="Lecture name" style={{ ...input, flex: '1 1 160px', color: l.retired ? '#888' : '#222' }} value={l.name} maxLength={60} onChange={(e) => setLecture(i, k, { name: e.target.value })} />
+                    <input aria-label="Lecture name" style={{ ...input, flex: '1 1 160px', color: l.retired ? 'var(--ink-888888)' : 'var(--ink-222222)' }} value={l.name} maxLength={60} onChange={(e) => setLecture(i, k, { name: e.target.value })} />
                     <span style={faint}>{c[l.id] || 0} question{c[l.id] === 1 ? '' : 's'}{l.retired ? ' • retired' : ''}</span>
                     {l.isNew ? (
-                      <button type="button" style={smallButton('white', '#8e1c12', '1px solid #8e1c12')} onClick={() => setSection(i, { lectures: s.lectures.filter((_, m) => m !== k) })}>Remove</button>
+                      <button type="button" style={smallButton('var(--surface)', 'var(--bad-text-8e1c12)', '1px solid #8e1c12')} onClick={() => setSection(i, { lectures: s.lectures.filter((_, m) => m !== k) })}>Remove</button>
                     ) : (
-                      <button type="button" style={smallButton('white', '#5a0000', '1px solid #5a0000')} onClick={() => setLecture(i, k, { retired: l.retired ? undefined : true })}>
+                      <button type="button" style={smallButton('var(--surface)', 'var(--bad-text-5a0000)', '1px solid #5a0000')} onClick={() => setLecture(i, k, { retired: l.retired ? undefined : true })}>
                         {l.retired ? 'Restore' : 'Retire'}
                       </button>
                     )}
                   </div>
                 ))}
-                <button type="button" style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => addLecture(i)}>+ Add lecture</button>
+                <button type="button" style={smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-brand)')} onClick={() => addLecture(i)}>+ Add lecture</button>
               </div>
             )}
           </div>
@@ -227,42 +227,42 @@ export default function SectionsPage() {
 
       {draft && (
         <>
-          <button type="button" style={{ ...smallButton('white', '#01202C', '1px solid #01202C'), marginBottom: '16px' }} onClick={addSection}>+ Add topic</button>
+          <button type="button" style={{ ...smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-brand)'), marginBottom: '16px' }} onClick={addSection}>+ Add topic</button>
 
-          <div style={{ borderTop: '2px solid #01202C', paddingTop: '12px', display: 'grid', gap: '8px' }}>
+          <div style={{ borderTop: '2px solid var(--line-brand)', paddingTop: '12px', display: 'grid', gap: '8px' }}>
             <input aria-label="What did you change?" style={input} placeholder="What did you change? (required)" value={summary} maxLength={200} onChange={(e) => setSummary(e.target.value)} />
             <input aria-label="Your name" style={input} placeholder="Your name (optional)" value={author} maxLength={40} onChange={(e) => setAuthorName(e.target.value)} />
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button type="button" style={smallButton(dirty && summary.trim() && !busy ? '#01202C' : '#9aa7ab')} disabled={!dirty || !summary.trim() || busy} onClick={save}>
+              <button type="button" style={smallButton(dirty && summary.trim() && !busy ? 'var(--btn)' : 'var(--btn-off)')} disabled={!dirty || !summary.trim() || busy} onClick={save}>
                 {busy ? 'Saving…' : 'Save'}
               </button>
               {dirty && (
-                <Confirm label="Discard changes" question="Throw away your changes?" confirmLabel="Discard" style={smallButton('white', '#8e1c12', '1px solid #8e1c12')} onConfirm={() => setDraft(keyed(clone(saved.doc.sections)))} />
+                <Confirm label="Discard changes" question="Throw away your changes?" confirmLabel="Discard" style={smallButton('var(--surface)', 'var(--bad-text-8e1c12)', '1px solid #8e1c12')} onConfirm={() => setDraft(keyed(clone(saved.doc.sections)))} />
               )}
               <span style={faint}>{dirty ? (summary.trim() ? '' : 'Say what you changed to save.') : 'No changes.'}</span>
             </div>
           </div>
 
           <div style={{ marginTop: '20px' }}>
-            <button type="button" style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={openHistory}>
+            <button type="button" style={smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-brand)')} onClick={openHistory}>
               {showHistory ? 'Hide history' : 'History'}
             </button>
             {showHistory && history && (
               <div style={{ marginTop: '10px' }}>
                 {history.revisions.map((h) => (
-                  <div key={h.rev} style={{ padding: '8px 0', borderTop: '1px solid #e3eaec', fontSize: '13px' }}>
+                  <div key={h.rev} style={{ padding: '8px 0', borderTop: '1px solid var(--line-e3eaec)', fontSize: '13px' }}>
                     <div>
                       <strong>Revision {h.rev}</strong>{' '}
                       <span style={faint}>{new Date(h.createdAt).toLocaleString()}{h.author ? ` • ${h.author}` : ''}</span>
                     </div>
-                    <div style={{ color: '#333' }}>{h.summary}</div>
+                    <div style={{ color: 'var(--ink)' }}>{h.summary}</div>
                     {h.rev !== history.latestRev && (
                       <div style={{ marginTop: '4px' }}>
                         <Confirm
                           label="Restore this revision"
                           question={`Make revision ${h.rev} current?`}
                           confirmLabel="Restore"
-                          style={smallButton('#01202C')}
+                          style={smallButton('var(--btn)')}
                           onConfirm={() => restore(h.rev)}
                         />
                       </div>

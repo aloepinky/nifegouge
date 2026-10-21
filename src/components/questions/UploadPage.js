@@ -12,8 +12,8 @@ import { smallButton } from './Confirm';
 // single submission. The topic and lecture are chosen once for the batch; a row can differ.
 
 const BATCH = 100;
-const faint = { fontSize: '12px', color: '#777' };
-const box = { width: '100%', boxSizing: 'border-box', padding: '6px 8px', fontSize: '14px', border: '1px solid #bbb', borderRadius: '5px' };
+const faint = { fontSize: '12px', color: 'var(--ink-777777)' };
+const box = { width: '100%', boxSizing: 'border-box', padding: '6px 8px', fontSize: '14px', border: '1px solid var(--line-bbbbbb)', borderRadius: '5px' };
 const WRONG = ['incorrectAnswer1', 'incorrectAnswer2', 'incorrectAnswer3'];
 
 // A row's topic column, where it has one, as a section: by id or by name.
@@ -134,9 +134,9 @@ export default function UploadPage() {
 
   return (
     <div className="questions-container" style={{ textAlign: 'left' }}>
-      <Link to="/nife/questions" style={{ color: '#003B4F', fontSize: '14px' }}>← Back to the questions</Link>
-      <h2 style={{ color: '#01202C', margin: '10px 0 6px' }}>Upload questions</h2>
-      <p style={{ fontSize: '14px', color: '#333', marginTop: 0 }}>
+      <Link to="/nife/questions" style={{ color: 'var(--ink-accent)', fontSize: '14px' }}>← Back to the questions</Link>
+      <h2 style={{ color: 'var(--ink-strong)', margin: '10px 0 6px' }}>Upload questions</h2>
+      <p style={{ fontSize: '14px', color: 'var(--ink)', marginTop: 0 }}>
         Paste rows copied from a spreadsheet, Quizlet export, or CSV file. A spreadsheet's columns
         are Question, Correct answer, Wrong answer 1 to 3, Lecture and Explanation, in that order
         unless the first row has column names. Check every question below before submitting.
@@ -156,7 +156,7 @@ export default function UploadPage() {
       </div>
 
       {result && (
-        <div style={{ marginTop: '14px', padding: '10px 12px', borderRadius: '6px', background: result.refused || result.failed ? '#fdecea' : '#e6f2f5', color: result.refused || result.failed ? '#8e1c12' : '#003B4F', fontSize: '14px' }}>
+        <div style={{ marginTop: '14px', padding: '10px 12px', borderRadius: '6px', background: result.refused || result.failed ? 'var(--bad-bg-fdecea)' : 'var(--surface-e6f2f5)', color: result.refused || result.failed ? 'var(--bad-text-8e1c12)' : 'var(--ink-accent)', fontSize: '14px' }}>
           {result.sent} question{result.sent === 1 ? '' : 's'} sent for community review.
           {result.refused > 0 && <div>{result.refused} could not be sent. They are still above, with the reason.</div>}
           {result.failed && <div>Sending stopped: {result.failed} Anything not sent is still above.</div>}
@@ -186,15 +186,15 @@ export default function UploadPage() {
 
           <div style={{ ...faint, marginBottom: '8px' }}>
             {rows.length} read. {count} ticked to send.{' '}
-            <button type="button" style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => setInclude(prepared.map((r) => r.problems.length === 0))}>Tick all that can go</button>{' '}
-            <button type="button" style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => setInclude(prepared.map(() => false))}>Untick all</button>
+            <button type="button" style={smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-brand)')} onClick={() => setInclude(prepared.map((r) => r.problems.length === 0))}>Tick all that can go</button>{' '}
+            <button type="button" style={smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-brand)')} onClick={() => setInclude(prepared.map(() => false))}>Untick all</button>
           </div>
 
           {prepared.map((r, i) => {
             const rowSection = sections.find((s) => s.id === r.topicId);
             const rowLectures = formLectures(rowSection);
             return (
-              <div key={i} style={{ border: '1px solid #d5dde0', borderLeft: `4px solid ${r.problems.length ? '#c62828' : ticked[i] ? '#003B4F' : '#ccc'}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '10px', background: 'white' }}>
+              <div key={i} style={{ border: '1px solid var(--line-d5dde0)', borderLeft: `4px solid ${r.problems.length ? '#c62828' : ticked[i] ? 'var(--line-accent)' : 'var(--line-cccccc)'}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '10px', background: 'var(--surface)' }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap' }}>
                   <input
                     type="checkbox"
@@ -204,7 +204,7 @@ export default function UploadPage() {
                     onChange={(e) => setInclude((inc) => inc.map((v, j) => (j === i ? e.target.checked : v)))}
                     style={{ width: '18px', minWidth: '18px', flex: '0 0 18px', padding: 0 }}
                   />
-                  <strong style={{ fontSize: '13px', color: '#01202C' }}>Row {i + 1}</strong>
+                  <strong style={{ fontSize: '13px', color: 'var(--ink-strong)' }}>Row {i + 1}</strong>
                   <span style={faint}>{rowSection ? rowSection.name : 'No topic'}</span>
                   {rowLectures.length > 0 && (
                     <select aria-label={`Lecture for row ${i + 1}`} value={r.lectureId} onChange={(e) => setRow(i, { lecture: e.target.value, lectureSet: true })} style={{ fontSize: '12px' }}>
@@ -219,15 +219,15 @@ export default function UploadPage() {
                   <input key={k} aria-label={`Wrong answer ${n + 1}`} style={{ ...box, marginTop: '4px' }} value={r[k]} onChange={(e) => setRow(i, { [k]: e.target.value })} placeholder={`Wrong answer ${n + 1}`} />
                 ))}
                 <textarea aria-label="Explanation" style={{ ...box, marginTop: '4px', minHeight: '32px' }} value={r.explanation} onChange={(e) => setRow(i, { explanation: e.target.value })} placeholder="Why is this the answer? (optional)" />
-                {r.problems.length > 0 && <div style={{ color: '#c62828', fontSize: '13px', marginTop: '6px' }}>{r.problems.join(' ')}</div>}
-                {r.serverError && <div style={{ color: '#c62828', fontSize: '13px', marginTop: '6px' }}>Not sent: {r.serverError}</div>}
+                {r.problems.length > 0 && <div style={{ color: 'var(--bad-text-c62828)', fontSize: '13px', marginTop: '6px' }}>{r.problems.join(' ')}</div>}
+                {r.serverError && <div style={{ color: 'var(--bad-text-c62828)', fontSize: '13px', marginTop: '6px' }}>Not sent: {r.serverError}</div>}
                 {r.borrowed && (
-                  <div style={{ color: '#8a5a00', fontSize: '13px', marginTop: '6px' }}>
+                  <div style={{ color: 'var(--warn-text-8a5a00)', fontSize: '13px', marginTop: '6px' }}>
                     Quizlet has no wrong answers, so these were taken from other cards. Check them.
                   </div>
                 )}
                 {r.duplicate && (
-                  <div style={{ color: '#003B4F', fontSize: '13px', marginTop: '6px' }}>
+                  <div style={{ color: 'var(--ink-accent)', fontSize: '13px', marginTop: '6px' }}>
                     Looks like an existing question: “{r.duplicate.question.question}” (✓ {r.duplicate.question.correctAnswer}). Left unticked; tick it if it is different.
                   </div>
                 )}
@@ -235,10 +235,10 @@ export default function UploadPage() {
             );
           })}
 
-          <div style={{ borderTop: '2px solid #01202C', paddingTop: '12px', display: 'grid', gap: '8px' }}>
+          <div style={{ borderTop: '2px solid var(--line-brand)', paddingTop: '12px', display: 'grid', gap: '8px' }}>
             <input aria-label="Your name" style={box} placeholder="Your name (optional)" value={author} maxLength={40} onChange={(e) => setAuthorName(e.target.value)} />
             <div>
-              <button type="button" style={smallButton(count && !busy ? '#01202C' : '#9aa7ab')} disabled={!count || busy} onClick={send}>
+              <button type="button" style={smallButton(count && !busy ? 'var(--btn)' : 'var(--btn-off)')} disabled={!count || busy} onClick={send}>
                 {busy ? 'Sending…' : `Send ${count} question${count === 1 ? '' : 's'} for review`}
               </button>
             </div>

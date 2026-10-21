@@ -245,7 +245,7 @@ function PublishPanel({ mode, loadedLog, logs, params, capture, onDone, onBack }
         <button type="button" style={SECONDARY} onClick={onBack}>Cancel</button>
       </div>
 
-      <div style={{...LABEL, marginTop: '10px', color: '#999'}}>
+      <div style={{...LABEL, marginTop: '10px', color: 'var(--ink-999999)'}}>
         Publishes permanently on the site for anyone to see.
       </div>
 

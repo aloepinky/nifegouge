@@ -17,19 +17,19 @@ const OVERLAY = {
 };
 
 const CARD = {
-  background: 'white', borderRadius: '8px', padding: '24px 28px',
+  background: 'var(--surface)', borderRadius: '8px', padding: '24px 28px',
   minWidth: '320px', maxWidth: '460px', maxHeight: '80vh', overflowY: 'auto',
-  boxShadow: '0 6px 24px rgba(0,0,0,0.3)', color: '#333',
+  boxShadow: '0 6px 24px rgba(0,0,0,0.3)', color: 'var(--ink)',
 };
 
 const SECTION = {
-  fontSize: '0.7em', fontWeight: 'bold', color: '#888', marginBottom: '6px',
+  fontSize: '0.7em', fontWeight: 'bold', color: 'var(--ink-888888)', marginBottom: '6px',
   letterSpacing: '0.05em',
 };
 
 const MODE_CHIP = (mode) => ({
   fontSize: '0.65em', padding: '1px 5px', borderRadius: '3px',
-  background: mode === 'VFR' ? '#1e40af' : '#444', color: 'white', flexShrink: 0,
+  background: mode === 'VFR' ? '#1e40af' : '#444', color: 'var(--on-brand)', flexShrink: 0,
 });
 
 function JetLogLibrary({
@@ -168,16 +168,16 @@ function JetLogLibrary({
             <div
               onClick={() => toggleGroup(group)}
               style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
-                fontSize: '0.78em', fontWeight: 'bold', color: '#003B4F', padding: '3px 2px',
+                fontSize: '0.78em', fontWeight: 'bold', color: 'var(--ink-accent)', padding: '3px 2px',
                 userSelect: 'none', borderRadius: '3px'}}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#f3f4f6'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-f3f4f6)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = ''; }}
             >
               <span style={{fontSize: '0.85em', width: '8px', display: 'inline-block'}}>
                 {groupOpen ? '▾' : '▸'}
               </span>
               {group}
-              <span style={{color: '#aaa', fontWeight: 'normal'}}>({count})</span>
+              <span style={{color: 'var(--ink-aaaaaa)', fontWeight: 'normal'}}>({count})</span>
             </div>
             {groupOpen && !folders.length && (
               <div style={{...QUIET, paddingLeft: '10px'}}>None yet.</div>
@@ -187,16 +187,16 @@ function JetLogLibrary({
                 <div
                   onClick={() => toggle(key)}
                   style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
-                    fontSize: '0.78em', fontWeight: '600', color: '#444', padding: '3px 2px',
+                    fontSize: '0.78em', fontWeight: '600', color: 'var(--ink-444444)', padding: '3px 2px',
                     userSelect: 'none', borderRadius: '3px'}}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#f3f4f6'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-f3f4f6)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = ''; }}
                 >
                   <span style={{fontSize: '0.85em', width: '8px', display: 'inline-block'}}>
                     {isOpen(key) ? '▾' : '▸'}
                   </span>
                   {folder}
-                  <span style={{color: '#aaa', fontWeight: 'normal'}}>({rows.length})</span>
+                  <span style={{color: 'var(--ink-aaaaaa)', fontWeight: 'normal'}}>({rows.length})</span>
                 </div>
                 {isOpen(key) && (
                   <div style={{marginTop: '2px'}}>
@@ -213,11 +213,11 @@ function JetLogLibrary({
                           onClick={() => apply(entry)}
                         >
                           {entry.name}
-                          {applying === entry.id && <span style={{color: '#999'}}> …</span>}
+                          {applying === entry.id && <span style={{color: 'var(--ink-999999)'}}> …</span>}
                         </span>
                         <button
                           type="button"
-                          style={{background: 'none', border: 'none', color: '#999',
+                          style={{background: 'none', border: 'none', color: 'var(--ink-999999)',
                             fontSize: '0.7em', cursor: 'pointer', padding: '2px 4px'}}
                           title={`Every version of ${entry.name}`}
                           onClick={() => { setHistoryFor(entry); setView('history'); }}
@@ -236,7 +236,7 @@ function JetLogLibrary({
 
         {applyError && <div style={ERROR}>{applyError}</div>}
 
-        <hr style={{margin: '10px 0', borderColor: '#e5e7eb'}} />
+        <hr style={{margin: '10px 0', borderColor: 'var(--line-e5e7eb)'}} />
 
         <div style={SECTION}>MY JET LOGS</div>
         <div style={{...QUIET, marginBottom: '6px'}}>Kept in this browser only.</div>
@@ -254,7 +254,7 @@ function JetLogLibrary({
             <button
               type="button"
               onClick={() => onDeleteLocal(p.id)}
-              style={{fontSize: '0.7em', padding: '1px 5px', background: '#fee2e2',
+              style={{fontSize: '0.7em', padding: '1px 5px', background: 'var(--bad-bg-fee2e2)',
                 border: '1px solid #fca5a5', borderRadius: '3px', cursor: 'pointer',
                 flexShrink: 0}}
             >
@@ -263,9 +263,9 @@ function JetLogLibrary({
           </div>
         ))}
 
-        <hr style={{margin: '12px 0', borderColor: '#e5e7eb'}} />
+        <hr style={{margin: '12px 0', borderColor: 'var(--line-e5e7eb)'}} />
 
-        <div style={{fontSize: '0.75em', color: '#666', marginBottom: '6px'}}>
+        <div style={{fontSize: '0.75em', color: 'var(--ink-666666)', marginBottom: '6px'}}>
           Save the jet log on screen:
         </div>
         <div style={{display: 'flex', gap: '4px', flexWrap: 'wrap'}}>
@@ -310,7 +310,7 @@ function JetLogLibrary({
           {(view === 'list' || view === 'history') && 'JET LOGS'}
         </div>
         {notice && view === 'list' && (
-          <div style={{fontSize: '0.8em', color: '#166534', marginBottom: '10px'}}>{notice}</div>
+          <div style={{fontSize: '0.8em', color: 'var(--ok-text-166534)', marginBottom: '10px'}}>{notice}</div>
         )}
         {body}
       </div>

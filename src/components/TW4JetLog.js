@@ -547,16 +547,16 @@ function TW4JetLog() {
 
   const renderAirportDropdown = (type) => openDropdown === type && (
     <div
-      style={{position: 'absolute', zIndex: 200, background: 'white', border: '1px solid #999',
+      style={{position: 'absolute', zIndex: 200, background: 'var(--surface)', border: '1px solid var(--line-999999)',
         maxHeight: '130px', overflowY: 'auto', minWidth: '160px', left: 0, top: '100%'}}
       onClick={e => e.stopPropagation()}
     >
       {airports.map(ap => (
         <div key={ap.airport}
           onClick={() => selectAirport(ap, type)}
-          style={{padding: '3px 6px', cursor: 'pointer', fontSize: '0.75em', borderBottom: '1px solid #f0f0f0'}}
-          onMouseEnter={e => e.currentTarget.style.background = '#e8f0fe'}
-          onMouseLeave={e => e.currentTarget.style.background = 'white'}
+          style={{padding: '3px 6px', cursor: 'pointer', fontSize: '0.75em', borderBottom: '1px solid var(--line-f0f0f0)'}}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--info-bg-e8f0fe)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}
         >
           {ap.airport} {ap.elev}
         </div>
@@ -634,7 +634,7 @@ function TW4JetLog() {
       <div style={{position: 'relative'}}>
         <input type="text" value={main} onChange={onChange} />
         {qualifier && qualifier !== 'C' && (
-          <span style={{position: 'absolute', top: -6, right: 2, fontSize: '0.75em', lineHeight: 1, color: '#555', pointerEvents: 'none'}}>
+          <span style={{position: 'absolute', top: -6, right: 2, fontSize: '0.75em', lineHeight: 1, color: 'var(--ink-555555)', pointerEvents: 'none'}}>
             {qualifier}
           </span>
         )}
@@ -679,7 +679,7 @@ function TW4JetLog() {
       return (
         <td id={cellId} rowSpan={rowSpan || undefined} colSpan={colSpan || undefined} style={{padding: 0, border: '1px solid black', height: '1px', ...splitFontStyle}}>
           <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
-            <div style={{flex: 1, minHeight: 0, borderBottom: '1px solid #000', display: 'flex', alignItems: 'center', padding: '0 3px'}}>
+            <div style={{flex: 1, minHeight: 0, borderBottom: '1px solid var(--line-000000)', display: 'flex', alignItems: 'center', padding: '0 3px'}}>
               <input value={top} onChange={e => handleSplitTopChange(e.target.value)} style={{textAlign: 'center', width: '100%', boxSizing: 'border-box', ...splitFontStyle}} />
             </div>
             <div style={{flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 3px', ...splitFontStyle}}>{bottom}</div>
@@ -767,10 +767,10 @@ function TW4JetLog() {
     return (
       <td id={cellId} rowSpan={2} style={{verticalAlign: isSingleInput ? 'middle' : 'top', padding: '2px', position: 'relative'}}>
         {holdCells[cellId] && (
-          <span style={{position: 'absolute', top: 2, [isApproach ? 'left' : 'right']: 3, fontSize: '0.65em', fontWeight: 'bold', color: '#333', pointerEvents: 'none', lineHeight: 1}}>H</span>
+          <span style={{position: 'absolute', top: 2, [isApproach ? 'left' : 'right']: 3, fontSize: '0.65em', fontWeight: 'bold', color: 'var(--ink)', pointerEvents: 'none', lineHeight: 1}}>H</span>
         )}
         {isApproach && (
-          <span style={{position: 'absolute', top: 2, right: 3, fontSize: '0.65em', fontWeight: 'bold', color: '#333', pointerEvents: 'none', lineHeight: 1}}>
+          <span style={{position: 'absolute', top: 2, right: 3, fontSize: '0.65em', fontWeight: 'bold', color: 'var(--ink)', pointerEvents: 'none', lineHeight: 1}}>
             {badge}
           </span>
         )}
@@ -808,16 +808,16 @@ function TW4JetLog() {
         )}
         {openDropdown === dropKey && (
           <div
-            style={{position: 'absolute', zIndex: 200, background: 'white', border: '1px solid #999',
+            style={{position: 'absolute', zIndex: 200, background: 'var(--surface)', border: '1px solid var(--line-999999)',
               maxHeight: '150px', overflowY: 'auto', minWidth: '120px', left: 0, top: '100%'}}
             onClick={e => e.stopPropagation()}
           >
             {ROUTE_OPTIONS.map(opt => (
               <div key={opt}
                 onClick={() => handleRouteOption(cellId, opt)}
-                style={{padding: '3px 6px', cursor: 'pointer', fontSize: '0.75em', borderBottom: '1px solid #f0f0f0'}}
-                onMouseEnter={e => e.currentTarget.style.background = '#e8f0fe'}
-                onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                style={{padding: '3px 6px', cursor: 'pointer', fontSize: '0.75em', borderBottom: '1px solid var(--line-f0f0f0)'}}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--info-bg-e8f0fe)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--surface)'}
               >
                 {opt}
               </div>
@@ -859,7 +859,7 @@ function TW4JetLog() {
           }}
           style={{position: 'absolute', top: 2, right: 2, width: '8px', height: '8px', margin: 0, cursor: 'pointer', opacity: isStart ? 1 : 0.15}}
         />
-        {isStart && <span style={{position: 'absolute', top: 1, right: 12, fontSize: '0.55em', fontWeight: 'bold', color: '#1e40af', lineHeight: 1, pointerEvents: 'none'}}>S</span>}
+        {isStart && <span style={{position: 'absolute', top: 1, right: 12, fontSize: '0.55em', fontWeight: 'bold', color: 'var(--info-text-1e40af)', lineHeight: 1, pointerEvents: 'none'}}>S</span>}
         <div style={{display: 'flex', flexDirection: 'column', gap: '1px'}}>
           <input
             value={inputValues[aId] || ''}
@@ -885,7 +885,7 @@ function TW4JetLog() {
                     setFlagState(prev => ({...prev, [cellId]: isNaN(n) ? true : Math.max(1, n)}));
                   }}
                   onClick={e => e.stopPropagation()}
-                  style={{width: '18px', textAlign: 'center', fontSize: 'inherit', padding: 0, margin: 0, border: '1px solid #aaa', borderRadius: '2px'}}
+                  style={{width: '18px', textAlign: 'center', fontSize: 'inherit', padding: 0, margin: 0, border: '1px solid var(--line-aaaaaa)', borderRadius: '2px'}}
                 />
               ) : (
                 <span style={{minWidth: labelWidth, textAlign: 'right', display: 'inline-block'}}>{isChecked ? label : ''}</span>
@@ -2549,7 +2549,7 @@ function TW4JetLog() {
           </div>
           <div style={{textAlign: 'center', padding: '8px 0', display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap'}}>
             <button onClick={() => setPdfUrl(prev => { URL.revokeObjectURL(prev); return null; })}>← Return to Jet Log</button>
-            <a href={pdfUrl} download="DD-1801.pdf" target="_blank" rel="noreferrer" style={{display: 'inline-block', padding: '4px 10px', background: '#e8e8e8', border: '1px solid #999', borderRadius: '3px', color: '#000', textDecoration: 'none', fontSize: '0.9em', cursor: 'pointer'}}>Open / Download PDF</a>
+            <a href={pdfUrl} download="DD-1801.pdf" target="_blank" rel="noreferrer" style={{display: 'inline-block', padding: '4px 10px', background: 'var(--surface-e8e8e8)', border: '1px solid var(--line-999999)', borderRadius: '3px', color: 'var(--ink-000000)', textDecoration: 'none', fontSize: '0.9em', cursor: 'pointer'}}>Open / Download PDF</a>
           </div>
           {jetlogScale >= 1 ? (
             <iframe src={pdfUrl} style={{width: '100%', height: 'calc(100vh - 50px)', border: 'none', display: 'block'}} title="DD-1801 Flight Plan" />
@@ -2564,7 +2564,7 @@ function TW4JetLog() {
       {loadedPresetName && (
         <h1 style={{fontSize: '1.3em', margin: '0 0 6px'}}>{loadedPresetName}</h1>
       )}
-      <div style={{fontSize: '0.68em', color: '#888', textAlign: 'center', marginBottom: '2px'}}>
+      <div style={{fontSize: '0.68em', color: 'var(--ink-888888)', textAlign: 'center', marginBottom: '2px'}}>
         {vfrMode
           ? 'Input GS and Dist for each leg; check T&G/APR boxes as appropriate; and click Solve. Lbs/hr is auto calculated from GS for standard day sea level — if a different condition is desired, enter it manually. The "FP code" box should contain the radial-DME or lat/long definition of points as they will be written on the flight plan.'
           : 'Check that the Jet Log Parameters are set as you like. Input winds, ΔT, altitude, and OAT; MC and Dist for legs; mark approaches and holds as appropriate; and click solve. Input total distance into the DIST cell, the solver will split it into climb and cruise dist.'}
@@ -2575,7 +2575,7 @@ function TW4JetLog() {
       <div style={{display: 'flex', justifyContent: 'center', margin: '4px 0 8px'}}>
         <button
           onClick={() => setShowPresets(s => !s)}
-          style={{background: '#003B4F', color: 'white', border: 'none', borderRadius: '5px',
+          style={{background: 'var(--btn-2)', color: 'var(--on-brand)', border: 'none', borderRadius: '5px',
             padding: '7px 18px', fontSize: '0.95em', fontWeight: 'bold', cursor: 'pointer',
             letterSpacing: '0.02em'}}
         >
@@ -2601,11 +2601,11 @@ function TW4JetLog() {
         <div style={{display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold', cursor: 'pointer'}}
           onClick={() => { setVfrMode(m => { const next = !m; const newAlt = next ? 3000 : 1000; setSelectedAlt(newAlt); if (next) autoFillVFRCruise(clncFields.vfrGsCalc); else setVfrStart(null); return next; }); }}
         >
-          <span style={{color: !vfrMode ? '#1e40af' : '#aaa', transition: 'color 0.2s'}}>IFR</span>
+          <span style={{color: !vfrMode ? 'var(--info-text-1e40af)' : 'var(--ink-aaaaaa)', transition: 'color 0.2s'}}>IFR</span>
           <div style={{position: 'relative', width: '44px', height: '22px', backgroundColor: vfrMode ? '#1e40af' : '#888', borderRadius: '11px', transition: 'background-color 0.2s', flexShrink: 0}}>
-            <div style={{position: 'absolute', top: '2px', left: vfrMode ? '24px' : '2px', width: '18px', height: '18px', backgroundColor: 'white', borderRadius: '50%', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.4)'}} />
+            <div style={{position: 'absolute', top: '2px', left: vfrMode ? '24px' : '2px', width: '18px', height: '18px', backgroundColor: 'var(--surface)', borderRadius: '50%', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.4)'}} />
           </div>
-          <span style={{color: vfrMode ? '#1e40af' : '#aaa', transition: 'color 0.2s'}}>VFR</span>
+          <span style={{color: vfrMode ? 'var(--info-text-1e40af)' : 'var(--ink-aaaaaa)', transition: 'color 0.2s'}}>VFR</span>
         </div>
       </div>
       {/* Each line goes as soon as its box is filled in */}
@@ -2619,12 +2619,12 @@ function TW4JetLog() {
       <div className="jetlog-wrapper" style={jetlogScale < 1 ? {zoom: jetlogScale} : undefined}>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-          <input type="text" value={depInput} onChange={e => { const v = e.target.value; setDepInput(v); const match = airports.find(ap => ap.airport.toUpperCase() === v.trim().toUpperCase()); if (match) selectAirport(match, 'dep'); }} style={{width: '70px', border: '1px solid #999', borderRadius: '3px', padding: '2px 4px', fontSize: '0.85em', backgroundColor: '#f4f4f4'}} />
+          <input type="text" value={depInput} onChange={e => { const v = e.target.value; setDepInput(v); const match = airports.find(ap => ap.airport.toUpperCase() === v.trim().toUpperCase()); if (match) selectAirport(match, 'dep'); }} style={{width: '70px', border: '1px solid var(--line-999999)', borderRadius: '3px', padding: '2px 4px', fontSize: '0.85em', backgroundColor: 'var(--surface-f4f4f4)'}} />
           <span style={{fontSize: '1.1em'}}>→</span>
-          <input type="text" value={destInput} onChange={e => { const v = e.target.value; setDestInput(v); const match = airports.find(ap => ap.airport.toUpperCase() === v.trim().toUpperCase()); if (match) selectAirport(match, 'dest'); }} style={{width: '70px', border: '1px solid #999', borderRadius: '3px', padding: '2px 4px', fontSize: '0.85em', backgroundColor: '#f4f4f4'}} />
+          <input type="text" value={destInput} onChange={e => { const v = e.target.value; setDestInput(v); const match = airports.find(ap => ap.airport.toUpperCase() === v.trim().toUpperCase()); if (match) selectAirport(match, 'dest'); }} style={{width: '70px', border: '1px solid var(--line-999999)', borderRadius: '3px', padding: '2px 4px', fontSize: '0.85em', backgroundColor: 'var(--surface-f4f4f4)'}} />
         </div>
         <span style={{fontWeight: 'bold', fontSize: '0.85em'}}>FLIGHT LOG</span>
-        <select value={selectedAlt} onChange={e => { const v = parseInt(e.target.value); setSelectedAlt(v); if (clncFields.deltaT) autoFillTTC(clncFields.deltaT, v, infoFields.depElev); if (clncFields.oat) autoFillCruise(clncFields.oat, v); if (vfrMode) autoFillVFRCruise(clncFields.vfrGsCalc); }} style={{fontSize: '0.8em', padding: '2px 4px', border: '1px solid #999', borderRadius: '3px', backgroundColor: '#f4f4f4'}}>
+        <select value={selectedAlt} onChange={e => { const v = parseInt(e.target.value); setSelectedAlt(v); if (clncFields.deltaT) autoFillTTC(clncFields.deltaT, v, infoFields.depElev); if (clncFields.oat) autoFillCruise(clncFields.oat, v); if (vfrMode) autoFillVFRCruise(clncFields.vfrGsCalc); }} style={{fontSize: '0.8em', padding: '2px 4px', border: '1px solid var(--line-999999)', borderRadius: '3px', backgroundColor: 'var(--surface-f4f4f4)'}}>
           {vfrMode ? (
             Array.from({length: 6}, (_, i) => 2000 + i * 500).map(alt => (
               <option key={alt} value={alt}>{alt.toLocaleString()}' AGL</option>
@@ -2725,9 +2725,9 @@ function TW4JetLog() {
                     <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>IAS:</span><input type="text" style={{width: '36px'}} value={clncFields.ias} onChange={e => setClncFields(prev => ({...prev, ias: e.target.value}))} /></div>
                   </div>
                   <div style={{display: 'flex', flexDirection: 'column', gap: '1px', paddingTop: '10px'}}>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><input type="text" placeholder="MAG VAR" className="magvar-input" style={{width: '30px', fontSize: '0.7em', textAlign: 'center'}} value={clncFields.magVar} onChange={e => setClncFields(prev => ({...prev, magVar: e.target.value}))} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>Climb:</span><input type="text" placeholder="DIR" style={{width: '28px', backgroundColor: !clncFields.climbDir ? '#dbeafe' : ''}} value={clncFields.climbDir} onChange={e => setClncFields(prev => ({...prev, climbDir: e.target.value}))} /><input type="text" placeholder="VEL" style={{width: '28px', backgroundColor: !clncFields.climbVel ? '#dbeafe' : ''}} value={clncFields.climbVel} onChange={e => setClncFields(prev => ({...prev, climbVel: e.target.value}))} /></div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><div style={{width: '30px', flexShrink: 0}} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>Cruise:</span><input type="text" placeholder="DIR" style={{width: '28px', backgroundColor: !clncFields.cruiseDir ? '#dbeafe' : ''}} value={clncFields.cruiseDir} onChange={e => setClncFields(prev => ({...prev, cruiseDir: e.target.value}))} /><input type="text" placeholder="VEL" style={{width: '28px', backgroundColor: !clncFields.cruiseVel ? '#dbeafe' : ''}} value={clncFields.cruiseVel} onChange={e => setClncFields(prev => ({...prev, cruiseVel: e.target.value}))} /></div>
-                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><div style={{width: '30px', flexShrink: 0}} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>ΔT:</span><input type="text" style={{width: '28px', backgroundColor: !clncFields.deltaT ? '#dbeafe' : ''}} value={clncFields.deltaT} onChange={e => { const v = e.target.value; setClncFields(prev => ({...prev, deltaT: v})); if (v) autoFillTTC(v, selectedAlt, infoFields.depElev); }} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap', marginLeft: '4px'}}>OAT:</span><input type="text" style={{width: '28px', backgroundColor: !clncFields.oat ? '#dbeafe' : ''}} value={clncFields.oat} onChange={e => { const v = e.target.value; setClncFields(prev => ({...prev, oat: v})); if (v) autoFillCruise(v, selectedAlt); }} /></div>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><input type="text" placeholder="MAG VAR" className="magvar-input" style={{width: '30px', fontSize: '0.7em', textAlign: 'center'}} value={clncFields.magVar} onChange={e => setClncFields(prev => ({...prev, magVar: e.target.value}))} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>Climb:</span><input type="text" placeholder="DIR" style={{width: '28px', backgroundColor: !clncFields.climbDir ? 'var(--surface-dbeafe)' : ''}} value={clncFields.climbDir} onChange={e => setClncFields(prev => ({...prev, climbDir: e.target.value}))} /><input type="text" placeholder="VEL" style={{width: '28px', backgroundColor: !clncFields.climbVel ? 'var(--surface-dbeafe)' : ''}} value={clncFields.climbVel} onChange={e => setClncFields(prev => ({...prev, climbVel: e.target.value}))} /></div>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><div style={{width: '30px', flexShrink: 0}} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>Cruise:</span><input type="text" placeholder="DIR" style={{width: '28px', backgroundColor: !clncFields.cruiseDir ? 'var(--surface-dbeafe)' : ''}} value={clncFields.cruiseDir} onChange={e => setClncFields(prev => ({...prev, cruiseDir: e.target.value}))} /><input type="text" placeholder="VEL" style={{width: '28px', backgroundColor: !clncFields.cruiseVel ? 'var(--surface-dbeafe)' : ''}} value={clncFields.cruiseVel} onChange={e => setClncFields(prev => ({...prev, cruiseVel: e.target.value}))} /></div>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}><div style={{width: '30px', flexShrink: 0}} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap'}}>ΔT:</span><input type="text" style={{width: '28px', backgroundColor: !clncFields.deltaT ? 'var(--surface-dbeafe)' : ''}} value={clncFields.deltaT} onChange={e => { const v = e.target.value; setClncFields(prev => ({...prev, deltaT: v})); if (v) autoFillTTC(v, selectedAlt, infoFields.depElev); }} /><span className="info-label" style={{display: 'inline', whiteSpace: 'nowrap', marginLeft: '4px'}}>OAT:</span><input type="text" style={{width: '28px', backgroundColor: !clncFields.oat ? 'var(--surface-dbeafe)' : ''}} value={clncFields.oat} onChange={e => { const v = e.target.value; setClncFields(prev => ({...prev, oat: v})); if (v) autoFillCruise(v, selectedAlt); }} /></div>
                   </div>
                 </div>
               </td>
@@ -2956,8 +2956,8 @@ function TW4JetLog() {
                   </React.Fragment>
                 ) : (
                   <React.Fragment>
-                    <td style={{background: '#e8e8e8'}} />
-                    <td style={{background: '#e8e8e8'}} />
+                    <td style={{background: 'var(--surface-e8e8e8)'}} />
+                    <td style={{background: 'var(--surface-e8e8e8)'}} />
                   </React.Fragment>
                 )}
               </tr>
@@ -2974,7 +2974,7 @@ function TW4JetLog() {
           onClick={() => setShowParams(false)}
         >
           <div
-            style={{background: 'white', borderRadius: '8px', padding: '24px 28px',
+            style={{background: 'var(--surface)', borderRadius: '8px', padding: '24px 28px',
               minWidth: '300px', boxShadow: '0 6px 24px rgba(0,0,0,0.3)'}}
             onClick={e => e.stopPropagation()}
           >
@@ -2992,7 +2992,7 @@ function TW4JetLog() {
               {label: 'Auto Final Approach Fuel',  key: 'includeFinalApr', checkbox: true, vfrHide: true},
             ].filter(p => (!vfrMode || !p.vfrHide) && (vfrMode || !p.ifrHide)).map(({label, key, checkbox}) => (
               <div key={key} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '16px'}}>
-                <label style={{fontSize: '0.85em', whiteSpace: 'nowrap', color: '#333'}}>{label}</label>
+                <label style={{fontSize: '0.85em', whiteSpace: 'nowrap', color: 'var(--ink)'}}>{label}</label>
                 {checkbox ? (
                   <input
                     type="checkbox"

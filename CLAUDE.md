@@ -83,8 +83,18 @@ cut by `tools/crop-posters.py`.
   EPs/Limits pages via `EPsLimitsShell.js`.
 - **Styling**: all global classes in `src/style.css` (no CSS modules). The only inline-style
   exception is `src/components/systems/**` (computed from `THEME`). Primary colors `#01202C` and
-  `#003B4F`, teal accents, light theme. No "AI vibes": no dark backgrounds, no neon, no triple
-  coloring (bg/border/text in one color family).
+  `#003B4F`, teal accents. No "AI vibes": no neon, no triple coloring (bg/border/text in one
+  color family).
+- **Light and dark themes** (since 2026-10-21): every colour is a token from the `:root` block at
+  the top of `style.css`, redefined under `html[data-theme="dark"]`. The attribute is set before
+  first paint by a script in `public/index.html` (saved choice in localStorage `psm-theme`, else
+  the device setting) and flipped by the footer's toggle (`components/theme.js`). New CSS and
+  inline styles use the plain role names (`--surface`, `--ink`, `--ink-accent`, `--line`,
+  `--btn`, `--band`, `--wash`, `--ok-bg`…), never a raw grey or white; hex-suffixed names
+  (`--surface-f2f6f8`) are shades the file already had, kept exact in light. Saturated status
+  colours, dark pills and scrims stay literal. The nav, sub-nav and footer are brand navy in
+  both modes. The systems diagrams are the one light-only area (`THEME` is literal; the Systems
+  tab sits on `.systems-light`); the landing page has its own dark palette.
 - **Filesystem is case-insensitive NTFS.** Never create a file whose name differs from an existing
   one only by case — it overwrites it and breaks the Linux build.
 - `leftovers.js` is a gitignored scratch file.

@@ -169,12 +169,12 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
       {showGameModal && (
         <div className="game-modal-overlay" onClick={() => setShowGameModal(false)}>
           <div className="game-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '340px', minWidth: '300px' }}>
-            <h3 style={{ marginTop: 0, color: '#01202C' }}>Game Mode</h3>
-            <p style={{ fontSize: '0.9em', color: '#666' }}>
+            <h3 style={{ marginTop: 0, color: 'var(--ink-strong)' }}>Game Mode</h3>
+            <p style={{ fontSize: '0.9em', color: 'var(--ink-666666)' }}>
               Complete EPs and/or Limits with no errors. Your time is recorded when all answers are correct.
             </p>
             <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="game-mode" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#333' }}>Mode</label>
+              <label htmlFor="game-mode" style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: 'var(--ink)' }}>Mode</label>
               <select id="game-mode" value={gameMode} onChange={(e) => setGameMode(e.target.value)} className="game-mode-select" style={{ width: '100%' }}>
                 {MODES.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
               </select>
@@ -198,8 +198,8 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
       {isPaused && (
         <div className="game-modal-overlay" style={{ zIndex: 9999, backgroundColor: 'rgba(0, 0, 0, 0.75)' }}>
           <div className="game-modal" style={{ maxWidth: '320px', minWidth: '280px' }}>
-            <h3 style={{ marginTop: 0, color: '#01202C' }}>Game Paused</h3>
-            <p style={{ fontSize: '0.9em', color: '#666', margin: '0 0 16px' }}>
+            <h3 style={{ marginTop: 0, color: 'var(--ink-strong)' }}>Game Paused</h3>
+            <p style={{ fontSize: '0.9em', color: 'var(--ink-666666)', margin: '0 0 16px' }}>
               Timer is stopped. Press Resume to continue.
             </p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>

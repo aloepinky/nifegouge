@@ -2,9 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <!-- Light or dark before the first paint: the saved choice (src/components/theme.js), else
+         the device setting. The stylesheet reads data-theme on <html>; without this the page
+         would flash light for a dark-mode reader on every load. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('psm-theme');
+          if (t !== 'dark' && t !== 'light') {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', t);
+          document.documentElement.style.colorScheme = t;
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#01202C" />
     <meta
       name="description"
       content="High quality, community-built gouge for naval aviation training"

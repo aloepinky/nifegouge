@@ -4,8 +4,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 // happened without stopping the student, and clears itself after a few seconds.
 
 const STYLES = {
-  info: { background: '#e6f2f5', border: '1px solid #7fb3c2', color: '#003B4F' },
-  error: { background: '#fdecea', border: '1px solid #e0a39c', color: '#8e1c12' },
+  info: { background: 'var(--surface-e6f2f5)', border: '1px solid var(--line-7fb3c2)', color: 'var(--ink-accent)' },
+  error: { background: 'var(--bad-bg-fdecea)', border: '1px solid #e0a39c', color: 'var(--bad-text-8e1c12)' },
 };
 
 export function useNotice() {

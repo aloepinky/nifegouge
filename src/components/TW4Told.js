@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const B = '1px solid #000';
+const B = '1px solid var(--line-000000)';
 
 const AIRPORTS = { KNGP: 5000, KCRP: 6080, KVCT: 9111, KMFE: 7120, KHRL: 5950, KALI: 4490, KCLL: 5158, KSAT: 5519, KAUS: 9000, KROW: 10008, KALM: 9207};
 const AIRPORT_KEYS = Object.keys(AIRPORTS);
@@ -28,9 +28,9 @@ const mkInitial = () => ({
 // --- Static styles (defined outside component so references are stable) ---
 const S = {
   tbl:      { borderCollapse: 'collapse', width: '100%', maxWidth: '600px', margin: '0 auto', fontSize: '12px' },
-  title:    { border: B, backgroundColor: '#ccc', fontWeight: 'bold', textAlign: 'center', fontSize: '13px', padding: '5px 8px' },
-  section:  { border: B, backgroundColor: '#e0e0e0', fontWeight: 'bold', textAlign: 'center', fontSize: '11px', padding: '4px 8px' },
-  colHdr:   { border: B, backgroundColor: '#eeeeee', fontWeight: 'bold', textAlign: 'center', fontSize: '11px', padding: '4px 8px' },
+  title:    { border: B, backgroundColor: 'var(--surface-cccccc)', fontWeight: 'bold', textAlign: 'center', fontSize: '13px', padding: '5px 8px' },
+  section:  { border: B, backgroundColor: 'var(--surface-e0e0e0)', fontWeight: 'bold', textAlign: 'center', fontSize: '11px', padding: '4px 8px' },
+  colHdr:   { border: B, backgroundColor: 'var(--surface-eeeeee)', fontWeight: 'bold', textAlign: 'center', fontSize: '11px', padding: '4px 8px' },
   // Label/unit cells have only side borders — row lines come from input cells only
   lbl:      { borderLeft: B, borderRight: B, borderTop: 'none', borderBottom: 'none', fontWeight: 'bold', fontSize: '11px', verticalAlign: 'middle', padding: '5px 8px' },
   lblLast:  { borderLeft: B, borderRight: B, borderTop: 'none', borderBottom: B,      fontWeight: 'bold', fontSize: '11px', verticalAlign: 'middle', padding: '5px 8px' },
@@ -351,7 +351,7 @@ function TW4Told() {
         <tbody>
           <tr><td colSpan={5} style={S.title}>T-6B TAKEOFF AND LANDING DATA (TOLD) CARD</td></tr>
           <tr>
-            <td colSpan={5} style={{ border: B, backgroundColor: '#f9f9f9', fontSize: '10px', textAlign: 'center', padding: '3px 8px', fontStyle: 'italic', color: '#555' }}>
+            <td colSpan={5} style={{ border: B, backgroundColor: 'var(--surface-2)', fontSize: '10px', textAlign: 'center', padding: '3px 8px', fontStyle: 'italic', color: 'var(--ink-555555)' }}>
               Auto-calculated values assume flat runway, zero wind, and non-ice conditions. Any other conditions must be manually calculated
             </td>
           </tr>
@@ -412,7 +412,7 @@ function TW4Told() {
               <select
                 value={toDistMode}
                 onChange={e => setToDistMode(e.target.value)}
-                style={{fontSize: '0.72em', padding: '1px 2px', border: '1px solid #bbb', borderRadius: '2px', boxShadow: 'none'}}
+                style={{fontSize: '0.72em', padding: '1px 2px', border: '1px solid var(--line-bbbbbb)', borderRadius: '2px', boxShadow: 'none'}}
               >
                 <option value="50ft">50 ft obstacle (PCL)</option>
                 <option value="noObs">No Obstacle (NATOPS)</option>

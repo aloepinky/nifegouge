@@ -16,7 +16,7 @@ import EditDiff from './EditDiff';
 // No box of its own: it sits on the yellow the whole review section already has.
 const bannerStyle = {
   marginBottom: '10px',
-  color: '#6b5200',
+  color: 'var(--warn-text-6b5200)',
   textAlign: 'center',
   fontWeight: 'bold',
 };
@@ -97,11 +97,11 @@ export default function PendingCard({ item, original, badge, onDone }) {
         <div className="feedback-row">
           <button className="thumb-btn up" onClick={() => vote(up)} disabled={busy} title={isEdit ? 'Better than the current version' : 'Add'}>
             <img src="/images/thumb.png" alt="" />
-            <span style={{ display: 'block', fontSize: '12px', marginTop: '5px', color: 'white' }}>{isEdit ? 'Better' : 'Approve'}</span>
+            <span style={{ display: 'block', fontSize: '12px', marginTop: '5px', color: 'var(--on-brand)' }}>{isEdit ? 'Better' : 'Approve'}</span>
           </button>
           <button className="thumb-btn down" onClick={() => vote(down)} disabled={busy} title={isEdit ? 'Worse than the current version' : 'Keep out'}>
             <img src="/images/thumb-down.png" alt="" />
-            <span style={{ display: 'block', fontSize: '12px', marginTop: '5px', color: 'white' }}>{isEdit ? 'Worse' : 'Reject'}</span>
+            <span style={{ display: 'block', fontSize: '12px', marginTop: '5px', color: 'var(--on-brand)' }}>{isEdit ? 'Worse' : 'Reject'}</span>
           </button>
         </div>
       )}
@@ -110,7 +110,7 @@ export default function PendingCard({ item, original, badge, onDone }) {
         <button
           onClick={() => vote('skip')}
           disabled={busy}
-          style={{ padding: '6px 16px', backgroundColor: 'transparent', color: '#666', border: '1px solid #999', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+          style={{ padding: '6px 16px', backgroundColor: 'transparent', color: 'var(--ink-666666)', border: '1px solid var(--line-999999)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
         >
           Skip
         </button>

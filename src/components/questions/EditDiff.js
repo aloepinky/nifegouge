@@ -22,8 +22,8 @@ export function wordDiff(before, after) {
 
 const MARK = {
   same: {},
-  removed: { textDecoration: 'line-through', color: '#8e1c12', background: '#fdecea', marginRight: '3px' },
-  added: { color: '#003B4F', background: '#dff0f4', fontWeight: 600 },
+  removed: { textDecoration: 'line-through', color: 'var(--bad-text-8e1c12)', background: 'var(--bad-bg-fdecea)', marginRight: '3px' },
+  added: { color: 'var(--ink-accent)', background: 'var(--surface-dff0f4)', fontWeight: 600 },
 };
 
 function Diffed({ before, after }) {
@@ -50,11 +50,11 @@ function wrongAnswers(original, edit) {
 
 function Row({ label, changed, children }) {
   return (
-    <div style={{ padding: '8px 0', borderTop: '1px solid #eee' }}>
-      <div style={{ fontSize: '12px', color: changed ? '#003B4F' : '#888', fontWeight: 600, marginBottom: '3px' }}>
+    <div style={{ padding: '8px 0', borderTop: '1px solid var(--line-eeeeee)' }}>
+      <div style={{ fontSize: '12px', color: changed ? 'var(--ink-accent)' : 'var(--ink-888888)', fontWeight: 600, marginBottom: '3px' }}>
         {label}{changed ? ' — changed' : ''}
       </div>
-      <div style={{ fontSize: '14px', color: '#222' }}>{children}</div>
+      <div style={{ fontSize: '14px', color: 'var(--ink-222222)' }}>{children}</div>
     </div>
   );
 }
@@ -62,7 +62,7 @@ function Row({ label, changed, children }) {
 export default function EditDiff({ original, edit }) {
   if (!original) {
     return (
-      <div style={{ fontSize: '14px', color: '#555', margin: '12px 0' }}>
+      <div style={{ fontSize: '14px', color: 'var(--ink-555555)', margin: '12px 0' }}>
         The question this edit changes has been removed, so there is nothing to compare it with.
       </div>
     );
@@ -76,9 +76,9 @@ export default function EditDiff({ original, edit }) {
   const nothing = !q.changed && !right.changed && !why.changed && !lecture.changed && !wrong.changed;
 
   return (
-    <div style={{ margin: '16px 0', padding: '10px 14px', border: '1px solid #cfdde2', borderRadius: '8px', background: '#fff', textAlign: 'left' }}>
-      <div style={{ fontWeight: 700, color: '#01202C', marginBottom: '4px' }}>What changed</div>
-      {nothing && <div style={{ fontSize: '14px', color: '#555' }}>Only the spacing changed.</div>}
+    <div style={{ margin: '16px 0', padding: '10px 14px', border: '1px solid var(--line-cfdde2)', borderRadius: '8px', background: 'var(--surface)', textAlign: 'left' }}>
+      <div style={{ fontWeight: 700, color: 'var(--ink-strong)', marginBottom: '4px' }}>What changed</div>
+      {nothing && <div style={{ fontSize: '14px', color: 'var(--ink-555555)' }}>Only the spacing changed.</div>}
       <Row label="Question" changed={q.changed}><Diffed before={q.before} after={q.after} /></Row>
       <Row label="Correct answer" changed={right.changed}><Diffed before={right.before} after={right.after} /></Row>
       <Row label="Wrong answers" changed={wrong.changed}>

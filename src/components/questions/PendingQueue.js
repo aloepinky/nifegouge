@@ -18,7 +18,7 @@ export default function PendingQueue({ pending, sections, seen, questions, onVot
       <button
         className="review-mode-toggle"
         onClick={onExit}
-        style={{ marginBottom: '15px', padding: '10px 20px', backgroundColor: '#01202C', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%' }}
+        style={{ marginBottom: '15px', padding: '10px 20px', backgroundColor: 'var(--btn)', color: 'var(--on-brand)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%' }}
       >
         Back to the Quiz
       </button>
@@ -28,7 +28,7 @@ export default function PendingQueue({ pending, sections, seen, questions, onVot
           <option value="all">All Topics</option>
           {activeSections(sections).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
-        <span style={{ fontSize: '15px', color: '#003B4F' }}>
+        <span style={{ fontSize: '15px', color: 'var(--ink-accent)' }}>
           {waiting.length === 0 ? 'Nothing waiting' : `${waiting.length} waiting for review`}
         </span>
       </div>
@@ -42,7 +42,7 @@ export default function PendingQueue({ pending, sections, seen, questions, onVot
           onDone={onVoted}
         />
       ) : (
-        <div style={{ textAlign: 'center', padding: '40px 10px', color: '#003B4F' }}>
+        <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--ink-accent)' }}>
           {topic === 'all'
             ? 'You have been through everything waiting for review. Thank you.'
             : `Nothing waiting for review in ${name(topic)}.`}

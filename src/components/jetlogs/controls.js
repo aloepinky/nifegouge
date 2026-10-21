@@ -7,35 +7,35 @@ import React, { useEffect, useState } from 'react';
 // an unstyled form or a second class vocabulary in the stylesheet for one modal.
 
 export const LABEL = {
-  display: 'block', fontSize: '0.72em', color: '#666', marginBottom: '3px',
+  display: 'block', fontSize: '0.72em', color: 'var(--ink-666666)', marginBottom: '3px',
   letterSpacing: '0.03em',
 };
 
 export const INPUT = {
-  width: '100%', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: '4px',
+  width: '100%', padding: '4px 6px', border: '1px solid var(--line-d1d5db)', borderRadius: '4px',
   fontSize: '0.85em', boxSizing: 'border-box',
 };
 
 export const PRIMARY = {
-  background: '#003B4F', color: 'white', border: 'none', borderRadius: '4px',
+  background: 'var(--btn-2)', color: 'var(--on-brand)', border: 'none', borderRadius: '4px',
   padding: '6px 14px', fontSize: '0.85em', fontWeight: 'bold', cursor: 'pointer',
 };
 
 export const SECONDARY = {
-  background: 'white', color: '#003B4F', border: '1px solid #c9d6dc', borderRadius: '4px',
+  background: 'var(--surface)', color: 'var(--ink-accent)', border: '1px solid var(--line-c9d6dc)', borderRadius: '4px',
   padding: '6px 12px', fontSize: '0.85em', cursor: 'pointer',
 };
 
-export const ERROR = { fontSize: '0.78em', color: '#b91c1c', marginTop: '6px' };
-export const NOTE = { fontSize: '0.78em', color: '#666', marginTop: '6px', lineHeight: 1.45 };
-export const QUIET = { fontSize: '0.8em', color: '#aaa', marginBottom: '8px' };
+export const ERROR = { fontSize: '0.78em', color: 'var(--bad-text-b91c1c)', marginTop: '6px' };
+export const NOTE = { fontSize: '0.78em', color: 'var(--ink-666666)', marginTop: '6px', lineHeight: 1.45 };
+export const QUIET = { fontSize: '0.8em', color: 'var(--ink-aaaaaa)', marginBottom: '8px' };
 
 export function Field({ label, hint, children }) {
   return (
     <div style={{marginBottom: '10px'}}>
       <label style={LABEL}>{label}</label>
       {children}
-      {hint && <div style={{fontSize: '0.7em', color: '#999', marginTop: '2px'}}>{hint}</div>}
+      {hint && <div style={{fontSize: '0.7em', color: 'var(--ink-999999)', marginTop: '2px'}}>{hint}</div>}
     </div>
   );
 }
@@ -59,7 +59,7 @@ export function ConfirmButton({ label, question, onConfirm, style, title }) {
   }
   return (
     <span style={{display: 'inline-flex', alignItems: 'center', gap: '6px'}}>
-      <span style={{fontSize: '0.78em', color: '#666'}}>{question}</span>
+      <span style={{fontSize: '0.78em', color: 'var(--ink-666666)'}}>{question}</span>
       <button type="button" style={PRIMARY} onClick={() => { setArmed(false); onConfirm(); }}>
         Yes
       </button>

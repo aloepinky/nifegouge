@@ -139,10 +139,10 @@ export default function QuestionForm({ mode, question, sections, defaultTopic, o
         </div>
 
         <div className="qa-box">
-          <label style={{ display: 'block', fontSize: '14px', color: '#01202C', fontWeight: 600, marginBottom: '4px' }} htmlFor="question-why">
-            Why is this the answer? <span style={{ fontWeight: 400, color: '#666' }}>(optional)</span>
+          <label style={{ display: 'block', fontSize: '14px', color: 'var(--ink-strong)', fontWeight: 600, marginBottom: '4px' }} htmlFor="question-why">
+            Why is this the answer? <span style={{ fontWeight: 400, color: 'var(--ink-666666)' }}>(optional)</span>
           </label>
-          <div style={{ fontSize: '13px', color: '#666', marginBottom: '6px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--ink-666666)', marginBottom: '6px' }}>
             Provide a source if you can.
           </div>
           <textarea
@@ -155,7 +155,7 @@ export default function QuestionForm({ mode, question, sections, defaultTopic, o
           />
         </div>
 
-        {error && <div style={{ color: '#c62828', fontSize: '14px', margin: '8px 0' }}>{error}</div>}
+        {error && <div style={{ color: 'var(--bad-text-c62828)', fontSize: '14px', margin: '8px 0' }}>{error}</div>}
 
         <button className="submitBtn" onClick={submit} disabled={sending}>
           {sending ? 'Sending…' : mode === 'edit' ? 'Submit Edit' : 'Submit Question'}

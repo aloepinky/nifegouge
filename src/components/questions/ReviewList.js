@@ -6,7 +6,7 @@ import QuestionHistory from './QuestionHistory';
 
 // Review Mode: every question in a topic (and lecture) as a list, each opened to try it.
 
-const selectStyle = { padding: '10px 15px', fontSize: '16px', borderRadius: '8px', border: '2px solid #ccc' };
+const selectStyle = { padding: '10px 15px', fontSize: '16px', borderRadius: '8px', border: '2px solid var(--line-cccccc)' };
 
 function byLectureThenScore(a, b) {
   const la = parseInt(a.lecture, 10) || 0;
@@ -55,7 +55,7 @@ export default function ReviewList({ questions, sections, topic, lecture, onTopi
         <button
           className="review-mode-toggle"
           onClick={onExit}
-          style={{ marginBottom: '15px', padding: '10px 20px', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%' }}
+          style={{ marginBottom: '15px', padding: '10px 20px', color: 'var(--on-brand)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%' }}
         >
           Enter Test Mode
         </button>
@@ -68,7 +68,7 @@ export default function ReviewList({ questions, sections, topic, lecture, onTopi
             <option value="All">All Lectures</option>
             {lectures.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
           </select>
-          <span style={{ marginLeft: '20px', fontSize: '16px', color: '#666' }}>
+          <span style={{ marginLeft: '20px', fontSize: '16px', color: 'var(--ink-666666)' }}>
             {listed.length} questions available
           </span>
         </div>
@@ -83,23 +83,23 @@ export default function ReviewList({ questions, sections, topic, lecture, onTopi
               key={q.questionId}
               id={`question-${q.questionId}`}
               className="review-question-item"
-              style={{ marginBottom: '20px', border: '2px solid #ddd', borderRadius: '12px', overflow: 'hidden', transition: 'all 0.3s ease' }}
+              style={{ marginBottom: '20px', border: '2px solid var(--line-dddddd)', borderRadius: '12px', overflow: 'hidden', transition: 'all 0.3s ease' }}
             >
               <div
                 className="review-question-header"
                 onClick={() => toggle(q.questionId)}
                 style={{
                   padding: '15px',
-                  backgroundColor: open ? '#f0f0f0' : '#f9f9f9',
+                  backgroundColor: open ? 'var(--surface-f0f0f0)' : 'var(--surface-2)',
                   cursor: 'pointer',
-                  borderBottom: open ? '1px solid #ddd' : 'none',
+                  borderBottom: open ? '1px solid var(--line-dddddd)' : 'none',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'flex-start',
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <span style={{ fontWeight: 'bold', marginRight: '10px', color: '#01202C' }}>
+                  <span style={{ fontWeight: 'bold', marginRight: '10px', color: 'var(--ink-strong)' }}>
                     Q{idx + 1}
                     {q.lecture && ` (${lectureName(sections, q.topic, q.lecture)})`}
                   </span>
@@ -108,7 +108,7 @@ export default function ReviewList({ questions, sections, topic, lecture, onTopi
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: '15px' }}>
                   <span style={{ fontSize: '20px', transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.3s' }}>▼</span>
                   {q.upvotes !== undefined && (
-                    <span style={{ marginTop: '5px', fontSize: '12px', color: score >= 0 ? '#4CAF50' : '#f44336', fontWeight: 'bold' }}>
+                    <span style={{ marginTop: '5px', fontSize: '12px', color: score >= 0 ? 'var(--ok-text-4caf50)' : '#f44336', fontWeight: 'bold' }}>
                       {score >= 0 ? '+' : ''}{score}
                     </span>
                   )}
@@ -116,7 +116,7 @@ export default function ReviewList({ questions, sections, topic, lecture, onTopi
               </div>
 
               {open && (
-                <div className="review-answers" style={{ padding: '15px', backgroundColor: '#fff' }}>
+                <div className="review-answers" style={{ padding: '15px', backgroundColor: 'var(--surface)' }}>
                   {q.choices.map((answer, i) => {
                     const picked = chosen[q.questionId] === answer;
                     const right = answer === q.correctAnswer;
@@ -129,19 +129,19 @@ export default function ReviewList({ questions, sections, topic, lecture, onTopi
                           padding: '10px 15px',
                           margin: '8px 0',
                           border: '2px solid',
-                          borderColor: tone === 'right' ? '#4CAF50' : tone === 'wrong' ? '#f44336' : '#ddd',
+                          borderColor: tone === 'right' ? '#4CAF50' : tone === 'wrong' ? '#f44336' : 'var(--line-dddddd)',
                           borderRadius: '8px',
                           cursor: 'pointer',
-                          backgroundColor: tone === 'right' ? '#e8f5e9' : tone === 'wrong' ? '#ffebee' : 'white',
+                          backgroundColor: tone === 'right' ? 'var(--ok-bg-e8f5e9)' : tone === 'wrong' ? 'var(--bad-bg-ffebee)' : 'var(--surface)',
                           transition: 'all 0.2s ease',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <span style={{ marginRight: '10px', fontWeight: 'bold', color: tone === 'right' ? '#4CAF50' : tone === 'wrong' ? '#f44336' : '#666' }}>
+                          <span style={{ marginRight: '10px', fontWeight: 'bold', color: tone === 'right' ? 'var(--ok-text-4caf50)' : tone === 'wrong' ? '#f44336' : 'var(--ink-666666)' }}>
                             {String.fromCharCode(65 + i)}.
                           </span>
-                          <span style={{ flex: 1, color: tone === 'wrong' ? '#999' : '#333' }}>{answer}</span>
-                          {tone === 'right' && <span style={{ color: '#4CAF50', fontWeight: 'bold', marginLeft: '10px' }}>✓</span>}
+                          <span style={{ flex: 1, color: tone === 'wrong' ? 'var(--ink-999999)' : 'var(--ink)' }}>{answer}</span>
+                          {tone === 'right' && <span style={{ color: 'var(--ok-text-4caf50)', fontWeight: 'bold', marginLeft: '10px' }}>✓</span>}
                           {tone === 'wrong' && <span style={{ color: '#f44336', fontWeight: 'bold', marginLeft: '10px' }}>✗</span>}
                         </div>
                       </div>
@@ -153,21 +153,21 @@ export default function ReviewList({ questions, sections, topic, lecture, onTopi
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button
                       onClick={() => onEdit(q)}
-                      style={{ marginTop: '12px', padding: '8px 18px', backgroundColor: '#01202C', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
+                      style={{ marginTop: '12px', padding: '8px 18px', backgroundColor: 'var(--btn)', color: 'var(--on-brand)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
                     >
                       Edit Question
                     </button>
                     {(q.rev || 1) > 1 && (
                       <button
                         onClick={() => setHistoryOf(historyOf === q.questionId ? null : q.questionId)}
-                        style={{ marginTop: '12px', padding: '8px 18px', backgroundColor: 'white', color: '#01202C', border: '1px solid #01202C', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
+                        style={{ marginTop: '12px', padding: '8px 18px', backgroundColor: 'var(--surface)', color: 'var(--ink-strong)', border: '1px solid var(--line-brand)', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
                       >
                         History
                       </button>
                     )}
                     <button
                       onClick={() => copyLink(q.questionId)}
-                      style={{ marginTop: '12px', padding: '8px 18px', backgroundColor: 'white', color: '#01202C', border: '1px solid #01202C', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
+                      style={{ marginTop: '12px', padding: '8px 18px', backgroundColor: 'var(--surface)', color: 'var(--ink-strong)', border: '1px solid var(--line-brand)', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' }}
                     >
                       Copy link
                     </button>
@@ -180,7 +180,7 @@ export default function ReviewList({ questions, sections, topic, lecture, onTopi
         })}
 
         {listed.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '50px', color: '#999' }}>No questions available for this topic</div>
+          <div style={{ textAlign: 'center', padding: '50px', color: 'var(--ink-999999)' }}>No questions available for this topic</div>
         )}
       </div>
     </div>

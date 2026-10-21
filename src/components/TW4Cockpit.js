@@ -14,21 +14,21 @@ EP_NWC_GROUPS.forEach((group) => group.forEach((k) => { NWC_GROUP_BY_KEY[k] = gr
 // chips so the chips visually match the bubble they expand into
 const NWC_BUBBLE_STYLES = {
   warning: {
-    backgroundColor: '#e6d4d4ff',
-    color: 'black',
+    backgroundColor: 'var(--bad-bg-e6d4d4)',
+    color: 'var(--ink-000000)',
     border: '2px solid #ef5350',
     boxShadow: '4px 4px 8px rgba(0, 0, 0, 0.3)',
     borderRadius: '4px'
   },
   caution: {
-    backgroundColor: 'white',
-    color: 'black',
+    backgroundColor: 'var(--surface)',
+    color: 'var(--ink-000000)',
     border: '3px dashed #ef5350',
     borderRadius: '4px'
   },
   note: {
-    backgroundColor: 'white',
-    color: 'black',
+    backgroundColor: 'var(--surface)',
+    color: 'var(--ink-000000)',
     border: '4px solid #ef5350',
     borderRadius: '4px'
   }
@@ -116,7 +116,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
         <div>
           {modalBaseContentRef.current}
           {stepText && (
-            <div style={{marginTop: '20px', padding: '10px', border: '2px solid #666', borderRadius: '8px', backgroundColor: '#f0f0f0'}}>
+            <div style={{marginTop: '20px', padding: '10px', border: '2px solid var(--line-666666)', borderRadius: '8px', backgroundColor: 'var(--surface-f0f0f0)'}}>
               <span className={getInputClass(modalStepKeyRef.current)}>{stepText}</span>
             </div>
           )}
@@ -520,7 +520,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       <div>
         {content}
         {stepText && (
-          <div style={{marginTop: '20px', padding: '10px', border: '2px solid #666', borderRadius: '8px', backgroundColor: '#f0f0f0'}}>
+          <div style={{marginTop: '20px', padding: '10px', border: '2px solid var(--line-666666)', borderRadius: '8px', backgroundColor: 'var(--surface-f0f0f0)'}}>
             <span className={getInputClass(nextEmptyField)}>{stepText}</span>
           </div>
         )}
@@ -808,8 +808,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
               padding: '8px 16px',
               fontSize: '14px',
               fontWeight: 'bold',
-              backgroundColor: cockpitMode === 'full' ? '#01202C' : '#003B4F',
-              color: 'white',
+              backgroundColor: cockpitMode === 'full' ? 'var(--btn)' : 'var(--btn-2)',
+              color: 'var(--on-brand)',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
@@ -828,14 +828,14 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
             onClick={() => setShowInstructions(false)}
           >
             <div
-              style={{backgroundColor: 'white', padding: '30px', borderRadius: '8px', 
+              style={{backgroundColor: 'var(--surface)', padding: '30px', borderRadius: '8px', 
                 maxWidth: '600px', maxHeight: '80vh', overflow: 'auto', position: 'relative'}}
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setShowInstructions(false)}
                 style={{position: 'absolute', top: '10px', right: '10px', fontSize: '24px',
-                  background: 'none', border: 'none', cursor: 'pointer', color: '#666'}}
+                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-666666)'}}
               >
                 &times;
               </button>
@@ -849,9 +849,9 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   <li>Clicking a correct control will automatically fill the entire step</li>
                   <li>Clicking on steps in the quadfold will reveal the corresponding expanded checklist item</li>
                   <li>Clicking on the ## of ## indicator will display a dropdown from which a specific checklist can be selected</li>
-                  <li>A <span style={{backgroundColor: '#f8d0d0'}}>red</span> step means the incorrect control was clicked or inputted. EPs are verbatim!</li>
-                  <li>A <span style={{backgroundColor: '#faf6be'}}>yellow</span> step means a part of the correct controls have been clicked or inputted</li>
-                  <li>A <span style={{backgroundColor: '#d0f0d0'}}>green</span> or <span style={{backgroundColor: '#d0f3f8'}}>blue</span> step means the correct controls have been clicked or inputted</li>
+                  <li>A <span style={{backgroundColor: 'var(--bad-bg)'}}>red</span> step means the incorrect control was clicked or inputted. EPs are verbatim!</li>
+                  <li>A <span style={{backgroundColor: 'var(--warn-bg)'}}>yellow</span> step means a part of the correct controls have been clicked or inputted</li>
+                  <li>A <span style={{backgroundColor: 'var(--ok-bg)'}}>green</span> or <span style={{backgroundColor: 'var(--surface-d0f3f8)'}}>blue</span> step means the correct controls have been clicked or inputted</li>
                 </ul>
 
                 <h3 style={{fontSize: '14px', marginTop: '15px'}}>Buttons & Controls</h3>
@@ -1473,7 +1473,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                       <button
                         onClick={closeChecklistModal}
                         style={{position: 'absolute', top: '3px', right: '2px', fontSize: '16px',
-                          background: 'rgba(0, 0, 0, 0.7)', border: 'none', cursor: 'pointer', color: '#fff', zIndex: 101,
+                          background: 'rgba(0, 0, 0, 0.7)', border: 'none', cursor: 'pointer', color: 'var(--on-brand)', zIndex: 101,
                           padding: '0 4px', lineHeight: '1'}}
                       >
                         &times;
@@ -1493,13 +1493,13 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   >
                     <div
                       style={{width: '100%', maxWidth: '600px', maxHeight: '90%', position: 'relative',
-                        backgroundColor: 'white', borderRadius: '8px', padding: '20px', overflowY: 'auto'}}
+                        backgroundColor: 'var(--surface)', borderRadius: '8px', padding: '20px', overflowY: 'auto'}}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
                         onClick={closeNWCModal}
                         style={{position: 'absolute', top: '8px', right: '8px', fontSize: '24px',
-                          background: 'transparent', border: 'none', cursor: 'pointer', color: '#333', zIndex: 101,
+                          background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ink)', zIndex: 101,
                           padding: '0 8px', lineHeight: '1', fontWeight: 'bold'}}
                       >
                         &times;
@@ -1511,11 +1511,11 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                           <div style={{display: 'flex', justifyContent: 'center', marginBottom: '8px'}}>
                             {[['N', 'notes'], ['W', 'warnings'], ['C', 'cautions']].map(([letter, cat]) => (
                               <div key={cat} style={{textAlign: 'center'}}>
-                                <div style={{fontSize: '11px', fontWeight: 'bold', color: 'black', lineHeight: 1.2}}>{letter}</div>
-                                <div style={{fontSize: '22px', fontWeight: 'bold', color: 'black', lineHeight: 1.1}}>
+                                <div style={{fontSize: '11px', fontWeight: 'bold', color: 'var(--ink-000000)', lineHeight: 1.2}}>{letter}</div>
+                                <div style={{fontSize: '22px', fontWeight: 'bold', color: 'var(--ink-000000)', lineHeight: 1.1}}>
                                   {nwcModalContent.epCounts[cat]}
                                 </div>
-                                <div style={{fontSize: '13px', color: '#aaa'}}>
+                                <div style={{fontSize: '13px', color: 'var(--ink-aaaaaa)'}}>
                                   {nwcModalContent.stepCounts[cat]}
                                 </div>
                               </div>
@@ -1529,8 +1529,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                             </h2>
                             <button
                               onClick={() => setShowAllHints(!showAllHints)}
-                              style={{backgroundColor: showAllHints ? '#003B4F' : 'white',
-                                color: showAllHints ? 'white' : '#003B4F', border: '1px solid #003B4F',
+                              style={{backgroundColor: showAllHints ? 'var(--btn-2)' : 'var(--surface)',
+                                color: showAllHints ? 'var(--on-brand)' : 'var(--ink-accent)', border: '1px solid var(--line-accent)',
                                 borderRadius: '4px', padding: '2px 8px', fontSize: '11px',
                                 fontWeight: 'bold', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap'}}
                             >
@@ -1567,7 +1567,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                                   <span>{item.seq}. {NWC_CATEGORY_LABELS[item.category]}</span>
                                   {item.hint && (
                                     hintShown ? (
-                                      <span style={{fontWeight: 'normal', fontStyle: 'italic', color: '#555'}}>
+                                      <span style={{fontWeight: 'normal', fontStyle: 'italic', color: 'var(--ink-555555)'}}>
                                         {item.hint}
                                       </span>
                                     ) : (
@@ -1576,7 +1576,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                                           e.stopPropagation();
                                           setRevealedHints((prev) => ({...prev, [item.seq]: true}));
                                         }}
-                                        style={{fontWeight: 'normal', fontStyle: 'italic', color: '#888',
+                                        style={{fontWeight: 'normal', fontStyle: 'italic', color: 'var(--ink-888888)',
                                           textDecoration: 'underline'}}
                                       >
                                         Hint
@@ -1632,8 +1632,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                           top: '100%',
                           left: '50%',
                           transform: 'translateX(-50%)',
-                          backgroundColor: 'white',
-                          border: '2px solid #333',
+                          backgroundColor: 'var(--surface)',
+                          border: '2px solid var(--line-333333)',
                           borderRadius: '4px',
                           boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
                           zIndex: 1000,
@@ -1650,20 +1650,20 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                             style={{
                               padding: '8px 12px',
                               cursor: 'pointer',
-                              borderBottom: idx < (currentDivKey === 'epDivs' ? EP_TITLES : currentDivKey === 'fullEpDivs' ? EP_FULL_TITLES : QUAD_TITLES).length - 1 ? '1px solid #ddd' : 'none',
-                              backgroundColor: currentIndexArray[currentIndex] === idx ? '#e3f2fd' : 'white',
+                              borderBottom: idx < (currentDivKey === 'epDivs' ? EP_TITLES : currentDivKey === 'fullEpDivs' ? EP_FULL_TITLES : QUAD_TITLES).length - 1 ? '1px solid var(--line-dddddd)' : 'none',
+                              backgroundColor: currentIndexArray[currentIndex] === idx ? 'var(--surface-e3f2fd)' : 'var(--surface)',
                               fontSize: '11px',
                               fontWeight: currentIndexArray[currentIndex] === idx ? 'bold' : 'normal',
                               textAlign: 'center'
                             }}
                             onMouseEnter={(e) => {
                               if (currentIndexArray[currentIndex] !== idx) {
-                                e.target.style.backgroundColor = '#f5f5f5';
+                                e.target.style.backgroundColor = 'var(--surface-f5f5f5)';
                               }
                             }}
                             onMouseLeave={(e) => {
                               if (currentIndexArray[currentIndex] !== idx) {
-                                e.target.style.backgroundColor = 'white';
+                                e.target.style.backgroundColor = 'var(--surface)';
                               }
                             }}
                             onClick={() => {
@@ -1846,10 +1846,10 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
               <button
                 onClick={toggleAutoExpanded}
                 style={{
-                  backgroundColor: autoExpanded ? '#4CAF50' : '#f0f0f0',
-                  color: autoExpanded ? 'white' : 'black',
+                  backgroundColor: autoExpanded ? '#4CAF50' : 'var(--surface-f0f0f0)',
+                  color: autoExpanded ? 'var(--on-brand)' : 'var(--ink-000000)',
                   fontWeight: autoExpanded ? 'bold' : 'normal',
-                  border: autoExpanded ? '2px solid #45a049' : '1px solid #ccc',
+                  border: autoExpanded ? '2px solid #45a049' : '1px solid var(--line-cccccc)',
                   boxShadow: autoExpanded ? 'inset 0 2px 4px rgba(0,0,0,0.2)' : 'none'
                 }}
               >
@@ -1860,10 +1860,10 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
           <button
             onClick={toggleAutoNWC}
             style={{
-              backgroundColor: autoNWC ? '#4CAF50' : '#f0f0f0',
-              color: autoNWC ? 'white' : 'black',
+              backgroundColor: autoNWC ? '#4CAF50' : 'var(--surface-f0f0f0)',
+              color: autoNWC ? 'var(--on-brand)' : 'var(--ink-000000)',
               fontWeight: autoNWC ? 'bold' : 'normal',
-              border: autoNWC ? '2px solid #45a049' : '1px solid #ccc',
+              border: autoNWC ? '2px solid #45a049' : '1px solid var(--line-cccccc)',
               boxShadow: autoNWC ? 'inset 0 2px 4px rgba(0,0,0,0.2)' : 'none'
             }}
           >
@@ -1906,8 +1906,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   width: '20px',
                   height: '20px',
                   borderRadius: '50%',
-                  border: '2px solid #333',
-                  backgroundColor: currentDivKey === 'epDivs' ? '#333' : '#fff',
+                  border: '2px solid var(--line-333333)',
+                  backgroundColor: currentDivKey === 'epDivs' ? '#333' : 'var(--surface)',
                   transition: 'background-color 0.2s'
                 }}></div>
               </div>
@@ -1934,8 +1934,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   width: '20px',
                   height: '20px',
                   borderRadius: '50%',
-                  border: '2px solid #333',
-                  backgroundColor: currentDivKey === 'fullEpDivs' ? '#333' : '#fff',
+                  border: '2px solid var(--line-333333)',
+                  backgroundColor: currentDivKey === 'fullEpDivs' ? '#333' : 'var(--surface)',
                   transition: 'background-color 0.2s'
                 }}></div>
               </div>
@@ -1963,8 +1963,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   width: '20px',
                   height: '20px',
                   borderRadius: '50%',
-                  border: '2px solid #333',
-                  backgroundColor: currentDivKey === 'quadDivs' ? '#333' : '#fff',
+                  border: '2px solid var(--line-333333)',
+                  backgroundColor: currentDivKey === 'quadDivs' ? '#333' : 'var(--surface)',
                   transition: 'background-color 0.2s'
                 }}></div>
               </div>

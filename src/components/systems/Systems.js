@@ -39,10 +39,13 @@ function Systems() {
           </span>
         ))}
       </div>
-      {/* Holds the page's height while a diagram's chunk loads, so the footer doesn't jump. */}
-      <Suspense fallback={<div style={{ minHeight: '100vh' }} />}>
-        <Diagram />
-      </Suspense>
+      {/* The diagrams are drawn for a light page and stay light in dark mode; .systems-light is
+          their floor, a screen tall so the footer doesn't jump while a diagram's chunk loads. */}
+      <div className="systems-light">
+        <Suspense fallback={null}>
+          <Diagram />
+        </Suspense>
+      </div>
     </div>
   );
 }

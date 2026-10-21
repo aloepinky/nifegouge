@@ -87,19 +87,19 @@ function HistoryPanel({ entry, onApply, onBack, onRestored }) {
             {state.data.revisions.map((r) => {
               const current = r.rev === state.data.latestRev;
               return (
-                <tr key={r.rev} style={{background: current ? '#f3f7f9' : undefined}}>
+                <tr key={r.rev} style={{background: current ? 'var(--surface-f3f7f9)' : undefined}}>
                   <td style={{padding: '5px 6px', verticalAlign: 'top', whiteSpace: 'nowrap',
-                    borderTop: '1px solid #eee', color: '#666'}}>
-                    {r.rev}{current && <span style={{color: '#003B4F'}}> ·now</span>}
+                    borderTop: '1px solid var(--line-eeeeee)', color: 'var(--ink-666666)'}}>
+                    {r.rev}{current && <span style={{color: 'var(--ink-accent)'}}> ·now</span>}
                   </td>
-                  <td style={{padding: '5px 6px', verticalAlign: 'top', borderTop: '1px solid #eee'}}>
-                    <div>{r.summary || <span style={{color: '#aaa'}}>No summary</span>}</div>
-                    <div style={{color: '#999', fontSize: '0.9em'}}>
+                  <td style={{padding: '5px 6px', verticalAlign: 'top', borderTop: '1px solid var(--line-eeeeee)'}}>
+                    <div>{r.summary || <span style={{color: 'var(--ink-aaaaaa)'}}>No summary</span>}</div>
+                    <div style={{color: 'var(--ink-999999)', fontSize: '0.9em'}}>
                       {r.author || 'Anonymous'} · {when(r.createdAt)}
                     </div>
                   </td>
                   <td style={{padding: '5px 6px', verticalAlign: 'top', textAlign: 'right',
-                    whiteSpace: 'nowrap', borderTop: '1px solid #eee'}}>
+                    whiteSpace: 'nowrap', borderTop: '1px solid var(--line-eeeeee)'}}>
                     <button
                       type="button"
                       style={{...SECONDARY, padding: '3px 8px', fontSize: '0.95em'}}

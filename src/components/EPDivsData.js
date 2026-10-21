@@ -12,22 +12,22 @@ import React from 'react';
 // Define styles for EP divs
 const epSectionStyle = {
   marginBottom: '6px',
-  border: '1px solid #ddd',
+  border: '1px solid var(--line-dddddd)',
   borderRadius: '6px',
   overflow: 'hidden',
-  backgroundColor: '#f9f9f9',
+  backgroundColor: 'var(--surface-2)',
   maxWidth: "350px",
   margin: '0 auto'
 };
 
 const epHeaderStyle = {
   backgroundColor: '#ef5350',
-  color: 'white',
+  color: 'var(--on-brand)',
   padding: '6px 12px',
   fontWeight: 'bold',
   fontSize: '12px',
   textAlign: 'center',
-  borderBottom: '1px solid #000'
+  borderBottom: '1px solid var(--line-000000)'
 };
 
 const epStepStyle = {
@@ -35,17 +35,17 @@ const epStepStyle = {
   display: 'flex',
   alignItems: 'center',
   gap: '0px',
-  borderBottom: '1px solid #ddd',
+  borderBottom: '1px solid var(--line-dddddd)',
   fontSize: '12px',
   fontWeight: 'bold',
-  backgroundColor: 'white'
+  backgroundColor: 'var(--surface)'
 };
 
 const epInputStyle = {
   flex: 1,
   padding: '2px',
   fontSize: '11px',
-  border: '1px solid #ccc',
+  border: '1px solid var(--line-cccccc)',
   borderRadius: '3px',
   fontFamily: 'inherit'
 };
@@ -54,14 +54,14 @@ const decisionPointStyle = {
   fontStyle: 'italic',
   padding: '6px',
   backgroundColor: '#9e9e9e',
-  color: 'white',
+  color: 'var(--on-brand)',
   fontSize: '11px'
 };
 
 const subStepStyle = {
   padding: '4px 12px 4px 32px',
   fontSize: '10px',
-  borderBottom: '1px solid #eee',
+  borderBottom: '1px solid var(--line-eeeeee)',
   display: 'flex',
   alignItems: 'flex-start',
   gap: '8px'
@@ -71,7 +71,7 @@ const subStepStyle = {
 
 const nwcButtonStyle = {
   backgroundColor: '#ef5350',
-  color: 'white',
+  color: 'var(--on-brand)',
   border: 'none',
   padding: '0px 0px',
   fontSize: '8px',
@@ -132,7 +132,7 @@ export const getEPDivs = ({ epsData, handleEPsChange, getInputClass, openNWCModa
   const renderEPHeader = (title, nwcKey, styleOverride = {}) => (
     <div style={{...epHeaderStyle, ...styleOverride, display: 'flex', alignItems: 'center', gap: '6px'}}>
       <span style={{flex: 1, textAlign: 'center'}}>{title}</span>
-      {renderNWCButton(nwcKey, {backgroundColor: 'white', color: '#ef5350', flexShrink: 0})}
+      {renderNWCButton(nwcKey, {backgroundColor: 'var(--surface)', color: '#ef5350', flexShrink: 0})}
     </div>
   );
 

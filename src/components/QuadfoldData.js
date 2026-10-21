@@ -12,19 +12,19 @@ const btFontSize = '10px'
 const asFontSize = '10px'
 const quadSectionStyle = {
   marginBottom: '6px',
-  border: '1px solid #ddd',
-  backgroundColor: '#f9f9f9',
+  border: '1px solid var(--line-dddddd)',
+  backgroundColor: 'var(--surface-2)',
   maxWidth: "350px",
   margin: '0 auto'
 };
 
 const quadHeaderStyle = {
   backgroundColor: '#000',
-  color: 'white',
+  color: 'var(--on-brand)',
   padding: '6px 12px',
   fontSize: '12px',
   textAlign: 'left',
-  borderBottom: '1px solid #000'
+  borderBottom: '1px solid var(--line-000000)'
 };
 
 const quadStepStyle = {
@@ -32,16 +32,16 @@ const quadStepStyle = {
   display: 'flex',
   alignItems: 'center',
   gap: '0px',
-  borderBottom: '1px solid #ddd',
+  borderBottom: '1px solid var(--line-dddddd)',
   fontSize: '11px',
-  backgroundColor: 'white',
+  backgroundColor: 'var(--surface)',
   cursor: 'pointer'
 };
 
 const quadSubStepStyle = {
   padding: '2px 8px 4px 10px',
   fontSize: '9px',
-  borderBottom: '1px solid #eee',
+  borderBottom: '1px solid var(--line-eeeeee)',
   display: 'flex',
   justifyContent: 'flex-end',
   gap: '4px',
@@ -51,7 +51,7 @@ const quadSubStepStyle = {
 
 const nwcButtonStyle = {
   backgroundColor: '#000000ff',
-  color: 'white',
+  color: 'var(--on-brand)',
   border: 'none',
   padding: '0px 0px',
   fontSize: '7px',
@@ -1103,7 +1103,7 @@ export const QUAD_TITLES = [
 const createActionBubbles = (bubbles, fontSizer = '11px') => (
   <div style={{display: 'flex', flexDirection: 'column', gap: '8px', width: '100%'}}>
     {bubbles.map((bubble, idx) => (
-      <div key={idx} style={{border: '2px solid #333', borderRadius: '12px', padding: '8px', backgroundColor: '#fff'}}>
+      <div key={idx} style={{border: '2px solid var(--line-333333)', borderRadius: '12px', padding: '8px', backgroundColor: 'var(--surface)'}}>
         <div style={{fontSize: fontSizer, lineHeight: '1.4'}}>
           {Array.isArray(bubble) ? bubble.map((item, i) => {
             if (typeof item === 'string') {

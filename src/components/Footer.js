@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTheme } from './theme';
 
 const MAX_PHOTOS = 3;
 
@@ -36,6 +37,8 @@ function Footer() {
   const [email, setEmail] = useState('');
   const [photos, setPhotos] = useState([]);
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
+  const { theme, setTheme } = useTheme();
+  const dark = theme === 'dark';
 
   const handlePhotos = (e) => {
     setPhotos(Array.from(e.target.files).slice(0, MAX_PHOTOS));
@@ -150,6 +153,15 @@ function Footer() {
         )}
       </div>
       <div className="footer-support">
+        <button
+          type="button"
+          className="footer-theme-toggle"
+          aria-pressed={dark}
+          onClick={() => setTheme(dark ? 'light' : 'dark')}
+        >
+          <span className="footer-theme-icon" aria-hidden="true">{dark ? '☀' : '☾'}</span>
+          {dark ? 'Light mode' : 'Dark mode'}
+        </button>
         <a
           className="footer-bmc"
           href="https://www.buymeacoffee.com/pinksheetmafia"

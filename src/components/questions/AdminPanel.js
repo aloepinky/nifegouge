@@ -24,23 +24,23 @@ const LIVE_LIMIT = 50;
 const tabStyle = (active) => ({
   padding: '8px 16px',
   border: 'none',
-  borderBottom: active ? '3px solid #01202C' : '3px solid transparent',
+  borderBottom: active ? '3px solid var(--line-brand)' : '3px solid transparent',
   background: 'none',
-  color: active ? '#01202C' : '#667',
+  color: active ? 'var(--ink-strong)' : 'var(--ink-666677)',
   fontWeight: 'bold',
   fontSize: '14px',
   cursor: 'pointer',
 });
 
-const card = { padding: '12px 15px', border: '1px solid #d5dde0', borderRadius: '8px', marginBottom: '12px', background: 'white' };
-const meta = { fontSize: '12px', color: '#777' };
+const card = { padding: '12px 15px', border: '1px solid var(--line-d5dde0)', borderRadius: '8px', marginBottom: '12px', background: 'var(--surface)' };
+const meta = { fontSize: '12px', color: 'var(--ink-777777)' };
 
 function Answers({ q }) {
   return (
     <div style={{ fontSize: '13px', marginTop: '4px' }}>
-      <div style={{ color: '#2e7d32' }}>✓ {q.correctAnswer}</div>
+      <div style={{ color: 'var(--ok-text-2e7d32)' }}>✓ {q.correctAnswer}</div>
       {['incorrectAnswer1', 'incorrectAnswer2', 'incorrectAnswer3'].filter((k) => q[k]).map((k) => (
-        <div key={k} style={{ color: '#666' }}>✗ {q[k]}</div>
+        <div key={k} style={{ color: 'var(--ink-666666)' }}>✗ {q[k]}</div>
       ))}
     </div>
   );
@@ -88,13 +88,13 @@ export default function AdminPanel({ questions, sections, onExit, onChanged }) {
       <button
         className="review-mode-toggle"
         onClick={onExit}
-        style={{ marginBottom: '15px', padding: '10px 20px', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%', backgroundColor: '#5a0000' }}
+        style={{ marginBottom: '15px', padding: '10px 20px', color: 'var(--on-brand)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%', backgroundColor: '#5a0000' }}
       >
         Exit Admin Panel
       </button>
 
       {!token && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '12px', color: '#555', fontSize: '13px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '12px', color: 'var(--ink-555555)', fontSize: '13px' }}>
           <input
             type="password"
             placeholder="Admin token"
@@ -107,14 +107,14 @@ export default function AdminPanel({ questions, sections, onExit, onChanged }) {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid #ddd', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--line-dddddd)', marginBottom: '12px' }}>
         <button style={tabStyle(tab === 'pending')} onClick={() => setTab('pending')}>Pending</button>
         <button style={tabStyle(tab === 'live')} onClick={() => setTab('live')}>Live</button>
         <button style={tabStyle(tab === 'removed')} onClick={() => setTab('removed')}>Removed</button>
       </div>
 
-      {error && <div style={{ marginBottom: '12px', color: '#c62828', fontSize: '14px' }}>{error}</div>}
-      {done && <div style={{ marginBottom: '12px', color: '#003B4F', fontSize: '14px' }}>{done}</div>}
+      {error && <div style={{ marginBottom: '12px', color: 'var(--bad-text-c62828)', fontSize: '14px' }}>{error}</div>}
+      {done && <div style={{ marginBottom: '12px', color: 'var(--ink-accent)', fontSize: '14px' }}>{done}</div>}
 
       <div style={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', paddingRight: '8px' }}>
         {tab === 'pending' && <PendingTab questions={questions} sections={sections} run={run} />}
@@ -149,9 +149,9 @@ function PendingTab({ questions, sections, run }) {
     await refresh();
   };
 
-  if (failed) return <div style={{ color: '#c62828', fontSize: '14px' }}>{failed}</div>;
+  if (failed) return <div style={{ color: 'var(--bad-text-c62828)', fontSize: '14px' }}>{failed}</div>;
   if (!pending) return <div style={meta}>Loading…</div>;
-  if (pending.length === 0) return <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>No pending questions. The queue is clear.</div>;
+  if (pending.length === 0) return <div style={{ textAlign: 'center', padding: '40px', color: 'var(--ink-999999)' }}>No pending questions. The queue is clear.</div>;
 
   const toggle = (id) => setPicked((prev) => {
     const next = new Set(prev);
@@ -171,7 +171,7 @@ function PendingTab({ questions, sections, run }) {
     <>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '12px', fontSize: '14px' }}>
         <span>{pending.length} pending, oldest first.</span>
-        <button style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => setPicked(picked.size === pending.length ? new Set() : new Set(pending.map((q) => q.questionId)))}>
+        <button style={smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-brand)')} onClick={() => setPicked(picked.size === pending.length ? new Set() : new Set(pending.map((q) => q.questionId)))}>
           {picked.size === pending.length ? 'Select none' : 'Select all'}
         </button>
         {ids.length > 0 && (
@@ -205,7 +205,7 @@ function PendingTab({ questions, sections, run }) {
                 <div style={meta}>
                   {q.type === 'edit' ? 'Proposed edit' : 'New question'}{q.batchId ? ` from an upload of ${batchSize(q.batchId)}` : ''} • {sectionName(sections, q.topic)}{q.lecture ? ` L${q.lecture}` : ''} •{' '}
                   {new Date(q.submittedAt).toLocaleDateString()} •{' '}
-                  <span style={{ fontWeight: 'bold', color: net > 0 ? '#2e7d32' : net < 0 ? '#c62828' : '#666' }}>
+                  <span style={{ fontWeight: 'bold', color: net > 0 ? 'var(--ok-text-2e7d32)' : net < 0 ? 'var(--bad-text-c62828)' : 'var(--ink-666666)' }}>
                     {net > 0 ? '+' : ''}{net} ({q.approveCount || 0} for / {q.rejectCount || 0} against)
                   </span>
                 </div>
@@ -214,11 +214,11 @@ function PendingTab({ questions, sections, run }) {
                 ) : (
                   <>
                     {q.type === 'edit' && (
-                      <div style={{ ...meta, color: '#8a5a00', marginTop: '4px' }}>
+                      <div style={{ ...meta, color: 'var(--warn-text-8a5a00)', marginTop: '4px' }}>
                         The question this edits has been removed. Approving it adds it as a question of its own.
                       </div>
                     )}
-                    <div style={{ fontSize: '14px', color: '#222', marginTop: '6px' }}>{q.question}</div>
+                    <div style={{ fontSize: '14px', color: 'var(--ink-222222)', marginTop: '6px' }}>{q.question}</div>
                     <Answers q={q} />
                     <Explanation text={q.explanation} style={{ maxWidth: 'none' }} />
                   </>
@@ -229,7 +229,7 @@ function PendingTab({ questions, sections, run }) {
                 <button style={smallButton('#2e7d32')} onClick={() => decide((t) => moderate(t, q.questionId, 'approve'), 'Approved.')}>Approve</button>
                 <button style={smallButton('#c62828')} onClick={() => decide((t) => moderate(t, q.questionId, 'reject'), 'Rejected. It can be sent back for review from Removed.')}>Reject</button>
                 {q.batchId && batchSize(q.batchId) > 1 && (
-                  <button style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => pickBatch(q.batchId)}>Select the upload</button>
+                  <button style={smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-brand)')} onClick={() => pickBatch(q.batchId)}>Select the upload</button>
                 )}
               </div>
             </div>
@@ -276,10 +276,10 @@ function LiveTab({ questions, sections, run }) {
           <div key={q.questionId} style={card}>
             <div style={meta}>
               {sectionName(sections, q.topic)}{q.lecture ? ` L${q.lecture}` : ''} • {q.questionId} •{' '}
-              <span style={{ fontWeight: 'bold', color: score >= 0 ? '#2e7d32' : '#c62828' }}>{score >= 0 ? '+' : ''}{score}</span>
+              <span style={{ fontWeight: 'bold', color: score >= 0 ? 'var(--ok-text-2e7d32)' : 'var(--bad-text-c62828)' }}>{score >= 0 ? '+' : ''}{score}</span>
               {(q.rev || 1) > 1 && ` • version ${q.rev}`}
             </div>
-            <div style={{ fontSize: '14px', color: '#222', marginTop: '6px' }}>{q.question}</div>
+            <div style={{ fontSize: '14px', color: 'var(--ink-222222)', marginTop: '6px' }}>{q.question}</div>
             <Answers q={q} />
             <Explanation text={q.explanation} style={{ maxWidth: 'none' }} />
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
@@ -291,7 +291,7 @@ function LiveTab({ questions, sections, run }) {
                 onConfirm={() => run((t) => setQuestionStatus(t, q.questionId, 'hidden'), 'Hidden. It is listed under Removed.')}
               />
               {(q.rev || 1) > 1 && (
-                <button style={smallButton('white', '#01202C', '1px solid #01202C')} onClick={() => setHistoryOf(historyOf === q.questionId ? null : q.questionId)}>
+                <button style={smallButton('var(--surface)', 'var(--ink-strong)', '1px solid var(--line-brand)')} onClick={() => setHistoryOf(historyOf === q.questionId ? null : q.questionId)}>
                   History
                 </button>
               )}
@@ -345,14 +345,14 @@ function RemovedTab({ token, sections, run }) {
     <>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
         {REMOVED.map((k) => (
-          <button key={k.status} style={smallButton(which === k.status ? '#01202C' : 'white', which === k.status ? 'white' : '#01202C', '1px solid #01202C')} onClick={() => setWhich(k.status)}>
+          <button key={k.status} style={smallButton(which === k.status ? 'var(--btn)' : 'var(--surface)', which === k.status ? 'var(--on-brand)' : 'var(--ink-strong)', '1px solid var(--line-brand)')} onClick={() => setWhich(k.status)}>
             {k.label}
           </button>
         ))}
       </div>
-      {failed && <div style={{ color: '#c62828', fontSize: '14px' }}>{failed}</div>}
+      {failed && <div style={{ color: 'var(--bad-text-c62828)', fontSize: '14px' }}>{failed}</div>}
       {!rows && !failed && <div style={meta}>Loading…</div>}
-      {rows && rows.length === 0 && <div style={{ textAlign: 'center', padding: '30px', color: '#999' }}>Nothing {kind.label.toLowerCase()}.</div>}
+      {rows && rows.length === 0 && <div style={{ textAlign: 'center', padding: '30px', color: 'var(--ink-999999)' }}>Nothing {kind.label.toLowerCase()}.</div>}
       {rows && rows.map((q) => (
         <div key={q.questionId} style={card}>
           <div style={meta}>
@@ -361,14 +361,14 @@ function RemovedTab({ token, sections, run }) {
             {!q.hiddenAt && q.moderatedAt && ` • ${new Date(q.moderatedAt).toLocaleDateString()} by ${q.moderatedBy === 'community-threshold' ? 'community vote' : q.moderatedBy || 'unknown'}`}
             {q.rejectedReason === 'superseded' && ' • another edit of the same question was approved'}
           </div>
-          <div style={{ fontSize: '14px', color: '#222', marginTop: '6px' }}>{q.question}</div>
+          <div style={{ fontSize: '14px', color: 'var(--ink-222222)', marginTop: '6px' }}>{q.question}</div>
           <Answers q={q} />
           <div style={{ marginTop: '10px' }}>
             <Confirm
               label={kind.action}
               question={kind.status === 'hidden' ? 'Put this question back?' : 'Send back for review?'}
               confirmLabel={kind.status === 'hidden' ? 'Put back' : 'Send back'}
-              style={smallButton('#01202C')}
+              style={smallButton('var(--btn)')}
               onConfirm={async () => {
                 await run((t) => setQuestionStatus(t, q.questionId, kind.back), kind.says);
                 refresh();

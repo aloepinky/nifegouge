@@ -351,7 +351,7 @@ function Questions() {
         <button
           className="review-mode-toggle"
           onClick={() => setView('review')}
-          style={{ marginBottom: '10px', padding: '10px 20px', backgroundColor: '#01202C', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%' }}
+          style={{ marginBottom: '10px', padding: '10px 20px', backgroundColor: 'var(--btn)', color: 'var(--on-brand)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px', width: '100%' }}
         >
           Enter Review Mode
         </button>
@@ -359,7 +359,7 @@ function Questions() {
         {unseen.length > 0 && (
           <button
             onClick={() => setView('pending')}
-            style={{ marginBottom: '15px', padding: '8px 20px', backgroundColor: 'white', color: '#01202C', border: '2px solid #01202C', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', width: '100%' }}
+            style={{ marginBottom: '15px', padding: '8px 20px', backgroundColor: 'var(--surface)', color: 'var(--ink-strong)', border: '2px solid var(--line-brand)', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', width: '100%' }}
           >
             Review pending questions ({unseen.length})
           </button>
@@ -368,7 +368,7 @@ function Questions() {
         {isAdminEnabled && (
           <button
             onClick={() => setView('admin')}
-            style={{ marginBottom: '10px', padding: '7px 16px', backgroundColor: '#5a0000', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', width: '100%' }}
+            style={{ marginBottom: '10px', padding: '7px 16px', backgroundColor: '#5a0000', color: 'var(--on-brand)', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', width: '100%' }}
           >
             Admin Panel
           </button>
@@ -414,14 +414,14 @@ function Questions() {
         </div>
 
         <div style={{ textAlign: 'right', fontSize: '13px', margin: '-4px 0 10px' }}>
-          <Link to="/nife/questions/sections" style={{ color: '#003B4F' }}>Topics or lectures out of date? Edit them</Link>
+          <Link to="/nife/questions/sections" style={{ color: 'var(--ink-accent)' }}>Topics or lectures out of date? Edit them</Link>
         </div>
 
         {loadState === 'loading' && (
-          <div style={{ textAlign: 'center', padding: '40px 10px', color: '#003B4F' }}>Loading questions…</div>
+          <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--ink-accent)' }}>Loading questions…</div>
         )}
         {loadState === 'error' && (
-          <div style={{ textAlign: 'center', padding: '40px 10px', color: '#003B4F' }}>
+          <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--ink-accent)' }}>
             Could not load the questions. Check your connection.
             <button className="submitBtn" onClick={() => { setLoadState('loading'); loadAll(); }}>
               Try again
@@ -429,7 +429,7 @@ function Questions() {
           </div>
         )}
         {loadState === 'ready' && quiz.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px 10px', color: '#003B4F' }}>No questions in this topic yet.</div>
+          <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--ink-accent)' }}>No questions in this topic yet.</div>
         )}
 
         {bonus && (
@@ -469,11 +469,11 @@ function Questions() {
                 {answered && <Explanation text={current.explanation} />}
 
                 {disputed && (
-                  <div style={{ marginTop: '14px', padding: '10px 12px', background: '#f3f7f8', border: '1px solid #cfdde2', borderRadius: '6px', fontSize: '14px', color: '#003B4F' }}>
+                  <div style={{ marginTop: '14px', padding: '10px 12px', background: 'var(--surface-f3f7f8)', border: '1px solid var(--line-cfdde2)', borderRadius: '6px', fontSize: '14px', color: 'var(--ink-accent)' }}>
                     Controversial question. If something in it is wrong or unclear,{' '}
                     <button
                       onClick={() => openForm('edit', current)}
-                      style={{ padding: 0, background: 'none', color: '#003B4F', border: 'none', borderBottom: '1px solid #003B4F', cursor: 'pointer', font: 'inherit', fontWeight: 600 }}
+                      style={{ padding: 0, background: 'none', color: 'var(--ink-accent)', border: 'none', borderBottom: '1px solid var(--line-accent)', cursor: 'pointer', font: 'inherit', fontWeight: 600 }}
                     >
                       Suggest an edit
                     </button>.
@@ -528,7 +528,7 @@ function Questions() {
           Submit a Question
         </button>
         <div style={{ textAlign: 'center', fontSize: '13px', marginTop: '6px' }}>
-          <Link to="/nife/questions/upload" style={{ color: '#003B4F' }}>Upload a spreadsheet or a Quizlet set</Link>
+          <Link to="/nife/questions/upload" style={{ color: 'var(--ink-accent)' }}>Upload a spreadsheet or a Quizlet set</Link>
         </div>
       </div>
 

@@ -453,21 +453,21 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     width: '100%',
     borderCollapse: 'collapse',
     marginBottom: '-2px',
-    border: '2px solid #000',
+    border: '2px solid var(--line-000000)',
     widthMax: "700px"
   };
 
   const limitThStyle = {
-    border: '1px solid #000',
+    border: '1px solid var(--line-000000)',
     padding: '6px',
-    backgroundColor: '#ddd',
+    backgroundColor: 'var(--surface-dddddd)',
     fontWeight: 'bold',
     textAlign: 'center',
     fontSize: '12px'
   };
 
   const limitTdStyle = {
-    border: '1px solid #000',
+    border: '1px solid var(--line-000000)',
     padding: '2px',
     textAlign: 'center',
     fontSize: '10px'
@@ -477,7 +477,7 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     width: '100%',
     border: 'none',
     borderBottom: '1px solid #606060ff',
-    background: 'white',
+    background: 'var(--surface)',
     textAlign: 'center',
     padding: '2px',
     fontSize: '11px',
@@ -990,10 +990,10 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
                 }
               }}
               style={{
-                backgroundColor: isRandomMode ? '#4CAF50' : '#f0f0f0',
-                color: isRandomMode ? 'white' : 'black',
+                backgroundColor: isRandomMode ? '#4CAF50' : 'var(--surface-f0f0f0)',
+                color: isRandomMode ? 'var(--on-brand)' : 'var(--ink-000000)',
                 fontWeight: isRandomMode ? 'bold' : 'normal',
-                border: isRandomMode ? '2px solid #45a049' : '1px solid #ccc',
+                border: isRandomMode ? '2px solid #45a049' : '1px solid var(--line-cccccc)',
                 boxShadow: isRandomMode ? 'inset 0 2px 4px rgba(0,0,0,0.2)' : 'none'
               }}
             >

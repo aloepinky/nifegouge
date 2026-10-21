@@ -973,7 +973,7 @@ function TW4CourseRules() {
             onClick={() => toggleFolderExpansion(folder.path)}
             style={{
               cursor: 'pointer',
-              color: '#000',
+              color: 'var(--ink-000000)',
               fontWeight: 'bold',
               fontSize: '13px',
               flex: 1,
@@ -1007,7 +1007,7 @@ function TW4CourseRules() {
               <div key={feature.id} style={{
                 display: 'flex',
                 alignItems: 'center',
-                backgroundColor: '#f5f5f5',
+                backgroundColor: 'var(--surface-f5f5f5)',
                 padding: `2px 8px 2px ${level * 12 + 20}px`,
                 height: '22px',
                 marginBottom: '1px',
@@ -1026,7 +1026,7 @@ function TW4CourseRules() {
                   }}
                 />
                 <span style={{
-                  color: '#000',
+                  color: 'var(--ink-000000)',
                   fontSize: '12px',
                   flex: 1,
                   width: "80%",
@@ -1180,8 +1180,8 @@ function TW4CourseRules() {
                   }}
                   style={{
                     padding: '8px 12px',
-                    background: flightPathQuizMode ? '#1976d2' : '#e0e0e0',
-                    color: flightPathQuizMode ? 'white' : 'black',
+                    background: flightPathQuizMode ? '#1976d2' : 'var(--surface-e0e0e0)',
+                    color: flightPathQuizMode ? 'var(--on-brand)' : 'var(--ink-000000)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -1211,7 +1211,7 @@ function TW4CourseRules() {
                       style={{
                         padding: '8px 12px',
                         background: '#4caf50',
-                        color: 'white',
+                        color: 'var(--on-brand)',
                         border: 'none',
                         borderRadius: '4px',
                         cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -1228,7 +1228,7 @@ function TW4CourseRules() {
             </div>
 
             {/* Current Location Display */}
-            <div style={{ marginBottom: '15px', padding: '10px', background: '#e3f2fd', borderRadius: '4px' }}>
+            <div style={{ marginBottom: '15px', padding: '10px', background: 'var(--surface-e3f2fd)', borderRadius: '4px' }}>
               <strong>Current Location:</strong>
               <div style={{ marginTop: '5px' }}>
                 {crFeatures[currentNode] ? crFeatures[currentNode].name : 'Loading…'}
@@ -1236,7 +1236,7 @@ function TW4CourseRules() {
 
               {/* Course Rule or Question (depending on quiz mode) */}
               {crFeatures[currentNode] && !flightPathQuizMode && crFeatures[currentNode].customDescription && (
-                <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #90caf9' }}>
+                <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--line-90caf9)' }}>
                   <strong>Course Rule:</strong>
                   <div
                     style={{ marginTop: '5px', fontSize: '13px', lineHeight: '1.4' }}
@@ -1257,7 +1257,7 @@ function TW4CourseRules() {
 
               {/* Question (when in quiz mode) */}
               {crFeatures[currentNode] && flightPathQuizMode && crFeatures[currentNode].questions && crFeatures[currentNode].questions.length > 0 && (
-                <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #90caf9' }}>
+                <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--line-90caf9)' }}>
                   <strong>Question {fpQuizQuestionIndex + 1} of {crFeatures[currentNode].questions.length}:</strong>
                   <div
                     style={{ marginTop: '5px', fontSize: '13px', lineHeight: '1.8' }}
@@ -1275,8 +1275,8 @@ function TW4CourseRules() {
 
               {/* No questions available message */}
               {crFeatures[currentNode] && flightPathQuizMode && (!crFeatures[currentNode].questions || crFeatures[currentNode].questions.length === 0) && (
-                <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #90caf9' }}>
-                  <em style={{ color: '#666', fontSize: '13px' }}>No questions available for this location.</em>
+                <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--line-90caf9)' }}>
+                  <em style={{ color: 'var(--ink-666666)', fontSize: '13px' }}>No questions available for this location.</em>
                 </div>
               )}
             </div>
@@ -1285,7 +1285,7 @@ function TW4CourseRules() {
             {flightPath.length > 1 && (
               <div style={{ marginBottom: '15px' }}>
                 <strong>Flight Path:</strong>
-                <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+                <div style={{ marginTop: '5px', fontSize: '12px', color: 'var(--ink-666666)' }}>
                   {flightPath.map((nodeId, index) => (
                     <span key={`path-${index}`}>
                       {crFeatures[nodeId] ? crFeatures[nodeId].name : nodeId}
@@ -1331,33 +1331,33 @@ function TW4CourseRules() {
                         style={{
                           padding: '12px',
                           textAlign: 'left',
-                          border: '1px solid #ddd',
+                          border: '1px solid var(--line-dddddd)',
                           borderRadius: '4px',
-                          background: 'white',
+                          background: 'var(--surface)',
                           cursor: 'pointer',
                           transition: 'all 0.2s',
-                          color: '#000'
+                          color: 'var(--ink-000000)'
                         }}
                         onMouseOver={(e) => {
-                          e.currentTarget.style.background = '#f0f0f0';
-                          e.currentTarget.style.borderColor = '#999';
+                          e.currentTarget.style.background = 'var(--surface-f0f0f0)';
+                          e.currentTarget.style.borderColor = 'var(--line-999999)';
                         }}
                         onMouseOut={(e) => {
-                          e.currentTarget.style.background = 'white';
-                          e.currentTarget.style.borderColor = '#ddd';
+                          e.currentTarget.style.background = 'var(--surface)';
+                          e.currentTarget.style.borderColor = 'var(--line-dddddd)';
                         }}
                       >
-                        <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px', color: '#000' }}>
+                        <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px', color: 'var(--ink-000000)' }}>
                           {feature.name || 'Unnamed'}
                         </div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--ink-666666)' }}>
                           {feature.folderPath || 'No folder'} {feature.subCategory && `• ${feature.subCategory}`}
                         </div>
                       </button>
                     );
                   })
                 ) : (
-                  <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+                  <div style={{ padding: '20px', textAlign: 'center', color: 'var(--ink-999999)' }}>
                     No more waypoints available from this location.
                   </div>
                 )}
@@ -1374,7 +1374,7 @@ function TW4CourseRules() {
               <button onClick={showAllInTree} style={{ padding: '8px 16px' }}>Show All</button>
               <button onClick={hideAllInTree} style={{ padding: '8px 16px' }}>Hide All</button>
             </div>
-            <div className="tree-container" style={{background: 'white', padding: '8px', minHeight: '400px', maxHeight: '600px', overflow: 'auto', width: '100%', boxSizing: 'border-box'}}>
+            <div className="tree-container" style={{background: 'var(--surface)', padding: '8px', minHeight: '400px', maxHeight: '600px', overflow: 'auto', width: '100%', boxSizing: 'border-box'}}>
               {Object.keys(folderTree).length === 0 ? (
                 <p>Loading folders...</p>
               ) : (
@@ -1411,18 +1411,18 @@ function TW4CourseRules() {
                 </div>
 
                 {/* Feature Name */}
-                <div style={{ marginBottom: '15px', padding: '10px', background: '#e3f2fd', borderRadius: '4px' }}>
+                <div style={{ marginBottom: '15px', padding: '10px', background: 'var(--surface-e3f2fd)', borderRadius: '4px' }}>
                   <strong>Feature:</strong>
                   <div style={{ marginTop: '5px' }}>
                     {crFeatures[currentRandomFeature].name}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '3px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--ink-666666)', marginTop: '3px' }}>
                     {crFeatures[currentRandomFeature].folderPath}
                   </div>
                 </div>
 
                 {/* Question with Blanks */}
-                <div style={{ marginBottom: '15px', padding: '15px', background: 'white', borderRadius: '4px', border: '1px solid #ddd' }}>
+                <div style={{ marginBottom: '15px', padding: '15px', background: 'var(--surface)', borderRadius: '4px', border: '1px solid var(--line-dddddd)' }}>
                   <strong style={{ display: 'block', marginBottom: '10px' }}>
                     Question {currentRandomQuestionIndex + 1} of {crFeatures[currentRandomFeature].questions.length}:
                   </strong>
@@ -1455,7 +1455,7 @@ function TW4CourseRules() {
                     style={{
                       padding: '10px 20px',
                       background: '#4caf50',
-                      color: 'white',
+                      color: 'var(--on-brand)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
@@ -1483,7 +1483,7 @@ function TW4CourseRules() {
                     style={{
                       padding: '10px 20px',
                       background: '#1976d2',
-                      color: 'white',
+                      color: 'var(--on-brand)',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
