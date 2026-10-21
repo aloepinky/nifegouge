@@ -673,7 +673,7 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   otherwise reproduces the sheet's style. 118 limits verified; three stored as min/max pairs.
 - T-54A: three sets, EPs | Flows | Checklists (`T54A/t54aNormals.js`, NATOPS Ch. 7). NATOPS §7.2
   keeps memorized flows apart from read checklists, so the page does: flows are typed and
-  asterisked (and join the EPs under "All Memory Procedures"), checklists are `read` and never
+  asterisked (and join the EPs under "Include Flows"), checklists are `read` and never
   asterisked. A flow row's `who` is its table column (LS/RS or PF/PM), `num` that column's number.
   The normals' poster targets are rough first-pass boxes (`?spots`), marked in the poster file.
 

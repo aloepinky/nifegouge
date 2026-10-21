@@ -8,7 +8,7 @@
 // are two lists here and two sets on the page:
 //
 //   T54A_FLOWS        typed like the EPs, every step asterisked as performed from memory. The
-//                     EPs page also adds them to the EPs when "All Memory Procedures" is on.
+//                     EPs page also adds them to the EPs when "Include Flows" is on.
 //   T54A_CHECKLISTS   read, as the T-44C's Hollywood is: the lines are printed and a step is done
 //                     by clicking its control. Never asterisked.
 //
