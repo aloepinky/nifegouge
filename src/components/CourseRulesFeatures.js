@@ -720,7 +720,7 @@ export const crFeatures = {
     questions : ["When #1 downwind at the _____, descend to ___  MSL.  Turn northbound to circle around ______ to the east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["180", "500'", "Redfish Point", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30", "Point-Departures-31"],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194", "Routes-Arrivals-5", "Routes-Arrivals-6"]
+    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
   },
   "Routes-Departures-33" : {
     name : "18",
@@ -734,7 +734,7 @@ export const crFeatures = {
     questions : ["When #1 downwind at the _____, descend to ___  MSL.  Going \"_____\" turn east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["180", "500'", "feet wet", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30",],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194", "Routes-Arrivals-5", "Routes-Arrivals-6"]
+    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
   },
   "Routes-Departures-34" : {
     name : "32",
@@ -748,7 +748,7 @@ export const crFeatures = {
     questions : ["When #1 upwind, climb to  ___  MSL.  Turn northbound to circle around ______ to the east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["500'", "Redfish Point", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30", "Point-Departures-31"],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194", "Routes-Arrivals-5", "Routes-Arrivals-6"]
+    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
   },
   "Routes-Departures-35" : {
     name : "36",
@@ -762,7 +762,7 @@ export const crFeatures = {
     questions : ["When #1 upwind, climb to ___  MSL.  Going \"_____\" turn east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["500'", "feet wet", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30",],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194", "Routes-Arrivals-5", "Routes-Arrivals-6"]
+    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
   },
   "Point-Mustang-36" : {
     name : "KRAS",
@@ -934,7 +934,7 @@ export const crFeatures = {
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
   },
   "Routes-Departures-47" : {
     name : "17",
@@ -956,7 +956,7 @@ export const crFeatures = {
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
   },
   "Routes-Departures-48" : {
     name : "29",
@@ -978,7 +978,7 @@ export const crFeatures = {
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
   },
   "Routes-Departures-49" : {
     name : "35",
@@ -1000,7 +1000,7 @@ export const crFeatures = {
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
   },
   "Point-default-50" : {
     name : "KNWL",

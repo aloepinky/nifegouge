@@ -89,7 +89,13 @@ const groupOptions = (ids) => {
     return { prefix: entries[0].rest.slice(0, prefix), items, folders };
   };
   if (ids.length === 0) return { prefix: [], items: [], folders: [] };
-  return build(ids.map(id => ({ id, rest: (crFeatures[id].folderPath || '').split(' > ') })));
+  // Pattern legs sit loose in the airfield's folder; give them their own, or a bare
+  // "04/22" doesn't read as "stay in the pattern"
+  const pathOf = (f) => [
+    ...(f.folderPath || '').split(' > '),
+    ...(f.category === 'Routes' && f.subCategory === 'Traffic Patterns' ? ['Traffic Patterns'] : [])
+  ];
+  return build(ids.map(id => ({ id, rest: pathOf(crFeatures[id]) })));
 };
 
 function WaypointFolder({ group, path, open, toggle, onSelect }) {
