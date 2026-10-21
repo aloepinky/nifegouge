@@ -101,6 +101,19 @@ function SchoolHighlights({ id, platforms }) {
   );
 }
 
+// The school tiles, in the order they fill the rows. The Advanced schools are named for the
+// airframe, not just the stage: Advanced covers several schools.
+const TILES = [
+  { id: 'nife', name: 'NIFE', href: '/nife/about', img: '/images/c172.webp', alt: 'NIFE - Cessna 172' },
+  { id: 'tw4', name: 'Primary', href: '/primary/about', img: '/images/t6b.webp', alt: 'Primary - T-6B Texan II' },
+  { id: 'th73a', name: 'TH-73A Advanced', href: '/th73a/about', img: TH73A_PHOTO, alt: 'TH-73A Advanced - Thrasher' },
+  { id: 't44c', name: 'T-44C Advanced', href: '/t44c/about', img: '/images/t44c.webp', alt: 'T-44C Advanced - Pegasus' },
+  // A photo whose aircraft is wider than the tile: keep the nose.
+  { id: 't54a', name: 'T-54A Advanced', href: '/t54a/about', img: T54A_PHOTO, alt: 'T-54A Advanced - King Air', imgClass: 'landing-photo--nose' },
+];
+
+const rowsOf = (list, n) => Array.from({ length: Math.ceil(list.length / n) }, (_, i) => list.slice(i * n, i * n + n));
+
 function LandingPage() {
   const navigate = useNavigate();
   const [platforms, setPlatforms] = useState(platformsLoaded);
@@ -133,79 +146,26 @@ function LandingPage() {
         </p>
       </div>
 
-      {/* Two rows, each centred: the three fixed-wing schools, then the Advanced schools
-          that came later (the TH-73A's tile appears once the program is listed). */}
+      {/* Rows of three, each centred, filled in this order. Programs not yet listed are left
+          out before the split, so the rows close up rather than leave a hole. */}
       <div className="landing-buttons">
-        <div className="landing-row">
-        <div className="landing-school">
-          <div
-            className="landing-button"
-            onClick={() => navigate('/nife/about')}
-          >
-            <div className="landing-button-fallback">NIFE</div>
-            <img src="/images/c172.webp" alt="NIFE - Cessna 172" />
-            <div className="landing-button-label">NIFE</div>
+        {rowsOf(TILES.filter((t) => listed(PROGRAMS.find((p) => p.id === t.id))), 3).map((row) => (
+          <div key={row[0].id} className="landing-row">
+            {row.map((t) => (
+              <div key={t.id} className="landing-school">
+                <div
+                  className="landing-button"
+                  onClick={() => navigate(t.href)}
+                >
+                  <div className="landing-button-fallback">{t.name}</div>
+                  <img src={t.img} alt={t.alt} className={t.imgClass} />
+                  <div className="landing-button-label">{t.name}</div>
+                </div>
+                <SchoolHighlights id={t.id} platforms={platforms && platforms[t.id]} />
+              </div>
+            ))}
           </div>
-          <SchoolHighlights id="nife" platforms={platforms && platforms.nife} />
-        </div>
-
-        <div className="landing-school">
-          <div
-            className="landing-button"
-            onClick={() => navigate('/primary/about')}
-          >
-            <div className="landing-button-fallback">Primary</div>
-            <img src="/images/t6b.webp" alt="Primary - T-6B Texan II" />
-            <div className="landing-button-label">Primary</div>
-          </div>
-          <SchoolHighlights id="tw4" platforms={platforms && platforms.tw4} />
-        </div>
-
-        <div className="landing-school">
-          <div
-            className="landing-button"
-            onClick={() => navigate('/t44c/about')}
-          >
-            {/* Named for the airframe, not just the stage: Advanced covers several schools. */}
-            <div className="landing-button-fallback">T-44C Advanced</div>
-            <img src="/images/t44c.webp" alt="T-44C Advanced - Pegasus" />
-            <div className="landing-button-label">T-44C Advanced</div>
-          </div>
-          <SchoolHighlights id="t44c" platforms={platforms && platforms.t44c} />
-        </div>
-        </div>
-
-        <div className="landing-row">
-        {/* Unlisted on the live site (programs.js): reached by link only. */}
-        {listed(PROGRAMS.find((p) => p.id === 't54a')) && (
-          <div className="landing-school">
-            <div
-              className="landing-button"
-              onClick={() => navigate('/t54a/about')}
-            >
-              <div className="landing-button-fallback">T-54A Advanced</div>
-              <img src={T54A_PHOTO} alt="T-54A Advanced - King Air" className="landing-photo--nose" />
-              <div className="landing-button-label">T-54A Advanced</div>
-            </div>
-            <SchoolHighlights id="t54a" platforms={platforms && platforms.t54a} />
-          </div>
-        )}
-
-        {/* Unlisted on the live site (programs.js): reached by link only. */}
-        {listed(PROGRAMS.find((p) => p.id === 'th73a')) && (
-          <div className="landing-school">
-            <div
-              className="landing-button"
-              onClick={() => navigate('/th73a/about')}
-            >
-              <div className="landing-button-fallback">TH-73A Advanced</div>
-              <img src={TH73A_PHOTO} alt="TH-73A Advanced - Thrasher" />
-              <div className="landing-button-label">TH-73A Advanced</div>
-            </div>
-            <SchoolHighlights id="th73a" platforms={platforms && platforms.th73a} />
-          </div>
-        )}
-        </div>
+        ))}
       </div>
     </div>
   );
