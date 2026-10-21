@@ -472,6 +472,12 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
         map.removeLayer(layer);
       }
     });
+
+    // Filled areas (working areas, airspace) go under the routes: a line added before an area
+    // would otherwise sit beneath its fill and couldn't be clicked
+    Object.values(layersRef.current).forEach(({ layer }) => {
+      if (layer instanceof L.Polygon && map.hasLayer(layer)) layer.bringToBack();
+    });
   }, [visibleLayers, folderVisibility, featureVisibility, visibleFlightPath, map, layersLoaded, controlMode, currentRandomFeature]);
 
   // Fly to visible flight path features

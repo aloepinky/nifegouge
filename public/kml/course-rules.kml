@@ -6839,7 +6839,7 @@
 	</Folder>
 	<Folder>
 		<name>(KNGP) Corpus Christi NAS</name>
-		<Folder><name>Beach Line Departures</name><Placemark><name>Central MUSTANG Transition</name><LineString><tessellate>1</tessellate><coordinates>-97.182100,27.650600,0 -97.117013,27.631866,0 -97.047518,27.710596,0 -97.120000,27.800000,0</coordinates></LineString></Placemark></Folder>
+		<Folder><name>Beach Line Departures</name><Placemark><name>Central MUSTANG Transition</name><LineString><tessellate>1</tessellate><coordinates>-97.182100,27.650600,0 -97.117013,27.631866,0 -97.115917,27.631634,0 -97.114796,27.631520,0 -97.113669,27.631526,0 -97.112551,27.631651,0 -97.111457,27.631894,0 -97.110404,27.632252,0 -97.109407,27.632718,0 -97.108481,27.633287,0 -97.107638,27.633950,0 -97.106890,27.634697,0 -97.106890,27.634697,0 -97.041215,27.705898,0 -97.040574,27.706720,0 -97.040048,27.707604,0 -97.039645,27.708537,0 -97.039372,27.709506,0 -97.039231,27.710497,0 -97.039225,27.711495,0 -97.039355,27.712487,0 -97.039618,27.713459,0 -97.040010,27.714395,0 -97.040526,27.715284,0 -97.041158,27.716111,0 -97.041158,27.716111,0 -97.120000,27.800000,0</coordinates></LineString></Placemark></Folder>
 	</Folder>
 	<Folder>
 		<name>Mustang Working Areas</name>
