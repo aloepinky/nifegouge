@@ -6815,5 +6815,38 @@
 			</Polygon>
 		</Placemark>
 	</Folder>
+	<!-- Added from the TW-4 VFR Course Rules Manual (20 Feb 2025): tracks and landmarks the original map lacked -->
+	<Folder>
+		<name>(KNGT) Goliad NOLF</name>
+		<Placemark><name>Berclair</name><Point><coordinates>-97.591110,28.530830,0</coordinates></Point></Placemark>
+	</Folder>
+	<Folder>
+		<name>(KNGT) Goliad NOLF</name>
+		<Folder><name>Arrivals</name><Placemark><name>From PT Rusty</name><LineString><tessellate>1</tessellate><coordinates>-97.263500,27.886500,0 -97.213600,28.097300,0 -97.561052,28.544730,0</coordinates></LineString></Placemark></Folder>
+	</Folder>
+	<Folder>
+		<name>(KRKP) Aransas County Airport</name>
+		<Folder><name>Arrivals</name><Placemark><name>From Goliad / KINGS 4</name><LineString><tessellate>1</tessellate><coordinates>-97.322100,28.236600,0 -97.213600,28.097300,0 -97.073100,28.113400,0</coordinates></LineString></Placemark></Folder>
+	</Folder>
+	<Folder>
+		<name>(KNGP) Corpus Christi NAS</name>
+		<Placemark><name>NGP TACAN</name><Point><coordinates>-97.294750,27.686278,0</coordinates></Point></Placemark>
+		<Placemark><name>CRP VORTAC</name><Point><coordinates>-97.444881,27.903766,0</coordinates></Point></Placemark>
+	</Folder>
+	<Folder>
+		<name>(KNGP) Corpus Christi NAS</name>
+		<Folder><name>Shamrock Arrivals</name><Placemark><name>Woodsboro</name><Point><coordinates>-97.322100,28.236600,0</coordinates></Point></Placemark><Placemark><name>Bayside</name><Point><coordinates>-97.213600,28.097300,0</coordinates></Point></Placemark><Placemark><name>Descent from Central</name><LineString><tessellate>1</tessellate><coordinates>-97.165000,27.697500,0 -97.033172,27.659568,0 -97.087000,27.718900,0</coordinates></LineString></Placemark></Folder>
+	</Folder>
+	<Folder>
+		<name>(KNGP) Corpus Christi NAS</name>
+		<Folder><name>Beach Line Departures</name><Placemark><name>Central MUSTANG Transition</name><LineString><tessellate>1</tessellate><coordinates>-97.182100,27.650600,0 -97.117013,27.631866,0 -97.047518,27.710596,0 -97.120000,27.800000,0</coordinates></LineString></Placemark></Folder>
+	</Folder>
+	<Folder>
+		<name>Mustang Working Areas</name>
+		<Placemark><name>Padre Balli Park (Bob Hall Pier)</name><Point><coordinates>-97.216700,27.580000,0</coordinates></Point></Placemark>
+		<Placemark><name>Fish Pass</name><Point><coordinates>-97.175800,27.682800,0</coordinates></Point></Placemark>
+		<Placemark><name>South to North Transition</name><LineString><tessellate>1</tessellate><coordinates>-97.275000,27.600000,0 -97.240000,27.634700,0 -97.170400,27.756400,0 -97.147900,27.821400,0 -97.127600,27.895300,0 -97.076800,27.964300,0 -97.026500,28.032700,0</coordinates></LineString></Placemark>
+		<Placemark><name>North to South Transition</name><LineString><tessellate>1</tessellate><coordinates>-97.035000,28.020000,0 -97.076800,27.964300,0 -97.127600,27.895300,0 -97.147900,27.821400,0 -97.170400,27.756400,0 -97.240000,27.634700,0 -97.327600,27.554500,0</coordinates></LineString></Placemark>
+	</Folder>
 </Document>
 </kml>

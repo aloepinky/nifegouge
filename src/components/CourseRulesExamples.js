@@ -633,3 +633,11 @@ perRunway(r('Routes-Arrivals-', 136, 143), n => ({
 }));
 
 add(crExamples, ['Routes-Arrivals-188'], crExamples['Working Areas-Mustang-197'].find(b => b.title.endsWith('Lex Arrival')));
+
+// The tracks added to the map take the examples for the routes they draw
+const blockTitled = (id, title) => crExamples[id].find(b => b.title === title);
+add(crExamples, ['Routes-Transitions-223'], blockTitled('Working Areas-Mustang-197', 'Complete in MUSTANG 3, South to North transition to Aransas County'));
+add(crExamples, ['Routes-Transitions-224'], blockTitled('Working Areas-Mustang-191', 'Complete in MUSTANG 1, North to South transition to Waldron'));
+add(crExamples, ['Routes-Arrivals-213'], blockTitled('Point-Departures-160', 'At PT Rusty, for Goliad'));
+add(crExamples, ['Routes-Transitions-220', 'Routes-Arrivals-219'], blockTitled('Working Areas-Mustang Maintenance-195', 'MUSTANG Central, in and out'));
+add(crExamples, ['Routes-Transitions-214'], { title: 'Woodsboro to Aransas County', from: '2-51', lines: WOODSBORO_TO_ARANSAS });
