@@ -230,7 +230,6 @@
   --surface-cccccc: #cccccc;
   --surface-e0e0e0: #e0e0e0;
   --bad-text-5a0000: #5a0000;
-  --ink-0066cc: #0066cc;
   --btn-off: #9aa7ab;
 
   /* T-6B systems diagrams (systems/diagramTheme.js and each diagram's LOCAL read these) */
@@ -347,7 +346,7 @@
   --ink-555555: #c0c6c9;
   --ink-4a5a61: #bcc7cc;
   --ink-4a6674: #b2c5ce;
-  --ink-0066cc: #8ab4f8;
+  --ink-0066cc: #b9d0f0;
   --ink-666666: #b7bec2;
   --ink-5a6b73: #b4bfc5;
   --ink-546e7a: #b0c1c9;
@@ -484,7 +483,6 @@
   --surface-cccccc: #34495a;
   --surface-e0e0e0: #2a3c47;
   --bad-text-5a0000: #f0a0a0;
-  --ink-0066cc: #8ab8f0;
   --btn-off: #3d4f58;
 
   --sys-bg: var(--page);
@@ -4046,6 +4044,17 @@ textarea.incorrect-answer {
   }
   :root[data-theme="dark"] .leaflet-container a.leaflet-popup-close-button {
     color: var(--ink-muted);
+  }
+  /* The KML's own styling inside a popup: the airport cards' pale yellow table, their teal
+     headings and the red cautions. */
+  :root[data-theme="dark"] .leaflet-popup-content table[bgcolor] {
+    background-color: var(--surface-2);
+  }
+  :root[data-theme="dark"] .leaflet-popup-content font[color="#cc0000"] {
+    color: var(--bad-text);
+  }
+  :root[data-theme="dark"] .leaflet-popup-content font[color="#009999"] {
+    color: var(--ink-accent);
   }
 
   /* Course Rules Map Styles */
