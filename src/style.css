@@ -4028,6 +4028,71 @@ textarea.incorrect-answer {
     overflow-wrap: anywhere;
   }
 
+  /* The comm script's worked example under a leg's radio calls: closed by default, the
+     controller's replies indented under the pilot's lines */
+  .cr-example {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line-strong);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .cr-example summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--ink-accent);
+  }
+
+  .cr-example-note {
+    margin: 4px 0 0;
+    font-size: 12px;
+    font-style: italic;
+    color: var(--ink-muted);
+  }
+
+  .cr-example-block {
+    margin-top: 10px;
+  }
+
+  .cr-example-title {
+    font-weight: 600;
+    color: var(--ink-strong);
+  }
+
+  .cr-example-line {
+    margin-top: 5px;
+  }
+
+  .cr-example-line--reply {
+    padding-left: 18px;
+  }
+
+  .cr-example-line--reply .course-rules-call-text {
+    color: var(--ink-muted);
+  }
+
+  .cr-example-direction,
+  .cr-example-label {
+    margin-top: 5px;
+    font-style: italic;
+    color: var(--ink-muted);
+  }
+
+  .cr-example-label {
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .cr-example-manual {
+    margin-top: 4px;
+    padding: 4px 8px;
+    border-left: 3px solid var(--line-accent);
+    background: var(--surface-f5f5f5);
+    font-size: 12px;
+    color: var(--ink-strong);
+  }
+
   /* Flight Path Builder: next waypoints, grouped into folders */
   .cr-waypoints {
     margin-top: 10px;

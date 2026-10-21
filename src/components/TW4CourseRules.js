@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { kml } from '@tmcw/togeojson';
 import 'leaflet/dist/leaflet.css';
 import { crFeatures } from './CourseRulesFeatures.js';
+import { crExamples } from './CourseRulesExamples.js';
 
 // Fix for default marker icons in Leaflet with React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -40,6 +41,41 @@ function RadioCalls({ comms }) {
         );
       })}
     </div>
+  );
+}
+
+// A worked example of the whole exchange, controller's side included, kept apart from the
+// manual's calls and closed until asked for
+function ExampleExchange({ blocks }) {
+  if (!blocks || blocks.length === 0) return null;
+  return (
+    <details className="cr-example">
+      <summary>Example exchange</summary>
+      <p className="cr-example-note">A worked example, not from a TW-4 publication.</p>
+      {blocks.map(block => (
+        <div key={block.title} className="cr-example-block">
+          <div className="cr-example-title">{block.title}</div>
+          {block.lines.map((line, i) => {
+            if (line.label) return <div key={i} className="cr-example-label">{line.label}</div>;
+            if (line.note) return <div key={i} className="cr-example-direction">{line.note}</div>;
+            if (line.manual) {
+              return (
+                <div key={i} className="cr-example-manual">
+                  Course Rules Manual: {line.manual} (p. {line.page})
+                </div>
+              );
+            }
+            const reply = !line.radio;
+            return (
+              <div key={i} className={reply ? 'cr-example-line cr-example-line--reply' : 'cr-example-line'}>
+                <span className="course-rules-call-radio">{line.radio || line.who}</span>
+                <span className="course-rules-call-text">“{line.text}”</span>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </details>
   );
 }
 
@@ -1331,7 +1367,10 @@ function TW4CourseRules() {
 
               {/* Radio calls for this leg (hidden in quiz mode, like the course rule) */}
               {crFeatures[currentNode] && !flightPathQuizMode && (
-                <RadioCalls comms={crFeatures[currentNode].comms} />
+                <>
+                  <RadioCalls comms={crFeatures[currentNode].comms} />
+                  <ExampleExchange key={currentNode} blocks={crExamples[currentNode]} />
+                </>
               )}
 
               {/* Question (when in quiz mode) */}
