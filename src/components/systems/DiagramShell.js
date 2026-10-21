@@ -97,7 +97,7 @@ export default function DiagramShell({ briefing, sims = [], keyframes, children 
                     ...btnStyle,
                     background: on ? C.accent : C.box,
                     border: `1px solid ${on ? C.accent : C.stroke}`,
-                    color: on ? '#ffffff' : C.accent,
+                    color: on ? '#ffffff' : C.accentInk,
                     transition: 'all 0.15s',
                   }}
                 >

@@ -22,7 +22,8 @@ const LOCAL = {
   motiveLine: '#2e8b57', // MOTIVE FLOW / RETURN FLOW (green)
   refuelLine: '#d4b81e', // SINGLE POINT REFUEL/DEFUEL (yellow)
   purgeLine:  '#5b9bd5', // PURGE LINE (blue)
-  tankFill: '#d9dee4', tankStroke: '#8a97a5', collectorFill: '#cfd6dd',
+  tankFill: 'var(--sys-fuel-tank)', tankStroke: 'var(--sys-fuel-tank-stroke)', collectorFill: 'var(--sys-fuel-collector)',
+  frame: 'var(--sys-fuel-frame)', pumpOn: 'var(--sys-fuel-pump-on)',
   ventLine: '#8b9cad',
   annWarning: '#f2453d', annCaution: '#e0b830', annAdvisory: '#4fbf6b',
 };
@@ -232,12 +233,12 @@ const FloatValve = ({ x, y }) => (
 );
 
 const BoostPump = ({ x, y, on = false }) => (
-  <g stroke={on ? C.accent : C.text} strokeWidth={1.1}>
-    <circle cx={x} cy={y} r={9} fill={on ? '#dcebf0' : C.box} />
+  <g stroke={on ? C.accentInk : C.text} strokeWidth={1.1}>
+    <circle cx={x} cy={y} r={9} fill={on ? C.pumpOn : C.box} />
     {[30, 150, 270].map(a => (
       <path key={a} d={`M ${x},${y} L ${x + 6.5 * Math.cos((a * Math.PI) / 180)},${y + 6.5 * Math.sin((a * Math.PI) / 180)}`} />
     ))}
-    <circle cx={x} cy={y} r={2} fill={on ? C.accent : C.text} stroke="none" />
+    <circle cx={x} cy={y} r={2} fill={on ? C.accentInk : C.text} stroke="none" />
   </g>
 );
 
@@ -907,7 +908,7 @@ function T6BFuelDiagram() {
           {LEGEND}
 
           {/* ═══ FUSELAGE OUTLINE + FIREWALL ═══ */}
-          <rect x={338} y={337} width={190} height={474} fill="none" stroke="#c3ccd4" strokeWidth={1} />
+          <rect x={338} y={337} width={190} height={474} fill="none" stroke={C.frame} strokeWidth={1} />
           <path d="M 338,340 H 528" stroke="#8fa0b0" strokeWidth={5} opacity={0.45} />
 
           {/* ═══ WING TANKS ═══ */}
@@ -1093,7 +1094,7 @@ function T6BFuelDiagram() {
                 style={{
                   fontFamily: FONT, fontSize: 8, fontWeight: 700, letterSpacing: '0.05em',
                   padding: '1px 10px', cursor: 'pointer', color: C.text,
-                  background: C.boxAlt, border: `1px solid ${C.accent}`, borderRadius: 3,
+                  background: C.boxAlt, border: `1px solid ${C.accentInk}`, borderRadius: 3,
                 }}>
                 QUICK FILL
               </button>
@@ -1113,7 +1114,7 @@ function T6BFuelDiagram() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3.5,
                 width: '100%', height: '100%', boxSizing: 'border-box', padding: 0,
                 cursor: 'pointer', background: paused ? C.accent : C.boxAlt,
-                border: `1px solid ${C.accent}`, borderRadius: 3,
+                border: `1px solid ${C.accentInk}`, borderRadius: 3,
               }}>
               {paused
                 ? <span style={{
@@ -1305,7 +1306,7 @@ function T6BFuelDiagram() {
                     fontFamily: FONT, fontSize: 7, fontWeight: 700, letterSpacing: '0.04em',
                     padding: '2px 0', cursor: 'pointer', color: service === mode ? '#fff' : C.text,
                     background: service === mode ? C.accent : C.boxAlt,
-                    border: `1px solid ${C.accent}`, borderRadius: 3,
+                    border: `1px solid ${C.accentInk}`, borderRadius: 3,
                   }}>
                   {label}
                 </button>

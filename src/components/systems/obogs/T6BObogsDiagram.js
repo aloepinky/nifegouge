@@ -26,10 +26,10 @@ const LOCAL = {
   // function but deliberately the same grey as every other unpowered stroke.
   ambientLine: THEME.stroke,
   senseLine:   '#8496a6', // reference pressure, drains, monitor sensing — never flowing
-  unitFill:    '#e4e9ee', // the OBOGS unit enclosure
-  seatFill:    '#dde3e9',
-  pilotFill:   '#c6d1da',
-  pilotStroke: '#7d8f9f',
+  unitFill:    'var(--sys-obogs-unit)', // the OBOGS unit enclosure
+  seatFill:    'var(--sys-obogs-seat)',
+  pilotFill:   'var(--sys-obogs-pilot)',
+  pilotStroke: 'var(--sys-obogs-pilot-stroke)',
   ringGreen:   '#2e8b57', // the emergency oxygen handle's own color, not a status color
   // Lit annunciator text runs brighter than the THEME status colors because it sits
   // on a black EICAS face.
@@ -870,7 +870,7 @@ function T6BObogsDiagram() {
             <text x={437} y={369} style={{ ...T.sym, fontSize: 6.5 }}>REGULATOR/</text>
             <text x={437} y={380} style={{ ...T.sym, fontSize: 6.5 }}>SHUTOFF</text>
             <text x={437} y={391} style={{ ...T.sym, fontSize: 6.5 }}>VALVE</text>
-            <text x={437} y={405} style={{ ...T.mini, fontSize: 6, fill: systemPowered ? C.accent : C.muted }}>
+            <text x={437} y={405} style={{ ...T.mini, fontSize: 6, fill: systemPowered ? C.accentInk : C.muted }}>
               {systemPowered ? 'OPEN' : 'CLOSED'}
             </text>
           </HotBox>
@@ -886,7 +886,7 @@ function T6BObogsDiagram() {
             <text x={562} y={371} style={{ ...T.sym, fontSize: 6.5 }}>CONCENTRATOR</text>
             {producing
               ? concLines.map((l, i) => (
-                <text key={l} x={562} y={382 + i * 9} style={{ ...T.sym, fontSize: 6, fill: C.accent }}>{l}</text>
+                <text key={l} x={562} y={382 + i * 9} style={{ ...T.sym, fontSize: 6, fill: C.accentInk }}>{l}</text>
               ))
               : <text x={562} y={386} style={{ ...T.sym, fontSize: 6, fill: C.muted }}>— — —</text>}
           </HotBox>

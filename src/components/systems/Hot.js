@@ -45,7 +45,7 @@ export function HotRing(shape) {
   return ringShape(shape, {
     className: 'dgm-hot-ring',
     fill: 'none',
-    stroke: THEME.accent,
+    stroke: THEME.accentInk,
     strokeWidth: 1,
   });
 }

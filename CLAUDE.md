@@ -93,8 +93,8 @@ cut by `tools/crop-posters.py`.
   `--btn`, `--band`, `--wash`, `--ok-bg`…), never a raw grey or white; hex-suffixed names
   (`--surface-f2f6f8`) are shades the file already had, kept exact in light. Saturated status
   colours, dark pills and scrims stay literal. The nav, sub-nav and footer are brand navy in
-  both modes. The systems diagrams are the one light-only area (`THEME` is literal; the Systems
-  tab sits on `.systems-light`); the landing page has its own dark palette.
+  both modes. The systems diagrams follow the theme through their own `--sys-*` tokens at the
+  end of each block (see Systems diagrams); the landing page has its own dark palette.
 - **Filesystem is case-insensitive NTFS.** Never create a file whose name differs from an existing
   one only by case — it overwrites it and breaks the Linux build.
 - `leftovers.js` is a gitignored scratch file.
@@ -130,7 +130,12 @@ Shared, at `systems/` root:
    minimal**: `label` is the exact message (no severity — `color` has it); `cause` is one sentence;
    `response` names the EP and stops.
 
-**Styling**: light theme only. `const C = { ...THEME, ...LOCAL }`. Red/amber/green only for
+**Styling**: both themes. `const C = { ...THEME, ...LOCAL }`. `THEME` and a diagram's neutral
+`LOCAL` fills are `var(--sys-*)` strings (tokens at the end of each block in `style.css`, light
+values the colours the diagrams were drawn with), so a value cannot take an alpha suffix
+(`${C.text}22`); a translucent shade is its own token (`rule`). Fluid lines, bus colours,
+hardware placards, instrument faces and the energized-wire yellow stay literal. The teal is
+`accent` as a fill and `accentInk` as text, a stroke or a border. Red/amber/green only for
 warning/caution/advisory (except hardware placarded that color, e.g. OBOGS levers). Flow-line `d`
 is authored in flow direction. A line is colored only when its fluid is in it, and only segments
 with real flow animate. Animate a valve only when something on the diagram commands it. Unknown

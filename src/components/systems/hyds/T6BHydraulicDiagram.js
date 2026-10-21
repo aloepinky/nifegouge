@@ -24,8 +24,9 @@ const KEYFRAMES = `
 // ── Colors: shared THEME + hydraulic-specific fluid colors ───────────
 const LOCAL = {
   supply: '#c0392b', emerg: '#d97c1e', ret: '#27ae60', sel: '#7b4bb8',
-  caution: THEME.cautionText, advisory: 'rgba(45,122,45,0.15)',
-  tCaution: '#7a5000', tAdvisory: '#1a5a1a',
+  caution: THEME.cautionText, advisory: 'var(--sys-hyds-advisory)',
+  tCaution: 'var(--sys-hyds-caution-text)', tAdvisory: 'var(--sys-hyds-advisory-text)',
+  manifoldText: 'var(--sys-hyds-manifold-text)', manifoldLine: 'var(--sys-hyds-manifold-line)',
 };
 
 const C = { ...THEME, ...LOCAL };
@@ -1297,8 +1298,8 @@ export default function T6BHydraulicDiagram() {
         })()}
 
         <rect x="515" y="325" width="165" height="310" rx="5"
-          fill="none" stroke="#6a4a18" strokeWidth="0.5" strokeDasharray="4 3" />
-        <text x="595" y="645" style={{ ...T.t, fill:'#7a5520', letterSpacing:'0.06em', fontSize:7.5 }}>EMER SELECTOR MANIFOLD</text>
+          fill="none" stroke={C.manifoldLine} strokeWidth="0.5" strokeDasharray="4 3" />
+        <text x="595" y="645" style={{ ...T.t, fill:C.manifoldText, letterSpacing:'0.06em', fontSize:7.5 }}>EMER SELECTOR MANIFOLD</text>
 
       </svg>
     </DiagramShell>

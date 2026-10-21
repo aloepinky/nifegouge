@@ -111,7 +111,7 @@ function BriefingModal({
               if (row.section) {
                 return (
                   <tr key={i}>
-                    <td colSpan={2} style={{ padding: '10px 8px 4px', color: C.muted, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', borderBottom: `0.5px solid ${C.stroke}44`, textTransform: 'uppercase' }}>
+                    <td colSpan={2} style={{ padding: '10px 8px 4px', color: C.muted, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', borderBottom: `0.5px solid ${C.rule}`, textTransform: 'uppercase' }}>
                       {row.section}
                     </td>
                   </tr>
@@ -121,10 +121,10 @@ function BriefingModal({
               const rowBg    = row.highlight === 'warning' ? C.eicasWarningBg : row.highlight ? C.eicasCautionBg : 'transparent';
               return (
                 <tr key={i} style={{ background: rowBg }}>
-                  <td style={{ padding: '8px 8px', borderBottom: `0.5px solid ${C.stroke}44`, color: rowColor, fontWeight: 700, whiteSpace: 'nowrap', verticalAlign: 'top', minWidth: valueMinWidth }}>
+                  <td style={{ padding: '8px 8px', borderBottom: `0.5px solid ${C.rule}`, color: rowColor, fontWeight: 700, whiteSpace: 'nowrap', verticalAlign: 'top', minWidth: valueMinWidth }}>
                     {row.value}
                   </td>
-                  <td style={{ padding: '8px 8px', borderBottom: `0.5px solid ${C.stroke}44`, color: C.muted, lineHeight: 1.6 }}>
+                  <td style={{ padding: '8px 8px', borderBottom: `0.5px solid ${C.rule}`, color: C.muted, lineHeight: 1.6 }}>
                     {row.label}
                   </td>
                 </tr>

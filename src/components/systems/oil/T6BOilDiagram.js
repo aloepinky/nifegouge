@@ -44,9 +44,9 @@ const LOCAL = {
   scavengeOil: '#d4b81e', // SCAVENGE OIL
   breather:    '#8b9cad', // breather / vent — air, never flowing oil, always static
   senseLine:   '#8496a6',
-  engineFill:  '#f4f6f8', engineStroke: '#9aa8b6',
-  tankFill:    '#e9edf1',
-  metalFill:   '#eef1f4', // pump and gearbox housings, a shade off the white boxes
+  engineFill:  'var(--sys-oil-engine)', engineStroke: 'var(--sys-oil-engine-stroke)',
+  tankFill:    'var(--sys-oil-tank)',
+  metalFill:   'var(--sys-oil-metal)', // pump and gearbox housings, a shade off the white boxes
   // Lit annunciator text runs brighter than the THEME status colors because it sits
   // on a black EICAS face.
   annWarning: '#f2453d', annCaution: '#e0b830',
@@ -382,7 +382,7 @@ const HoverName = ({ hv }) => hv && (
     x={Math.max(74, Math.min(806, hv.x))} y={Math.max(14, hv.y)}
     style={{
       fontFamily: FONT, fontSize: 8.5, fontWeight: 700, letterSpacing: '0.06em',
-      fill: C.accent, textAnchor: 'middle', dominantBaseline: 'central',
+      fill: C.accentInk, textAnchor: 'middle', dominantBaseline: 'central',
       paintOrder: 'stroke', stroke: C.bg, strokeWidth: 5, strokeLinejoin: 'round',
       pointerEvents: 'none',
     }}

@@ -1,26 +1,38 @@
-// Shared light theme for the T-6B systems diagrams (hyds / elec / prop).
+// Shared theme for the T-6B systems diagrams (hyds / elec / prop / oil / fuel / obogs).
 // Diagrams build their palette as `const C = { ...THEME, ...LOCAL }` where
 // LOCAL holds only genuinely per-system colors (fluid lines, bus colors, metal).
+//
+// Page chrome, boxes, text and status tints are `var(--sys-*)` references into the
+// token blocks at the top of src/style.css, so the diagrams follow the site's light and
+// dark themes: the light values there are the colours these diagrams were drawn with. A
+// var() string works anywhere a colour does, SVG presentation attributes included, but
+// it cannot take an alpha suffix (`${C.text}22` is not a colour), so a translucent
+// variant is its own token (rule) and only a literal below may be suffixed that way.
+//
+// Literal on purpose: the saturated status fills on the sim buttons, the instrument
+// faces (dark in both themes, as in the cockpit), the energized-wire yellow and the
+// white flow dashes.
 
-const warningText   = '#cc2222';
-const warningBg     = 'rgba(180,30,30,0.10)';
-const warningBorder = '#cc3333';
+const warningText   = 'var(--sys-warning-text)';
+const warningBg     = 'var(--sys-warning-bg)';
+const warningBorder = 'var(--sys-warning-border)';
 
-const cautionText   = '#b07800';
-const cautionBg     = 'rgba(160,100,0,0.10)';
-const cautionBorder = '#b07800';
+const cautionText   = 'var(--sys-caution-text)';
+const cautionBg     = 'var(--sys-caution-bg)';
+const cautionBorder = 'var(--sys-caution-border)';
 
-const advisoryText   = '#2d7a2d';
-const advisoryBg     = 'rgba(30,120,30,0.10)';
-const advisoryBorder = '#3a7a3a';
+const advisoryText   = 'var(--sys-advisory-text)';
+const advisoryBg     = 'var(--sys-advisory-bg)';
+const advisoryBorder = 'var(--sys-advisory-border)';
 
 export const THEME = {
-  bg:       '#f4f4f4',
-  box:      '#ffffff',
-  boxAlt:   '#e8ecf0',
-  stroke:   '#9aaabb',
-  text:     '#1a2f42',
-  muted:    '#60788a',
+  bg:       'var(--sys-bg)',
+  box:      'var(--sys-box)',
+  boxAlt:   'var(--sys-box-alt)',
+  stroke:   'var(--sys-stroke)',
+  rule:     'var(--sys-rule)',     // a stroke at quarter strength: table rules in the briefing modal
+  text:     'var(--sys-text)',
+  muted:    'var(--sys-muted)',
 
   warningText, warningBg, warningBorder,
   cautionText, cautionBg, cautionBorder,
@@ -29,27 +41,31 @@ export const THEME = {
   // Opaque fills for a symbol that has tripped. The *Bg values above are translucent
   // overlays for modal panels; a schematic symbol sits on top of pipes and needs to
   // cover them, so these are the solid equivalents.
-  warningTint: '#f6d3d3',
-  cautionTint: '#f6ecd0',
+  warningTint: 'var(--sys-warning-tint)',
+  cautionTint: 'var(--sys-caution-tint)',
 
   // EICAS message severities (aliases of the status colors above)
   eicasWarning: warningText,   eicasWarningBg: warningBg,   eicasWarningBorder: warningBorder,
   eicasCaution: cautionText,   eicasCautionBg: cautionBg,   eicasCautionBorder: cautionBorder,
   eicasAdvisory: advisoryText, eicasAdvisoryBg: advisoryBg, eicasAdvisoryBorder: advisoryBorder,
 
-  // Site-teal accent family (PSM primaries #01202C / #003B4F)
+  // Site-teal accent family (PSM primaries #01202C / #003B4F). `accent` and `accentDeep`
+  // are fills (a lit button, a selected switch) and stay navy in both themes, like the
+  // site's buttons; `accentInk` is the same teal as text, a stroke or a border, and
+  // lightens in dark mode where navy on navy would vanish.
   accentDeep: '#01202C',
   accent:     '#003B4F',
+  accentInk:  'var(--sys-accent-ink)',
 
   // Briefing-modal UI (quote boxes, EP badges, landing notes)
-  quoteBoxBg:     'rgba(0,59,79,0.05)',
-  quoteBoxBorder: '#5b8496',
-  epBadgeBg:      'rgba(0,59,79,0.10)',
-  epBadgeBorder:  '#5b8496',
-  epBadgeText:    '#003B4F',
-  landingBg:      'rgba(0,59,79,0.05)',
-  landingBorder:  '#003B4F',
-  landingText:    '#01202C',
+  quoteBoxBg:     'var(--sys-quote-bg)',
+  quoteBoxBorder: 'var(--sys-quote-border)',
+  epBadgeBg:      'var(--sys-badge-bg)',
+  epBadgeBorder:  'var(--sys-badge-border)',
+  epBadgeText:    'var(--sys-badge-text)',
+  landingBg:      'var(--sys-landing-bg)',
+  landingBorder:  'var(--sys-landing-border)',
+  landingText:    'var(--sys-landing-text)',
 
   // Sim-fault buttons
   simWarnBg:     '#b42525',
@@ -80,4 +96,3 @@ export const THEME = {
 };
 
 export const DIAGRAM_FONT = "'Courier New', monospace";
-

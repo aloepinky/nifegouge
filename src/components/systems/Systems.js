@@ -39,9 +39,9 @@ function Systems() {
           </span>
         ))}
       </div>
-      {/* The diagrams are drawn for a light page and stay light in dark mode; .systems-light is
-          their floor, a screen tall so the footer doesn't jump while a diagram's chunk loads. */}
-      <div className="systems-light">
+      {/* .systems-floor is the page colour a screen tall, so the footer doesn't jump while a
+          diagram's chunk loads. */}
+      <div className="systems-floor">
         <Suspense fallback={null}>
           <Diagram />
         </Suspense>

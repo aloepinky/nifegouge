@@ -24,8 +24,9 @@
    Deliberately not tokens: saturated status colours (red, amber and green
    buttons and borders), dark pills and scrims, the hint glow, the pink
    wordmark, the landing page (already dark) and the footer (brand colours
-   in both modes). The T-6B systems diagrams keep their own light palette
-   (systems/diagramTheme.js) and sit on a light floor (.systems-light).
+   in both modes). The T-6B systems diagrams read the --sys-* tokens at the
+   end of each block (systems/diagramTheme.js); their fluid lines, bus
+   colours, hardware placards and instrument faces are literal.
    =================================================================== */
 :root {
   --page: #f4f4f4;
@@ -230,6 +231,53 @@
   --surface-e0e0e0: #e0e0e0;
   --bad-text-5a0000: #5a0000;
   --btn-off: #9aa7ab;
+
+  /* T-6B systems diagrams (systems/diagramTheme.js and each diagram's LOCAL read these) */
+  --sys-bg: var(--page);
+  --sys-box: #ffffff;
+  --sys-box-alt: #e8ecf0;
+  --sys-stroke: #9aaabb;
+  --sys-rule: #9aaabb44;
+  --sys-text: #1a2f42;
+  --sys-muted: #60788a;
+  --sys-accent-ink: #003B4F;
+  --sys-warning-text: #cc2222;
+  --sys-warning-bg: rgba(180,30,30,0.10);
+  --sys-warning-border: #cc3333;
+  --sys-warning-tint: #f6d3d3;
+  --sys-caution-text: #b07800;
+  --sys-caution-bg: rgba(160,100,0,0.10);
+  --sys-caution-border: #b07800;
+  --sys-caution-tint: #f6ecd0;
+  --sys-advisory-text: #2d7a2d;
+  --sys-advisory-bg: rgba(30,120,30,0.10);
+  --sys-advisory-border: #3a7a3a;
+  --sys-quote-bg: rgba(0,59,79,0.05);
+  --sys-quote-border: #5b8496;
+  --sys-badge-bg: rgba(0,59,79,0.10);
+  --sys-badge-border: #5b8496;
+  --sys-badge-text: #003B4F;
+  --sys-landing-bg: rgba(0,59,79,0.05);
+  --sys-landing-border: #003B4F;
+  --sys-landing-text: #01202C;
+  --sys-fuel-tank: #d9dee4;
+  --sys-fuel-tank-stroke: #8a97a5;
+  --sys-fuel-collector: #cfd6dd;
+  --sys-fuel-frame: #c3ccd4;
+  --sys-fuel-pump-on: #dcebf0;
+  --sys-obogs-unit: #e4e9ee;
+  --sys-obogs-seat: #dde3e9;
+  --sys-obogs-pilot: #c6d1da;
+  --sys-obogs-pilot-stroke: #7d8f9f;
+  --sys-oil-engine: #f4f6f8;
+  --sys-oil-engine-stroke: #9aa8b6;
+  --sys-oil-tank: #e9edf1;
+  --sys-oil-metal: #eef1f4;
+  --sys-hyds-advisory: rgba(45,122,45,0.15);
+  --sys-hyds-caution-text: #7a5000;
+  --sys-hyds-advisory-text: #1a5a1a;
+  --sys-hyds-manifold-text: #7a5520;
+  --sys-hyds-manifold-line: #6a4a18;
 }
 
 :root[data-theme="dark"] {
@@ -436,6 +484,52 @@
   --surface-e0e0e0: #2a3c47;
   --bad-text-5a0000: #f0a0a0;
   --btn-off: #3d4f58;
+
+  --sys-bg: var(--page);
+  --sys-box: #1e2c33;
+  --sys-box-alt: #2a3b44;
+  --sys-stroke: #4f6672;
+  --sys-rule: #4f667266;
+  --sys-text: #e2ebf0;
+  --sys-muted: #93a9b4;
+  --sys-accent-ink: #89c0d2;
+  --sys-warning-text: #f08a8a;
+  --sys-warning-bg: rgba(240,138,138,0.14);
+  --sys-warning-border: #d9605f;
+  --sys-warning-tint: #5a2a2c;
+  --sys-caution-text: #e0b45a;
+  --sys-caution-bg: rgba(224,180,90,0.14);
+  --sys-caution-border: #c99a3a;
+  --sys-caution-tint: #4a3d1c;
+  --sys-advisory-text: #7fc27f;
+  --sys-advisory-bg: rgba(127,194,127,0.14);
+  --sys-advisory-border: #5fa05f;
+  --sys-quote-bg: rgba(137,192,210,0.08);
+  --sys-quote-border: #5a93a8;
+  --sys-badge-bg: rgba(137,192,210,0.14);
+  --sys-badge-border: #5a93a8;
+  --sys-badge-text: #89c0d2;
+  --sys-landing-bg: rgba(137,192,210,0.08);
+  --sys-landing-border: #5a93a8;
+  --sys-landing-text: #ecf2f5;
+  --sys-fuel-tank: #2b3c46;
+  --sys-fuel-tank-stroke: #5c7280;
+  --sys-fuel-collector: #33454f;
+  --sys-fuel-frame: #3a4e59;
+  --sys-fuel-pump-on: #2f4650;
+  --sys-obogs-unit: #28393f;
+  --sys-obogs-seat: #2f4650;
+  --sys-obogs-pilot: #3d525d;
+  --sys-obogs-pilot-stroke: #8aa0ad;
+  --sys-oil-engine: #1a262d;
+  --sys-oil-engine-stroke: #4f6672;
+  --sys-oil-tank: #2a3b44;
+  --sys-oil-metal: #263640;
+  --sys-hyds-advisory: rgba(127,194,127,0.18);
+  --sys-hyds-caution-text: #e0b45a;
+  --sys-hyds-advisory-text: #7fc27f;
+  --sys-hyds-manifold-text: #c9a86a;
+  --sys-hyds-manifold-line: #8a6a30;
 }
 
 /* Global Styles */
@@ -3660,8 +3754,8 @@ textarea.incorrect-answer {
     margin: 0;
   }
 
-  /* The tiles sit in rows the page lays out itself (NIFE, Primary, T-44C; then the later
-     Advanced schools), each row centred on its own. Between phone and wide, a 2-up grid
+  /* The tiles sit in rows of three the page lays out itself (LandingPage.js TILES), each row
+     centred on its own. Between phone and wide, a 2-up grid
      instead (below). */
   .landing-buttons {
     display: flex;
@@ -4575,8 +4669,8 @@ textarea.incorrect-answer {
 
 /* The systems diagrams are drawn for a light page (systems/diagramTheme.js). This floor keeps
    the Systems tab light in dark mode too, including the slack under a short diagram. */
-.systems-light {
-  background: #f4f4f4;
+.systems-floor {
+  background: var(--page);
   min-height: 100vh;
 }
 
