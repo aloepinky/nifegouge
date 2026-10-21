@@ -4028,14 +4028,22 @@ textarea.incorrect-answer {
     overflow-wrap: anywhere;
   }
 
-  /* The comm script's worked example under a leg's radio calls: closed by default, the
+  /* Example comms under a leg's radio calls: one closed section per example, the
      controller's replies indented under the pilot's lines */
-  .cr-example {
+  .cr-examples {
     margin-top: 10px;
     padding-top: 8px;
     border-top: 1px dashed var(--line-strong);
+  }
+
+  .cr-example {
+    margin-top: 4px;
     font-size: 13px;
     line-height: 1.4;
+  }
+
+  .cr-example[open] {
+    margin-bottom: 8px;
   }
 
   .cr-example summary {
@@ -4049,15 +4057,6 @@ textarea.incorrect-answer {
     font-size: 12px;
     font-style: italic;
     color: var(--ink-muted);
-  }
-
-  .cr-example-block {
-    margin-top: 10px;
-  }
-
-  .cr-example-title {
-    font-weight: 600;
-    color: var(--ink-strong);
   }
 
   .cr-example-line {

@@ -1,6 +1,9 @@
-// Example radio exchanges for Flight Path Builder, from a TW-4 Primary comms practice script
-// (10/7/20). It is a worked example, not a TW-4 publication: the page says so, and the
-// manual's own calls (`comms` in CourseRulesFeatures.js) always come first.
+// Example comms for Flight Path Builder. The first set is the TW-4 Primary comms practice
+// script (10/7/20), page in `page`. The second set, below it, covers legs the script doesn't
+// fly: the pilot's calls are the Course Rules Manual's (page in `from`) with the leg's names
+// filled in, set out the way the script runs an exchange; the controller's side uses only the
+// script's own phrases. The page shows both alike, as a worked example, not a TW-4
+// publication, after the manual's own calls (`comms` in CourseRulesFeatures.js).
 //
 // Each leg gets blocks of { title, page, lines }. A line is { radio, who, text } like a manual
 // call, { note } for the script's stage directions, or { label } for this site's own caption.
@@ -8,6 +11,8 @@
 // replies. `was` keeps the script's wording where it was corrected: a typo, a wrong facility,
 // or a name. A line the manual contradicts stays as the script has it, followed by a `manual`
 // note giving the manual's version and page.
+
+import { crFeatures } from './CourseRulesFeatures.js';
 
 const r = (prefix, from, to) => Array.from({ length: to - from + 1 }, (_, i) => `${prefix}${from + i}`);
 
@@ -304,3 +309,327 @@ add(crExamples, r('Routes-Departures-', 32, 35), ARANSAS_DEPARTURE);
 add(crExamples, r('Routes-Arrivals-', 86, 89), WALDRON_ARRIVAL);
 add(crExamples, ['Routes-Traffic Patterns-52', 'Routes-Traffic Patterns-53'], WALDRON_PATTERN);
 add(crExamples, r('Routes-Departures-', 91, 94), WALDRON_EAST_DEPARTURE);
+
+// ---------------------------------------------------------------------------------------------
+// Legs the script doesn't fly. Pilot calls: the manual's, page in `from`. Controller replies:
+// only the script's phrases (ident, radar contact, proceed, contact, terminate, report).
+
+// A runway leg's runway, from its name ("13L"; a pattern's "04/22" gives "04")
+const rwy = (id) => crFeatures[id].name.split('/')[0];
+const perRunway = (ids, make) => ids.forEach(id => add(crExamples, [id], make(rwy(id))));
+
+const IDENT = (facility, then) => [
+  { who: 'ATC', text: `Ranger 837, Corpus ${facility}, ident` },
+  { note: '...press IDENT but say nothing...' },
+  { who: 'ATC', text: `Ranger 837, Corpus ${facility}, radar contact, ${then}` }
+];
+
+const TOWER_TO = (facility) => [
+  { who: 'ATC', text: `Ranger 837, Navy Corpus Tower, contact ${facility}` },
+  { radio: 'UHF CH4', text: `Ranger 837, contact ${facility}` }
+];
+
+// KNGP departures by name, taxi to check-in (2-7, 2-9, 2-13)
+perRunway(r('Routes-Departures-', 179, 186), n => ({
+  title: `Runway ${n}, Portland Low`, from: '2-7', lines: [
+    { radio: 'UHF CH3', text: 'Navy Corpus Ground, Ranger 837, delta line, request taxi with information alpha, Portland Low' },
+    { radio: 'UHF CH4', text: 'Navy Corpus Tower, Ranger 837, ready for departure, Portland Low departure' },
+    ...TOWER_TO('departure'),
+    { radio: 'UHF CH8', text: 'Corpus Departure, Ranger 837, 500 feet off Navy Corpus, Portland Low followed by (VFR intentions)' },
+    ...IDENT('Departure', 'proceed as requested'),
+    { radio: 'UHF CH8', text: 'Ranger 837, wilco' },
+    { manual: 'State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.', page: '2-7' }
+  ]
+}));
+
+perRunway(r('Routes-Arrivals-', 170, 177), n => ({
+  title: `Runway ${n}, Nueces Transition`, from: '2-9', lines: [
+    { radio: 'UHF CH3', text: 'Navy Corpus Ground, Ranger 837, delta line, request taxi with information alpha, Nueces Transition' },
+    { radio: 'UHF CH4', text: 'Navy Corpus Tower, Ranger 837, ready for departure, Nueces Transition' },
+    ...TOWER_TO('Cabaniss Tower'),
+    { radio: 'UHF CH27', text: 'Cabaniss Tower, Ranger 837, Nueces transition' },
+    { manual: '(Switch Corpus Christi Tower when directed by Cabaniss Tower)', page: '2-9' }
+  ]
+}));
+
+perRunway(r('Routes-Arrivals-', 127, 134), n => ({
+  title: `Runway ${n}, Oso Transition to Waldron`, from: '2-13', lines: [
+    { radio: 'UHF CH3', text: 'Navy Corpus Ground, Ranger 837, delta line, request taxi with information alfa, Oso Transition' },
+    { radio: 'UHF CH4', text: 'Navy Corpus Tower, Ranger 837, ready for departure, Oso Transition' },
+    ...TOWER_TO('Waldron Tower'),
+    { radio: 'UHF CH30', text: 'Waldron Tower, Ranger 837, Oso transition' },
+    { who: 'ATC', text: 'Ranger 837, Waldron Tower, runway 13 is in use, no aircraft in the pattern, altimeter 29.92, report the numbers for runway 13' }
+  ]
+}));
+
+// Beach Line transitions after the check-in (2-5, 2-15, 2-17, 2-40)
+add(crExamples, ['Routes-Departures-156'], {
+  title: 'Beach Line to Waldron', from: '2-40', lines: [
+    { radio: 'UHF CH8', text: 'Corpus Approach, Ranger 837, course rules to Waldron' },
+    { who: 'ATC', text: 'Ranger 837, Corpus Approach, Waldron landing runway 13, proceed as requested' },
+    { radio: 'UHF CH8', text: 'Ranger 837, Waldron landing 13' }
+  ]
+});
+
+add(crExamples, ['Routes-Departures-158'], {
+  title: 'Beach Line, SHAMROCK re-entry', from: '2-5', lines: [
+    { radio: 'UHF CH8', text: 'Corpus Departure, Ranger 837, 500 feet off Navy Corpus, Shamrock re-entry' },
+    ...IDENT('Departure', 'proceed course rules Shamrock'),
+    { radio: 'UHF CH8', text: 'Ranger 837, course rules Shamrock' },
+    ...TERMINATE_SHAMROCK.lines
+  ]
+});
+
+add(crExamples, ['Working Areas-Mustang Maintenance-195'], {
+  title: 'MUSTANG Central, in and out', from: '2-15', lines: [
+    { radio: 'UHF CH18', text: '99 Central, Ranger 837, working 7,500' },
+    { label: 'Leaving the area:' },
+    { radio: 'UHF CH18', text: '99 Central, Ranger 837, complete, departing for Shamrock' },
+    { radio: 'UHF CH8', text: 'Corpus Approach, Ranger 837, complete Mustang Central, course rules Shamrock with information bravo' },
+    { who: 'ATC', text: 'Ranger 837, Corpus Approach, proceed course rules Shamrock' },
+    { radio: 'UHF CH8', text: 'Ranger 837, course rules Shamrock' }
+  ]
+});
+
+add(crExamples, ['Working Areas-Mustang Maintenance-196'], {
+  title: 'Leaving the Maintenance Area', from: '2-17', lines: [
+    { radio: 'UHF CH17', text: 'Corpus Approach, Ranger 837, complete, request direct to Point Shamrock' },
+    { who: 'ATC', text: 'Ranger 837, Corpus Approach, proceed as requested' },
+    { radio: 'UHF CH17', text: 'Ranger 837, direct Point Shamrock' }
+  ]
+});
+
+// MUSTANG exits to the manual's other destinations (2-16, 2-17, 2-60)
+const MUSTANG_TO_SHAMROCK = (area) => ({
+  title: `Complete in MUSTANG ${area}, course rules SHAMROCK`, from: '2-16', lines: [
+    { radio: 'UHF CH17', text: `Corpus Approach, Ranger 837, complete in Mustang ${area}, course rules Shamrock with information bravo` },
+    { who: 'ATC', text: 'Ranger 837, Corpus Approach, change to approach local channel 8' },
+    { radio: 'UHF CH17', text: 'Ranger 837, change to approach channel 8' },
+    { radio: 'UHF CH8', text: 'Corpus Approach, Ranger 837, course rules Shamrock' },
+    { who: 'ATC', text: 'Ranger 837, Corpus Approach, proceed course rules Shamrock' }
+  ]
+});
+
+add(crExamples, r('Working Areas-Mustang-', 191, 194), MUSTANG_TO_SHAMROCK(1));
+add(crExamples, r('Working Areas-Mustang-', 191, 194), {
+  title: 'Complete in MUSTANG 1, North to South transition to Waldron', from: '2-16', lines: [
+    { radio: 'UHF CH17', text: 'Corpus Approach, Ranger 837, complete in Mustang 1, North to South transition, course rules to Waldron' },
+    { who: 'ATC', text: 'Ranger 837, Corpus Approach, proceed as requested' },
+    { radio: 'UHF CH17', text: 'Ranger 837, North to South transition, Waldron' }
+  ]
+});
+add(crExamples, r('Working Areas-Mustang-', 197, 200), MUSTANG_TO_SHAMROCK(3));
+add(crExamples, r('Working Areas-Mustang-', 197, 200), {
+  title: 'Complete in MUSTANG 3, South to North transition to Aransas County', from: '2-17', lines: [
+    { radio: 'UHF CH17', text: 'Corpus Approach, Ranger 837, complete in Mustang 3, South to North transition, request High-Key into Aransas County' },
+    { who: 'ATC', text: 'Ranger 837, Corpus Approach, proceed as requested' },
+    { radio: 'UHF CH17', text: 'Ranger 837, South to North transition, Aransas County' },
+    { radio: 'UHF CH17', text: 'Corpus Approach, Ranger 837, terminate Aransas County' },
+    { who: 'ATC', text: 'Ranger 837, terminate' }
+  ]
+});
+add(crExamples, r('Working Areas-Mustang-', 197, 200), {
+  title: 'Complete in MUSTANG 3, Lex Arrival', from: '2-60', lines: [
+    { radio: 'UHF CH17', text: 'Corpus Approach, Ranger 837, complete in Mustang 3, request the Lex Arrival with information bravo' },
+    { who: 'ATC', text: 'Ranger 837, Corpus Approach, proceed as requested' },
+    { radio: 'UHF CH17', text: 'Ranger 837, Lex Arrival' },
+    { who: 'ATC', text: 'Ranger 837, Corpus Approach, contact Navy Corpus Tower' },
+    { radio: 'UHF CH17', text: 'Ranger 837, contact Navy Corpus Tower' },
+    { radio: 'UHF CH4', text: 'Navy Corpus Tower, Ranger 837, USS Lexington, straight-in, full stop' }
+  ]
+});
+
+add(crExamples, ['Working Areas-Foxtrot-189', 'Working Areas-Foxtrot-190'], {
+  title: 'Into FOXTROT', from: '2-21', lines: [
+    { radio: 'UHF CH8', text: 'Corpus Approach, Ranger 837, terminate Foxtrot' },
+    { who: 'ATC', text: 'Ranger 837, terminate' },
+    { manual: 'Switch to FOXTROT Common (CH 22 UHF) for advisories and area coordination.', page: '2-21' }
+  ]
+});
+
+add(crExamples, ['Routes-Arrivals-106', 'Routes-Arrivals-110'], TERMINATE_SHAMROCK);
+
+// KINGS 4 exit to Aransas County, and Goliad departures (2-28, 2-51, 2-58)
+const WOODSBORO_TO_ARANSAS = [
+  { radio: 'UHF CH6', text: 'Corpus Approach, Ranger 837, Over Woodsboro, course rules Aransas County' },
+  ...IDENT('Approach', 'proceed course rules Aransas County'),
+  { radio: 'UHF CH6', text: 'Ranger 837, course rules Aransas County' },
+  { radio: 'UHF CH6', text: 'Corpus Approach, Ranger 837, terminate Aransas County' },
+  { who: 'ATC', text: 'Ranger 837, terminate' },
+  { radio: 'VHF CH21', text: 'Aransas County Traffic, Ranger 837, 10 miles to the west, at 2500, inbound for a left overhead runway 14, Aransas County' }
+];
+
+add(crExamples, ['Routes-Transitions-202'], {
+  title: 'Complete in KINGS 4, course rules Aransas County', from: '2-28', lines: [
+    { radio: 'VHF CH22', text: 'Houston Center, Ranger 837, complete Kings 4, VFR to Aransas County, negative flight following' },
+    { who: 'ATC', text: 'Ranger 837, Houston Center, proceed as requested, terminate, frequency change approved, squawk appropriate code' },
+    { radio: 'VHF CH22', text: 'Ranger 837, terminate' },
+    { radio: 'UHF CH20', text: '99 Kings 4, Ranger 837 departing area 9 low, Aransas County' },
+    ...WOODSBORO_TO_ARANSAS
+  ]
+});
+
+add(crExamples, r('Routes-Arrivals-', 25, 28), {
+  title: 'Into Aransas County from Goliad or KINGS 4 (runway 14)', from: '2-51', lines: [
+    { radio: 'VHF CH21', text: 'Aransas County Traffic, Ranger 837, 10 miles to the west, at 2500, inbound for a left overhead runway 14, Aransas County' },
+    { radio: 'UHF CH21', text: 'Any Texans working Aransas County?' },
+    { radio: 'UHF CH21', text: 'Ranger 837 is inbound for the initial' },
+    { radio: 'VHF CH21', text: 'Aransas County Traffic, Ranger 837, 2 mile Initial runway 14 for a left overhead, Aransas County' },
+    { radio: 'VHF CH21', text: 'Aransas County Traffic, Ranger 837, numbers runway 14 for the left overhead, Aransas County' }
+  ]
+});
+
+add(crExamples, r('Routes-Departures-', 46, 49), {
+  title: 'Goliad to Aransas County', from: '2-51', lines: [
+    { radio: 'UHF CH15', text: 'Goliad RDO, Ranger 837, departing' },
+    { who: 'RDO', text: 'Ranger 837, RDO, roger' },
+    ...WOODSBORO_TO_ARANSAS
+  ]
+});
+
+add(crExamples, r('Routes-Departures-', 46, 49), {
+  title: 'Goliad to KINGS 4', from: '2-26', lines: [
+    { radio: 'UHF CH15', text: 'Goliad RDO, Ranger 837, departing' },
+    { who: 'RDO', text: 'Ranger 837, RDO, roger' },
+    { radio: 'VHF CH22', text: 'Houston Center, Ranger 837, off Goliad, 4500, course rules kings 4' },
+    { who: 'ATC', text: 'Ranger 837, Houston Center, cleared Kings 4' },
+    { radio: 'VHF CH22', text: 'Ranger 837, cleared Kings 4' },
+    { note: '(Switch UHF CH20 no later than 8000)' },
+    { radio: 'UHF CH20', text: '99 Kings 4, anybody working area 9 low?' },
+    { radio: 'UHF CH20', text: '99 Kings 4, Ranger 837 claims area 9 low' }
+  ]
+});
+
+add(crExamples, r('Routes-Departures-', 46, 49), {
+  title: 'Goliad to Ingleside', from: '2-58', lines: [
+    { radio: 'UHF CH15', text: 'Goliad RDO, Ranger 837, departing' },
+    { who: 'RDO', text: 'Ranger 837, RDO, roger' },
+    { radio: 'UHF CH6', text: 'Corpus Approach, Ranger 837, Woodsboro, 2500, Ingleside' },
+    ...IDENT('Approach', 'proceed as requested'),
+    { radio: 'UHF CH6', text: 'Ranger 837, proceed as requested' }
+  ]
+});
+
+// PT Rusty for Goliad, and KNGP to Ingleside (2-11, 2-58)
+add(crExamples, ['Point-Departures-160'], {
+  title: 'At PT Rusty, for Goliad', from: '2-11', lines: [
+    { radio: 'UHF CH6', text: 'Corpus Approach, Ranger 837, 5500 over Point Rusty, course rules Goliad' },
+    { who: 'ATC', text: 'Ranger 837, Corpus Approach, proceed course rules to Goliad' },
+    { radio: 'UHF CH6', text: 'Ranger 837, course rules Goliad' },
+    { radio: 'UHF CH6', text: 'Corpus Approach, Ranger 837, terminate Goliad' },
+    { who: 'ATC', text: 'Ranger 837, terminate' }
+  ]
+});
+
+add(crExamples, ['Routes-Arrivals-13', 'Routes-Arrivals-14'], {
+  title: 'Navy Corpus to Ingleside', from: '2-11', lines: [
+    { radio: 'UHF CH3', text: 'Navy Corpus Ground, Ranger 837, delta line, request taxi with information alpha, RUSTY, VFR to Ingleside' },
+    ...TOWER_TO('departure'),
+    { radio: 'UHF CH12', text: 'Corpus Departure, Ranger 837, 500 feet off Navy Corpus, VFR to Ingleside' },
+    ...IDENT('Departure', 'proceed as requested'),
+    { radio: 'UHF CH12', text: 'Ranger 837, wilco' },
+    { radio: 'UHF CH12', text: 'Corpus Departure, Ranger 837, terminate Ingleside' },
+    { who: 'ATC', text: 'Ranger 837, terminate' }
+  ]
+});
+
+// Ingleside: CTAF VHF 122.7; the airport's notes list the calls, Aransas County's give the words
+const KTFP_ARRIVALS = ['Routes-Arrivals-5', 'Routes-Arrivals-6', 'Routes-Arrivals-8', 'Routes-Arrivals-9',
+  'Routes-Arrivals-11', 'Routes-Arrivals-12', 'Routes-Arrivals-13', 'Routes-Arrivals-14',
+  'Routes-Arrivals-15', 'Routes-Arrivals-16'];
+perRunway(KTFP_ARRIVALS, n => ({
+  title: `Into Ingleside (runway ${n})`, from: 'KTFP notes', lines: [
+    { radio: 'UHF', text: 'Corpus Approach, Ranger 837, terminate Ingleside' },
+    { who: 'ATC', text: 'Ranger 837, terminate' },
+    { radio: 'VHF 122.7', text: `Ingleside Traffic, Ranger 837, 2 mile initial runway ${n} for a left overhead, Ingleside` },
+    { radio: 'VHF 122.7', text: `Ingleside Traffic, Ranger 837, numbers runway ${n} for a left overhead, Ingleside` }
+  ]
+}));
+
+perRunway(['Routes-Traffic Patterns-2', 'Routes-Traffic Patterns-3'], n => ({
+  title: `Ingleside pattern (runway ${n})`, from: 'KTFP notes', lines: [
+    { radio: 'VHF 122.7', text: `Ingleside Traffic, Ranger 837, left crosswind, runway ${n}, Ingleside` },
+    { radio: 'VHF 122.7', text: `Ingleside Traffic, Ranger 837, left base, runway ${n}, touch and go, Ingleside` },
+    { manual: 'Once established in the pattern, Aircrew must contact Corpus Approach on CH 6 UHF prior to climbing for high key 3000\' MSL.', page: '2-57' }
+  ]
+}));
+
+perRunway(['Routes-Departures-17', 'Routes-Departures-18'], n => ({
+  title: `Leaving Ingleside, single ship (runway ${n})`, from: 'KTFP single departure', lines: [
+    { radio: 'UHF CH8', text: 'Corpus Approach, Ranger 837, Ingleside, request course rules to Shamrock with information bravo' },
+    ...IDENT('Approach', 'proceed course rules Shamrock'),
+    { radio: 'UHF CH8', text: 'Ranger 837, course rules Shamrock' },
+    { radio: 'VHF 122.7', text: `Ingleside Traffic, Ranger 837, departing runway ${n} to the north, Ingleside` }
+  ]
+}));
+
+perRunway(['Routes-Departures-19', 'Routes-Departures-20'], n => ({
+  title: `Leaving Ingleside, formation (runway ${n})`, from: 'KTFP formation departure', lines: [
+    { radio: 'VHF 122.7', text: `Ingleside Traffic, Ranger 837 flight, departing runway ${n} to the north, Ingleside` },
+    { radio: 'UHF CH6', text: 'Corpus Approach, Ranger 837 flight, off Ingleside, 1000, Goliad Arrival with information bravo' },
+    ...IDENT('Approach', 'proceed course rules Shamrock'),
+    { radio: 'UHF CH6', text: 'Ranger 837 flight, course rules Shamrock' }
+  ]
+}));
+
+// Waldron's transitions back to Navy Corpus (2-47, 2-48)
+perRunway(r('Routes-Departures-', 56, 59), n => ({
+  title: `Runway ${n}, Sunrise Transition to Navy Corpus`, from: '2-47', lines: [
+    { radio: 'UHF CH30', text: 'Waldron Tower, Ranger 837, request Sunrise Transition' },
+    { who: 'ATC', text: 'Ranger 837, Waldron Tower, contact Cabaniss Tower' },
+    { radio: 'UHF CH30', text: 'Ranger 837, contact Cabaniss Tower' },
+    { radio: 'UHF CH27', text: 'Cabaniss Tower, Ranger 837, Point Chapman, Sunrise Transition' },
+    { who: 'ATC', text: 'Ranger 837, Cabaniss Tower, contact Navy Corpus Tower' },
+    { radio: 'UHF CH27', text: 'Ranger 837, contact Navy Corpus Tower' },
+    { radio: 'UHF CH4', text: 'Navy Corpus Tower, Ranger 837, Point Sunrise, full stop' },
+    { manual: 'Expect an Overhead, Base, or straight-in entry at Tower\'s discretion.', page: '2-47' }
+  ]
+}));
+
+perRunway(r('Routes-Departures-', 74, 77), n => ({
+  title: `Runway ${n}, Oso Transition to Navy Corpus`, from: '2-48', lines: [
+    { radio: 'UHF CH30', text: 'Waldron Tower, Ranger 837, would like to put an Oso Transition on request' },
+    { who: 'ATC', text: 'Ranger 837, Right turnout for your Oso Transition is approved. Contact Navy Tower' },
+    { radio: 'UHF CH30', text: 'Ranger 837, contact Navy Tower' },
+    { radio: 'UHF CH4', text: 'Navy Corpus Tower, Ranger 837, Oso Bridge, full stop' }
+  ]
+}));
+
+perRunway(r('Routes-Arrivals-', 67, 70), n => ({
+  title: `Into Waldron via the Oso Transition (runway ${n})`, from: '2-43', lines: [
+    { radio: 'UHF CH30', text: `Waldron Tower, Ranger 837, initial ${n}` },
+    { who: 'ATC', text: `Ranger 837, Waldron Tower, report the numbers runway ${n}` },
+    { radio: 'UHF CH30', text: `Waldron Tower, Ranger 837, numbers ${n}` }
+  ]
+}));
+
+// Aransas County departure for a working area (2-55)
+add(crExamples, r('Routes-Departures-', 32, 35), {
+  title: 'Leaving Aransas County for MUSTANG 1', from: '2-55', lines: [
+    { radio: 'VHF CH21', text: 'Aransas County Traffic, Ranger 837, clear to the south, last call, Aransas County' },
+    { radio: 'UHF CH8', text: 'Corpus Approach, Ranger 837, Off Aransas County, request Mustang 1' },
+    ...IDENT('Approach', 'proceed as requested'),
+    { radio: 'UHF CH8', text: 'Ranger 837, wilco, Mustang 1' }
+  ]
+});
+
+// Navy Corpus tower pattern (2-6 and the script's Waldron pattern)
+perRunway(r('Routes-Traffic Patterns-', 98, 101), n => ({
+  title: `Navy Corpus pattern (runway ${n})`, from: '2-6', lines: [
+    { radio: 'UHF CH4', text: `Navy Corpus Tower, Ranger 837, 180, gear down, touch and go` },
+    { who: 'ATC', text: `Ranger 837, Navy Corpus Tower, runway ${n}, cleared touch and go` },
+    { radio: 'UHF CH4', text: `Ranger 837, cleared touch and go, runway ${n}` }
+  ]
+}));
+
+// Into Navy Corpus from PT Sunrise, and the Lex Arrival on its own leg (2-47, 2-60)
+perRunway(r('Routes-Arrivals-', 136, 143), n => ({
+  title: `From PT Sunrise (runway ${n})`, from: '2-47', lines: [
+    { radio: 'UHF CH4', text: 'Navy Corpus Tower, Ranger 837, Point Sunrise, full stop' },
+    { who: 'ATC', text: `Ranger 837, Navy Corpus Tower, report the initial runway ${n}` },
+    { radio: 'UHF CH4', text: `Ranger 837, report the initial runway ${n}` },
+    { manual: 'Expect an Overhead, Base, or straight-in entry at Tower\'s discretion.', page: '2-47' }
+  ]
+}));
+
+add(crExamples, ['Routes-Arrivals-188'], crExamples['Working Areas-Mustang-197'].find(b => b.title.endsWith('Lex Arrival')));

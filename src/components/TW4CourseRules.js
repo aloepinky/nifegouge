@@ -44,17 +44,16 @@ function RadioCalls({ comms }) {
   );
 }
 
-// A worked example of the whole exchange, controller's side included, kept apart from the
-// manual's calls and closed until asked for
-function ExampleExchange({ blocks }) {
+// Worked examples of the whole exchange, controller's side included, kept apart from the
+// manual's calls. Each is closed until asked for, with what it covers in its heading.
+function ExampleComms({ blocks }) {
   if (!blocks || blocks.length === 0) return null;
   return (
-    <details className="cr-example">
-      <summary>Example exchange</summary>
-      <p className="cr-example-note">A worked example, not from a TW-4 publication.</p>
+    <div className="cr-examples">
       {blocks.map(block => (
-        <div key={block.title} className="cr-example-block">
-          <div className="cr-example-title">{block.title}</div>
+        <details key={block.title} className="cr-example">
+          <summary>Example comms: {block.title}</summary>
+          <p className="cr-example-note">A worked example, not from a TW-4 publication.</p>
           {block.lines.map((line, i) => {
             if (line.label) return <div key={i} className="cr-example-label">{line.label}</div>;
             if (line.note) return <div key={i} className="cr-example-direction">{line.note}</div>;
@@ -73,9 +72,9 @@ function ExampleExchange({ blocks }) {
               </div>
             );
           })}
-        </div>
+        </details>
       ))}
-    </details>
+    </div>
   );
 }
 
@@ -1369,7 +1368,7 @@ function TW4CourseRules() {
               {crFeatures[currentNode] && !flightPathQuizMode && (
                 <>
                   <RadioCalls comms={crFeatures[currentNode].comms} />
-                  <ExampleExchange key={currentNode} blocks={crExamples[currentNode]} />
+                  <ExampleComms key={currentNode} blocks={crExamples[currentNode]} />
                 </>
               )}
 
