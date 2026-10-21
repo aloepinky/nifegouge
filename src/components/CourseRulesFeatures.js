@@ -418,7 +418,7 @@ export const crFeatures = {
     questions : ["While established in the pattern, monitor CTAF and contact Corpus Approach (CH ___ UHF) and request \"course rules to _____.\" KTFP should be exited to the North (~____) towards Bayside.  Once cleared, proceed east to the intra-coastal and climb to _____ MSL once clear of the pattern and join the Northern Arrival."],
     answers : [["8", "SHAMROCK", "350°", "1000'"]],
     dependentNode: ["Point-Arrivals-113"],
-    nextNode : ["Routes-Arrivals-104"]
+    nextNode : ["Point-Arrivals-113"]
   },
   "Routes-Departures-18" : {
     name : "31",
@@ -431,7 +431,7 @@ export const crFeatures = {
     questions : ["While established in the pattern, monitor CTAF and contact Corpus Approach (CH ___ UHF) and request \"course rules to _____.\" KTFP should be exited to the North (~____) towards Bayside.  Once cleared, proceed east to the intra-coastal and climb to _____ MSL once clear of the pattern and join the Northern Arrival."],
     answers : [["8", "SHAMROCK", "350°", "1000'"]],
     dependentNode: ["Point-Arrivals-113"],
-    nextNode : ["Routes-Arrivals-104"]
+    nextNode : ["Point-Arrivals-113"]
   },
   "Routes-Departures-19" : {
     name : "13",
@@ -444,7 +444,7 @@ export const crFeatures = {
     questions : ["Depart the pattern northbound (~_____ ) towards _____.  Climb and maintain _____ MSL.  Contact Corpus Approach (CH __ UHF) to join the ______.  If contact is not made with Corpus Approach prior to reaching Bayside, join the Goliad Arrival and continue attempting to make contact."],
     answers : [["350°", "Bayside", "1000'", "6", "Goliad Arrival"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112"]
+    nextNode : ["Point-Arrivals-113"]
   },
   "Routes-Departures-20" : {
     name : "31",
@@ -457,7 +457,7 @@ export const crFeatures = {
     questions : ["Depart the pattern northbound (~_____ ) towards _____.  Climb and maintain _____ MSL.  Contact Corpus Approach (CH __ UHF) to join the ______.  If contact is not made with Corpus Approach prior to reaching Bayside, join the Goliad Arrival and continue attempting to make contact."],
     answers : [["350°", "Bayside", "1000'", "6", "Goliad Arrival"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112"]
+    nextNode : ["Point-Arrivals-113"]
   },
   "Point-default-21" : {
     name : "KRKP",
