@@ -133,15 +133,21 @@ const groupOptions = (ids) => {
   return build(ids.map(id => ({ id, rest: pathOf(crFeatures[id]) })));
 };
 
+// "(KRKP) Aransas County Airport › Arrivals" names an airfield; leg names often say where a leg
+// comes from ("Goliad Arrivals"), so an option bound for another airfield leads with the airfield
+const AIRFIELD = /^\((K[A-Z0-9]{3})\)\s*([^›]+?)\s*(?:›|$)/;
+
 function WaypointFolder({ group, path, open, toggle, onSelect }) {
   return (
     <>
       {group.items.map(item => {
         const id = typeof item === 'string' ? item : item.id;
+        const name = crFeatures[id].name || 'Unnamed';
+        const field = item.where && item.where.match(AIRFIELD);
         return (
           <button key={id} className="cr-waypoint" onClick={() => onSelect(id)}>
-            <span className="cr-waypoint-name">{crFeatures[id].name || 'Unnamed'}</span>
-            {item.where && <span className="cr-waypoint-where">{item.where}</span>}
+            <span className="cr-waypoint-name">{field ? `${field[1]} ${field[2]}` : name}</span>
+            {item.where && <span className="cr-waypoint-where">{field ? name : item.where}</span>}
           </button>
         );
       })}
@@ -152,7 +158,7 @@ function WaypointFolder({ group, path, open, toggle, onSelect }) {
           <div key={key} className="cr-folder">
             <button className="cr-folder-toggle" aria-expanded={isOpen} onClick={() => toggle(key)}>
               <span className="cr-folder-caret">{isOpen ? '▾' : '▸'}</span>
-              <span className="cr-folder-label">{folder.label}</span>
+              <span className="cr-folder-label">{folder.label.replace(/^\((K[A-Z0-9]{3})\)\s*/, '$1 ')}</span>
               <span className="cr-folder-count">{folder.count}</span>
             </button>
             {isOpen && (

@@ -3497,7 +3497,7 @@
 			</Placemark>
 		</Folder>
 		<Folder>
-			<name>KNGP Arrivals</name>
+			<name>Arrivals from KNGP</name>
 			<visibility>0</visibility>
 			<Placemark>
 				<name>13</name>
@@ -3527,7 +3527,7 @@
 			</Placemark>
 		</Folder>
 		<Folder>
-			<name>Goliad Arrivals</name>
+			<name>Arrivals from Goliad</name>
 			<visibility>0</visibility>
 			<Placemark id="554F8F3B4400000F">
 				<name>13</name>

@@ -358,7 +358,7 @@ export const crFeatures = {
   "Routes-Arrivals-13" : {
     name : "13",
     parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > KNGP Arrivals",
+    folderPath : "(KTFP) Ingleside Regional Airport > Arrivals from KNGP",
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
@@ -371,7 +371,7 @@ export const crFeatures = {
   "Routes-Arrivals-14" : {
     name : "31",
     parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > KNGP Arrivals",
+    folderPath : "(KTFP) Ingleside Regional Airport > Arrivals from KNGP",
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
@@ -384,7 +384,7 @@ export const crFeatures = {
   "Routes-Arrivals-15" : {
     name : "13",
     parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > Goliad Arrivals",
+    folderPath : "(KTFP) Ingleside Regional Airport > Arrivals from Goliad",
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
@@ -397,7 +397,7 @@ export const crFeatures = {
   "Routes-Arrivals-16" : {
     name : "31",
     parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > Goliad Arrivals",
+    folderPath : "(KTFP) Ingleside Regional Airport > Arrivals from Goliad",
     subCategory : "Arrivals",
     category : "Routes",
     description : "",
