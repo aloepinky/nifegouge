@@ -18,11 +18,11 @@ import EPsLimitsShell from './epsLimits/EPsLimitsShell';
 //
 // `nwc` gives the page its NWC buttons and Auto NWC toggle, from the NATOPS (t54aData.js).
 //
-// Three sets, as the T-44C page has its EPs and Hollywood: the EPs; the NATOPS Ch. 7 flows,
-// done from memory and typed like the EPs (and added to the EPs by "Include Flows": memorized,
-// NATOPS §7.2, but not on the Critical Action Memory Items sheet);
-// and the Ch. 7 checklists, read off and clicked. NATOPS §7.2 keeps flows and checklists apart,
-// so the page does too: only the flows carry the asterisk. See T54A/t54aNormals.js.
+// Two sets, as the T-44C page has its EPs and Hollywood. The EPs, with a button ("Include
+// Flows") that adds the NATOPS Ch. 7 flows, typed like the EPs: memorized (NATOPS §7.2), though
+// not on the Critical Action Memory Items sheet, so they are never drilled on their own. And the
+// Ch. 7 checklists, read off and clicked. NATOPS §7.2 keeps flows and checklists apart, so the
+// page does too: only the flows carry the asterisk. See T54A/t54aNormals.js.
 
 const TABS = [
   { id: 'eps', label: 'EPs' },
@@ -75,11 +75,11 @@ const SETS = [
     nwc: T54A_EP_NWC,
     title: 'T-54A EMERGENCY PROCEDURES',
     footnote: '* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS',
-    extra: { label: 'Include Flows', eps: T54A_FLOWS },
-  },
-  {
-    id: 'flows', label: 'Flows', eps: T54A_FLOWS, nwc: null, normal: true, sequential: true,
-    title: 'T-54A FLOWS', footnote: '* EXECUTED FROM MEMORY',
+    extra: {
+      label: 'Include Flows',
+      eps: T54A_FLOWS,
+      footnote: '* CRITICAL ACTION MEMORY ITEMS (EPs), EXECUTED FROM MEMORY (FLOWS) · † REQUIRES CONCURRENCE OF BOTH PILOTS',
+    },
   },
   {
     id: 'checklists', label: 'Checklists', eps: T54A_CHECKLISTS, nwc: null, normal: true, read: true, sequential: true,

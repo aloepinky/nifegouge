@@ -315,7 +315,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, 
 // chosen one filled. Styled as `.epl-modes`, copied from TW4Cockpit.js's inline styles.
 function ModeDots({ sets, current, onPick }) {
   return (
-    <div className={`epl-modes${sets.length > 2 ? ' epl-modes--wide' : ''}`} role="radiogroup" aria-label="Checklists">
+    <div className="epl-modes" role="radiogroup" aria-label="Checklists">
       <div className="epl-modes-line" />
       {sets.map((set) => (
         <button key={set.id} type="button" role="radio" aria-checked={set.id === current}
@@ -332,9 +332,11 @@ function ModeDots({ sets, current, onPick }) {
 // answers and the card sizing all start again for the new list, as Primary's switch resets them.
 // Simple/Full Mode is the one choice that carries across.
 //
-// A set's `extra` (`{ label, eps }`) is a button beside Auto NWC that adds more procedures to the
-// set's own: the EPs page's "All Memory Procedures", the normal procedures done from memory. A game
-// leaves them out, so every leaderboard time is the same EPs.
+// A set's `extra` (`{ label, eps, footnote? }`) is a button beside Auto NWC that adds more
+// procedures to the set's own: the T-44C's "All Memory Procedures", the normal procedures done
+// from memory, and the T-54A's "Include Flows". Its `footnote`, if any, replaces the set's while
+// the button is on, for an asterisk that means something else on the added cards. A game leaves
+// them out, so every leaderboard time is the same EPs.
 function EPDrill({ sets, isGameActive = false, ...props }) {
   const [current, setCurrent] = useState(sets ? sets[0].id : null);
   const [full, setFull] = useState(null);
@@ -346,6 +348,7 @@ function EPDrill({ sets, isGameActive = false, ...props }) {
   return (
     <Drill key={`${id}${adding ? '+' : ''}`} {...props} {...overrides} isGameActive={isGameActive}
       eps={adding ? [...overrides.eps, ...extra.eps] : overrides.eps}
+      footnote={adding && extra.footnote ? extra.footnote : overrides.footnote}
       initialFull={full} onFull={setFull}
       extraToggle={extra && !isGameActive ? { label: extra.label, on: withExtra, toggle: () => setWithExtra((v) => !v) } : null}
       modes={isGameActive ? null : <ModeDots sets={sets} current={set.id} onPick={setCurrent} />} />

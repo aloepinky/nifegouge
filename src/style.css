@@ -8512,11 +8512,6 @@ textarea.incorrect-answer {
   margin: 4px auto 0;
 }
 
-/* Three or more stops (the T-54A's EPs, Flows, Checklists): the labels need the room. */
-.epl-modes--wide {
-  width: 240px;
-}
-
 .epl-modes-line {
   position: absolute;
   top: 25px;

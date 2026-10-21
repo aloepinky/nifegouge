@@ -5,10 +5,10 @@
 // The T-54A publishes its normals in two kinds, and NATOPS §7.2 keeps them apart: FLOWS are
 // "executed from memory", laid out as a table by seat or crew position with the crew callouts in
 // bold quotes; CHECKLISTS are "executed as a challenge-verification-response", read off. So they
-// are two lists here and two sets on the page:
+// are two lists here, kept apart on the page:
 //
-//   T54A_FLOWS        typed like the EPs, every step asterisked as performed from memory. The
-//                     EPs page also adds them to the EPs when "Include Flows" is on.
+//   T54A_FLOWS        typed like the EPs, every step asterisked as performed from memory. Drilled
+//                     only with the EPs, when the page's "Include Flows" is on.
 //   T54A_CHECKLISTS   read, as the T-44C's Hollywood is: the lines are printed and a step is done
 //                     by clicking its control. Never asterisked.
 //
