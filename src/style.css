@@ -3532,6 +3532,42 @@ textarea.incorrect-answer {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
+  /* Radio calls under a course rule (Flight Path Builder and map popups) */
+  .course-rules-comms {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #90caf9;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .course-rules-call {
+    margin-top: 6px;
+  }
+
+  .course-rules-call-when {
+    color: #555;
+    font-style: italic;
+  }
+
+  .course-rules-call-radio {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 0 5px;
+    border: 1px solid #b0bec5;
+    border-radius: 3px;
+    background: #fff;
+    color: #003B4F;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .course-rules-call-text {
+    color: #01202C;
+    overflow-wrap: anywhere;
+  }
+
   .quiz-mode {
     max-width: 600px;
     margin: 0 auto;

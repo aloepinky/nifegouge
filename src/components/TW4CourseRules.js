@@ -13,6 +13,50 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
+const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// One row per call: the manual's lead-in, then channel and speaker, then the words
+const callParts = (call) => ({
+  when: call.when,
+  tag: [call.radio, call.who].filter(Boolean).join(' · '),
+  text: `“${call.text}”`,
+  after: call.after
+});
+
+function RadioCalls({ comms }) {
+  if (!comms || comms.length === 0) return null;
+  return (
+    <div className="course-rules-comms">
+      <strong>Radio calls:</strong>
+      {comms.map((call, i) => {
+        const { when, tag, text, after } = callParts(call);
+        return (
+          <div key={i} className="course-rules-call">
+            {when && <div className="course-rules-call-when">{when}</div>}
+            {tag && <span className="course-rules-call-radio">{tag}</span>}
+            <span className="course-rules-call-text">{text}</span>
+            {after && <div className="course-rules-call-when">({after})</div>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const radioCallsHtml = (comms) => {
+  if (!comms || comms.length === 0) return '';
+  const rows = comms.map(call => {
+    const { when, tag, text, after } = callParts(call);
+    return `<div class="course-rules-call">`
+      + (when ? `<div class="course-rules-call-when">${escapeHtml(when)}</div>` : '')
+      + (tag ? `<span class="course-rules-call-radio">${escapeHtml(tag)}</span>` : '')
+      + `<span class="course-rules-call-text">${escapeHtml(text)}</span>`
+      + (after ? `<div class="course-rules-call-when">(${escapeHtml(after)})</div>` : '')
+      + `</div>`;
+  }).join('');
+  return `<div class="course-rules-comms"><strong>Radio calls:</strong>${rows}</div>`;
+};
+
 // Component to load and manage KML layers
 function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, setFolderTree, selectedParentFolder, controlMode, visibleFlightPath, currentRandomFeature }) {
   const map = useMap();
@@ -187,6 +231,7 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
               <em style="font-size: 12px; color: #666;">${featureType}</em><br/>
               ${description ? `<div style="margin-top: 10px; font-size: 13px;">${description}</div>` : ''}
               ${customDescription ? `<div style="margin-top: 10px; font-size: 13px; color: #0066cc;">${customDescription}</div>` : ''}
+              ${radioCallsHtml(crFeatures[featureId]?.comms)}
             </div>
           `;
           layer.bindPopup(popupContent, {
@@ -1203,6 +1248,11 @@ function TW4CourseRules() {
                     }}
                   />
                 </div>
+              )}
+
+              {/* Radio calls for this leg (hidden in quiz mode, like the course rule) */}
+              {crFeatures[currentNode] && !flightPathQuizMode && (
+                <RadioCalls comms={crFeatures[currentNode].comms} />
               )}
 
               {/* Question (when in quiz mode) */}

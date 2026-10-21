@@ -26,6 +26,143 @@ const MUSTANG_AREAS_5_6_7_8_DESCRIPTION = [
   "When complete Areas 5-8, proceed towards the beach line and descend to 4,500' MSL prior to transiting."
 ];
 
+// Radio calls, verbatim from the TW-4 VFR Course Rules Manual (COMTRAWINGFOURINST 3710.14,
+// 20 Feb 2025); page in each comment. `when` labels when a call is made, from the manual's
+// heading or lead-in; `after` is the manual's note under a call.
+const BEACH_LINE_COMMS = [ // 2-5
+  { radio: "CH 8 UHF", text: "Corpus Departure, (call sign), 500 feet off Navy Corpus, (Transition)." }
+];
+
+const PORTLAND_COMMS = [ // 2-7
+  { radio: "CH 3 UHF", text: "Navy Corpus Ground, (call sign), (position), request taxi with information ALPHA, Portland Low." },
+  { radio: "CH 8 UHF", text: "Corpus Departure, (call sign), 500 feet off Navy Corpus, Portland Low followed by (VFR intentions)." }
+];
+
+const CABANISS_NUECES_CALL = { // 2-9
+  radio: "CH 27 UHF", text: "Cabaniss Tower, (call sign), Nueces transition.",
+  after: "Switch Corpus Christi Tower when directed by Cabaniss Tower"
+};
+
+const NUECES_COMMS = [ // 2-9
+  { radio: "CH 3 UHF", text: "Navy Corpus Ground, (call sign), (position), request taxi with information ALPHA, Nueces Transition." },
+  CABANISS_NUECES_CALL
+];
+
+const RUSTY_COMMS = [ // 2-11
+  { radio: "CH 3 UHF", text: "Navy Corpus Ground, (call sign), (position), request taxi with information ALPHA, RUSTY / KINGS 4 VFR." },
+  { radio: "CH 12 UHF", text: "Corpus Departure, (call sign), 500 feet off Navy Corpus, KINGS 4 / course rules Goliad / VFR to XXX." }
+];
+
+const WALDRON_OSO_CALLS = [ // 2-13
+  { radio: "CH 30 UHF", text: "Waldron Tower, (call sign), Oso transition." },
+  { who: "NWL TWR", text: "(call sign), Waldron Tower, runway 13 is in use, no aircraft in the pattern, altimeter 29.92, report the numbers for runway 13." }
+];
+
+const OSO_COMMS = [ // 2-13
+  { radio: "CH 3 UHF", text: "Navy Corpus Ground, (call sign), (position), request taxi with information ALFA, Oso Transition." },
+  ...WALDRON_OSO_CALLS
+];
+
+const MUSTANG_CENTRAL_COMMS = [ // 2-15
+  { radio: "CH 18 UHF", text: "99 Central, (tac call sign), Working 7,500." }
+];
+
+const MUSTANG_EXIT_COMMS = [ // 2-16
+  { radio: "CH 17 UHF", text: "Corpus Approach, (call sign), complete in MUSTANG 1, request High-Key into Aransas County / Course Rules SHAMROCK with information ALPHA / North to South transition" }
+];
+
+const KINGS_ENTRY_COMMS = [ // 2-26
+  { radio: "CH 22 VHF", text: "Houston Center, (call sign), passing (altitude), working KINGS 4." },
+  { when: "Claiming a KINGS 4 MOA working area:", radio: "CH 20 UHF", text: "99 KINGS 4, anybody working area ____ high / low?" },
+  { when: "After responses:", radio: "CH 20 UHF", text: "99 KINGS 4, (call sign) claims area ____ (high / low)." }
+];
+
+const KINGS_EXIT_COMMS = [ // 2-28
+  { radio: "CH 22 VHF", text: "Houston Center, (call sign), Complete KINGS 4, Terminate Goliad." },
+  { when: "Departing working area:", radio: "CH 20 UHF", text: "99 KINGS 4, (call sign) departing area ____ (high/low), (Goliad/Aransas County/PPEL Goliad)." },
+  { when: "Clearing an unclaimed working area to climb/descend:", radio: "CH 20 UHF", text: "99 KINGS 4, anybody working area ____ low/high." },
+  { when: "If the block is clear:", radio: "CH 20 UHF", text: "99 KINGS 4, (call sign) climbing/descending through area ____ low/high, for Goliad/9 High." }
+];
+
+const GOLIAD_ARRIVAL_COMMS = [ // 2-30 to 2-32
+  { radio: "CH 15 UHF", who: "AIRCRAFT", text: "Goliad, landing." },
+  { who: "RDO", text: "Goliad landing (RWY #). (#) in the pattern. No solos." },
+  { when: "Once established at the 4 NM initial:", who: "AIRCRAFT", text: "Goliad RDO, (Call Sign), initial (RWY#)." },
+  { who: "RDO", text: "(Call Sign), You are #1 for the break, and #2 when you get here." },
+  { who: "AIRCRAFT", text: "(Call Sign), 1 for 2." },
+  { when: "Or if the RDO is unable to accept an aircraft into the pattern:", who: "RDO", text: "(Call Sign), execute discontinued entry." },
+  { when: "Abeam the approach end numbers:", who: "AIRCRAFT", text: "(Call Sign), numbers (RWY #)" },
+  { when: "Break:", who: "AIRCRAFT", text: "Goliad RDO, (Call Sign), crosswind break" },
+  { when: "At the 180 Position:", who: "AIRCRAFT", text: "(AC ID), 180, gear down." }
+];
+
+const GOLIAD_PATTERN_COMMS = [ // 2-34, 2-35
+  { when: "Crosswind:", who: "AIRCRAFT", text: "(AC ID), crosswind (touch & go / pattern PEL / AOA)" },
+  { when: "Practice PEL, 3-5 NM from High-Key:", who: "AIRCRAFT", text: "Goliad RDO, (Call Sign), __ miles to the (cardinal direction), (altitude), Practice PEL, (RWY #)." },
+  { who: "RDO", text: "(Call Sign), you are #2 for High-Key, and #2 in the pattern. De-conflict with (Call Sign #2) on Victor." },
+  { who: "AIRCRAFT", text: "(Call Sign), #2 for #2, WILCO." },
+  { when: "High-Key:", who: "AIRCRAFT", text: "Goliad RDO, (Call Sign), High-Key, (RWY #)." },
+  { when: "Low-Key:", who: "AIRCRAFT", text: "(Call Sign), Low-Key, gear down." },
+  { when: "Or…", who: "AIRCRAFT", text: "(Call Sign), Pattern Low-Key, gear down." },
+  { who: "RDO", text: "Roger, Gear" }
+];
+
+const GOLIAD_DEPARTURE_COMMS = [ // 2-36
+  { who: "AIRCRAFT", text: "Goliad RDO, (call sign), departing" }
+];
+
+const ARANSAS_ARRIVAL_COMMS = [ // 2-51
+  { when: "GOLIAD/KINGS 4 MOA:", radio: "UHF", text: "Corpus Approach, (call sign), Over Woodsboro, course rules Aransas County." },
+  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), 10 miles to the west, at 2500, inbound for a left overhead (RWY #), Aransas County." },
+  { radio: "UHF", text: "Any Texans working Aransas County?" },
+  { radio: "UHF", text: "(Call sign) is inbound for the initial." },
+  { radio: "VHF", text: "Aransas County Traffic, (call sign), 2 mile Initial (RWY #) for a left overhead, Aransas County." },
+  { radio: "VHF", text: "Aransas County Traffic, (call sign), numbers (RWY #) for the left overhead, Aransas County." }
+];
+
+const ARANSAS_PATTERN_COMMS = [ // 2-53
+  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), Left crosswind, (RWY #), Aransas County." },
+  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), Left base, (RWY #), touch & go, Aransas County." },
+  { when: "PPEL/P:", radio: "VHF", text: "Aransas County Traffic, (Call Sign), high left crosswind, (RWY #), Aransas County." },
+  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), high left base, (RWY #), touch & go, Aransas County." }
+];
+
+const ARANSAS_DEPARTURE_COMMS = [ // 2-55
+  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), number one upwind/downwind departing to the east, Aransas County." },
+  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), clear to the south, last call, Aransas County." },
+  { radio: "CH 8 UHF", text: "Corpus Approach, (Call Sign), Off Aransas County, Course Rules SHAMROCK with information ALPHA." }
+];
+
+const WALDRON_ARRIVAL_COMMS = [ // 2-40, 2-41
+  { radio: "CH 8 UHF", who: "AIRCRAFT", text: "Corpus Approach, (Call Sign), course rules to Waldron." },
+  { when: "Or…", who: "AIRCRAFT", text: "Corpus Approach, (Call Sign), request High-Key to Waldron." },
+  { who: "AIRCRAFT", text: "Corpus Approach, (Call Sign), Camel Humps, Terminate." },
+  { radio: "CH 30 UHF", who: "AIRCRAFT", text: "Waldron Tower, (Call Sign), Camel Humps for Touch and Go(s)." },
+  { who: "TWR", text: "(Call Sign), Waldron Tower, Report the initial RWY 13" },
+  { who: "AIRCRAFT", text: "Waldron Tower, (Call Sign), Initial 13." },
+  { who: "AIRCRAFT", text: "Waldron Tower, (Call Sign), Numbers 13" }
+];
+
+const WALDRON_PATTERN_COMMS = [ // 2-45
+  { who: "TWR", text: "(Call Sign), left downwind approved." },
+  { when: "PPEL/P:", who: "AIRCRAFT", text: "Waldron Tower, (Call Sign), request pattern Low-Key." },
+  { who: "TWR", text: "(Call Sign), Pattern Low-Key Approved at or below 2000’." }
+];
+
+const WALDRON_EAST_DEPARTURE_COMMS = [ // 2-46
+  { radio: "CH 8 UHF", who: "AIRCRAFT", text: "Corpus Approach, (Call Sign), Abeam the Power Plant/off Waldron with information ALPHA, course rules SHAMROCK/Request South MUSTANG." }
+];
+
+const SHAMROCK_COMMS = [ // 2-63
+  { radio: "CH 4 UHF", who: "AIRCRAFT", text: "Navy Corpus Tower, (Call Sign), SHAMROCK, (Full Stop/Touch & Go(s)/Straight-in)" }
+];
+
+const KNGP_INITIAL_COMMS = [ // 2-63
+  { who: "AIRCRAFT", text: "Navy Corpus Tower, (Call Sign), Initial (RWY #)" },
+  { who: "TWR", text: "(Call Sign), Navy Corpus Tower, Report the Numbers (RWY #)" },
+  { when: "At the Numbers…", who: "AIRCRAFT", text: "Navy Corpus Tower, (Call Sign), Numbers (RWY #)" }
+];
+
 export const crFeatures = {
   "Point-default-0" : {
     name : "KTFP",
@@ -366,6 +503,7 @@ export const crFeatures = {
       "<u>PPEL Entry</u>",
       "PPELs are authorized for all runways provided no more than two aircraft (including civilian) are already established in the traffic pattern. PPELs must be flown to the same side as the normal traffic pattern. Aircraft executing a PPEL must announce intentions on CTAF (CH 21 VHF) and report \"High-Key\" on KRKP common (CH 21 UHF)."
     ],
+    comms : ARANSAS_PATTERN_COMMS,
     questions : [
       "A maximum of ___ aircraft are permitted in the pattern, including civilian traffic.",
       "With interval and at a minimum altitude of _____ MSL, turn downwind and climb to pattern altitude.",
@@ -399,6 +537,7 @@ export const crFeatures = {
       "<u>PPEL Entry</u>",
       "PPELs are authorized for all runways provided no more than two aircraft (including civilian) are already established in the traffic pattern. PPELs must be flown to the same side as the normal traffic pattern. Aircraft executing a PPEL must announce intentions on CTAF (CH 21 VHF) and report \"High-Key\" on KRKP common (CH 21 UHF)."
     ],
+    comms : ARANSAS_PATTERN_COMMS,
     questions : [
       "A maximum of ___ aircraft are permitted in the pattern, including civilian traffic.",
       "With interval and at a minimum altitude of _____ MSL, turn downwind and climb to pattern altitude.",
@@ -429,6 +568,7 @@ export const crFeatures = {
       "<u>GOLIAD/KINGS 4 MOA</u>",
       "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
     ],
+    comms : ARANSAS_ARRIVAL_COMMS,
     questions : [
       "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
       "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
@@ -457,6 +597,7 @@ export const crFeatures = {
       "<u>GOLIAD/KINGS 4 MOA</u>",
       "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
     ],
+    comms : ARANSAS_ARRIVAL_COMMS,
     questions : [
       "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
       "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
@@ -485,6 +626,7 @@ export const crFeatures = {
       "<u>GOLIAD/KINGS 4 MOA</u>",
       "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
     ],
+    comms : ARANSAS_ARRIVAL_COMMS,
     questions : [
       "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
       "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
@@ -513,6 +655,7 @@ export const crFeatures = {
       "<u>GOLIAD/KINGS 4 MOA</u>",
       "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
     ],
+    comms : ARANSAS_ARRIVAL_COMMS,
     questions : [
       "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
       "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
@@ -573,6 +716,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "When #1 downwind at the 180, descend to 500' MSL.  Turn northbound to circle around Redfish Point to the east.  Thence climb to pass over the LBJ Causeway at 1500' MSL. Call clear of the field passing 9 Mile Point. Switch Corpus Approach (CH 8 UHF) and state intentions (Northern Arrival/Request a working area).",
+    comms : ARANSAS_DEPARTURE_COMMS,
     questions : ["When #1 downwind at the _____, descend to ___  MSL.  Turn northbound to circle around ______ to the east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["180", "500'", "Redfish Point", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30", "Point-Departures-31"],
@@ -586,6 +730,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "When #1 downwind at the 180, descend to 500' MSL. Going \"feet wet\" turn east. Thence climb to pass over the LBJ Causeway at 1500' MSL. Call clear of the field passing 9 Mile Point. Switch Corpus Approach (CH 8 UHF) and state intentions (Northern Arrival/Request a working area).",
+    comms : ARANSAS_DEPARTURE_COMMS,
     questions : ["When #1 downwind at the _____, descend to ___  MSL.  Going \"_____\" turn east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["180", "500'", "feet wet", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30",],
@@ -599,6 +744,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "When #1 upwind, climb to 500' MSL. Turn northbound to circle around Redfish Point to the east.  Thence climb to pass over the LBJ Causeway at 1500' MSL. Call clear of the field passing 9 Mile Point. Switch Corpus Approach (CH 8 UHF) and state intentions (Northern Arrival/Request a working area).",
+    comms : ARANSAS_DEPARTURE_COMMS,
     questions : ["When #1 upwind, climb to  ___  MSL.  Turn northbound to circle around ______ to the east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["500'", "Redfish Point", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30", "Point-Departures-31"],
@@ -612,6 +758,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "When #1 upwind, climb to 500' MSL. Going \"feet wet\" turn east. Thence climb to pass over the LBJ Causeway at 1500' MSL. Call clear of the field passing 9 Mile Point. Switch Corpus Approach (CH 8 UHF) and state intentions (Northern Arrival/Request a working area).",
+    comms : ARANSAS_DEPARTURE_COMMS,
     questions : ["When #1 upwind, climb to ___  MSL.  Going \"_____\" turn east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["500'", "feet wet", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30",],
@@ -668,6 +815,7 @@ export const crFeatures = {
       "Wave-offs must be made to the pattern side of the active runway at 800' MSL, unless otherwise directed by the RDO.",
       "PPEL/Ps must be performed to the pattern side of the runway with proper interval."
     ],
+    comms : GOLIAD_PATTERN_COMMS,
     questions : [
       "The pattern will be limited to a maximum of _____ aircraft.  The maximum number may be reduced at the discretion of the RDO.",
       "Wave-offs must be made to the _____ side of the active runway at _____ MSL, unless otherwise directed by the RDO."
@@ -688,6 +836,7 @@ export const crFeatures = {
       "Wave-offs must be made to the pattern side of the active runway at 800' MSL, unless otherwise directed by the RDO.",
       "PPEL/Ps must be performed to the pattern side of the runway with proper interval."
     ],
+    comms : GOLIAD_PATTERN_COMMS,
     questions : [
       "The pattern will be limited to a maximum of _____ aircraft.  The maximum number may be reduced at the discretion of the RDO.",
       "Wave-offs must be made to the _____ side of the active runway at _____ MSL, unless otherwise directed by the RDO."
@@ -717,6 +866,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Aircraft must enter via a 4 NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the 4 NM initial point at no greater than a 45-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset 1/4 WTD from the extended runway centerline to the pattern side of the runway for the break.",
+    comms : GOLIAD_ARRIVAL_COMMS,
     questions : [ "Aircraft must enter via a ____ NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the ___ NM initial point at no greater than a ____-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset ____ WTD from the extended runway centerline to the pattern side of the runway for the break."],
     answers : [["4", "4", "45", "1/4"]],
     dependentNode: [],
@@ -730,6 +880,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Aircraft must enter via a 4 NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the 4 NM initial point at no greater than a 45-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset 1/4 WTD from the extended runway centerline to the pattern side of the runway for the break.",
+    comms : GOLIAD_ARRIVAL_COMMS,
     questions : [ "Aircraft must enter via a ____ NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the ___ NM initial point at no greater than a ____-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset ____ WTD from the extended runway centerline to the pattern side of the runway for the break."],
     answers : [["4", "4", "45", "1/4"]],
     dependentNode: [],
@@ -743,6 +894,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Aircraft must enter via a 4 NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the 4 NM initial point at no greater than a 45-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset 1/4 WTD from the extended runway centerline to the pattern side of the runway for the break.",
+    comms : GOLIAD_ARRIVAL_COMMS,
     questions : [ "Aircraft must enter via a ____ NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the ___ NM initial point at no greater than a ____-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset ____ WTD from the extended runway centerline to the pattern side of the runway for the break."],
     answers : [["4", "4", "45", "1/4"]],
     dependentNode: [],
@@ -756,6 +908,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Aircraft must enter via a 4 NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the 4 NM initial point at no greater than a 45-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset 1/4 WTD from the extended runway centerline to the pattern side of the runway for the break.",
+    comms : GOLIAD_ARRIVAL_COMMS,
     questions : [ "Aircraft must enter via a ____ NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the ___ NM initial point at no greater than a ____-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset ____ WTD from the extended runway centerline to the pattern side of the runway for the break."],
     answers : [["4", "4", "45", "1/4"]],
     dependentNode: [],
@@ -777,6 +930,7 @@ export const crFeatures = {
       "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
       "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
     ],
+    comms : GOLIAD_DEPARTURE_COMMS,
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
@@ -798,6 +952,7 @@ export const crFeatures = {
       "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
       "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
     ],
+    comms : GOLIAD_DEPARTURE_COMMS,
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
@@ -819,6 +974,7 @@ export const crFeatures = {
       "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
       "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
     ],
+    comms : GOLIAD_DEPARTURE_COMMS,
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
@@ -840,6 +996,7 @@ export const crFeatures = {
       "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
       "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
     ],
+    comms : GOLIAD_DEPARTURE_COMMS,
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
@@ -894,6 +1051,7 @@ export const crFeatures = {
       "Wave-offs will be made to the pattern side of the active runway at 500' MSL, unless otherwise directed by Tower.",
       "CAUTION: aircraft will remain south of the Flour Bluff Water Tower to avoid conflicts with NAS Corpus Christi traffic."
     ],
+    comms : WALDRON_PATTERN_COMMS,
     questions : [
       "Waldron Tower's airspace extends from the surface to _____ MSL. The pattern will be limited to a maximum of ____ aircraft.",
       "After takeoff, climb on runway heading to a maximum altitude of _____ MSL. When cleared by tower and at a minimum of _____ MSL, turn downwind and continue climb to pattern altitude.",
@@ -930,6 +1088,7 @@ export const crFeatures = {
       "Wave-offs will be made to the pattern side of the active runway at 500' MSL, unless otherwise directed by Tower.",
       "CAUTION: aircraft will remain south of the Flour Bluff Water Tower to avoid conflicts with NAS Corpus Christi traffic."
     ],
+    comms : WALDRON_PATTERN_COMMS,
     questions : [
       "Waldron Tower's airspace extends from the surface to _____ MSL. The pattern will be limited to a maximum of ____ aircraft.",
       "After takeoff, climb on runway heading to a maximum altitude of _____ MSL. When cleared by tower and at a minimum of _____ MSL, turn downwind and continue climb to pattern altitude.",
@@ -1124,6 +1283,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River.  Turn to intercept the extended centerline of the runway in use and report the \"initial\" to Waldron Tower.",
+    comms : WALDRON_OSO_CALLS,
     questions : ["Proceed at _____ KIAS, ______ MSL from the west side of the ______ southwest, remaining _____ WTD west of the Oso River.  Turn to intercept the extended centerline of the runway in use and report the \"initial\" to Waldron Tower."],
     answers : [["200", "1000'", "Oso Bridge", "1/2"]],
     dependentNode: [],
@@ -1137,6 +1297,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River.  Turn to intercept the extended centerline of the runway in use and report the \"initial\" to Waldron Tower.",
+    comms : WALDRON_OSO_CALLS,
     questions : ["Proceed at _____ KIAS, ______ MSL from the west side of the ______ southwest, remaining _____ WTD west of the Oso River.  Turn to intercept the extended centerline of the runway in use and report the \"initial\" to Waldron Tower."],
     answers : [["200", "1000'", "Oso Bridge", "1/2"]],
     dependentNode: [],
@@ -1150,6 +1311,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River toward the southwest corner of the Cooling Ponds.  Abeam the Cooling Ponds turn left and proceed along the southern edge of the Cooling Ponds and report the \"initial\" to Waldron Tower.",
+    comms : WALDRON_OSO_CALLS,
     questions : ["Proceed at _____ KIAS, _____ MSL from the west side of the _____ southwest, remaining ____ WTD west of the Oso River toward the southwest corner of the ______.  Abeam the ______ turn left and proceed along the southern edge of the ______ and report the \"initial\" to Waldron Tower."],
     answers : [["200", "1000'", "Oso Bridge", "1/2", "Cooling Ponds", "Cooling Ponds", "Cooling Ponds"]],
     dependentNode: ["Point-Arrivals-63", "Point-Arrivals-64", "Point-Arrivals-65", "Point-Arrivals-66"],
@@ -1163,6 +1325,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River toward the southwest corner of the Cooling Ponds.  Abeam the Cooling Ponds turn left and proceed along the southern edge of the Cooling Ponds and report the \"initial\" to Waldron Tower.",
+    comms : WALDRON_OSO_CALLS,
     questions : ["Proceed at _____ KIAS, _____ MSL from the west side of the _____ southwest, remaining ____ WTD west of the Oso River toward the southwest corner of the ______.  Abeam the ______ turn left and proceed along the southern edge of the ______ and report the \"initial\" to Waldron Tower."],
     answers : [["200", "1000'", "Oso Bridge", "1/2", "Cooling Ponds", "Cooling Ponds", "Cooling Ponds"]],
     dependentNode: ["Point-Arrivals-63", "Point-Arrivals-64", "Point-Arrivals-66"],
@@ -1374,6 +1537,7 @@ export const crFeatures = {
       "Fly to the Camel Humps and terminate with Corpus Approach.  Contact Waldron Tower (CH 30 UHF).  Proceed north up the shoreline toward the Shrimp Ponds, paralleling the Intracoastal Waterway at 1000' MSL and 200 KIAS. At the Shrimp Ponds, turn left and proceed to the southwest corner of the Cooling Ponds.  Remain along the west side of the Oso River.  Call the \"initial\" over the Yorktown Bridge.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by Tower. Remain south of the Flour Bluff Water Tower",
       "If two-way radio communication is not established with Waldron Tower by the Shrimp Ponds, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly south along the center of the intracoastal waterway.  Maintain 1000' MSL and contact Corpus Approach (CH 8)."
     ],
+    comms : WALDRON_ARRIVAL_COMMS,
     questions : [
       "Fly to the _____ and terminate with Corpus Approach.  Contact Waldron Tower (CH ____ UHF).  Proceed north up the shoreline toward the _____, paralleling the Intracoastal Waterway at _____ MSL and _____ KIAS. At the _____, turn left and proceed to the southwest corner of the ______.  Remain along the west side of the Oso River.  Call the \"initial\" over the ______.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by Tower. Remain south of the ______",
       "If two-way radio communication is not established with Waldron Tower by the _______, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly ______ along the center of the intracoastal waterway.  Maintain _____ MSL and contact Corpus Approach (CH ____)."
@@ -1396,6 +1560,7 @@ export const crFeatures = {
       "Fly to the Camel Humps and terminate with Corpus Approach.  Contact Waldron Tower (CH 30 UHF).  Proceed north up the shoreline toward the Shrimp Ponds, paralleling the Intracoastal Waterway at 1000' MSL and 200 KIAS. At the Shrimp Ponds, turn left and proceed to the southwest corner of the Cooling Ponds.  Remain along the west side of the Oso River.  Call the \"initial\" over the Yorktown Bridge.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by Tower. Remain south of the Flour Bluff Water Tower",
       "If two-way radio communication is not established with Waldron Tower by the Shrimp Ponds, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly south along the center of the intracoastal waterway.  Maintain 1000' MSL and contact Corpus Approach (CH 8)."
     ],
+    comms : WALDRON_ARRIVAL_COMMS,
     questions : [
       "Fly to the _____ and terminate with Corpus Approach.  Contact Waldron Tower (CH ____ UHF).  Proceed north up the shoreline toward the _____, paralleling the Intracoastal Waterway at _____ MSL and _____ KIAS. At the _____, turn left and proceed to the southwest corner of the ______.  Remain along the west side of the Oso River.  Call the \"initial\" over the ______.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by Tower. Remain south of the ______",
       "If two-way radio communication is not established with Waldron Tower by the _______, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly ______ along the center of the intracoastal waterway.  Maintain _____ MSL and contact Corpus Approach (CH ____)."
@@ -1418,6 +1583,7 @@ export const crFeatures = {
       "Fly to the Camel Humps and terminate with Corpus Approach.  Contact Waldron Tower (CH 30 UHF).  Proceed north up the shoreline toward the Shrimp Ponds, paralleling the Intracoastal Waterway at 1000' MSL and 200 KIAS. At the Shrimp Ponds,  call “Initial” abeam the Shrimp Ponds.  Remain west of the Waldron Power Plant for RWY 36 and east of the Waldron Power Plant for RWY 31.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by tower.",
       "If two-way radio communication is not established with Waldron Tower by the Shrimp Ponds, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly south along the center of the intracoastal waterway.  Maintain 1000' MSL and contact Corpus Approach (CH 8)."
     ],
+    comms : WALDRON_ARRIVAL_COMMS,
     questions : [
       "Fly to the _____ and terminate with Corpus Approach.  Contact Waldron Tower (CH ____ UHF).  Proceed north up the shoreline toward the _____, paralleling the Intracoastal Waterway at _____ MSL and _____ KIAS. At the _____,  call “Initial” abeam the ______.  Remain west of the _______ for RWY 36 and east of the _______ for RWY 31.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by tower. ",
       "If two-way radio communication is not established with Waldron Tower by the _______, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly ______ along the center of the intracoastal waterway.  Maintain _____ MSL and contact Corpus Approach (CH ____)."
@@ -1440,6 +1606,7 @@ export const crFeatures = {
       "Fly to the Camel Humps and terminate with Corpus Approach.  Contact Waldron Tower (CH 30 UHF).  Proceed north up the shoreline toward the Shrimp Ponds, paralleling the Intracoastal Waterway at 1000' MSL and 200 KIAS. At the Shrimp Ponds,  call “Initial” abeam the Shrimp Ponds.  Remain west of the Waldron Power Plant for RWY 36 and east of the Waldron Power Plant for RWY 31.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by tower.",
       "If two-way radio communication is not established with Waldron Tower by the Shrimp Ponds, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly south along the center of the intracoastal waterway.  Maintain 1000' MSL and contact Corpus Approach (CH 8)."
     ],
+    comms : WALDRON_ARRIVAL_COMMS,
     questions : [
       "Fly to the _____ and terminate with Corpus Approach.  Contact Waldron Tower (CH ____ UHF).  Proceed north up the shoreline toward the _____, paralleling the Intracoastal Waterway at _____ MSL and _____ KIAS. At the _____,  call “Initial” abeam the ______.  Remain west of the _______ for RWY 36 and east of the _______ for RWY 31.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by tower. ",
       "If two-way radio communication is not established with Waldron Tower by the _______, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly ______ along the center of the intracoastal waterway.  Maintain _____ MSL and contact Corpus Approach (CH ____)."
@@ -1472,6 +1639,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb/Descend to 500' MSL. When #1 upwind. Fly RWY HDG and accelerate to 240 KIAS. Thence turn eastbound to avoid the Power Plant.  Once feet wet, turn to cross Padre Island (~120°).  Remain north of the Padre Island National Seashore but south of the Padre Island residential areas.  Maintain 500' MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH 8 UHF) with request.  Crossing the beach line, climb to 1000' MSL and join the Southern Arrival.",
+    comms : WALDRON_EAST_DEPARTURE_COMMS,
     questions : ["Climb/Descend to _____ MSL. When #1 upwind. Fly ____ HDG and accelerate to ___  KIAS. Thence turn eastbound to avoid the ______.  Once feet wet, turn to cross Padre Island (~_____).  Remain _____ of the Padre Island National Seashore but ______ of the Padre Island residential areas.  Maintain _____ MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH ___ UHF) with request.  Crossing the beach line, climb to ______ MSL and join the Southern Arrival."],
     answers : [["500'", "RWY", "240", "Power Plant", "120°", "north", "south", "500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-90", "Point-Arrivals-79"],
@@ -1485,6 +1653,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb/Descend to 500' MSL. When #1 upwind. Fly RWY HDG and accelerate to 240 KIAS. Thence turn eastbound to avoid the Power Plant.  Once feet wet, turn to cross Padre Island (~120°).  Remain north of the Padre Island National Seashore but south of the Padre Island residential areas.  Maintain 500' MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH 8 UHF) with request.  Crossing the beach line, climb to 1000' MSL and join the Southern Arrival.",
+    comms : WALDRON_EAST_DEPARTURE_COMMS,
     questions : ["Climb/Descend to _____ MSL. When #1 upwind. Fly ____ HDG and accelerate to ___  KIAS. Thence turn eastbound to avoid the ______.  Once feet wet, turn to cross Padre Island (~_____).  Remain _____ of the Padre Island National Seashore but ______ of the Padre Island residential areas.  Maintain _____ MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH ___ UHF) with request.  Crossing the beach line, climb to ______ MSL and join the Southern Arrival."],
     answers : [["500'", "RWY", "240", "Power Plant", "120°", "north", "south", "500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-90", "Point-Arrivals-79"],
@@ -1498,6 +1667,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb/Descend to 500' MSL. When #1 downwind at the 180. Fly reciprocal runway HDG and accelerate to 240 KIAS. Thence turn eastbound to avoid the Power Plant.  Once feet wet, turn to cross Padre Island (~120°).  Remain north of the Padre Island National Seashore but south of the Padre Island residential areas.  Maintain 500' MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH 8 UHF) with request.  Crossing the beach line, climb to 1000' MSL and join the Southern Arrival.",
+    comms : WALDRON_EAST_DEPARTURE_COMMS,
     questions : ["Climb/Descend to _____ MSL. When #1 downwind at the 180. Fly ____ HDG and accelerate to ___  KIAS. Thence turn eastbound to avoid the ______.  Once feet wet, turn to cross Padre Island (~_____).  Remain _____ of the Padre Island National Seashore but ______ of the Padre Island residential areas.  Maintain _____ MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH ___ UHF) with request.  Crossing the beach line, climb to ______ MSL and join the Southern Arrival."],
     answers : [["500'", "reciprocal runway", "240", "Power Plant", "120°", "north", "south", "500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-90", "Point-Arrivals-79"],
@@ -1511,6 +1681,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb/Descend to 500' MSL. When #1 downwind at the 180. Fly reciprocal runway HDG and accelerate to 240 KIAS. Thence turn eastbound to avoid the Power Plant.  Once feet wet, turn to cross Padre Island (~120°).  Remain north of the Padre Island National Seashore but south of the Padre Island residential areas.  Maintain 500' MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH 8 UHF) with request.  Crossing the beach line, climb to 1000' MSL and join the Southern Arrival.",
+    comms : WALDRON_EAST_DEPARTURE_COMMS,
     questions : ["Climb/Descend to _____ MSL. When #1 downwind at the 180. Fly ____ HDG and accelerate to ___  KIAS. Thence turn eastbound to avoid the ______.  Once feet wet, turn to cross Padre Island (~_____).  Remain _____ of the Padre Island National Seashore but ______ of the Padre Island residential areas.  Maintain _____ MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH ___ UHF) with request.  Crossing the beach line, climb to ______ MSL and join the Southern Arrival."],
     answers : [["500'", "reciprocal runway", "240", "Power Plant", "120°", "north", "south", "500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-90", "Point-Arrivals-79"],
@@ -1811,11 +1982,12 @@ export const crFeatures = {
     category : "Point",
     description : "",
     customDescription : [
-      "At PT SHAMROCK, slow to 200 KIAS, contact Navy Corpus Tower (CH 4 UHF), state intentions, and proceed as follows... AIRCRAFT:  “Navy Corpus Tower, (Call Sign), SHAMROCK, (Full Stop/Touch & Go(s)/Straight-in)” ",
+      "At PT SHAMROCK, slow to 200 KIAS, contact Navy Corpus Tower (CH 4 UHF), state intentions, and proceed as follows...",
       "The preferred procedure for the VFR straight-in will be to fly the normal ground track. At PT SHAMROCK, slow to 200 KIAS and request a visual straight-in with Tower.",
       "For South flow traffic, RWY s 13 L/R, 18, 22, establish a descent and level off at 800'MSL.  For North flow traffic, RWYs 4, 31 L/R, 36, establish a descent and level off at 500' MSL.",
       "Approaching the initial reporting point ... decelerate below 150 KIAS and configure (gear down and flaps as required).  Complete the Before Landing Checklist."
     ],
+    comms : SHAMROCK_COMMS,
     questions : [
       "At PT SHAMROCK, slow to ____ KIAS, contact Navy Corpus Tower (CH __ UHF), state intentions, and proceed as follows... AIRCRAFT:  “Navy Corpus Tower, (Call Sign), SHAMROCK, (Full Stop/Touch & Go(s)/Straight-in)” ",
       "The preferred procedure for the VFR straight-in will be to fly the normal ground track. At PT SHAMROCK, slow to ____ KIAS and request a visual straight-in with Tower.",
@@ -1852,6 +2024,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 22",
+    comms : KNGP_INITIAL_COMMS,
     questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence...   Report initial when crossing the ______"],
     answers : [["TAMUCC", "255", "extended centerline of Runway 22"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
@@ -1865,6 +2038,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence... Report initial upon reaching extended centerline of Runway 22 (no later than 3 NM).",
+    comms : KNGP_INITIAL_COMMS,
     questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence... Report initial upon reaching _____ (no later than 3 NM)."],
     answers : [["TAMUCC", "255", "extended centerline of Runway 22"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
@@ -1878,6 +2052,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 18.",
+    comms : KNGP_INITIAL_COMMS,
     questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence...   Report initial when crossing the _____."],
     answers : [["TAMUCC", "255", "extended centerline of Runway 18"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
@@ -1891,6 +2066,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 18.",
+    comms : KNGP_INITIAL_COMMS,
     questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence...   Report initial when crossing the _____."],
     answers : [["TAMUCC", "255", "extended centerline of Runway 18"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
@@ -1943,6 +2119,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Fly towards the high bridge (~200°).  Report the initial abeam PT DIMMIT.  Thence... Turn towards the low bridge and fly west over SPID to intercept NM final. ",
+    comms : KNGP_INITIAL_COMMS,
     questions : ["Fly towards the _____ (~____°).  Report the initial abeam _____.  Thence... Turn towards the _____ and fly west over ____ to intercept NM final. "],
     answers : [["high bridge", "200", "PT DIMMIT", "low bridge", "SPID"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-119", "Point-Arrivals-121", "Point-Arrivals-120"],
@@ -1956,6 +2133,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Fly towards the high bridge (~200°).  Report the initial abeam PT DIMMIT.  Thence... Turn towards the low bridge and fly west over SPID to intercept NM final. ",
+    comms : KNGP_INITIAL_COMMS,
     questions : ["Fly towards the _____ (~____°).  Report the initial abeam _____.  Thence... Turn towards the _____ and fly west over ____ to intercept NM final. "],
     answers : [["high bridge", "200", "PT DIMMIT", "low bridge", "SPID"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-119", "Point-Arrivals-121", "Point-Arrivals-120"],
@@ -1969,6 +2147,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Fly towards the high bridge (~200°).  Report the initial abeam PT DIMMIT.  Thence... Turn right and proceed direct to the runway numbers.  Report the runway numbers for the Overhead Maneuver.",
+    comms : KNGP_INITIAL_COMMS,
     questions : ["Fly towards the _____ (~____°).  Report the initial abeam _____.  Thence... Turn right and proceed direct to the runway numbers.  Report the runway numbers for the Overhead Maneuver."],
     answers : [["high bridge", "200", "PT DIMMIT"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-119", "Point-Arrivals-121"],
@@ -1982,6 +2161,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Fly towards the high bridge (~200°).  Report the initial abeam PT DIMMIT.  Thence... Turn right and proceed direct to the runway numbers.  Report the runway numbers for the Overhead Maneuver.",
+    comms : KNGP_INITIAL_COMMS,
     questions : ["Fly towards the _____ (~____°).  Report the initial abeam _____.  Thence... Turn right and proceed direct to the runway numbers.  Report the runway numbers for the Overhead Maneuver."],
     answers : [["high bridge", "200", "PT DIMMIT"]],
     dependentNode: ["Point-Arrivals-113", "Point-Arrivals-119", "Point-Arrivals-121"],
@@ -2012,6 +2192,7 @@ export const crFeatures = {
       "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
       "Depart from the downwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
     ],
+    comms : OSO_COMMS,
     questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
     answers : [["downwind", "1000'", "200", "Oso Bridge"]],
     dependentNode: ["Point-Arrivals-126", "Point-default-95"],
@@ -2029,6 +2210,7 @@ export const crFeatures = {
       "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
       "Depart from the downwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
     ],
+    comms : OSO_COMMS,
     questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
     answers : [["downwind", "1000'", "200", "Oso Bridge"]],
     dependentNode: ["Point-Arrivals-126", "Point-default-95"],
@@ -2046,6 +2228,7 @@ export const crFeatures = {
       "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
       "Depart from the downwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
     ],
+    comms : OSO_COMMS,
     questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
     answers : [["downwind", "1000'", "200", "Oso Bridge"]],
     dependentNode: ["Point-Arrivals-126", "Point-default-95"],
@@ -2063,6 +2246,7 @@ export const crFeatures = {
       "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
       "Depart from the crosswind turn. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
     ],
+    comms : OSO_COMMS,
     questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
     answers : [["crosswind turn", "1000'", "200", "Oso Bridge"]],
     dependentNode: ["Point-Arrivals-126", "Point-default-95"],
@@ -2080,6 +2264,7 @@ export const crFeatures = {
       "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
       "Depart upwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
     ],
+    comms : OSO_COMMS,
     questions : ["Depart ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
     answers : [["upwind", "1000'", "200", "Oso Bridge"]],
     dependentNode: ["Point-Arrivals-126", "Point-default-95"],
@@ -2097,6 +2282,7 @@ export const crFeatures = {
       "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
       "Depart from the crosswind turn. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
     ],
+    comms : OSO_COMMS,
     questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
     answers : [["crosswind turn", "1000'", "200", "Oso Bridge"]],
     dependentNode: ["Point-Arrivals-126", "Point-default-95"],
@@ -2114,6 +2300,7 @@ export const crFeatures = {
       "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
       "Depart upwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
     ],
+    comms : OSO_COMMS,
     questions : ["Depart ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
     answers : [["upwind", "1000'", "200", "Oso Bridge"]],
     dependentNode: ["Point-Arrivals-126", "Point-default-95"],
@@ -2131,6 +2318,7 @@ export const crFeatures = {
       "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
       "Depart from the downwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
     ],
+    comms : OSO_COMMS,
     questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
     answers : [["downwind", "1000'", "200", "Oso Bridge"]],
     dependentNode: ["Point-Arrivals-126", "Point-default-95"],
@@ -2274,6 +2462,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    comms : BEACH_LINE_COMMS,
     questions : ["Climb to _____ MSL, _____ KIAS on ___ HDG. When clear of the pattern turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
     answers : [["500'", "200", "RWY", "105", "2500'", "8", "1000'"]],
     dependentNode: [],
@@ -2287,6 +2476,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb to 500' MSL, 200 KIAS on HDG 125° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    comms : BEACH_LINE_COMMS,
     questions : ["Climb to _____ MSL, _____ KIAS on HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
     answers : [["500'", "200", "125", "High Bridge", "105", "2500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-144"],
@@ -2300,6 +2490,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb to 500' MSL, 200 KIAS on HDG 135° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    comms : BEACH_LINE_COMMS,
     questions : ["Climb to _____ MSL, _____ KIAS on HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
     answers : [["500'", "200", "135", "High Bridge", "105", "2500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-144"],
@@ -2313,6 +2504,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb to 500' MSL, 200 KIAS on turn left to HDG 105° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    comms : BEACH_LINE_COMMS,
     questions : ["Climb to _____ MSL, _____ KIAS on turn left to HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
     answers : [["500'", "200", "105", "High Bridge", "105", "2500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-144"],
@@ -2326,6 +2518,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb to 500' MSL, 200 KIAS on turn left to HDG 105° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    comms : BEACH_LINE_COMMS,
     questions : ["Climb to _____ MSL, _____ KIAS on turn left to HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
     answers : [["500'", "200", "105", "High Bridge", "105", "2500'", "8", "1000'"]],
     dependentNode: ["Point-Departures-144"],
@@ -2339,6 +2532,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb to 500' MSL, 200 KIAS on HDG 305°. When cleared by tower turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    comms : BEACH_LINE_COMMS,
     questions : ["Climb to _____ MSL, _____ KIAS on HDG ____°. When cleared by tower turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
     answers : [["500'", "200", "305", "105", "2500'", "8", "1000'"]],
     dependentNode: [],
@@ -2352,6 +2546,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb to 500' MSL, 200 KIAS on HDG 315°. When clear of the pattern, turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    comms : BEACH_LINE_COMMS,
     questions : ["Climb to _____ MSL, _____ KIAS on HDG ____°. When clear of the pattern, turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
     answers : [["500'", "200", "315", "105", "2500'", "8", "1000'"]],
     dependentNode: [],
@@ -2365,6 +2560,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
+    comms : BEACH_LINE_COMMS,
     questions : ["Climb to _____ MSL, _____ KIAS on ___ HDG. When clear of the pattern turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
     answers : [["500'", "200", "RWY", "105", "2500'", "8", "1000'"]],
     dependentNode: [],
@@ -2485,6 +2681,7 @@ export const crFeatures = {
       "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern, turn to point RUSTY HDG ~ 010. Thence",
       "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
     ],
+    comms : RUSTY_COMMS,
     questions : [
       "Climb to _____ MSL, ____ KIAS on _____ HDG.  When _____, turn to point _____ HDG ____. Thence",
       "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
@@ -2507,6 +2704,7 @@ export const crFeatures = {
       "HDG 125° until High Bridge.  Thence.",
       "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
     ],
+    comms : RUSTY_COMMS,
     questions : [
       "HDG ____ until ______.  Thence.",
       "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
@@ -2529,6 +2727,7 @@ export const crFeatures = {
       "HDG 135° until High Bridge.  Thence.",
       "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
     ],
+    comms : RUSTY_COMMS,
     questions : [
       "HDG ____ until ______.  Thence.",
       "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
@@ -2551,6 +2750,7 @@ export const crFeatures = {
       "When clear of the pattern, execute left turn to HDG 105° until High Bridge.  Thence",
       "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
     ],
+    comms : RUSTY_COMMS,
     questions : [
       "When ____, execute left turn to HDG ____ until ____.  Thence",
       "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
@@ -2573,6 +2773,7 @@ export const crFeatures = {
       "When clear of the pattern, execute left turn to HDG 105° until High Bridge.  Thence",
       "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
     ],
+    comms : RUSTY_COMMS,
     questions : [
       "When ____, execute left turn to HDG ____ until ____.  Thence",
       "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
@@ -2595,6 +2796,7 @@ export const crFeatures = {
       "HDG 305°.  When cleared by tower:",
       "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
     ],
+    comms : RUSTY_COMMS,
     questions : [
       "HDG ____.  _______",
       "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
@@ -2617,6 +2819,7 @@ export const crFeatures = {
       "HDG 315°.  When clear of pattern:",
       "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
     ],
+    comms : RUSTY_COMMS,
     questions : [
       "HDG ____.  _______",
       "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
@@ -2639,6 +2842,7 @@ export const crFeatures = {
       "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern, turn to point RUSTY HDG ~ 360. Thence",
       "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
     ],
+    comms : RUSTY_COMMS,
     questions : [
       "Climb to _____ MSL, ____ KIAS on _____ HDG.  When _____, turn to point _____ HDG ____. Thence",
       "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
@@ -2661,6 +2865,7 @@ export const crFeatures = {
       "Upon reaching PT SUNRISE, contact Cabaniss Tower (CH 27 UHF) or Corpus Christi Tower (as directed) and continue westbound. Do not fly south of SPID before the Crosstown Expressway.",
       "Transitions will be limited to a one-in/one-out operation at 1000' MSL when directed by ATC or when weather/ceilings preclude a climb to 1500' MSL."
     ],
+    comms : [CABANISS_NUECES_CALL],
     questions : [
       "Upon reaching PT SUNRISE, contact Cabaniss Tower (CH ___ UHF) or Corpus Christi Tower (as directed) and continue westbound. Do not fly south of ____ before the ______."
     ],
@@ -2678,6 +2883,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make left turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
+    comms : NUECES_COMMS,
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'","left", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
@@ -2691,6 +2897,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make right turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
+    comms : NUECES_COMMS,
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
@@ -2704,6 +2911,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make right turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
+    comms : NUECES_COMMS,
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
@@ -2717,6 +2925,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make right turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
+    comms : NUECES_COMMS,
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
@@ -2730,6 +2939,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make right turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
+    comms : NUECES_COMMS,
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
@@ -2743,6 +2953,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make left turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
+    comms : NUECES_COMMS,
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'", "left", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
@@ -2756,6 +2967,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make left turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
+    comms : NUECES_COMMS,
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'", "left", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
@@ -2769,6 +2981,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make left turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
+    comms : NUECES_COMMS,
     questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
     answers : [["RWY", "500'", "left", "1500'", "SPID", "PT SUNRISE", "200"]],
     dependentNode: ["Point-Arrivals-169" ],
@@ -2795,6 +3008,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make left turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
+    comms : PORTLAND_COMMS,
     questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
     answers : [["RWY", "500'", "left", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
     dependentNode: ["Point-Departures-178"],
@@ -2808,6 +3022,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make left turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
+    comms : PORTLAND_COMMS,
     questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
     answers : [["RWY", "500'", "left", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
     dependentNode: ["Point-Departures-178"],
@@ -2821,6 +3036,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make left turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
+    comms : PORTLAND_COMMS,
     questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
     answers : [["RWY", "500'", "left", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
     dependentNode: ["Point-Departures-178"],
@@ -2834,6 +3050,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make left turn HDG 025°. At 5 DME turn left HDG 320°. Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
+    comms : PORTLAND_COMMS,
     questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make ____ turn HDG _____. At _____ DME turn left HDG _____. Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
     answers : [["RWY", "500'", "left", "025°", "5", "320°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
     dependentNode: ["Point-Departures-178"],
@@ -2847,6 +3064,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make right turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
+    comms : PORTLAND_COMMS,
     questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
     answers : [["RWY", "500'", "right", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
     dependentNode: ["Point-Departures-178"],
@@ -2860,6 +3078,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make right turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
+    comms : PORTLAND_COMMS,
     questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
     answers : [["RWY", "500'", "right", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
     dependentNode: ["Point-Departures-178"],
@@ -2873,6 +3092,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make right turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
+    comms : PORTLAND_COMMS,
     questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
     answers : [["RWY", "500'", "right", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
     dependentNode: ["Point-Departures-178"],
@@ -2886,6 +3106,7 @@ export const crFeatures = {
     category : "Routes",
     description : "",
     customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make right turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
+    comms : PORTLAND_COMMS,
     questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
     answers : [["RWY", "500'", "right", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
     dependentNode: ["Point-Departures-178"],
@@ -2966,6 +3187,7 @@ export const crFeatures = {
     category : "Working Areas",
     description : "",
     customDescription : MUSTANG_NORTH_AREAS_1_2_DESCRIPTION,
+    comms : MUSTANG_EXIT_COMMS,
     questions : [
       "Working altitudes are ____ MSL to _____ MSL (Up to _____ MSL available upon request with Corpus Approach).",
       "WARNING!  maintain a ___ NM stand-off from MUSTANG Beach Airport (KRAS) below _____ MSL when parajumping operations are in effect.",
@@ -2989,6 +3211,7 @@ export const crFeatures = {
     category : "Working Areas",
     description : "",
     customDescription : MUSTANG_AREAS_5_6_7_8_DESCRIPTION,
+    comms : MUSTANG_EXIT_COMMS,
     questions : [],
     answers : [],
     dependentNode: [],
@@ -3002,6 +3225,7 @@ export const crFeatures = {
     category : "Working Areas",
     description : "",
     customDescription : MUSTANG_NORTH_AREAS_1_2_DESCRIPTION,
+    comms : MUSTANG_EXIT_COMMS,
     questions : [],
     answers : [],
     dependentNode: ["Airspace-default-37"],
@@ -3015,6 +3239,7 @@ export const crFeatures = {
     category : "Working Areas",
     description : "",
     customDescription : MUSTANG_AREAS_5_6_7_8_DESCRIPTION,
+    comms : MUSTANG_EXIT_COMMS,
     questions : [],
     answers : [],
     dependentNode: [],
@@ -3035,6 +3260,7 @@ export const crFeatures = {
       "<u>Exit</u>",
       "Prior to departing the area, make a \"99\" call on Central Common (CH 18 UHF) stating intentions and contact Corpus Approach on CH 8 UHF.  Advise complete in the working area and state intentions. If joining course rules, initiate a descent after clearing the lateral boundaries of the Central area, just north of Fish Pass, remaining clear of the maintenance area and other Central area traffic. Heading east, perpendicular to the beach line ( ~ 105°), turn LEFT towards PT SHAMROCK upon reaching 14 DME or 1/2 working altitude, whichever comes first . Maintain 1000' MSL and join the Eastern Arrival to PT SHAMROCK."
     ],
+    comms : MUSTANG_CENTRAL_COMMS,
     questions : [],
     answers : [],
     dependentNode: [],
@@ -3066,6 +3292,7 @@ export const crFeatures = {
     category : "Working Areas",
     description : "",
     customDescription : MUSTANG_SOUTH_AREAS_3_4_DESCRIPTION,
+    comms : MUSTANG_EXIT_COMMS,
     questions : [],
     answers : [],
     dependentNode: [],
@@ -3079,6 +3306,7 @@ export const crFeatures = {
     category : "Working Areas",
     description : "",
     customDescription : MUSTANG_AREAS_5_6_7_8_DESCRIPTION,
+    comms : MUSTANG_EXIT_COMMS,
     questions : [],
     answers : [],
     dependentNode: [],
@@ -3092,6 +3320,7 @@ export const crFeatures = {
     category : "Working Areas",
     description : "",
     customDescription : MUSTANG_SOUTH_AREAS_3_4_DESCRIPTION,
+    comms : MUSTANG_EXIT_COMMS,
     questions : [],
     answers : [],
     dependentNode: [],
@@ -3105,6 +3334,7 @@ export const crFeatures = {
     category : "Working Areas",
     description : "",
     customDescription : MUSTANG_AREAS_5_6_7_8_DESCRIPTION,
+    comms : MUSTANG_EXIT_COMMS,
     questions : [],
     answers : [],
     dependentNode: [],
@@ -3121,6 +3351,7 @@ export const crFeatures = {
       "Reaching PT RUSTY, turn right towards Bayside (~360°), climb to 14,500 MSL, and execute the area entry procedures.",
       "When directed by Corpus Christi Approach, contact Houston Center (CH 22 VHF). Once cleared to enter the MOA by Houston Center, claim a working block on KINGS 4 MOA Common (CH 20 UHF). Enter the MOA laterally utilizing the transition layer and proceed direct to your working block. Once established above/below, descend/climb into your working block. Maintain a listening watch with Houston Center."
     ],
+    comms : KINGS_ENTRY_COMMS,
     questions : [
       "Reaching PT RUSTY, turn right towards ______ (~_____), climb to ______ MSL, and execute the area entry procedures.",
       "When directed by Corpus Christi Approach, contact Houston Center (CH ___ VHF). Once cleared to enter the MOA by Houston Center, claim a working block on KINGS 4 MOA Common (CH ___ UHF)."
@@ -3140,6 +3371,7 @@ export const crFeatures = {
     category : "Working Areas",
     description : "",
     customDescription : "Descend within the lateral confines of the KINGS 4 MOA to 2500' MSL. Upon reaching 2500' MSL proceed direct to Woodsboro. Cross Woodsboro at 2500' MSL and Contact Corpus Approach CH 6 UHF with intentions. Fly ~145° to Bayside. Passing Bayside, terminate with Corpus Approach and switch KRKP CTAF CH 21 VHF and CH 21 UHF to self-announce. Execute Aransas County entry procedures.",
+    comms : KINGS_EXIT_COMMS,
     questions : [
       "Descend within the lateral confines of the KINGS 4 MOA to _____ MSL. Upon reaching 2500' MSL proceed direct to ______. Cross Woodsboro at _____ MSL and Contact Corpus Approach CH ___ UHF with intentions. Fly ~_____ to ______."
     ],
