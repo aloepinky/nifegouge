@@ -677,7 +677,7 @@ function TW4JetLog() {
         }
       };
       return (
-        <td id={cellId} rowSpan={rowSpan || undefined} colSpan={colSpan || undefined} style={{padding: 0, border: '1px solid black', height: '1px', ...splitFontStyle}}>
+        <td id={cellId} rowSpan={rowSpan || undefined} colSpan={colSpan || undefined} style={{padding: 0, border: '1px solid var(--line-000000)', height: '1px', ...splitFontStyle}}>
           <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
             <div style={{flex: 1, minHeight: 0, borderBottom: '1px solid var(--line-000000)', display: 'flex', alignItems: 'center', padding: '0 3px'}}>
               <input value={top} onChange={e => handleSplitTopChange(e.target.value)} style={{textAlign: 'center', width: '100%', boxSizing: 'border-box', ...splitFontStyle}} />
@@ -1590,7 +1590,7 @@ function TW4JetLog() {
 
   const renderVFRNotesCells = (top) => (
     <>
-      <td rowSpan={2} style={{textAlign: 'center', border: '1px solid black', fontSize: '0.85em', verticalAlign: 'middle', padding: '1px 2px'}}>
+      <td rowSpan={2} style={{textAlign: 'center', border: '1px solid var(--line-000000)', fontSize: '0.85em', verticalAlign: 'middle', padding: '1px 2px'}}>
         {inputValues[`r${top}c8`] || ''}
       </td>
       <td rowSpan={2} style={{fontSize: '0.75em'}}>
@@ -1628,7 +1628,7 @@ function TW4JetLog() {
           {renderCell(`r${top}c7`)}
           {vfrMode ? renderVFRNotesCells(top) : renderCell(`r${top}c8`, 2)}
           {showIntCol && (
-            <td rowSpan={2} style={{border: '1px solid black', padding: ic ? 0 : '2px', height: ic ? '1px' : undefined, textAlign: 'center', verticalAlign: 'middle'}}>
+            <td rowSpan={2} style={{border: '1px solid var(--line-000000)', padding: ic ? 0 : '2px', height: ic ? '1px' : undefined, textAlign: 'center', verticalAlign: 'middle'}}>
               {showIntClimbSelector ? (
                 <input type="checkbox"
                   checked={!!ic}
@@ -1679,13 +1679,13 @@ function TW4JetLog() {
     <React.Fragment>
       <tr>
         {editRowsMode && <td rowSpan={2} className="edit-minus-cell" />}
-        <td rowSpan={2} style={{fontSize: '1.5em', textAlign: 'center', padding: '1px 3px', border: '1px solid black'}}>Total</td>
+        <td rowSpan={2} style={{fontSize: '1.5em', textAlign: 'center', padding: '1px 3px', border: '1px solid var(--line-000000)'}}>Total</td>
         {renderCell(`r${tTop}c1`)}
         {renderCell(`r${tTop}c2`, 2)}
-        <td id={`r${tTop}c3`} rowSpan={2} style={{textAlign: 'center', border: '1px solid black'}}>
+        <td id={`r${tTop}c3`} rowSpan={2} style={{textAlign: 'center', border: '1px solid var(--line-000000)'}}>
           {sumCells(distIds) ?? ''}
         </td>
-        <td id={`r${tTop}c4`} rowSpan={2} style={{textAlign: 'center', border: '1px solid black'}}>
+        <td id={`r${tTop}c4`} rowSpan={2} style={{textAlign: 'center', border: '1px solid var(--line-000000)'}}>
           {(() => {
             if (vfrMode && !isAlt) {
               const secs = sumEteSecs(eteIds);
@@ -1701,13 +1701,13 @@ function TW4JetLog() {
           })()}
         </td>
         {renderCell(`r${tTop}c5`)}
-        <td id={`r${tTop}c6`} rowSpan={2} style={{textAlign: 'center', border: '1px solid black'}}>
+        <td id={`r${tTop}c6`} rowSpan={2} style={{textAlign: 'center', border: '1px solid var(--line-000000)'}}>
           {(() => { const s = sumCells(fuelIds); return s != null ? s + '#' : ''; })()}
         </td>
         {renderCell(`r${tTop}c7`)}
-        {vfrMode ? <td rowSpan={2} colSpan={2} style={{border: '1px solid black'}} /> : renderCell(`r${tTop}c8`, 2)}
+        {vfrMode ? <td rowSpan={2} colSpan={2} style={{border: '1px solid var(--line-000000)'}} /> : renderCell(`r${tTop}c8`, 2)}
         {!isAlt && !vfrMode && (showIntClimbSelector || intClimbs.length > 0) && (
-          <td rowSpan={2} style={{border: '1px solid black'}} />
+          <td rowSpan={2} style={{border: '1px solid var(--line-000000)'}} />
         )}
       </tr>
       <tr>
@@ -2799,7 +2799,7 @@ function TW4JetLog() {
           {/* Pair 0: STTO */}
           <tr>
             {editRowsMode && <td rowSpan={2} className="edit-minus-cell" />}
-            <td rowSpan={2} style={{fontSize: '1.5em', textAlign: 'center', padding: '1px 3px', border: '1px solid black'}}>STTO</td>
+            <td rowSpan={2} style={{fontSize: '1.5em', textAlign: 'center', padding: '1px 3px', border: '1px solid var(--line-000000)'}}>STTO</td>
             {renderCell('r0c1')}
             {renderCell('r0c2', 2)}
             {renderCell('r0c3', 2)}
@@ -2809,7 +2809,7 @@ function TW4JetLog() {
             {renderCell('r0c7')}
             {vfrMode ? renderVFRNotesCells(0) : renderCell('r0c8', 2)}
             {!vfrMode && (showIntClimbSelector || intClimbs.length > 0) && (
-              <td rowSpan={2} style={{border: '1px solid black'}} />
+              <td rowSpan={2} style={{border: '1px solid var(--line-000000)'}} />
             )}
           </tr>
           <tr>

@@ -355,8 +355,8 @@
   --brand: #01202c;
   --brand-2: #003b4f;
   --band: #0a1f29;
-  --btn: #245c70;
-  --btn-2: #2c6f86;
+  --btn: #003b4f;
+  --btn-2: #0a5068;
   --on-brand: #ffffff;
   --wash: rgba(144, 190, 213, 0.08);
   --wash-01202c-a012: rgba(144, 190, 213, 0.192);
@@ -3661,7 +3661,8 @@ textarea.incorrect-answer {
   }
 
   /* The tiles sit in rows the page lays out itself (NIFE, Primary, T-44C; then the later
-     Advanced schools), each row centred on its own. */
+     Advanced schools), each row centred on its own. Between phone and wide, a 2-up grid
+     instead (below). */
   .landing-buttons {
     display: flex;
     flex-direction: column;
@@ -3857,6 +3858,25 @@ textarea.incorrect-answer {
     letter-spacing: 2px;
     z-index: 3;
     pointer-events: none;
+  }
+
+  /* Too narrow for a row of three: the rows give up their grouping and every tile flows in
+     one centred grid, two to a row, rather than three wrapping to two and a stray one. The
+     column gap is narrower so two tiles still fit at the top of the range, scrollbar and all;
+     1399px leaves room for the scrollbar where three would otherwise just fit. */
+  @media (min-width: 901px) and (max-width: 1399px) {
+    .landing-buttons {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 30px 40px;
+      max-width: 840px;
+    }
+
+    .landing-row {
+      display: contents;
+    }
   }
 
   /* Responsive design for landing page */
