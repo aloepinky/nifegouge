@@ -94,7 +94,9 @@ cut by `tools/crop-posters.py`.
   (`--surface-f2f6f8`) are shades the file already had, kept exact in light. Saturated status
   colours, dark pills and scrims stay literal. The nav, sub-nav and footer are brand navy in
   both modes. The systems diagrams follow the theme through their own `--sys-*` tokens at the
-  end of each block (see Systems diagrams); the landing page has its own dark palette.
+  end of each block (see Systems diagrams); the course rules map inverts its OpenStreetMap
+  tiles under dark (a filter on `.leaflet-tile-pane`, the KML overlay pane untouched) and
+  Leaflet's white chrome takes the site's surfaces; the landing page has its own dark palette.
 - **Filesystem is case-insensitive NTFS.** Never create a file whose name differs from an existing
   one only by case — it overwrites it and breaks the Linux build.
 - `leftovers.js` is a gitignored scratch file.

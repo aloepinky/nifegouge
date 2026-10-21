@@ -230,6 +230,7 @@
   --surface-cccccc: #cccccc;
   --surface-e0e0e0: #e0e0e0;
   --bad-text-5a0000: #5a0000;
+  --ink-0066cc: #0066cc;
   --btn-off: #9aa7ab;
 
   /* T-6B systems diagrams (systems/diagramTheme.js and each diagram's LOCAL read these) */
@@ -483,6 +484,7 @@
   --surface-cccccc: #34495a;
   --surface-e0e0e0: #2a3c47;
   --bad-text-5a0000: #f0a0a0;
+  --ink-0066cc: #8ab8f0;
   --btn-off: #3d4f58;
 
   --sys-bg: var(--page);
@@ -4003,6 +4005,47 @@ textarea.incorrect-answer {
     .landing-explainer {
       font-size: 16px;
     }
+  }
+
+  /* The course rules map in dark mode. Leaflet has no theme of its own: the tiles are
+     OpenStreetMap's light ones, so under dark they are inverted and hue-rotated back (land
+     dark grey, water dark blue, labels light), which keeps the same map and attribution.
+     The overlay pane (the KML routes and airspace) is not filtered, so the legend colours
+     hold. Leaflet's own chrome (zoom buttons, attribution, popups) is white and takes the
+     site's surfaces here. */
+  :root[data-theme="dark"] .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9) saturate(0.7);
+  }
+  :root[data-theme="dark"] .leaflet-container {
+    background: var(--page);
+  }
+  :root[data-theme="dark"] .leaflet-bar a {
+    background: var(--surface);
+    color: var(--ink-strong);
+    border-bottom-color: var(--line);
+  }
+  :root[data-theme="dark"] .leaflet-bar a:hover,
+  :root[data-theme="dark"] .leaflet-bar a:focus {
+    background: var(--surface-2);
+  }
+  :root[data-theme="dark"] .leaflet-bar a.leaflet-disabled {
+    background: var(--surface-2);
+    color: var(--ink-faint);
+  }
+  :root[data-theme="dark"] .leaflet-control-attribution {
+    background: var(--surface-ffffff-a088);
+    color: var(--ink-muted);
+  }
+  :root[data-theme="dark"] .leaflet-control-attribution a {
+    color: var(--ink-accent);
+  }
+  :root[data-theme="dark"] .leaflet-popup-content-wrapper,
+  :root[data-theme="dark"] .leaflet-popup-tip {
+    background: var(--surface);
+    color: var(--ink);
+  }
+  :root[data-theme="dark"] .leaflet-container a.leaflet-popup-close-button {
+    color: var(--ink-muted);
   }
 
   /* Course Rules Map Styles */

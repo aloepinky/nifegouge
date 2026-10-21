@@ -344,9 +344,9 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
           const popupContent = `
             <div style="max-width: ${hasVerboseDescription ? '500px' : '300px'}; max-height: 400px; overflow-y: auto;">
               <strong style="font-size: 14px;">${name}</strong><br/>
-              <em style="font-size: 12px; color: #666;">${featureType}</em><br/>
+              <em style="font-size: 12px; color: var(--ink-666666);">${featureType}</em><br/>
               ${description ? `<div style="margin-top: 10px; font-size: 13px;">${description}</div>` : ''}
-              ${customDescription ? `<div style="margin-top: 10px; font-size: 13px; color: #0066cc;">${customDescription}</div>` : ''}
+              ${customDescription ? `<div style="margin-top: 10px; font-size: 13px; color: var(--ink-0066cc);">${customDescription}</div>` : ''}
               ${radioCallsHtml(crFeatures[featureId]?.comms)}
             </div>
           `;
