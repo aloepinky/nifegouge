@@ -418,7 +418,7 @@ export const crFeatures = {
     questions : ["While established in the pattern, monitor CTAF and contact Corpus Approach (CH ___ UHF) and request \"course rules to _____.\" KTFP should be exited to the North (~____) towards Bayside.  Once cleared, proceed east to the intra-coastal and climb to _____ MSL once clear of the pattern and join the Northern Arrival."],
     answers : [["8", "SHAMROCK", "350°", "1000'"]],
     dependentNode: ["Point-Arrivals-113"],
-    nextNode : ["Point-Arrivals-113"]
+    nextNode : ["Routes-Arrivals-104"]
   },
   "Routes-Departures-18" : {
     name : "31",
@@ -431,7 +431,7 @@ export const crFeatures = {
     questions : ["While established in the pattern, monitor CTAF and contact Corpus Approach (CH ___ UHF) and request \"course rules to _____.\" KTFP should be exited to the North (~____) towards Bayside.  Once cleared, proceed east to the intra-coastal and climb to _____ MSL once clear of the pattern and join the Northern Arrival."],
     answers : [["8", "SHAMROCK", "350°", "1000'"]],
     dependentNode: ["Point-Arrivals-113"],
-    nextNode : ["Point-Arrivals-113"]
+    nextNode : ["Routes-Arrivals-104"]
   },
   "Routes-Departures-19" : {
     name : "13",
@@ -720,7 +720,7 @@ export const crFeatures = {
     questions : ["When #1 downwind at the _____, descend to ___  MSL.  Turn northbound to circle around ______ to the east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["180", "500'", "Redfish Point", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30", "Point-Departures-31"],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
+    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194", "Routes-Arrivals-5", "Routes-Arrivals-6"]
   },
   "Routes-Departures-33" : {
     name : "18",
@@ -734,7 +734,7 @@ export const crFeatures = {
     questions : ["When #1 downwind at the _____, descend to ___  MSL.  Going \"_____\" turn east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["180", "500'", "feet wet", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30",],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
+    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194", "Routes-Arrivals-5", "Routes-Arrivals-6"]
   },
   "Routes-Departures-34" : {
     name : "32",
@@ -748,7 +748,7 @@ export const crFeatures = {
     questions : ["When #1 upwind, climb to  ___  MSL.  Turn northbound to circle around ______ to the east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["500'", "Redfish Point", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30", "Point-Departures-31"],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
+    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194", "Routes-Arrivals-5", "Routes-Arrivals-6"]
   },
   "Routes-Departures-35" : {
     name : "36",
@@ -762,7 +762,7 @@ export const crFeatures = {
     questions : ["When #1 upwind, climb to ___  MSL.  Going \"_____\" turn east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
     answers : [["500'", "feet wet", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
     dependentNode: ["Point-Departures-29", "Point-Departures-30",],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
+    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194", "Routes-Arrivals-5", "Routes-Arrivals-6"]
   },
   "Point-Mustang-36" : {
     name : "KRAS",
@@ -934,7 +934,7 @@ export const crFeatures = {
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
   },
   "Routes-Departures-47" : {
     name : "17",
@@ -956,7 +956,7 @@ export const crFeatures = {
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
   },
   "Routes-Departures-48" : {
     name : "29",
@@ -978,7 +978,7 @@ export const crFeatures = {
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
   },
   "Routes-Departures-49" : {
     name : "35",
@@ -1000,7 +1000,7 @@ export const crFeatures = {
     questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
     answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16"]
+    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
   },
   "Point-default-50" : {
     name : "KNWL",
@@ -1129,8 +1129,8 @@ export const crFeatures = {
     customDescription : "",
     questions : [],
     answers : [],
-    dependentNode: [],
-    nextNode : ["Point-Arrivals-135"]
+    dependentNode: ["Point-Arrivals-135"],
+    nextNode : ["Routes-Arrivals-136", "Routes-Arrivals-137", "Routes-Arrivals-138", "Routes-Arrivals-139", "Routes-Arrivals-140", "Routes-Arrivals-141", "Routes-Arrivals-142", "Routes-Arrivals-143"]
   },
   "Routes-Departures-56" : {
     name : "13",
@@ -1341,8 +1341,8 @@ export const crFeatures = {
     customDescription : "",
     questions : [],
     answers : [],
-    dependentNode: [],
-    nextNode : ["Point-Arrivals-126"]
+    dependentNode: ["Point-Arrivals-126"],
+    nextNode : ["Routes-Arrivals-127", "Routes-Arrivals-128", "Routes-Arrivals-129", "Routes-Arrivals-130", "Routes-Arrivals-131", "Routes-Arrivals-132", "Routes-Arrivals-133", "Routes-Arrivals-134"]
   },
   "Point-Departures-72" : {
     name : "Yorktown Bridge",
@@ -1697,7 +1697,7 @@ export const crFeatures = {
     customDescription : "",
     questions : [],
     answers : [],
-    dependentNode: ["Airspace-default-96"],
+    dependentNode: ["Airspace-default-96", "Airspace-default-97"],
     nextNode : [
       // Traffic Patterns (after 95, before 189)
       "Routes-Traffic Patterns-98", "Routes-Traffic Patterns-99", "Routes-Traffic Patterns-100", "Routes-Traffic Patterns-101",
@@ -1712,8 +1712,7 @@ export const crFeatures = {
       "Routes-Departures-179", "Routes-Departures-180", "Routes-Departures-181", "Routes-Departures-182",
       "Routes-Departures-183", "Routes-Departures-184", "Routes-Departures-185", "Routes-Departures-186",
       "Routes-Arrivals-170", "Routes-Arrivals-171", "Routes-Arrivals-172", "Routes-Arrivals-173",
-      "Routes-Arrivals-174", "Routes-Arrivals-175", "Routes-Arrivals-176", "Routes-Arrivals-177",
-      "Routes-Arrivals-13", "Routes-Arrivals-14"
+      "Routes-Arrivals-174", "Routes-Arrivals-175", "Routes-Arrivals-176", "Routes-Arrivals-177"
     ]
   },
   "Airspace-default-96" : {
@@ -2177,8 +2176,8 @@ export const crFeatures = {
     customDescription : "",
     questions : [],
     answers : [],
-    dependentNode: [],
-    nextNode : ["Point-Arrivals-60","Routes-Arrivals-134","Routes-Arrivals-133","Routes-Arrivals-132","Routes-Arrivals-131","Routes-Arrivals-130","Routes-Arrivals-129","Routes-Arrivals-128","Routes-Arrivals-127"]
+    dependentNode: ["Point-Arrivals-60"],
+    nextNode : ["Routes-Arrivals-67", "Routes-Arrivals-68", "Routes-Arrivals-69", "Routes-Arrivals-70"]
   },
   "Routes-Arrivals-127" : {
     name : "04",
@@ -2616,7 +2615,7 @@ export const crFeatures = {
     questions : ["Crossing the beach line, commence a turn south to parallel the beach at ____ WTD and climb to ____ MSL.  Continue south until abeam the _____.  Terminate with Corpus Approach, proceed direct to the _____ and comply with the WALDRON Arrival Procedures.  Aircrew desiring to proceed to high key at WALDRON must comply with the above procedures until coordinated with Corpus Departure.  When cleared, remain at or below _____ MSL unless coordinated for higher. "],
     answers : [["1/2", "2500'", "Camel Humps", "Camel Humps", "4500'"]],
     dependentNode: ["Point-Departures-155"],
-    nextNode : ["Point-Departures-155"]
+    nextNode : ["Point-Arrivals-78"]
   },
   "Point-Departures-157" : {
     name : "PT Shamrock",
@@ -2668,7 +2667,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-11", "Routes-Arrivals-12", "Routes-Arrivals-110", "Routes-Transitions-201"]
+    nextNode : ["Routes-Arrivals-11", "Routes-Arrivals-12", "Routes-Arrivals-110", "Routes-Transitions-201", "Routes-Arrivals-13", "Routes-Arrivals-14", "Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
   },
   "Routes-Departures-161" : {
     name : "04",
@@ -2873,7 +2872,8 @@ export const crFeatures = {
       ["27", "SPID", "Crosstown Expressway"]
     ],
     dependentNode: [],
-    nextNode : []
+    nextNode : [],
+    endNote : "The Nueces Transition continues west to Corpus Christi International, which isn't on this map."
   },
   "Routes-Arrivals-170" : {
     name : "04",
@@ -2998,7 +2998,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : ["Point-Departures-178", "Point-Departures-160"]
+    nextNode : ["Point-Departures-160"]
   },
   "Routes-Departures-179" : {
     name : "04",
@@ -3164,7 +3164,7 @@ export const crFeatures = {
       ["within", "their", "outside", "Northern Arrival", "8"]
     ],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Point-Arrivals-78"]
   },
   "Working Areas-Foxtrot-190" : {
     name : "Foxtrot 2",
@@ -3177,7 +3177,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Point-Arrivals-78"]
   },
   "Working Areas-Mustang-191" : {
     name : "Mustang North 1",
@@ -3200,8 +3200,8 @@ export const crFeatures = {
       ["17", "5500'"],
       ["17", "8", "1,500'"]
     ],
-    dependentNode: ["Airspace-default-37"],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
+    dependentNode: ["Airspace-default-37", "Point-Mustang-36"],
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Point-Arrivals-78"]
   },
   "Working Areas-Mustang-192" : {
     name : "Mustang North 5",
@@ -3215,7 +3215,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Point-Arrivals-78"]
   },
   "Working Areas-Mustang-193" : {
     name : "Mustang North 2",
@@ -3228,8 +3228,8 @@ export const crFeatures = {
     comms : MUSTANG_EXIT_COMMS,
     questions : [],
     answers : [],
-    dependentNode: ["Airspace-default-37"],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
+    dependentNode: ["Airspace-default-37", "Point-Mustang-36"],
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Point-Arrivals-78"]
   },
   "Working Areas-Mustang-194" : {
     name : "Mustang North 6",
@@ -3243,7 +3243,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
+    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Point-Arrivals-78"]
   },
   "Working Areas-Mustang Maintenance-195" : {
     name : "Mustang Central",
@@ -3295,8 +3295,8 @@ export const crFeatures = {
     comms : MUSTANG_EXIT_COMMS,
     questions : [],
     answers : [],
-    dependentNode: [],
-    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9"]
+    dependentNode: ["Point-Mustang-36", "Airspace-default-37"],
+    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },
   "Working Areas-Mustang-198" : {
     name : "Mustang South 7",
@@ -3310,7 +3310,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9"]
+    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },
   "Working Areas-Mustang-199" : {
     name : "Mustang South 4",
@@ -3323,8 +3323,8 @@ export const crFeatures = {
     comms : MUSTANG_EXIT_COMMS,
     questions : [],
     answers : [],
-    dependentNode: [],
-    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9"]
+    dependentNode: ["Point-Mustang-36", "Airspace-default-37"],
+    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },
   "Working Areas-Mustang-200" : {
     name : "Mustang South 8",
@@ -3338,7 +3338,7 @@ export const crFeatures = {
     questions : [],
     answers : [],
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9"]
+    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
   },
   "Routes-Transitions-201" : {
     name : "Rusty Entry",

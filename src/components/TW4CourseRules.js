@@ -57,6 +57,75 @@ const radioCallsHtml = (comms) => {
   return `<div class="course-rules-comms"><strong>Radio calls:</strong>${rows}</div>`;
 };
 
+// Group the next waypoints by folder, starting at the first level they don't all share:
+// a folder that holds every option is skipped, and a run of single-child folders is one row
+const groupOptions = (ids) => {
+  const build = (entries) => {
+    const first = entries[0].rest;
+    let prefix = first.length;
+    entries.forEach(({ rest }) => {
+      let i = 0;
+      while (i < prefix && i < rest.length && rest[i] === first[i]) i++;
+      prefix = i;
+    });
+    const items = [];
+    const groups = new Map();
+    entries.forEach(e => {
+      const rest = e.rest.slice(prefix);
+      if (rest.length === 0) items.push(e.id);
+      else {
+        if (!groups.has(rest[0])) groups.set(rest[0], []);
+        groups.get(rest[0]).push({ id: e.id, rest: rest.slice(1) });
+      }
+    });
+    const folders = [];
+    groups.forEach((children, name) => {
+      const inner = build(children);
+      const label = [name, ...inner.prefix].join(' › ');
+      // A folder with one option is just that option, labelled with where it is
+      if (inner.items.length === 1 && inner.folders.length === 0) items.push({ id: inner.items[0], where: label });
+      else folders.push({ label, items: inner.items, folders: inner.folders, count: children.length });
+    });
+    return { prefix: entries[0].rest.slice(0, prefix), items, folders };
+  };
+  if (ids.length === 0) return { prefix: [], items: [], folders: [] };
+  return build(ids.map(id => ({ id, rest: (crFeatures[id].folderPath || '').split(' > ') })));
+};
+
+function WaypointFolder({ group, path, open, toggle, onSelect }) {
+  return (
+    <>
+      {group.items.map(item => {
+        const id = typeof item === 'string' ? item : item.id;
+        return (
+          <button key={id} className="cr-waypoint" onClick={() => onSelect(id)}>
+            <span className="cr-waypoint-name">{crFeatures[id].name || 'Unnamed'}</span>
+            {item.where && <span className="cr-waypoint-where">{item.where}</span>}
+          </button>
+        );
+      })}
+      {group.folders.map(folder => {
+        const key = `${path} > ${folder.label}`;
+        const isOpen = !!open[key];
+        return (
+          <div key={key} className="cr-folder">
+            <button className="cr-folder-toggle" aria-expanded={isOpen} onClick={() => toggle(key)}>
+              <span className="cr-folder-caret">{isOpen ? '▾' : '▸'}</span>
+              <span className="cr-folder-label">{folder.label}</span>
+              <span className="cr-folder-count">{folder.count}</span>
+            </button>
+            {isOpen && (
+              <div className="cr-folder-body">
+                <WaypointFolder group={folder} path={key} open={open} toggle={toggle} onSelect={onSelect} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 // Component to load and manage KML layers
 function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, setFolderTree, selectedParentFolder, controlMode, visibleFlightPath, currentRandomFeature }) {
   const map = useMap();
@@ -452,6 +521,10 @@ function TW4CourseRules() {
   const [currentNode, setCurrentNode] = useState('Point-default-95');
   const [flightPath, setFlightPath] = useState(['Point-default-95']); // Track the path taken
   const [visibleFeatures, setVisibleFeatures] = useState(['Point-default-95']); // For Flight Path Builder mode
+  const [openFolders, setOpenFolders] = useState({}); // Waypoint folders opened at this stop
+
+  // Each stop starts with its folders closed
+  useEffect(() => setOpenFolders({}), [currentNode]);
 
   // Flight path builder quiz mode states
   const [flightPathQuizMode, setFlightPathQuizMode] = useState(false);
@@ -1167,8 +1240,8 @@ function TW4CourseRules() {
                   style={{ flex: 1, padding: '8px', fontSize: '14px' }}
                 >
                   <option value="Point-default-0">{crFeatures["Point-default-0"]?.parentFolder || "KTFP"}</option>
-                  <option value="Point-default-21">{crFeatures["Point-default-21"]?.parentFolder || "KRAS"}</option>
-                  <option value="Point-default-38">{crFeatures["Point-default-38"]?.parentFolder || "KALI"}</option>
+                  <option value="Point-default-21">{crFeatures["Point-default-21"]?.parentFolder || "KRKP"}</option>
+                  <option value="Point-default-38">{crFeatures["Point-default-38"]?.parentFolder || "KNGT"}</option>
                   <option value="Point-default-50">{crFeatures["Point-default-50"]?.parentFolder || "KRKP"}</option>
                   <option value="Point-default-95">{crFeatures["Point-default-95"]?.parentFolder || "KNGP"}</option>
                 </select>
@@ -1313,52 +1386,27 @@ function TW4CourseRules() {
             {/* Next Waypoints */}
             <div>
               <strong>Available Waypoints:</strong>
-              <div style={{
-                marginTop: '10px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                maxHeight: '400px',
-                overflow: 'auto'
-              }}>
-                {getNextNodes(currentNode).length > 0 ? (
-                  getNextNodes(currentNode).map(nodeId => {
-                    const feature = crFeatures[nodeId];
-                    return (
-                      <button
-                        key={nodeId}
-                        onClick={() => selectNextNode(nodeId)}
-                        style={{
-                          padding: '12px',
-                          textAlign: 'left',
-                          border: '1px solid var(--line-dddddd)',
-                          borderRadius: '4px',
-                          background: 'var(--surface)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          color: 'var(--ink-000000)'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.background = 'var(--surface-f0f0f0)';
-                          e.currentTarget.style.borderColor = 'var(--line-999999)';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.background = 'var(--surface)';
-                          e.currentTarget.style.borderColor = 'var(--line-dddddd)';
-                        }}
-                      >
-                        <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px', color: 'var(--ink-000000)' }}>
-                          {feature.name || 'Unnamed'}
-                        </div>
-                        <div style={{ fontSize: '12px', color: 'var(--ink-666666)' }}>
-                          {feature.folderPath || 'No folder'} {feature.subCategory && `• ${feature.subCategory}`}
-                        </div>
-                      </button>
-                    );
-                  })
-                ) : (
+              <div className="cr-waypoints">
+                {getNextNodes(currentNode).length > 0 ? (() => {
+                  const group = groupOptions(getNextNodes(currentNode));
+                  return (
+                    <>
+                      {/* The folder every option shares, so a bare runway list says where it is */}
+                      {group.prefix.length > 0 && (
+                        <div className="cr-waypoints-in">{group.prefix.join(' › ')}</div>
+                      )}
+                      <WaypointFolder
+                        group={group}
+                        path=""
+                        open={openFolders}
+                        toggle={key => setOpenFolders(prev => ({ ...prev, [key]: !prev[key] }))}
+                        onSelect={selectNextNode}
+                      />
+                    </>
+                  );
+                })() : (
                   <div style={{ padding: '20px', textAlign: 'center', color: 'var(--ink-999999)' }}>
-                    No more waypoints available from this location.
+                    {crFeatures[currentNode]?.endNote || 'No more waypoints available from this location.'}
                   </div>
                 )}
               </div>
