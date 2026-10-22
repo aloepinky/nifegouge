@@ -4324,6 +4324,257 @@ textarea.incorrect-answer {
     border-left: 2px solid var(--line);
   }
 
+  /* Course rules: the words are the community's (courserules/). Source line, map popups,
+     airfield cards, the quiz's blanks, the editor and the history */
+  .cr-source {
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-666666);
+    margin: -18px 0 16px;
+  }
+
+  .cr-source--warn {
+    color: var(--bad-text);
+    margin-top: -8px;
+  }
+
+  .cr-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--ink-accent);
+    font-size: inherit;
+    cursor: pointer;
+  }
+
+  .cr-link:hover {
+    text-decoration: underline;
+  }
+
+  .cr-link--edit {
+    margin-left: 8px;
+    font-size: 12px;
+  }
+
+  .cr-popup {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .cr-popup-name {
+    font-size: 14px;
+  }
+
+  .cr-popup-edit {
+    margin-left: 8px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--ink-accent);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .cr-popup-edit:hover {
+    text-decoration: underline;
+  }
+
+  .cr-popup-type {
+    font-size: 12px;
+    color: var(--ink-666666);
+  }
+
+  .cr-popup-rule {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--ink-0066cc);
+  }
+
+  .cr-card {
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  .cr-card-title {
+    font-weight: bold;
+    font-size: 15px;
+    color: var(--ink-accent);
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .cr-card p {
+    margin: 0 0 8px;
+  }
+
+  .cr-card-warning {
+    color: var(--bad-text);
+  }
+
+  .cr-card-details {
+    margin-top: 8px;
+    font-size: 13px;
+  }
+
+  .cr-card-details summary {
+    cursor: pointer;
+    color: var(--ink-accent);
+  }
+
+  .cr-quiz-blank {
+    display: inline-block;
+    height: 20px;
+    margin: 0 2px;
+    border-radius: 3px;
+    background: var(--line);
+    vertical-align: middle;
+  }
+
+  .cr-quiz-answer {
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: #4caf50;
+    color: #ffffff;
+    font-weight: bold;
+  }
+
+  .cr-edit {
+    margin: 16px 0;
+  }
+
+  .cr-edit-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .cr-edit-title {
+    margin: 0 0 10px;
+    font-size: 17px;
+    color: var(--ink-accent);
+  }
+
+  .cr-edit-part {
+    margin-bottom: 12px;
+    border-top: 1px solid var(--line);
+    padding-top: 8px;
+  }
+
+  .cr-edit-part > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--ink-accent);
+    margin-bottom: 6px;
+  }
+
+  .cr-edit-count {
+    margin-left: 8px;
+    font-size: 12px;
+    font-weight: normal;
+    color: var(--ink-muted);
+  }
+
+  .cr-edit-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .cr-edit-cell {
+    display: block;
+    flex: 1 1 160px;
+    min-width: 0;
+    margin: 6px 0;
+  }
+
+  .cr-edit-cell--wide {
+    flex-basis: 100%;
+  }
+
+  .cr-edit-rowname {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-right: auto;
+  }
+
+  .cr-edit-shows {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--ink-666666);
+  }
+
+  .cr-edit-preview b {
+    color: var(--ink-strong);
+  }
+
+  .cr-edit-also {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+
+  .cr-edit-exline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 6px 0;
+  }
+
+  .cr-edit-exline > .discuss-editor-line {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+
+  .cr-edit-exline > .cr-edit-exwho {
+    flex: 0 1 140px;
+  }
+
+  .cr-history {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .cr-history-row {
+    padding: 8px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .cr-history-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-size: 13px;
+  }
+
+  .cr-history-when {
+    color: var(--ink-muted);
+  }
+
+  .cr-history-who {
+    font-weight: 600;
+  }
+
+  .cr-history-what {
+    flex-basis: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .cr-history-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .cr-history-current {
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+
   .quiz-mode {
     max-width: 600px;
     margin: 0 auto;

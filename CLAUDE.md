@@ -16,7 +16,8 @@ language. Work accordingly:
   says now, and the publication, section and page that says so. Never push to this repository's
   `main`: a push there deploys the live site and the server.
 - **Community content is not in this repository.** Discussion item pages, briefs, shared jet logs,
-  NIFE questions, docs and links live on the server (see below). If the contributor wants to change
+  NIFE questions, docs and links, and the words on the course rules page live on the server (see
+  below). If the contributor wants to change
   one of those, tell them to click `[edit]` (or the equivalent) on pinksheetmafia.com instead; do not
   edit it through code.
 - **A local copy reads and writes the live server.** `npm start` shows real content, and publishing
@@ -525,6 +526,28 @@ are vector art — render to classify NWCs.
 - No `window.confirm/alert` — `ConfirmButton`, `RowTools confirmRemove`; unavailable actions are
   disabled with the reason in `title`. One editor open at a time. `.discuss-editor` has `clear: both`.
   Drafts show only in `ItemPage`, never in nav/search.
+
+## Course rules
+
+`/primary/courserules` (`TW4CourseRules.js`). The **map** is code: `public/kml/course-rules.kml`
+and the route graph in `CourseRulesFeatures.js` (names, folders, `nextNode`, `dependentNode`,
+`endNote`). The **words** are the community's since 2026-10-21: one document per wing (`tw4`) in
+table `CourseRules`, ops in `lambda/discussApi/courseRules.mjs`, mirrored to
+`courserules/tw4.json`, same revision/409/history model, no deletes. Code in
+`src/components/courserules/`.
+- Document: `legs` and `airfields`, keyed by the page's feature ids
+  (`${category}-${subType}-${n}`, numbered in KML placemark order: reorder the KML and every key
+  orphans; `courserules-api-test.mjs` checks the keys). A leg has `rule` (paragraphs, `heading`
+  for the manual's underlined subheads), `comms`, `examples`, optional `page`; an airfield a
+  `title` and `blocks` of heading/lines/`warning`.
+- Plain text only; the server refuses tags and `rules.js` escapes everything before it becomes
+  HTML. `**bold**` and `[[words]]` (a quiz blank) are the markup. **The quiz is made from the
+  marks** (`quizOf`: a question per paragraph with a blank), so there is no separate question to
+  go stale. `withText` merges the document into the shape the page has always read.
+- Popups are built on open from the current document and carry an edit link; the editor
+  (`LegEditor.js`) offers to change legs with word-for-word the same rule together.
+- `tools/courserules-seed.js` seeded it once from the text in commit `e61e4c6`, read out of git.
+  Don't put words back into `CourseRulesFeatures.js`.
 
 ## Shared jet logs
 

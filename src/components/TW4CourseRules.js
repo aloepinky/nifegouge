@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { kml } from '@tmcw/togeojson';
 import 'leaflet/dist/leaflet.css';
 import { crFeatures } from './CourseRulesFeatures.js';
-import { crExamples } from './CourseRulesExamples.js';
+import { cardHtml, escapeHtml, questionHtml, withText } from './courserules/rules';
+import { fetchCourseRules } from './courserules/courseRulesApi';
+import LegEditor from './courserules/LegEditor';
+import CourseRulesHistory from './courserules/History';
 
 // Fix for default marker icons in Leaflet with React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -13,8 +16,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
-
-const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // One row per call: the manual's lead-in, then channel and speaker, then the words
 const callParts = (call) => ({
@@ -174,10 +175,26 @@ function WaypointFolder({ group, path, open, toggle, onSelect }) {
 }
 
 // Component to load and manage KML layers
-function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, setFolderTree, selectedParentFolder, controlMode, visibleFlightPath, currentRandomFeature }) {
+function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, setFolderTree, selectedParentFolder, controlMode, visibleFlightPath, currentRandomFeature, textRef, onEditRef }) {
   const map = useMap();
   const layersRef = useRef({});
   const [layersLoaded, setLayersLoaded] = useState(false);
+
+  // A popup's "edit" opens that feature's editor under the map.
+  useEffect(() => {
+    const onOpen = (e) => {
+      // An airfield's card wants the room; whether there is one is known only as it opens.
+      const wide = !!(e.popup.getElement() && e.popup.getElement().querySelector('.cr-popup--wide'));
+      if ((e.popup.options.maxWidth === 500) !== wide) {
+        e.popup.options.maxWidth = wide ? 500 : 300;
+        e.popup.update();
+      }
+      const button = e.popup.getElement() && e.popup.getElement().querySelector('[data-cr-edit]');
+      if (button) button.onclick = () => { map.closePopup(); onEditRef.current(button.dataset.crEdit); };
+    };
+    map.on('popupopen', onOpen);
+    return () => map.off('popupopen', onOpen);
+  }, [map, onEditRef]);
 
   useEffect(() => {
     // First, fetch and parse the KML to extract folder structure
@@ -328,32 +345,25 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
             layer.setStyle(styles[styleKey] || { color: '#666', weight: 2 });
           }
 
-          // Add popup with information
-          // For verbose descriptions (like airport info), give more space and preserve HTML
+          // The popup is built when it opens, from the course rules as they are now, so an
+          // edit published on this page shows without a reload. The words are the community's
+          // (courserules/rules.js escapes them); the KML's own descriptions are no longer read.
           const featureId = `${category}-${subType || 'default'}-${features.length}`;
-
-          // Get customDescription from crFeatures if available
-          let customDescription = '';
-          if (crFeatures[featureId] && crFeatures[featureId].customDescription) {
-            const customDesc = crFeatures[featureId].customDescription;
-            // If it's an array, join with line breaks; otherwise use as-is
-            customDescription = Array.isArray(customDesc) ? customDesc.join('<br/>') : customDesc;
-          }
-
-          const hasVerboseDescription = description && description.length > 200;
-          const popupContent = `
-            <div style="max-width: ${hasVerboseDescription ? '500px' : '300px'}; max-height: 400px; overflow-y: auto;">
-              <strong style="font-size: 14px;">${name}</strong><br/>
-              <em style="font-size: 12px; color: var(--ink-666666);">${featureType}</em><br/>
-              ${description ? `<div style="margin-top: 10px; font-size: 13px;">${description}</div>` : ''}
-              ${customDescription ? `<div style="margin-top: 10px; font-size: 13px; color: var(--ink-0066cc);">${customDescription}</div>` : ''}
-              ${radioCallsHtml(crFeatures[featureId]?.comms)}
-            </div>
-          `;
-          layer.bindPopup(popupContent, {
-            maxWidth: hasVerboseDescription ? 500 : 300,
-            maxHeight: 400
-          });
+          const card = () => textRef.current[featureId]?.card;
+          layer.bindPopup(() => {
+            const f = textRef.current[featureId] || {};
+            const wide = !!card();
+            return `
+              <div class="cr-popup${wide ? ' cr-popup--wide' : ''}">
+                <strong class="cr-popup-name">${escapeHtml(name)}</strong>
+                <button type="button" class="cr-popup-edit" data-cr-edit="${featureId}">edit</button><br/>
+                ${featureType ? `<em class="cr-popup-type">${escapeHtml(featureType)}</em><br/>` : ''}
+                ${wide ? cardHtml(card()) : ''}
+                ${f.customDescription ? `<div class="cr-popup-rule">${f.customDescription}</div>` : ''}
+                ${radioCallsHtml(f.comms)}
+              </div>
+            `;
+          }, { maxWidth: 300, maxHeight: 400 });
 
           // Store layer with metadata
           layersRef.current[featureId] = {
@@ -421,7 +431,7 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
       });
       layersRef.current = {};
     };
-  }, [url, map, setFolderTree]);
+  }, [url, map, setFolderTree, textRef]);
 
   // Update visible layers when selection changes
   useEffect(() => {
@@ -539,6 +549,32 @@ function KmlLayer({ url, visibleLayers, folderVisibility, featureVisibility, set
 }
 
 function TW4CourseRules() {
+  // The words on the page are the community's, from the server (courserules/); the map and
+  // the route graph are crFeatures. `features` is the two together, in the shape the page reads.
+  const [record, setRecord] = useState(null);
+  const [loadError, setLoadError] = useState('');
+  const [editing, setEditing] = useState(null); // feature id whose editor is open
+  const [showHistory, setShowHistory] = useState(false);
+  const features = useMemo(() => withText(crFeatures, record && record.doc), [record]);
+  const textRef = useRef(features);
+  textRef.current = features;
+  const onEditRef = useRef(null);
+  onEditRef.current = (id) => { setShowHistory(false); setEditing(id); };
+
+  const reload = useCallback(() => fetchCourseRules().then(
+    (r) => { setRecord(r); setLoadError(r ? '' : 'The course rules text has not been published yet.'); },
+    (err) => setLoadError(err.message),
+  ), []);
+  useEffect(() => { reload(); }, [reload]);
+
+  // Feature names for the editor and the history, which name legs rather than ids.
+  // "(KNGP) Corpus Christi NAS › Arrivals › Shamrock"; an airfield is just its folder.
+  const names = useMemo(() => Object.fromEntries(Object.entries(crFeatures).map(([id, f]) => {
+    const folder = (f.folderPath || '').split(' > ').filter(Boolean).join(' › ');
+    if (!folder) return [id, f.name];
+    return [id, folder.startsWith(`(${f.name})`) && !folder.includes('›') ? folder : `${folder} › ${f.name}`];
+  })), []);
+
   const [folderTree, setFolderTree] = useState({});
   const [expandedFolders, setExpandedFolders] = useState({});
   const [visibleLayers] = useState({
@@ -590,7 +626,7 @@ function TW4CourseRules() {
     const allFeatures = [];
     const seenQuestions = new Set();
 
-    Object.entries(crFeatures).forEach(([id, feature]) => {
+    Object.entries(features).forEach(([id, feature]) => {
       // Must have questions
       if (!feature.questions || feature.questions.length === 0) return;
 
@@ -657,58 +693,14 @@ function TW4CourseRules() {
     return currentFeatureId;
   };
 
-  const parseQuestionWithBlanks = (questionText, answers, questionIndex, revealedIndices) => {
-    if (!questionText) return { html: '', totalBlanks: 0 };
-
-    // Find all occurrences of 2+ consecutive underscores
-    const blankPattern = /_{2,}/g;
-    const matches = [];
-    let match;
-
-    while ((match = blankPattern.exec(questionText)) !== null) {
-      matches.push({
-        index: match.index,
-        length: match[0].length,
-        text: match[0]
-      });
-    }
-
-    if (matches.length === 0) {
-      return { html: questionText, totalBlanks: 0 };
-    }
-
-    // Build HTML with blanks
-    let html = '';
-    let lastIndex = 0;
-    const answerArray = answers && answers[questionIndex] ? answers[questionIndex] : [];
-
-    matches.forEach((blank, blankIndex) => {
-      // Add text before this blank
-      html += questionText.substring(lastIndex, blank.index);
-
-      // Add blank or answer
-      const isRevealed = revealedIndices.includes(blankIndex);
-      const answerText = answerArray[blankIndex] || '';
-
-      if (isRevealed && answerText) {
-        html += `<span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 3px; font-weight: bold;">${answerText}</span>`;
-      } else {
-        html += `<span style="display: inline-block; min-width: ${blank.length * 8}px; height: 20px; background: #ccc; border-radius: 3px; margin: 0 2px; vertical-align: middle;"></span>`;
-      }
-
-      lastIndex = blank.index + blank.length;
-    });
-
-    // Add remaining text
-    html += questionText.substring(lastIndex);
-
-    return { html, totalBlanks: matches.length };
-  };
+  // The quiz's question with its blanks; the text is escaped (courserules/rules.js).
+  const parseQuestionWithBlanks = (questionText, answers, questionIndex, revealedIndices) =>
+    questionHtml(questionText, answers && answers[questionIndex], revealedIndices);
 
   const revealNextAnswer = () => {
-    if (!currentRandomFeature || !crFeatures[currentRandomFeature]) return;
+    if (!currentRandomFeature || !features[currentRandomFeature]) return;
 
-    const feature = crFeatures[currentRandomFeature];
+    const feature = features[currentRandomFeature];
     const questionText = feature.questions[currentRandomQuestionIndex];
     const { totalBlanks } = parseQuestionWithBlanks(questionText, feature.answers, currentRandomQuestionIndex, []);
 
@@ -719,9 +711,9 @@ function TW4CourseRules() {
   };
 
   const nextRandomQuestion = () => {
-    if (!currentRandomFeature || !crFeatures[currentRandomFeature]) return;
+    if (!currentRandomFeature || !features[currentRandomFeature]) return;
 
-    const feature = crFeatures[currentRandomFeature];
+    const feature = features[currentRandomFeature];
     if (!feature.questions || feature.questions.length === 0) return;
 
     // Check if there are more questions in the current feature
@@ -761,44 +753,8 @@ function TW4CourseRules() {
 
   // Flight path builder functions
   const getNextNodes = (nodeId) => {
-    if (!crFeatures[nodeId] || !crFeatures[nodeId].nextNode) return [];
-    return crFeatures[nodeId].nextNode.filter(id => crFeatures[id]); // Only return valid nodes
-  };
-
-  // Format customDescription with bold words from answers
-  const formatCustomDescription = (customDesc, answers) => {
-    if (!customDesc) return '';
-
-    // Get text content
-    let text = Array.isArray(customDesc) ? customDesc.join('<br/>') : customDesc;
-
-    // Collect all answer words
-    const answerWords = new Set();
-    if (answers && Array.isArray(answers)) {
-      answers.forEach(answerItem => {
-        if (Array.isArray(answerItem)) {
-          answerItem.forEach(word => {
-            if (typeof word === 'string' && word.trim()) {
-              answerWords.add(word.trim().toLowerCase());
-            }
-          });
-        } else if (typeof answerItem === 'string' && answerItem.trim()) {
-          answerWords.add(answerItem.trim().toLowerCase());
-        }
-      });
-    }
-
-    // Bold any words that match answers (case-insensitive)
-    if (answerWords.size > 0) {
-      answerWords.forEach(answerWord => {
-        // Escape special regex characters
-        const escapedWord = answerWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b(${escapedWord})\\b`, 'gi');
-        text = text.replace(regex, '<b>$1</b>');
-      });
-    }
-
-    return text;
+    if (!features[nodeId] || !features[nodeId].nextNode) return [];
+    return features[nodeId].nextNode.filter(id => features[id]); // Only return valid nodes
   };
 
   // Auto-progress through single nodes - COMMENTED OUT FOR NOW
@@ -825,7 +781,7 @@ function TW4CourseRules() {
     setFlightPath(prev => [...prev, nodeId]);
 
     // Add the selected node and its dependent nodes to visible features
-    const dependentNodes = crFeatures[nodeId]?.dependentNode || [];
+    const dependentNodes = features[nodeId]?.dependentNode || [];
     setVisibleFeatures(prev => [...prev, nodeId, ...dependentNodes]);
 
     // Reset quiz when moving to new node
@@ -839,7 +795,7 @@ function TW4CourseRules() {
     setCurrentNode(startingAirport);
     setFlightPath([startingAirport]);
     // Include dependent nodes in visible features
-    const dependentNodes = crFeatures[startingAirport]?.dependentNode || [];
+    const dependentNodes = features[startingAirport]?.dependentNode || [];
     setVisibleFeatures([startingAirport, ...dependentNodes]);
 
     // Reset quiz
@@ -858,7 +814,7 @@ function TW4CourseRules() {
     setFlightPath(newPath);
     setCurrentNode(newCurrent);
     // Keep each remaining node's dependent landmarks on the map
-    setVisibleFeatures(newPath.flatMap(id => [id, ...(crFeatures[id]?.dependentNode || [])]));
+    setVisibleFeatures(newPath.flatMap(id => [id, ...(features[id]?.dependentNode || [])]));
 
     // Reset quiz when going back
     if (flightPathQuizMode) {
@@ -869,9 +825,9 @@ function TW4CourseRules() {
 
   // Flight path quiz mode functions
   const revealNextFlightPathAnswer = () => {
-    if (!currentNode || !crFeatures[currentNode]) return;
+    if (!currentNode || !features[currentNode]) return;
 
-    const feature = crFeatures[currentNode];
+    const feature = features[currentNode];
     if (!feature.questions || feature.questions.length === 0) return;
 
     const questionText = feature.questions[fpQuizQuestionIndex];
@@ -883,9 +839,9 @@ function TW4CourseRules() {
   };
 
   const nextFlightPathQuestion = () => {
-    if (!currentNode || !crFeatures[currentNode]) return;
+    if (!currentNode || !features[currentNode]) return;
 
-    const feature = crFeatures[currentNode];
+    const feature = features[currentNode];
     if (!feature.questions || feature.questions.length === 0) return;
 
     // Move to next question if available
@@ -896,9 +852,9 @@ function TW4CourseRules() {
   };
 
   const handleFlightPathQuizButton = () => {
-    if (!currentNode || !crFeatures[currentNode]) return;
+    if (!currentNode || !features[currentNode]) return;
 
-    const feature = crFeatures[currentNode];
+    const feature = features[currentNode];
     if (!feature.questions || feature.questions.length === 0) return;
 
     const questionText = feature.questions[fpQuizQuestionIndex];
@@ -1032,7 +988,7 @@ function TW4CourseRules() {
     const options = [<option key="" value="">All Features</option>];
 
     // Only offer folders that have questions in them
-    const hasQuestions = (path) => Object.values(crFeatures).some(f =>
+    const hasQuestions = (path) => Object.values(features).some(f =>
       f.questions && f.questions.length > 0 &&
       (f.folderPath === path || (f.folderPath || '').startsWith(path + ' > '))
     );
@@ -1183,6 +1139,21 @@ function TW4CourseRules() {
       <p className="about-text" style={{textAlign: 'center', fontStyle: 'italic', marginTop: '-30px'}}>
         Huge thank you to Francis Chval for the <a href="https://drive.google.com/drive/folders/1zRndKMJi24wtqIwm_tSC3z71ZMJgFVEk?usp=sharing" target="_blank" rel="noopener noreferrer">map data</a>
       </p>
+      <p className="cr-source">
+        {record && record.doc.source && (
+          <>
+            From the {record.doc.source.publication}
+            {record.doc.source.date ? `, ${record.doc.source.date}` : ''}.{' '}
+          </>
+        )}
+        Anyone can correct the words: click <b>edit</b> on a leg or a map popup.{' '}
+        {record && (
+          <button type="button" className="cr-link" onClick={() => { setEditing(null); setShowHistory(true); }}>
+            [history]
+          </button>
+        )}
+      </p>
+      {loadError && <p className="cr-source cr-source--warn">Course rules text: {loadError}</p>}
 
       {/* Control Mode Selector */}
       <div className="course-rules-mode-selector">
@@ -1240,6 +1211,8 @@ function TW4CourseRules() {
             controlMode={controlMode}
             visibleFlightPath={visibleFeatures}
             currentRandomFeature={currentRandomFeature}
+            textRef={textRef}
+            onEditRef={onEditRef}
           />
         </MapContainer>
 
@@ -1263,6 +1236,27 @@ function TW4CourseRules() {
         </div>
       </div>
 
+      {/* The editor or the history, under the map whichever mode is showing */}
+      {editing && record && (
+        <LegEditor
+          key={editing}
+          id={editing}
+          names={names}
+          record={record}
+          isAirfield={crFeatures[editing]?.category === 'Point' && /^K[A-Z0-9]{3}$/.test(crFeatures[editing]?.name || '')}
+          onClose={() => setEditing(null)}
+          onPublished={() => { setEditing(null); reload(); }}
+        />
+      )}
+      {showHistory && record && (
+        <CourseRulesHistory
+          names={names}
+          latestRev={record.rev}
+          onClose={() => setShowHistory(false)}
+          onRestored={() => { setShowHistory(false); reload(); }}
+        />
+      )}
+
       {/* Controls Panel */}
       <div className="course-rules-controls">
         {/* Flight Path Builder Mode */}
@@ -1282,7 +1276,7 @@ function TW4CourseRules() {
                     setCurrentNode(airportId);
                     setFlightPath([airportId]);
                     // Include dependent nodes in visible features
-                    const dependentNodes = crFeatures[airportId]?.dependentNode || [];
+                    const dependentNodes = features[airportId]?.dependentNode || [];
                     setVisibleFeatures([airportId, ...dependentNodes]);
                     // Reset quiz when changing starting airport
                     if (flightPathQuizMode) {
@@ -1292,11 +1286,11 @@ function TW4CourseRules() {
                   }}
                   style={{ flex: 1, padding: '8px', fontSize: '14px' }}
                 >
-                  <option value="Point-default-0">{crFeatures["Point-default-0"]?.parentFolder || "KTFP"}</option>
-                  <option value="Point-default-21">{crFeatures["Point-default-21"]?.parentFolder || "KRKP"}</option>
-                  <option value="Point-default-38">{crFeatures["Point-default-38"]?.parentFolder || "KNGT"}</option>
-                  <option value="Point-default-50">{crFeatures["Point-default-50"]?.parentFolder || "KRKP"}</option>
-                  <option value="Point-default-95">{crFeatures["Point-default-95"]?.parentFolder || "KNGP"}</option>
+                  <option value="Point-default-0">{features["Point-default-0"]?.parentFolder || "KTFP"}</option>
+                  <option value="Point-default-21">{features["Point-default-21"]?.parentFolder || "KRKP"}</option>
+                  <option value="Point-default-38">{features["Point-default-38"]?.parentFolder || "KNGT"}</option>
+                  <option value="Point-default-50">{features["Point-default-50"]?.parentFolder || "KRKP"}</option>
+                  <option value="Point-default-95">{features["Point-default-95"]?.parentFolder || "KNGP"}</option>
                 </select>
                 <button
                   onClick={() => {
@@ -1317,8 +1311,8 @@ function TW4CourseRules() {
                 >
                   Quiz Mode
                 </button>
-                {flightPathQuizMode && crFeatures[currentNode] && crFeatures[currentNode].questions && crFeatures[currentNode].questions.length > 0 && (() => {
-                  const feature = crFeatures[currentNode];
+                {flightPathQuizMode && features[currentNode] && features[currentNode].questions && features[currentNode].questions.length > 0 && (() => {
+                  const feature = features[currentNode];
                   const { totalBlanks } = parseQuestionWithBlanks(
                     feature.questions[fpQuizQuestionIndex],
                     feature.answers,
@@ -1356,44 +1350,55 @@ function TW4CourseRules() {
             {/* Current Location Display */}
             <div style={{ marginBottom: '15px', padding: '10px', background: 'var(--surface-e3f2fd)', borderRadius: '4px' }}>
               <strong>Current Location:</strong>
+              {record && !flightPathQuizMode && (
+                <button type="button" className="cr-link cr-link--edit" onClick={() => onEditRef.current(currentNode)}>
+                  [edit]
+                </button>
+              )}
               <div style={{ marginTop: '5px' }}>
-                {crFeatures[currentNode] ? crFeatures[currentNode].name : 'Loading…'}
+                {features[currentNode] ? features[currentNode].name : 'Loading…'}
               </div>
 
+              {/* An airfield's card, closed until asked for */}
+              {features[currentNode]?.card && !flightPathQuizMode && (
+                <details className="cr-card-details">
+                  <summary>Airfield info</summary>
+                  <div dangerouslySetInnerHTML={{ __html: cardHtml(features[currentNode].card) }} />
+                </details>
+              )}
+
               {/* Course Rule or Question (depending on quiz mode) */}
-              {crFeatures[currentNode] && !flightPathQuizMode && crFeatures[currentNode].customDescription && (
+              {features[currentNode] && !flightPathQuizMode && features[currentNode].customDescription && (
                 <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--line-90caf9)' }}>
                   <strong>Course Rule:</strong>
                   <div
                     style={{ marginTop: '5px', fontSize: '13px', lineHeight: '1.4' }}
                     dangerouslySetInnerHTML={{
-                      __html: formatCustomDescription(
-                        crFeatures[currentNode].customDescription,
-                        crFeatures[currentNode].answers
-                      )
+                      // Built from escaped text, the quiz blanks in bold (courserules/rules.js)
+                      __html: features[currentNode].customDescription
                     }}
                   />
                 </div>
               )}
 
               {/* Radio calls for this leg (hidden in quiz mode, like the course rule) */}
-              {crFeatures[currentNode] && !flightPathQuizMode && (
+              {features[currentNode] && !flightPathQuizMode && (
                 <>
-                  <RadioCalls comms={crFeatures[currentNode].comms} />
-                  <ExampleComms key={currentNode} blocks={crExamples[currentNode]} />
+                  <RadioCalls comms={features[currentNode].comms} />
+                  <ExampleComms key={currentNode} blocks={features[currentNode].examples} />
                 </>
               )}
 
               {/* Question (when in quiz mode) */}
-              {crFeatures[currentNode] && flightPathQuizMode && crFeatures[currentNode].questions && crFeatures[currentNode].questions.length > 0 && (
+              {features[currentNode] && flightPathQuizMode && features[currentNode].questions && features[currentNode].questions.length > 0 && (
                 <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--line-90caf9)' }}>
-                  <strong>Question {fpQuizQuestionIndex + 1} of {crFeatures[currentNode].questions.length}:</strong>
+                  <strong>Question {fpQuizQuestionIndex + 1} of {features[currentNode].questions.length}:</strong>
                   <div
                     style={{ marginTop: '5px', fontSize: '13px', lineHeight: '1.8' }}
                     dangerouslySetInnerHTML={{
                       __html: parseQuestionWithBlanks(
-                        crFeatures[currentNode].questions[fpQuizQuestionIndex],
-                        crFeatures[currentNode].answers,
+                        features[currentNode].questions[fpQuizQuestionIndex],
+                        features[currentNode].answers,
                         fpQuizQuestionIndex,
                         fpQuizRevealedAnswers
                       ).html
@@ -1403,7 +1408,7 @@ function TW4CourseRules() {
               )}
 
               {/* No questions available message */}
-              {crFeatures[currentNode] && flightPathQuizMode && (!crFeatures[currentNode].questions || crFeatures[currentNode].questions.length === 0) && (
+              {features[currentNode] && flightPathQuizMode && (!features[currentNode].questions || features[currentNode].questions.length === 0) && (
                 <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--line-90caf9)' }}>
                   <em style={{ color: 'var(--ink-666666)', fontSize: '13px' }}>No questions available for this location.</em>
                 </div>
@@ -1417,7 +1422,7 @@ function TW4CourseRules() {
                 <div style={{ marginTop: '5px', fontSize: '12px', color: 'var(--ink-666666)' }}>
                   {flightPath.map((nodeId, index) => (
                     <span key={`path-${index}`}>
-                      {crFeatures[nodeId] ? crFeatures[nodeId].name : nodeId}
+                      {features[nodeId] ? features[nodeId].name : nodeId}
                       {index < flightPath.length - 1 && ' → '}
                     </span>
                   ))}
@@ -1462,7 +1467,7 @@ function TW4CourseRules() {
                   );
                 })() : (
                   <div style={{ padding: '20px', textAlign: 'center', color: 'var(--ink-999999)' }}>
-                    {crFeatures[currentNode]?.endNote || 'No more waypoints available from this location.'}
+                    {features[currentNode]?.endNote || 'No more waypoints available from this location.'}
                   </div>
                 )}
               </div>
@@ -1494,7 +1499,7 @@ function TW4CourseRules() {
         {controlMode === 'quiz' && quizMode && (
           <div className="quiz-mode">
             {/* Pure Random Quiz */}
-            {currentRandomFeature && crFeatures[currentRandomFeature] && (
+            {currentRandomFeature && features[currentRandomFeature] && (
               <div className="pure-random-quiz">
                 <h3>Random Quiz</h3>
 
@@ -1518,24 +1523,24 @@ function TW4CourseRules() {
                 <div style={{ marginBottom: '15px', padding: '10px', background: 'var(--surface-e3f2fd)', borderRadius: '4px' }}>
                   <strong>Feature:</strong>
                   <div style={{ marginTop: '5px' }}>
-                    {crFeatures[currentRandomFeature].name}
+                    {features[currentRandomFeature].name}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--ink-666666)', marginTop: '3px' }}>
-                    {crFeatures[currentRandomFeature].folderPath}
+                    {features[currentRandomFeature].folderPath}
                   </div>
                 </div>
 
                 {/* Question with Blanks */}
                 <div style={{ marginBottom: '15px', padding: '15px', background: 'var(--surface)', borderRadius: '4px', border: '1px solid var(--line-dddddd)' }}>
                   <strong style={{ display: 'block', marginBottom: '10px' }}>
-                    Question {currentRandomQuestionIndex + 1} of {crFeatures[currentRandomFeature].questions.length}:
+                    Question {currentRandomQuestionIndex + 1} of {features[currentRandomFeature].questions.length}:
                   </strong>
                   <div
                     style={{ lineHeight: '1.8', fontSize: '14px' }}
                     dangerouslySetInnerHTML={{
                       __html: parseQuestionWithBlanks(
-                        crFeatures[currentRandomFeature].questions[currentRandomQuestionIndex],
-                        crFeatures[currentRandomFeature].answers,
+                        features[currentRandomFeature].questions[currentRandomQuestionIndex],
+                        features[currentRandomFeature].answers,
                         currentRandomQuestionIndex,
                         revealedAnswerIndices
                       ).html
@@ -1550,8 +1555,8 @@ function TW4CourseRules() {
                     disabled={
                       revealedAnswerIndices.length >=
                       parseQuestionWithBlanks(
-                        crFeatures[currentRandomFeature].questions[currentRandomQuestionIndex],
-                        crFeatures[currentRandomFeature].answers,
+                        features[currentRandomFeature].questions[currentRandomQuestionIndex],
+                        features[currentRandomFeature].answers,
                         currentRandomQuestionIndex,
                         []
                       ).totalBlanks
@@ -1566,8 +1571,8 @@ function TW4CourseRules() {
                       fontWeight: 'bold',
                       opacity: revealedAnswerIndices.length >=
                         parseQuestionWithBlanks(
-                          crFeatures[currentRandomFeature].questions[currentRandomQuestionIndex],
-                          crFeatures[currentRandomFeature].answers,
+                          features[currentRandomFeature].questions[currentRandomQuestionIndex],
+                          features[currentRandomFeature].answers,
                           currentRandomQuestionIndex,
                           []
                         ).totalBlanks ? 0.5 : 1
@@ -1575,8 +1580,8 @@ function TW4CourseRules() {
                   >
                     Reveal Next Answer ({revealedAnswerIndices.length} / {
                       parseQuestionWithBlanks(
-                        crFeatures[currentRandomFeature].questions[currentRandomQuestionIndex],
-                        crFeatures[currentRandomFeature].answers,
+                        features[currentRandomFeature].questions[currentRandomQuestionIndex],
+                        features[currentRandomFeature].answers,
                         currentRandomQuestionIndex,
                         []
                       ).totalBlanks

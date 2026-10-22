@@ -1,3709 +1,2043 @@
-// Shared custom descriptions
-const MUSTANG_NORTH_AREAS_1_2_DESCRIPTION = [
-  "Working altitudes are 6500' MSL to 15,000' MSL (Up to 17,500' MSL available upon request with Corpus Approach).",
-  "WARNING!  maintain a 3 NM stand-off from MUSTANG Beach Airport (KRAS) below 11,500' MSL when parajumping operations are in effect. ",
-  "Solos must only use MUSTANG areas 1, 2, 3, and 4.",
-  "<u>Entry</u>",
-  "Abeam MUSTANG Beach Airport auto-switch to Corpus Approach on CH 17 UHF. Climb to working altitude once established under the working area from an altitude of 5500' MSL.",
-  "<u>Exit</u>",
-  "Contact Corpus Approach on CH 17 UHF.  Advise complete in the working area and state intentions.  If returning to KNGP, contact Corpus Approach on CH 8 UHF when directed and join the Northern or Southern Arrival. Departing North MUSTANG area for northern arrival, ensure established at 1,500' MSL no later than nine-mile point."
-];
-
-const MUSTANG_SOUTH_AREAS_3_4_DESCRIPTION = [
-  "Working altitudes are 6500' MSL to 15,000' MSL (Up to 17,500' MSL available upon request with Corpus Approach).",
-  "WARNING!  maintain a 3 NM stand-off from MUSTANG Beach Airport (KRAS) below 11,500' MSL when parajumping operations are in effect. ",
-  "Solos must only use MUSTANG areas 1, 2, 3, and 4.",
-  "<u>Entry</u>",
-  "Abeam Padre Balli Park (Old Bob Hall Pier) auto-switch to Corpus Approach on CH 17 UHF. Climb to working altitude once established under the working area from an altitude of 5500' MSL.",
-  "<u>Exit</u>",
-  "Contact Corpus Approach on CH 17 UHF.  Advise complete in the working area and state intentions.  If returning to KNGP, contact Corpus Approach on CH 8 UHF when directed and join the Northern or Southern Arrival. Departing South MUSTANG to intercept southern arrival, maintain vigilant scan for KNWL course rules departure traffic."
-];
-
-const MUSTANG_AREAS_5_6_7_8_DESCRIPTION = [
-  "<u>Special Entry Rules</u>",
-  "If working MUSTANG areas 5, 6, 7, or 8, turn away from the beach towards your assigned area once abeam. Do not breach the SEAGULL working area boundary when working or transiting to MUSTANG areas 5, 6, 7 and 8.",
-  "<u>Special Exit Rules</u>",
-  "When complete Areas 5-8, proceed towards the beach line and descend to 4,500' MSL prior to transiting."
-];
-
-// Radio calls, verbatim from the TW-4 VFR Course Rules Manual (COMTRAWINGFOURINST 3710.14,
-// 20 Feb 2025); page in each comment. `when` labels when a call is made, from the manual's
-// heading or lead-in; `after` is the manual's note under a call.
-const BEACH_LINE_COMMS = [ // 2-5
-  { radio: "CH 8 UHF", text: "Corpus Departure, (call sign), 500 feet off Navy Corpus, (Transition)." }
-];
-
-const PORTLAND_COMMS = [ // 2-7
-  { radio: "CH 3 UHF", text: "Navy Corpus Ground, (call sign), (position), request taxi with information ALPHA, Portland Low." },
-  { radio: "CH 8 UHF", text: "Corpus Departure, (call sign), 500 feet off Navy Corpus, Portland Low followed by (VFR intentions)." }
-];
-
-const CABANISS_NUECES_CALL = { // 2-9
-  radio: "CH 27 UHF", text: "Cabaniss Tower, (call sign), Nueces transition.",
-  after: "Switch Corpus Christi Tower when directed by Cabaniss Tower"
-};
-
-const NUECES_COMMS = [ // 2-9
-  { radio: "CH 3 UHF", text: "Navy Corpus Ground, (call sign), (position), request taxi with information ALPHA, Nueces Transition." },
-  CABANISS_NUECES_CALL
-];
-
-const RUSTY_COMMS = [ // 2-11
-  { radio: "CH 3 UHF", text: "Navy Corpus Ground, (call sign), (position), request taxi with information ALPHA, RUSTY / KINGS 4 VFR." },
-  { radio: "CH 12 UHF", text: "Corpus Departure, (call sign), 500 feet off Navy Corpus, KINGS 4 / course rules Goliad / VFR to XXX." }
-];
-
-const WALDRON_OSO_CALLS = [ // 2-13
-  { radio: "CH 30 UHF", text: "Waldron Tower, (call sign), Oso transition." },
-  { who: "NWL TWR", text: "(call sign), Waldron Tower, runway 13 is in use, no aircraft in the pattern, altimeter 29.92, report the numbers for runway 13." }
-];
-
-const OSO_COMMS = [ // 2-13
-  { radio: "CH 3 UHF", text: "Navy Corpus Ground, (call sign), (position), request taxi with information ALFA, Oso Transition." },
-  ...WALDRON_OSO_CALLS
-];
-
-const MUSTANG_CENTRAL_COMMS = [ // 2-15
-  { radio: "CH 18 UHF", text: "99 Central, (tac call sign), Working 7,500." }
-];
-
-const MUSTANG_EXIT_COMMS = [ // 2-16
-  { radio: "CH 17 UHF", text: "Corpus Approach, (call sign), complete in MUSTANG 1, request High-Key into Aransas County / Course Rules SHAMROCK with information ALPHA / North to South transition" }
-];
-
-const KINGS_ENTRY_COMMS = [ // 2-26
-  { radio: "CH 22 VHF", text: "Houston Center, (call sign), passing (altitude), working KINGS 4." },
-  { when: "Claiming a KINGS 4 MOA working area:", radio: "CH 20 UHF", text: "99 KINGS 4, anybody working area ____ high / low?" },
-  { when: "After responses:", radio: "CH 20 UHF", text: "99 KINGS 4, (call sign) claims area ____ (high / low)." }
-];
-
-const KINGS_EXIT_COMMS = [ // 2-28
-  { radio: "CH 22 VHF", text: "Houston Center, (call sign), Complete KINGS 4, Terminate Goliad." },
-  { when: "Departing working area:", radio: "CH 20 UHF", text: "99 KINGS 4, (call sign) departing area ____ (high/low), (Goliad/Aransas County/PPEL Goliad)." },
-  { when: "Clearing an unclaimed working area to climb/descend:", radio: "CH 20 UHF", text: "99 KINGS 4, anybody working area ____ low/high." },
-  { when: "If the block is clear:", radio: "CH 20 UHF", text: "99 KINGS 4, (call sign) climbing/descending through area ____ low/high, for Goliad/9 High." }
-];
-
-const GOLIAD_ARRIVAL_COMMS = [ // 2-30 to 2-32
-  { radio: "CH 15 UHF", who: "AIRCRAFT", text: "Goliad, landing." },
-  { who: "RDO", text: "Goliad landing (RWY #). (#) in the pattern. No solos." },
-  { when: "Once established at the 4 NM initial:", who: "AIRCRAFT", text: "Goliad RDO, (Call Sign), initial (RWY#)." },
-  { who: "RDO", text: "(Call Sign), You are #1 for the break, and #2 when you get here." },
-  { who: "AIRCRAFT", text: "(Call Sign), 1 for 2." },
-  { when: "Or if the RDO is unable to accept an aircraft into the pattern:", who: "RDO", text: "(Call Sign), execute discontinued entry." },
-  { when: "Abeam the approach end numbers:", who: "AIRCRAFT", text: "(Call Sign), numbers (RWY #)" },
-  { when: "Break:", who: "AIRCRAFT", text: "Goliad RDO, (Call Sign), crosswind break" },
-  { when: "At the 180 Position:", who: "AIRCRAFT", text: "(AC ID), 180, gear down." }
-];
-
-const GOLIAD_PATTERN_COMMS = [ // 2-34, 2-35
-  { when: "Crosswind:", who: "AIRCRAFT", text: "(AC ID), crosswind (touch & go / pattern PEL / AOA)" },
-  { when: "Practice PEL, 3-5 NM from High-Key:", who: "AIRCRAFT", text: "Goliad RDO, (Call Sign), __ miles to the (cardinal direction), (altitude), Practice PEL, (RWY #)." },
-  { who: "RDO", text: "(Call Sign), you are #2 for High-Key, and #2 in the pattern. De-conflict with (Call Sign #2) on Victor." },
-  { who: "AIRCRAFT", text: "(Call Sign), #2 for #2, WILCO." },
-  { when: "High-Key:", who: "AIRCRAFT", text: "Goliad RDO, (Call Sign), High-Key, (RWY #)." },
-  { when: "Low-Key:", who: "AIRCRAFT", text: "(Call Sign), Low-Key, gear down." },
-  { when: "Or…", who: "AIRCRAFT", text: "(Call Sign), Pattern Low-Key, gear down." },
-  { who: "RDO", text: "Roger, Gear" }
-];
-
-const GOLIAD_DEPARTURE_COMMS = [ // 2-36
-  { who: "AIRCRAFT", text: "Goliad RDO, (call sign), departing" }
-];
-
-const ARANSAS_ARRIVAL_COMMS = [ // 2-51
-  { when: "GOLIAD/KINGS 4 MOA:", radio: "UHF", text: "Corpus Approach, (call sign), Over Woodsboro, course rules Aransas County." },
-  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), 10 miles to the west, at 2500, inbound for a left overhead (RWY #), Aransas County." },
-  { radio: "UHF", text: "Any Texans working Aransas County?" },
-  { radio: "UHF", text: "(Call sign) is inbound for the initial." },
-  { radio: "VHF", text: "Aransas County Traffic, (call sign), 2 mile Initial (RWY #) for a left overhead, Aransas County." },
-  { radio: "VHF", text: "Aransas County Traffic, (call sign), numbers (RWY #) for the left overhead, Aransas County." }
-];
-
-const ARANSAS_PATTERN_COMMS = [ // 2-53
-  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), Left crosswind, (RWY #), Aransas County." },
-  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), Left base, (RWY #), touch & go, Aransas County." },
-  { when: "PPEL/P:", radio: "VHF", text: "Aransas County Traffic, (Call Sign), high left crosswind, (RWY #), Aransas County." },
-  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), high left base, (RWY #), touch & go, Aransas County." }
-];
-
-const ARANSAS_DEPARTURE_COMMS = [ // 2-55
-  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), number one upwind/downwind departing to the east, Aransas County." },
-  { radio: "VHF", text: "Aransas County Traffic, (Call Sign), clear to the south, last call, Aransas County." },
-  { radio: "CH 8 UHF", text: "Corpus Approach, (Call Sign), Off Aransas County, Course Rules SHAMROCK with information ALPHA." }
-];
-
-const WALDRON_ARRIVAL_COMMS = [ // 2-40, 2-41
-  { radio: "CH 8 UHF", who: "AIRCRAFT", text: "Corpus Approach, (Call Sign), course rules to Waldron." },
-  { when: "Or…", who: "AIRCRAFT", text: "Corpus Approach, (Call Sign), request High-Key to Waldron." },
-  { who: "AIRCRAFT", text: "Corpus Approach, (Call Sign), Camel Humps, Terminate." },
-  { radio: "CH 30 UHF", who: "AIRCRAFT", text: "Waldron Tower, (Call Sign), Camel Humps for Touch and Go(s)." },
-  { who: "TWR", text: "(Call Sign), Waldron Tower, Report the initial RWY 13" },
-  { who: "AIRCRAFT", text: "Waldron Tower, (Call Sign), Initial 13." },
-  { who: "AIRCRAFT", text: "Waldron Tower, (Call Sign), Numbers 13" }
-];
-
-const WALDRON_PATTERN_COMMS = [ // 2-45
-  { who: "TWR", text: "(Call Sign), left downwind approved." },
-  { when: "PPEL/P:", who: "AIRCRAFT", text: "Waldron Tower, (Call Sign), request pattern Low-Key." },
-  { who: "TWR", text: "(Call Sign), Pattern Low-Key Approved at or below 2000’." }
-];
-
-const WALDRON_EAST_DEPARTURE_COMMS = [ // 2-46
-  { radio: "CH 8 UHF", who: "AIRCRAFT", text: "Corpus Approach, (Call Sign), Abeam the Power Plant/off Waldron with information ALPHA, course rules SHAMROCK/Request South MUSTANG." }
-];
-
-const SHAMROCK_COMMS = [ // 2-63
-  { radio: "CH 4 UHF", who: "AIRCRAFT", text: "Navy Corpus Tower, (Call Sign), SHAMROCK, (Full Stop/Touch & Go(s)/Straight-in)" }
-];
-
-const KNGP_INITIAL_COMMS = [ // 2-63
-  { who: "AIRCRAFT", text: "Navy Corpus Tower, (Call Sign), Initial (RWY #)" },
-  { who: "TWR", text: "(Call Sign), Navy Corpus Tower, Report the Numbers (RWY #)" },
-  { when: "At the Numbers…", who: "AIRCRAFT", text: "Navy Corpus Tower, (Call Sign), Numbers (RWY #)" }
-];
+// The course rules map's features: what each placemark in public/kml/course-rules.kml is
+// called, the folder it sits in, and where the Flight Path Builder can go next from it.
+//
+// Keyed by the page's feature ids, `${category}-${subType}-${n}`, numbered in the KML's
+// placemark order (TW4CourseRules.js, KmlLayer): reorder the KML and every id moves. The
+// server's course rules document (lambda/discussApi/courseRules.mjs) is keyed by these same ids.
+//
+// The words about each feature (course rules, quiz blanks, radio calls, example comms, airfield
+// cards) are not here. They are the community's, edited on the page and stored on the server;
+// until 2026-10-21 they were typed into this file and CourseRulesExamples.js, and
+// tools/courserules-seed.js read them from there once.
+//
+// `endNote` is the site's own line for a stop with nowhere further to go on this map.
 
 export const crFeatures = {
-  "Point-default-0" : {
-    name : "KTFP",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport",
-    subCategory : "Traffic Patterns",
-    category : "Point",
-    description : "<table width=\"100%\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" bgcolor=\"#e8e9cb\">\n   <tr>\n    <td>\n      <center><b><font size=\"5\" color=\"#009999\">(KTFP) Ingleside Regional Airport</font></b></center>\n    </td>\n  </tr>\n  <tr>\n    <td>\n        <p><b>Field Elevation: 18'</b><br />\n\n        <p><b>Runway 13/31</b><br />\n        Magnetic Heading: 137°/317°<br />\n        Length x Width: 5000' x 75'</p>\n\n        <p><b>Approach Frequencies</b><br />\n        UHF 6 (348.725MHz)<br />\n        VHF 6 (120.9MHz)</p>\n\n        <p><b>ASOS</b></br>\n        VHF 118.775MHz</p>\n\n        <p><b>CTAF</b></br>\n        VHF 122.7MHz</p>\n\n        <p><b>Traffic Rules</b><br />\n        Aircraft in pattern: <font color=\"#cc0000\"><b>5 MAX</b></font><br />\n        Break: 1,000' MSL<br />\n        Pattern: 800' MSL <br />\n        Pattern Direction: Left <br />\n        PPELs: Same as pattern direction<br />\n        Hours: Daylight Only</p>\n        \n       <p>Practice \"See and Avoid\". Give way to civilian aircraft. CTAF calls made when turning crosswind and base legs, intentions announced upon entry/exit, reporting on 2NM initial, and reporting on numbers.</p>\n\n       <p><b>WARNING!</b><br />\n       Once established in the pattern, aircrew must contact Corpus Approach on UHF 6 prior to climbing for high key 3000'MSL. KRAS RNAV final approach course runway 12 lies 1NM SW of KTFP with a minimum altitude of 1500' MSL.</p>\n    </td>\n  </tr>\n</table>\n",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-default-0": {
+    name: "KTFP",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport",
+    subCategory: "Traffic Patterns",
+    category: "Point",
     dependentNode: ["Airspace-default-1"],
-    nextNode : ["Routes-Traffic Patterns-2", "Routes-Traffic Patterns-3", "Routes-Departures-17", "Routes-Departures-18", "Routes-Departures-19", "Routes-Departures-20"]
+    nextNode: ["Routes-Traffic Patterns-2","Routes-Traffic Patterns-3","Routes-Departures-17","Routes-Departures-18","Routes-Departures-19","Routes-Departures-20"]
   },
-  "Airspace-default-1" : {
-    name : "2 NM Radius",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport",
-    subCategory : "Airspace",
-    category : "Airspace",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Airspace-default-1": {
+    name: "2 NM Radius",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport",
+    subCategory: "Airspace",
+    category: "Airspace",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Traffic Patterns-2" : {
-    name : "13",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : "Traffic patterns comply with Federal Aviation Regulations and will be made to the left.  PPELs must be flown in the same direction as the normal pattern.  The maximum number of aircraft permissible for TW-4 pattern operations is five (civil or military).",
-    questions : [],
-    answers : [],
+  "Routes-Traffic Patterns-2": {
+    name: "13",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Routes-Traffic Patterns-3" : {
-    name : "31",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : "Traffic patterns comply with Federal Aviation Regulations and will be made to the left.  PPELs must be flown in the same direction as the normal pattern.  The maximum number of aircraft permissible for TW-4 pattern operations is five (civil or military).",
-    questions : [],
-    answers : [],
+  "Routes-Traffic Patterns-3": {
+    name: "31",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Point-Arrivals-4" : {
-    name : "9 Mile Point",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > North Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-4": {
+    name: "9 Mile Point",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > North Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-5" : {
-    name : "13",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > North Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Contact Corpus Approach and state intentions.  Proceed down the intracoastal at 1500' MSL, once clear of Aransas County Airport, proceed direct to the initial or downwind.",
-    questions : ["Contact Corpus Approach and state intentions.  Proceed down the intracoastal at _____ MSL, once clear of ______, proceed direct to the initial or downwind. "],
-    answers : [["1500'","Aransas County Airport"]],
+  "Routes-Arrivals-5": {
+    name: "13",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > North Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-default-21"],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Routes-Arrivals-6" : {
-    name : "31",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > North Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Contact Corpus Approach and state intentions.  Proceed down the intracoastal at 1500' MSL, once clear of Aransas County Airport, proceed direct to the initial or downwind.",
-    questions : ["Contact Corpus Approach and state intentions.  Proceed down the intracoastal at _____ MSL, once clear of ______, proceed direct to the initial or downwind. "],
-    answers : [["1500'","Aransas County Airport"]],
+  "Routes-Arrivals-6": {
+    name: "31",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > North Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-default-21"],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Point-Arrivals-7" : {
-    name : "Port Royal",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > East / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-7": {
+    name: "Port Royal",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > East / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-8" : {
-    name : "13",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > East / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "<u>Southern Entry</u>",
-      "From the Southern Arrival, continue up the beach line at 2500' MSL and once abeam Port Royal, proceed direct to Ingleside Regional (~330°).  Once feet dry over Ingleside, begin descent into KTFP.",
-      "<u>Eastern Entry</u>",
-      "Maintain 2500' MSL on the Eastern Arrival.  Once abeam Port Royal, proceed to Ingleside Regional (~330° ).  Once feet dry over Ingleside, begin descent into KTFP.  Be prepared to comply with alternate ATC instructions as necessary."
-    ],
-    questions : [
-      "From the Southern Arrival, continue up the beach line at _____ MSL and once abeam _____, proceed direct to Ingleside Regional (~_____).  Once feet dry over Ingleside, begin descent into KTFP.",
-      "Maintain ______ MSL on the Eastern Arrival.  Once abeam _____, proceed to Ingleside Regional (~_____ ).  Once feet dry over Ingleside, begin descent into KTFP.  Be prepared to comply with alternate ATC instructions as necessary."
-    ],
-    answers : [
-      ["2500'", "Port Royal", "330°"],
-      ["2500'", "Port Royal", "330°"]
-    ],
+  "Routes-Arrivals-8": {
+    name: "13",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > East / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-7"],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Routes-Arrivals-9" : {
-    name : "31",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > East / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "<u>Southern Entry</u>",
-      "From the Southern Arrival, continue up the beach line at 2500' MSL and once abeam Port Royal, proceed direct to Ingleside Regional (~330°).  Once feet dry over Ingleside, begin descent into KTFP.",
-      "<u>Eastern Entry</u>",
-      "Maintain 2500' MSL on the Eastern Arrival.  Once abeam Port Royal, proceed to Ingleside Regional (~330° ).  Once feet dry over Ingleside, begin descent into KTFP.  Be prepared to comply with alternate ATC instructions as necessary."
-    ],
-    questions : [
-      "From the Southern Arrival, continue up the beach line at _____ MSL and once abeam _____, proceed direct to Ingleside Regional (~_____).  Once feet dry over Ingleside, begin descent into KTFP.",
-      "Maintain ______ MSL on the Eastern Arrival.  Once abeam _____, proceed to Ingleside Regional (~_____ ).  Once feet dry over Ingleside, begin descent into KTFP.  Be prepared to comply with alternate ATC instructions as necessary."
-    ],
-    answers : [
-      ["2500'", "Port Royal", "330°"],
-      ["2500'", "Port Royal", "330°"]
-    ],
+  "Routes-Arrivals-9": {
+    name: "31",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > East / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-7"],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Point-Arrivals-10" : {
-    name : "PT Rusty",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > West Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-10": {
+    name: "PT Rusty",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > West Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-11", "Routes-Arrivals-12"]
+    nextNode: ["Routes-Arrivals-11","Routes-Arrivals-12"]
   },
-  "Routes-Arrivals-11" : {
-    name : "13",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > West Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "On initial contact with Corpus Approach state intentions.  Join the Western Arrival, and at PT RUSTY, proceed direct to the initial or downwind.",
-    questions : ["On initial contact with Corpus Approach state intentions.  Join the Western Arrival, and at _____, proceed direct to the initial or downwind."],
-    answers : [["PT RUSTY"]],
+  "Routes-Arrivals-11": {
+    name: "13",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > West Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-10"],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Routes-Arrivals-12" : {
-    name : "31",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > West Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "On initial contact with Corpus Approach state intentions.  Join the Western Arrival, and at PT RUSTY, proceed direct to the initial or downwind.",
-    questions : ["On initial contact with Corpus Approach state intentions.  Join the Western Arrival, and at _____, proceed direct to the initial or downwind."],
-    answers : [["PT RUSTY"]],
+  "Routes-Arrivals-12": {
+    name: "31",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > West Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-10"],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Routes-Arrivals-13" : {
-    name : "13",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > Arrivals from KNGP",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Execute RUSTY Departure procedures. State intentions with Corpus Departure.  When cleared, proceed direct to McCampbell-Porter.",
-    questions : ["Execute ______ Departure procedures. State intentions with Corpus Departure.  When cleared, proceed direct to McCampbell-Porter."],
-    answers : [["RUSTY"]],
+  "Routes-Arrivals-13": {
+    name: "13",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > Arrivals from KNGP",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Routes-Arrivals-14" : {
-    name : "31",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > Arrivals from KNGP",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Execute RUSTY Departure procedures. State intentions with Corpus Departure.  When cleared, proceed direct to McCampbell-Porter.",
-    questions : ["Execute ______ Departure procedures. State intentions with Corpus Departure.  When cleared, proceed direct to McCampbell-Porter."],
-    answers : [["RUSTY"]],
+  "Routes-Arrivals-14": {
+    name: "31",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > Arrivals from KNGP",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Routes-Arrivals-15" : {
-    name : "13",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > Arrivals from Goliad",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Contact Corpus Approach (CH 6 UHF) at Woodsboro and state intentions.  Expect to join the Goliad Arrival until in the vicinity of KTFP.",
-    questions : ["Contact Corpus Approach (CH ___ UHF) at ______ and state intentions.  Expect to join the Goliad Arrival until in the vicinity of KTFP."],
-    answers : [["6", "Woodsboro"]],
+  "Routes-Arrivals-15": {
+    name: "13",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > Arrivals from Goliad",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-217"],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Routes-Arrivals-16" : {
-    name : "31",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > Arrivals from Goliad",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Contact Corpus Approach (CH 6 UHF) at Woodsboro and state intentions.  Expect to join the Goliad Arrival until in the vicinity of KTFP.",
-    questions : ["Contact Corpus Approach (CH ___ UHF) at ______ and state intentions.  Expect to join the Goliad Arrival until in the vicinity of KTFP."],
-    answers : [["6", "Woodsboro"]],
+  "Routes-Arrivals-16": {
+    name: "31",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > Arrivals from Goliad",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-217"],
-    nextNode : ["Point-default-0"]
+    nextNode: ["Point-default-0"]
   },
-  "Routes-Departures-17" : {
-    name : "13",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > Single Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "While established in the pattern, monitor CTAF and contact Corpus Approach (CH 8 UHF) and request \"course rules to SHAMROCK.\" KTFP should be exited to the North (~350° ) towards Bayside.  Once cleared, proceed east to the intra-coastal and climb to 1000' MSL once clear of the pattern and join the Northern Arrival.",
-    questions : ["While established in the pattern, monitor CTAF and contact Corpus Approach (CH ___ UHF) and request \"course rules to _____.\" KTFP should be exited to the North (~____) towards Bayside.  Once cleared, proceed east to the intra-coastal and climb to _____ MSL once clear of the pattern and join the Northern Arrival."],
-    answers : [["8", "SHAMROCK", "350°", "1000'"]],
-    dependentNode: ["Point-Arrivals-113", "Point-Arrivals-218"],
-    nextNode : ["Point-Arrivals-113"]
+  "Routes-Departures-17": {
+    name: "13",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > Single Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-113","Point-Arrivals-218"],
+    nextNode: ["Point-Arrivals-113"]
   },
-  "Routes-Departures-18" : {
-    name : "31",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > Single Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "While established in the pattern, monitor CTAF and contact Corpus Approach (CH 8 UHF) and request \"course rules to SHAMROCK.\" KTFP should be exited to the North (~350° ) towards Bayside.  Once cleared, proceed east to the intra-coastal and climb to 1000' MSL once clear of the pattern and join the Northern Arrival.",
-    questions : ["While established in the pattern, monitor CTAF and contact Corpus Approach (CH ___ UHF) and request \"course rules to _____.\" KTFP should be exited to the North (~____) towards Bayside.  Once cleared, proceed east to the intra-coastal and climb to _____ MSL once clear of the pattern and join the Northern Arrival."],
-    answers : [["8", "SHAMROCK", "350°", "1000'"]],
-    dependentNode: ["Point-Arrivals-113", "Point-Arrivals-218"],
-    nextNode : ["Point-Arrivals-113"]
+  "Routes-Departures-18": {
+    name: "31",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > Single Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-113","Point-Arrivals-218"],
+    nextNode: ["Point-Arrivals-113"]
   },
-  "Routes-Departures-19" : {
-    name : "13",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > Formation Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Depart the pattern northbound (~350° ) towards Bayside.  Climb and maintain 1000' MSL.  Contact Corpus Approach (CH 6 UHF) to join the Goliad Arrival.  If contact is not made with Corpus Approach prior to reaching Bayside, join the Goliad Arrival and continue attempting to make contact.",
-    questions : ["Depart the pattern northbound (~_____ ) towards _____.  Climb and maintain _____ MSL.  Contact Corpus Approach (CH __ UHF) to join the ______.  If contact is not made with Corpus Approach prior to reaching Bayside, join the Goliad Arrival and continue attempting to make contact."],
-    answers : [["350°", "Bayside", "1000'", "6", "Goliad Arrival"]],
+  "Routes-Departures-19": {
+    name: "13",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > Formation Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-218"],
-    nextNode : ["Point-Arrivals-113"]
+    nextNode: ["Point-Arrivals-113"]
   },
-  "Routes-Departures-20" : {
-    name : "31",
-    parentFolder : "(KTFP) Ingleside Regional Airport",
-    folderPath : "(KTFP) Ingleside Regional Airport > Formation Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Depart the pattern northbound (~350° ) towards Bayside.  Climb and maintain 1000' MSL.  Contact Corpus Approach (CH 6 UHF) to join the Goliad Arrival.  If contact is not made with Corpus Approach prior to reaching Bayside, join the Goliad Arrival and continue attempting to make contact.",
-    questions : ["Depart the pattern northbound (~_____ ) towards _____.  Climb and maintain _____ MSL.  Contact Corpus Approach (CH __ UHF) to join the ______.  If contact is not made with Corpus Approach prior to reaching Bayside, join the Goliad Arrival and continue attempting to make contact."],
-    answers : [["350°", "Bayside", "1000'", "6", "Goliad Arrival"]],
+  "Routes-Departures-20": {
+    name: "31",
+    parentFolder: "(KTFP) Ingleside Regional Airport",
+    folderPath: "(KTFP) Ingleside Regional Airport > Formation Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-218"],
-    nextNode : ["Point-Arrivals-113"]
+    nextNode: ["Point-Arrivals-113"]
   },
-  "Point-default-21" : {
-    name : "KRKP",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport",
-    subCategory : "Traffic Patterns",
-    category : "Point",
-    description : "<table width=\"100%\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" bgcolor=\"#e8e9cb\">\n   <tr>\n    <td>\n      <center><b><font size=\"5\" color=\"#009999\">(KRKP) Aransas County Airport</font></b></center>\n    </td>\n  </tr>\n  <tr>\n    <td>\n        <p><b>Field Elevation: 25'</b><br />\n\n        <p><b>Runway 14/32</b><br />\n        Magnetic Heading: 142°/322°<br />\n        Length x Width: 5608' x 100'</p>\n\n        <p><b>Runway 18/36</b><br />\n        Magnetic Heading: 187°/007°<br />\n        Length x Width: 4498' x 100'</p>\n\n        <p><b>Approach Frequencies</b><br />\n        UHF 8 (223.7MHz)<br />\n        VHF 8 (132.825MHz)</p>\n\n        <p><b>ASOS</b></br>\n        VHF 119.275MHz</p>\n\n        <p><b>CTAF</b></br>\n        VHF 21 (123.05MHz)</p>\n\n        <p><b>Traffic Rules</b><br />\n        Aircraft in pattern: <font color=\"#cc0000\"><b>4 MAX</b></font><br />\n        High-Key 3000' MSL<br />\n        Low-Key 1500' MSL<br />\n        Delta 2000' MSL<br />\n         Break: 1,000' MSL<br />\n        Pattern: 800' MSL <br />\n        Pattern Direction: Inside <br />\n        PPELs: Same as pattern direction. Max 2 aircraft already established in pattern. <br />\n        Hours: 0800-1800 with ARDO</p>\n        \n       <p>NO SOLOS. Practice \"See and Avoid\". Give way to civilian aircraft. CTAF calls made when turning crosswind and base legs, intentions announced upon entry/exit, reporting on 2NM initial, and reporting on numbers.</p>\n\n       <p><b>WARNING!</b><br />\n       T-6 arriving aircraft must exercise extreme caution descending to the initial due to the potential for traffic established on course rules at 1500/ MSL over the intracoastal and inbound from Bayside.</p>\n    </td>\n  </tr>\n</table>\n",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-default-21": {
+    name: "KRKP",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport",
+    subCategory: "Traffic Patterns",
+    category: "Point",
     dependentNode: ["Airspace-default-22"],
-    nextNode : ["Routes-Traffic Patterns-23", "Routes-Traffic Patterns-24", "Routes-Departures-32", "Routes-Departures-33", "Routes-Departures-34", "Routes-Departures-35"]
+    nextNode: ["Routes-Traffic Patterns-23","Routes-Traffic Patterns-24","Routes-Departures-32","Routes-Departures-33","Routes-Departures-34","Routes-Departures-35"]
   },
-  "Airspace-default-22" : {
-    name : "2 NM Radius",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport",
-    subCategory : "Airspace",
-    category : "Airspace",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Airspace-default-22": {
+    name: "2 NM Radius",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport",
+    subCategory: "Airspace",
+    category: "Airspace",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Traffic Patterns-23" : {
-    name : "14/32",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Hours for TW-4 touch and go operations are from 0800-1800 limited by ARDO watch standing hours. An ARDO must be in position prior to any touch and go operations.",
-      "A maximum of 4 aircraft are permitted in the pattern, including civilian traffic.",
-      "CTAF advisory radio calls must be made when turning crosswind and base legs.",
-      "<u>Successive Touch-and-Go(s)</u>",
-      "With interval and at a minimum altitude of 300' MSL, turn downwind and climb to pattern altitude.",
-      "<u>Wave-Offs</u>",
-      "Wave-offs must be made to the pattern side of the active runway at 500' MSL.",
-      "<u>PPEL Entry</u>",
-      "PPELs are authorized for all runways provided no more than two aircraft (including civilian) are already established in the traffic pattern. PPELs must be flown to the same side as the normal traffic pattern. Aircraft executing a PPEL must announce intentions on CTAF (CH 21 VHF) and report \"High-Key\" on KRKP common (CH 21 UHF)."
-    ],
-    comms : ARANSAS_PATTERN_COMMS,
-    questions : [
-      "A maximum of ___ aircraft are permitted in the pattern, including civilian traffic.",
-      "With interval and at a minimum altitude of _____ MSL, turn downwind and climb to pattern altitude.",
-      "Wave-offs must be made to the pattern side of the active runway at _____ MSL.",
-      "PPELs are authorized for all runways provided no more than ____ aircraft (including civilian) are already established in the traffic pattern."
-    ],
-    answers : [
-      ["4"],
-      ["300'"],
-      ["500'"],
-      ["two"]
-    ],
+  "Routes-Traffic Patterns-23": {
+    name: "14/32",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-21" ]
+    nextNode: ["Point-default-21"]
   },
-  "Routes-Traffic Patterns-24" : {
-    name : "18/36",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Hours for TW-4 touch and go operations are from 0800-1800 limited by ARDO watch standing hours. An ARDO must be in position prior to any touch and go operations.",
-      "A maximum of 4 aircraft are permitted in the pattern, including civilian traffic.",
-      "CTAF advisory radio calls must be made when turning crosswind and base legs.",
-      "<u>Successive Touch-and-Go(s)</u>",
-      "With interval and at a minimum altitude of 300' MSL, turn downwind and climb to pattern altitude.",
-      "<u>Wave-Offs</u>",
-      "Wave-offs must be made to the pattern side of the active runway at 500' MSL.",
-      "<u>PPEL Entry</u>",
-      "PPELs are authorized for all runways provided no more than two aircraft (including civilian) are already established in the traffic pattern. PPELs must be flown to the same side as the normal traffic pattern. Aircraft executing a PPEL must announce intentions on CTAF (CH 21 VHF) and report \"High-Key\" on KRKP common (CH 21 UHF)."
-    ],
-    comms : ARANSAS_PATTERN_COMMS,
-    questions : [
-      "A maximum of ___ aircraft are permitted in the pattern, including civilian traffic.",
-      "With interval and at a minimum altitude of _____ MSL, turn downwind and climb to pattern altitude.",
-      "Wave-offs must be made to the pattern side of the active runway at _____ MSL.",
-      "PPELs are authorized for all runways provided no more than ____ aircraft (including civilian) are already established in the traffic pattern."
-    ],
-    answers : [
-      ["4"],
-      ["300'"],
-      ["500'"],
-      ["two"]
-    ],
+  "Routes-Traffic Patterns-24": {
+    name: "18/36",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-21" ]
+    nextNode: ["Point-default-21"]
   },
-  "Routes-Arrivals-25" : {
-    name : "14",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Prior to executing these procedures, obtain KRKP ASOS on 119.275 VHF.",
-      "<u>North MUSTANG/South-North Transition</u>",
-      "Execute area exit/transition procedures. Switch CH 21 VHF and self-announce over KRKP CTAF. Proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH 21 UHF, TW-4 KRKP Common, and check-in.",
-      "WARNING! T-6 arriving aircraft must exercise extreme caution descending to the initial due to the potential for traffic established on course rules at 1500' MSL over the intracoastal and inbound from bayside.",
-      "<u>GOLIAD/KINGS 4 MOA</u>",
-      "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
-    ],
-    comms : ARANSAS_ARRIVAL_COMMS,
-    questions : [
-      "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
-      "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
-      "Crossing ______ at _____ MSL, contact Corpus Approach (CH ___ UHF) with intentions. Fly ~_____ to ______ and self-announce on KRKP CTAF (CH ___ VHF). Descend to _____ MSL/____ KIAS going feet wet and proceed to a ___ NM initial for the runway in use/favored by winds."
-    ],
-    answers : [
-      ["119.275"],
-      ["21", "2", "21"],
-      ["Woodsboro", "2500'", "6", "145°", "Bayside", "21", "1000'", "200", "2"]
-    ],
+  "Routes-Arrivals-25": {
+    name: "14",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-21" ]
+    nextNode: ["Point-default-21"]
   },
-  "Routes-Arrivals-26" : {
-    name : "18",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Prior to executing these procedures, obtain KRKP ASOS on 119.275 VHF.",
-      "<u>North MUSTANG/South-North Transition</u>",
-      "Execute area exit/transition procedures. Switch CH 21 VHF and self-announce over KRKP CTAF. Proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH 21 UHF, TW-4 KRKP Common, and check-in.",
-      "WARNING! T-6 arriving aircraft must exercise extreme caution descending to the initial due to the potential for traffic established on course rules at 1500' MSL over the intracoastal and inbound from bayside.",
-      "<u>GOLIAD/KINGS 4 MOA</u>",
-      "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
-    ],
-    comms : ARANSAS_ARRIVAL_COMMS,
-    questions : [
-      "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
-      "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
-      "Crossing ______ at _____ MSL, contact Corpus Approach (CH ___ UHF) with intentions. Fly ~_____ to ______ and self-announce on KRKP CTAF (CH ___ VHF). Descend to _____ MSL/____ KIAS going feet wet and proceed to a ___ NM initial for the runway in use/favored by winds."
-    ],
-    answers : [
-      ["119.275"],
-      ["21", "2", "21"],
-      ["Woodsboro", "2500'", "6", "145°", "Bayside", "21", "1000'", "200", "2"]
-    ],
+  "Routes-Arrivals-26": {
+    name: "18",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-21" ]
+    nextNode: ["Point-default-21"]
   },
-  "Routes-Arrivals-27" : {
-    name : "32",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Prior to executing these procedures, obtain KRKP ASOS on 119.275 VHF.",
-      "<u>North MUSTANG/South-North Transition</u>",
-      "Execute area exit/transition procedures. Switch CH 21 VHF and self-announce over KRKP CTAF. Proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH 21 UHF, TW-4 KRKP Common, and check-in.",
-      "WARNING! T-6 arriving aircraft must exercise extreme caution descending to the initial due to the potential for traffic established on course rules at 1500' MSL over the intracoastal and inbound from bayside.",
-      "<u>GOLIAD/KINGS 4 MOA</u>",
-      "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
-    ],
-    comms : ARANSAS_ARRIVAL_COMMS,
-    questions : [
-      "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
-      "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
-      "Crossing ______ at _____ MSL, contact Corpus Approach (CH ___ UHF) with intentions. Fly ~_____ to ______ and self-announce on KRKP CTAF (CH ___ VHF). Descend to _____ MSL/____ KIAS going feet wet and proceed to a ___ NM initial for the runway in use/favored by winds."
-    ],
-    answers : [
-      ["119.275"],
-      ["21", "2", "21"],
-      ["Woodsboro", "2500'", "6", "145°", "Bayside", "21", "1000'", "200", "2"]
-    ],
+  "Routes-Arrivals-27": {
+    name: "32",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-21" ]
+    nextNode: ["Point-default-21"]
   },
-  "Routes-Arrivals-28" : {
-    name : "36",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Prior to executing these procedures, obtain KRKP ASOS on 119.275 VHF.",
-      "<u>North MUSTANG/South-North Transition</u>",
-      "Execute area exit/transition procedures. Switch CH 21 VHF and self-announce over KRKP CTAF. Proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH 21 UHF, TW-4 KRKP Common, and check-in.",
-      "WARNING! T-6 arriving aircraft must exercise extreme caution descending to the initial due to the potential for traffic established on course rules at 1500' MSL over the intracoastal and inbound from bayside.",
-      "<u>GOLIAD/KINGS 4 MOA</u>",
-      "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in."
-    ],
-    comms : ARANSAS_ARRIVAL_COMMS,
-    questions : [
-      "Prior to executing these procedures, obtain KRKP ASOS on _______ VHF.",
-      "Execute area exit/transition procedures. Switch CH ___ VHF and self-announce over KRKP CTAF. Proceed to a ___ NM initial for the runway in use/favored by winds. Terminate with Corpus Approach, switch CH ___ UHF, TW-4 KRKP Common, and check-in.",
-      "Crossing ______ at _____ MSL, contact Corpus Approach (CH ___ UHF) with intentions. Fly ~_____ to ______ and self-announce on KRKP CTAF (CH ___ VHF). Descend to _____ MSL/____ KIAS going feet wet and proceed to a ___ NM initial for the runway in use/favored by winds."
-    ],
-    answers : [
-      ["119.275"],
-      ["21", "2", "21"],
-      ["Woodsboro", "2500'", "6", "145°", "Bayside", "21", "1000'", "200", "2"]
-    ],
+  "Routes-Arrivals-28": {
+    name: "36",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-21" ]
+    nextNode: ["Point-default-21"]
   },
-  "Point-Departures-29" : {
-    name : "LBJ Causeway",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-29": {
+    name: "LBJ Causeway",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Departures-30" : {
-    name : "9 Mile Point",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-30": {
+    name: "9 Mile Point",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Departures-31" : {
-    name : "Redfish Point",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-31": {
+    name: "Redfish Point",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Departures-32" : {
-    name : "14",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "When #1 downwind at the 180, descend to 500' MSL.  Turn northbound to circle around Redfish Point to the east.  Thence climb to pass over the LBJ Causeway at 1500' MSL. Call clear of the field passing 9 Mile Point. Switch Corpus Approach (CH 8 UHF) and state intentions (Northern Arrival/Request a working area).",
-    comms : ARANSAS_DEPARTURE_COMMS,
-    questions : ["When #1 downwind at the _____, descend to ___  MSL.  Turn northbound to circle around ______ to the east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
-    answers : [["180", "500'", "Redfish Point", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
-    dependentNode: ["Point-Departures-29", "Point-Departures-30", "Point-Departures-31"],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
+  "Routes-Departures-32": {
+    name: "14",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-29","Point-Departures-30","Point-Departures-31"],
+    nextNode: ["Routes-Arrivals-104","Working Areas-Foxtrot-189","Working Areas-Foxtrot-190","Working Areas-Mustang-191","Working Areas-Mustang-192","Working Areas-Mustang-193","Working Areas-Mustang-194"]
   },
-  "Routes-Departures-33" : {
-    name : "18",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "When #1 downwind at the 180, descend to 500' MSL. Going \"feet wet\" turn east. Thence climb to pass over the LBJ Causeway at 1500' MSL. Call clear of the field passing 9 Mile Point. Switch Corpus Approach (CH 8 UHF) and state intentions (Northern Arrival/Request a working area).",
-    comms : ARANSAS_DEPARTURE_COMMS,
-    questions : ["When #1 downwind at the _____, descend to ___  MSL.  Going \"_____\" turn east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
-    answers : [["180", "500'", "feet wet", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
-    dependentNode: ["Point-Departures-29", "Point-Departures-30",],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
+  "Routes-Departures-33": {
+    name: "18",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-29","Point-Departures-30"],
+    nextNode: ["Routes-Arrivals-104","Working Areas-Foxtrot-189","Working Areas-Foxtrot-190","Working Areas-Mustang-191","Working Areas-Mustang-192","Working Areas-Mustang-193","Working Areas-Mustang-194"]
   },
-  "Routes-Departures-34" : {
-    name : "32",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "When #1 upwind, climb to 500' MSL. Turn northbound to circle around Redfish Point to the east.  Thence climb to pass over the LBJ Causeway at 1500' MSL. Call clear of the field passing 9 Mile Point. Switch Corpus Approach (CH 8 UHF) and state intentions (Northern Arrival/Request a working area).",
-    comms : ARANSAS_DEPARTURE_COMMS,
-    questions : ["When #1 upwind, climb to  ___  MSL.  Turn northbound to circle around ______ to the east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
-    answers : [["500'", "Redfish Point", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
-    dependentNode: ["Point-Departures-29", "Point-Departures-30", "Point-Departures-31"],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
+  "Routes-Departures-34": {
+    name: "32",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-29","Point-Departures-30","Point-Departures-31"],
+    nextNode: ["Routes-Arrivals-104","Working Areas-Foxtrot-189","Working Areas-Foxtrot-190","Working Areas-Mustang-191","Working Areas-Mustang-192","Working Areas-Mustang-193","Working Areas-Mustang-194"]
   },
-  "Routes-Departures-35" : {
-    name : "36",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "When #1 upwind, climb to 500' MSL. Going \"feet wet\" turn east. Thence climb to pass over the LBJ Causeway at 1500' MSL. Call clear of the field passing 9 Mile Point. Switch Corpus Approach (CH 8 UHF) and state intentions (Northern Arrival/Request a working area).",
-    comms : ARANSAS_DEPARTURE_COMMS,
-    questions : ["When #1 upwind, climb to ___  MSL.  Going \"_____\" turn east.  Thence climb to pass over the ______ at _____ MSL. Call clear of the field passing ______. Switch Corpus Approach (CH _____ UHF) and state intentions (Northern Arrival/Request a working area)."],
-    answers : [["500'", "feet wet", "LBJ Causeway", "1500'", "9 Mile Point", "8"]],
-    dependentNode: ["Point-Departures-29", "Point-Departures-30",],
-    nextNode : ["Routes-Arrivals-104", "Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
+  "Routes-Departures-35": {
+    name: "36",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-29","Point-Departures-30"],
+    nextNode: ["Routes-Arrivals-104","Working Areas-Foxtrot-189","Working Areas-Foxtrot-190","Working Areas-Mustang-191","Working Areas-Mustang-192","Working Areas-Mustang-193","Working Areas-Mustang-194"]
   },
-  "Point-Mustang-36" : {
-    name : "KRAS",
-    parentFolder : "(KRAS) Mustang Beach Airport",
-    folderPath : "(KRAS) Mustang Beach Airport",
-    subCategory : "Mustang",
-    category : "Point",
-    description : "<table width=\"100%\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" bgcolor=\"#e8e9cb\">\n   <tr>\n    <td>\n      <center><b><font size=\"5\" color=\"#009999\">(KRAS) Mustang Beach Airport</font></b></center>\n    </td>\n  </tr>\n  <tr>\n    <td>\n        <p><b>Field Elevation: 5'</b><br />\n\n        <p><b>Runway 12/30</b><br />\n        Magnetic Heading: 125°/305°<br />\n        Length x Width: 3482' x 70'<br />\n        ASPHALT IN POOR CONDITION</p>\n\n        <p><b>Approach Frequencies</b><br />\n        UHF 5 (307.9MHz)<br />\n        VHF 5 (125.4MHz)</p>\n\n        <p><b>ASOS</b></br>\n        VHF 118.425MHz</p>\n\n        <p><b>CTAF</b></br>\n        VHF 122.9MHz</p>\n\n       <p><b>WARNING!</b><br />\n       Maintain a 3NM stand-off when para-jumping operations are in effect. Flight crews must ensure para-jumping operations are not in effect with ATC prior to operating within 3NM of KRAS. The 3NM stand-off only applies to working altitudes below 11,500' MSL.</p>\n    </td>\n  </tr>\n</table>\n",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Mustang-36": {
+    name: "KRAS",
+    parentFolder: "(KRAS) Mustang Beach Airport",
+    folderPath: "(KRAS) Mustang Beach Airport",
+    subCategory: "Mustang",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Airspace-default-37" : {
-    name : "KRAS Stand Off",
-    parentFolder : "(KRAS) Mustang Beach Airport",
-    folderPath : "(KRAS) Mustang Beach Airport",
-    subCategory : "Airspace",
-    category : "Airspace",
-    description : "Airspace",
-    customDescription : "WARNING! maintain a 3 NM stand-off from MUSTANG Beach Airport (KRAS) when para-jumping operations are in effect. Flight crews must ensure para-jumping operations are not in effect with ATC prior to operating within 3NM of KRAS. The 3 NM stand-off only applies to working altitudes below 11,500' MSL.",
-    questions : [],
-    answers : [],
+  "Airspace-default-37": {
+    name: "KRAS Stand Off",
+    parentFolder: "(KRAS) Mustang Beach Airport",
+    folderPath: "(KRAS) Mustang Beach Airport",
+    subCategory: "Airspace",
+    category: "Airspace",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-default-38" : {
-    name : "KNGT",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF",
-    subCategory : "Point",
-    category : "Point",
-    description : "<table width=\"100%\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" bgcolor=\"#e8e9cb\">\n   <tr>\n    <td>\n      <center><b><font size=\"5\" color=\"#009999\">(KNGT) Goliad NOLF</font></b></center>\n    </td>\n  </tr>\n  <tr>\n    <td>\n        <p><b>Field Elevation: 324'</b><br />\n\n        <p><b>Runway 11/29</b><br />\n        Magnetic Heading: 106°/296°<br />\n        Length x Width: 8000' x 150'</p>\n\n        <p><b>Runway 17/35</b><br />\n        Magnetic Heading: 167°/357°<br />\n        Length x Width: 8000' x 150'</p>\n\n        <p><b>Houston Center</b><br />\n        UHF 22 (353.6MHz)<br />\n        VHF 22 (135.05MHz)</p>\n\n        <p><b>ASOS</b></br>\n        UHF 14 (353.675MHz)</p>\n\n        <p><b>CTAF</b></br>\n        VHF 15 (132.875MHz)</p>\n\n        <p><b>RDO</b></br>\n        UHF 15 (307.075MHz)</p>\n\n        <p><b>Traffic Rules</b><br />\n        Aircraft in pattern: <font color=\"#cc0000\"><b>5 MAX</b></font><br />\n        High-Key 3300' MSL<br />\n        Low-Key 1800' MSL<br />\n        Delta 2300' MSL<br />\n        Break: 1,300' MSL<br />\n        Pattern: 1,100' MSL <br />\n        Pattern Direction: Outside <br />\n        PPELs: Same side and opposite direction of pattern. Practice ELPs not authorized with SNA solo flights in pattern. <br />\n        Hours: 0800-RDO departure</p>\n       \n        <p>Two-way communication with RDO/Crash Crew is required. If initial call is not acknowledged by the RDO prior to 2NM radius from runway, execute a discontinued entry. No clearance to land will be issued by RDO. Pattern side wave-offs at 800' MSL. Position and intentions must be provided to RDO prior to 4NM initial. Report numbers and report break thereafter with proper interval. Report 180 gear down. Report crosswind with proper interval.</p>\n         \n       <p><b>WARNING!</b><br />\n       If an aircraft is executing a PPEL/P and another aircraft calls inbound at the initial, the initial traffic must visually acquire the PPEL/P traffic prior to 2NM and maintain separation to continue inbound for the break. If separation cannot be maintained or is in doubt, execute a discontinued entry.</p>\n\n       <p>Discontinued entry outside 2NM radius must immediately turn a minimum of 90° away from normal traffic pattern while maintaining break altitude until clear of airfield. Inside of 2NM radius must depart when beyond the upwind numbers and clear of traffic while maintaining break altitude.</p>\n\n      <p><b>WARNING!</b><br />\n      Due to possible traffic conflicts during practice ELPs, when a practice ELP aircraft decides to wave-off it will execute the wave-off procedures to remain on the Low-Key side of the runway.<br />\n      Aircraft at Low-Key must wave-off to the Low-Key side of the runway if unable to report Low-Key due to radio saturation.<br />\n      A possible traffic conflict exists between PPEL/P aircraft climbing to pattern Low-Key and a PPEL aircraft descending from High-Key on the ELP.</p>\n\n    </td>\n  </tr>\n</table>\n",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-default-38": {
+    name: "KNGT",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF",
+    subCategory: "Point",
+    category: "Point",
     dependentNode: ["Airspace-default-41"],
-    nextNode : ["Routes-Traffic Patterns-39", "Routes-Traffic Patterns-40", "Routes-Departures-46", "Routes-Departures-47", "Routes-Departures-48", "Routes-Departures-49"]
+    nextNode: ["Routes-Traffic Patterns-39","Routes-Traffic Patterns-40","Routes-Departures-46","Routes-Departures-47","Routes-Departures-48","Routes-Departures-49"]
   },
-  "Routes-Traffic Patterns-39" : {
-    name : "11/29",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "The pattern will be limited to a maximum of five aircraft.  The maximum number may be reduced at the discretion of the RDO.",
-      "Wave-offs must be made to the pattern side of the active runway at 800' MSL, unless otherwise directed by the RDO.",
-      "PPEL/Ps must be performed to the pattern side of the runway with proper interval."
-    ],
-    comms : GOLIAD_PATTERN_COMMS,
-    questions : [
-      "The pattern will be limited to a maximum of _____ aircraft.  The maximum number may be reduced at the discretion of the RDO.",
-      "Wave-offs must be made to the _____ side of the active runway at _____ MSL, unless otherwise directed by the RDO."
-    ],
-    answers : [["five"], ["pattern", "800'"]],
+  "Routes-Traffic Patterns-39": {
+    name: "11/29",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-38"]
+    nextNode: ["Point-default-38"]
   },
-  "Routes-Traffic Patterns-40" : {
-    name : "17/35",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "The pattern will be limited to a maximum of five aircraft.  The maximum number may be reduced at the discretion of the RDO.",
-      "Wave-offs must be made to the pattern side of the active runway at 800' MSL, unless otherwise directed by the RDO.",
-      "PPEL/Ps must be performed to the pattern side of the runway with proper interval."
-    ],
-    comms : GOLIAD_PATTERN_COMMS,
-    questions : [
-      "The pattern will be limited to a maximum of _____ aircraft.  The maximum number may be reduced at the discretion of the RDO.",
-      "Wave-offs must be made to the _____ side of the active runway at _____ MSL, unless otherwise directed by the RDO."
-    ],
-    answers : [["five"], ["pattern", "800'"]],
+  "Routes-Traffic Patterns-40": {
+    name: "17/35",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-38"]
+    nextNode: ["Point-default-38"]
   },
-  "Airspace-default-41" : {
-    name : "4 NM Radius",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF > Arrivals",
-    subCategory : "Airspace",
-    category : "Airspace",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Airspace-default-41": {
+    name: "4 NM Radius",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF > Arrivals",
+    subCategory: "Airspace",
+    category: "Airspace",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-42" : {
-    name : "11",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF > Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Aircraft must enter via a 4 NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the 4 NM initial point at no greater than a 45-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset 1/4 WTD from the extended runway centerline to the pattern side of the runway for the break.",
-    comms : GOLIAD_ARRIVAL_COMMS,
-    questions : [ "Aircraft must enter via a ____ NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the ___ NM initial point at no greater than a ____-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset ____ WTD from the extended runway centerline to the pattern side of the runway for the break."],
-    answers : [["4", "4", "45", "1/4"]],
+  "Routes-Arrivals-42": {
+    name: "11",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF > Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-default-212"],
-    nextNode : ["Point-default-38"]
+    nextNode: ["Point-default-38"]
   },
-  "Routes-Arrivals-43" : {
-    name : "17",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF > Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Aircraft must enter via a 4 NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the 4 NM initial point at no greater than a 45-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset 1/4 WTD from the extended runway centerline to the pattern side of the runway for the break.",
-    comms : GOLIAD_ARRIVAL_COMMS,
-    questions : [ "Aircraft must enter via a ____ NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the ___ NM initial point at no greater than a ____-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset ____ WTD from the extended runway centerline to the pattern side of the runway for the break."],
-    answers : [["4", "4", "45", "1/4"]],
+  "Routes-Arrivals-43": {
+    name: "17",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF > Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-default-212"],
-    nextNode : ["Point-default-38"]
+    nextNode: ["Point-default-38"]
   },
-  "Routes-Arrivals-44" : {
-    name : "29",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF > Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Aircraft must enter via a 4 NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the 4 NM initial point at no greater than a 45-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset 1/4 WTD from the extended runway centerline to the pattern side of the runway for the break.",
-    comms : GOLIAD_ARRIVAL_COMMS,
-    questions : [ "Aircraft must enter via a ____ NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the ___ NM initial point at no greater than a ____-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset ____ WTD from the extended runway centerline to the pattern side of the runway for the break."],
-    answers : [["4", "4", "45", "1/4"]],
+  "Routes-Arrivals-44": {
+    name: "29",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF > Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-default-212"],
-    nextNode : ["Point-default-38"]
+    nextNode: ["Point-default-38"]
   },
-  "Routes-Arrivals-45" : {
-    name : "35",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF > Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Aircraft must enter via a 4 NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the 4 NM initial point at no greater than a 45-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset 1/4 WTD from the extended runway centerline to the pattern side of the runway for the break.",
-    comms : GOLIAD_ARRIVAL_COMMS,
-    questions : [ "Aircraft must enter via a ____ NM initial point on extended runway centerline.  Intercept the extended runway centerline prior to the ___ NM initial point at no greater than a ____-degree angle of intercept, at break altitude and airspeed.  Aircraft will offset ____ WTD from the extended runway centerline to the pattern side of the runway for the break."],
-    answers : [["4", "4", "45", "1/4"]],
+  "Routes-Arrivals-45": {
+    name: "35",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF > Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-default-212"],
-    nextNode : ["Point-default-38"]
+    nextNode: ["Point-default-38"]
   },
-  "Routes-Departures-46" : {
-    name : "11",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF > Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "(a) Ensure 'Number 1, Upwind' (if not, maintain 800' MSL, 120 KIAS and landing configuration, until number 1 with interval to depart).",
-      "(b) Raise the Gear and Flaps.",
-      "(c) Maintain 800' MSL.", 
-      "(d) Turn approximately 45 degrees away from runway heading (opposite pattern direction).", 
-      "(e) Call the RDO: \"Goliad RDO, (call sign), departing\"",
-      "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
-      "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
-    ],
-    comms : GOLIAD_DEPARTURE_COMMS,
-    questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
-    answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
-    dependentNode: ["Point-Arrivals-217", "Point-default-212"],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211", "Routes-Transitions-214"]
+  "Routes-Departures-46": {
+    name: "11",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF > Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-217","Point-default-212"],
+    nextNode: ["Routes-Arrivals-112","Routes-Arrivals-15","Routes-Arrivals-16","Working Areas-King-203","Working Areas-King-204","Working Areas-King-205","Working Areas-King-206","Working Areas-King-207","Working Areas-King-208","Working Areas-King-209","Working Areas-King-210","Working Areas-King-211","Routes-Transitions-214"]
   },
-  "Routes-Departures-47" : {
-    name : "17",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF > Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "(a) Ensure 'Number 1, Upwind' (if not, maintain 800' MSL, 120 KIAS and landing configuration, until number 1 with interval to depart).",
-      "(b) Raise the Gear and Flaps.",
-      "(c) Maintain 800' MSL.", 
-      "(d) Turn approximately 45 degrees away from runway heading (opposite pattern direction).", 
-      "(e) Call the RDO: \"Goliad RDO, (call sign), departing\"",
-      "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
-      "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
-    ],
-    comms : GOLIAD_DEPARTURE_COMMS,
-    questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
-    answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
-    dependentNode: ["Point-Arrivals-217", "Point-default-212"],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211", "Routes-Transitions-214"]
+  "Routes-Departures-47": {
+    name: "17",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF > Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-217","Point-default-212"],
+    nextNode: ["Routes-Arrivals-112","Routes-Arrivals-15","Routes-Arrivals-16","Working Areas-King-203","Working Areas-King-204","Working Areas-King-205","Working Areas-King-206","Working Areas-King-207","Working Areas-King-208","Working Areas-King-209","Working Areas-King-210","Working Areas-King-211","Routes-Transitions-214"]
   },
-  "Routes-Departures-48" : {
-    name : "29",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF > Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "(a) Ensure 'Number 1, Upwind' (if not, maintain 800' MSL, 120 KIAS and landing configuration, until number 1 with interval to depart).",
-      "(b) Raise the Gear and Flaps.",
-      "(c) Maintain 800' MSL.", 
-      "(d) Turn approximately 45 degrees away from runway heading (opposite pattern direction).", 
-      "(e) Call the RDO: \"Goliad RDO, (call sign), departing\"",
-      "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
-      "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
-    ],
-    comms : GOLIAD_DEPARTURE_COMMS,
-    questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
-    answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
-    dependentNode: ["Point-Arrivals-217", "Point-default-212"],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211", "Routes-Transitions-214"]
+  "Routes-Departures-48": {
+    name: "29",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF > Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-217","Point-default-212"],
+    nextNode: ["Routes-Arrivals-112","Routes-Arrivals-15","Routes-Arrivals-16","Working Areas-King-203","Working Areas-King-204","Working Areas-King-205","Working Areas-King-206","Working Areas-King-207","Working Areas-King-208","Working Areas-King-209","Working Areas-King-210","Working Areas-King-211","Routes-Transitions-214"]
   },
-  "Routes-Departures-49" : {
-    name : "35",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF > Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "(a) Ensure 'Number 1, Upwind' (if not, maintain 800' MSL, 120 KIAS and landing configuration, until number 1 with interval to depart).",
-      "(b) Raise the Gear and Flaps.",
-      "(c) Maintain 800' MSL.", 
-      "(d) Turn approximately 45 degrees away from runway heading (opposite pattern direction).", 
-      "(e) Call the RDO: \"Goliad RDO, (call sign), departing\"",
-      "(f) Once clear of the traffic pattern and the break traffic, climb to 2,500' MSL.",
-      "(g) Turn to heading~ 140° to Woodsboro and join the course rules to SHAMROCK.  Accelerate to 240 KIAS. "
-    ],
-    comms : GOLIAD_DEPARTURE_COMMS,
-    questions : ["Maintain ____ MSL. Turn approximately ____ degrees away from runway heading (opposite pattern direction). Once clear of the traffic pattern and the break traffic, climb to _____ MSL. Turn to heading ~_____ to ______ and join the course rules to SHAMROCK. Accelerate to ____ KIAS."],
-    answers : [["800'", "45", "2,500'", "140°", "Woodsboro", "240"]],
-    dependentNode: ["Point-Arrivals-217", "Point-default-212"],
-    nextNode : ["Routes-Arrivals-112", "Routes-Arrivals-15", "Routes-Arrivals-16", "Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211", "Routes-Transitions-214"]
+  "Routes-Departures-49": {
+    name: "35",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF > Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-217","Point-default-212"],
+    nextNode: ["Routes-Arrivals-112","Routes-Arrivals-15","Routes-Arrivals-16","Working Areas-King-203","Working Areas-King-204","Working Areas-King-205","Working Areas-King-206","Working Areas-King-207","Working Areas-King-208","Working Areas-King-209","Working Areas-King-210","Working Areas-King-211","Routes-Transitions-214"]
   },
-  "Point-default-50" : {
-    name : "KNWL",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF",
-    subCategory : "Point",
-    category : "Point",
-    description : "<table width=\"100%\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" bgcolor=\"#e8e9cb\">\n   <tr>\n    <td>\n      <center><b><font size=\"5\" color=\"#009999\">(KNWL) Waldron NOLF</font></b></center>\n    </td>\n  </tr>\n  <tr>\n    <td>\n        <p><b>Field Elevation: 25'</b><br />\n\n        <p><b>Runway 13/31</b><br />\n        Magnetic Heading: 131°/311°<br />\n        Length x Width: 5000' x 200'</p>\n\n        <p><b>Runway 18/36</b><br />\n        Magnetic Heading: 176°/356°<br />\n        Length x Width: 5000' x 200'</p>\n\n        <p><b>Approach Frequencies</b><br />\n        UHF 8 (223.7MHz)<br />\n        VHF 8 (132.825MHz)</p>\n\n        <p><b>Tower</b></br>\n        UHF 30 (236.825MHz)</p>\n\n        <p><b>Ground</b></br>\n        VHF 30 (133.85MHz)</p>\n\n        <p><b>Traffic Rules</b><br />\n        Aircraft in pattern: <font color=\"#cc0000\"><b>6 MAX</b></font><br />\n        High-Key: 3,000' MSL<br />\n        Low-Key: 1,500' MSL<br />\n        Delta: 2,000' MSL<br />\n        Break: 1,000' MSL<br />\n        Pattern: 800' MSL <br />\n        Pattern Direction: West <br />\n        PPELs: Same side and opposite direction of pattern. <br />\n        Hours: 30min after KNGP opens - 1900 or sunset</p>\n       \n        <p>Normal towered airfield operations. Class D airspace up to 2,000' MSL. Tower will clear aircraft to break, turn crosswind, and turn downwind with  option to grant blanket clearance for all downwind turns at the pilot's discretion. Pattern side wave-offs at 500' MSL.</p>\n\n       <p><b>WARNING!</b><br />\n       Remain south of the Flour Bluff Water Tower to remain clear of NAS Corpus Christi airspace</p>\n\n       <p><b>WARNING!</b><br />\n      When crossing the beach line to join the southern arrival, be alert for traffic already established at 1000' MSL.</p>\n    </td>\n  </tr>\n</table>\n",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-default-50": {
+    name: "KNWL",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF",
+    subCategory: "Point",
+    category: "Point",
     dependentNode: ["Airspace-default-51"],
-    nextNode : ["Routes-Traffic Patterns-52", "Routes-Traffic Patterns-53",
-      "Routes-Departures-56", "Routes-Departures-57", "Routes-Departures-58", "Routes-Departures-59",
-      "Routes-Departures-74", "Routes-Departures-75", "Routes-Departures-76", "Routes-Departures-77",
-      "Routes-Departures-91", "Routes-Departures-92", "Routes-Departures-93", "Routes-Departures-94"
-    ]
+    nextNode: ["Routes-Traffic Patterns-52","Routes-Traffic Patterns-53","Routes-Departures-56","Routes-Departures-57","Routes-Departures-58","Routes-Departures-59","Routes-Departures-74","Routes-Departures-75","Routes-Departures-76","Routes-Departures-77","Routes-Departures-91","Routes-Departures-92","Routes-Departures-93","Routes-Departures-94"]
   },
-  "Airspace-default-51" : {
-    name : "Class D Airspace",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF",
-    subCategory : "Airspace",
-    category : "Airspace",
-    description : "",
-    customDescription : "SFC to 2000' MSL",
-    questions : [],
-    answers : [],
+  "Airspace-default-51": {
+    name: "Class D Airspace",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF",
+    subCategory: "Airspace",
+    category: "Airspace",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Traffic Patterns-52" : {
-    name : "13/31",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Waldron Tower's airspace extends from the surface to 2000' MSL. Higher altitudes may be coordinated with approach. The pattern will be limited to a maximum of six aircraft. The maximum number may be reduced at the discretion of the tower supervisor.",
-      "<u>Successive Touch and Go Landings</u>",
-      "After takeoff, climb on runway heading to a maximum altitude of 500' MSL. When cleared by tower and at a minimum of 300' MSL, turn downwind and continue climb to pattern altitude.",
-      "<u>PPEL/P</u>",
-      "PPEL/Ps must be performed to the pattern side of the runway with proper interval. Instructor Pilots must request clearance from Tower prior to simulating a PPEL in the pattern and comply with Tower directions and restrictions.",
-      "<u>Delta Pattern (Emergency Orbit)</u>",
-      "The delta pattern will conform to the traffic flow for the runway in use at 2000' MSL. Climbs and descents to/from the delta pattern will be at the direction of the Tower.",
-      "<u>Wave-offs</u>",
-      "Wave-offs will be made to the pattern side of the active runway at 500' MSL, unless otherwise directed by Tower.",
-      "CAUTION: aircraft will remain south of the Flour Bluff Water Tower to avoid conflicts with NAS Corpus Christi traffic."
-    ],
-    comms : WALDRON_PATTERN_COMMS,
-    questions : [
-      "Waldron Tower's airspace extends from the surface to _____ MSL. The pattern will be limited to a maximum of ____ aircraft.",
-      "After takeoff, climb on runway heading to a maximum altitude of _____ MSL. When cleared by tower and at a minimum of _____ MSL, turn downwind and continue climb to pattern altitude.",
-      "The delta pattern will conform to the traffic flow for the runway in use at _____ MSL.",
-      "Wave-offs will be made to the _____ side of the active runway at _____ MSL, unless otherwise directed by Tower.",
-      "Aircraft will remain _____ of the ______ to avoid conflicts with NAS Corpus Christi traffic."
-    ],
-    answers : [
-      ["2000'", "six"],
-      ["500'", "300'"],
-      ["2000'"],
-      ["pattern", "500'"],
-      ["south", "Flour Bluff Water Tower"]
-    ],
+  "Routes-Traffic Patterns-52": {
+    name: "13/31",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-50"]
+    nextNode: ["Point-default-50"]
   },
-  "Routes-Traffic Patterns-53" : {
-    name : "18/36",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Waldron Tower's airspace extends from the surface to 2000' MSL. Higher altitudes may be coordinated with approach. The pattern will be limited to a maximum of six aircraft. The maximum number may be reduced at the discretion of the tower supervisor.",
-      "<u>Successive Touch and Go Landings</u>",
-      "After takeoff, climb on runway heading to a maximum altitude of 500' MSL. When cleared by tower and at a minimum of 300' MSL, turn downwind and continue climb to pattern altitude.",
-      "<u>PPEL/P</u>",
-      "PPEL/Ps must be performed to the pattern side of the runway with proper interval. Instructor Pilots must request clearance from Tower prior to simulating a PPEL in the pattern and comply with Tower directions and restrictions.",
-      "<u>Delta Pattern (Emergency Orbit)</u>",
-      "The delta pattern will conform to the traffic flow for the runway in use at 2000' MSL. Climbs and descents to/from the delta pattern will be at the direction of the Tower.",
-      "<u>Wave-offs</u>",
-      "Wave-offs will be made to the pattern side of the active runway at 500' MSL, unless otherwise directed by Tower.",
-      "CAUTION: aircraft will remain south of the Flour Bluff Water Tower to avoid conflicts with NAS Corpus Christi traffic."
-    ],
-    comms : WALDRON_PATTERN_COMMS,
-    questions : [
-      "Waldron Tower's airspace extends from the surface to _____ MSL. The pattern will be limited to a maximum of ____ aircraft.",
-      "After takeoff, climb on runway heading to a maximum altitude of _____ MSL. When cleared by tower and at a minimum of _____ MSL, turn downwind and continue climb to pattern altitude.",
-      "The delta pattern will conform to the traffic flow for the runway in use at _____ MSL.",
-      "Wave-offs will be made to the _____ side of the active runway at _____ MSL, unless otherwise directed by Tower.",
-      "Aircraft will remain _____ of the ______ to avoid conflicts with NAS Corpus Christi traffic."
-    ],
-    answers : [
-      ["2000'", "six"],
-      ["500'", "300'"],
-      ["2000'"],
-      ["pattern", "500'"],
-      ["south", "Flour Bluff Water Tower"]
-    ],
+  "Routes-Traffic Patterns-53": {
+    name: "18/36",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-50"]
+    nextNode: ["Point-default-50"]
   },
-  "Point-Departures-54" : {
-    name : "PT Chapman",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-54": {
+    name: "PT Chapman",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Departures-55" : {
-    name : "PT Sunrise",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-55": {
+    name: "PT Sunrise",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Routes-Arrivals-136", "Routes-Arrivals-137", "Routes-Arrivals-138", "Routes-Arrivals-139", "Routes-Arrivals-140", "Routes-Arrivals-141", "Routes-Arrivals-142", "Routes-Arrivals-143"]
+    nextNode: ["Routes-Arrivals-136","Routes-Arrivals-137","Routes-Arrivals-138","Routes-Arrivals-139","Routes-Arrivals-140","Routes-Arrivals-141","Routes-Arrivals-142","Routes-Arrivals-143"]
   },
-  "Routes-Departures-56" : {
-    name : "13",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to 500' MSL.  From the downwind/crosswind and when cleared.  Fly direct to PT CHAPMAN (~270°) and accelerate to 200 KIAS. At PT CHAPMAN climb to 1000' MSL and contact Cabaniss Tower (CH 27 UHF).  Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : ["Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to _____ MSL.  From the downwind/crosswind and when cleared.  Fly direct to ______ (~____) and accelerate to ____ KIAS. At ______ climb to _____ MSL and contact Cabaniss Tower (CH ___ UHF).  Proceed to _____ (~heading _____ degrees) and contact Navy Tower (CH ___ UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion."],
-    answers : [["500'", "PT CHAPMAN", "270°", "200", "PT CHAPMAN", "1000'", "27", "PT SUNRISE", "025", "4"]],
-    dependentNode: ["Point-Departures-54", "Point-Departures-55"],
-    nextNode : ["Point-Departures-55"]
+  "Routes-Departures-56": {
+    name: "13",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-54","Point-Departures-55"],
+    nextNode: ["Point-Departures-55"]
   },
-  "Routes-Departures-57" : {
-    name : "18",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to 500' MSL.  From the downwind/crosswind and when cleared.  Fly direct to PT CHAPMAN (~270°) and accelerate to 200 KIAS. At PT CHAPMAN climb to 1000' MSL and contact Cabaniss Tower (CH 27 UHF).  Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : ["Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to _____ MSL.  From the downwind/crosswind and when cleared.  Fly direct to ______ (~____) and accelerate to ____ KIAS. At ______ climb to _____ MSL and contact Cabaniss Tower (CH ___ UHF).  Proceed to _____ (~heading _____ degrees) and contact Navy Tower (CH ___ UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion."],
-    answers : [["500'", "PT CHAPMAN", "270°", "200", "PT CHAPMAN", "1000'", "27", "PT SUNRISE", "025", "4"]],
-    dependentNode: ["Point-Departures-54", "Point-Departures-55"],
-    nextNode : ["Point-Departures-55"]
+  "Routes-Departures-57": {
+    name: "18",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-54","Point-Departures-55"],
+    nextNode: ["Point-Departures-55"]
   },
-  "Routes-Departures-58" : {
-    name : "31",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to 500' MSL.  When #1 upwind and cleared. Fly direct to PT CHAPMAN (~270°) and accelerate to 200 KIAS. At PT CHAPMAN climb to 1000' MSL and contact Cabaniss Tower (CH 27 UHF).  Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : ["Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to _____ MSL.  When #1 upwind and cleared. Fly direct to ______ (~____) and accelerate to ____ KIAS. At ______ climb to _____ MSL and contact Cabaniss Tower (CH ___ UHF).  Proceed to _____ (~heading _____ degrees) and contact Navy Tower (CH ___ UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion."],
-    answers : [["500'", "PT CHAPMAN", "270°", "200", "PT CHAPMAN", "1000'", "27", "PT SUNRISE", "025", "4"]],
-    dependentNode: ["Point-Departures-54", "Point-Departures-55"],
-    nextNode : ["Point-Departures-55"]
+  "Routes-Departures-58": {
+    name: "31",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-54","Point-Departures-55"],
+    nextNode: ["Point-Departures-55"]
   },
-  "Routes-Departures-59" : {
-    name : "36",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to 500' MSL.  When #1 upwind and cleared. Fly direct to PT CHAPMAN (~270°) and accelerate to 200 KIAS. At PT CHAPMAN climb to 1000' MSL and contact Cabaniss Tower (CH 27 UHF).  Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : ["Request a \"Sunrise Transition\" with Waldron Tower. Climb/Descend to _____ MSL.  When #1 upwind and cleared. Fly direct to ______ (~____) and accelerate to ____ KIAS. At ______ climb to _____ MSL and contact Cabaniss Tower (CH ___ UHF).  Proceed to _____ (~heading _____ degrees) and contact Navy Tower (CH ___ UHF) when directed.  Expect an Overhead, Base, or straight-in entry at Tower's discretion."],
-    answers : [["500'", "PT CHAPMAN", "270°", "200", "PT CHAPMAN", "1000'", "27", "PT SUNRISE", "025", "4"]],
-    dependentNode: ["Point-Departures-54", "Point-Departures-55"],
-    nextNode : ["Point-Departures-55"]
+  "Routes-Departures-59": {
+    name: "36",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Sunrise Transition / North Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-54","Point-Departures-55"],
+    nextNode: ["Point-Departures-55"]
   },
-  "Point-Arrivals-60" : {
-    name : "Oso Bridge (West Side)",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-60": {
+    name: "Oso Bridge (West Side)",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-67", "Routes-Arrivals-68", "Routes-Arrivals-69", "Routes-Arrivals-70"]
+    nextNode: ["Routes-Arrivals-67","Routes-Arrivals-68","Routes-Arrivals-69","Routes-Arrivals-70"]
   },
-  "Point-Arrivals-61" : {
-    name : "PT Lima",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-61": {
+    name: "PT Lima",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-62" : {
-    name : "Water Tower",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-62": {
+    name: "Water Tower",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-63" : {
-    name : "Yorktown Bridge",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-63": {
+    name: "Yorktown Bridge",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-64" : {
-    name : "Cooling Pond",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-64": {
+    name: "Cooling Pond",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-65" : {
-    name : "PITA Island",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-65": {
+    name: "PITA Island",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-66" : {
-    name : "Power Plant",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-66": {
+    name: "Power Plant",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-67" : {
-    name : "13",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River.  Turn to intercept the extended centerline of the runway in use and report the \"initial\" to Waldron Tower.",
-    comms : WALDRON_OSO_CALLS,
-    questions : ["Proceed at _____ KIAS, ______ MSL from the west side of the ______ southwest, remaining _____ WTD west of the Oso River.  Turn to intercept the extended centerline of the runway in use and report the \"initial\" to Waldron Tower."],
-    answers : [["200", "1000'", "Oso Bridge", "1/2"]],
+  "Routes-Arrivals-67": {
+    name: "13",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-50"]
+    nextNode: ["Point-default-50"]
   },
-  "Routes-Arrivals-68" : {
-    name : "18",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River.  Turn to intercept the extended centerline of the runway in use and report the \"initial\" to Waldron Tower.",
-    comms : WALDRON_OSO_CALLS,
-    questions : ["Proceed at _____ KIAS, ______ MSL from the west side of the ______ southwest, remaining _____ WTD west of the Oso River.  Turn to intercept the extended centerline of the runway in use and report the \"initial\" to Waldron Tower."],
-    answers : [["200", "1000'", "Oso Bridge", "1/2"]],
+  "Routes-Arrivals-68": {
+    name: "18",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-default-50"]
+    nextNode: ["Point-default-50"]
   },
-  "Routes-Arrivals-69" : {
-    name : "31",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River toward the southwest corner of the Cooling Ponds.  Abeam the Cooling Ponds turn left and proceed along the southern edge of the Cooling Ponds and report the \"initial\" to Waldron Tower.",
-    comms : WALDRON_OSO_CALLS,
-    questions : ["Proceed at _____ KIAS, _____ MSL from the west side of the _____ southwest, remaining ____ WTD west of the Oso River toward the southwest corner of the ______.  Abeam the ______ turn left and proceed along the southern edge of the ______ and report the \"initial\" to Waldron Tower."],
-    answers : [["200", "1000'", "Oso Bridge", "1/2", "Cooling Ponds", "Cooling Ponds", "Cooling Ponds"]],
-    dependentNode: ["Point-Arrivals-63", "Point-Arrivals-64", "Point-Arrivals-65", "Point-Arrivals-66"],
-    nextNode : ["Point-default-50"]
+  "Routes-Arrivals-69": {
+    name: "31",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-63","Point-Arrivals-64","Point-Arrivals-65","Point-Arrivals-66"],
+    nextNode: ["Point-default-50"]
   },
-  "Routes-Arrivals-70" : {
-    name : "36",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed at 200 KIAS, 1000' MSL from the west side of the Oso Bridge southwest, remaining 1/2 WTD west of the Oso River toward the southwest corner of the Cooling Ponds.  Abeam the Cooling Ponds turn left and proceed along the southern edge of the Cooling Ponds and report the \"initial\" to Waldron Tower.",
-    comms : WALDRON_OSO_CALLS,
-    questions : ["Proceed at _____ KIAS, _____ MSL from the west side of the _____ southwest, remaining ____ WTD west of the Oso River toward the southwest corner of the ______.  Abeam the ______ turn left and proceed along the southern edge of the ______ and report the \"initial\" to Waldron Tower."],
-    answers : [["200", "1000'", "Oso Bridge", "1/2", "Cooling Ponds", "Cooling Ponds", "Cooling Ponds"]],
-    dependentNode: ["Point-Arrivals-63", "Point-Arrivals-64", "Point-Arrivals-66"],
-    nextNode : ["Point-default-50"]
+  "Routes-Arrivals-70": {
+    name: "36",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-63","Point-Arrivals-64","Point-Arrivals-66"],
+    nextNode: ["Point-default-50"]
   },
-  "Point-Departures-71" : {
-    name : "Oso Bridge (West Side)",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-71": {
+    name: "Oso Bridge (West Side)",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: ["Point-Arrivals-126"],
-    nextNode : ["Routes-Arrivals-127", "Routes-Arrivals-128", "Routes-Arrivals-129", "Routes-Arrivals-130", "Routes-Arrivals-131", "Routes-Arrivals-132", "Routes-Arrivals-133", "Routes-Arrivals-134"]
+    nextNode: ["Routes-Arrivals-127","Routes-Arrivals-128","Routes-Arrivals-129","Routes-Arrivals-130","Routes-Arrivals-131","Routes-Arrivals-132","Routes-Arrivals-133","Routes-Arrivals-134"]
   },
-  "Point-Departures-72" : {
-    name : "Yorktown Bridge",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-72": {
+    name: "Yorktown Bridge",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Departures-73" : {
-    name : "Water Tower",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-73": {
+    name: "Water Tower",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Departures-74" : {
-    name : "18",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request an \"Oso Transition\" with Waldron Tower.  When cleared by Tower climb to 1000' MSL. At the 180 and when cleared.  Fly direct to the west end of the Oso Bay Bridge, contact Navy Corpus Tower when directed by Waldron Tower. Request 1. Base or downwind entry 2. Break Entry.",
-    questions : ["Request an \"Oso Transition\" with Waldron Tower.  When cleared by Tower climb to ____ MSL. At the 180 and when cleared.  Fly direct to the west end of the _____, contact Navy Corpus Tower when directed by Waldron Tower. Request 1. Base or downwind entry 2. Break Entry."],
-    answers : [["1000'", "Oso Bay Bridge"]],
+  "Routes-Departures-74": {
+    name: "18",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-71"],
-    nextNode : ["Point-Departures-71"]
+    nextNode: ["Point-Departures-71"]
   },
-  "Routes-Departures-75" : {
-    name : "13",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request an \"Oso Transition\" with Waldron Tower.  When cleared by Tower climb to 1000' MSL. At the 180 and when cleared.  Fly direct to the west end of the Oso Bay Bridge, contact Navy Corpus Tower when directed by Waldron Tower. Request 1. Base or downwind entry 2. Break Entry.",
-    questions : ["Request an \"Oso Transition\" with Waldron Tower.  When cleared by Tower climb to ____ MSL. At the 180 and when cleared.  Fly direct to the west end of the _____, contact Navy Corpus Tower when directed by Waldron Tower. Request 1. Base or downwind entry 2. Break Entry."],
-    answers : [["1000'", "Oso Bay Bridge"]],
+  "Routes-Departures-75": {
+    name: "13",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-71"],
-    nextNode : ["Point-Departures-71"]
+    nextNode: ["Point-Departures-71"]
   },
-  "Routes-Departures-76" : {
-    name : "31",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request an \"Oso Transition\" with Waldron Tower.  When cleared by Tower climb to 1000' MSL. When # 1 upwind and cleared.  Fly direct to the west end of the Oso Bay Bridge, contact Navy Corpus Tower when directed by Waldron Tower. Request 1. Base or downwind entry 2. Break Entry.",
-    questions : ["Request an \"Oso Transition\" with Waldron Tower.  When cleared by Tower climb to ____ MSL. When # 1 upwind and cleared.  Fly direct to the west end of the _____, contact Navy Corpus Tower when directed by Waldron Tower. Request 1. Base or downwind entry 2. Break Entry."],
-    answers : [["1000'", "Oso Bay Bridge"]],
+  "Routes-Departures-76": {
+    name: "31",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-71"],
-    nextNode : ["Point-Departures-71"]
+    nextNode: ["Point-Departures-71"]
   },
-  "Routes-Departures-77" : {
-    name : "36",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > Oso Transition / North Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request an \"Oso Transition\" with Waldron Tower.  When cleared by Tower climb to 1000' MSL. When # 1 upwind and cleared.  Fly direct to the west end of the Oso Bay Bridge, contact Navy Corpus Tower when directed by Waldron Tower. Request 1. Base or downwind entry 2. Break Entry.",
-    questions : ["Request an \"Oso Transition\" with Waldron Tower.  When cleared by Tower climb to ____ MSL. When # 1 upwind and cleared.  Fly direct to the west end of the _____, contact Navy Corpus Tower when directed by Waldron Tower. Request 1. Base or downwind entry 2. Break Entry."],
-    answers : [["1000'", "Oso Bay Bridge"]],
+  "Routes-Departures-77": {
+    name: "36",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > Oso Transition / North Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-71"],
-    nextNode : ["Point-Departures-71"]
+    nextNode: ["Point-Departures-71"]
   },
-  "Point-Arrivals-78" : {
-    name : "Camel Humps",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-78": {
+    name: "Camel Humps",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-86", "Routes-Arrivals-87", "Routes-Arrivals-88", "Routes-Arrivals-89"]
+    nextNode: ["Routes-Arrivals-86","Routes-Arrivals-87","Routes-Arrivals-88","Routes-Arrivals-89"]
   },
-  "Point-Arrivals-79" : {
-    name : "Power Plant",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-79": {
+    name: "Power Plant",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-80" : {
-    name : "PITA Island",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-80": {
+    name: "PITA Island",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-81" : {
-    name : "Shrimp Pond",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-81": {
+    name: "Shrimp Pond",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-82" : {
-    name : "Cooling Pond",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-82": {
+    name: "Cooling Pond",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-83" : {
-    name : "Yorktown Bridge",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-83": {
+    name: "Yorktown Bridge",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-84" : {
-    name : "Water Tower",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-84": {
+    name: "Water Tower",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-85" : {
-    name : "PT Lima",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-85": {
+    name: "PT Lima",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-86" : {
-    name : "13",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Fly to the Camel Humps and terminate with Corpus Approach.  Contact Waldron Tower (CH 30 UHF).  Proceed north up the shoreline toward the Shrimp Ponds, paralleling the Intracoastal Waterway at 1000' MSL and 200 KIAS. At the Shrimp Ponds, turn left and proceed to the southwest corner of the Cooling Ponds.  Remain along the west side of the Oso River.  Call the \"initial\" over the Yorktown Bridge.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by Tower. Remain south of the Flour Bluff Water Tower",
-      "If two-way radio communication is not established with Waldron Tower by the Shrimp Ponds, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly south along the center of the intracoastal waterway.  Maintain 1000' MSL and contact Corpus Approach (CH 8)."
-    ],
-    comms : WALDRON_ARRIVAL_COMMS,
-    questions : [
-      "Fly to the _____ and terminate with Corpus Approach.  Contact Waldron Tower (CH ____ UHF).  Proceed north up the shoreline toward the _____, paralleling the Intracoastal Waterway at _____ MSL and _____ KIAS. At the _____, turn left and proceed to the southwest corner of the ______.  Remain along the west side of the Oso River.  Call the \"initial\" over the ______.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by Tower. Remain south of the ______",
-      "If two-way radio communication is not established with Waldron Tower by the _______, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly ______ along the center of the intracoastal waterway.  Maintain _____ MSL and contact Corpus Approach (CH ____)."
-    ],
-    answers : [
-      ["Camel Humps", "30", "Shrimp Ponds", "1000'", "200", "Shrimp Ponds", "Cooling Ponds", "Yorktown Bridge", "Flour Bluff Water Tower"],
-      ["Shrimp Ponds", "south", "1000'", "8"]
-    ],
-    dependentNode: ["Point-Arrivals-78", "Point-Arrivals-81", "Point-Arrivals-82", "Point-Arrivals-83", "Point-Arrivals-84"],
-    nextNode : ["Point-default-50"]
+  "Routes-Arrivals-86": {
+    name: "13",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-78","Point-Arrivals-81","Point-Arrivals-82","Point-Arrivals-83","Point-Arrivals-84"],
+    nextNode: ["Point-default-50"]
   },
-  "Routes-Arrivals-87" : {
-    name : "18",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Fly to the Camel Humps and terminate with Corpus Approach.  Contact Waldron Tower (CH 30 UHF).  Proceed north up the shoreline toward the Shrimp Ponds, paralleling the Intracoastal Waterway at 1000' MSL and 200 KIAS. At the Shrimp Ponds, turn left and proceed to the southwest corner of the Cooling Ponds.  Remain along the west side of the Oso River.  Call the \"initial\" over the Yorktown Bridge.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by Tower. Remain south of the Flour Bluff Water Tower",
-      "If two-way radio communication is not established with Waldron Tower by the Shrimp Ponds, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly south along the center of the intracoastal waterway.  Maintain 1000' MSL and contact Corpus Approach (CH 8)."
-    ],
-    comms : WALDRON_ARRIVAL_COMMS,
-    questions : [
-      "Fly to the _____ and terminate with Corpus Approach.  Contact Waldron Tower (CH ____ UHF).  Proceed north up the shoreline toward the _____, paralleling the Intracoastal Waterway at _____ MSL and _____ KIAS. At the _____, turn left and proceed to the southwest corner of the ______.  Remain along the west side of the Oso River.  Call the \"initial\" over the ______.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by Tower. Remain south of the ______",
-      "If two-way radio communication is not established with Waldron Tower by the _______, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly ______ along the center of the intracoastal waterway.  Maintain _____ MSL and contact Corpus Approach (CH ____)."
-    ],
-    answers : [
-      ["Camel Humps", "30", "Shrimp Ponds", "1000'", "200", "Shrimp Ponds", "Cooling Ponds", "Yorktown Bridge", "Flour Bluff Water Tower"],
-      ["Shrimp Ponds", "south", "1000'", "8"]
-    ],
-    dependentNode: ["Point-Arrivals-78", "Point-Arrivals-81", "Point-Arrivals-82", "Point-Arrivals-83", "Point-Arrivals-84"],
-    nextNode : ["Point-default-50"]
+  "Routes-Arrivals-87": {
+    name: "18",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-78","Point-Arrivals-81","Point-Arrivals-82","Point-Arrivals-83","Point-Arrivals-84"],
+    nextNode: ["Point-default-50"]
   },
-  "Routes-Arrivals-88" : {
-    name : "31",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Fly to the Camel Humps and terminate with Corpus Approach.  Contact Waldron Tower (CH 30 UHF).  Proceed north up the shoreline toward the Shrimp Ponds, paralleling the Intracoastal Waterway at 1000' MSL and 200 KIAS. At the Shrimp Ponds,  call “Initial” abeam the Shrimp Ponds.  Remain west of the Waldron Power Plant for RWY 36 and east of the Waldron Power Plant for RWY 31.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by tower.",
-      "If two-way radio communication is not established with Waldron Tower by the Shrimp Ponds, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly south along the center of the intracoastal waterway.  Maintain 1000' MSL and contact Corpus Approach (CH 8)."
-    ],
-    comms : WALDRON_ARRIVAL_COMMS,
-    questions : [
-      "Fly to the _____ and terminate with Corpus Approach.  Contact Waldron Tower (CH ____ UHF).  Proceed north up the shoreline toward the _____, paralleling the Intracoastal Waterway at _____ MSL and _____ KIAS. At the _____,  call “Initial” abeam the ______.  Remain west of the _______ for RWY 36 and east of the _______ for RWY 31.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by tower. ",
-      "If two-way radio communication is not established with Waldron Tower by the _______, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly ______ along the center of the intracoastal waterway.  Maintain _____ MSL and contact Corpus Approach (CH ____)."
-    ],
-    answers : [
-      ["Camel Humps", "30", "Shrimp Ponds", "1000'", "200", "Shrimp Ponds", "Shrimp Ponds", "Waldron Power Plant", "Waldron Power Plant"],
-      ["Shrimp Ponds", "south", "1000'", "8"]
-    ],
-    dependentNode: ["Point-Arrivals-78", "Point-Arrivals-79", "Point-Arrivals-80", "Point-Arrivals-81"],
-    nextNode : ["Point-default-50"]
+  "Routes-Arrivals-88": {
+    name: "31",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-78","Point-Arrivals-79","Point-Arrivals-80","Point-Arrivals-81"],
+    nextNode: ["Point-default-50"]
   },
-  "Routes-Arrivals-89" : {
-    name : "36",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Fly to the Camel Humps and terminate with Corpus Approach.  Contact Waldron Tower (CH 30 UHF).  Proceed north up the shoreline toward the Shrimp Ponds, paralleling the Intracoastal Waterway at 1000' MSL and 200 KIAS. At the Shrimp Ponds,  call “Initial” abeam the Shrimp Ponds.  Remain west of the Waldron Power Plant for RWY 36 and east of the Waldron Power Plant for RWY 31.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by tower.",
-      "If two-way radio communication is not established with Waldron Tower by the Shrimp Ponds, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly south along the center of the intracoastal waterway.  Maintain 1000' MSL and contact Corpus Approach (CH 8)."
-    ],
-    comms : WALDRON_ARRIVAL_COMMS,
-    questions : [
-      "Fly to the _____ and terminate with Corpus Approach.  Contact Waldron Tower (CH ____ UHF).  Proceed north up the shoreline toward the _____, paralleling the Intracoastal Waterway at _____ MSL and _____ KIAS. At the _____,  call “Initial” abeam the ______.  Remain west of the _______ for RWY 36 and east of the _______ for RWY 31.  Turn inbound to set up for the overhead maneuver and report the numbers as direct by tower. ",
-      "If two-way radio communication is not established with Waldron Tower by the _______, or Waldron Tower reports that the pattern is full and denies entry, turn right and fly ______ along the center of the intracoastal waterway.  Maintain _____ MSL and contact Corpus Approach (CH ____)."
-    ],
-    answers : [
-      ["Camel Humps", "30", "Shrimp Ponds", "1000'", "200", "Shrimp Ponds", "Shrimp Ponds", "Waldron Power Plant", "Waldron Power Plant"],
-      ["Shrimp Ponds", "south", "1000'", "8"]
-    ],
-    dependentNode: ["Point-Arrivals-78", "Point-Arrivals-79", "Point-Arrivals-81"],
-    nextNode : ["Point-default-50"]
+  "Routes-Arrivals-89": {
+    name: "36",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-78","Point-Arrivals-79","Point-Arrivals-81"],
+    nextNode: ["Point-default-50"]
   },
-  "Point-Departures-90" : {
-    name : "Sandbar",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > East Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-90": {
+    name: "Sandbar",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > East Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Departures-91" : {
-    name : "13",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > East Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb/Descend to 500' MSL. When #1 upwind. Fly RWY HDG and accelerate to 240 KIAS. Thence turn eastbound to avoid the Power Plant.  Once feet wet, turn to cross Padre Island (~120°).  Remain north of the Padre Island National Seashore but south of the Padre Island residential areas.  Maintain 500' MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH 8 UHF) with request.  Crossing the beach line, climb to 1000' MSL and join the Southern Arrival.",
-    comms : WALDRON_EAST_DEPARTURE_COMMS,
-    questions : ["Climb/Descend to _____ MSL. When #1 upwind. Fly ____ HDG and accelerate to ___  KIAS. Thence turn eastbound to avoid the ______.  Once feet wet, turn to cross Padre Island (~_____).  Remain _____ of the Padre Island National Seashore but ______ of the Padre Island residential areas.  Maintain _____ MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH ___ UHF) with request.  Crossing the beach line, climb to ______ MSL and join the Southern Arrival."],
-    answers : [["500'", "RWY", "240", "Power Plant", "120°", "north", "south", "500'", "8", "1000'"]],
-    dependentNode: ["Point-Departures-90", "Point-Arrivals-79"],
-    nextNode : ["Routes-Arrivals-108"]
+  "Routes-Departures-91": {
+    name: "13",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > East Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-90","Point-Arrivals-79"],
+    nextNode: ["Routes-Arrivals-108"]
   },
-  "Routes-Departures-92" : {
-    name : "18",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > East Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb/Descend to 500' MSL. When #1 upwind. Fly RWY HDG and accelerate to 240 KIAS. Thence turn eastbound to avoid the Power Plant.  Once feet wet, turn to cross Padre Island (~120°).  Remain north of the Padre Island National Seashore but south of the Padre Island residential areas.  Maintain 500' MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH 8 UHF) with request.  Crossing the beach line, climb to 1000' MSL and join the Southern Arrival.",
-    comms : WALDRON_EAST_DEPARTURE_COMMS,
-    questions : ["Climb/Descend to _____ MSL. When #1 upwind. Fly ____ HDG and accelerate to ___  KIAS. Thence turn eastbound to avoid the ______.  Once feet wet, turn to cross Padre Island (~_____).  Remain _____ of the Padre Island National Seashore but ______ of the Padre Island residential areas.  Maintain _____ MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH ___ UHF) with request.  Crossing the beach line, climb to ______ MSL and join the Southern Arrival."],
-    answers : [["500'", "RWY", "240", "Power Plant", "120°", "north", "south", "500'", "8", "1000'"]],
-    dependentNode: ["Point-Departures-90", "Point-Arrivals-79"],
-    nextNode : ["Routes-Arrivals-108"]
+  "Routes-Departures-92": {
+    name: "18",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > East Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-90","Point-Arrivals-79"],
+    nextNode: ["Routes-Arrivals-108"]
   },
-  "Routes-Departures-93" : {
-    name : "31",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > East Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb/Descend to 500' MSL. When #1 downwind at the 180. Fly reciprocal runway HDG and accelerate to 240 KIAS. Thence turn eastbound to avoid the Power Plant.  Once feet wet, turn to cross Padre Island (~120°).  Remain north of the Padre Island National Seashore but south of the Padre Island residential areas.  Maintain 500' MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH 8 UHF) with request.  Crossing the beach line, climb to 1000' MSL and join the Southern Arrival.",
-    comms : WALDRON_EAST_DEPARTURE_COMMS,
-    questions : ["Climb/Descend to _____ MSL. When #1 downwind at the 180. Fly ____ HDG and accelerate to ___  KIAS. Thence turn eastbound to avoid the ______.  Once feet wet, turn to cross Padre Island (~_____).  Remain _____ of the Padre Island National Seashore but ______ of the Padre Island residential areas.  Maintain _____ MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH ___ UHF) with request.  Crossing the beach line, climb to ______ MSL and join the Southern Arrival."],
-    answers : [["500'", "reciprocal runway", "240", "Power Plant", "120°", "north", "south", "500'", "8", "1000'"]],
-    dependentNode: ["Point-Departures-90", "Point-Arrivals-79"],
-    nextNode : ["Routes-Arrivals-108"]
+  "Routes-Departures-93": {
+    name: "31",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > East Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-90","Point-Arrivals-79"],
+    nextNode: ["Routes-Arrivals-108"]
   },
-  "Routes-Departures-94" : {
-    name : "36",
-    parentFolder : "(KNWL) Waldron NOLF",
-    folderPath : "(KNWL) Waldron NOLF > East Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb/Descend to 500' MSL. When #1 downwind at the 180. Fly reciprocal runway HDG and accelerate to 240 KIAS. Thence turn eastbound to avoid the Power Plant.  Once feet wet, turn to cross Padre Island (~120°).  Remain north of the Padre Island National Seashore but south of the Padre Island residential areas.  Maintain 500' MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH 8 UHF) with request.  Crossing the beach line, climb to 1000' MSL and join the Southern Arrival.",
-    comms : WALDRON_EAST_DEPARTURE_COMMS,
-    questions : ["Climb/Descend to _____ MSL. When #1 downwind at the 180. Fly ____ HDG and accelerate to ___  KIAS. Thence turn eastbound to avoid the ______.  Once feet wet, turn to cross Padre Island (~_____).  Remain _____ of the Padre Island National Seashore but ______ of the Padre Island residential areas.  Maintain _____ MSL.  Terminate with Waldron Tower and contact Corpus Approach (CH ___ UHF) with request.  Crossing the beach line, climb to ______ MSL and join the Southern Arrival."],
-    answers : [["500'", "reciprocal runway", "240", "Power Plant", "120°", "north", "south", "500'", "8", "1000'"]],
-    dependentNode: ["Point-Departures-90", "Point-Arrivals-79"],
-    nextNode : ["Routes-Arrivals-108"]
+  "Routes-Departures-94": {
+    name: "36",
+    parentFolder: "(KNWL) Waldron NOLF",
+    folderPath: "(KNWL) Waldron NOLF > East Departures",
+    subCategory: "Departures",
+    category: "Routes",
+    dependentNode: ["Point-Departures-90","Point-Arrivals-79"],
+    nextNode: ["Routes-Arrivals-108"]
   },
-  "Point-default-95" : {
-    name : "KNGP",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS",
-    subCategory : "Point",
-    category : "Point",
-    description : "<table width=\"100%\" border=\"0\" cellpadding=\"5\" cellspacing=\"0\" bgcolor=\"#e8e9cb\">\n   <tr>\n    <td>\n      <center><b><font size=\"5\" color=\"#009999\">(KNGP) Corpus Christi NAS</font></b></center>\n    </td>\n  </tr>\n  <tr>\n    <td>\n        <p><b>Field Elevation: 19'</b><br />\n\n        <p><b>Runway 18/36</b><br />\n        Magnetic Heading: 177°/357°<br />\n        Length x Width: 5002' x 196'</p>\n\n        <p><b>Runway 04/22</b><br />\n        Magnetic Heading: 042°/222°<br />\n        Length x Width: 5001' x 196'</p>\n\n        <p><b>Runway 13L/31R</b><br />\n        Magnetic Heading: 132°/312°<br />\n        Length x Width: 5002' x 196'</p>\n\n        <p><b>Runway 13R/31L</b><br />\n        Magnetic Heading: 132°/312°<br />\n        Length x Width: 8001' x 200'</p>\n\n        <p><b>Approach Frequencies</b><br />\n        UHF 5 (307.9MHz)<br />\n        VHF 5 (125.4MHz)<br />\n        UHF 6 (348.725MHz)<br />\n        VHF 6 (120.9MHz)<br />\n        UHF 7 (273.45MHz)<br />\n        VHF 7 (124.8MHz)<br />\n        UHF 8 (223.7MHz)<br />\n        VHF 8 (132.825MHz)</p>\n\n       <p><b>Clearance</b></br>\n        UHF 2 (314.3MHz)</p>\n\n        <p><b>Tower</b></br>\n        UHF 4 (340.2MHz)<br />\n        VHF 4 (134.85MHz)</p>\n\n        <p><b>Ground</b></br>\n        UHF 3 (257.85MHz)<br />\n        VHF 3 (118.7MHz)</p>\n\n        <p><b>ATIS</b></br>\n        UHF 1 (290.9MHz)<br />\n        VHF 1 (127.9MHz)</p>\n\n        <p><b>Traffic Rules</b><br />\n        Break: 1,000' MSL<br />\n        Pattern: 800' MSL <br />\n        Pattern Direction: Outside <br />\n        PPELs: Same side and opposite direction of pattern. <br />\n        Hours: 0700-2300 M-Th, 0700-1900 Fri</p>\n        <p>Normal towered airfield operations. Class D airspace up to 2,500' MSL. Turns after takeoff NST 300' AGL. Climb at 180 KIAS and level off at 200 KIAS. Transit at 240 KIAS once outside of class D airspace. CONT & FORMS training events contact departure via UHF, INST & NAV via VHF. Hold short runway 13L/R and 18 on RH side for VFR and LH side for IFR. Only call tower when next for departure. Tower clearance to pass 500' MSL required following takeoff. Echo (south side) runup used for north flow. Sierra runup used for south flow. Sierra runup is within a Non-controlled Movement Area and does not require clearance to taxi.</p>    \n    </td>\n  </tr>\n</table>\n",
-    customDescription : "",
-    questions : [],
-    answers : [],
-    dependentNode: ["Airspace-default-96", "Airspace-default-97", "Point-default-216"],
-    nextNode : [
-      // Traffic Patterns (after 95, before 189)
-      "Routes-Traffic Patterns-98", "Routes-Traffic Patterns-99", "Routes-Traffic Patterns-100", "Routes-Traffic Patterns-101",
-
-      // Departures (after 95, before 189)
-      "Routes-Arrivals-134", "Routes-Arrivals-133", "Routes-Arrivals-132", "Routes-Arrivals-131", "Routes-Arrivals-130",
-      "Routes-Arrivals-129", "Routes-Arrivals-128", "Routes-Arrivals-127",
-      "Routes-Departures-145", "Routes-Departures-146", "Routes-Departures-147", "Routes-Departures-148",
-      "Routes-Departures-149", "Routes-Departures-150", "Routes-Departures-151", "Routes-Departures-152",
-      "Routes-Departures-161", "Routes-Departures-162", "Routes-Departures-163", "Routes-Departures-164",
-      "Routes-Departures-165", "Routes-Departures-166", "Routes-Departures-167", "Routes-Departures-168",
-      "Routes-Departures-179", "Routes-Departures-180", "Routes-Departures-181", "Routes-Departures-182",
-      "Routes-Departures-183", "Routes-Departures-184", "Routes-Departures-185", "Routes-Departures-186",
-      "Routes-Arrivals-170", "Routes-Arrivals-171", "Routes-Arrivals-172", "Routes-Arrivals-173",
-      "Routes-Arrivals-174", "Routes-Arrivals-175", "Routes-Arrivals-176", "Routes-Arrivals-177"
-    ]
+  "Point-default-95": {
+    name: "KNGP",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS",
+    subCategory: "Point",
+    category: "Point",
+    dependentNode: ["Airspace-default-96","Airspace-default-97","Point-default-216"],
+    nextNode: ["Routes-Traffic Patterns-98","Routes-Traffic Patterns-99","Routes-Traffic Patterns-100","Routes-Traffic Patterns-101","Routes-Arrivals-134","Routes-Arrivals-133","Routes-Arrivals-132","Routes-Arrivals-131","Routes-Arrivals-130","Routes-Arrivals-129","Routes-Arrivals-128","Routes-Arrivals-127","Routes-Departures-145","Routes-Departures-146","Routes-Departures-147","Routes-Departures-148","Routes-Departures-149","Routes-Departures-150","Routes-Departures-151","Routes-Departures-152","Routes-Departures-161","Routes-Departures-162","Routes-Departures-163","Routes-Departures-164","Routes-Departures-165","Routes-Departures-166","Routes-Departures-167","Routes-Departures-168","Routes-Departures-179","Routes-Departures-180","Routes-Departures-181","Routes-Departures-182","Routes-Departures-183","Routes-Departures-184","Routes-Departures-185","Routes-Departures-186","Routes-Arrivals-170","Routes-Arrivals-171","Routes-Arrivals-172","Routes-Arrivals-173","Routes-Arrivals-174","Routes-Arrivals-175","Routes-Arrivals-176","Routes-Arrivals-177"]
   },
-  "Airspace-default-96" : {
-    name : "Class D Airspace",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS",
-    subCategory : "Airspace",
-    category : "Airspace",
-    description : "",
-    customDescription : "Class D airspace (surface to 2500' and 4.3 miles from center of airport).",
-    questions : [
-      "Class __ airspace (_____ to _____ and _____ miles from center of airport)."
-    ],
-    answers : [
-      ["D", "surface", "2500'", "4.3"]
-    ],
+  "Airspace-default-96": {
+    name: "Class D Airspace",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS",
+    subCategory: "Airspace",
+    category: "Airspace",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Airspace-default-97" : {
-    name : "Controlled Ejection Area",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS",
-    subCategory : "Airspace",
-    category : "Airspace",
-    description : "",
-    customDescription : "The CEA is defined as a 2NM radius around the CRP VORTAC 170 Radial at 20 DME.  Upon arrival, turn to a 210 heading for ejection.",
-    questions : ["The CEA is defined as a ___ NM radius around the CRP VORTAC ___ Radial at ___ DME.  Upon arrival, turn to a ____ heading for ejection."],
-    answers : [["2", "170", "20", "210"]],
+  "Airspace-default-97": {
+    name: "Controlled Ejection Area",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS",
+    subCategory: "Airspace",
+    category: "Airspace",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Traffic Patterns-98" : {
-    name : "04/22",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "04 left pattern, 22 right pattern.",
-      "Normal entry is from the initial to an overhead maneuver.  However, the tower may specify a straight-in, downwind or base entry.",
-      "Initial/Break 1000 ft MSL, Pattern 800 ft MSL, Delta 2000 ft MSL conforms to the pattern for the runway in use.",
-      "After takeoff, climb on runway heading to a maximum altitude of 500' MSL.  When cleared by tower and at a minimum altitude of 300' MSL, turn crosswind and climb to pattern altitude."
-    ],
-    questions : ["04 ____ pattern, 22 ____ pattern."],
-    answers : [["left", "right"]],
+  "Routes-Traffic Patterns-98": {
+    name: "04/22",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: ["Point-default-95"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Traffic Patterns-99" : {
-    name : "18/36",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "36 left pattern, 18 right pattern.",
-      "Normal entry is from the initial to an overhead maneuver.  However, the tower may specify a straight-in, downwind or base entry.",
-      "Initial/Break 1000 ft MSL, Pattern 800 ft MSL, Delta 2000 ft MSL conforms to the pattern for the runway in use.",
-      "After takeoff, climb on runway heading to a maximum altitude of 500' MSL.  When cleared by tower and at a minimum altitude of 300' MSL, turn crosswind and climb to pattern altitude.",
-      "When holding short of RWY 13L/R and RWY 18 on RWY 4/22, pilots awaiting VFR departure must hold short to the right of the taxiway centerline and IFR departures hold short to the left of the taxiway centerline"
-    ],
-    questions : ["18 ____ pattern, 36 ____ pattern."],
-    answers : [["right", "left"]],
+  "Routes-Traffic Patterns-99": {
+    name: "18/36",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: ["Point-default-95"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Traffic Patterns-100" : {
-    name : "13L/31R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "13L left pattern, 31R right pattern.",
-      "Normal entry is from the initial to an overhead maneuver.  However, the tower may specify a straight-in, downwind or base entry.",
-      "Initial/Break 1000 ft MSL, Pattern 800 ft MSL, Delta 2000 ft MSL conforms to the pattern for the runway in use.",
-      "After takeoff, climb on runway heading to a maximum altitude of 500' MSL.  When cleared by tower and at a minimum altitude of 300' MSL, turn crosswind and climb to pattern altitude.",
-      "When holding short of RWY 13L/R and RWY 18 on RWY 4/22, pilots awaiting VFR departure must hold short to the right of the taxiway centerline and IFR departures hold short to the left of the taxiway centerline"
-    ],
-    questions : ["31R ____ pattern, 13L ____ pattern."],
-    answers : [["right", "left"]],
+  "Routes-Traffic Patterns-100": {
+    name: "13L/31R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: ["Point-default-95"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Traffic Patterns-101" : {
-    name : "13R/31L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS",
-    subCategory : "Traffic Patterns",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "31L left pattern, 13R right pattern.",
-      "Normal entry is from the initial to an overhead maneuver.  However, the tower may specify a straight-in, downwind or base entry.",
-      "Initial/Break 1000 ft MSL, Pattern 800 ft MSL, Delta 2000 ft MSL conforms to the pattern for the runway in use.",
-      "After takeoff, climb on runway heading to a maximum altitude of 500' MSL.  When cleared by tower and at a minimum altitude of 300' MSL, turn crosswind and climb to pattern altitude.",
-      "When holding short of RWY 13L/R and RWY 18 on RWY 4/22, pilots awaiting VFR departure must hold short to the right of the taxiway centerline and IFR departures hold short to the left of the taxiway centerline"
-    ],
-    questions : [
-      "31L ____ pattern, 13R ____ pattern.",
-      "When holding short of RWY 13L/R and RWY 18 on RWY 4/22, pilots awaiting VFR departure must hold short to the ____ of the taxiway centerline and IFR departures hold short to the ____ of the taxiway centerline",
-      "Initial/Break ____ ft MSL, Pattern ____ ft MSL, Delta ____ ft MSL",
-      "After takeoff, climb on runway heading to a maximum altitude of ____ MSL.  When cleared by tower and at a minimum altitude of ____ MSL, turn crosswind and climb to pattern altitude."
-    ],
-    answers : [
-      ["left", "right"],
-      ["right", "left"],
-      ["1000", "800", "2000"],
-      ["500", "300"]
-    ],
+  "Routes-Traffic Patterns-101": {
+    name: "13R/31L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS",
+    subCategory: "Traffic Patterns",
+    category: "Routes",
     dependentNode: ["Point-default-95"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Point-Arrivals-102" : {
-    name : "Aransas Pass Causeway",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-102": {
+    name: "Aransas Pass Causeway",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-103" : {
-    name : "9 Mile Point",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-103": {
+    name: "9 Mile Point",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-104" : {
-    name : "North Arrivals",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "240 KIAS. Establish the aircraft at 1500' MSL southbound over the intracoastal waterway abeam KRKP.  Contact Corpus Approach (CH 8 UHF) NLT 9-mile Point.  Descend to 1000' MSL by the Aransas Pass Causeway and proceed direct to PT SHAMROCK... ",
-    questions : ["____ KIAS. Establish the aircraft at ____ MSL southbound over the intracoastal waterway abeam KRKP.  Contact Corpus Approach (CH ___ UHF) NLT ______.  Descend to _____ MSL by the ______ and proceed direct to _____..."],
-    answers : [["240", "1500'","8", "9-mile Point", "1000'", "Aransas Pass Causeway", "PT SHAMROCK"]],
-    dependentNode: ["Point-Arrivals-102", "Point-Arrivals-103", "Point-Arrivals-113"],
-    nextNode : ["Point-Arrivals-113"]
+  "Routes-Arrivals-104": {
+    name: "North Arrivals",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-102","Point-Arrivals-103","Point-Arrivals-113"],
+    nextNode: ["Point-Arrivals-113"]
   },
-  "Point-Arrivals-105" : {
-    name : "Twin Condos",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-105": {
+    name: "Twin Condos",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-106" : {
-    name : "East Arrivals",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Cross the beach line in between Port Royal and the Twin Condos at 1000' MSL, direct PT SHAMROCK... ",
-    questions : ["Cross the beach line in between _____ and the ______ at ____ MSL, direct ______... "],
-    answers : [["Port Royal", "Twin Condos", "1000'", "PT SHAMROCK"]],
-    dependentNode: ["Point-Arrivals-105", "Point-Arrivals-107", "Point-Arrivals-113"],
-    nextNode : ["Point-Arrivals-113"]
+  "Routes-Arrivals-106": {
+    name: "East Arrivals",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-105","Point-Arrivals-107","Point-Arrivals-113"],
+    nextNode: ["Point-Arrivals-113"]
   },
-  "Point-Arrivals-107" : {
-    name : "Port Royal",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-107": {
+    name: "Port Royal",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-108" : {
-    name : "South Arrivals",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "240 KIAS. Establish the aircraft at 1000' MSL, One WTD off the beach line northbound.  Be alert for traffic already established on the southern arrival at 1000' MSL.  Cross the beach line in the vicinity of Port Royal and proceed direct to PT SHAMROCK ... ",
-    questions : ["____ KIAS. Establish the aircraft at ____ MSL, ______ off the beach line northbound.  Be alert for traffic already established on the southern arrival at 1000' MSL.  Cross the beach line in the vicinity of _____ and proceed direct to ______ ... "],
-    answers : [["240", "1000'", "One WTD", "Port Royal", "PT SHAMROCK"]],
-    dependentNode: ["Point-Arrivals-107", "Point-Arrivals-113"],
-    nextNode : ["Point-Arrivals-113"]
+  "Routes-Arrivals-108": {
+    name: "South Arrivals",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-107","Point-Arrivals-113"],
+    nextNode: ["Point-Arrivals-113"]
   },
-  "Point-Arrivals-109" : {
-    name : "PT Rusty",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-109": {
+    name: "PT Rusty",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-110" : {
-    name : "West Arrivals",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "240 KIAS. Proceed Direct to PT RUSTY at 1000' MSL. From RUSTY fly direct to PT SHAMROCK ( ~ 140°)...",
-    questions : ["____ KIAS. Proceed Direct to ______ at _____ MSL. From _____ fly direct to ______ ( ~ 140°)..."],
-    answers : [["240", "PT RUSTY", "1000'", "RUSTY", "PT SHAMROCK"]],
-    dependentNode: ["Point-Arrivals-109", "Point-Arrivals-113"],
-    nextNode : ["Point-Arrivals-113"]
+  "Routes-Arrivals-110": {
+    name: "West Arrivals",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-109","Point-Arrivals-113"],
+    nextNode: ["Point-Arrivals-113"]
   },
-  "Point-Arrivals-111" : {
-    name : "Port Bay Bridge",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-111": {
+    name: "Port Bay Bridge",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-112" : {
-    name : "Goliad Arrivals",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "240 KIAS. Fly direct to Woodsboro at 2500' MSL (~140°).  At Woodsboro, contact Corpus Approach (CH 6 UHF).  Fly ~145° to Bayside.  Fly ~155° to the Port Bay Bridge.  Reaching the bridge descend to 1000' MSL and fly direct to the Aransas Causeway ( ~ 150°) to join the Northern Arrival... ",
-    questions : ["____ KIAS. Fly direct to _____  at _____ MSL (~140°).  At ______, contact Corpus Approach (CH __ UHF).  Fly ____ to _____.  Fly _____ to the ______.  Reaching the bridge descend to _____ MSL and fly direct to the ______ ( ~ 150°) to join the Northern Arrival... "],
-    answers : [["240", "Woodsboro", "2500'", "Woodsboro", "6", "~145°", "Bayside", "~155°", "Port Bay Bridge", "1000'", "Aransas Causeway"]],
-    dependentNode: ["Point-Arrivals-111", "Point-Arrivals-113", "Point-Arrivals-217", "Point-Arrivals-218"],
-    nextNode : ["Point-Arrivals-113"]
+  "Routes-Arrivals-112": {
+    name: "Goliad Arrivals",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-111","Point-Arrivals-113","Point-Arrivals-217","Point-Arrivals-218"],
+    nextNode: ["Point-Arrivals-113"]
   },
-  "Point-Arrivals-113" : {
-    name : "PT Shamrock",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : [
-      "At PT SHAMROCK, slow to 200 KIAS, contact Navy Corpus Tower (CH 4 UHF), state intentions, and proceed as follows...",
-      "The preferred procedure for the VFR straight-in will be to fly the normal ground track. At PT SHAMROCK, slow to 200 KIAS and request a visual straight-in with Tower.",
-      "For South flow traffic, RWY s 13 L/R, 18, 22, establish a descent and level off at 800'MSL.  For North flow traffic, RWYs 4, 31 L/R, 36, establish a descent and level off at 500' MSL.",
-      "Approaching the initial reporting point ... decelerate below 150 KIAS and configure (gear down and flaps as required).  Complete the Before Landing Checklist."
-    ],
-    comms : SHAMROCK_COMMS,
-    questions : [
-      "At PT SHAMROCK, slow to ____ KIAS, contact Navy Corpus Tower (CH __ UHF), state intentions, and proceed as follows... AIRCRAFT:  “Navy Corpus Tower, (Call Sign), SHAMROCK, (Full Stop/Touch & Go(s)/Straight-in)” ",
-      "The preferred procedure for the VFR straight-in will be to fly the normal ground track. At PT SHAMROCK, slow to ____ KIAS and request a visual straight-in with Tower.",
-      "For South flow traffic, RWY s 13 L/R, 18, 22, establish a descent and level off at ____ MSL.  For North flow traffic, RWYs 4, 31 L/R, 36, establish a descent and level off at ____ MSL.",
-      "Approaching the _____ reporting point ... decelerate below ____ KIAS and configure (gear down and flaps as required).  Complete the _____."
-    ],
-    answers : [
-      ["200", "4"],
-      ["200"],
-      ["800'", "500'"],
-      ["initial","150", "Before Landing Checklist"]
-    ],
+  "Point-Arrivals-113": {
+    name: "PT Shamrock",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-115", "Routes-Arrivals-116", "Routes-Arrivals-117", "Routes-Arrivals-118", "Routes-Arrivals-122", "Routes-Arrivals-123", "Routes-Arrivals-124", "Routes-Arrivals-125"]
+    nextNode: ["Routes-Arrivals-115","Routes-Arrivals-116","Routes-Arrivals-117","Routes-Arrivals-118","Routes-Arrivals-122","Routes-Arrivals-123","Routes-Arrivals-124","Routes-Arrivals-125"]
   },
-  "Point-Arrivals-114" : {
-    name : "TAMUCC NW Corner",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-114": {
+    name: "TAMUCC NW Corner",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-115" : {
-    name : "18",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 22",
-    comms : KNGP_INITIAL_COMMS,
-    questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence...   Report initial when crossing the ______"],
-    answers : [["TAMUCC", "255", "extended centerline of Runway 22"]],
-    dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
-    nextNode : ["Point-default-95"]
+  "Routes-Arrivals-115": {
+    name: "18",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-113","Point-Arrivals-114"],
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-116" : {
-    name : "22",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence... Report initial upon reaching extended centerline of Runway 22 (no later than 3 NM).",
-    comms : KNGP_INITIAL_COMMS,
-    questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence... Report initial upon reaching _____ (no later than 3 NM)."],
-    answers : [["TAMUCC", "255", "extended centerline of Runway 22"]],
-    dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
-    nextNode : ["Point-default-95"]
+  "Routes-Arrivals-116": {
+    name: "22",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-113","Point-Arrivals-114"],
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-117" : {
-    name : "13L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 18.",
-    comms : KNGP_INITIAL_COMMS,
-    questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence...   Report initial when crossing the _____."],
-    answers : [["TAMUCC", "255", "extended centerline of Runway 18"]],
-    dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
-    nextNode : ["Point-default-95"]
+  "Routes-Arrivals-117": {
+    name: "13L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-113","Point-Arrivals-114"],
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-118" : {
-    name : "13R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Fly towards the northwest corner of TAMUCC (~255°).  Thence...   Report initial when crossing the extended centerline of Runway 18.",
-    comms : KNGP_INITIAL_COMMS,
-    questions : ["Fly towards the northwest corner of ______ (~_____°).  Thence...   Report initial when crossing the _____."],
-    answers : [["TAMUCC", "255", "extended centerline of Runway 18"]],
-    dependentNode: ["Point-Arrivals-113", "Point-Arrivals-114"],
-    nextNode : ["Point-default-95"]
+  "Routes-Arrivals-118": {
+    name: "13R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-113","Point-Arrivals-114"],
+    nextNode: ["Point-default-95"]
   },
-  "Point-Arrivals-119" : {
-    name : "High Bridge",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-119": {
+    name: "High Bridge",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-120" : {
-    name : "Low Bridge",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-120": {
+    name: "Low Bridge",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-121" : {
-    name : "PT DIMMIT",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-121": {
+    name: "PT DIMMIT",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-122" : {
-    name : "04",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Fly towards the high bridge (~200°).  Report the initial abeam PT DIMMIT.  Thence... Turn towards the low bridge and fly west over SPID to intercept NM final. ",
-    comms : KNGP_INITIAL_COMMS,
-    questions : ["Fly towards the _____ (~____°).  Report the initial abeam _____.  Thence... Turn towards the _____ and fly west over ____ to intercept NM final. "],
-    answers : [["high bridge", "200", "PT DIMMIT", "low bridge", "SPID"]],
-    dependentNode: ["Point-Arrivals-113", "Point-Arrivals-119", "Point-Arrivals-121", "Point-Arrivals-120"],
-    nextNode : ["Point-default-95"]
+  "Routes-Arrivals-122": {
+    name: "04",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-113","Point-Arrivals-119","Point-Arrivals-121","Point-Arrivals-120"],
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-123" : {
-    name : "36",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Fly towards the high bridge (~200°).  Report the initial abeam PT DIMMIT.  Thence... Turn towards the low bridge and fly west over SPID to intercept NM final. ",
-    comms : KNGP_INITIAL_COMMS,
-    questions : ["Fly towards the _____ (~____°).  Report the initial abeam _____.  Thence... Turn towards the _____ and fly west over ____ to intercept NM final. "],
-    answers : [["high bridge", "200", "PT DIMMIT", "low bridge", "SPID"]],
-    dependentNode: ["Point-Arrivals-113", "Point-Arrivals-119", "Point-Arrivals-121", "Point-Arrivals-120"],
-    nextNode : ["Point-default-95"]
+  "Routes-Arrivals-123": {
+    name: "36",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-113","Point-Arrivals-119","Point-Arrivals-121","Point-Arrivals-120"],
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-124" : {
-    name : "31R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Fly towards the high bridge (~200°).  Report the initial abeam PT DIMMIT.  Thence... Turn right and proceed direct to the runway numbers.  Report the runway numbers for the Overhead Maneuver.",
-    comms : KNGP_INITIAL_COMMS,
-    questions : ["Fly towards the _____ (~____°).  Report the initial abeam _____.  Thence... Turn right and proceed direct to the runway numbers.  Report the runway numbers for the Overhead Maneuver."],
-    answers : [["high bridge", "200", "PT DIMMIT"]],
-    dependentNode: ["Point-Arrivals-113", "Point-Arrivals-119", "Point-Arrivals-121"],
-    nextNode : ["Point-default-95"]
+  "Routes-Arrivals-124": {
+    name: "31R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-113","Point-Arrivals-119","Point-Arrivals-121"],
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-125" : {
-    name : "31L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Fly towards the high bridge (~200°).  Report the initial abeam PT DIMMIT.  Thence... Turn right and proceed direct to the runway numbers.  Report the runway numbers for the Overhead Maneuver.",
-    comms : KNGP_INITIAL_COMMS,
-    questions : ["Fly towards the _____ (~____°).  Report the initial abeam _____.  Thence... Turn right and proceed direct to the runway numbers.  Report the runway numbers for the Overhead Maneuver."],
-    answers : [["high bridge", "200", "PT DIMMIT"]],
-    dependentNode: ["Point-Arrivals-113", "Point-Arrivals-119", "Point-Arrivals-121"],
-    nextNode : ["Point-default-95"]
+  "Routes-Arrivals-125": {
+    name: "31L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals > PT Shamrock",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-113","Point-Arrivals-119","Point-Arrivals-121"],
+    nextNode: ["Point-default-95"]
   },
-  "Point-Arrivals-126" : {
-    name : "Oso Bridge (West Side)",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-126": {
+    name: "Oso Bridge (West Side)",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: ["Point-Arrivals-60"],
-    nextNode : ["Routes-Arrivals-67", "Routes-Arrivals-68", "Routes-Arrivals-69", "Routes-Arrivals-70"]
+    nextNode: ["Routes-Arrivals-67","Routes-Arrivals-68","Routes-Arrivals-69","Routes-Arrivals-70"]
   },
-  "Routes-Arrivals-127" : {
-    name : "04",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "<u>Oso Transition/South Departure</u>",
-      "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
-      "Depart from the downwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
-    ],
-    comms : OSO_COMMS,
-    questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
-    answers : [["downwind", "1000'", "200", "Oso Bridge"]],
-    dependentNode: ["Point-Arrivals-126", "Point-default-95"],
-    nextNode : ["Point-Arrivals-126", "Point-default-95"]
+  "Routes-Arrivals-127": {
+    name: "04",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-126","Point-default-95"],
+    nextNode: ["Point-Arrivals-126","Point-default-95"]
   },
-  "Routes-Arrivals-128" : {
-    name : "13L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "<u>Oso Transition/South Departure</u>",
-      "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
-      "Depart from the downwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
-    ],
-    comms : OSO_COMMS,
-    questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
-    answers : [["downwind", "1000'", "200", "Oso Bridge"]],
-    dependentNode: ["Point-Arrivals-126", "Point-default-95"],
-    nextNode : ["Point-Arrivals-126", "Point-default-95"]
+  "Routes-Arrivals-128": {
+    name: "13L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-126","Point-default-95"],
+    nextNode: ["Point-Arrivals-126","Point-default-95"]
   },
-  "Routes-Arrivals-129" : {
-    name : "13R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "<u>Oso Transition/South Departure</u>",
-      "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
-      "Depart from the downwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
-    ],
-    comms : OSO_COMMS,
-    questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
-    answers : [["downwind", "1000'", "200", "Oso Bridge"]],
-    dependentNode: ["Point-Arrivals-126", "Point-default-95"],
-    nextNode : ["Point-Arrivals-126", "Point-default-95"]
+  "Routes-Arrivals-129": {
+    name: "13R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-126","Point-default-95"],
+    nextNode: ["Point-Arrivals-126","Point-default-95"]
   },
-  "Routes-Arrivals-130" : {
-    name : "18",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "<u>Oso Transition/South Departure</u>",
-      "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
-      "Depart from the crosswind turn. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
-    ],
-    comms : OSO_COMMS,
-    questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
-    answers : [["crosswind turn", "1000'", "200", "Oso Bridge"]],
-    dependentNode: ["Point-Arrivals-126", "Point-default-95"],
-    nextNode : ["Point-Arrivals-126", "Point-default-95"]
+  "Routes-Arrivals-130": {
+    name: "18",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-126","Point-default-95"],
+    nextNode: ["Point-Arrivals-126","Point-default-95"]
   },
-  "Routes-Arrivals-131" : {
-    name : "22",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "<u>Oso Transition/South Departure</u>",
-      "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
-      "Depart upwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
-    ],
-    comms : OSO_COMMS,
-    questions : ["Depart ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
-    answers : [["upwind", "1000'", "200", "Oso Bridge"]],
-    dependentNode: ["Point-Arrivals-126", "Point-default-95"],
-    nextNode : ["Point-Arrivals-126", "Point-default-95"]
+  "Routes-Arrivals-131": {
+    name: "22",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-126","Point-default-95"],
+    nextNode: ["Point-Arrivals-126","Point-default-95"]
   },
-  "Routes-Arrivals-132" : {
-    name : "31L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "<u>Oso Transition/South Departure</u>",
-      "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
-      "Depart from the crosswind turn. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
-    ],
-    comms : OSO_COMMS,
-    questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
-    answers : [["crosswind turn", "1000'", "200", "Oso Bridge"]],
-    dependentNode: ["Point-Arrivals-126", "Point-default-95"],
-    nextNode : ["Point-Arrivals-126", "Point-default-95"]   
+  "Routes-Arrivals-132": {
+    name: "31L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-126","Point-default-95"],
+    nextNode: ["Point-Arrivals-126","Point-default-95"]
   },
-  "Routes-Arrivals-133" : {
-    name : "31R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "<u>Oso Transition/South Departure</u>",
-      "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
-      "Depart upwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
-    ],
-    comms : OSO_COMMS,
-    questions : ["Depart ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
-    answers : [["upwind", "1000'", "200", "Oso Bridge"]],
-    dependentNode: ["Point-Arrivals-126", "Point-default-95"],
-    nextNode : ["Point-Arrivals-126", "Point-default-95"]
+  "Routes-Arrivals-133": {
+    name: "31R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-126","Point-default-95"],
+    nextNode: ["Point-Arrivals-126","Point-default-95"]
   },
-  "Routes-Arrivals-134" : {
-    name : "36",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "<u>Oso Transition/South Departure</u>",
-      "Request an \"Oso Transition\" with Ground Control, in the home field pattern or upon check in with tower inbound from PT SHAMROCK.  Upon clearance from Tower:",
-      "Depart from the downwind. Climb to 1000' MSL and accelerate to 200 KIAS.  Proceed direct to the western side of the Oso Bridge.  Switch to Waldron Tower when directed"
-    ],
-    comms : OSO_COMMS,
-    questions : ["Depart from the ______. Climb to _____ MSL and accelerate to _____ KIAS.  Proceed direct to the western side of the _____.  Switch to Waldron Tower when directed"],
-    answers : [["downwind", "1000'", "200", "Oso Bridge"]],
-    dependentNode: ["Point-Arrivals-126", "Point-default-95"],
-    nextNode : ["Point-Arrivals-126", "Point-default-95"]
+  "Routes-Arrivals-134": {
+    name: "36",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Oso Transition / South Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-126","Point-default-95"],
+    nextNode: ["Point-Arrivals-126","Point-default-95"]
   },
-  "Point-Arrivals-135" : {
-    name : "PT Sunrise",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-135": {
+    name: "PT Sunrise",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-136", "Routes-Arrivals-137", "Routes-Arrivals-138", "Routes-Arrivals-139", "Routes-Arrivals-140", "Routes-Arrivals-141", "Routes-Arrivals-142", "Routes-Arrivals-143"]
+    nextNode: ["Routes-Arrivals-136","Routes-Arrivals-137","Routes-Arrivals-138","Routes-Arrivals-139","Routes-Arrivals-140","Routes-Arrivals-141","Routes-Arrivals-142","Routes-Arrivals-143"]
   },
-  "Routes-Arrivals-136" : {
-    name : "04",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : [],
-    answers : [],
+  "Routes-Arrivals-136": {
+    name: "04",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-137" : {
-    name : "13L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : [],
-    answers : [],
+  "Routes-Arrivals-137": {
+    name: "13L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-138" : {
-    name : "13R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : [],
-    answers : [],
+  "Routes-Arrivals-138": {
+    name: "13R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-139" : {
-    name : "18",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : [],
-    answers : [],
+  "Routes-Arrivals-139": {
+    name: "18",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-140" : {
-    name : "22",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : [],
-    answers : [],
+  "Routes-Arrivals-140": {
+    name: "22",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-141" : {
-    name : "31L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : [],
-    answers : [],
+  "Routes-Arrivals-141": {
+    name: "31L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-142" : {
-    name : "31R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : [],
-    answers : [],
+  "Routes-Arrivals-142": {
+    name: "31R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Routes-Arrivals-143" : {
-    name : "36",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Proceed to PT SUNRISE (~heading 025 degrees) and contact Navy Tower (CH 4 UHF) when directed. Expect an Overhead, Base, or straight-in entry at Tower's discretion.",
-    questions : [],
-    answers : [],
+  "Routes-Arrivals-143": {
+    name: "36",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Sunrise Transition / South Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-135"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Point-Departures-144" : {
-    name : "High Bridge",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-144": {
+    name: "High Bridge",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Departures-145" : {
-    name : "04",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    comms : BEACH_LINE_COMMS,
-    questions : ["Climb to _____ MSL, _____ KIAS on ___ HDG. When clear of the pattern turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "RWY", "105", "2500'", "8", "1000'"]],
+  "Routes-Departures-145": {
+    name: "04",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-196", "Routes-Transitions-220"]
+    nextNode: ["Routes-Transitions-153","Routes-Transitions-154","Routes-Departures-156","Routes-Departures-158","Working Areas-Mustang Maintenance-196","Routes-Transitions-220"]
   },
-  "Routes-Departures-146" : {
-    name : "13L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 125° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    comms : BEACH_LINE_COMMS,
-    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "125", "High Bridge", "105", "2500'", "8", "1000'"]],
+  "Routes-Departures-146": {
+    name: "13L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-144"],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-196", "Routes-Transitions-220"]
+    nextNode: ["Routes-Transitions-153","Routes-Transitions-154","Routes-Departures-156","Routes-Departures-158","Working Areas-Mustang Maintenance-196","Routes-Transitions-220"]
   },
-  "Routes-Departures-147" : {
-    name : "13R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 135° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    comms : BEACH_LINE_COMMS,
-    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "135", "High Bridge", "105", "2500'", "8", "1000'"]],
+  "Routes-Departures-147": {
+    name: "13R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-144"],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-196", "Routes-Transitions-220"]
+    nextNode: ["Routes-Transitions-153","Routes-Transitions-154","Routes-Departures-156","Routes-Departures-158","Working Areas-Mustang Maintenance-196","Routes-Transitions-220"]
   },
-  "Routes-Departures-148" : {
-    name : "18",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on turn left to HDG 105° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    comms : BEACH_LINE_COMMS,
-    questions : ["Climb to _____ MSL, _____ KIAS on turn left to HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "105", "High Bridge", "105", "2500'", "8", "1000'"]],
+  "Routes-Departures-148": {
+    name: "18",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-144"],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-196", "Routes-Transitions-220"]
+    nextNode: ["Routes-Transitions-153","Routes-Transitions-154","Routes-Departures-156","Routes-Departures-158","Working Areas-Mustang Maintenance-196","Routes-Transitions-220"]
   },
-  "Routes-Departures-149" : {
-    name : "22",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on turn left to HDG 105° until High Bridge. Thence turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    comms : BEACH_LINE_COMMS,
-    questions : ["Climb to _____ MSL, _____ KIAS on turn left to HDG ____° until _____.  Thence turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "105", "High Bridge", "105", "2500'", "8", "1000'"]],
+  "Routes-Departures-149": {
+    name: "22",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-144"],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-196", "Routes-Transitions-220"]
+    nextNode: ["Routes-Transitions-153","Routes-Transitions-154","Routes-Departures-156","Routes-Departures-158","Working Areas-Mustang Maintenance-196","Routes-Transitions-220"]
   },
-  "Routes-Departures-150" : {
-    name : "31L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 305°. When cleared by tower turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    comms : BEACH_LINE_COMMS,
-    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____°. When cleared by tower turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "305", "105", "2500'", "8", "1000'"]],
+  "Routes-Departures-150": {
+    name: "31L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-196", "Routes-Transitions-220"]
+    nextNode: ["Routes-Transitions-153","Routes-Transitions-154","Routes-Departures-156","Routes-Departures-158","Working Areas-Mustang Maintenance-196","Routes-Transitions-220"]
   },
-  "Routes-Departures-151" : {
-    name : "31R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on HDG 315°. When clear of the pattern, turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    comms : BEACH_LINE_COMMS,
-    questions : ["Climb to _____ MSL, _____ KIAS on HDG ____°. When clear of the pattern, turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "315", "105", "2500'", "8", "1000'"]],
+  "Routes-Departures-151": {
+    name: "31R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-196", "Routes-Transitions-220"]
+    nextNode: ["Routes-Transitions-153","Routes-Transitions-154","Routes-Departures-156","Routes-Departures-158","Working Areas-Mustang Maintenance-196","Routes-Transitions-220"]
   },
-  "Routes-Departures-152" : {
-    name : "36",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern turn HDG 105° toward the beach line and climb to 2500' MSL.  When directed, contact Corpus Departure CH 8 UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at 1000' MSL.",
-    comms : BEACH_LINE_COMMS,
-    questions : ["Climb to _____ MSL, _____ KIAS on ___ HDG. When clear of the pattern turn HDG _____° toward the beach line and climb to ____ MSL.  When directed, contact Corpus Departure CH __ UHF.  Advise Corpus Departure of intentions on initial contact.  Be alert for traffic established on the southern arrival at _____ MSL."],
-    answers : [["500'", "200", "RWY", "105", "2500'", "8", "1000'"]],
+  "Routes-Departures-152": {
+    name: "36",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-153", "Routes-Transitions-154", "Routes-Departures-156", "Routes-Departures-158", "Working Areas-Mustang Maintenance-196", "Routes-Transitions-220"]
+    nextNode: ["Routes-Transitions-153","Routes-Transitions-154","Routes-Departures-156","Routes-Departures-158","Working Areas-Mustang Maintenance-196","Routes-Transitions-220"]
   },
-  "Routes-Transitions-153" : {
-    name : "Foxtrot/North Mustang Transition",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Transition",
-    category : "Routes",
-    description : "",
-    customDescription : "On initial check-in, Approach will coordinate a working block.  Crossing the beach line, turn north to parallel the beach and climb to 5500' MSL at 1/2 WTD.  Comply with area entry procedures.  For outboard MUSTANGs, when cleared to area 5/6, proceed to area and do not begin climb to enter area until directly under assigned area.",
-    questions : ["On initial check-in, Approach will coordinate a working block.  Crossing the beach line, turn north to parallel the beach and climb to ______ MSL at _____ WTD.  Comply with area entry procedures.  For outboard MUSTANGs, when cleared to area _____, proceed to area and do not begin climb to enter area until directly under assigned area."],
-    answers : [["5500'", "1/2", "5/6"]],
+  "Routes-Transitions-153": {
+    name: "Foxtrot/North Mustang Transition",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Transition",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Working Areas-Foxtrot-189", "Working Areas-Foxtrot-190", "Working Areas-Mustang-191", "Working Areas-Mustang-192", "Working Areas-Mustang-193", "Working Areas-Mustang-194"]
+    nextNode: ["Working Areas-Foxtrot-189","Working Areas-Foxtrot-190","Working Areas-Mustang-191","Working Areas-Mustang-192","Working Areas-Mustang-193","Working Areas-Mustang-194"]
   },
-  "Routes-Transitions-154" : {
-    name : "South Mustang Transition",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Transition",
-    category : "Routes",
-    description : "",
-    customDescription : "On initial check-in, Approach will coordinate a working block.  Crossing the beach line, turn south to parallel the beach and climb to 5500' MSL at 1/2 WTD.  Comply with area entry procedures.  For outboard MUSTANGs, when cleared to area 7/8, proceed to area and do not begin climb to enter area until directly under assigned area.",
-    questions : ["On initial check-in, Approach will coordinate a working block.  Crossing the beach line, turn south to parallel the beach and climb to _____ MSL at _____ WTD.  Comply with area entry procedures.  For outboard MUSTANGs, when cleared to area ____, proceed to area and do not begin climb to enter area until directly under assigned area."],
-    answers : [["5500'", "1/2", "7/8"]],
+  "Routes-Transitions-154": {
+    name: "South Mustang Transition",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Transition",
+    category: "Routes",
     dependentNode: ["Point-Mustang-221"],
-    nextNode : ["Working Areas-Mustang-197", "Working Areas-Mustang-198", "Working Areas-Mustang-199", "Working Areas-Mustang-200"]
+    nextNode: ["Working Areas-Mustang-197","Working Areas-Mustang-198","Working Areas-Mustang-199","Working Areas-Mustang-200"]
   },
-  "Point-Departures-155" : {
-    name : "Camel Humps",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-155": {
+    name: "Camel Humps",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : ["Point-Arrivals-78"]
+    nextNode: ["Point-Arrivals-78"]
   },
-  "Routes-Departures-156" : {
-    name : "Waldron Arrival",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Crossing the beach line, commence a turn south to parallel the beach at 1/2 WTD and climb to 2500' MSL.  Continue south until abeam the Camel Humps.  Terminate with Corpus Approach, proceed direct to the Camel Humps and comply with the WALDRON Arrival Procedures.  Aircrew desiring to proceed to high key at WALDRON must comply with the above procedures until coordinated with Corpus Departure.  When cleared, remain at or below 4500' MSL unless coordinated for higher.",
-    questions : ["Crossing the beach line, commence a turn south to parallel the beach at ____ WTD and climb to ____ MSL.  Continue south until abeam the _____.  Terminate with Corpus Approach, proceed direct to the _____ and comply with the WALDRON Arrival Procedures.  Aircrew desiring to proceed to high key at WALDRON must comply with the above procedures until coordinated with Corpus Departure.  When cleared, remain at or below _____ MSL unless coordinated for higher. "],
-    answers : [["1/2", "2500'", "Camel Humps", "Camel Humps", "4500'"]],
+  "Routes-Departures-156": {
+    name: "Waldron Arrival",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-155"],
-    nextNode : ["Point-Arrivals-78"]
+    nextNode: ["Point-Arrivals-78"]
   },
-  "Point-Departures-157" : {
-    name : "PT Shamrock",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-157": {
+    name: "PT Shamrock",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Departures-158" : {
-    name : "Shamrock Re-entry",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Crossing the beach line, commence turn north to parallel the beach at one WTD.  When cleared by approach, descend to 1000' MSL and execute the arrival procedures for PT SHAMROCK",
-    questions : ["Crossing the beach line, commence turn north to parallel the beach at ___ WTD.  When cleared by approach, descend to _____ MSL and execute the arrival procedures for PT SHAMROCK"],
-    answers : [["One", "1000'"]],
+  "Routes-Departures-158": {
+    name: "Shamrock Re-entry",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-157"],
-    nextNode : ["Routes-Arrivals-108"]
+    nextNode: ["Routes-Arrivals-108"]
   },
-  "Point-Departures-159" : {
-    name : "High Bridge",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Rusty Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-159": {
+    name: "High Bridge",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Rusty Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Departures-160" : {
-    name : "PT Rusty",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Rusty Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-160": {
+    name: "PT Rusty",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Rusty Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-11", "Routes-Arrivals-12", "Routes-Arrivals-110", "Routes-Transitions-201", "Routes-Arrivals-13", "Routes-Arrivals-14", "Routes-Arrivals-213"]
+    nextNode: ["Routes-Arrivals-11","Routes-Arrivals-12","Routes-Arrivals-110","Routes-Transitions-201","Routes-Arrivals-13","Routes-Arrivals-14","Routes-Arrivals-213"]
   },
-  "Routes-Departures-161" : {
-    name : "04",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Rusty Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern, turn to point RUSTY HDG ~ 010. Thence",
-      "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
-    ],
-    comms : RUSTY_COMMS,
-    questions : [
-      "Climb to _____ MSL, ____ KIAS on _____ HDG.  When _____, turn to point _____ HDG ____. Thence",
-      "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
-    ],
-    answers : [
-      ["500'", "200", "RWY", "clear of the pattern", "RUSTY", "010"],
-      ["PT RUSTY", "2500'", "200", "240", "12", "5500'"]
-    ],
+  "Routes-Departures-161": {
+    name: "04",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Rusty Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-Departures-160"]
+    nextNode: ["Point-Departures-160"]
   },
-  "Routes-Departures-162" : {
-    name : "13L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Rusty Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "HDG 125° until High Bridge.  Thence.",
-      "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
-    ],
-    comms : RUSTY_COMMS,
-    questions : [
-      "HDG ____ until ______.  Thence.",
-      "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
-    ],
-    answers : [
-      ["125°", "High Bridge"],
-      ["PT RUSTY", "2500'", "200", "240", "12", "5500'"]
-    ],
+  "Routes-Departures-162": {
+    name: "13L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Rusty Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-159"],
-    nextNode : ["Point-Departures-160"]
+    nextNode: ["Point-Departures-160"]
   },
-  "Routes-Departures-163" : {
-    name : "13R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Rusty Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "HDG 135° until High Bridge.  Thence.",
-      "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
-    ],
-    comms : RUSTY_COMMS,
-    questions : [
-      "HDG ____ until ______.  Thence.",
-      "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
-    ],
-    answers : [
-      ["135°", "High Bridge"],
-      ["PT RUSTY", "2500'", "200", "240", "12", "5500'"]
-    ],
+  "Routes-Departures-163": {
+    name: "13R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Rusty Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-159"],
-    nextNode : ["Point-Departures-160"]
+    nextNode: ["Point-Departures-160"]
   },
-  "Routes-Departures-164" : {
-    name : "18",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Rusty Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "When clear of the pattern, execute left turn to HDG 105° until High Bridge.  Thence",
-      "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
-    ],
-    comms : RUSTY_COMMS,
-    questions : [
-      "When ____, execute left turn to HDG ____ until ____.  Thence",
-      "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
-    ],
-    answers : [
-      ["clear of the pattern", "105°", "High Bridge"],
-      ["PT RUSTY", "2500'", "200", "240", "12", "5500'"]
-    ],
+  "Routes-Departures-164": {
+    name: "18",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Rusty Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-159"],
-    nextNode : ["Point-Departures-160"]
+    nextNode: ["Point-Departures-160"]
   },
-  "Routes-Departures-165" : {
-    name : "22",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Rusty Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "When clear of the pattern, execute left turn to HDG 105° until High Bridge.  Thence",
-      "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
-    ],
-    comms : RUSTY_COMMS,
-    questions : [
-      "When ____, execute left turn to HDG ____ until ____.  Thence",
-      "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
-    ],
-    answers : [
-      ["clear of the pattern", "105°", "High Bridge"],
-      ["PT RUSTY", "2500'", "200", "240", "12", "5500'"]
-    ],
+  "Routes-Departures-165": {
+    name: "22",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Rusty Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-159"],
-    nextNode : ["Point-Departures-160"]
+    nextNode: ["Point-Departures-160"]
   },
-  "Routes-Departures-166" : {
-    name : "31L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Rusty Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "HDG 305°.  When cleared by tower:",
-      "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
-    ],
-    comms : RUSTY_COMMS,
-    questions : [
-      "HDG ____.  _______",
-      "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
-    ],
-    answers : [
-      ["305°", "When cleared by tower"],
-      ["PT RUSTY", "2500'", "200", "240", "12", "5500'"]
-    ],
+  "Routes-Departures-166": {
+    name: "31L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Rusty Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-Departures-160"]
+    nextNode: ["Point-Departures-160"]
   },
-  "Routes-Departures-167" : {
-    name : "31R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Rusty Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "HDG 315°.  When clear of pattern:",
-      "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
-    ],
-    comms : RUSTY_COMMS,
-    questions : [
-      "HDG ____.  _______",
-      "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
-    ],
-    answers : [
-      ["315°", "When clear of pattern"],
-      ["PT RUSTY", "2500'", "200", "240", "12", "5500'"]
-    ],
+  "Routes-Departures-167": {
+    name: "31R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Rusty Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-Departures-160"]
+    nextNode: ["Point-Departures-160"]
   },
-  "Routes-Departures-168" : {
-    name : "36",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Rusty Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Climb to 500' MSL, 200 KIAS on RWY HDG.  When clear of the pattern, turn to point RUSTY HDG ~ 360. Thence",
-      "Turn direct to PT RUSTY.  Climb and maintain 2500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then 240 KIAS.  When instructed by tower, switch Corpus Departure (CH 12 UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain 5500' MSL."
-    ],
-    comms : RUSTY_COMMS,
-    questions : [
-      "Climb to _____ MSL, ____ KIAS on _____ HDG.  When _____, turn to point _____ HDG ____. Thence",
-      "Turn direct to ______.  Climb and maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then _____ KIAS.  When instructed by tower, switch Corpus Departure (CH ____ UHF) and state intentions/transition.  When cleared on course by Approach, climb and maintain _____ MSL."
-    ],
-    answers : [
-      ["500'", "200", "RWY", "clear of the pattern", "RUSTY", "360"],
-      ["PT RUSTY", "2500'", "200", "240", "12", "5500'"]
-    ],
+  "Routes-Departures-168": {
+    name: "36",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Rusty Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: [],
-    nextNode : ["Point-Departures-160"]
+    nextNode: ["Point-Departures-160"]
   },
-  "Point-Arrivals-169" : {
-    name : "PT Sunrise",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : [
-      "Upon reaching PT SUNRISE, contact Cabaniss Tower (CH 27 UHF) or Corpus Christi Tower (as directed) and continue westbound. Do not fly south of SPID before the Crosstown Expressway.",
-      "Transitions will be limited to a one-in/one-out operation at 1000' MSL when directed by ATC or when weather/ceilings preclude a climb to 1500' MSL."
-    ],
-    comms : [CABANISS_NUECES_CALL],
-    questions : [
-      "Upon reaching PT SUNRISE, contact Cabaniss Tower (CH ___ UHF) or Corpus Christi Tower (as directed) and continue westbound. Do not fly south of ____ before the ______."
-    ],
-    answers : [
-      ["27", "SPID", "Crosstown Expressway"]
-    ],
+  "Point-Arrivals-169": {
+    name: "PT Sunrise",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : [],
-    endNote : "The Nueces Transition continues west to Corpus Christi International, which isn't on this map."
+    nextNode: [],
+    endNote: "The Nueces Transition continues west to Corpus Christi International, which isn't on this map."
   },
-  "Routes-Arrivals-170" : {
-    name : "04",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make left turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
-    comms : NUECES_COMMS,
-    questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
-    answers : [["RWY", "500'","left", "1500'", "SPID", "PT SUNRISE", "200"]],
-    dependentNode: ["Point-Arrivals-169" ],
-    nextNode : ["Point-Arrivals-169"]
+  "Routes-Arrivals-170": {
+    name: "04",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-169"],
+    nextNode: ["Point-Arrivals-169"]
   },
-  "Routes-Arrivals-171" : {
-    name : "13L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make right turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
-    comms : NUECES_COMMS,
-    questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
-    answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
-    dependentNode: ["Point-Arrivals-169" ],
-    nextNode : ["Point-Arrivals-169"]
+  "Routes-Arrivals-171": {
+    name: "13L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-169"],
+    nextNode: ["Point-Arrivals-169"]
   },
-  "Routes-Arrivals-172" : {
-    name : "13R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make right turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
-    comms : NUECES_COMMS,
-    questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
-    answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
-    dependentNode: ["Point-Arrivals-169" ],
-    nextNode : ["Point-Arrivals-169"]
+  "Routes-Arrivals-172": {
+    name: "13R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-169"],
+    nextNode: ["Point-Arrivals-169"]
   },
-  "Routes-Arrivals-173" : {
-    name : "18",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make right turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
-    comms : NUECES_COMMS,
-    questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
-    answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
-    dependentNode: ["Point-Arrivals-169" ],
-    nextNode : ["Point-Arrivals-169"]
+  "Routes-Arrivals-173": {
+    name: "18",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-169"],
+    nextNode: ["Point-Arrivals-169"]
   },
-  "Routes-Arrivals-174" : {
-    name : "22",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make right turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
-    comms : NUECES_COMMS,
-    questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
-    answers : [["RWY", "500'","right", "1500'", "SPID", "PT SUNRISE", "200"]],
-    dependentNode: ["Point-Arrivals-169" ],
-    nextNode : ["Point-Arrivals-169"]
+  "Routes-Arrivals-174": {
+    name: "22",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-169"],
+    nextNode: ["Point-Arrivals-169"]
   },
-  "Routes-Arrivals-175" : {
-    name : "31L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make left turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
-    comms : NUECES_COMMS,
-    questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
-    answers : [["RWY", "500'", "left", "1500'", "SPID", "PT SUNRISE", "200"]],
-    dependentNode: ["Point-Arrivals-169" ],
-    nextNode : ["Point-Arrivals-169"]
+  "Routes-Arrivals-175": {
+    name: "31L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-169"],
+    nextNode: ["Point-Arrivals-169"]
   },
-  "Routes-Arrivals-176" : {
-    name : "31R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make left turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
-    comms : NUECES_COMMS,
-    questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
-    answers : [["RWY", "500'", "left", "1500'", "SPID", "PT SUNRISE", "200"]],
-    dependentNode: ["Point-Arrivals-169" ],
-    nextNode : ["Point-Arrivals-169"]
+  "Routes-Arrivals-176": {
+    name: "31R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-169"],
+    nextNode: ["Point-Arrivals-169"]
   },
-  "Routes-Arrivals-177" : {
-    name : "36",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Climb RWY HDG to 500' MSL.  When cleared by tower make left turnout.  Thence climb to 1500' MSL, remain north of SPID, and proceed direct to PT SUNRISE at 200 KIAS.",
-    comms : NUECES_COMMS,
-    questions : ["Climb ____ HDG to ____ MSL.  When cleared by tower make ______ turnout.  Thence climb to _____ MSL, remain north of ____, and proceed direct to ______ at ____ KIAS."],
-    answers : [["RWY", "500'", "left", "1500'", "SPID", "PT SUNRISE", "200"]],
-    dependentNode: ["Point-Arrivals-169" ],
-    nextNode : ["Point-Arrivals-169"]
+  "Routes-Arrivals-177": {
+    name: "36",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Nueces Transition / East Arrivals & Departures",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-169"],
+    nextNode: ["Point-Arrivals-169"]
   },
-  "Point-Departures-178" : {
-    name : "PT Silver",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Portland Departures",
-    subCategory : "Departures",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Departures-178": {
+    name: "PT Silver",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Portland Departures",
+    subCategory: "Departures",
+    category: "Point",
     dependentNode: [],
-    nextNode : [],
-    endNote : "Portland Low ends here; the flight continues with the VFR intentions given to Corpus Departure."
+    nextNode: [],
+    endNote: "Portland Low ends here; the flight continues with the VFR intentions given to Corpus Departure."
   },
-  "Routes-Departures-179" : {
-    name : "04",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Portland Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make left turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
-    comms : PORTLAND_COMMS,
-    questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
-    answers : [["RWY", "500'", "left", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
+  "Routes-Departures-179": {
+    name: "04",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Portland Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-178"],
-    nextNode : ["Point-Departures-178"]
+    nextNode: ["Point-Departures-178"]
   },
-  "Routes-Departures-180" : {
-    name : "13L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Portland Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make left turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
-    comms : PORTLAND_COMMS,
-    questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
-    answers : [["RWY", "500'", "left", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
+  "Routes-Departures-180": {
+    name: "13L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Portland Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-178"],
-    nextNode : ["Point-Departures-178"]
+    nextNode: ["Point-Departures-178"]
   },
-  "Routes-Departures-181" : {
-    name : "13R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Portland Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make left turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
-    comms : PORTLAND_COMMS,
-    questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
-    answers : [["RWY", "500'", "left", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
+  "Routes-Departures-181": {
+    name: "13R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Portland Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-178"],
-    nextNode : ["Point-Departures-178"]
+    nextNode: ["Point-Departures-178"]
   },
-  "Routes-Departures-182" : {
-    name : "18",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Portland Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make left turn HDG 025°. At 5 DME turn left HDG 320°. Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
-    comms : PORTLAND_COMMS,
-    questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make ____ turn HDG _____. At _____ DME turn left HDG _____. Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
-    answers : [["RWY", "500'", "left", "025°", "5", "320°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
+  "Routes-Departures-182": {
+    name: "18",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Portland Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-178"],
-    nextNode : ["Point-Departures-178"]
+    nextNode: ["Point-Departures-178"]
   },
-  "Routes-Departures-183" : {
-    name : "22",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Portland Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make right turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
-    comms : PORTLAND_COMMS,
-    questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
-    answers : [["RWY", "500'", "right", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
+  "Routes-Departures-183": {
+    name: "22",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Portland Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-178"],
-    nextNode : ["Point-Departures-178"]
+    nextNode: ["Point-Departures-178"]
   },
-  "Routes-Departures-184" : {
-    name : "31L",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Portland Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make right turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
-    comms : PORTLAND_COMMS,
-    questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
-    answers : [["RWY", "500'", "right", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
+  "Routes-Departures-184": {
+    name: "31L",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Portland Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-178"],
-    nextNode : ["Point-Departures-178"]
+    nextNode: ["Point-Departures-178"]
   },
-  "Routes-Departures-185" : {
-    name : "31R",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Portland Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make right turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
-    comms : PORTLAND_COMMS,
-    questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
-    answers : [["RWY", "500'", "right", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
+  "Routes-Departures-185": {
+    name: "31R",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Portland Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-178"],
-    nextNode : ["Point-Departures-178"]
+    nextNode: ["Point-Departures-178"]
   },
-  "Routes-Departures-186" : {
-    name : "36",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Portland Departures",
-    subCategory : "Departures",
-    category : "Routes",
-    description : "",
-    customDescription : "Request a Portland Low Departure with Ground Control.  Climb RWY HDG to 500' MSL.  When cleared by tower make right turn HDG 350°.  Thence turn to fly direct to PT SILVER.  Maintain 500' MSL and 200 KIAS until clear of Class D airspace (4.3nm), then transit at 240 KIAS.  When instructed by Tower, switch Corpus Departure CH 8 UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF 122.7.",
-    comms : PORTLAND_COMMS,
-    questions : ["Request a Portland Low Departure with Ground Control.  Climb _____ HDG to _____ MSL.  When cleared by tower make _____ turn HDG _____.  Thence turn to fly direct to _____.  Maintain _____ MSL and _____ KIAS until clear of Class D airspace (4.3nm), then transit at _____ KIAS.  When instructed by Tower, switch Corpus Departure CH ____ UHF.  State intentions with Departure, monitor McCampbell-Porter CTAF on VHF _____."],
-    answers : [["RWY", "500'", "right", "350°", "PT SILVER", "500'", "200", "240", "8", "122.7"]],
+  "Routes-Departures-186": {
+    name: "36",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Portland Departures",
+    subCategory: "Departures",
+    category: "Routes",
     dependentNode: ["Point-Departures-178"],
-    nextNode : ["Point-Departures-178"]
+    nextNode: ["Point-Departures-178"]
   },
-  "Point-Arrivals-187" : {
-    name : "USS Lexington",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Lexington Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-187": {
+    name: "USS Lexington",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Lexington Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-188" : {
-    name : "South Flow - Straight In",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Lexington Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "(South Flow Only) Request the Lex Arrival with Corpus Approach.  When cleared, proceed direct to the USS Lexington at 1000' MSL.  When directed, switch Navy Corpus Tower (CH 4 UHF) and comply with instructions for a straight-in, overhead, or base entry.  Slow to 200 KIAS within the confines of Class D airspace (4.3nm).",
-    questions : ["(____ Flow Only) Request the Lex Arrival with Corpus Approach.  When cleared, proceed direct to the ______ at _____ MSL.  When directed, switch Navy Corpus Tower (CH ___ UHF) and comply with instructions for a straight-in, overhead, or base entry.  Slow to ____ KIAS within the confines of Class D airspace (4.3nm)."],
-    answers : [["South", "USS Lexington", "1000'", "4", "200"]],
+  "Routes-Arrivals-188": {
+    name: "South Flow - Straight In",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Lexington Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-187"],
-    nextNode : ["Point-default-95"]
+    nextNode: ["Point-default-95"]
   },
-  "Working Areas-Foxtrot-189" : {
-    name : "Foxtrot 1",
-    parentFolder : "Foxtrot Working Areas",
-    folderPath : "Foxtrot Working Areas",
-    subCategory : "Foxtrot",
-    category : "Working Areas",
-    description : "",
-    customDescription : [
-      "<u>Altitudes</u>",
-      "Low Block (T-44 Primary): 4,000' - 5,999' MSL Low Transition: 6,000' - 6,999' MSL Middle Block (Hellcat Primary): 7,000' - 11,999' MSL  High Transition: 12,000' - 12,999' MSL",
-      "<u>Entry</u>",
-      "Approaching the southern boundary of the FOXTROT training area terminate with Corpus Approach. Switch to FOXTROT Common (CH 22 UHF) for advisories and area coordination. Fly ~055° to remain clear of the lateral boundaries of the area until de-conflicted. Climb/Descend to working altitude or transition layer.",
-      "<u>Exit</u>",
-      "Aircraft may exit the FOXTROT working areas by climbing or descending within the lateral confines of their working area, outside the lateral boundaries of the FOXTROT Area, or by coordinating a climb or descent through an unoccupied area on FOXTROT Common UHF 337.8. Remain feet wet over Intracoastal to SHAMROCK via the Northern Arrival and contact Corpus Approach (CH 8)"
-    ],
-    questions : [
-      "Low Block (T-44 Primary): ____ - _____ MSL Low Transition: _____ - _____ MSL Middle Block (Hellcat Primary): _____ - _____ MSL  High Transition: ____ - _____ MSL",
-      "Approaching the southern boundary of the FOXTROT training area terminate with Corpus Approach. Switch to FOXTROT Common (CH ____ UHF) for advisories and area coordination. Fly ____ to remain clear of the lateral boundaries of the area until de-conflicted. Climb/Descend to working altitude or transition layer.",
-      "Aircraft may exit the FOXTROT working areas by climbing or descending ____ the lateral confines of ____ working area, _____ the lateral boundaries of the FOXTROT Area, or by coordinating a climb or descent through an unoccupied area on FOXTROT Common UHF 337.8. Remain feet wet over Intracoastal to SHAMROCK via the _____ and contact Corpus Approach (CH ___)"
-    ],
-    answers : [
-      ["4,000'", "5,999'", "6,000'", "6,999'", "7,000'", "11,999'", "12,000'","12,999'"],
-      ["22", "~055°"],
-      ["within", "their", "outside", "Northern Arrival", "8"]
-    ],
+  "Working Areas-Foxtrot-189": {
+    name: "Foxtrot 1",
+    parentFolder: "Foxtrot Working Areas",
+    folderPath: "Foxtrot Working Areas",
+    subCategory: "Foxtrot",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Routes-Transitions-224"]
+    nextNode: ["Routes-Arrivals-104","Routes-Arrivals-5","Routes-Arrivals-6","Routes-Arrivals-25","Routes-Arrivals-26","Routes-Arrivals-27","Routes-Arrivals-28","Routes-Transitions-224"]
   },
-  "Working Areas-Foxtrot-190" : {
-    name : "Foxtrot 2",
-    parentFolder : "Foxtrot Working Areas",
-    folderPath : "Foxtrot Working Areas",
-    subCategory : "Foxtrot",
-    category : "Working Areas",
-    description : "",
-    customDescription : "Refer to Fox 1",
-    questions : [],
-    answers : [],
+  "Working Areas-Foxtrot-190": {
+    name: "Foxtrot 2",
+    parentFolder: "Foxtrot Working Areas",
+    folderPath: "Foxtrot Working Areas",
+    subCategory: "Foxtrot",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Routes-Transitions-224"]
+    nextNode: ["Routes-Arrivals-104","Routes-Arrivals-5","Routes-Arrivals-6","Routes-Arrivals-25","Routes-Arrivals-26","Routes-Arrivals-27","Routes-Arrivals-28","Routes-Transitions-224"]
   },
-  "Working Areas-Mustang-191" : {
-    name : "Mustang North 1",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang",
-    category : "Working Areas",
-    description : "",
-    customDescription : MUSTANG_NORTH_AREAS_1_2_DESCRIPTION,
-    comms : MUSTANG_EXIT_COMMS,
-    questions : [
-      "Working altitudes are ____ MSL to _____ MSL (Up to _____ MSL available upon request with Corpus Approach).",
-      "WARNING!  maintain a ___ NM stand-off from MUSTANG Beach Airport (KRAS) below _____ MSL when parajumping operations are in effect.",
-      "Abeam MUSTANG Beach Airport auto-switch to Corpus Approach on CH ___ UHF. Climb to working altitude once established under the working area from an altitude of _____ MSL.",
-      "Contact Corpus Approach on CH ___ UHF.  Advise complete in the working area and state intentions.  If returning to KNGP, contact Corpus Approach on CH ___ UHF when directed and join the Northern or Southern Arrival. Departing North MUSTANG area for northern arrival, ensure established at ____ MSL no later than nine-mile point."
-    ],
-    answers : [
-      ["6500'", "15,000'", "17,500'"],
-      ["3", "11,500'"],
-      ["17", "5500'"],
-      ["17", "8", "1,500'"]
-    ],
-    dependentNode: ["Airspace-default-37", "Point-Mustang-36"],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Routes-Transitions-224"]
+  "Working Areas-Mustang-191": {
+    name: "Mustang North 1",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang",
+    category: "Working Areas",
+    dependentNode: ["Airspace-default-37","Point-Mustang-36"],
+    nextNode: ["Routes-Arrivals-104","Routes-Arrivals-5","Routes-Arrivals-6","Routes-Arrivals-25","Routes-Arrivals-26","Routes-Arrivals-27","Routes-Arrivals-28","Routes-Transitions-224"]
   },
-  "Working Areas-Mustang-192" : {
-    name : "Mustang North 5",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang",
-    category : "Working Areas",
-    description : "",
-    customDescription : MUSTANG_AREAS_5_6_7_8_DESCRIPTION,
-    comms : MUSTANG_EXIT_COMMS,
-    questions : [],
-    answers : [],
+  "Working Areas-Mustang-192": {
+    name: "Mustang North 5",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Routes-Transitions-224"]
+    nextNode: ["Routes-Arrivals-104","Routes-Arrivals-5","Routes-Arrivals-6","Routes-Arrivals-25","Routes-Arrivals-26","Routes-Arrivals-27","Routes-Arrivals-28","Routes-Transitions-224"]
   },
-  "Working Areas-Mustang-193" : {
-    name : "Mustang North 2",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang",
-    category : "Working Areas",
-    description : "",
-    customDescription : MUSTANG_NORTH_AREAS_1_2_DESCRIPTION,
-    comms : MUSTANG_EXIT_COMMS,
-    questions : [],
-    answers : [],
-    dependentNode: ["Airspace-default-37", "Point-Mustang-36"],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Routes-Transitions-224"]
+  "Working Areas-Mustang-193": {
+    name: "Mustang North 2",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang",
+    category: "Working Areas",
+    dependentNode: ["Airspace-default-37","Point-Mustang-36"],
+    nextNode: ["Routes-Arrivals-104","Routes-Arrivals-5","Routes-Arrivals-6","Routes-Arrivals-25","Routes-Arrivals-26","Routes-Arrivals-27","Routes-Arrivals-28","Routes-Transitions-224"]
   },
-  "Working Areas-Mustang-194" : {
-    name : "Mustang North 6",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang",
-    category : "Working Areas",
-    description : "",
-    customDescription : MUSTANG_AREAS_5_6_7_8_DESCRIPTION,
-    comms : MUSTANG_EXIT_COMMS,
-    questions : [],
-    answers : [],
+  "Working Areas-Mustang-194": {
+    name: "Mustang North 6",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Arrivals-104", "Routes-Arrivals-5", "Routes-Arrivals-6", "Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28", "Routes-Transitions-224"]
+    nextNode: ["Routes-Arrivals-104","Routes-Arrivals-5","Routes-Arrivals-6","Routes-Arrivals-25","Routes-Arrivals-26","Routes-Arrivals-27","Routes-Arrivals-28","Routes-Transitions-224"]
   },
-  "Working Areas-Mustang Maintenance-195" : {
-    name : "Mustang Central",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang Maintenance",
-    category : "Working Areas",
-    description : "",
-    customDescription : [
-      "<u>Special Entry Rules</u>",
-      "At 10 DME turn to ~035° making sure to stay outside of the Central area eastern boundary.  Turn inbound to the working area 500' prior to your designated altitude and autoswitch to CH 18 UHF.  Self-announce with a \"99\" Call on CH 18 UHF. ",
-      "<u>Central Altitude Assignment</u>",
-      "Typically, Corpus Approach will assign working altitudes from 6,500ft to 14,500ft in 2000ft intervals (e.g. 6,500ft, 8,500ft, etc.).  Once even altitude blocks are taken, they will assign odd altitude blocks (e.g. 7,500ft, 9,500ft) resulting in 1000ft of separation.",
-      "<u>Exit</u>",
-      "Prior to departing the area, make a \"99\" call on Central Common (CH 18 UHF) stating intentions and contact Corpus Approach on CH 8 UHF.  Advise complete in the working area and state intentions. If joining course rules, initiate a descent after clearing the lateral boundaries of the Central area, just north of Fish Pass, remaining clear of the maintenance area and other Central area traffic. Heading east, perpendicular to the beach line ( ~ 105°), turn LEFT towards PT SHAMROCK upon reaching 14 DME or 1/2 working altitude, whichever comes first . Maintain 1000' MSL and join the Eastern Arrival to PT SHAMROCK."
-    ],
-    comms : MUSTANG_CENTRAL_COMMS,
-    questions : [],
-    answers : [],
+  "Working Areas-Mustang Maintenance-195": {
+    name: "Mustang Central",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang Maintenance",
+    category: "Working Areas",
     dependentNode: ["Point-Mustang-222"],
-    nextNode : ["Routes-Arrivals-219"]
+    nextNode: ["Routes-Arrivals-219"]
   },
-  "Working Areas-Mustang Maintenance-196" : {
-    name : "Mustang Maintenance Area",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang Maintenance",
-    category : "Working Areas",
-    description : "",
-    customDescription : [
-      "<u>Entry</u>",
-      "Upon check-in, Corpus Departure will advise of any other traffic established in the area.  Continue climb on heading 105° into the area.  When directed, switch Corpus Approach CH 17 UHF.  Utilize Maintenance Area Common 136.975 VHF to de-conflict as necessary.",
-      "<u>Exit</u>",
-      "Contact Corpus Approach and request direct to PT SHAMROCK. Comply with ATC instructions for recovery via course rules."
-    ],
-    questions : [],
-    answers : [],
+  "Working Areas-Mustang Maintenance-196": {
+    name: "Mustang Maintenance Area",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang Maintenance",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Point-Arrivals-113"]
+    nextNode: ["Point-Arrivals-113"]
   },
-  "Working Areas-Mustang-197" : {
-    name : "Mustang South 3",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang",
-    category : "Working Areas",
-    description : "",
-    customDescription : MUSTANG_SOUTH_AREAS_3_4_DESCRIPTION,
-    comms : MUSTANG_EXIT_COMMS,
-    questions : [],
-    answers : [],
-    dependentNode: ["Point-Mustang-36", "Airspace-default-37", "Point-Mustang-221"],
-    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9", "Routes-Transitions-223"]
+  "Working Areas-Mustang-197": {
+    name: "Mustang South 3",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang",
+    category: "Working Areas",
+    dependentNode: ["Point-Mustang-36","Airspace-default-37","Point-Mustang-221"],
+    nextNode: ["Routes-Arrivals-108","Routes-Arrivals-188","Point-Arrivals-78","Routes-Arrivals-8","Routes-Arrivals-9","Routes-Transitions-223"]
   },
-  "Working Areas-Mustang-198" : {
-    name : "Mustang South 7",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang",
-    category : "Working Areas",
-    description : "",
-    customDescription : MUSTANG_AREAS_5_6_7_8_DESCRIPTION,
-    comms : MUSTANG_EXIT_COMMS,
-    questions : [],
-    answers : [],
+  "Working Areas-Mustang-198": {
+    name: "Mustang South 7",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang",
+    category: "Working Areas",
     dependentNode: ["Point-Mustang-221"],
-    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9", "Routes-Transitions-223"]
+    nextNode: ["Routes-Arrivals-108","Routes-Arrivals-188","Point-Arrivals-78","Routes-Arrivals-8","Routes-Arrivals-9","Routes-Transitions-223"]
   },
-  "Working Areas-Mustang-199" : {
-    name : "Mustang South 4",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang",
-    category : "Working Areas",
-    description : "",
-    customDescription : MUSTANG_SOUTH_AREAS_3_4_DESCRIPTION,
-    comms : MUSTANG_EXIT_COMMS,
-    questions : [],
-    answers : [],
-    dependentNode: ["Point-Mustang-36", "Airspace-default-37", "Point-Mustang-221"],
-    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9", "Routes-Transitions-223"]
+  "Working Areas-Mustang-199": {
+    name: "Mustang South 4",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang",
+    category: "Working Areas",
+    dependentNode: ["Point-Mustang-36","Airspace-default-37","Point-Mustang-221"],
+    nextNode: ["Routes-Arrivals-108","Routes-Arrivals-188","Point-Arrivals-78","Routes-Arrivals-8","Routes-Arrivals-9","Routes-Transitions-223"]
   },
-  "Working Areas-Mustang-200" : {
-    name : "Mustang South 8",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang",
-    category : "Working Areas",
-    description : "",
-    customDescription : MUSTANG_AREAS_5_6_7_8_DESCRIPTION,
-    comms : MUSTANG_EXIT_COMMS,
-    questions : [],
-    answers : [],
+  "Working Areas-Mustang-200": {
+    name: "Mustang South 8",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang",
+    category: "Working Areas",
     dependentNode: ["Point-Mustang-221"],
-    nextNode : ["Routes-Arrivals-108", "Routes-Arrivals-188", "Point-Arrivals-78", "Routes-Arrivals-8", "Routes-Arrivals-9", "Routes-Transitions-223"]
+    nextNode: ["Routes-Arrivals-108","Routes-Arrivals-188","Point-Arrivals-78","Routes-Arrivals-8","Routes-Arrivals-9","Routes-Transitions-223"]
   },
-  "Routes-Transitions-201" : {
-    name : "Rusty Entry",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : [
-      "Reaching PT RUSTY, turn right towards Bayside (~360°), climb to 14,500 MSL, and execute the area entry procedures.",
-      "When directed by Corpus Christi Approach, contact Houston Center (CH 22 VHF). Once cleared to enter the MOA by Houston Center, claim a working block on KINGS 4 MOA Common (CH 20 UHF). Enter the MOA laterally utilizing the transition layer and proceed direct to your working block. Once established above/below, descend/climb into your working block. Maintain a listening watch with Houston Center."
-    ],
-    comms : KINGS_ENTRY_COMMS,
-    questions : [
-      "Reaching PT RUSTY, turn right towards ______ (~_____), climb to ______ MSL, and execute the area entry procedures.",
-      "When directed by Corpus Christi Approach, contact Houston Center (CH ___ VHF). Once cleared to enter the MOA by Houston Center, claim a working block on KINGS 4 MOA Common (CH ___ UHF)."
-    ],
-    answers : [
-      ["Bayside", "360°", "14,500'"],
-      ["22", "20"]
-    ],
+  "Routes-Transitions-201": {
+    name: "Rusty Entry",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
     dependentNode: ["Point-Arrivals-218"],
-    nextNode : ["Working Areas-King-203", "Working Areas-King-204", "Working Areas-King-205", "Working Areas-King-206", "Working Areas-King-207", "Working Areas-King-208", "Working Areas-King-209", "Working Areas-King-210", "Working Areas-King-211"]
+    nextNode: ["Working Areas-King-203","Working Areas-King-204","Working Areas-King-205","Working Areas-King-206","Working Areas-King-207","Working Areas-King-208","Working Areas-King-209","Working Areas-King-210","Working Areas-King-211"]
   },
-  "Routes-Transitions-202" : {
-    name : "Aransas Exit",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : "Descend within the lateral confines of the KINGS 4 MOA to 2500' MSL. Upon reaching 2500' MSL proceed direct to Woodsboro. Cross Woodsboro at 2500' MSL and Contact Corpus Approach CH 6 UHF with intentions. Fly ~145° to Bayside. Passing Bayside, terminate with Corpus Approach and switch KRKP CTAF CH 21 VHF and CH 21 UHF to self-announce. Execute Aransas County entry procedures.",
-    comms : KINGS_EXIT_COMMS,
-    questions : [
-      "Descend within the lateral confines of the KINGS 4 MOA to _____ MSL. Upon reaching 2500' MSL proceed direct to ______. Cross Woodsboro at _____ MSL and Contact Corpus Approach CH ___ UHF with intentions. Fly ~_____ to ______."
-    ],
-    answers : [
-      ["2500'", "Woodsboro", "2500'", "6", "145°", "Bayside"]
-    ],
-    dependentNode: ["Working Areas-King-211", "Point-Arrivals-217", "Point-Arrivals-218"],
-    nextNode : ["Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
+  "Routes-Transitions-202": {
+    name: "Aransas Exit",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
+    dependentNode: ["Working Areas-King-211","Point-Arrivals-217","Point-Arrivals-218"],
+    nextNode: ["Routes-Arrivals-25","Routes-Arrivals-26","Routes-Arrivals-27","Routes-Arrivals-28"]
   },
-  "Working Areas-King-203" : {
-    name : "Kings 4 MOA 1",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : [
-      "Low Block: 9000' MSL to 14000' MSL ; Transition layer: 14000' MSL to 15000' MSL, fly west at 14200' MSL and east at 14700' MSL ; High Block 15000' MSL to 22000' MSL. Utilize KNGP altimeter setting while operating in the KINGS 4 MOA.",
-      "<u>Entry</u>",
-      "Maintain 14,500' MSL until within the lateral confines of the MOA.  Once within the MOA, utilize the appropriate transition altitude for direction of flight.",
-      "NOLF Goliad to KINGS 4 MOA: Once clear of the pattern, climb to no higher than 4500' MSL.  Contact Houston Center on 135.05 (VHF CH 22) for clearance into the MOA.  Once cleared, switch KINGS 4 MOA Common (UHF CH 20) no later than 8000' MSL.  Switch to CH 22/23 VHF (128.15/135.05) when directed by Center.",
-      "<u>Exit</u>",
-      "Check out with Houston Center before departing MOA and state intentions on ch 20 UHF. Descend via area 5 low or unoccupied area to 2,500 ft.",
-      "If exiting MOA to go to Goliad, switch ch 15 UHF/VHF after getting ASOS on ch 14 UHF once clear of the MOA. Remain outside of 5 nm or 5000 ft MSL from KNGT while maneuvering to initial."
-    ],
-    questions : [
-      "Low Block: _______ MSL to _______ MSL ; Transition layer: _______ MSL to ______ MSL, fly west at _____ MSL and east at ______ MSL ; High Block ________ MSL to _________ MSL. Utilize ____ altimeter setting while operating in the KINGS 4 MOA.",
-      "On entry maintain _____ MSL until within the lateral confines of the MOA.  Once within the MOA, utilize the appropriate transition altitude for direction of flight.",
-      "NOLF Goliad to KINGS 4 MOA: Once clear of the pattern, climb to no higher than ____ MSL.  Contact Houston Center on 135.05 (VHF CH ___) for clearance into the MOA.  Once cleared, switch KINGS 4 MOA Common (UHF CH ____) no later than ______ MSL.  Switch to CH _____ VHF (128.15/135.05) when directed by Center.",
-      "Check out with _____ before departing MOA and state intentions on ch ____ UHF. Descend via area ___ low or unoccupied area to ____ MSL.",
-      "If exiting MOA to go to Goliad, switch ch ____ UHF/VHF after getting ASOS on ch ____ UHF once clear of the MOA. Remain outside of ____ nm or ______ MSL from KNGT while maneuvering to initial."
-    ],
-    answers : [
-      ["9000", "14000'", "14000'", "15000'", "14200'", "14700'", "15000'", "22000'", "KNGP"],
-      ["14,500'"],
-      ["4500'", "22", "20", "8000'", "22/23"],
-      ["Houston Center", "20", "5", "2500'"],
-      ["15", "14", "5", "5000'"]
-    ],
+  "Working Areas-King-203": {
+    name: "Kings 4 MOA 1",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-202", "Routes-Arrivals-112", "Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
+    nextNode: ["Routes-Transitions-202","Routes-Arrivals-112","Routes-Arrivals-42","Routes-Arrivals-43","Routes-Arrivals-44","Routes-Arrivals-45"]
   },
-  "Working Areas-King-204" : {
-    name : "Kings 4 MOA 2",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : "See Kings 1",
-    questions : [],
-    answers : [],
+  "Working Areas-King-204": {
+    name: "Kings 4 MOA 2",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-202", "Routes-Arrivals-112", "Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
+    nextNode: ["Routes-Transitions-202","Routes-Arrivals-112","Routes-Arrivals-42","Routes-Arrivals-43","Routes-Arrivals-44","Routes-Arrivals-45"]
   },
-  "Working Areas-King-205" : {
-    name : "Kings 4 MOA 3",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : "See Kings 1",
-    questions : [],
-    answers : [],
+  "Working Areas-King-205": {
+    name: "Kings 4 MOA 3",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-202", "Routes-Arrivals-112", "Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
+    nextNode: ["Routes-Transitions-202","Routes-Arrivals-112","Routes-Arrivals-42","Routes-Arrivals-43","Routes-Arrivals-44","Routes-Arrivals-45"]
   },
-  "Working Areas-King-206" : {
-    name : "Kings 4 MOA 4",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : "See Kings 1",
-    questions : [],
-    answers : [],
+  "Working Areas-King-206": {
+    name: "Kings 4 MOA 4",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-202", "Routes-Arrivals-112", "Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
+    nextNode: ["Routes-Transitions-202","Routes-Arrivals-112","Routes-Arrivals-42","Routes-Arrivals-43","Routes-Arrivals-44","Routes-Arrivals-45"]
   },
-  "Working Areas-King-207" : {
-    name : "Kings 4 MOA 5",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : "See Kings 1",
-    questions : [],
-    answers : [],
+  "Working Areas-King-207": {
+    name: "Kings 4 MOA 5",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-202", "Routes-Arrivals-112", "Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
+    nextNode: ["Routes-Transitions-202","Routes-Arrivals-112","Routes-Arrivals-42","Routes-Arrivals-43","Routes-Arrivals-44","Routes-Arrivals-45"]
   },
-  "Working Areas-King-208" : {
-    name : "Kings 4 MOA 6",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : "See Kings 1",
-    questions : [],
-    answers : [],
+  "Working Areas-King-208": {
+    name: "Kings 4 MOA 6",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-202", "Routes-Arrivals-112", "Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
+    nextNode: ["Routes-Transitions-202","Routes-Arrivals-112","Routes-Arrivals-42","Routes-Arrivals-43","Routes-Arrivals-44","Routes-Arrivals-45"]
   },
-  "Working Areas-King-209" : {
-    name : "Kings 4 MOA 7",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : "See Kings 1",
-    questions : [],
-    answers : [],
+  "Working Areas-King-209": {
+    name: "Kings 4 MOA 7",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-202", "Routes-Arrivals-112", "Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
+    nextNode: ["Routes-Transitions-202","Routes-Arrivals-112","Routes-Arrivals-42","Routes-Arrivals-43","Routes-Arrivals-44","Routes-Arrivals-45"]
   },
-  "Working Areas-King-210" : {
-    name : "Kings 4 MOA 8",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : "See Kings 1",
-    questions : [],
-    answers : [],
+  "Working Areas-King-210": {
+    name: "Kings 4 MOA 8",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-202", "Routes-Arrivals-112", "Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
+    nextNode: ["Routes-Transitions-202","Routes-Arrivals-112","Routes-Arrivals-42","Routes-Arrivals-43","Routes-Arrivals-44","Routes-Arrivals-45"]
   },
-  "Working Areas-King-211" : {
-    name : "Kings 4 MOA 9",
-    parentFolder : "Kings 4 MOAs",
-    folderPath : "Kings 4 MOAs",
-    subCategory : "King",
-    category : "Working Areas",
-    description : "",
-    customDescription : "See Kings 1",
-    questions : [],
-    answers : [],
+  "Working Areas-King-211": {
+    name: "Kings 4 MOA 9",
+    parentFolder: "Kings 4 MOAs",
+    folderPath: "Kings 4 MOAs",
+    subCategory: "King",
+    category: "Working Areas",
     dependentNode: [],
-    nextNode : ["Routes-Transitions-202", "Routes-Arrivals-112", "Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
-    
+    nextNode: ["Routes-Transitions-202","Routes-Arrivals-112","Routes-Arrivals-42","Routes-Arrivals-43","Routes-Arrivals-44","Routes-Arrivals-45"]
   },
-  // Tracks and landmarks added from the TW-4 VFR Course Rules Manual (20 Feb 2025): the
-  // placemarks at the end of course-rules.kml
-  "Point-default-212" : {
-    name : "Berclair",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF",
-    subCategory : "Point",
-    category : "Point",
-    description : "",
-    customDescription : "Note: avoid overflying the town of Berclair located to the south of KNGT.",
-    questions : [],
-    answers : [],
+  "Point-default-212": {
+    name: "Berclair",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF",
+    subCategory: "Point",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-213" : {
-    name : "From PT Rusty",
-    parentFolder : "(KNGT) Goliad NOLF",
-    folderPath : "(KNGT) Goliad NOLF > Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : "Reaching PT RUSTY, turn right towards Bayside (~360°). Upon reaching Bayside, proceed direct to NOLF Goliad (~322°) and execute the NOLF Goliad arrival procedures outlined in Ch 2 paragraph 4.",
-    questions : ["Reaching PT RUSTY, turn right towards ______ (~_____). Upon reaching Bayside, proceed direct to NOLF Goliad (~_____)."],
-    answers : [["Bayside", "360°", "322°"]],
-    dependentNode: ["Point-Arrivals-218", "Point-default-212"],
-    nextNode : ["Routes-Arrivals-42", "Routes-Arrivals-43", "Routes-Arrivals-44", "Routes-Arrivals-45"]
+  "Routes-Arrivals-213": {
+    name: "From PT Rusty",
+    parentFolder: "(KNGT) Goliad NOLF",
+    folderPath: "(KNGT) Goliad NOLF > Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-218","Point-default-212"],
+    nextNode: ["Routes-Arrivals-42","Routes-Arrivals-43","Routes-Arrivals-44","Routes-Arrivals-45"]
   },
-  "Routes-Transitions-214" : {
-    name : "From Goliad / KINGS 4",
-    parentFolder : "(KRKP) Aransas County Airport",
-    folderPath : "(KRKP) Aransas County Airport > Arrivals",
-    subCategory : "Transition",
-    category : "Routes",
-    description : "",
-    customDescription : "Crossing Woodsboro at 2500' MSL, contact Corpus Approach (CH 6 UHF) with intentions. Fly ~145° to Bayside and self-announce on KRKP CTAF (CH 21 VHF). Descend to 1000' MSL/200 KIAS going feet wet and proceed to a 2 NM initial for the runway in use/favored by winds. Terminate with Corpus Approach and switch CH 21 UHF, TW-4 KRKP Common, and check-in.",
-    comms : ARANSAS_ARRIVAL_COMMS.slice(0, 2),
-    questions : ["Crossing ______ at _____ MSL, contact Corpus Approach (CH ___ UHF) with intentions. Fly ~_____ to ______ and self-announce on KRKP CTAF (CH ___ VHF). Descend to _____ MSL/____ KIAS going feet wet and proceed to a ___ NM initial for the runway in use/favored by winds."],
-    answers : [["Woodsboro", "2500'", "6", "145°", "Bayside", "21", "1000'", "200", "2"]],
-    dependentNode: ["Point-Arrivals-217", "Point-Arrivals-218"],
-    nextNode : ["Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
+  "Routes-Transitions-214": {
+    name: "From Goliad / KINGS 4",
+    parentFolder: "(KRKP) Aransas County Airport",
+    folderPath: "(KRKP) Aransas County Airport > Arrivals",
+    subCategory: "Transition",
+    category: "Routes",
+    dependentNode: ["Point-Arrivals-217","Point-Arrivals-218"],
+    nextNode: ["Routes-Arrivals-25","Routes-Arrivals-26","Routes-Arrivals-27","Routes-Arrivals-28"]
   },
-  "Point-default-215" : {
-    name : "NGP TACAN",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS",
-    subCategory : "Point",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-default-215": {
+    name: "NGP TACAN",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS",
+    subCategory: "Point",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-default-216" : {
-    name : "CRP VORTAC",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS",
-    subCategory : "Point",
-    category : "Point",
-    description : "",
-    customDescription : "The CEA is defined as a 2NM radius around the CRP VORTAC 170 Radial at 20 DME.",
-    questions : [],
-    answers : [],
+  "Point-default-216": {
+    name: "CRP VORTAC",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS",
+    subCategory: "Point",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-217" : {
-    name : "Woodsboro",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-217": {
+    name: "Woodsboro",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Arrivals-218" : {
-    name : "Bayside",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Arrivals-218": {
+    name: "Bayside",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Arrivals-219" : {
-    name : "Descent from Central",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
-    subCategory : "Arrivals",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Prior to departing the area, make a \"99\" call on Central Common (CH 18 UHF) stating intentions and contact Corpus Approach on CH 8 UHF. Advise complete in the working area and state intentions.",
-      "If joining course rules, initiate a descent after clearing the lateral boundaries of the Central area, just north of Fish Pass, remaining clear of the maintenance area and other Central area traffic. Heading east, perpendicular to the beach line (~105°), turn LEFT towards PT SHAMROCK upon reaching 14 DME or 1/2 working altitude, whichever comes first. Maintain 1000' MSL and join the Eastern Arrival to PT SHAMROCK."
-    ],
-    questions : ["Heading east, perpendicular to the beach line (~_____), turn LEFT towards PT SHAMROCK upon reaching ___ DME or ___ working altitude, whichever comes first. Maintain _____ MSL and join the ______ Arrival to PT SHAMROCK."],
-    answers : [["105°", "14", "1/2", "1000'", "Eastern"]],
-    dependentNode: ["Point-Mustang-222", "Point-default-215"],
-    nextNode : ["Routes-Arrivals-106", "Routes-Arrivals-8", "Routes-Arrivals-9"]
+  "Routes-Arrivals-219": {
+    name: "Descent from Central",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Shamrock Arrivals",
+    subCategory: "Arrivals",
+    category: "Routes",
+    dependentNode: ["Point-Mustang-222","Point-default-215"],
+    nextNode: ["Routes-Arrivals-106","Routes-Arrivals-8","Routes-Arrivals-9"]
   },
-  "Routes-Transitions-220" : {
-    name : "Central MUSTANG Transition",
-    parentFolder : "(KNGP) Corpus Christi NAS",
-    folderPath : "(KNGP) Corpus Christi NAS > Beach Line Departures",
-    subCategory : "Transition",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "On initial check-in, Corpus Departure will coordinate a working altitude. Cross the beach line on heading 105° and continue climb for assigned altitude. Comply with area entry procedures.",
-      "At 10 DME turn to ~035° making sure to stay outside of the Central area eastern boundary. Turn inbound to the working area 500' prior to your designated altitude and auto-switch to CH 18 UHF. Self-announce with a \"99\" Call on CH 18 UHF.",
-      "Note: If working altitude has not been achieved prior to reaching the southern boundary of area 2, execute a right 270° turn to continue climb prior to entering the central area."
-    ],
-    comms : MUSTANG_CENTRAL_COMMS,
-    questions : ["Cross the beach line on heading _____ and continue climb for assigned altitude. At ___ DME turn to ~_____ making sure to stay outside of the Central area eastern boundary."],
-    answers : [["105°", "10", "035°"]],
+  "Routes-Transitions-220": {
+    name: "Central MUSTANG Transition",
+    parentFolder: "(KNGP) Corpus Christi NAS",
+    folderPath: "(KNGP) Corpus Christi NAS > Beach Line Departures",
+    subCategory: "Transition",
+    category: "Routes",
     dependentNode: ["Point-default-215"],
-    nextNode : ["Working Areas-Mustang Maintenance-195"]
+    nextNode: ["Working Areas-Mustang Maintenance-195"]
   },
-  "Point-Mustang-221" : {
-    name : "Padre Balli Park (Bob Hall Pier)",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang",
-    category : "Point",
-    description : "",
-    customDescription : "Abeam MUSTANG Beach Airport for MUSTANG North or abeam Padre Balli Park (Old Bob Hall Pier) for MUSTANG South, auto-switch to Corpus Approach on CH 17 UHF.",
-    questions : [],
-    answers : [],
+  "Point-Mustang-221": {
+    name: "Padre Balli Park (Bob Hall Pier)",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Point-Mustang-222" : {
-    name : "Fish Pass",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Mustang",
-    category : "Point",
-    description : "",
-    customDescription : "",
-    questions : [],
-    answers : [],
+  "Point-Mustang-222": {
+    name: "Fish Pass",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Mustang",
+    category: "Point",
     dependentNode: [],
-    nextNode : []
+    nextNode: []
   },
-  "Routes-Transitions-223" : {
-    name : "South to North Transition",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Transition",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Contact Corpus Approach (CH 8/17 UHF) and state intentions. Fly north at 3500' MSL or 5500' MSL over the Intracoastal Waterway.",
-      "Approaching the appropriate OLF or assigned working area, terminate/switch with Corpus Approach (as required) and execute the appropriate entry procedures."
-    ],
-    questions : ["Contact Corpus Approach (CH ______ UHF) and state intentions. Fly north at _____ MSL or _____ MSL over the ______."],
-    answers : [["8/17", "3500'", "5500'", "Intracoastal Waterway"]],
+  "Routes-Transitions-223": {
+    name: "South to North Transition",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Transition",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-119"],
-    nextNode : ["Routes-Arrivals-25", "Routes-Arrivals-26", "Routes-Arrivals-27", "Routes-Arrivals-28"]
+    nextNode: ["Routes-Arrivals-25","Routes-Arrivals-26","Routes-Arrivals-27","Routes-Arrivals-28"]
   },
-  "Routes-Transitions-224" : {
-    name : "North to South Transition",
-    parentFolder : "Mustang Working Areas",
-    folderPath : "Mustang Working Areas",
-    subCategory : "Transition",
-    category : "Routes",
-    description : "",
-    customDescription : [
-      "Contact Corpus Approach (CH 8/17 UHF) and state intentions. Fly south at 4500' MSL over the Intracoastal Waterway. Aircraft transiting south of Waldron may descend to 2500' MSL after passing the High Bridge.",
-      "Approaching the appropriate OLF or assigned working area, terminate/switch with Corpus Approach (as required) and execute the appropriate entry procedures."
-    ],
-    questions : ["Fly south at _____ MSL over the ______. Aircraft transiting south of Waldron may descend to _____ MSL after passing the ______."],
-    answers : [["4500'", "Intracoastal Waterway", "2500'", "High Bridge"]],
+  "Routes-Transitions-224": {
+    name: "North to South Transition",
+    parentFolder: "Mustang Working Areas",
+    folderPath: "Mustang Working Areas",
+    subCategory: "Transition",
+    category: "Routes",
     dependentNode: ["Point-Arrivals-119"],
-    nextNode : ["Point-Arrivals-78"]
+    nextNode: ["Point-Arrivals-78"]
   }
-}
+};
