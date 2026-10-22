@@ -231,7 +231,7 @@
   --surface-e0e0e0: #e0e0e0;
   --bad-text-5a0000: #5a0000;
   --btn-off: #9aa7ab;
-  --band-9e9e9e: #9e9e9e;
+  --decision: #757575;
 
   /* T-6B systems diagrams (systems/diagramTheme.js and each diagram's LOCAL read these) */
   --sys-bg: var(--page);
@@ -485,7 +485,7 @@
   --surface-e0e0e0: #2a3c47;
   --bad-text-5a0000: #f0a0a0;
   --btn-off: #3d4f58;
-  --band-9e9e9e: #44565f;
+  --decision: #44565f;
 
   --sys-bg: var(--page);
   --sys-box: #1e2c33;
@@ -8600,7 +8600,7 @@ textarea.incorrect-answer {
 .epl-decision {
   font-style: italic;
   padding: 6px;
-  background-color: var(--band-9e9e9e);
+  background-color: var(--decision);
   color: var(--on-brand);
   font-size: 11px;
 }

@@ -53,7 +53,7 @@ const epInputStyle = {
 const decisionPointStyle = {
   fontStyle: 'italic',
   padding: '6px',
-  backgroundColor: 'var(--band-9e9e9e)',
+  backgroundColor: 'var(--decision)',
   color: 'var(--on-brand)',
   fontSize: '11px'
 };
