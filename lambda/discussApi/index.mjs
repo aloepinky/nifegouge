@@ -32,6 +32,10 @@ import {
   saveSectionsHandler, sectionsHistoryHandler, sectionsRevisionHandler, restoreSectionsHandler,
   importSectionsHandler, remirrorSections,
 } from './questionSections.mjs';
+import {
+  getCourseRulesHandler, saveCourseRulesHandler, courseRulesHistoryHandler, courseRulesRevisionHandler,
+  restoreCourseRulesHandler, importCourseRulesHandler, remirrorCourseRules,
+} from './courseRules.mjs';
 import { namespaceItemsHandler } from './namespaceOp.mjs';
 import { pageviewHandler, pageStatsHandler } from './pageviews.mjs';
 
@@ -101,9 +105,15 @@ import { pageviewHandler, pageStatsHandler } from './pageviews.mjs';
 //   GET  question-sections-revision?rev=                                             -> { revision }
 //   POST restore-question-sections         { rev, author?, summary? }                    -> { rev }
 //   POST import-question-sections (admin)  { doc }                                       -> { rev: 1 }; 409
+//   GET  get-courserules?id=                                                         -> { rev, updatedAt, author, summary, doc }
+//   POST save-courserules                  { id, baseRev, doc, author?, summary }        -> { rev, updatedAt }; 400; 409
+//   GET  courserules-history?id=                                                     -> { latestRev, revisions }
+//   GET  courserules-revision?id=&rev=                                               -> { revision }
+//   POST restore-courserules               { id, rev, author?, summary? }                -> { rev }
+//   POST import-courserules  (admin)       { id, doc, author?, summary? }                -> { rev: 1 }; 409
 //   POST pageview                          { path, newDay, newPage } (text/plain beacon)  -> 204
 //   GET  page-stats?from=&to=  (stats)     X-Stats-Token or X-Admin-Token              -> { days: [{ day, views, visitors, pages }] }
-//   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'questions'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs, questions }
+//   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'questions'|'courserules'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs, questions, courserules }
 //   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
 
 async function rebuildIndexHandler(event) {
@@ -134,6 +144,9 @@ async function rebuildIndexHandler(event) {
   }
   if (what === 'questions' || what === 'all') {
     out.questions = { ...(await rebuildQuestionsMirror()), sectionsRev: await remirrorSections() };
+  }
+  if (what === 'courserules' || what === 'all') {
+    out.courserules = { tw4: await remirrorCourseRules('tw4') };
   }
   return reply(200, { success: true, ...out });
 }
@@ -192,6 +205,12 @@ const ROUTES = {
   'question-sections-revision': { method: 'GET', run: sectionsRevisionHandler },
   'restore-question-sections': { method: 'POST', run: restoreSectionsHandler },
   'import-question-sections': { method: 'POST', admin: true, run: importSectionsHandler },
+  'get-courserules': { method: 'GET', run: getCourseRulesHandler },
+  'save-courserules': { method: 'POST', run: saveCourseRulesHandler },
+  'courserules-history': { method: 'GET', run: courseRulesHistoryHandler },
+  'courserules-revision': { method: 'GET', run: courseRulesRevisionHandler },
+  'restore-courserules': { method: 'POST', run: restoreCourseRulesHandler },
+  'import-courserules': { method: 'POST', admin: true, run: importCourseRulesHandler },
   'pageview': { method: 'POST', run: pageviewHandler },
   'page-stats': { method: 'GET', run: pageStatsHandler },
   'rebuild-index': { method: 'POST', admin: true, run: rebuildIndexHandler },

@@ -17,7 +17,7 @@ below is created once, by hand, in the AWS console for `us-east-2`.
 
 ## 1. DynamoDB
 
-Eight tables, on-demand capacity, everything else default. Create whichever does not exist yet:
+Nine tables, on-demand capacity, everything else default. Create whichever does not exist yet:
 
 | Table | Partition key | Sort key |
 |---|---|---|
@@ -29,6 +29,7 @@ Eight tables, on-demand capacity, everything else default. Create whichever does
 | `NIFEQuestions` | `questionId` (String) | (none) |
 | `QuestionSections` | `listId` (String) | `rev` (Number) |
 | `PageViews` | `day` (String) | `path` (String) |
+| `CourseRules` | `rulesId` (String) | `rev` (Number) |
 
 `EPsLimitsScores` is the EPs/Limits leaderboard (`scores.mjs`): one row per finished run, keyed
 `NIFE#EPs`, `Primary#Limits` and so on, never deleted. Its sort key is a String, unlike the
@@ -104,7 +105,8 @@ of that page (`arn:aws:iam::ACCOUNT_ID:role/...`), and the bucket name if you ch
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/EPsLimitsScores",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/NIFEQuestions",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/QuestionSections",
-        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/PageViews"
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/PageViews",
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/CourseRules"
       ]
     },
     {
@@ -142,6 +144,7 @@ Configuration → Environment variables:
 | `QUESTIONS_TABLE` | `NIFEQuestions` (optional; this is the default) |
 | `QUESTION_SECTIONS_TABLE` | `QuestionSections` (optional; this is the default) |
 | `PAGEVIEWS_TABLE` | `PageViews` (optional; this is the default) |
+| `COURSE_RULES_TABLE` | `CourseRules` (optional; this is the default) |
 | `STATS_TOKEN` | a second long random string, which can only read the page counts (the Google Sheet holds it) |
 | `DISCUSS_BUCKET` | `pinksheetmafia-discuss` |
 | `DISCUSS_ADMIN_TOKEN` | a long random string (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`) |
@@ -213,6 +216,11 @@ new edition goes in, as a new revision of each brief.
   "The page names no aircraft".
 - Roll back a bad revision: open the page's History on the site and restore the one before
   it. Nothing is ever deleted from the table.
+- The course rules page's words (`courseRules.mjs`) are one document per wing in `CourseRules`,
+  mirrored to `courserules/<id>.json`. TW-4's (`tw4`) is seeded once from the text that used
+  to be in the site's code: `DISCUSS_ADMIN_TOKEN=... node tools/courserules-seed.js --publish
+  --api=<api>` (read `_courserules-seed/report.json` first). A second import is refused; every
+  later change is made on the page, and its [history] restores any revision.
 - A revision showing a name that should not be on it:
   `DISCUSS_ADMIN_TOKEN=... node tools/discuss-set-author.js --from="Old" --to="New" --slugs=a,b`
   (or `--all`) rewrites the name on every revision of those pages that carries it. The

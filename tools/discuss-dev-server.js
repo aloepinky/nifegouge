@@ -7,6 +7,7 @@
 //   node tools/discuss-dev-server.js              # http://localhost:8787
 //   node tools/discuss-dev-server.js --port=9000
 //   node tools/discuss-dev-server.js --reset      # start from an empty table and mirror
+//   node tools/discuss-dev-server.js --port=8789 --state=_discuss-dev-2   # a second, separate one
 //
 // Then run the site against it:
 //
@@ -29,12 +30,12 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 
 const ROOT = path.resolve(__dirname, '..');
-const STATE = path.join(ROOT, '_discuss-dev');
 const argv = process.argv.slice(2);
 const value = (name) => {
   const hit = argv.find((a) => a.startsWith(`--${name}=`));
   return hit ? hit.slice(name.length + 3) : null;
 };
+const STATE = path.resolve(ROOT, value('state') || '_discuss-dev');
 const PORT = Number(value('port') || 8787);
 
 process.env.DISCUSS_ADMIN_TOKEN = process.env.DISCUSS_ADMIN_TOKEN || 'dev';

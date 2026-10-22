@@ -66,3 +66,4 @@ tools/discuss-audit.json
 
 # Output of invoking the weekly-report Lambda by hand
 out.json
+/_courserules-seed

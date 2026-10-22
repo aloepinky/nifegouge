@@ -425,3 +425,19 @@ export const newestQuestionSections = questionSections.newest;
 export const createQuestionSections = questionSections.create;
 export const saveQuestionSections = questionSections.save;
 export const questionSectionsHistory = questionSections.history;
+
+// A wing's course rules: one document per wing (rulesId 'tw4'), revisioned like a jet log.
+// See courseRules.mjs.
+const courseRules = revisionStore({
+  table: 'courseRulesTable', key: 'rulesId', noun: 'course rules',
+  titleOf: (doc) => `${doc.wing || doc.id} course rules`,
+  flagsOf: (doc) => ({ aircraft: doc.aircraft, school: doc.school }),
+  takenMessage: 'Those course rules already exist; change them on the site',
+});
+
+export const courseRulesMeta = courseRules.meta;
+export const courseRulesRevision = courseRules.revision;
+export const newestCourseRules = courseRules.newest;
+export const createCourseRules = courseRules.create;
+export const saveCourseRules = courseRules.save;
+export const courseRulesHistory = courseRules.history;
