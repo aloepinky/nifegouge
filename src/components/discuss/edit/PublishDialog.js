@@ -76,12 +76,12 @@ function PublishDialog({ slug, baseRev, item, marked = [], onPublished, onConfli
         <fieldset className="discuss-editor-field discuss-publish-outdated">
           <legend className="discuss-editor-label">Marked outdated</legend>
           <p className="discuss-editor-hint">
-            Tick the parts your edit brings up to date. Their outdated marks are cleared.
+            Tick the parts your edit updates. Their outdated marks are cleared.
           </p>
           {marked.map((m) => (
             <label key={m.id} className="discuss-publish-outdated-row">
               <input type="checkbox" checked={clearing.has(m.id)} onChange={() => toggle(m.id)} />
-              {' '}{m.title} is up to date
+              {m.title} is up to date
             </label>
           ))}
         </fieldset>

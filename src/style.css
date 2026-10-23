@@ -9274,5 +9274,16 @@ button.epl-modal-close:hover {
 .discuss-outdated-pubs-list { margin: 0 0 8px; font-size: 13px; color: var(--outdated-ink); }
 .discuss-outdated-pubs .discuss-pub-report { margin-top: 8px; text-align: left; }
 
-.discuss-publish-outdated { border: none; padding: 0; }
-.discuss-publish-outdated-row { display: block; font-size: 14px; margin: 4px 0; color: var(--ink); }
+.discuss-publish-outdated { border: none; padding: 0; margin-left: 0; margin-right: 0; min-width: 0; }
+.discuss-publish-outdated legend { padding: 0; }
+.discuss-publish-outdated-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  font-size: 14px;
+  margin: 6px 0;
+  color: var(--ink);
+  cursor: pointer;
+}
+.discuss-publish-outdated-row input { width: auto; height: auto; margin: 0; flex: none; }
