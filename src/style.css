@@ -8308,6 +8308,22 @@ textarea.incorrect-answer {
   flex-direction: column;
 }
 
+/* "Practice the Cases" under an EP card that has another set drilling it (EPDrill `practice`).
+   Quiet, like the unlit toggles, so it never reads as part of the procedure. */
+.limits-eps-container button.epl-practice {
+  align-self: center;
+  margin-top: 8px;
+  padding: 6px 14px;
+  background-color: var(--surface-f0f0f0);
+  color: var(--ink-000000);
+  font-weight: normal;
+  border: 1px solid var(--line-cccccc);
+}
+
+.limits-eps-container button.epl-practice:hover {
+  background-color: var(--surface-eeeeee);
+}
+
 /* A normal checklist read, not typed (EPDrill `read`), printed as the checklist card prints it:
    challenge, a dotted leader, reply. A step that has an action to show is clickable. */
 .epl-step--read {

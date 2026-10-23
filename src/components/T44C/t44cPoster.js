@@ -294,7 +294,7 @@ export const T44C_POSTER = {
           values: ['FUEL CUTOFF', 'LOW IDLE', 'FUEL CUTOFF (Dec. Below 790°C)', 'HIGH IDLE'] },
         { box: [0.653, 0.462, 0.17, 0.123], label: 'Flap handle',
           action: 'Flaps',
-          values: ['UP', 'APPROACH (Unless Already UP)', 'Approach (Unless Already Up)',
+          values: ['UP', 'APPROACH', 'APPROACH (Unless Already UP)', 'Approach (Unless Already Up)',
             'As Required', 'Maintain Current Setting', 'CORRESPOND', 'CHECKED/UP', 'Up/Approach/Down'] },
 
         // Normal checklists. Rough, 2026-10-12: tune with ?spots. Three wheels, one step.

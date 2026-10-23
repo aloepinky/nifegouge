@@ -2,6 +2,7 @@ import React from 'react';
 import T44CLimits from './T44C/T44CLimits';
 import { T44C_EPS, T44C_EP_NWC } from './T44C/t44cData';
 import { T44C_HOLLYWOOD, T44C_MEMORY_NORMALS } from './T44C/t44cNormals';
+import { T44C_CASES } from './T44C/t44cCases';
 import { T44C_POSTER, T44C_ALIASES, t44cRegion } from './T44C/t44cPoster';
 import ActionButtons from './epsLimits/ActionButtons';
 import { PosterRegion, usePoster } from './epsLimits/CockpitPoster';
@@ -96,6 +97,13 @@ const SETS = [
   {
     id: 'hollywood', label: 'Hollywood', eps: T44C_HOLLYWOOD, nwc: null, normal: true, read: true, sequential: true,
     title: 'T-44C NORMAL PROCEDURES', footnote: '* PERFORMED FROM MEMORY · # ABBREVIATED CHECKLIST ITEM',
+  },
+  // The single-engine cases (T44C/t44cCases.js), read like Hollywood but drawn as EPs, so the
+  // cards keep the EP title and the EP buttons. Also opened from Engine Failure After Takeoff and
+  // the Emergency Shutdown Checklist (`practice` in t44cData.js).
+  {
+    id: 'cases', label: 'Cases', eps: T44C_CASES, nwc: null, read: true, sequential: true,
+    title: 'T-44C SINGLE-ENGINE CASES', footnote: '* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS',
   },
 ];
 

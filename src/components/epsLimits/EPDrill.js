@@ -337,6 +337,9 @@ function ModeDots({ sets, current, onPick }) {
 // from memory, and the T-54A's "Include Flows". Its `footnote`, if any, replaces the set's while
 // the button is on, for an asterisk that means something else on the added cards. A game leaves
 // them out, so every leaderboard time is the same EPs.
+//
+// An EP's `practice` is the id of another set; its card then carries a button that switches to
+// that set ("Practice the Cases"). Hidden in a game, like every other way off the EPs.
 function EPDrill({ sets, isGameActive = false, ...props }) {
   const [current, setCurrent] = useState(sets ? sets[0].id : null);
   const [full, setFull] = useState(null);
@@ -351,6 +354,10 @@ function EPDrill({ sets, isGameActive = false, ...props }) {
       footnote={adding && extra.footnote ? extra.footnote : overrides.footnote}
       initialFull={full} onFull={setFull}
       extraToggle={extra && !isGameActive ? { label: extra.label, on: withExtra, toggle: () => setWithExtra((v) => !v) } : null}
+      practice={isGameActive ? null : {
+        open: setCurrent,
+        labelOf: (setId) => `Practice the ${(sets.find((s) => s.id === setId) || {}).label || ''}`,
+      }}
       modes={isGameActive ? null : <ModeDots sets={sets} current={set.id} onPick={setCurrent} />} />
   );
 }
@@ -418,7 +425,7 @@ function ActionPanel({ row, label, mark, onClose }) {
 function Drill({
   eps, title, footnote, top, above, left, right, sideWidth = 200,
   aliases = DEFAULT_ALIASES, normal = false, read = false, sequential = false, modes = null, extraToggle = null,
-  initialFull = null, onFull,
+  practice = null, initialFull = null, onFull,
   nwc, nwcHints, isGameActive = false, onGameComplete,
 }) {
   // One number sets both columns; a pair sets them separately, which a bespoke layout needs —
@@ -979,6 +986,13 @@ function Drill({
                 below sits at the same place whichever procedure is showing. */}
             <div className="epl-card-slot" style={cardMin ? { minHeight: cardMin } : undefined}>
               {card}
+              {/* An EP with `practice` names another set that drills it in context (the T-44C's
+                  single-engine cases under Engine Failure After Takeoff); the button opens it. */}
+              {showTools && practice && ep.practice && (
+                <button type="button" className="epl-practice" onClick={() => practice.open(ep.practice)}>
+                  {practice.labelOf(ep.practice)}
+                </button>
+              )}
               {actionRow && (
                 <ActionPanel row={actionRow} label={actionLabel} mark={readMark(actionRow.id)}
                   onClose={() => { setOpenAction(null); setAutoExpand(false); }} />

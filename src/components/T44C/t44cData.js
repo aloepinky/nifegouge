@@ -63,6 +63,8 @@ export const T44C_EPS = [
   {
     id: 'eng-fail-after-takeoff',
     title: 'Engine Failure After Takeoff',
+    // The single-engine pattern cases (t44cCases.js), a set of their own; see T44CEPsLimits.js.
+    practice: 'cases',
     rows: [
       step('efat1', 'Power', 'As Required'),
       step('efat2', 'Landing gear', 'UP'),
@@ -73,6 +75,7 @@ export const T44C_EPS = [
   {
     id: 'emer-shutdown-checklist',
     title: 'Emergency Shutdown Checklist',
+    practice: 'cases',
     rows: [
       concur('esc1', 'Power Lever', 'IDLE'),
       concur('esc2', 'Prop Lever', 'FEATHER'),

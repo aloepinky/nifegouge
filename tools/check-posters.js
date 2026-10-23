@@ -62,6 +62,7 @@ const SCHOOLS = [
   // must be clickable too, and a step two targets answer in halves ("ITT and N1") must add up.
   { name: 'T-44C Hollywood', data: 'components/T44C/t44cNormals.js', eps: 'T44C_HOLLYWOOD', poster: 'components/T44C/t44cPoster.js', key: 'T44C_POSTER' },
   { name: 'T-44C memory normals', data: 'components/T44C/t44cNormals.js', eps: 'T44C_MEMORY_NORMALS', poster: 'components/T44C/t44cPoster.js', key: 'T44C_POSTER' },
+  { name: 'T-44C cases', data: 'components/T44C/t44cCases.js', eps: 'T44C_CASES', poster: 'components/T44C/t44cPoster.js', key: 'T44C_POSTER' },
   { name: 'T-54A', data: 'components/T54A/t54aData.js', eps: 'T54A_EPS', poster: 'components/T54A/t54aPoster.js', key: 'T54A_POSTER' },
   { name: 'T-54A flows', data: 'components/T54A/t54aNormals.js', eps: 'T54A_FLOWS', poster: 'components/T54A/t54aPoster.js', key: 'T54A_POSTER' },
   { name: 'T-54A checklists', data: 'components/T54A/t54aNormals.js', eps: 'T54A_CHECKLISTS', poster: 'components/T54A/t54aPoster.js', key: 'T54A_POSTER' },
