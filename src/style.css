@@ -9270,9 +9270,9 @@ button.epl-modal-close:hover {
 .discuss-pub-report-scope { border: none; padding: 0; margin: 0 0 14px; }
 .discuss-pub-report-choice { display: inline-block; margin-right: 16px; font-size: 14px; color: var(--ink); }
 
-.discuss-outdated-pubs { margin: 0 0 16px; }
+.discuss-outdated-pubs { margin: 24px 0 0; text-align: center; }
 .discuss-outdated-pubs-list { margin: 0 0 8px; font-size: 13px; color: var(--outdated-ink); }
-.discuss-outdated-pubs .discuss-pub-report { margin-top: 8px; }
+.discuss-outdated-pubs .discuss-pub-report { margin-top: 8px; text-align: left; }
 
 .discuss-publish-outdated { border: none; padding: 0; }
 .discuss-publish-outdated-row { display: block; font-size: 14px; margin: 4px 0; color: var(--ink); }

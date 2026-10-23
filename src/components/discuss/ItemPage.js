@@ -25,10 +25,10 @@ import { squadronsFor, isOthers, hasSeveralUnits, unitOf, readSquadron, writeSqu
 import { useDiscussData } from './DiscussData';
 import {
   useOutdated, setOutdated, sectionState, numbersBlock, markedByMe, markOutdated, markedParts,
-  partChanged, reportsFor,
+  partChanged, reportsFor, citedRefs,
 } from './outdated';
 import {
-  MarkLink, MarkPanel, OutdatedNote, outdatedClass, PubReportForm, RefReports,
+  MarkLink, MarkPanel, OutdatedNote, outdatedClass, PubLink, PubReportForm, RefReports,
 } from './OutdatedMarks';
 
 // The one piece of inline markup the item data carries: `**bold**`. It exists for mnemonics —
@@ -972,8 +972,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const Edit = readOnly ? () => null : EditLink;
 
   // Outdated marks, on the sections, subsections and the Numbers box only: never the page as a
-  // whole, the lead, See also or the references, which report the publication instead. An old
-  // revision shows none.
+  // whole, the lead, See also or the references. An old revision shows none.
   const stateOf = (id, block) => (readOnly ? null : sectionState(outdated, school, view, id, block));
   const markLink = (id, what, st) => !readOnly && (
     <MarkLink
@@ -984,10 +983,17 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       onTakeBack={() => markOutdated(school, view.slug, id, false).catch(() => {})}
     />
   );
-  const marked = (id, st) => (
+  // A section reports the publications it cites; the reference list only says what was reported.
+  const pubLink = (id, what, block) => !readOnly && citedRefs(view, block).length > 0 && (
+    <PubLink what={what} onOpen={() => setReporting(id)} />
+  );
+  const marked = (id, st, block) => (
     <>
       {marking === id && (
         <MarkPanel school={school} slug={view.slug} target={id} onClose={() => setMarking(null)} />
+      )}
+      {reporting === id && (
+        <PubReportForm school={school} cited={citedRefs(view, block)} onClose={() => setReporting(null)} />
       )}
       <OutdatedNote state={st} />
     </>
@@ -1239,8 +1245,9 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                         />
                       )}
                       {!editingThis && markLink(section.id, section.title, st)}
+                      {!editingThis && pubLink(section.id, section.title, section)}
                     </h2>
-                    {!editingThis && marked(section.id, st)}
+                    {!editingThis && marked(section.id, st, section)}
                     {editingThis ? (
                       <SectionEditor
                         section={section}
@@ -1275,8 +1282,9 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                               />
                             )}
                             {!editingSub && markLink(sub.id, sub.title, subSt)}
+                            {!editingSub && pubLink(sub.id, sub.title, sub)}
                           </h3>
-                          {!editingSub && marked(sub.id, subSt)}
+                          {!editingSub && marked(sub.id, subSt, sub)}
                           {editingSub ? (
                             <SectionEditor
                               section={sub}
@@ -1343,22 +1351,6 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                       {ref.pages ? `, ${ref.pages}` : ''}
                       {citedDate(ref) ? `, ${citedDate(ref)}` : ''}
                       {!readOnly && <RefReports reports={reportsFor(outdated, ref)} />}
-                      {!readOnly && reporting !== ref.n && (
-                        <span className="discuss-edit-link discuss-mark-link">
-                          <span className="discuss-edit-bracket">[</span>
-                          <button
-                            type="button"
-                            onClick={() => setReporting(ref.n)}
-                            aria-label={`Mark ${ref.work} as outdated`}
-                          >
-                            mark pub as outdated
-                          </button>
-                          <span className="discuss-edit-bracket">]</span>
-                        </span>
-                      )}
-                      {reporting === ref.n && (
-                        <PubReportForm school={school} cited={ref} onClose={() => setReporting(null)} />
-                      )}
                     </li>
                   ))}
                 </ol>

@@ -241,13 +241,13 @@ function Index() {
           )}
         </p>
 
-        <OutdatedPubs school={school} />
-
         <CourseSummary platform={platform.current} />
 
         <CourseFlow />
 
         <PostFlowChart current={platform.current} />
+
+        <OutdatedPubs school={school} />
 
         <section className="discuss-section">
           <h2>Stages</h2>

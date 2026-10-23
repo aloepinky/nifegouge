@@ -201,6 +201,19 @@ function refsIn(block) {
   return out;
 }
 
+// The references a section's own blocks cite, in reference order, one per work and section:
+// what its `[mark pub as outdated]` offers.
+export function citedRefs(item, block) {
+  const ns = refsIn(block);
+  const seen = new Set();
+  return (item.references || []).filter((r) => {
+    const key = `${norm(r.work)}|${norm(r.loc)}`;
+    if (!ns.has(r.n) || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 // { level: 0..3, marks, notes, pubs } for one section, subsection or the Numbers box (`target`
 // 'numbers', `block` { refs } of every row). `marks` is readers' marks since the section was
 // last said to be up to date; `pubs` the reports that touch a reference it cites, made since.

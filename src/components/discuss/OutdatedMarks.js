@@ -97,15 +97,30 @@ const SCOPES = [
 
 const WORK_NAMES = WORKS.map((w) => w.work).sort((a, b) => a.localeCompare(b));
 
-// Report that a publication has been updated. From a reference the publication is that
-// reference's and the section and chapter are filled in from it; from the All Events page the
-// reader picks the publication and types the part.
+const refName = (r) => `${r.work}${r.loc ? `, ${r.loc}` : ''}`;
+const chapterLabel = (r) => {
+  const ch = r ? chapterOf(r) : null;
+  return ch ? ch.label : '';
+};
+
+// Report that a publication has been updated. From a section the reader picks one of the
+// references it cites (`cited`, none to pick when there is one) and the section and chapter are
+// filled in from it; from the All Events page the reader picks any publication and types the part.
 export function PubReportForm({ school, cited, onClose }) {
-  const chapter = cited ? chapterOf(cited) : null;
-  const [work, setWork] = useState(cited ? cited.work : '');
+  const refs = cited || [];
+  const [pick, setPick] = useState(0);
+  const ref = refs[pick] || null;
+  const [work, setWork] = useState(ref ? ref.work : '');
   const [scope, setScope] = useState('section');
-  const [section, setSection] = useState(cited ? cited.loc || '' : '');
-  const [chapterText, setChapterText] = useState(chapter ? chapter.label : '');
+  const [section, setSection] = useState(ref ? ref.loc || '' : '');
+  const [chapterText, setChapterText] = useState(chapterLabel(ref));
+  const choose = (i) => {
+    const r = refs[i];
+    setPick(i);
+    setWork(r.work);
+    setSection(r.loc || '');
+    setChapterText(chapterLabel(r));
+  };
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -149,9 +164,21 @@ export function PubReportForm({ school, cited, onClose }) {
         A new edition or change of a publication. Every section that cites the part that changed is
         marked outdated until someone brings it up to date.
       </p>
-      {cited ? (
-        <p className="discuss-pub-report-work">{work}</p>
-      ) : (
+      {refs.length === 1 && <p className="discuss-pub-report-work">{refName(ref)}</p>}
+      {refs.length > 1 && (
+        <div className="discuss-editor-field">
+          <label className="discuss-editor-label" htmlFor="pub-report-ref">Publication</label>
+          <select
+            id="pub-report-ref"
+            className="discuss-editor-select"
+            value={pick}
+            onChange={(e) => choose(Number(e.target.value))}
+          >
+            {refs.map((r, i) => <option key={r.n} value={i}>{refName(r)}</option>)}
+          </select>
+        </div>
+      )}
+      {!refs.length && (
         <div className="discuss-editor-field">
           <label className="discuss-editor-label" htmlFor="pub-report-work">Publication</label>
           <select
@@ -233,7 +260,20 @@ export function PubReportForm({ school, cited, onClose }) {
   );
 }
 
-// `[mark pub as outdated]` on a reference, and the reports already made against it.
+// `[mark pub as outdated]` beside a section's heading, for the publications it cites.
+export function PubLink({ what, onOpen }) {
+  return (
+    <span className="discuss-edit-link discuss-mark-link">
+      <span className="discuss-edit-bracket">[</span>
+      <button type="button" onClick={onOpen} aria-label={`Mark a publication ${what} cites as outdated`}>
+        mark pub as outdated
+      </button>
+      <span className="discuss-edit-bracket">]</span>
+    </span>
+  );
+}
+
+// The reports already made against a reference, on its line in the References list.
 export function RefReports({ reports }) {
   if (!reports.length) return null;
   return (
