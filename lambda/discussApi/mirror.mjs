@@ -14,7 +14,7 @@ import {
 //
 //   items/index.json      { generatedAt, items: [{ slug, title, rev, updatedAt, aircraft, school,
 //                           maneuver?, stub?, generated? }] }
-//   items/<slug>.json     { slug, rev, updatedAt, author, summary, item }
+//   items/<slug>.json     { slug, rev, updatedAt, contentUpdatedAt, author, summary, item }
 //   syllabi/index.json    { generatedAt, syllabi: [{ id, name, rev, updatedAt, aircraft, school }] }
 //   syllabi/<id>.json     { id, name, rev, updatedAt, aircraft, school, doc }
 //   jetlogs/index.json    { generatedAt, logs: [{ id, name, group, folder, mode, rev, updatedAt }] }
@@ -59,6 +59,8 @@ export function itemRecord(meta, row) {
     slug: splitItemId(meta.slug).slug,
     rev: row.rev,
     updatedAt: row.createdAt,
+    // The page's "Last updated": the newest revision that changed more than its gouge.
+    contentUpdatedAt: row.contentAt || row.createdAt,
     author: row.author || '',
     summary: row.summary || '',
     item: JSON.parse(row.docJson),

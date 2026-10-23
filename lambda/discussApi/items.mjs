@@ -11,6 +11,7 @@ import {
 import { checkItem, checkSlug } from './lint.mjs';
 import { relinkEvent } from './syllabi.mjs';
 import { itemId, splitItemId, schoolNs } from './namespace.mjs';
+import { clearOutdated, targetsOf } from './outdated.mjs';
 
 // Discuss item pages. Open editing: anyone may publish a revision, every revision is kept,
 // and a bad one is undone by restoring the one before it. What a revision records is who
@@ -122,11 +123,38 @@ export async function saveItemHandler(event) {
   const { key, meta } = await requireItem(school, slug);
   if (meta.latestRev !== baseRev) throw new HttpError(409, 'A newer revision exists', { rev: meta.latestRev });
 
+  // A revision that changes only the Random gouge leaves the page's "Last updated" where it
+  // was: the gouge is not the page's content, and a fact added yesterday says nothing about
+  // whether the sections are current.
+  const prev = await itemRevision(key, baseRev);
+  const contentAt = prev && sameContent(JSON.parse(prev.docJson), item)
+    ? (prev.contentAt || prev.createdAt)
+    : undefined;
+
   // No prose lint on the way in: the rules in discussRules.mjs are for the CLI, not for
   // refusing a student's edit. The shape check above is the gate.
-  const saved = await saveItem(key, baseRev, item, { author: cleanAuthor(body.author), summary });
+  const saved = await saveItem(key, baseRev, item, { author: cleanAuthor(body.author), summary, contentAt });
   await afterWrite(saved.meta, saved.row);
-  return ok({ slug, rev: saved.row.rev, updatedAt: saved.row.createdAt });
+  // The publisher said these sections are up to date (`clearOutdated`, '*' for the page).
+  const outdated = await clearOutdated(school, slug, body.clearOutdated);
+  return ok({
+    slug,
+    rev: saved.row.rev,
+    updatedAt: saved.row.createdAt,
+    contentUpdatedAt: saved.row.contentAt || saved.row.createdAt,
+    ...(outdated ? { outdated } : {}),
+  });
+}
+
+const withoutGouge = ({ gouge, ...rest }) => JSON.stringify(rest);
+const sameContent = (a, b) => withoutGouge(a) === withoutGouge(b);
+
+// The sections of a page's newest revision a reader can mark outdated (outdated.mjs).
+export async function pageTargets(school, slug) {
+  checkSlug(slug);
+  const { key } = await requireItem(school, slug);
+  const found = await newestItem(key);
+  return targetsOf(found ? JSON.parse(found.row.docJson) : null);
 }
 
 // A new page starts as a stub. With `link`, the event row that named it is pointed at it in

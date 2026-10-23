@@ -17,7 +17,7 @@ below is created once, by hand, in the AWS console for `us-east-2`.
 
 ## 1. DynamoDB
 
-Nine tables, on-demand capacity, everything else default. Create whichever does not exist yet:
+Ten tables, on-demand capacity, everything else default. Create whichever does not exist yet:
 
 | Table | Partition key | Sort key |
 |---|---|---|
@@ -30,10 +30,15 @@ Nine tables, on-demand capacity, everything else default. Create whichever does 
 | `QuestionSections` | `listId` (String) | `rev` (Number) |
 | `PageViews` | `day` (String) | `path` (String) |
 | `CourseRules` | `rulesId` (String) | `rev` (Number) |
+| `DiscussOutdated` | `id` (String) | (none) |
 
 `EPsLimitsScores` is the EPs/Limits leaderboard (`scores.mjs`): one row per finished run, keyed
 `NIFE#EPs`, `Primary#Limits` and so on, never deleted. Its sort key is a String, unlike the
 others.
+
+`DiscussOutdated` holds the outdated marks on discussion items and the publications readers
+have reported updated (`outdated.mjs`): one row per marked page, one per report, mirrored whole
+to `outdated/index.json`. A report made in error comes down with `hide-outdated-pub`.
 
 `PageViews` is the site's own page counter (`pageviews.mjs`): one row per page per Central
 day, plus a `#total` row, with `views` and `visitors`. Its sort key is a String too.
@@ -106,7 +111,8 @@ of that page (`arn:aws:iam::ACCOUNT_ID:role/...`), and the bucket name if you ch
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/NIFEQuestions",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/QuestionSections",
         "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/PageViews",
-        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/CourseRules"
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/CourseRules",
+        "arn:aws:dynamodb:us-east-2:ACCOUNT_ID:table/DiscussOutdated"
       ]
     },
     {

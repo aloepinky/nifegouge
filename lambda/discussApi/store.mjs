@@ -9,7 +9,7 @@ import { HttpError } from './http.mjs';
 // DiscussItems: partition `slug` (S), sort `rev` (N).
 //   rev 0      the meta row: { latestRev, title, flags: { maneuver?, stub?, generated?,
 //              aircraft, school }, hidden?, updatedAt }
-//   rev >= 1   a revision: { docJson, author, summary, createdAt, baseRev }
+//   rev >= 1   a revision: { docJson, author, summary, createdAt, baseRev, contentAt? }
 // A save is one transaction — put the revision, bump the meta row — so a lost race can never
 // leave a revision without its meta bump, and the meta row is the single answer to "which
 // revision is current".
@@ -229,7 +229,8 @@ function revisionStore({ table, key, noun, titleOf, flagsOf, takenMessage = 'Tha
     return row ? { meta: m, row } : null;
   }
 
-  function revisionRow(id, rev, doc, { author, summary, baseRev }) {
+  function revisionRow(id, rev, doc, { author, summary, baseRev, contentAt }) {
+    const createdAt = new Date().toISOString();
     return {
       [key]: id,
       rev,
@@ -239,7 +240,10 @@ function revisionStore({ table, key, noun, titleOf, flagsOf, takenMessage = 'Tha
       author: author || '',
       summary: summary || '',
       baseRev: baseRev == null ? rev - 1 : baseRev,
-      createdAt: new Date().toISOString(),
+      createdAt,
+      // When the content last changed, where this revision changed something else (an item's
+      // Random gouge). Absent means this revision's own time.
+      ...(contentAt && contentAt !== createdAt ? { contentAt } : {}),
     };
   }
 

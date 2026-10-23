@@ -45,6 +45,7 @@ export const CONFIG = {
   questionSectionsTable: process.env.QUESTION_SECTIONS_TABLE || 'QuestionSections',
   courseRulesTable: process.env.COURSE_RULES_TABLE || 'CourseRules',
   pageViewsTable: process.env.PAGEVIEWS_TABLE || 'PageViews',
+  outdatedTable: process.env.OUTDATED_TABLE || 'DiscussOutdated',
   bucket: process.env.DISCUSS_BUCKET || 'pinksheetmafia-discuss',
   // Where the browser reads the mirror. Overridable so a dev server can point at itself.
   mirrorUrl: process.env.DISCUSS_MIRROR_URL

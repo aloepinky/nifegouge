@@ -6,8 +6,11 @@ import {
 import {
   getItemHandler, itemHistoryHandler, itemRevisionHandler, saveItemHandler, createItemHandler,
   restoreItemHandler, figureUploadUrlHandler, importItemsHandler, hideItemHandler,
-  setAuthorHandler,
+  setAuthorHandler, pageTargets,
 } from './items.mjs';
+import {
+  markOutdatedHandler, reportOutdatedPubHandler, hideOutdatedPubHandler, rebuildOutdatedMirror,
+} from './outdated.mjs';
 import {
   getJetLogHandler, jetLogHistoryHandler, jetLogRevisionHandler, publishJetLogHandler,
   saveJetLogHandler, restoreJetLogHandler, importJetLogsHandler, hideJetLogHandler,
@@ -60,10 +63,13 @@ import { pageviewHandler, pageStatsHandler } from './pageviews.mjs';
 //   GET  get-item?slug=                    -> { item }
 //   GET  item-history?slug=                -> { latestRev, revisions }
 //   GET  item-revision?slug=&rev=          -> { revision }
-//   POST save-item                         { slug, baseRev, item, author?, summary }  -> { rev, updatedAt }; 400; 409
+//   POST save-item                         { slug, baseRev, item, author?, summary, clearOutdated? } -> { rev, updatedAt, contentUpdatedAt, outdated? }; 400; 409
 //   POST create-item                       { slug, title, aircraft, school, sourcingLead?, author?, summary?, link? } -> { rev: 1, linked }
 //   POST restore-item                      { slug, rev, author?, summary? }           -> { rev }
 //   POST figure-upload-url                 { slug, name }                             -> { uploadUrl, publicUrl, key }
+//   POST mark-outdated                     { school, slug, target, on?, note?, voter }  -> { outdated }
+//   POST report-outdated-pub               { school, work, scope, part?, note?, voter } -> { already, outdated }
+//   POST hide-outdated-pub   (admin)       { id, hidden }                               -> { outdated }
 //   POST import-items        (admin)       { items, overwrite? }                      -> { imported, skipped }
 //   POST import-syllabus     (admin)       { id, name, doc, replace? }                -> { id, rev }
 //   POST hide-item           (admin)       { slug, hidden }
@@ -113,7 +119,7 @@ import { pageviewHandler, pageStatsHandler } from './pageviews.mjs';
 //   POST import-courserules  (admin)       { id, doc, author?, summary? }                -> { rev: 1 }; 409
 //   POST pageview                          { path, newDay, newPage } (text/plain beacon)  -> 204
 //   GET  page-stats?from=&to=  (stats)     X-Stats-Token or X-Admin-Token              -> { days: [{ day, views, visitors, pages }] }
-//   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'questions'|'courserules'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs, questions, courserules }
+//   POST rebuild-index      (admin)       { what?: 'items'|'syllabi'|'jetlogs'|'briefs'|'questions'|'courserules'|'outdated'|'all', remirror?: bool } -> { items, syllabi, jetlogs, briefs, questions, courserules }
 //   POST tag-program         (admin)       { aircraft, school, limit?, overwrite?, dryRun? } -> { items, syllabi, remaining }
 
 async function rebuildIndexHandler(event) {
@@ -148,6 +154,10 @@ async function rebuildIndexHandler(event) {
   if (what === 'courserules' || what === 'all') {
     out.courserules = { tw4: await remirrorCourseRules('tw4') };
   }
+  if (what === 'outdated' || what === 'all') {
+    const index = await rebuildOutdatedMirror();
+    out.outdated = { pages: Object.keys(index.pages).length, pubs: index.pubs.length };
+  }
   return reply(200, { success: true, ...out });
 }
 
@@ -163,6 +173,9 @@ const ROUTES = {
   'create-item': { method: 'POST', run: createItemHandler },
   'restore-item': { method: 'POST', run: restoreItemHandler },
   'figure-upload-url': { method: 'POST', run: figureUploadUrlHandler },
+  'mark-outdated': { method: 'POST', run: markOutdatedHandler(pageTargets) },
+  'report-outdated-pub': { method: 'POST', run: reportOutdatedPubHandler },
+  'hide-outdated-pub': { method: 'POST', admin: true, run: hideOutdatedPubHandler },
   'import-items': { method: 'POST', admin: true, run: importItemsHandler },
   'import-syllabus': { method: 'POST', admin: true, run: importSyllabusHandler },
   'hide-item': { method: 'POST', admin: true, run: hideItemHandler },
