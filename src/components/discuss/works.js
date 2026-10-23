@@ -22,9 +22,11 @@ export const WORKS = [
   { work: 'VT-28 SOP', date: '23OCT25' },
   { work: 'TW-4 Formation Supplement', date: 'JUN24' },
   { work: 'TW-4 Briefing Guide', date: '31MAR25' },
-  // Standardization board minutes, issued as lettered Read-and-Initials. Each wing set cancels
-  // the one before it (T cancels Q, which cancelled O), so only the newest is cited; the
-  // squadron sets cancel nothing and are cited each by its own letter.
+  // Standardization board minutes, issued as lettered Read-and-Initials. A set overrules an
+  // earlier one only where it says so; an item a later set does not carry forward still applies,
+  // so each set is cited by its own letter.
+  { work: 'TW-4 R&I O', date: '13NOV25' },
+  { work: 'TW-4 R&I Q', date: '27FEB26' },
   { work: 'TW-4 R&I T', date: '11JUN26' },
   { work: 'VT-28 R&I P', date: '18DEC25' },
   { work: 'VT-28 R&I R', date: '19FEB26' },
@@ -49,7 +51,7 @@ export const WORKS = [
   { work: 'Course Rules Brief', date: '26FEB26' },
   { work: 'Closed Tower Operating Agreement', date: '04AUG23' },
   { work: 'IFG', date: '05JUN26' },
-  { work: 'KNGP IFG', date: '05JUN26' },
+  { work: 'KNGP IFG', date: 'OCT26' },
   // NIFE. The names carry the school because three of these collide with a Primary
   // publication of the same short name — `IFG` and `Checklist Study Guide` are both taken
   // above, and there is more than one FTI, SOP and MCG on the site.
