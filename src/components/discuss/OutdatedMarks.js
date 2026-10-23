@@ -103,8 +103,8 @@ const chapterLabel = (r) => {
   return ch ? ch.label : '';
 };
 
-// Report that a publication has been updated. From a section the reader picks one of the
-// references it cites (`cited`, none to pick when there is one) and the section and chapter are
+// Report that a publication has been updated. From the References the reader picks one of the
+// page's references (`cited`, none to pick when there is one) and the section and chapter are
 // filled in from it; from the All Events page the reader picks any publication and types the part.
 export function PubReportForm({ school, cited, onClose }) {
   const refs = cited || [];
@@ -260,12 +260,12 @@ export function PubReportForm({ school, cited, onClose }) {
   );
 }
 
-// `[mark pub as outdated]` beside a section's heading, for the publications it cites.
-export function PubLink({ what, onOpen }) {
+// `[mark pub as outdated]` beside the References heading, for the publications the page cites.
+export function PubLink({ onOpen }) {
   return (
     <span className="discuss-edit-link discuss-mark-link">
       <span className="discuss-edit-bracket">[</span>
-      <button type="button" onClick={onOpen} aria-label={`Mark a publication ${what} cites as outdated`}>
+      <button type="button" onClick={onOpen} aria-label="Mark a publication this page cites as outdated">
         mark pub as outdated
       </button>
       <span className="discuss-edit-bracket">]</span>

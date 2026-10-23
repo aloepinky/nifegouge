@@ -790,7 +790,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const [publishing, setPublishing] = useState(false);
   // The section whose "mark outdated" box is open, and the reference whose report form is.
   const [marking, setMarking] = useState(null);
-  const [reporting, setReporting] = useState(null);
+  const [reporting, setReporting] = useState(false);
   const outdated = useOutdated();
   const { school } = useDiscussData();
   const [conflict, setConflict] = useState(false);
@@ -983,17 +983,10 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       onTakeBack={() => markOutdated(school, view.slug, id, false).catch(() => {})}
     />
   );
-  // A section reports the publications it cites; the reference list only says what was reported.
-  const pubLink = (id, what, block) => !readOnly && citedRefs(view, block).length > 0 && (
-    <PubLink what={what} onOpen={() => setReporting(id)} />
-  );
-  const marked = (id, st, block) => (
+  const marked = (id, st) => (
     <>
       {marking === id && (
         <MarkPanel school={school} slug={view.slug} target={id} onClose={() => setMarking(null)} />
-      )}
-      {reporting === id && (
-        <PubReportForm school={school} cited={citedRefs(view, block)} onClose={() => setReporting(null)} />
       )}
       <OutdatedNote state={st} />
     </>
@@ -1245,9 +1238,8 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                         />
                       )}
                       {!editingThis && markLink(section.id, section.title, st)}
-                      {!editingThis && pubLink(section.id, section.title, section)}
                     </h2>
-                    {!editingThis && marked(section.id, st, section)}
+                    {!editingThis && marked(section.id, st)}
                     {editingThis ? (
                       <SectionEditor
                         section={section}
@@ -1282,9 +1274,8 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                               />
                             )}
                             {!editingSub && markLink(sub.id, sub.title, subSt)}
-                            {!editingSub && pubLink(sub.id, sub.title, sub)}
                           </h3>
-                          {!editingSub && marked(sub.id, subSt, sub)}
+                          {!editingSub && marked(sub.id, subSt)}
                           {editingSub ? (
                             <SectionEditor
                               section={sub}
@@ -1342,7 +1333,15 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                 <h2>
                   References
                   <Edit onClick={() => open({ kind: 'page' })} what="the references" disabled={busy} />
+                  {!readOnly && !reporting && <PubLink onOpen={() => setReporting(true)} />}
                 </h2>
+                {reporting && (
+                  <PubReportForm
+                    school={school}
+                    cited={citedRefs(view, { refs: view.references.map((r) => r.n) })}
+                    onClose={() => setReporting(false)}
+                  />
+                )}
                 <ol className="discuss-ref-list">
                   {view.references.map((ref) => (
                     <li id={`ref-${ref.n}`} key={ref.n} value={ref.n}>

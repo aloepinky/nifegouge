@@ -197,7 +197,7 @@ matching in `discuss/outdated.js` (tested), UI in `discuss/OutdatedMarks.js`;
   browser, taken back by clicking again). Never the page, the lede, gouge, See also or a
   reference. The section is tinted `--outdated-1/2/3` by its count (capped at 3).
 - **A publication is reported updated** (`report-outdated-pub`): a section, a chapter or the
-  whole work, from a section's `[mark pub as outdated]` (a pick of the references it cites) or All Events' **Report an outdated
+  whole work, from the References heading's `[mark pub as outdated]` (a pick of the page's references) or All Events' **Report an outdated
   pub**. Nothing is stored on pages; `refMatches` tints every section citing that part.
   Chapters are read off `loc` (`Ch. N`, `§12.2.3`, AIM `§1-1-9`, an FTI's hundreds `§403`,
   appendices); a section report covers the sections numbered under it. Bad reports:

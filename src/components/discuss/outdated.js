@@ -201,8 +201,8 @@ function refsIn(block) {
   return out;
 }
 
-// The references a section's own blocks cite, in reference order, one per work and section:
-// what its `[mark pub as outdated]` offers.
+// The references a block cites, in reference order, one per work and section: given every
+// reference number, what the References' `[mark pub as outdated]` offers.
 export function citedRefs(item, block) {
   const ns = refsIn(block);
   const seen = new Set();
