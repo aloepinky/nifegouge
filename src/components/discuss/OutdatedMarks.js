@@ -82,7 +82,7 @@ export function OutdatedNote({ state }) {
   }
   for (const p of state.pubs) {
     const note = (p.notes || []).length ? `: “${p.notes[p.notes.length - 1]}”` : '';
-    parts.push(`${reportName(p)} reported updated${note}`);
+    parts.push(`${reportName(p)} reportedly updated${note}`);
   }
   return <p className="discuss-outdated-note">{parts.join('. ')}.</p>;
 }
@@ -162,7 +162,7 @@ export function PubReportForm({ school, cited, onClose }) {
     <div className="discuss-editor discuss-pub-report" role="group" aria-label="Report an outdated publication">
       <p className="discuss-editor-hint">
         A new edition or change of a publication. Every section that cites the part that changed is
-        marked outdated until someone brings it up to date.
+        marked outdated until someone updates it.
       </p>
       {refs.length === 1 && <p className="discuss-pub-report-work">{refName(ref)}</p>}
       {refs.length > 1 && (
@@ -278,7 +278,7 @@ export function RefReports({ reports }) {
   if (!reports.length) return null;
   return (
     <span className="discuss-ref-outdated">
-      {' '}Reported updated: {reports.map(reportName).join(', ')}.
+      {' '}Reportedly updated: {reports.map(reportName).join(', ')}.
     </span>
   );
 }
@@ -292,7 +292,7 @@ export function OutdatedPubs({ school }) {
     <div className="discuss-outdated-pubs">
       {mine.length > 0 && (
         <p className="discuss-outdated-pubs-list">
-          Reported updated:{' '}
+          Reportedly updated:{' '}
           {mine.map((p, i) => (
             <React.Fragment key={p.id}>
               {i > 0 && ', '}
