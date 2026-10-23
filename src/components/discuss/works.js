@@ -16,12 +16,20 @@ export const WORKS = [
   { work: 'FAM FTI', date: '22OCT21' },
   { work: 'I FTI', date: '19AUG26' },
   { work: 'VNAV FTI', date: '29JUL26' },
-  { work: 'F FTI', date: '06APR20' },
+  { work: 'F FTI', date: '08JUN26' },
   { work: 'TW-4 SOP', date: '05MAY25' },
   { work: 'VT-27 SOP', date: '12MAR26' },
   { work: 'VT-28 SOP', date: '23OCT25' },
   { work: 'TW-4 Formation Supplement', date: 'JUN24' },
   { work: 'TW-4 Briefing Guide', date: '31MAR25' },
+  // Standardization board minutes, issued as lettered Read-and-Initials. Each wing set cancels
+  // the one before it (T cancels Q, which cancelled O), so only the newest is cited; the
+  // squadron sets cancel nothing and are cited each by its own letter.
+  { work: 'TW-4 R&I T', date: '11JUN26' },
+  { work: 'VT-28 R&I P', date: '18DEC25' },
+  { work: 'VT-28 R&I R', date: '19FEB26' },
+  { work: 'VT-28 R&I S', date: '12MAY26' },
+  { work: 'VT-28 R&I V', date: '31AUG26' },
   // Whiting Field. The VT-2 handouts are the SOP's Enclosures (2) to (4) and print only a
   // month; the INAV and Formation ones are still headed 3710.3H. `TW-5 SOP` is the FWOP,
   // COMTRAWINGFIVEINST 3710.2Z, dated by its cover's change (Ch 6, November 2025).
@@ -37,6 +45,9 @@ export const WORKS = [
   { work: 'VT-6 Standards', date: '13AUG25' },
   { work: 'Checklist Study Guide', date: '31MAR25' },
   { work: 'Course Rules Manual', date: '20FEB25' },
+  // The wing's G0201 course rules brief, which carries board changes the manual does not yet.
+  { work: 'Course Rules Brief', date: '26FEB26' },
+  { work: 'Closed Tower Operating Agreement', date: '04AUG23' },
   { work: 'IFG', date: '05JUN26' },
   { work: 'KNGP IFG', date: '05JUN26' },
   // NIFE. The names carry the school because three of these collide with a Primary
@@ -113,6 +124,8 @@ export const WORKS = [
   { work: 'FAA Order 8260.3', date: '01JUL24' },
   { work: 'National SAR Supplement', date: '23APR18' },
   { work: 'CNAF 3710', date: '07FEB25' },
+  { work: 'CNAF 1542.7', date: '01SEP21' },
+  { work: 'CNATRA TA Manual', date: '28MAY26' },
   { work: 'Delta JPPT', date: '15JUL24' },
   { work: 'Echo JPPT', date: '24APR26' },
 ];

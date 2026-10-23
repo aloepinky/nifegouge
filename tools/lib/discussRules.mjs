@@ -635,6 +635,10 @@ export const RETIRED = [
     pattern: /\binverse[- ]C\b/i,
     why: 'the inverse C circling icon was removed from charts in August 2025; the six-row radii table by category and circling MDA is the only current one',
   },
+  {
+    pattern: /\btoolbox that includes CRM\b/i,
+    why: 'the FAM FTI §109 framing; the crm page takes CNAF 1542.7D Encl (2): TEM is the execution tool for CRM, CRM the foundational skill set',
+  },
 ];
 
 // Every rendered string plus the table cells and alt text textsOf leaves out, since a retired
