@@ -3,6 +3,7 @@
 Emails the weekly community-activity report every Sunday at 1800 Central: what needs the admin
 (entries removed or one vote from removal, live questions at −10, pending questions), running
 totals with the change since the last report, discussion-page, syllabus, brief and jet log edits,
+sections marked outdated and publications reported updated (new reports also under Needs you),
 NIFE questions submitted and decided, documents and links added, leaderboard runs and new
 all-time records, and the votes cast since the last report. Totals and vote counts are kept in
 the snapshot. Your own saves and the seed
@@ -17,7 +18,9 @@ Deployed by `.github/workflows/deploy-lambda.yml` like the others. Created by ha
   `REPORT_BUCKET`.
   The Site traffic section reads `PageViews` with `dynamodb:Query` (added for it); without that
   grant the section says the counts are unavailable and the rest of the report goes out.
-- **Role** `weeklyReport-role`, inline policy `weeklyReport`: `dynamodb:Scan` on the nine tables it
+  The Outdated marks section scans `DiscussOutdated` the same way (added 2026-10-23), and reads
+  section headings from the public mirror over HTTPS (`DISCUSS_MIRROR` overrides the bucket URL).
+- **Role** `weeklyReport-role`, inline policy `weeklyReport`: `dynamodb:Scan` on the ten tables it
   reads, get/put on `pinksheetmafia-reports/weekly/*`, `ses:SendEmail` on the two identities below, logs.
   It cannot write to any table.
 - **Bucket** `pinksheetmafia-reports`, private (all public access blocked). Holds

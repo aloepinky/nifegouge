@@ -20,8 +20,11 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 // A discuss page's stored key is `<school>/<slug>` (lambda/discussApi/namespace.mjs); the
 // school's namespace is its route prefix on the site.
-const DISCUSS_BASE = { primary: '/primary/discuss', nife: '/nife/discuss', advanced: '/t44c/discuss', 't-54a': '/t54a/discuss' };
-const SCHOOL_NAME = { primary: 'Primary', nife: 'NIFE', advanced: 'T-44C', 't-54a': 'T-54A' };
+const DISCUSS_BASE = { primary: '/primary/discuss', nife: '/nife/discuss', advanced: '/t44c/discuss', 't-54a': '/t54a/discuss', 'th-73a': '/th73a/discuss' };
+const SCHOOL_NAME = { primary: 'Primary', nife: 'NIFE', advanced: 'T-44C', 't-54a': 'T-54A', 'th-73a': 'TH-73A' };
+// The public mirror the site reads, for the headings of sections marked outdated: a mark stores
+// only the section's id.
+const MIRROR = process.env.DISCUSS_MIRROR || 'https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com';
 function pageUrl(key) {
   const [ns, slug] = key.includes('/') ? key.split('/') : ['primary', key];
   return `${SITE}${DISCUSS_BASE[ns] || '/primary/discuss'}/${slug}`;
@@ -133,10 +136,37 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
     }
   }
 
+  // Outdated marks (lambda/discussApi/outdated.mjs): a row per marked page, a row per publication
+  // report. Like the page counts, a role without access leaves the section saying so.
+  async function outdatedRows() {
+    try {
+      return { rows: await scanAll('DiscussOutdated') };
+    } catch (error) {
+      return { rows: [], error: error.name || 'error' };
+    }
+  }
+
+  // A page's title and its sections' headings, from the mirror; null when it cannot be read.
+  async function pageHeadings(key) {
+    try {
+      const res = await fetch(`${MIRROR}/items/${key}.json`);
+      if (!res.ok) return null;
+      const { item } = await res.json();
+      const heads = { numbers: 'Numbers' };
+      for (const sec of item.sections || []) {
+        heads[sec.id] = sec.title;
+        for (const sub of sec.subsections || []) heads[sub.id] = sub.title;
+      }
+      return { title: item.title, heads };
+    } catch {
+      return null;
+    }
+  }
+
   // ---------------------------------------------------------------------------------------------
   // Gather
 
-  const [items, syllabi, briefs, jetLogs, sections, questions, docs, links, scores, views] = await Promise.all([
+  const [items, syllabi, briefs, jetLogs, sections, questions, docs, links, scores, views, outdated] = await Promise.all([
     revisions('DiscussItems', 'slug'),
     revisions('DiscussSyllabi', 'syllabusId', ['name']),
     revisions('Briefs', 'briefId'),
@@ -151,7 +181,10 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
       'upvotes', 'downvotes', 'outdatedUseful', 'outdatedObsolete', 'outdatedAt', 'outdatedNote']),
     scanAll('EPsLimitsScores', ['board', 'runId', 'playerName', 'designator', 'trainingClass', 'createdAt', 'split', 'elapsedTime']),
     traffic(),
+    outdatedRows(),
   ]);
+  const markRows = outdated.rows.filter((r) => String(r.id).startsWith('page#'));
+  const pubRows = outdated.rows.filter((r) => String(r.id).startsWith('pub#') && !r.hidden && r.n > 0);
 
   // ---------------------------------------------------------------------------------------------
   // Votes: the difference from the last run's totals
@@ -196,6 +229,10 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
     links: links.filter((l) => obsoleteLead(l) < REMOVE_AT).length,
     players: new Set(scores.map(playerKey)).size,
   };
+  if (!outdated.error) {
+    totals.outdated = markRows.reduce((n, r) => n + Object.values(r.marks || {}).filter((m) => m.n > 0).length, 0);
+    totals.pubReports = pubRows.length;
+  }
   const was = previous && previous.totals;
   const change = (k) => {
     if (!was || was[k] === undefined) return '';
@@ -227,6 +264,10 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
     if (pending.length) {
       lines.push({ text: `${plural(pending.length, 'pending question')} waiting for votes, the oldest since ${day(pending[0].submittedAt)}`, href: `${SITE}/nife/questions?admin` });
     }
+    // A publication report tints every section citing that part, on every page: worth a look.
+    for (const r of pubRows.filter((x) => inWeek(x.first))) {
+      lines.push({ text: `New publication report: ${r.work}${r.scope === 'pub' ? '' : ` ${r.part}`} (${r.scope === 'pub' ? 'whole publication' : r.scope}). If it is wrong, hide-outdated-pub with id ${String(r.id).slice(4)} takes it down.` });
+    }
     section('Needs you', lines, 'Nothing.');
   }
 
@@ -242,6 +283,9 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
       { text: `Docs: ${num(totals.docs)}${change('docs')}; useful links: ${num(totals.links)}${change('links')}` },
       { text: `Leaderboard players: ${num(totals.players)}${change('players')}` },
     ];
+    if (totals.outdated !== undefined) {
+      lines.push({ text: `Sections marked outdated: ${num(totals.outdated)}${change('outdated')}; publications reported updated: ${num(totals.pubReports)}${change('pubReports')}` });
+    }
     if (!was) lines.push({ text: 'Changes are shown from next week.', quiet: true });
     section('Totals', lines, '');
   }
@@ -305,6 +349,39 @@ export async function buildReport({ db, days = 7, since = null, until = new Date
     const mine = items.filter((r) => isOwn(r.author));
     if (mine.length) lines.push({ text: `Your own: ${plural(mine.length, 'edit')} to ${plural(new Set(mine.map((r) => r.id)).size, 'page')}.`, quiet: true });
     section('Discussion pages', lines, 'No edits.');
+  }
+
+  // Outdated marks: sections readers marked this week, publications reported updated, and the
+  // sections an edit said were up to date again (`cleared`).
+  {
+    const lines = [];
+    if (outdated.error) {
+      lines.push({ text: `Outdated marks unavailable (${outdated.error}).`, quiet: true });
+    } else {
+      const marked = [];
+      for (const row of markRows) {
+        for (const [target, m] of Object.entries(row.marks || {})) {
+          if (m.n > 0 && inWeek(m.at)) marked.push({ page: row.page, target, m });
+        }
+      }
+      marked.sort((a, b) => a.m.at.localeCompare(b.m.at));
+      const heads = new Map(await Promise.all([...new Set(marked.map((x) => x.page))].map(async (k) => [k, await pageHeadings(k)])));
+      for (const { page, target, m } of marked) {
+        const h = heads.get(page);
+        const notes = (m.notes || []).filter((x) => inWeek(x.at)).map((x) => `“${short(x.text, 80)}”`).join(' ');
+        lines.push({
+          text: `${day(m.at)}  ${h ? h.title : page}, ${(h && h.heads[target]) || target}: ${plural(m.n, 'mark')}${notes ? ` — ${notes}` : ''}`,
+          href: `${pageUrl(page)}#${target}`,
+        });
+      }
+      for (const r of pubRows.filter((x) => inWeek(x.at)).sort((a, b) => a.at.localeCompare(b.at))) {
+        const note = (r.notes || []).filter((x) => inWeek(x.at)).pop();
+        lines.push({ text: `${day(r.at)}  ${r.work}${r.scope === 'pub' ? '' : ` ${r.part}`} reportedly updated (${r.scope === 'pub' ? 'whole publication' : r.scope}, ${plural(r.n, 'reader')}${inWeek(r.first) ? '' : `, first ${day(r.first)}`})${note ? ` — “${short(note.text, 80)}”` : ''}` });
+      }
+      const cleared = markRows.reduce((n, r) => n + Object.values(r.cleared || {}).filter(inWeek).length, 0);
+      if (cleared) lines.push({ text: `${plural(cleared, 'section')} said up to date by an edit`, quiet: true });
+    }
+    section('Outdated marks', lines, 'None.');
   }
 
   // Syllabi, briefs, jet logs
