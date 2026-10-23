@@ -164,9 +164,13 @@ export function useItem(slug) {
   return { ...state, reload: () => setTick((t) => t + 1) };
 }
 
-// -> { slug, rev, updatedAt }
-export function saveItem(slug, baseRev, item, { author, summary }) {
-  return post('save-item', { slug, baseRev, item, author, summary, school: corpusSchool });
+// -> { slug, rev, updatedAt, contentUpdatedAt, outdated? }. `clearOutdated` names the sections
+// the publisher says are now up to date, which clears their outdated marks (outdated.js).
+export function saveItem(slug, baseRev, item, { author, summary, clearOutdated }) {
+  return post('save-item', {
+    slug, baseRev, item, author, summary, school: corpusSchool,
+    ...(clearOutdated && clearOutdated.length ? { clearOutdated } : {}),
+  });
 }
 
 // -> { slug, rev: 1, linked, syllabusRev?, linkError? }

@@ -187,6 +187,27 @@ Code in `src/components/discuss/` (route shell `Discuss.js`, `ItemPage.js`, `Eve
 - **Deploy**: one push to `main` deploys both Lambda and site. Function, tables, bucket and API
   route are created by hand once (`lambda/discussApi/README.md`).
 
+### Outdated marks
+
+The first step short of editing (since 2026-10-23). Ops in `lambda/discussApi/outdated.mjs`
+(table `DiscussOutdated`, PK `id`, mirrored whole to `outdated/index.json`); client store and
+matching in `discuss/outdated.js` (tested), UI in `discuss/OutdatedMarks.js`;
+`node tools/outdated-api-test.mjs` runs the ops against the fakes.
+- A reader marks a **section, subsection or the Numbers box** outdated (`mark-outdated`, one per
+  browser, taken back by clicking again). Never the page, the lede, gouge, See also or a
+  reference. The section is tinted `--outdated-1/2/3` by its count (capped at 3).
+- **A publication is reported updated** (`report-outdated-pub`): a section, a chapter or the
+  whole work, from a reference's `[mark pub as outdated]` or All Events' **Report an outdated
+  pub**. Nothing is stored on pages; `refMatches` tints every section citing that part.
+  Chapters are read off `loc` (`Ch. N`, `§12.2.3`, AIM `§1-1-9`, an FTI's hundreds `§403`,
+  appendices); a section report covers the sections numbered under it. Bad reports:
+  `hide-outdated-pub` (admin).
+- **Clearing**: the publish step lists the marked parts, the ones the edit changed ticked;
+  `save-item`'s `clearOutdated` zeroes their marks and records `cleared[id]`, so reports made
+  before it stop tinting. Nothing is deleted.
+- **Last updated** under the title is the mirror's `contentUpdatedAt`: a revision that changes
+  only the gouge keeps the previous one (`contentAt` on the revision row).
+
 ### Mounts and programs
 
 `Discuss` takes `base`, `school` and a built-in syllabus: Primary (`/primary/discuss`, Delta), NIFE

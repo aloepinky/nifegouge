@@ -22,6 +22,14 @@ import PageEditor from './edit/PageEditor';
 import { NWC_LABELS } from './nwc';
 import { citedDate } from './works';
 import { squadronsFor, isOthers, hasSeveralUnits, unitOf, readSquadron, writeSquadron } from './units';
+import { useDiscussData } from './DiscussData';
+import {
+  useOutdated, setOutdated, sectionState, numbersBlock, markedByMe, markOutdated, markedParts,
+  partChanged, reportsFor,
+} from './outdated';
+import {
+  MarkLink, MarkPanel, OutdatedNote, outdatedClass, PubReportForm, RefReports,
+} from './OutdatedMarks';
 
 // The one piece of inline markup the item data carries: `**bold**`. It exists for mnemonics —
 // the C-R-A-F-T of a clearance readback, the L-D-D-H-A of an approach setup — where the point
@@ -35,6 +43,14 @@ function inline(text) {
     // eslint-disable-next-line react/no-array-index-key
     i % 2 ? <strong key={i}>{part}</strong> : part
   ));
+}
+
+// "23 October 2026": the page's Last updated, a day rather than a moment.
+function longDate(iso) {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? ''
+    : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 // Superscript citation markers. `refs` is a list of reference numbers; each links to its
@@ -532,13 +548,15 @@ function Contents({ item, extra, hasSeeAlso, hasRefs, folded, onUnfold }) {
 
 // MOS: infoboxes in the lead section are right-aligned. Values only — a label and a
 // figure, nothing that reads as a sentence.
-function NumbersBox({ numbers, onEdit, busy }) {
+function NumbersBox({ numbers, onEdit, busy, mark, marked, className = '' }) {
   return (
-    <aside className="discuss-infobox" id="numbers" aria-label="Numbers">
+    <aside className={`discuss-infobox${className}`} id="numbers" aria-label="Numbers">
       <div className="discuss-infobox-head">
         Numbers
         {onEdit && <EditLink onClick={onEdit} what="the Numbers box" disabled={busy} />}
+        {mark}
       </div>
+      {marked}
       <table>
         <tbody>
           {numbers.map((n, i) => {
@@ -770,6 +788,11 @@ function ItemPage({ record, readOnly = false, banner = null }) {
     () => (!readOnly && location.state && location.state.write ? { kind: 'page' } : null)
   );
   const [publishing, setPublishing] = useState(false);
+  // The section whose "mark outdated" box is open, and the reference whose report form is.
+  const [marking, setMarking] = useState(null);
+  const [reporting, setReporting] = useState(null);
+  const outdated = useOutdated();
+  const { school } = useDiscussData();
   const [conflict, setConflict] = useState(false);
   const [conflictError, setConflictError] = useState(null);
   const [published, setPublished] = useState(false); // a publish just went through
@@ -876,7 +899,13 @@ function ItemPage({ record, readOnly = false, banner = null }) {
       };
       const result = await saveItem(item.slug, base.rev, next, { author, summary });
       rememberItem({
-        slug: item.slug, rev: result.rev, updatedAt: result.updatedAt, author, summary, item: next,
+        slug: item.slug,
+        rev: result.rev,
+        updatedAt: result.updatedAt,
+        contentUpdatedAt: result.contentUpdatedAt,
+        author,
+        summary,
+        item: next,
       });
     };
     try {
@@ -893,10 +922,12 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   // The draft has gone out: forget it here and let the store carry the new revision.
   const onPublished = (result) => {
     clearDraft(item.slug);
+    if (result.outdated) setOutdated(result.outdated);
     rememberItem({
       slug: item.slug,
       rev: result.rev,
       updatedAt: result.updatedAt,
+      contentUpdatedAt: result.contentUpdatedAt,
       author: result.author,
       summary: result.summary,
       item: clone(view),
@@ -939,6 +970,33 @@ function ItemPage({ record, readOnly = false, banner = null }) {
 
   // Every `[edit]` on the page goes through here, so a read-only rendering has none.
   const Edit = readOnly ? () => null : EditLink;
+
+  // Outdated marks, on the sections, subsections and the Numbers box only: never the page as a
+  // whole, the lead, See also or the references, which report the publication instead. An old
+  // revision shows none.
+  const stateOf = (id, block) => (readOnly ? null : sectionState(outdated, school, view, id, block));
+  const markLink = (id, what, st) => !readOnly && (
+    <MarkLink
+      mine={markedByMe(school, view.slug, id, st && st.entry)}
+      what={what}
+      onOpen={() => setMarking(id)}
+      // A failed take-back leaves the mark as it was, which the page already shows.
+      onTakeBack={() => markOutdated(school, view.slug, id, false).catch(() => {})}
+    />
+  );
+  const marked = (id, st) => (
+    <>
+      {marking === id && (
+        <MarkPanel school={school} slug={view.slug} target={id} onClose={() => setMarking(null)} />
+      )}
+      <OutdatedNote state={st} />
+    </>
+  );
+  // What the publish step offers to clear: every marked part, ticked where the edit changed it.
+  const markedNow = readOnly ? [] : markedParts(outdated, school, item)
+    .map((m) => ({ ...m, changed: partChanged(item, view, m.id) }));
+  const lastUpdated = record.contentUpdatedAt || record.updatedAt;
+  const numbersState = stateOf('numbers', numbersBlock(view));
 
   const fromEvent = s.getEvent(params.get('from'));
   const position = s.positionIn(fromEvent, view.slug);
@@ -998,6 +1056,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
           slug={item.slug}
           baseRev={draftBase}
           item={view}
+          marked={markedNow}
           onPublished={onPublished}
           onConflict={() => { setConflictError(null); setConflict(true); }}
           onCancel={() => setPublishing(false)}
@@ -1035,6 +1094,9 @@ function ItemPage({ record, readOnly = false, banner = null }) {
           <Edit onClick={() => open({ kind: 'page' })} what="this page" label="edit page" disabled={busy} />
           {!readOnly && <HeadLink to={historyTo} label="history" />}
         </h1>
+        {!readOnly && lastUpdated && (
+          <p className="discuss-updated">Last updated {longDate(lastUpdated)}</p>
+        )}
         {briefedIn.length > 0 && (
           <p className="discuss-briefed-in">
             Briefed on{' '}
@@ -1126,6 +1188,9 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                   numbers={view.numbers}
                   onEdit={readOnly ? null : () => open({ kind: 'numbers' })}
                   busy={busy}
+                  mark={markLink('numbers', 'the Numbers box', numbersState)}
+                  marked={marked('numbers', numbersState)}
+                  className={outdatedClass(numbersState)}
                 />
               ))}
             {view.lede && <p className="discuss-lede-para">{inline(view.lede)}</p>}
@@ -1140,6 +1205,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
             {(view.sections || []).map((section) => {
               const collapsed = sectionCite(section);
               const editingThis = editing && editing.kind === 'section' && editing.id === section.id;
+              const st = stateOf(section.id, section);
               const picker = firstLocal === section && !editing
                 && <SquadronPicker value={mine} onChange={pickSquadron} squadrons={squadrons} />;
               if (folded.has(section.id)) {
@@ -1162,7 +1228,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
               return (
                 <React.Fragment key={section.id}>
                   {picker}
-                  <section className="discuss-section" id={section.id}>
+                  <section className={`discuss-section${outdatedClass(st)}`} id={section.id}>
                     <h2>
                       {section.title}
                       {!editingThis && (
@@ -1172,7 +1238,9 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                           disabled={busy}
                         />
                       )}
+                      {!editingThis && markLink(section.id, section.title, st)}
                     </h2>
+                    {!editingThis && marked(section.id, st)}
                     {editingThis ? (
                       <SectionEditor
                         section={section}
@@ -1194,8 +1262,9 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                       // carries `refs` renders no citation at all: the parent's SOURCE line is
                       // absent and the blocks inside it were never given markers of their own.
                       const subCite = collapsed ? null : sectionCite(sub);
+                      const subSt = stateOf(sub.id, sub);
                       return (
-                        <section className="discuss-subsection" id={sub.id} key={sub.id}>
+                        <section className={`discuss-subsection${outdatedClass(subSt)}`} id={sub.id} key={sub.id}>
                           <h3>
                             {sub.title}
                             {!editingSub && (
@@ -1205,7 +1274,9 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                                 disabled={busy}
                               />
                             )}
+                            {!editingSub && markLink(sub.id, sub.title, subSt)}
                           </h3>
+                          {!editingSub && marked(sub.id, subSt)}
                           {editingSub ? (
                             <SectionEditor
                               section={sub}
@@ -1271,6 +1342,23 @@ function ItemPage({ record, readOnly = false, banner = null }) {
                       {ref.loc ? `, ${ref.loc}` : ''}
                       {ref.pages ? `, ${ref.pages}` : ''}
                       {citedDate(ref) ? `, ${citedDate(ref)}` : ''}
+                      {!readOnly && <RefReports reports={reportsFor(outdated, ref)} />}
+                      {!readOnly && reporting !== ref.n && (
+                        <span className="discuss-edit-link discuss-mark-link">
+                          <span className="discuss-edit-bracket">[</span>
+                          <button
+                            type="button"
+                            onClick={() => setReporting(ref.n)}
+                            aria-label={`Mark ${ref.work} as outdated`}
+                          >
+                            mark pub as outdated
+                          </button>
+                          <span className="discuss-edit-bracket">]</span>
+                        </span>
+                      )}
+                      {reporting === ref.n && (
+                        <PubReportForm school={school} cited={ref} onClose={() => setReporting(null)} />
+                      )}
                     </li>
                   ))}
                 </ol>

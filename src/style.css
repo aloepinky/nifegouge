@@ -279,6 +279,12 @@
   --sys-hyds-advisory-text: #1a5a1a;
   --sys-hyds-manifold-text: #7a5520;
   --sys-hyds-manifold-line: #6a4a18;
+  /* Discussion item sections marked outdated: one, two, three or more marks. */
+  --outdated-1: #fdf4f4;
+  --outdated-2: #fae6e6;
+  --outdated-3: #f5d3d3;
+  --outdated-edge: #e3a5a5;
+  --outdated-ink: #9b2c2c;
 }
 
 :root[data-theme="dark"] {
@@ -532,6 +538,11 @@
   --sys-hyds-advisory-text: #7fc27f;
   --sys-hyds-manifold-text: #c9a86a;
   --sys-hyds-manifold-line: #8a6a30;
+  --outdated-1: #2a2427;
+  --outdated-2: #35252a;
+  --outdated-3: #45272d;
+  --outdated-edge: #8a4a4a;
+  --outdated-ink: #ed9797;
 }
 
 /* Global Styles */
@@ -9208,3 +9219,60 @@ button.epl-modal-close:hover {
   font-size: 13px;
   color: var(--ink-4a6674);
 }
+
+/* ===================================================================
+   Outdated marks on discussion items (discuss/OutdatedMarks.js)
+   A marked section takes a faint red wash that deepens with the count,
+   and a line under its heading saying who marked it and why.
+   =================================================================== */
+.discuss-outdated {
+  border-left: 3px solid var(--outdated-edge);
+  padding: 6px 10px 8px;
+  margin-left: 0;
+  border-radius: 0 3px 3px 0;
+}
+.discuss-outdated--1 { background: var(--outdated-1); }
+.discuss-outdated--2 { background: var(--outdated-2); }
+.discuss-outdated--3 { background: var(--outdated-3); }
+.discuss-infobox.discuss-outdated { margin-left: 24px; padding: 0; border-left-width: 3px; }
+.discuss-infobox.discuss-outdated table { background: transparent; }
+.discuss-infobox .discuss-outdated-note,
+.discuss-infobox .discuss-mark-panel { margin: 6px 8px; }
+
+.discuss-outdated-note {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--outdated-ink);
+}
+
+.discuss-mark-panel {
+  margin: 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 480px;
+}
+
+.discuss-infobox-head .discuss-mark-link { float: right; margin-left: 4px; }
+
+.discuss-updated {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.discuss-ref-outdated { color: var(--outdated-ink); }
+.discuss-ref-list .discuss-mark-link { font-size: 12px; margin-left: 6px; }
+.discuss-ref-list .discuss-pub-report { margin: 8px 0 12px; }
+
+.discuss-pub-report { max-width: 560px; }
+.discuss-pub-report-work { margin: 0 0 10px; font-weight: 600; color: var(--ink-strong); }
+.discuss-pub-report-scope { border: none; padding: 0; margin: 0 0 14px; }
+.discuss-pub-report-choice { display: inline-block; margin-right: 16px; font-size: 14px; color: var(--ink); }
+
+.discuss-outdated-pubs { margin: 0 0 16px; }
+.discuss-outdated-pubs-list { margin: 0 0 8px; font-size: 13px; color: var(--outdated-ink); }
+.discuss-outdated-pubs .discuss-pub-report { margin-top: 8px; }
+
+.discuss-publish-outdated { border: none; padding: 0; }
+.discuss-publish-outdated-row { display: block; font-size: 14px; margin: 4px 0; color: var(--ink); }

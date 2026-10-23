@@ -8,9 +8,20 @@ import { saveItem, getAuthor, setAuthor } from '../discussApi';
 //
 // `onPublished({ rev, updatedAt, lint })` and `onConflict(rev)` are the two ways out besides
 // Cancel. The draft is untouched by this panel; ItemPage decides what to do with it.
-function PublishDialog({ slug, baseRev, item, onPublished, onConflict, onCancel }) {
+//
+// `marked` lists the parts of the page readers have marked outdated ({ id, title, changed }).
+// The publisher ticks the ones the edit brings up to date, which clears their marks; a part the
+// edit changed starts ticked.
+function PublishDialog({ slug, baseRev, item, marked = [], onPublished, onConflict, onCancel }) {
   const [author, setAuthorField] = useState(getAuthor);
   const [summary, setSummary] = useState('');
+  const [clearing, setClearing] = useState(() => new Set(marked.filter((m) => m.changed).map((m) => m.id)));
+  const toggle = (id) => setClearing((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    return next;
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   useEscape(onCancel);
@@ -24,7 +35,8 @@ function PublishDialog({ slug, baseRev, item, onPublished, onConflict, onCancel 
     const name = author.trim();
     setAuthor(name);
     try {
-      const result = await saveItem(slug, baseRev, item, { author: name, summary: summary.trim() });
+      const clearOutdated = marked.map((m) => m.id).filter((id) => clearing.has(id));
+      const result = await saveItem(slug, baseRev, item, { author: name, summary: summary.trim(), clearOutdated });
       onPublished({ ...result, author: name, summary: summary.trim() });
     } catch (err) {
       if (err.status === 409) {
@@ -60,6 +72,20 @@ function PublishDialog({ slug, baseRev, item, onPublished, onConflict, onCancel 
           onKeyDown={(e) => { if (e.key === 'Enter') publish(); }}
         />
       </div>
+      {marked.length > 0 && (
+        <fieldset className="discuss-editor-field discuss-publish-outdated">
+          <legend className="discuss-editor-label">Marked outdated</legend>
+          <p className="discuss-editor-hint">
+            Tick the parts your edit brings up to date. Their outdated marks are cleared.
+          </p>
+          {marked.map((m) => (
+            <label key={m.id} className="discuss-publish-outdated-row">
+              <input type="checkbox" checked={clearing.has(m.id)} onChange={() => toggle(m.id)} />
+              {' '}{m.title} is up to date
+            </label>
+          ))}
+        </fieldset>
+      )}
       {error && <p className="discuss-editor-warn">{error}</p>}
       <div className="discuss-editor-buttons">
         <button

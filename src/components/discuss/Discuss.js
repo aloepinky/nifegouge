@@ -19,6 +19,7 @@ import { DiscussDataProvider, useDiscussData, useBuiltInSyllabus } from './Discu
 import { programLabel, DEFAULT_PROGRAM } from './program';
 import { isSchool } from '../programs';
 import { SelectedSyllabusContext, recalledSyllabus, rememberSyllabus } from './RandomPage';
+import { OutdatedPubs } from './OutdatedMarks';
 
 // The upload page and the flow editor carry the PDF parser and pdf.js, so they load only when
 // someone opens them.
@@ -215,6 +216,7 @@ function PostFlowChart({ current }) {
 function Index() {
   const s = useSyllabus();
   const platform = usePlatform();
+  const { school } = useDiscussData();
   // A syllabus small enough not to need the JPPT's course-flow chart carries no `flow`, and
   // CourseFlow renders nothing for it. The sentence about correcting the chart would then be
   // pointing at something that is not on the page.
@@ -238,6 +240,8 @@ function Index() {
             </>
           )}
         </p>
+
+        <OutdatedPubs school={school} />
 
         <CourseSummary platform={platform.current} />
 

@@ -186,3 +186,20 @@ export function setAuthor(name) {
     // Private mode. The name still goes out with this publish.
   }
 }
+
+// This browser's voter id: one vote per browser, never per address (a squadron shares one).
+// The same key the NIFE questions' votes use, so a browser is one voter across the site.
+const VOTER_KEY = 'qVoterId';
+
+export function voterId() {
+  try {
+    let id = localStorage.getItem(VOTER_KEY);
+    if (!id) {
+      id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem(VOTER_KEY, id);
+    }
+    return id;
+  } catch {
+    return '';
+  }
+}
