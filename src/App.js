@@ -64,6 +64,7 @@ const TH73ADiscuss = page(() => import('./components/TH73ADiscuss.js'));
 const BriefsPage = page(() => import('./components/briefs/BriefsPage'));
 const NIFEAbout = page(() => import('./components/NIFEAbout.js'));
 const CourseRules = page(() => import('./components/TW4CourseRules.js'));
+const PracticeFlight = page(() => import('./components/practice/PracticeFlight.js'));
 const Systems = page(() => import('./components/systems/Systems.js'));
 const Discuss = page(() => import('./components/discuss/Discuss.js'));
 const TW4JetLog = page(() => import('./components/TW4JetLog.js'));
@@ -158,6 +159,7 @@ function App() {
         <Route path="/primary/docs" element={<TW4Docs />} />
         <Route path="/primary/briefs/*" element={<BriefsPage />} />
         <Route path="/primary/courserules" element={<CourseRules />} />
+        <Route path="/primary/practice/*" element={<PracticeFlight />} />
         <Route path="/primary/systems" element={<Systems />} />
         <Route path="/primary/systems/:tab" element={<Systems />} />
         <Route path="/primary/discuss/*" element={<Discuss />} />

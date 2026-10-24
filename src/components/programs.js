@@ -65,7 +65,8 @@ export const programName = (p) => `${p.label} - ${p.aircraft}`;
 // the two can never disagree about what a program has or what order it comes in.
 //
 // A tab marked `draft` is shown on a dev server and left out of a production build, the way a
-// draft program is. The page it points at is unrouted there too.
+// draft program is. The page it points at is unrouted there too. A tab marked `unlisted` is
+// never in the navigation, here or live, but its page is served: it is reached by link only.
 export const PROGRAM_TABS = {
   nife: [
     { to: '/nife/about', label: 'About' },
@@ -83,6 +84,7 @@ export const PROGRAM_TABS = {
     { to: '/primary/discuss', label: 'Discussion Items' },
     { to: '/primary/briefs', label: 'Briefs/TOLD' },
     { to: '/primary/courserules', label: 'TW4 Course Rules' },
+    { to: '/primary/practice', label: 'Practice Flight', unlisted: true },
     { to: '/primary/systems', label: 'Systems' },
     { to: '/primary/jetlog', label: 'Jet Log' },
   ],
@@ -108,8 +110,9 @@ export const PROGRAM_TABS = {
   ],
 };
 
-// The tabs of a program that are shown here: everything but a draft one on the live site.
-export const shownTabs = (tabs) => (tabs || []).filter((t) => !t.draft || DRAFT);
+// The tabs of a program that are shown here: everything but an unlisted one, and a draft one
+// on the live site.
+export const shownTabs = (tabs) => (tabs || []).filter((t) => !t.unlisted && (!t.draft || DRAFT));
 
 
 const norm = (text) => (text || '').trim().toLowerCase();

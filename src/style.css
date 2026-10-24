@@ -9520,6 +9520,713 @@ button.epl-modal-close:hover {
   color: var(--ink-4a6674);
 }
 
+/* Practice Flight (/primary/practice) */
+.pf-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 16px 40px;
+  color: var(--ink);
+}
+
+.pf-status {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.pf-status--ep {
+  border-color: var(--bad-text);
+}
+
+.pf-phases {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pf-phases li {
+  flex: none;
+}
+
+.pf-phase {
+  font: inherit;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: var(--ink-faint);
+  background: transparent;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.pf-phase:hover:not(:disabled) {
+  color: var(--ink-accent);
+  border-color: var(--line-accent);
+}
+
+.pf-phase:disabled {
+  cursor: default;
+}
+
+.pf-phase--done {
+  color: var(--ink-muted);
+  background: var(--wash);
+}
+
+.pf-phase--now {
+  color: var(--on-brand);
+  background: var(--btn);
+  border-color: var(--btn);
+}
+
+.pf-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pf-status-text {
+  font-size: 14px;
+  line-height: 1.4;
+  min-width: 0;
+}
+
+.pf-status-label {
+  display: inline-block;
+  width: 3em;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.pf-status-where {
+  color: var(--ink-muted);
+}
+
+.pf-status-buttons {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+/* A course rule said from memory: the marked words blank until revealed. */
+.pf-rule {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.pf-rule p {
+  margin: 0 0 6px;
+}
+
+.pf-rule p.pf-rule-sub {
+  margin-left: 1.5em;
+}
+
+.pf-rule-heading {
+  margin: 8px 0 2px;
+  text-decoration: underline;
+}
+
+.pf-rule-blank {
+  display: inline-block;
+  min-width: 2em;
+  border-bottom: 2px solid var(--line-strong);
+  line-height: 1.1;
+}
+
+.pf-rule-word {
+  font-weight: 700;
+  color: var(--ink-accent);
+}
+
+/* What the IP or a station says back: its own step, said large. */
+.pf-reply {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--line-accent);
+  background: var(--wash);
+}
+
+.pf-reply-who {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.pf-reply-text {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+/* High work: where the last maneuver left you, and what the next one needs. */
+.pf-setup {
+  margin: 0 0 8px;
+}
+
+.pf-setup-alt {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink-strong);
+  margin-bottom: 4px;
+}
+
+.pf-flightcard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 18px;
+  margin: 6px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.pf-flightcard div {
+  display: flex;
+  gap: 6px;
+}
+
+.pf-flightcard dt {
+  color: var(--ink-muted);
+}
+
+.pf-flightcard dd {
+  margin: 0;
+  color: var(--ink-strong);
+}
+
+.pf-skipped {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--wash);
+  font-size: 13px;
+}
+
+.pf-skipped-title {
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.pf-btn {
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.pf-btn:hover:not(:disabled) {
+  background: var(--wash);
+}
+
+.pf-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pf-btn--go {
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--on-brand);
+}
+
+.pf-btn--go:hover:not(:disabled) {
+  background: var(--btn-2);
+}
+
+.pf-btn--ep {
+  color: var(--bad-text);
+  border-color: var(--bad-text);
+}
+
+.pf-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.pf-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pf-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.pf-card--ep {
+  background: var(--bad-bg);
+}
+
+.pf-card-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: var(--ink-strong);
+}
+
+.pf-recent {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.pf-line {
+  display: flex;
+  gap: 8px;
+  padding: 1px 0;
+}
+
+.pf-who {
+  flex: none;
+  min-width: 4.5em;
+  font-size: 11px;
+  line-height: 1.8;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+}
+
+.pf-said {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pf-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.pf-prompt-context {
+  font-size: 13px;
+  color: var(--ink-muted);
+  flex-basis: 100%;
+}
+
+.pf-challenge {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.pf-channel {
+  font-size: 12px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: var(--wash);
+  color: var(--ink-accent);
+}
+
+.pf-when {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.pf-answer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-input {
+  flex: 1 1 260px;
+  min-width: 0;
+  font: inherit;
+  font-size: 16px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.pf-feedback,
+.pf-hint,
+.pf-shown {
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+
+.pf-feedback--partial {
+  color: var(--warn-text);
+}
+
+.pf-feedback--wrong {
+  color: var(--bad-text);
+}
+
+.pf-hint {
+  font-family: monospace;
+  color: var(--ink-muted);
+}
+
+.pf-shown {
+  font-weight: 600;
+  color: var(--ink-accent);
+}
+
+.pf-source {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.pf-done {
+  margin: 0 0 10px;
+}
+
+.pf-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pf-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-choice-name {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 3px;
+}
+
+.pf-choice-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pf-choice {
+  font: inherit;
+  font-size: 14px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-accent);
+  cursor: pointer;
+}
+
+.pf-choice:hover {
+  background: var(--wash);
+}
+
+/* Its own stack, so Leaflet's panes stay under the status bar and the menus. */
+.pf-map {
+  position: relative;
+  z-index: 0;
+}
+
+.pf-map-canvas {
+  height: 420px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.pf-map-failed {
+  color: var(--ink-muted);
+}
+
+.leaflet-interactive.pf-map-flown {
+  stroke: var(--line-strong);
+  stroke-width: 3;
+  fill: var(--line-strong);
+  fill-opacity: 0.1;
+}
+
+.leaflet-interactive.pf-map-landmark {
+  stroke: var(--ink-faint);
+  stroke-width: 2;
+  fill: var(--ink-faint);
+  fill-opacity: 0.08;
+}
+
+.leaflet-interactive.pf-map-current {
+  stroke: var(--ink-accent);
+  stroke-width: 5;
+  fill: var(--ink-accent);
+  fill-opacity: 0.15;
+}
+
+.leaflet-interactive.pf-map-option {
+  stroke: #e07000;
+  stroke-width: 4;
+  stroke-dasharray: 8 6;
+  fill: #e07000;
+  fill-opacity: 0.12;
+}
+
+.pf-log {
+  position: sticky;
+  top: 120px;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.pf-log summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.pf-log-count {
+  margin-left: 8px;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.pf-log-phase {
+  margin-top: 6px;
+}
+
+.pf-log .pf-log-phase > summary {
+  padding: 2px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-accent);
+}
+
+.pf-log-phase ol {
+  list-style: none;
+  margin: 2px 0 4px 14px;
+  padding: 0;
+}
+
+.pf-log-entry {
+  display: flex;
+  gap: 6px;
+  padding: 1px 0;
+}
+
+.pf-log-entry--auto,
+.pf-log-entry--choice {
+  color: var(--ink-muted);
+}
+
+.pf-mark {
+  margin-left: auto;
+  flex: none;
+}
+
+.pf-log-entry--correct .pf-mark {
+  color: var(--ink-accent);
+}
+
+.pf-log-entry--partial .pf-mark {
+  color: var(--warn-text);
+}
+
+.pf-log-entry--shown .pf-mark {
+  color: var(--bad-text);
+}
+
+/* What to fly now: altitude, heading, airspeed and each radio's channel, large. */
+.pf-readout {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+.pf-readout-cell {
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.pf-readout-cell dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.pf-readout-cell dd {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.pf-readout-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink-strong);
+  overflow-wrap: anywhere;
+}
+
+.pf-readout-cell--empty .pf-readout-value {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+.pf-readout-from {
+  font-size: 11px;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+/* A rule revealed a paragraph at a time: the next one is marked, a revealed one says what it
+   leaves you flying. */
+.pf-rule-para {
+  margin: 0 0 6px;
+  padding-left: 8px;
+  border-left: 3px solid transparent;
+}
+
+.pf-rule-para p {
+  margin: 0;
+}
+
+.pf-rule-para--next {
+  border-left-color: var(--ink-accent);
+}
+
+.pf-rule-fly {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-accent);
+}
+
+/* An FTI procedure's numbers. */
+.pf-numbers {
+  border-collapse: collapse;
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.pf-numbers th,
+.pf-numbers td {
+  padding: 4px 12px 4px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.pf-numbers th {
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.pf-numbers td {
+  font-weight: 700;
+  color: var(--ink-accent);
+}
+
+.pf-numbers-next th {
+  box-shadow: inset 3px 0 0 var(--ink-accent);
+}
+
+/* The channel a call is made on: asked for, then shown with the one it replaces. */
+.pf-channel--radio {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.pf-channel-label {
+  color: var(--ink-muted);
+}
+
+.pf-channel-value {
+  font-size: 18px;
+  font-weight: 700;
+  border-bottom: 2px solid var(--line-strong);
+}
+
+.pf-channel--shown .pf-channel-value {
+  border-bottom-color: transparent;
+}
+
+.pf-channel-from {
+  color: var(--ink-muted);
+}
+
+@media (max-width: 760px) {
+  .pf-page {
+    padding: 8px 16px 32px;
+  }
+
+  .pf-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pf-status-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .pf-challenge {
+    font-size: 18px;
+  }
+
+  .pf-readout {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pf-readout-value {
+    font-size: 15px;
+  }
+
+  .pf-map-canvas {
+    height: 40vh;
+  }
+
+  .pf-log {
+    position: static;
+    max-height: none;
+  }
+}
+
 /* ===================================================================
    Outdated marks on discussion items (discuss/OutdatedMarks.js)
    A marked section takes a faint red wash that deepens with the count,
@@ -9587,3 +10294,35 @@ button.epl-modal-close:hover {
   cursor: pointer;
 }
 .discuss-publish-outdated-row input { width: auto; height: auto; margin: 0; flex: none; }
+
+/* Practice Flight: a maneuver's brief over its numbers; answers of several lines */
+.pf-brief {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--wash);
+}
+.pf-brief--next { box-shadow: inset 3px 0 0 var(--ink-accent); }
+.pf-brief-label {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pf-brief-text { color: var(--ink); }
+.pf-lines { white-space: pre-line; }
+.pf-rule-piece--next { background: var(--wash); border-radius: 3px; }
+.pf-rule-cite { display: block; font-size: 0.8rem; color: var(--ink-muted); }
+.pf-select {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
