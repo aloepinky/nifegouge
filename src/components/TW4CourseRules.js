@@ -1142,11 +1142,10 @@ function TW4CourseRules() {
       <p className="cr-source">
         {record && record.doc.source && (
           <>
-            From the {record.doc.source.publication}
+            {record.doc.source.publication}
             {record.doc.source.date ? `, ${record.doc.source.date}` : ''}.{' '}
           </>
         )}
-        Anyone can correct the words: click <b>edit</b> on a leg or a map popup.{' '}
         {record && (
           <button type="button" className="cr-link" onClick={() => { setEditing(null); setShowHistory(true); }}>
             [history]
