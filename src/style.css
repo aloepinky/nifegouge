@@ -10325,4 +10325,5 @@ button.epl-modal-close:hover {
   background: var(--surface);
   color: var(--ink);
 }
+.pf-numbers-static th { font-weight: 600; color: var(--ink-accent); }
 

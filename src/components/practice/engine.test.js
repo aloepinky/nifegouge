@@ -420,7 +420,7 @@ withSeed('going round the pattern is a decision, and no Operations Check is run 
 });
 
 withSeed('the FTI procedures and VT-28 memory aids come where they are flown', () => {
-  const s = fly(3, { legs: LEGS, first: ['high', 'KINGS 4'], card: { rwy: '13L' } });
+  const s = fly(3, { legs: LEGS, first: ['high', 'KINGS 4', 'break'], card: { rwy: '13L' } });
   const said = s.log.map((l) => l.text);
   const at = (x) => said.indexOf(x);
   expect(at('FAM FTI: Takeoff')).toBeGreaterThan(at('Clear, Left, Right and Above. Cleared for Takeoff'));
@@ -452,7 +452,9 @@ withSeed('a Goliad lap and departure bring their procedures, as numbers only', (
 test('every FTI number is a figure from its procedure', () => {
   Object.entries(FTI_NUMBERS).forEach(([id, rows]) => {
     const text = FTI[id].rule.map((p) => p.text).join(' ').replace(/\[\[|\]\]/g, '');
-    rows.forEach(([label, value]) => {
+    // A reminder row (the Before Landing Checklist) has no figure.
+    rows.filter(([, value]) => value === null).forEach(([label]) => expect(label).toBe('Before Landing Checklist'));
+    rows.filter(([, value]) => value !== null).forEach(([label, value]) => {
       expect(label.length).toBeGreaterThan(0);
       expect(/[\d¾⅔]/.test(value)).toBe(true);
       expect(`${id}: ${text.includes(value) ? value : `${value} not in the text`}`).toBe(`${id}: ${value}`);
@@ -689,9 +691,10 @@ test('transit is scored against the least it could have been', () => {
   ];
   const t = transit(flown, block, 14500);
   expect(t.spent).toBe(1500 + 3000);
-  expect(t.order).toEqual(['gWarm', 'powerOnStall', 'spin', 'elpStall']);
-  // 1,500 into the block; then 500 up for the spin and 1,300 up for the ELP stall.
-  expect(t.best).toBe(1500 + 500 + 1300);
+  // 1,500 into the block, the power-on stall's climb, the ELP stall, then 1,300 up for the spin
+  // (whose start, 700 above its setup, must be 13,500 and its end inside the block).
+  expect(t.order).toEqual(['gWarm', 'powerOnStall', 'elpStall', 'spin']);
+  expect(t.best).toBe(1500 + 1300);
   // Climbing higher than needed is spent for nothing.
   expect(transit([{ maneuver: 'gWarm', at: 18000, alt: 17800 }], block, 14500).best).toBe(1500);
   expect(transit([{ maneuver: 'gWarm', at: 18000, alt: 17800 }], block, 14500).spent).toBe(3500);
@@ -723,8 +726,8 @@ withSeed('the student picks each maneuver, briefs it, and hears the transit befo
   const spin = said.find((x) => /, stalled, /.test(x));
   expect(spin).toMatch(/^\d+\.\d, stalled, \d+ knots rising, full (left|right), recover, PCL idle, controls neutral, recover from unusual attitude$/);
   const setup = s.hwFlown.find((f) => f.maneuver === 'spin').at;
-  expect(Number(spin.split(',')[0]) * 1000).toBeGreaterThanOrEqual(setup - 50);
-  expect(Number(spin.split(',')[0]) * 1000).toBeLessThanOrEqual(setup + 450);
+  expect(Number(spin.split(',')[0]) * 1000).toBeGreaterThanOrEqual(setup + 650);
+  expect(Number(spin.split(',')[0]) * 1000).toBeLessThanOrEqual(setup + 850);
   // One unusual attitude, never called inverted, answered PCL then stick.
   expect(said.filter((x) => /: PCL: (MAX|IDLE|As required)$/.test(x))).toHaveLength(1);
   expect(said.filter((x) => /: control stick: /.test(x))).toHaveLength(1);
@@ -1041,4 +1044,49 @@ test('the channel is asked only when a call switches to it', () => {
   expect(now.radio).toBe(s.fly.uhf.v);
   s = reduce(s, { type: 'reveal' });
   expect(s.cur.shown).toBe(true);
+});
+
+// --- Home by a straight-in; Goliad's side numbers; the ATIS off the CTAF ---------------------
+
+// Out of the area straight home by the Goliad Arrival to PT SHAMROCK.
+const homeByShamrock = (x, now, ids) => (now.choose === 'leg' && x.flags.inArea ? ids.find((i) => /Goliad Arrivals/.test(labelOf(i))) : null);
+
+withSeed('home by a straight-in: its own rule and calls, no break', () => {
+  const s = walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'KINGS 4', 'straight'], (x) => x.done, homeByShamrock);
+  const said = s.log.map((l) => l.text);
+  const pick = said.indexOf('Straight-in');
+  expect(pick).toBeGreaterThan(0);
+  expect(said.slice(pick).some((x) => /SHAMROCK, Straight-in$/.test(x))).toBe(true);
+  expect(said.slice(pick)).not.toContain('FAM FTI: The Break');
+  expect(said.slice(pick).some((x) => /Numbers 13L$/.test(x))).toBe(false);
+  expect(said.slice(pick).some((x) => /^Navy Corpus Tower, \w+ \d+, final, gear down$/.test(x))).toBe(true);
+  expect(said.slice(pick)).toContain('Before Landing');
+});
+
+withSeed('home by the overhead: the straight-in paragraphs are left out', () => {
+  const s = walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'KINGS 4', 'break'], (x) => x.done, homeByShamrock);
+  const rule = s.log.findIndex((l) => l.text === 'Course rules: PT Shamrock → Corpus Christi NAS (KNGP)');
+  expect(rule).toBeGreaterThan(0);
+  expect(s.log.slice(rule).some((l) => /SHAMROCK, Full Stop$/.test(l.text))).toBe(true);
+});
+
+withSeed('at Goliad the side number stands for the call sign', () => {
+  const s = toGoliad(6, 'break');
+  const side = s.card.side;
+  const goliad = s.log.filter((l) => /^Goliad RDO, /.test(l.text));
+  expect(goliad.length).toBeGreaterThan(0);
+  goliad.forEach((l) => expect(l.text).toMatch(new RegExp(`^Goliad RDO, ${side},`)));
+  expect(s.log.some((l) => l.text === `Goliad RDO, ${s.card.callSign}, initial 11.`)).toBe(false);
+});
+
+withSeed('the ATIS is copied off the RDO, before the rule that goes to Approach', () => {
+  const s = walk(start(LEGS, { card: { rwy: '13L' } }), ['low', 'KINGS 4', 'Point-default-38', 'break', 'toArea', 'break'], (x) => x.done,
+    (x, now, ids) => (now.choose === 'leg' && x.flags.inArea ? ids.find((i) => /Goliad Arrivals/.test(labelOf(i))) : null));
+  const said = s.log.map((l) => l.text);
+  const ask = said.findIndex((x) => /^Corpus Approach, .*course rules Shamrock with information/i.test(x));
+  expect(ask).toBeGreaterThan(0);
+  const atis = said.lastIndexOf('Switching ATIS', ask);
+  const rule = said.lastIndexOf('Course rules: Goliad Arrivals → PT Shamrock', ask);
+  expect(atis).toBeGreaterThan(0);
+  expect(atis).toBeLessThan(rule);
 });

@@ -9,16 +9,16 @@
 // What each maneuver gains or loses is the FTI's figure where it gives one:
 // - Power-on stall: "An entry speed of 150 KIAS results in about 1500-2000 feet altitude gain"
 //   (§518, p. 5-25).
-// - ELP stall: "you will lose at least 800 feet during the recovery" (§519, p. 5-28). The FTI
-//   adds "another 1000-2000 feet while setting up your dead engine glide"; flown, the setup is
-//   more like 500-1000 feet (the user's figure, 2026-10-23), so 1300-1800 feet in all.
-// - Spin: "approximately 2-3 seconds per turn with altitude loss of 400-500 feet per turn", the
-//   steady state reached after about three turns (§522, p. 5-33); with the recovery, 2000-3000
-//   feet in all (the user's figure, 2026-10-23).
+// - ELP stall: 500-1500 feet in all (the user's figure, 2026-10-24; the FTI's "at least 800
+//   feet during the recovery", §519, p. 5-28, is for the recovery alone).
+// - Spin: 700-800 feet gained slowing to the stall before the spin begins, then, from there,
+//   "approximately 2-3 seconds per turn with altitude loss of 400-500 feet per turn" (§522,
+//   p. 5-33), 2000-3000 feet with the recovery (the user's figures, 2026-10-23 and -24). The
+//   altitude the spin begins at is the one held to the 13,500 feet entry minimum.
 // - G-Warm: the nose is let "drop slightly below the horizon (no more than 10 degrees)" for
 //   4-5 breathing cycles (§905, p. 9-5); 0-500 feet is this page's estimate.
-// - Landing pattern stall: "recover with minimal altitude loss" (§520); 200-500 feet is this
-//   page's estimate.
+// - Landing pattern stall: "recover with minimal altitude loss" (§520); 200-700 feet (the
+//   user's figure, 2026-10-24).
 // - Contact unusual attitudes: taken as neutral.
 // The spin is entered no lower than 13,500 feet and recovered before 10,000 feet (§522: "below
 // 22,000 feet pressure altitude, and recovered before 10,000 feet pressure altitude. Minimum
@@ -33,9 +33,10 @@
 export const MANEUVERS = {
   gWarm: { label: 'G-Warm', brief: 'a G-ex', entry: '200-220 KIAS', change: [-500, 0], estimate: true },
   powerOnStall: { label: 'Power-on stall', brief: 'a power-on stall', entry: '150 KIAS', change: [1500, 2000] },
-  spin: { label: 'Spin', brief: 'a spin', entry: '150 KIAS', change: [-3000, -2000], minEntry: 13500, recoverAbove: 10000 },
-  elpStall: { label: 'ELP stall', brief: 'an ELP stall', entry: '150 KIAS', change: [-1800, -1300] },
-  landingPatternStall: { label: 'Landing pattern stall', brief: 'a landing pattern stall', entry: '120 KIAS', change: [-500, -200], estimate: true },
+  // From the setup: up 700-800 to the spin's start, then down 2000-3000.
+  spin: { label: 'Spin', brief: 'a spin', entry: '150 KIAS', climbFirst: [700, 800], change: [700 - 3000, 800 - 2000], minEntry: 13500, recoverAbove: 10000 },
+  elpStall: { label: 'ELP stall', brief: 'an ELP stall', entry: '150 KIAS', change: [-1500, -500] },
+  landingPatternStall: { label: 'Landing pattern stall', brief: 'a landing pattern stall', entry: '120 KIAS', change: [-700, -200] },
   cuas: { label: 'Contact unusual attitudes', brief: 'contact unusual attitudes', change: [0, 0] },
 };
 
@@ -77,7 +78,12 @@ export function problemWith(maneuver, alt, block) {
   if (alt > ceiling) return `${ft(alt)} is above ${ft(ceiling)}, 500 feet below the top of the block.`;
   if (alt + lo < floor) return `${m.label} can lose ${ft(-lo)}: from ${ft(alt)} that is ${ft(alt + lo)}, below ${ft(floor)}.`;
   if (alt + hi > ceiling) return `${m.label} can gain ${ft(hi)}: from ${ft(alt)} that is ${ft(alt + hi)}, above ${ft(ceiling)}.`;
-  if (m.minEntry && alt < m.minEntry) return `A spin is entered no lower than ${ft(m.minEntry)}.`;
+  // A spin climbs before it starts: that peak stays in the block (its top, not 500 feet under
+  // it, or the low block could never hold a spin begun at 13,500), and the start is the altitude
+  // held to the entry minimum.
+  const [up, top] = m.climbFirst || [0, 0];
+  if (alt + top > block.top) return `${m.label} climbs about ${ft(top)} before it starts: from ${ft(alt)} that is ${ft(alt + top)}, above the top of the block, ${ft(block.top)}.`;
+  if (m.minEntry && alt + up < m.minEntry) return `A spin is entered no lower than ${ft(m.minEntry)}: from ${ft(alt)} it starts about ${ft(alt + up)}.`;
   if (m.recoverAbove && alt + lo < m.recoverAbove) return `A spin is recovered before ${ft(m.recoverAbove)}: from ${ft(alt)} it could end at ${ft(alt + lo)}.`;
   return null;
 }
@@ -88,8 +94,8 @@ export function setupWindow(maneuver, block) {
   const { floor, ceiling } = limits(block);
   const [lo, hi] = m.change;
   return {
-    lo: Math.max(floor, floor - lo, m.minEntry || 0, m.recoverAbove ? m.recoverAbove - lo : 0),
-    hi: Math.min(ceiling, ceiling - hi),
+    lo: Math.max(floor, floor - lo, m.minEntry ? m.minEntry - (m.climbFirst || [0])[0] : 0, m.recoverAbove ? m.recoverAbove - lo : 0),
+    hi: Math.min(ceiling, ceiling - hi, block.top - (m.climbFirst || [0, 0])[1]),
   };
 }
 

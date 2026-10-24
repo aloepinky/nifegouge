@@ -74,6 +74,7 @@ function context(s, extra = {}) {
   const pel = s.entryPlan && s.entryPlan.mode === 'pel';
   const keywords = [
     ...(pel ? ['PPEL', 'High-Key'] : []),
+    ...(s.recovery === 'straight' ? ['Straight-in'] : s.recovery === 'break' ? ['Full Stop'] : []),
     ...(olfAhead ? [shortName(s.olf), 'VFR to'] : s.plan ? [s.plan, s.plan.split(' ')[0]] : []),
     // The leg's own name first ("North to South Transition"), then where it goes.
     ...(extra.leg && nameOf(extra.leg).length > 3 ? [nameOf(extra.leg)] : []),
@@ -120,7 +121,9 @@ const SWITCHING = {
 };
 
 function callSteps(calls, seg, s, ref, group, extra) {
-  const ctx = context(s, extra);
+  // At Goliad the RDO and the aircraft use the side number ("717"), not the whole call sign.
+  const goliad = [extra && extra.leg, seg.leg, seg.legCalls, seg.out].some((x) => x && fieldOf(x) === 'KNGT');
+  const ctx = { ...context(s, extra), ...(goliad ? { sideOnly: true } : {}) };
   return calls.map((c) => (SWITCHING[c.text] && !c.radio ? { ...c, radio: SWITCHING[c.text][0], station: SWITCHING[c.text][1] } : c)).map((c) => ({
     group,
     // Your calls are said and revealed; what the IP or a station says back is a step of its
@@ -280,6 +283,9 @@ function trimRule(rule, s, out) {
       }
     }
     if (home === false && /^If returning to KNGP/i.test(t)) return false;
+    // At PT SHAMROCK the straight-in's own sentences (2-65) are for a straight-in only.
+    if (s.recovery === 'break' && /straight-in|establish a descent and level off|^Approaching the initial reporting point/i.test(t)) return false;
+    if (s.recovery === 'break' && /^For North flow traffic/i.test(t)) return false;
     if (going !== null && /^Departing (North|South) MUSTANG.*(northern|southern) arrival/i.test(t)) {
       return new RegExp(/northern/i.test(t) ? 'North Arrivals|Shamrock' : 'South Arrivals|Shamrock', 'i').test(going);
     }
@@ -397,7 +403,9 @@ function expand(seg, s) {
     ];
   }
   if (seg.calls) return callSteps(CALLS[seg.calls], seg, s, undefined, seg.calls);
-  if (seg.rule) return ruleSteps(seg.rule, seg, s);
+  if (seg.rule) {
+    return [...ruleSteps(seg.rule, seg, s), ...(seg.then ? callSteps(seg.then, seg, s, COURSE_RULES(seg.rule), 'leg', { leg: seg.rule }) : [])];
+  }
   if (seg.callList) {
     return callSteps(seg.callList, seg, s, seg.ref || COURSE_RULES(seg.leg), 'field',
       seg.keywords ? { keywords: seg.keywords } : { leg: seg.leg });
@@ -425,7 +433,9 @@ function expand(seg, s) {
     // and the way it spins: all different each spin.
     const n = s.hwDone || 0;
     const r = (k) => chance(s.card.seed, 300 + n * 10 + k);
-    const at = (s.setupAt || 13500) + 50 * Math.floor(r(0) * 9);
+    // The altitude seen as the spin starts: the setup plus the 700-800 feet gained slowing to it.
+    const [up, top] = MANEUVERS.spin.climbFirst;
+    const at = (s.setupAt || 13500) + up + 50 * Math.floor(r(0) * ((top - up) / 50 + 1));
     const kts = 60 + 5 * Math.floor(r(1) * 7);
     const side = r(2) < 0.5 ? 'left' : 'right';
     const text = `${(at / 1000).toFixed(1)}, stalled, ${kts} knots rising, full ${side}, recover, PCL idle, controls neutral, recover from unusual attitude`;
@@ -455,7 +465,9 @@ function expand(seg, s) {
   if (seg.legCalls) {
     const bound = seg.out && (fieldOfLeg(seg.out) || fieldsAhead(seg.out).find((f) => f !== HOME));
     const otherwise = bound && bound !== HOME ? `course rules to ${shortName(bound)}` : undefined;
-    return callSteps(legCalls(seg.legCalls, s.legs).air.slice(...(seg.slice || [0])), seg, s, COURSE_RULES(seg.legCalls), 'leg', { leg: seg.out || seg.legCalls, otherwise })
+    const straight = s.recovery === 'straight' && fieldOf(seg.legCalls) === 'KNGP';
+    const calls = legCalls(seg.legCalls, s.legs).air.slice(...(seg.slice || [0])).filter((c) => !straight || !/Numbers/i.test(c.text));
+    return callSteps(calls, seg, s, COURSE_RULES(seg.legCalls), 'leg', { leg: seg.out || seg.legCalls, otherwise })
       .map((c) => ({ ...c, leg: labelOf(seg.legCalls) }));
   }
   if (seg.choose) return [{ kind: 'choose', choose: seg.choose, leg: seg.leg, field: seg.field, goliad: seg.goliad, phase: seg.phase, stage: seg.stage }];
@@ -522,8 +534,15 @@ function withAtis(steps, seg, s) {
   if (!AIRBORNE.has(seg.stage) || s.atisAirborne) return steps;
   const at = steps.findIndex((x) => x.kind === 'call' && /with information/i.test(x.text));
   if (at < 0) return steps;
-  return [...steps.slice(0, at), ...callSteps(CALLS.atis, seg, s, undefined, 'atis', { rwy: s.card.rwy }), ...steps.slice(at)];
+  // Copied off the CTAF or the RDO, before going to Approach: after the last call on any other
+  // station in this segment, or at its start (before a rule that sends the flight to Approach).
+  let put = 0;
+  steps.slice(0, at).forEach((x, i) => { if ((x.kind === 'call' || x.kind === 'reply') && !/Approach|Departure/i.test(x.text.split(',')[0])) put = i + 1; });
+  return [...steps.slice(0, put), ...callSteps(CALLS.atis, seg, s, undefined, 'atis', { rwy: s.card.rwy }), ...steps.slice(put)];
 }
+
+const PT_SHAMROCK = 'Point-Arrivals-113';
+const STRAIGHT_IN_REF = { work: 'Course Rules Manual', loc: 'Ch. 2 — SNA VFR Straight-In from PT SHAMROCK', pages: 'p. 2-65' };
 
 // Once off the ground the flight goes on the map.
 const AIRBORNE = new Set(['afterTakeoff', 'airborne']);
@@ -636,6 +655,9 @@ export function options(s) {
   if (now.choose === 'cua') return CUA_ANSWERS[now.part];
   if (now.choose === 'checkout') {
     return [{ id: 'gooftwar', label: 'GOOFTWAR' }, { id: 'abcdont', label: 'ABCDONT' }];
+  }
+  if (now.choose === 'recovery') {
+    return [{ id: 'break', label: 'Overhead break' }, { id: 'straight', label: 'Straight-in' }];
   }
   if (now.choose === 'lap') {
     return lapModes(s.legs, now.leg).map((id) => ({ id, label: modeLabel(s.legs, s.node, id) }));
@@ -805,6 +827,25 @@ function fly(s, id) {
   }
   const phase = phaseOfLeg(id, flags, s.route);
   const next = { ...s, flags, planDone };
+  if (id === PT_SHAMROCK && !s.recovery) segs.push({ ...air, phase, choose: 'recovery' });
+  // Home by a straight-in (Course Rules Manual 2-65): configured and the Before Landing Checklist
+  // approaching the initial, then the base or final call, and a full stop.
+  if (id === HOME && s.recovery === 'straight') {
+    const last = [...s.route].reverse().find((r) => !isAirfield(r));
+    const rwy = runwayOf(last) || s.card.rwy;
+    const report = s.card.north ? 'right base, gear down' : 'final, gear down';
+    const call = { who: 'you', text: `Navy Corpus Tower, (call sign), ${report}`, radio: 'CH 4 UHF', ref: STRAIGHT_IN_REF };
+    return {
+      ...next, node: id, rwy, route: [...s.route, id],
+      segments: [
+        ...segs,
+        ...BEFORE_LANDING.map((b) => ({ ...b, phase: 'Landing' })),
+        { stage: 'airborne', phase: 'Landing', callList: [call, ...CALLS.fullStop.slice(1)], ref: STRAIGHT_IN_REF, leg: last },
+        ...FULL_STOP.filter((x) => x.fti !== 'approach' && x.calls !== 'fullStop'),
+        ...s.segments,
+      ],
+    };
+  }
   if (isAirfield(id)) {
     const f = patternFly(s, id, id === HOME ? s.card.rwy : s.rwy);
     segs.push({ ...air, phase, fti: 'theBreak', fly: f.initial });
@@ -856,7 +897,11 @@ function fly(s, id) {
       segs.push({ ...air, phase, choose: 'block' }, { ...air, phase, legCalls: id, slice: [claim] });
     } else segs.push({ ...air, phase, legCalls: id });
   }
-  else if (shamrockCall(s, id)) segs.push({ ...air, phase, leg: id, callList: shamrockCall(s, id) });
+  else if (shamrockCall(s, id)) {
+    const ruled = segs.findIndex((x) => x.rule === id);
+    if (ruled >= 0) segs[ruled] = { ...segs[ruled], then: shamrockCall(s, id) };
+    else segs.push({ ...air, phase, leg: id, callList: shamrockCall(s, id) });
+  }
   if (isArea(id)) {
     if (!flags.inArea) {
       flags.inArea = true;
@@ -1101,6 +1146,7 @@ function choose(s, id, rng = Math.random) {
   if (now.choose === 'entryPlan') return advance({ ...logged, entryPlan: { field: now.field, mode: id } });
   if (now.choose === 'lap') return advance(lap(logged, now.leg, id));
   if (now.choose === 'checkout') return advance({ ...logged, segments: [{ ...seg(now), vt28: id }, ...s.segments] });
+  if (now.choose === 'recovery') return advance({ ...logged, recovery: id });
   // A maneuver picked: set it up, brief it, say its numbers, then pick the next. Before the
   // last, contact unusual attitudes, the altitude spent getting to the setups.
   if (now.choose === 'maneuver') {
@@ -1167,7 +1213,7 @@ function skipChoice(s, target) {
   if (now.choose === 'cua') return CUA_RIGHT[now.attitude.type][now.part];
   if (now.choose === 'block') return s.card.block;
   if (now.choose === 'checkout') return now.goliad ? 'gooftwar' : 'abcdont';
-  if (['order', 'plan', 'area', 'olf', 'entry', 'entryPlan', 'lap', 'maneuver'].includes(now.choose)) return opts[0];
+  if (['order', 'plan', 'area', 'olf', 'entry', 'entryPlan', 'lap', 'maneuver', 'recovery'].includes(now.choose)) return opts[0];
   if (now.choose === 'leg' && (s.flags.areaDone || s.flags.inArea)) {
     if (!s.route.includes(GOLIAD) && opts.some((id) => TO_GOLIAD[id] !== undefined)) {
       return opts.reduce((best, id) => ((TO_GOLIAD[id] ?? 99) < (TO_GOLIAD[best] ?? 99) ? id : best), opts[0]);
@@ -1237,7 +1283,7 @@ export const switchesChannel = (step, fly) => {
   return !on || on.v !== ch;
 };
 export const linesOf = (step, fly) => (step.kind === 'rule' ? Math.max(1, (step.pieces || []).length)
-  : step.kind === 'numbers' ? step.rows.length + (step.brief ? 1 : 0)
+  : step.kind === 'numbers' ? step.rows.filter((r) => r[1] !== null).length + (step.brief ? 1 : 0)
     : switchesChannel(step, fly) ? 2 : 1);
 
 // Reveal the next line (or `all` of them); a rule's paragraphs up to it go to the readout.

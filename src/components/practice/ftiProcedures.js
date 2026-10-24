@@ -717,10 +717,14 @@ export const FTI_NUMBERS = {
     ['Sink rate, feet per minute', '1350-1500 feet'],
     ['After the gear, glide', '120 KIAS'],
     ['Turn to low key AOB', '15-20°'],
+    // A reminder, shown as it is and not asked: §519 f, "Complete the Before Landing Checklist".
+    ['Before Landing Checklist', null],
     ['Nose high', '5-10°'],
     ['Recover, nose low', '~8°'],
   ],
   landingPatternStall: [
+    // A reminder, shown as it is and not asked, before the downwind configuration.
+    ['Before Landing Checklist', null],
     ['Downwind configuration', '120 KIAS'],
     ['Transition torque', '20%'],
     ['Approach turn, NF/TO/LDG', '120/115/110 KIAS'],

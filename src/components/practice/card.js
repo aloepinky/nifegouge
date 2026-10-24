@@ -92,9 +92,12 @@ export function fillCall(text, card, at = {}) {
   if (!card) return text;
   const rwy = at.rwy || card.rwy;
   const cross = crosswind({ ...card, hdg: card.hdg });
+  // At a field that uses side numbers (Goliad), the side number stands for the call sign.
+  const sign = at.sideOnly ? card.side : card.callSign;
+  const other = at.sideOnly ? card.other.split(' ').pop() : card.other;
   return String(text)
-    .replace(/\((?:tac )?call sign\)/gi, card.callSign)
-    .replace(/\[call sign\]/gi, card.callSign)
+    .replace(/\((?:tac )?call sign\)/gi, sign)
+    .replace(/\[call sign\]/gi, sign)
     .replace(/\(side #\)/gi, card.side)
     .replace(/\(Base name\) base/g, `${card.squadron} base`)
     .replace(/Boomer\/Ranger/g, card.squadron)
@@ -108,7 +111,7 @@ export function fillCall(text, card, at = {}) {
     .replace(/\{rwy\}/g, rwy)
     .replace(/\(RWY ?#\)/g, rwy)
     .replace(/\(#\) in the pattern/g, '1 in the pattern')
-    .replace(/\(Call Sign #2\)/g, card.other)
+    .replace(/\(Call Sign #2\)/g, other)
     .replace(/__ miles to the \(cardinal direction\)/g, '5 miles to the south')
     .replace(/winds are ___ at __ knots/g, `winds are ${wind(card)} knots`)
     .replace(/winds ____ at __kts/g, `winds ${wind(card)}`)
@@ -129,7 +132,7 @@ export function fillCall(text, card, at = {}) {
     .replace(/area ____ ?\(?high ?\/ ?low\)?/g, `area ${at.area || '1'} ${card.block}`)
     .replace(/area ____ ?\(?low ?\/ ?high\)?/g, `area ${at.area || '1'} ${card.block}`)
     .replace(/VFR to XXX/g, `VFR to ${at.fieldCode || 'XXX'}`)
-    .replace(/\(AC ID\)/g, card.callSign)
+    .replace(/\(AC ID\)/g, sign)
     .replace(/\s+\(((?:[^()]|\([^()]*\))*\/(?:[^()]|\([^()]*\))*)\)/g, (m, alts) => ` ${choose(alts.split('/'), at.keywords, at.otherwise)}`)
     .split(', ').map((clause) => (clause.includes(' / ') ? choose(clause.split(' / '), at.keywords, at.otherwise) : clause)).join(', ')
     .replace(/\b(climbing|descending)\/(climbing|descending)\b/g, (m, a) => a)

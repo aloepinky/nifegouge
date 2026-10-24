@@ -10,12 +10,11 @@ import { firstLetters } from '../briefs/firstLetters';
 import PracticeMap from './PracticeMap';
 import { fetchCourseRules } from '../courserules/courseRulesApi';
 import { readSquadron, writeSquadron } from '../discuss/units';
-import { MANEUVERS, describe, ft, limits } from './highWork';
+import { MANEUVERS, ft } from './highWork';
 
 // Before a maneuver: where the last one left you, what this one does to your altitude, and
 // the band the block allows.
 function SetupPrompt({ s, step }) {
-  const { floor, ceiling } = limits(s.block);
   const m = MANEUVERS[step.maneuver];
   const last = s.lastManeuver ? MANEUVERS[s.lastManeuver].label : null;
   return (
@@ -24,11 +23,7 @@ function SetupPrompt({ s, step }) {
         {last ? `The ${last.toLowerCase()} left you at ${ft(s.alt)}.`
           : `Established in the area at ${ft(s.alt)}, outside the block: ${s.block.top <= s.alt ? 'descend' : 'climb'} into the ${s.block.name.toLowerCase()} (${ft(s.block.bottom)}-${ft(s.block.top)}).`}
       </div>
-      <div className="pf-when">
-        Next: {m.label}, which {describe(step.maneuver)}
-        {m.minEntry ? `; entered no lower than ${ft(m.minEntry)} and recovered before ${ft(m.recoverAbove)}` : ''}.
-        {' '}Stay between {ft(floor)} and {ft(ceiling)} ({s.block.name.toLowerCase()} {ft(s.block.bottom)}-{ft(s.block.top)}, 500 feet inside each edge).
-      </div>
+      <div className="pf-when">Next: {m.label}</div>
     </div>
   );
 }
@@ -47,7 +42,7 @@ const CALLS = {
   atis: 'ATIS',
   clearanceDelivery: 'Clearance',
   channel3: 'Radios set',
-  base: 'Base call at run-ups',
+  base: 'Base Call at Run-Ups',
   ground: 'Ground call',
   crossing: 'Crossing a runway',
   tower: 'Tower call',
@@ -307,6 +302,10 @@ function Rule({ step, upTo, shown }) {
 function Numbers({ step, upTo, shown }) {
   const lead = step.brief ? 1 : 0;
   const open = (i) => shown || i < upTo;
+  // A row with no value is a reminder (the Before Landing Checklist): shown, never asked. The
+  // rest are revealed in turn.
+  let n = lead;
+  const line = step.rows.map(([, value]) => (value === null ? null : n++));
   return (
     <>
       {step.brief && (
@@ -322,12 +321,14 @@ function Numbers({ step, upTo, shown }) {
       )}
       <table className="pf-numbers">
         <tbody>
-          {step.rows.map(([label, value], i) => (
-            <tr key={i} className={!shown && i + lead === upTo ? 'pf-numbers-next' : undefined}>
+          {step.rows.map(([label, value], i) => (line[i] === null ? (
+            <tr key={i} className="pf-numbers-static"><th scope="row" colSpan={2}>{label}</th></tr>
+          ) : (
+            <tr key={i} className={!shown && line[i] === upTo ? 'pf-numbers-next' : undefined}>
               <th scope="row">{label}</th>
-              <td>{open(i + lead) ? value : <span className="pf-rule-blank">{FIG.repeat(Math.max(4, value.length))}</span>}</td>
+              <td>{open(line[i]) ? value : <span className="pf-rule-blank">{FIG.repeat(Math.max(4, value.length))}</span>}</td>
             </tr>
-          ))}
+          )))}
         </tbody>
       </table>
     </>
@@ -473,7 +474,8 @@ function StepCard({ s, dispatch }) {
     );
   }
 
-  const answer = Array.isArray(step.answer) ? step.answer.join(' or ') : step.answer;
+  // Other spellings are still accepted; the one shown is the first.
+  const answer = Array.isArray(step.answer) ? step.answer[0] : step.answer;
   // A rule or a procedure's numbers is revealed line by line, in place.
   const lined = step.kind === 'rule' || step.kind === 'numbers';
   const onKey = (e) => {
