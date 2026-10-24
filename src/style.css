@@ -8308,7 +8308,7 @@ textarea.incorrect-answer {
   flex-direction: column;
 }
 
-/* "Practice the Cases" under an EP card that has another set drilling it (EPDrill `practice`).
+/* "Practice Cases" under an EP card that has another set drilling it (EPDrill `practice`).
    Quiet, like the unlit toggles, so it never reads as part of the procedure. */
 .limits-eps-container button.epl-practice {
   align-self: center;
@@ -8322,6 +8322,39 @@ textarea.incorrect-answer {
 
 .limits-eps-container button.epl-practice:hover {
   background-color: var(--surface-eeeeee);
+}
+
+/* The spoken call of the step just answered, under a `calls` card (EPDrill). A fixed height on
+   every card, so the row below never moves; a long call scrolls inside it. */
+.epl-call {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  margin-top: 8px;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.limits-eps-container button.epl-call-say {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 420px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--ink);
+  background-color: var(--surface);
+  border: 2px solid var(--line-333333);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.epl-call-empty {
+  color: var(--ink-444444);
 }
 
 /* A normal checklist read, not typed (EPDrill `read`), printed as the checklist card prints it:

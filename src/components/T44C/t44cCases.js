@@ -1,7 +1,8 @@
-// The five single-engine cases of the T-44C's SSE landing pattern, for EPDrill, read the way
-// the Hollywood set is (t44cNormals.js has the row fields): each step printed as a control and
-// setting the poster can answer, and clicking one opens what to do and who says what. Pure data,
-// no JSX.
+// The five single-engine cases of the T-44C's SSE landing pattern, for EPDrill, typed from
+// memory like the EPs, in the Hollywood set's row shape (t44cNormals.js has the fields): each
+// step a control and setting the poster can answer. Once a step is in, its `replies` (who says
+// what) show under the card, and its `action` opens from them (EPDrill `calls`). Pure data, no
+// JSX.
 //
 // The NATOPS steps keep the EP sheet's wording (t44cData.js), with its asterisk and dagger; what
 // a case adds is the FTI's timing and the spoken concurrence around them.

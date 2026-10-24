@@ -254,7 +254,7 @@ function NWCModal({ group, current, nwc, hints, onClose }) {
   );
 }
 
-function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, read, extraLabel, onClose }) {
+function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, read, calls, extraLabel, onClose }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -277,6 +277,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, 
           ) : (
             <li>One EP is shown at a time. Type each step exactly as the checklist prints it, item and setting together: "Mixture - IDLE CUTOFF". EPs are verbatim!</li>
           )}
+          {calls && <li>Once a step is in, what is said for it shows under the card. Say your call before you look. What you say is in bold; click it for what the FTI says to do</li>}
           {hasPanel && <li>In Full Mode you can click the matching control instead of typing. A click fills the next empty step with that step's whole answer</li>}
           {hasPanel && hasWatch && !read && <li>A normal procedure step you check gauges or lights for also needs each of them clicked, in any order. It stays yellow until the last one is in</li>}
           {hasBand && <li>The cockpit poster is drawn above and beside the EP. Hint and Skip ring the control a step names and scroll it into view; where the poster shows one panel at a time, they bring up the panel it is on</li>}
@@ -339,7 +340,7 @@ function ModeDots({ sets, current, onPick }) {
 // them out, so every leaderboard time is the same EPs.
 //
 // An EP's `practice` is the id of another set; its card then carries a button that switches to
-// that set ("Practice the Cases"). Hidden in a game, like every other way off the EPs.
+// that set ("Practice Cases"). Hidden in a game, like every other way off the EPs.
 function EPDrill({ sets, isGameActive = false, ...props }) {
   const [current, setCurrent] = useState(sets ? sets[0].id : null);
   const [full, setFull] = useState(null);
@@ -356,7 +357,7 @@ function EPDrill({ sets, isGameActive = false, ...props }) {
       extraToggle={extra && !isGameActive ? { label: extra.label, on: withExtra, toggle: () => setWithExtra((v) => !v) } : null}
       practice={isGameActive ? null : {
         open: setCurrent,
-        labelOf: (setId) => `Practice the ${(sets.find((s) => s.id === setId) || {}).label || ''}`,
+        labelOf: (setId) => `Practice ${(sets.find((s) => s.id === setId) || {}).label || ''}`,
       }}
       modes={isGameActive ? null : <ModeDots sets={sets} current={set.id} onPick={setCurrent} />} />
   );
@@ -372,6 +373,10 @@ function ReadLine({ row }) {
     </span>
   );
 }
+
+// The height `.epl-call` takes under a `calls` card, its margin included (style.css), which
+// the card slot reserves on top of the tallest card.
+const CALL_ROOM = 72;
 
 const hasAction = (row) => !!((row.action && row.action.length) || (row.replies && row.replies.length));
 
@@ -424,7 +429,7 @@ function ActionPanel({ row, label, mark, onClose }) {
 
 function Drill({
   eps, title, footnote, top, above, left, right, sideWidth = 200,
-  aliases = DEFAULT_ALIASES, normal = false, read = false, sequential = false, modes = null, extraToggle = null,
+  aliases = DEFAULT_ALIASES, normal = false, read = false, calls = false, sequential = false, modes = null, extraToggle = null,
   practice = null, initialFull = null, onFull,
   nwc, nwcHints, isGameActive = false, onGameComplete,
 }) {
@@ -926,8 +931,18 @@ function Drill({
     </div>
   );
 
-  // The open action: the clicked step's, or with Auto Expanded the next step still to do.
-  const actionId = read ? (autoExpand ? (nextOpen() || {}).id : openAction) : null;
+  // `calls`: a typed set whose steps carry what is said (the T-44C's cases). The call shows under
+  // the card once its step is in, right or skipped, never before, so the step is still recalled
+  // and not read. It is the latest step in, since the steps go in in order; a step with nothing
+  // said but something to do offers that instead.
+  const lastIn = calls
+    ? [...steps].reverse().find((s2) => results[s2.id] === 'correct' || data[s2.id] === answers[s2.id])
+    : null;
+  const callRow = lastIn && hasAction(lastIn) ? lastIn : null;
+
+  // The open action: the clicked step's, or with Auto Expanded the next step still to do. A
+  // typed set opens one only from its call.
+  const actionId = read ? (autoExpand ? (nextOpen() || {}).id : openAction) : calls ? openAction : null;
   const actionRow = actionId ? steps.find((s2) => s2.id === actionId && hasAction(s2)) : null;
   const actionLabel = (() => {
     if (!actionRow) return '';
@@ -951,7 +966,7 @@ function Drill({
         ) : <span className="epl-mode-spacer" />}
       </div>
       {showHelp && <Instructions hasPanel={hasPanel} hasBand={!!top} hasLeft={!!left} hasNWC={hasNWC} hasModes={!!modes}
-        hasWatch={eps.some((e) => e.rows.some((r) => r.watch))} read={read}
+        hasWatch={eps.some((e) => e.rows.some((r) => r.watch))} read={read} calls={calls}
         extraLabel={extraToggle && extraToggle.label} onClose={() => setShowHelp(false)} />}
       {openNWC && (
         <NWCModal key={openNWC} group={nwcGroup} current={openNWC} nwc={nwc} hints={nwcHints}
@@ -984,7 +999,7 @@ function Drill({
             {/* The card hugs its own steps — a four-step EP is a four-step box. The RESERVATION
                 is the slot around it, which is always as tall as the longest EP, so everything
                 below sits at the same place whichever procedure is showing. */}
-            <div className="epl-card-slot" style={cardMin ? { minHeight: cardMin } : undefined}>
+            <div className="epl-card-slot" style={cardMin ? { minHeight: cardMin + (calls ? CALL_ROOM : 0) } : undefined}>
               {card}
               {/* An EP with `practice` names another set that drills it in context (the T-44C's
                   single-engine cases under Engine Failure After Takeoff); the button opens it. */}
@@ -992,6 +1007,24 @@ function Drill({
                 <button type="button" className="epl-practice" onClick={() => practice.open(ep.practice)}>
                   {practice.labelOf(ep.practice)}
                 </button>
+              )}
+              {/* Always drawn on a `calls` set, one height on every card, so Previous/Next still
+                  hold still. */}
+              {calls && (
+                <div className="epl-call" aria-live="polite">
+                  {callRow ? (
+                    <button type="button" className="epl-call-say" title="Show what the FTI says to do"
+                      onClick={() => setOpenAction(callRow.id)}>
+                      {!(callRow.replies && callRow.replies.length) && <span>What to do: {callRow.challenge}</span>}
+                      {(callRow.replies || []).map((reply, i) => (
+                        <span key={i} className={reply.act ? 'epl-say--act' : reply.ip ? 'epl-say--ip' : 'epl-say'}>
+                          {reply.act ? reply.text : <span>&ldquo;{reply.text}&rdquo;</span>}
+                          {reply.who ? ` (${reply.who})` : ''}
+                        </span>
+                      ))}
+                    </button>
+                  ) : <span className="epl-call-empty">{lastIn ? '' : 'The call shows here once its step is in'}</span>}
+                </div>
               )}
               {actionRow && (
                 <ActionPanel row={actionRow} label={actionLabel} mark={readMark(actionRow.id)}

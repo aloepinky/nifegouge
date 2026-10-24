@@ -98,11 +98,11 @@ const SETS = [
     id: 'hollywood', label: 'Hollywood', eps: T44C_HOLLYWOOD, nwc: null, normal: true, read: true, sequential: true,
     title: 'T-44C NORMAL PROCEDURES', footnote: '* PERFORMED FROM MEMORY · # ABBREVIATED CHECKLIST ITEM',
   },
-  // The single-engine cases (T44C/t44cCases.js), read like Hollywood but drawn as EPs, so the
-  // cards keep the EP title and the EP buttons. Also opened from Engine Failure After Takeoff and
-  // the Emergency Shutdown Checklist (`practice` in t44cData.js).
+  // The single-engine cases (T44C/t44cCases.js), typed from memory like the EPs, with each
+  // step's spoken call shown once the step is in (`calls`). Also opened from Engine Failure After
+  // Takeoff and the Emergency Shutdown Checklist (`practice` in t44cData.js).
   {
-    id: 'cases', label: 'Cases', eps: T44C_CASES, nwc: null, read: true, sequential: true,
+    id: 'cases', label: 'Cases', eps: T44C_CASES, nwc: null, calls: true, sequential: true,
     title: 'T-44C SINGLE-ENGINE CASES', footnote: '* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS',
   },
 ];
