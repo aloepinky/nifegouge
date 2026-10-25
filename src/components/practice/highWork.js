@@ -36,7 +36,7 @@ export const MANEUVERS = {
   // From the setup: up 700-800 to the spin's start, then down 2000-3000.
   spin: { label: 'Spin', brief: 'a spin', entry: '150 KIAS', climbFirst: [700, 800], change: [700 - 3000, 800 - 2000], minEntry: 13500, recoverAbove: 10000 },
   elpStall: { label: 'ELP stall', brief: 'an ELP stall', entry: '150 KIAS', change: [-1500, -500] },
-  landingPatternStall: { label: 'Landing pattern stall', brief: 'a landing pattern stall', entry: '120 KIAS', change: [-700, -200] },
+  landingPatternStall: { label: 'Approach turn stall', brief: 'an approach turn stall', entry: '120 KIAS', change: [-700, -200] },
   cuas: { label: 'Contact unusual attitudes', brief: 'contact unusual attitudes', change: [0, 0] },
 };
 

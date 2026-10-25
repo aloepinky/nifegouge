@@ -30,7 +30,7 @@ import {
   lapCalls, lapModes,
 } from './fieldOps';
 import { gradeStep } from './grade';
-import { FTI, FTI_NUMBERS } from './ftiProcedures';
+import { FTI, FTI_CALLOUTS, FTI_NUMBERS } from './ftiProcedures';
 import {
   MANEUVERS, after, blockFor, ft, label as setupLabel, problemWith, setups, transit,
 } from './highWork';
@@ -41,12 +41,17 @@ import { EP_ANSWERS, EP_LENGTHS, EP_TITLES } from '../EPDivsData';
 
 const clean = (s) => String(s).replace(/​/g, '').replace(/\s+/g, ' ').trim();
 
+// "PEL - Execute" is said with the whole PEL, in the FTI's memory aid for the NATOPS PEL
+// checklist (FAM FTI §704, p. 7-13).
+const PEL_WORDS = 'Turn, climb/accelerate, clean, check, BIP, determine, deliver, reduce, lower, report';
+const withPel = (step) => (/^PEL - EXECUTE$/i.test(step.trim()) ? `${step}\n${PEL_WORDS}` : step);
+
 // Each EP's memory steps, in order: EP_ANSWERS is keyed step by step in EP_TITLES order, and
 // EP_LENGTHS says how many steps each EP has.
 export const EP_STEPS = (() => {
   const keys = Object.keys(EP_ANSWERS);
   let at = 0;
-  return EP_LENGTHS.map((n) => keys.slice(at, (at += n)).map((k) => clean(EP_ANSWERS[k].join(''))));
+  return EP_LENGTHS.map((n) => keys.slice(at, (at += n)).map((k) => withPel(clean(EP_ANSWERS[k].join('')))));
 })();
 
 const COURSE_RULES = (id) => ({ work: 'Course Rules Manual', loc: labelOf(id) });
@@ -123,8 +128,15 @@ const SWITCHING = {
 function callSteps(calls, seg, s, ref, group, extra) {
   // At Goliad the RDO and the aircraft use the side number ("717"), not the whole call sign.
   const goliad = [extra && extra.leg, seg.leg, seg.legCalls, seg.out].some((x) => x && fieldOf(x) === 'KNGT');
-  const ctx = { ...context(s, extra), ...(goliad ? { sideOnly: true } : {}) };
-  return calls.map((c) => (SWITCHING[c.text] && !c.radio ? { ...c, radio: SWITCHING[c.text][0], station: SWITCHING[c.text][1] } : c)).map((c) => ({
+  // The first time you give the RDO your call sign it is the whole of it ("Ranger 717").
+  const base = context(s, extra);
+  // On the CTAF ("Goliad traffic") it is always the whole call sign.
+  const toRdo = (c) => c.who === 'you' && /^Goliad RDO/i.test(c.text);
+  const named = s.log.some((l) => l.who === 'you' && /^Goliad RDO/i.test(l.text) && l.text.includes(s.card.callSign));
+  const first = goliad && !named ? calls.findIndex(toRdo) : -1;
+  return calls.map((c) => (SWITCHING[c.text] && !c.radio ? { ...c, radio: SWITCHING[c.text][0], station: SWITCHING[c.text][1] } : c)).map((c, i) => {
+    const ctx = goliad && i !== first && !/^Goliad traffic/i.test(c.text) ? { ...base, sideOnly: true } : base;
+    return {
     group,
     // Your calls are said and revealed; what the IP or a station says back is a step of its
     // own, to be heard and acknowledged; a note goes straight into the log.
@@ -146,7 +158,8 @@ function callSteps(calls, seg, s, ref, group, extra) {
     ref: c.generated ? null : c.ref || ref,
     phase: seg.phase,
     stage: seg.stage,
-  }));
+    };
+  });
 }
 
 // A normal checklist is one step: say which checklist it is, by its name ("Before Taxi").
@@ -230,9 +243,9 @@ const needsClassD = (s, id) => s.route.length === 2 && s.route[0] === HOME && id
   && !((ruleOf(s, s.route[1]) || []).some((p) => /\[\[240\]\]/.test(p.text)));
 
 function ruleSteps(id, seg, s) {
-  const own = trimRule(ruleOf(s, id), s, null);
+  const own = trimRule(ruleOf(s, id), seg.entry === 'pel' ? { ...s, pelEntry: true } : s, null);
   const rule = seg.classD ? [...(own || []), CLASS_D] : own;
-  if (!rule) return [];
+  if (!rule || !rule.length) return [];
   return [ruleStep(rule, s, {
     leg: labelOf(id), phase: seg.phase, stage: seg.stage, text: `Course rules: ${labelOf(id)}`, ref: COURSE_RULES(id),
   })];
@@ -283,6 +296,8 @@ function trimRule(rule, s, out) {
       }
     }
     if (home === false && /^If returning to KNGP/i.test(t)) return false;
+    // Into a field by a PEL, the initial, the break and the overhead are not flown.
+    if (s.pelEntry && /\binitial\b|\bbreak\b|overhead maneuver|report the numbers/i.test(t)) return false;
     // At PT SHAMROCK the straight-in's own sentences (2-65) are for a straight-in only.
     if (s.recovery === 'break' && /straight-in|establish a descent and level off|^Approaching the initial reporting point/i.test(t)) return false;
     if (s.recovery === 'break' && /^For North flow traffic/i.test(t)) return false;
@@ -402,9 +417,22 @@ function expand(seg, s) {
       ], seg, s, undefined, 'departure') : []),
     ];
   }
-  if (seg.calls) return callSteps(CALLS[seg.calls], seg, s, undefined, seg.calls);
+  if (seg.calls) return callSteps(CALLS[seg.calls].slice(...(seg.slice || [0])), seg, s, undefined, seg.calls);
   if (seg.rule) {
     return [...ruleSteps(seg.rule, seg, s), ...(seg.then ? callSteps(seg.then, seg, s, COURSE_RULES(seg.rule), 'leg', { leg: seg.rule }) : [])];
+  }
+  if (seg.kingsOut) {
+    const { area, bound } = seg.kingsOut;
+    const num = (/(\d+)\s*$/.exec(nameOf(area)) || [])[1];
+    const block = s.card.block;
+    const to = bound && nameOf(bound);
+    const pel = s.entryPlan && s.entryPlan.mode === 'pel';
+    const intent = to === 'KNGT' ? (pel ? 'PPEL Goliad' : 'Goliad') : to === 'KRKP' ? 'Aransas County' : 'Course Rules SHAMROCK';
+    return callSteps([
+      { who: 'you', radio: 'CH 22 VHF', text: `Houston Center, (call sign), Complete KINGS 4, Terminate${to === 'KNGT' ? ' Goliad' : ''}.` },
+      { who: 'you', radio: 'CH 20 UHF', text: `99 KINGS 4, (call sign) departing area ${num} ${block}, ${intent}.` },
+      { who: 'you', radio: 'CH 20 UHF', text: `99 KINGS 4, (call sign) clear of area ${num} ${block}.`, generated: true },
+    ], seg, s, KINGS_EXIT_REF, 'leg', { leg: area });
   }
   if (seg.callList) {
     return callSteps(seg.callList, seg, s, seg.ref || COURSE_RULES(seg.leg), 'field',
@@ -418,28 +446,16 @@ function expand(seg, s) {
     // A high work maneuver is briefed to the IP first, said with its numbers: what it is, the
     // three Cs, the airspeed. Contact unusual attitudes are not: the IP has the controls.
     const m = seg.brief && MANEUVERS[seg.fti];
+    const what = seg.fti === 'spin' ? `${m.brief} to the ${spinOf(s).side}` : m && m.brief;
     const brief = m && m.brief && seg.fti !== 'cuas'
-      ? `Alright ${s.card.ip}, this next maneuver will be ${m.brief}. We are three Cs complete${m.entry ? ` and at ${m.entry}` : ''}.`
+      ? `Alright ${s.card.ip}, this next maneuver will be ${what}. We are three Cs complete${m.entry ? ` and at ${m.entry}` : ''}.`
       : null;
+    const callouts = seg.fti === 'spin' && seg.brief ? spinOf(s).callouts : FTI_CALLOUTS[seg.fti] || [];
     return [{
-      kind: 'numbers', who: 'you', group: 'fti', rows, brief, entry: brief && m.entry, phase: seg.phase, stage: seg.stage, ref: proc.ref,
+      kind: 'numbers', who: 'you', group: 'fti', rows, brief, callouts, entry: brief && m.entry, phase: seg.phase, stage: seg.stage, ref: proc.ref,
       sets: brief && m.entry ? { kias: m.entry } : null,
       leg: `FAM FTI: ${proc.title}`, text: `FAM FTI: ${proc.title}`,
     }];
-  }
-  // The spin's callouts, said through the spin and its recovery.
-  if (seg.spinCalls) {
-    // The altitude on the altimeter as the spin starts (a little above the setup), the airspeed,
-    // and the way it spins: all different each spin.
-    const n = s.hwDone || 0;
-    const r = (k) => chance(s.card.seed, 300 + n * 10 + k);
-    // The altitude seen as the spin starts: the setup plus the 700-800 feet gained slowing to it.
-    const [up, top] = MANEUVERS.spin.climbFirst;
-    const at = (s.setupAt || 13500) + up + 50 * Math.floor(r(0) * ((top - up) / 50 + 1));
-    const kts = 60 + 5 * Math.floor(r(1) * 7);
-    const side = r(2) < 0.5 ? 'left' : 'right';
-    const text = `${(at / 1000).toFixed(1)}, stalled, ${kts} knots rising, full ${side}, recover, PCL idle, controls neutral, recover from unusual attitude`;
-    return [{ kind: 'call', who: 'you', group: 'spin', text, answer: text, phase: seg.phase, stage: seg.stage, leg: 'Spin callouts', ref: FTI.spin.ref }];
   }
   // Contact unusual attitudes: the IP puts the aircraft in an attitude and gives it back; the
   // student says what to do with the PCL, then the stick.
@@ -470,6 +486,18 @@ function expand(seg, s) {
     return callSteps(calls, seg, s, COURSE_RULES(seg.legCalls), 'leg', { leg: seg.out || seg.legCalls, otherwise })
       .map((c) => ({ ...c, leg: labelOf(seg.legCalls) }));
   }
+  // Every other maneuver flown: no choice left. The altitude check, then the IP told the
+  // student is ready for contact unusual attitudes, and one attitude, made up here.
+  if (seg.choose === 'maneuver' && maneuversLeft(s)[0] === 'cuas') {
+    let k = 0;
+    const rng = () => chance(s.card.seed, 500 + (s.hwDone || 0) * 10 + k++);
+    const handOver = `${s.card.ip}, ready for contact UAs.`;
+    return [
+      ...expand({ ...seg, choose: undefined, transit: true }, s),
+      { kind: 'call', who: 'you', group: 'cua', text: handOver, answer: handOver, phase: seg.phase, stage: seg.stage, ref: FTI.cuas.ref },
+      ...expand({ ...seg, choose: undefined, cua: cuaAttitude(rng) }, s),
+    ];
+  }
   if (seg.choose) return [{ kind: 'choose', choose: seg.choose, leg: seg.leg, field: seg.field, goliad: seg.goliad, phase: seg.phase, stage: seg.stage }];
   if (seg.setup) {
     return [{ kind: 'choose', choose: 'altitude', maneuver: seg.setup, phase: seg.phase, stage: seg.stage, text: MANEUVERS[seg.setup].label }];
@@ -479,9 +507,9 @@ function expand(seg, s) {
     const t = transit(s.hwFlown || [], s.block, s.block.arrive);
     const over = t.spent - t.best;
     return [{
-      kind: 'reply', who: 'Altitude check', phase: seg.phase, stage: seg.stage,
-      text: `Transiting between maneuvers you climbed ${ft(t.climbed)} and descended ${ft(t.descended)}: ${ft(t.spent)} in all. `
-        + `The least it could have been, flying the same maneuvers in the best order (${t.order.map((m) => MANEUVERS[m].label.toLowerCase()).join(', ')}), was ${ft(t.best)}`
+      kind: 'reply', who: 'Altitude check', plain: true, phase: seg.phase, stage: seg.stage,
+      text: `Between maneuvers you climbed ${ft(t.climbed)} and descended ${ft(t.descended)} for ${ft(t.spent)} total. `
+        + `The minimum possible flying the same maneuvers in the optimal order (${t.order.map((m) => MANEUVERS[m].label.toLowerCase()).join(', ')}), was ${ft(t.best)}`
         + `${over > 0 ? `, so ${ft(over)} more than needed.` : '. No altitude wasted.'}`,
     }];
   }
@@ -490,12 +518,12 @@ function expand(seg, s) {
     const sim = SIM_EPS[seg.simEp];
     const base = { phase: seg.phase, stage: seg.stage, sim: sim.title, checklist: `Simulated ${sim.title.toLowerCase()}` };
     // Turn, climb, clean; then the EP's memory steps, said together.
-    const answers = [TCC, sim.keys.map((k) => clean(EP_ANSWERS[k].join(''))).join('\n')];
+    const answers = [TCC, sim.keys.map((k) => withPel(clean(EP_ANSWERS[k].join('')))).join('\n')];
     return [
       { ...base, kind: 'reply', who: 'ip', text: `Simulated, simulated, simulated, ${sim.call}.` },
       ...answers.map((text, n) => ({
         ...base, kind: 'response', who: 'you', text, answer: text, item: n + 1, of: answers.length,
-        ref: n ? EP_PHASES[EP_TITLES.indexOf(sim.ep)].ref : FTI.patternPel.ref,
+        ref: n ? EP_PHASES[EP_TITLES.indexOf(sim.ep)].ref : seg.tccRef || FTI.patternPel.ref,
       })),
     ];
   }
@@ -516,6 +544,7 @@ const logOf = (step, result, said) => ({
   result,
   said,
   ep: step.ep,
+  plain: step.plain,
 });
 
 const blank = () => ({ typed: '', result: '', first: '', shown: false, hint: false });
@@ -541,6 +570,30 @@ function withAtis(steps, seg, s) {
   return [...steps.slice(0, put), ...callSteps(CALLS.atis, seg, s, undefined, 'atis', { rwy: s.card.rwy }), ...steps.slice(put)];
 }
 
+// A spin's way round (briefed) and its callouts (the user's, 2026-10-25): the altitude on the
+// altimeter as it starts, the setup plus the 700-800 feet gained slowing to it, and the
+// airspeed, all different each spin.
+function spinOf(s) {
+  const n = s.hwDone || 0;
+  const r = (k) => chance(s.card.seed, 300 + n * 10 + k);
+  const [up, top] = MANEUVERS.spin.climbFirst;
+  const at = (s.setupAt || 13500) + up + 50 * Math.floor(r(0) * ((top - up) / 50 + 1));
+  const kts = 60 + 5 * Math.floor(r(1) * 7);
+  const side = r(2) < 0.5 ? 'left' : 'right';
+  return {
+    side,
+    callouts: [
+      'Power coming to idle, nose coming up.',
+      'Gear horn acknowledged.',
+      'Stick shaker, little bit of rudder.',
+      'Full stall.',
+      `${(at / 1000).toFixed(1)}, stalled, ${kts} knots rising, full ${side}, recover, PCL idle, controls neutral, altitude checked, recover from unusual attitude.`,
+      'Oil pressure in the green, power coming in.',
+    ],
+  };
+}
+
+const KINGS_EXIT_REF = { work: 'Course Rules Manual', loc: 'Ch. 2 — KINGS 4 MOA Exit', pages: 'p. 2-28' };
 const PT_SHAMROCK = 'Point-Arrivals-113';
 const STRAIGHT_IN_REF = { work: 'Course Rules Manual', loc: 'Ch. 2 — SNA VFR Straight-In from PT SHAMROCK', pages: 'p. 2-65' };
 
@@ -795,13 +848,21 @@ function fly(s, id) {
   const air = { stage: 'airborne' };
   const segs = [];
   const planDone = s.planDone || (isArea(id) && groupOf(id) === s.plan);
-  // Leaving a working area: the checks go with the leg out of it, after the area's exit rule.
+  // Leaving a working area: the checks go with the leg out of it, before the area's exit rule.
   const leaving = phaseOfLeg(id, { ...flags, inArea: false, areaDone: true }, s.route);
   if (flags.inArea && !isArea(id)) {
     // Bound for an outlying field: break or PEL is decided in the area, before checking out,
     // since the check-out says which.
     const bound = fieldOfLeg(id) || fieldsAhead(id).find((f) => f !== HOME);
     if (bound && bound !== HOME && fieldModes(s.legs, bound).length > 1) segs.push({ ...air, phase: leaving, choose: 'entryPlan', field: bound });
+    // Checking out of KINGS 4: GOOFTWAR bound for Goliad, ABCDONT otherwise, said before the
+    // check-out with Houston Center (the exit rule). Both take in the Descent Checklist and the
+    // Operations Check, so neither follows on its own.
+    if (groupOf(s.node) === 'KINGS 4') {
+      const goliad = /Goliad/.test(labelOf(id)) || destinationsOf(id).some((d) => /Goliad/.test(d));
+      segs.push({ ...air, phase: leaving, choose: 'checkout', goliad });
+      flags.descentDone = true;
+    }
     const { exit } = areaRules({ ...s, heading: id }, s.node);
     // Out of the area, the heading is to where the leg goes.
     const to = fieldOfLeg(id) ? fieldLabel(nameOf(fieldOfLeg(id))) : destinationsOf(id)[0] || labelOf(id);
@@ -811,11 +872,9 @@ function fly(s, id) {
       : {}), fly: toward });
     // An area's own calls are its check-out ("complete in MUSTANG 1").
     if (legCalls(s.node, s.legs).air.length) segs.push({ ...air, phase: leaving, legCalls: s.node, out: id });
-  }
-  // Checking out of KINGS 4: GOOFTWAR bound for Goliad, ABCDONT otherwise.
-  if (flags.inArea && !isArea(id) && groupOf(s.node) === 'KINGS 4') {
-    const goliad = /Goliad/.test(labelOf(id)) || destinationsOf(id).some((d) => /Goliad/.test(d));
-    segs.push({ ...air, phase: leaving, choose: 'checkout', goliad });
+    // KINGS 4 has no calls of its own in the document: the manual's check-out with Houston
+    // Center and the departing call on Common, then clear of the area.
+    if (groupOf(s.node) === 'KINGS 4') segs.push({ ...air, phase: leaving, kingsOut: { area: s.node, bound } });
   }
   if (flags.inArea && !isArea(id)) {
     flags.inArea = false;
@@ -824,6 +883,13 @@ function fly(s, id) {
       flags.descentDone = true;
       segs.push({ ...air, phase: leaving, checklist: 'descent', when: WHEN.descent, whenRef: WHEN_REF.descent });
     }
+  }
+  // Out of an outlying field and on to the working area: an Operations Check before entering
+  // the block.
+  if (isAirfield(s.node) && s.node !== HOME && !isPattern(id)) flags.opsDue = true;
+  if (isArea(id) && flags.opsDue && !flags.inArea) {
+    flags.opsDue = false;
+    segs.push({ ...air, phase: phaseOfLeg(id, flags, s.route), checklist: 'ops', when: WHEN.opsPattern, whenRef: WHEN_REF.opsPattern });
   }
   const phase = phaseOfLeg(id, flags, s.route);
   const next = { ...s, flags, planDone };
@@ -987,6 +1053,22 @@ const LAP = {
   ppel: { first: [{ fti: 'patternPel' }] },
 };
 
+// Setting up for Goliad's initial or high key, a position report with intentions on the CTAF
+// (Course Rules Manual 2-30, which gives no wording; this is made up for practice): from the
+// area worked, or from the point the arrival left.
+function goliadTraffic(s, mode) {
+  const area = [...s.route].reverse().find(isArea);
+  const num = area && (/(\d+)\s*$/.exec(nameOf(area)) || [])[1];
+  const from = s.route[s.route.length - 2];
+  const where = num ? `departing ${num} ${s.card.block}` : `inbound from ${nameOf(from).replace(/^From\s+/, '')}`;
+  const intent = mode === 'pel' ? 'for high key' : 'for the initial';
+  return {
+    who: 'you', radio: 'CH 15 VHF', station: 'Goliad CTAF', generated: true,
+    text: `Goliad traffic, (call sign), ${where} ${intent} runway ${s.rwy}, Goliad`,
+    note: 'Course Rules Manual 2-30: give position reports with intentions on CH 15 VHF while setting up for the 4 NM initial or high key.',
+  };
+}
+
 // Enter an outlying field by a break or a PEL. About one break in three, where the field's
 // calls have one, the RDO directs a discontinued entry: the student does as the manual says
 // and calls the initial again.
@@ -994,11 +1076,13 @@ function enter(s, leg, mode) {
   const field = fieldOfLeg(leg);
   const n = s.entries || 0;
   const discontinued = mode === 'break' && canDiscontinue(s.legs, leg) && chance(s.card.seed, n) < 1 / 3;
-  const calls = entryCalls(s.legs, leg, mode, discontinued);
+  const found = entryCalls(s.legs, leg, mode, discontinued);
+  const calls = fieldOf(leg) === 'KNGT' ? { ...found, opening: [...(found.opening || []), goliadTraffic(s, mode)] } : found;
   const f = patternFly(s, field, s.rwy);
   const fly = mode === 'pel' ? { before: f.highKey, downwind: f.lowKey } : { before: f.initial, downwind: f.downwind };
   // Into the field's pattern, done with Center on the VHF.
-  const segs = landing(s, phaseAt(field), leg, calls, undefined, ENTRY[mode], { ...fly, opening: { figs: { vhf: null } } });
+  const segs = landing(s, phaseAt(field), leg, calls, undefined, ENTRY[mode], { ...fly, opening: { figs: { vhf: null } } })
+    .map((x) => (x.rule === leg ? { ...x, entry: mode } : x));
   return { ...s, entries: n + 1, node: field, route: [...s.route, field], segments: [...segs, ...s.segments] };
 }
 
@@ -1013,6 +1097,11 @@ const SIM_EPS = {
   fire: { call: 'fire light', title: 'Fire light', ep: 'FIRE IN FLIGHT', keys: ['fif5'] },
 };
 const SIM_ORDER = Object.keys(SIM_EPS);
+// Before a PEL into a field: one of them, then turn, climb, clean (FAM FTI §704).
+const simulated = (s, now) => ({
+  ...seg(now), stage: 'airborne', tccRef: FTI.pel.ref,
+  simEp: SIM_ORDER[Math.floor(chance(s.card.seed, 250 + (s.entries || 0)) * SIM_ORDER.length)],
+});
 
 function lap(s, pattern, mode) {
   const calls = lapCalls(s.legs, pattern, mode);
@@ -1117,16 +1206,16 @@ export function cuaAttitude(rng = Math.random) {
   const side = r(1) < 0.5 ? 'left' : 'right';
   const step = (lo, hi, k, by = 5) => lo + by * Math.floor(r(k) * ((hi - lo) / by + 1));
   if (type === 'high') {
-    const pitch = step(30, 60, 2); const bank = step(0, 60, 3, 10); const kias = step(90, 130, 4);
-    return { type, text: `Nose ${pitch}° high, ${bank ? `${bank}° ${side} wing down` : 'wings level'}, ${kias} KIAS and slowing` };
+    const pitch = step(30, 60, 2); const bank = step(0, 60, 3, 10);
+    return { type, text: `Nose ${pitch}° high, ${bank ? `${bank}° ${side} wing down` : 'wings level'}` };
   }
   if (type === 'low') {
-    const pitch = step(30, 60, 2); const bank = step(30, 90, 3, 10); const kias = step(200, 260, 4, 10);
-    return { type, text: `Nose ${pitch}° low, ${bank}° ${side} wing down, ${kias} KIAS and accelerating` };
+    const pitch = step(30, 60, 2); const bank = step(30, 90, 3, 10);
+    return { type, text: `Nose ${pitch}° low, ${bank}° ${side} wing down` };
   }
-  const bank = step(150, 180, 3); const pitch = step(0, 10, 2); const kias = step(150, 200, 4, 10);
+  const bank = step(150, 180, 3); const pitch = step(0, 10, 2);
   // Near inverted, said as what the instruments show, not named.
-  return { type, text: `${bank}° of bank to the ${side}, nose ${pitch ? `${pitch}° low` : 'on the horizon'}, ${kias} KIAS` };
+  return { type, text: `${bank}° of bank to the ${side}, nose ${pitch ? `${pitch}° low` : 'on the horizon'}` };
 }
 
 function choose(s, id, rng = Math.random) {
@@ -1142,23 +1231,26 @@ function choose(s, id, rng = Math.random) {
     return advance({ ...logged, flags: { ...s.flags, climbDone: id === 'run' }, segments: [...segs, ...s.segments] });
   }
   if (now.choose === 'order') return advance({ ...logged, order: id });
-  if (now.choose === 'entry') return advance(enter(logged, now.leg, id));
-  if (now.choose === 'entryPlan') return advance({ ...logged, entryPlan: { field: now.field, mode: id } });
+  // A PEL picked, here or in the area: the IP's simulated emergency comes straight after.
+  if (now.choose === 'entry') {
+    const into = enter(logged, now.leg, id);
+    return advance(id === 'pel' ? { ...into, segments: [simulated(logged, now), ...into.segments] } : into);
+  }
+  if (now.choose === 'entryPlan') {
+    const planned = { ...logged, entryPlan: { field: now.field, mode: id } };
+    return advance(id === 'pel' ? { ...planned, segments: [simulated(logged, now), ...s.segments] } : planned);
+  }
   if (now.choose === 'lap') return advance(lap(logged, now.leg, id));
   if (now.choose === 'checkout') return advance({ ...logged, segments: [{ ...seg(now), vt28: id }, ...s.segments] });
   if (now.choose === 'recovery') return advance({ ...logged, recovery: id });
   // A maneuver picked: set it up, brief it, say its numbers, then pick the next. Before the
   // last, contact unusual attitudes, the altitude spent getting to the setups.
   if (now.choose === 'maneuver') {
-    // Contact unusual attitudes: the transit so far, then one attitude, made up as it is picked;
-    // no setup (the IP flies it) and no numbers (its questions are the procedure).
-    const segs = id === 'cuas'
-      ? [{ ...seg(now), transit: true }, { ...seg(now), cua: cuaAttitude(rng) }]
-      : [
-        { ...seg(now), setup: id }, { ...seg(now), fti: id, brief: true },
-        ...(id === 'spin' ? [{ ...seg(now), spinCalls: true }] : []),
-        { ...seg(now), choose: 'maneuver' },
-      ];
+    // Contact unusual attitudes are never picked: they follow the last maneuver (expand).
+    const segs = [
+      { ...seg(now), setup: id }, { ...seg(now), fti: id, brief: true },
+      { ...seg(now), choose: 'maneuver' },
+    ];
     return advance({ ...logged, segments: [...segs, ...s.segments] });
   }
   // An unusual attitude: the PCL, then the stick. A wrong one is said so, and tried again.
@@ -1276,6 +1368,8 @@ function flown(s, now) {
 // procedure's numbers; everything else at once.
 // A call's channel is asked first only when the call switches to it; on the channel already
 // set, the call is all there is to say.
+// A callout in brackets or parentheses is a reminder or a cue: shown, not said.
+export const isCue = (line) => /^[[(].*[\])]\.?$/.test(line);
 export const switchesChannel = (step, fly) => {
   if (step.kind !== 'call' || !step.radio || !/CH\s*\d/.test(step.radio)) return false;
   const ch = radioOf(step.radio);
@@ -1284,6 +1378,7 @@ export const switchesChannel = (step, fly) => {
 };
 export const linesOf = (step, fly) => (step.kind === 'rule' ? Math.max(1, (step.pieces || []).length)
   : step.kind === 'numbers' ? step.rows.filter((r) => r[1] !== null).length + (step.brief ? 1 : 0)
+    + (step.callouts || []).filter((c) => !isCue(c)).length
     : switchesChannel(step, fly) ? 2 : 1);
 
 // Reveal the next line (or `all` of them); a rule's paragraphs up to it go to the readout.

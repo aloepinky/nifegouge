@@ -188,8 +188,10 @@ export const GROUND = [
   { phase: 'Taxi', stage: 'ground', calls: 'ground' },
   { phase: 'Taxi', stage: 'ground', calls: 'crossing' },
   { phase: 'Takeoff', stage: 'ground', calls: 'tower' },
+  // The takeoff numbers come after the wind call, as the roll begins.
+  { phase: 'Takeoff', stage: 'takeoff', calls: 'roll', slice: [0, 1] },
   { phase: 'Takeoff', stage: 'takeoff', fti: 'takeoffRoll' },
-  { phase: 'Takeoff', stage: 'takeoff', calls: 'roll' },
+  { phase: 'Takeoff', stage: 'takeoff', calls: 'roll', slice: [1] },
   { phase: 'Departure', stage: 'afterTakeoff', calls: 'afterTakeoff' },
   { phase: 'Departure', stage: 'airborne', calls: 'departure' },
   { phase: 'Departure', stage: 'airborne', checklist: 'ops' },

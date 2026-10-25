@@ -159,7 +159,7 @@ export const FTI = {
     ]
   },
   touchAndGo: {
-    title: "Landings",
+    title: "Touch-and-Go Landing",
     ref: {
       work: "FAM FTI",
       loc: "§607 — Landings",
@@ -494,7 +494,7 @@ export const FTI = {
     ]
   },
   landingPatternStall: {
-    title: "Landing Pattern Stalls",
+    title: "Approach Turn Stall",
     ref: {
       work: "FAM FTI",
       loc: "§520 — Landing Pattern Stalls",
@@ -632,90 +632,95 @@ export const FTI = {
 // Each procedure cut to its numbers, in the order they are flown, for chair flying: a terse
 // label and the FTI's own figure (every value is a figure from the procedure's text above, and
 // the test checks it is). The procedure's section is the source.
+// The numbers said with each procedure, as the user laid them out (2026-10-25): feet as ',
+// thousands with commas, speeds in KIAS, power as torque, spacing in WTD. Each figure is in the
+// procedure's own steps above, except a row with a third entry, which names where it is from.
+const ROTATE_GUST = 'FAM FTI §505 — Takeoff, note, p. 5-7';
+const DOWNWIND_TORQUE = 'FAM FTI §606 — Approach, p. 6-7';
+const ELP = 'FAM FTI §703 — Emergency Landing Pattern (ELP), p. 7-11';
+const NATOPS_SPINS = 'NATOPS Ch. 5 — Prohibited Maneuvers, p. 5-9';
 export const FTI_NUMBERS = {
   takeoffRoll: [
     ['PCL to MAX in', '2-3 seconds'],
     ['Torque and fuel flow check at', '60 KIAS'],
-    ['Fuel flow less than', '800 lbs'],
-    ['Rotate at', '90 KIAS'],
+    ['Fuel flow below', '800 pph'],
+    ['Rotate at', '90 KIAS + ½ gust factor', ROTATE_GUST],
     ['Takeoff attitude, nose high', '7-10°'],
   ],
-  climbOut: [
-    ['Nose attitude, nose high', '7-10°'],
-    ['Climbing attitude approaching', '180 KIAS'],
-  ],
-  // The field's own figures (break altitude, runway heading) are the course rules'.
-  olfEntry: [],
   theBreak: [
     ['Break AOB', '30-60°'],
-    ['Gear below', '150 KIAS'],
-    ['Downwind spacing, wingtip distance', '¾ - 1'],
+    ['Gear down below', '150 KIAS'],
+    ['Downwind spacing', '¾-1 WTD'],
     ['Slow to', '120 KIAS'],
-    ['Power to stay level', '~31%'],
-    ['Power to descend to pattern altitude', '~20%'],
-    ['Level-off power, NF/TO/LDG', '31/42/52%'],
+    ['Torque to stay level', '~31%'],
+    ['Torque to descend to pattern alt', '~20%'],
+    ['Level-off torque, NF/TO/LDG', '31/42/52%'],
   ],
   approach: [
-    ['Downwind', '120 KIAS'],
-    ['Downwind torque, NF', '31%'],
+    ['Downwind speed', '120 KIAS'],
+    ['Downwind torque, NF/TO/LDG', '31/42/52%', DOWNWIND_TORQUE],
     ['Transition torque, all flap settings', '20%'],
-    ['180, NF/TO/LDG', '120/115/110 KIAS'],
+    ['180 speed, NF/TO/LDG', '120/115/110 KIAS'],
     ['Approach turn AOB', '25-30°'],
-    ['90 position', '450 feet AGL'],
-    ['Start of the groove from the threshold', '1200-1500 feet'],
-    ['Start of the groove', '200 feet AGL'],
+    ['90 alt', "450' AGL"],
+    ['Groove distance from the threshold', "1,200-1,500'"],
+    ['Groove alt', "200' AGL"],
   ],
   touchAndGo: [
     ['Takeoff attitude, nose high', '7-10°'],
     ['Flaps up at', '110 KIAS'],
-    ['Power approaching 120 KIAS', '60%'],
-    ['Climb upwind at', '120 KIAS'],
-    ['Downwind spacing, wingtip distance', '¾ - 1'],
-    ['Level-off below pattern altitude', '50 feet'],
-    ['Level-off power', '~31%'],
-  ],
-  olfDeparture: [
-    ['Airspeed minimum', '120 KIAS'],
-    ['Gear and flaps up below', '150 KIAS'],
+    ['Torque approaching 120 KIAS', '60%'],
+    ['Climb speed upwind', '120 KIAS'],
+    ['Downwind spacing', '¾-1 WTD'],
+    ['Start level-off', "50' below pattern alt"],
+    ['Level-off torque', '~31%'],
   ],
   pel: [
-    ['Climb at', '140 KIAS'],
-    ['Power, no sooner than DEGA', '4-6%'],
-    ['ELP minimum', '120 KIAS'],
-    ['High key AOB, calm wind', '~ 15-20°'],
-    ['Low key, wingtip distance', '2/3'],
-    ['Base key', '600-800 feet AGL'],
-    ['Final, minimum', '110 KIAS'],
+    ['Climb speed', '140 KIAS'],
+    ['Torque, no sooner than DEGA', '4-6%'],
+    ['ELP minimum speed', '120 KIAS'],
+    ['High key alt and AOB, calm wind', "3,000' AGL, ~15-20°", ELP],
+    ['Low key alt and spacing', "1,500' AGL, ⅔ WTD", ELP],
+    ['Base key alt', "600-800' AGL"],
+    ['Final minimum speed', '110 KIAS'],
   ],
   patternPel: [
-    ['Climb at', '125 KIAS'],
-    ['Power on the ELP', '4-6%'],
-    ['Glide', '125 KIAS'],
-    ['After the gear, minimum', '120 KIAS'],
-    ['Low key, wingtip distance', '⅔'],
+    ['Climb speed', '125 KIAS'],
+    ['Torque on the ELP', '4-6%'],
+    ['Glide speed', '125 KIAS'],
+    ['After the gear, minimum speed', '120 KIAS'],
+    ['Low key alt and spacing', "1,500' AGL, ⅔ WTD", ELP],
+    ['Base key alt', "600-800' AGL", ELP],
+    ['Final minimum speed', '110 KIAS', ELP],
+  ],
+  gWarm: [
+    ['Begin at', '200-220 KIAS'],
+    ['AOB', '70-80°'],
+    ['Nose low, no more than', '10°'],
+    ['G load', "4 G's"],
+    ['Hold for', '4-5 breathing cycles'],
   ],
   powerOnStall: [
-    ['Complete above', '6000 feet AGL'],
+    ['Complete above', "6,000' AGL"],
     ['Torque', '30-60%'],
     ['Nose high', '15-40°'],
     ['Turning stall AOB', '20-30°'],
   ],
   spin: [
-    ['Slow cruise', '150 KIAS'],
-    ['Spin entered below', '22,000 feet'],
-    ['Recovered before', '10,000 feet'],
-    ['Minimum entry altitude', '13,500 feet AGL'],
+    ['Entry speed', '150 KIAS'],
+    ['Max spin alt', "22,000' PA", NATOPS_SPINS],
+    ['Recovered above', "10,000' PA", NATOPS_SPINS],
+    ['Min entry alt', "13,500' AGL"],
     ['Nose above the horizon', '30°'],
-    ['Steady-state airspeed', '120-135 KIAS'],
+    ['Steady-state speed', '120-135 KIAS'],
     ['Oil pressure minimum', '90 psi'],
   ],
   elpStall: [
-    ['Begin at', '150 KIAS'],
-    ['Complete above', '6000 feet AGL'],
+    ['Complete above', "6,000' AGL"],
     ['Torque', '4-6%'],
-    ['Best glide', '125 KIAS'],
-    ['Sink rate, feet per minute', '1350-1500 feet'],
-    ['After the gear, glide', '120 KIAS'],
+    ['Best glide speed', '125 KIAS'],
+    ['Sink rate', '1,350-1,500 fpm'],
+    ['After the gear, glide speed', '120 KIAS'],
     ['Turn to low key AOB', '15-20°'],
     // A reminder, shown as it is and not asked: §519 f, "Complete the Before Landing Checklist".
     ['Before Landing Checklist', null],
@@ -725,12 +730,24 @@ export const FTI_NUMBERS = {
   landingPatternStall: [
     // A reminder, shown as it is and not asked, before the downwind configuration.
     ['Before Landing Checklist', null],
-    ['Downwind configuration', '120 KIAS'],
+    ['Downwind speed', '120 KIAS'],
     ['Transition torque', '20%'],
-    ['Approach turn, NF/TO/LDG', '120/115/110 KIAS'],
+    ['Approach turn speed, NF/TO/LDG', '120/115/110 KIAS'],
     ['Nose high', '5-10°'],
     ['AOB', '20-45°'],
-    ['Landing attitude stall, above final approach speed', '5-10 knots'],
+    ['Landing attitude stall, above final approach speed', '5-10 KIAS'],
+  ],
+  // No longer flown: the climb-out (a second takeoff table), the outlying field departure and
+  // the unusual attitudes (their questions are the procedure). An outlying field entry's
+  // figures are the field's.
+  climbOut: [
+    ['Nose attitude, nose high', '7-10°'],
+    ['Climbing attitude approaching', '180 KIAS'],
+  ],
+  olfEntry: [],
+  olfDeparture: [
+    ['Airspeed minimum', '120 KIAS'],
+    ['Gear and flaps up below', '150 KIAS'],
   ],
   cuas: [
     ['Nose high: roll past', '90°'],
@@ -738,11 +755,49 @@ export const FTI_NUMBERS = {
     ['Nose low: do not exceed', '316 KIAS'],
     ['Advance the PCL below', '110 KIAS'],
   ],
+};
+
+// What is said aloud through each procedure, after its numbers, as the user wrote it
+// (2026-10-25), a line at a time. A line in brackets or parentheses is a reminder or a cue,
+// shown and not said. The spin's are made in the engine (its altitude, airspeed and way round
+// change each spin); the takeoff's and the pattern PEL's are their own calls.
+export const FTI_CALLOUTS = {
+  theBreak: [
+    "Flop, chop, don't let the nose drop.",
+    '(Roll first, pull power second)',
+  ],
+  touchAndGo: [
+    'Above 110, flaps. 120, power coming back to 60.',
+  ],
   gWarm: [
-    ['Begin at', '200-220 KIAS'],
-    ['AOB', '70-80 degrees'],
-    ['Nose low, no more than', '10 degrees'],
-    ['G', "4 G's"],
-    ['Hold for', '4-5 breathing cycles'],
+    '(While rolling)',
+    "G's coming on, now, now, now.",
+    '(Pull)',
+    'And roll out.',
+  ],
+  powerOnStall: [
+    "Nose coming up, there's stick shaker, and there's the full stall.",
+    'Relax, max, level, ball.',
+    'AOA, ball. AOA, ball. AOA, ball. AOA, ball.',
+    'Two positive rates, maneuver complete.',
+  ],
+  elpStall: [
+    'Stabilized at 125 KIAS, VSI between 1,350 and 1,500.',
+    'Simulating approaching high key.',
+    'Below 150, gear.',
+    'Starting that turn.',
+    'Restabilized at 120 KIAS.',
+    '[Before Landing Checklist]',
+    'And nose coming up.',
+    "Stick shaker, nose low 8°, there's 120, maneuver complete.",
+  ],
+  landingPatternStall: [
+    '[Before Landing Checklist]',
+    "Simulated transition, there's the 180, power coming back, rolling to 30° AOB.",
+    'Nose coming up, power coming to idle.',
+    "There's stick shaker.",
+    'Relax, max, level, ball.',
+    'AOA, ball. AOA, ball. AOA, ball.',
+    'Two positive rates, maneuver complete.',
   ],
 };

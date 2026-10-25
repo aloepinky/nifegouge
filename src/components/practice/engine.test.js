@@ -1,4 +1,4 @@
-import { EP_STEPS, areaRules, current, epsFor, options, reduce, start, typedAltitude } from './engine';
+import { EP_STEPS, areaRules, current, epsFor, isCue, options, reduce, start, typedAltitude } from './engine';
 import { taxiIn, taxiOut } from './taxi';
 import { flyOn } from './figures';
 import { CALLS, CHECKLISTS, EP_PHASES } from './famScript';
@@ -6,7 +6,7 @@ import { QUAD_ACTIONS } from '../QuadfoldData';
 import { CAN_GET_HOME, HOME, PLANS, choicesFrom, departures, fieldsAhead as fieldsAheadOf, labelOf } from './legs';
 import { gradeStep } from './grade';
 import { limits, problemWith, transit } from './highWork';
-import { FTI, FTI_NUMBERS } from './ftiProcedures';
+import { FTI, FTI_CALLOUTS, FTI_NUMBERS } from './ftiProcedures';
 import { fieldFigures, figuresOf } from './figures';
 import { EP_LENGTHS, EP_TITLES } from '../EPDivsData';
 import { crFeatures } from '../CourseRulesFeatures';
@@ -177,8 +177,11 @@ test('a flight answered correctly starts on the ground and ends at shutdown', ()
   expect(said).not.toContain('ICS Check');
   expect(said).toContain('Switching ATIS');
   expect(said.some((t) => /^Nearest airfield is \w/.test(t))).toBe(true);
-  // A normal checklist is one step, its name.
-  expect(s.log.filter((l) => l.checklist === 'Operations Check')).toHaveLength(1);
+  // A normal checklist is one step, its name. The Operations Check comes after the departure
+  // check-in and again leaving an outlying field for the working area.
+  const ops = s.log.filter((l) => l.checklist === 'Operations Check' && l.kind === 'checklist');
+  expect(ops.every((l) => l.text === 'Ops Check')).toBe(true);
+  expect(ops).toHaveLength(s.order === 'low' ? 2 : 1);
 });
 
 test('500 random flights all reach shutdown', () => {
@@ -196,7 +199,9 @@ test('a working area brings the PSA checklist and leaving it the Descent checkli
     const psa = said.indexOf('Pre-Stalling, Spinning, and Aerobatic');
     if (psa < 0) continue;
     found = true;
-    expect(said.indexOf('Descent')).toBeGreaterThan(psa);
+    // Out of KINGS 4 the check-out aid takes in the Descent Checklist; elsewhere it is its own.
+    const descent = said.indexOf('Descent');
+    expect(s.plan === 'KINGS 4' ? descent === -1 : descent > psa).toBe(true);
   }
   expect(found).toBe(true);
 });
@@ -377,6 +382,14 @@ withSeed('entering Goliad is a decision: break or PEL', () => {
   expect(pel.some((x) => /Practice PEL/.test(x))).toBe(true);
   expect(pel.some((x) => /High-Key/.test(x))).toBe(true);
   expect(pel.some((x) => /, initial /.test(x))).toBe(false);
+  // Goliad's arrival rule is all the 4 NM initial and the break: by a PEL, none of it.
+  expect(brk.some((x) => /^Course rules: KNGT Arrivals/.test(x))).toBe(true);
+  expect(pel.some((x) => /^Course rules: KNGT Arrivals/.test(x))).toBe(false);
+  // A PEL picked brings the IP's simulated emergency: turn, climb, clean, then its steps.
+  const sim = pel.findIndex((x) => /^Simulated, simulated, simulated, /.test(x));
+  expect(sim).toBeGreaterThan(pel.indexOf('PEL'));
+  expect(pel[sim + 1]).toBe('Turn, climb, clean');
+  expect(brk.some((x) => /^Simulated, simulated/.test(x))).toBe(false);
 });
 
 withSeed('the RDO directs a discontinued entry about one time in three, and it is complied with', () => {
@@ -425,10 +438,22 @@ withSeed('the FTI procedures and VT-28 memory aids come where they are flown', (
   const at = (x) => said.indexOf(x);
   expect(at('FAM FTI: Takeoff')).toBeGreaterThan(at('Clear, Left, Right and Above. Cleared for Takeoff'));
   expect(at('FAM FTI: Takeoff')).toBeLessThan(at('90 knots, rotate'));
-  // Out of KINGS 4: one of the squadron's checking-out aids, before the Descent checklist.
+  // Out of KINGS 4: one of the squadron's checking-out aids, before the check-out with Houston
+  // Center (the exit rule); it takes in the Descent Checklist, which does not follow.
   const out = said.findIndex((x) => /^VT-28 technique: Checking out of the MOA/.test(x));
   expect(out).toBeGreaterThan(0);
-  expect(out).toBeLessThan(at('Descent'));
+  expect(out).toBeLessThan(at('Course rules: leaving KINGS 4'));
+  expect(at('Descent')).toBe(-1);
+  // Then the manual's check-out with Center and the departing call on Common, and clear.
+  const sign = s.card.callSign;
+  // Home from the last time in the area: no field named, Course Rules SHAMROCK.
+  const center = said.lastIndexOf(`Houston Center, ${sign}, Complete KINGS 4, Terminate.`);
+  expect(center).toBeGreaterThan(said.lastIndexOf('Course rules: leaving KINGS 4'));
+  expect(said[center + 1]).toMatch(new RegExp(`^99 KINGS 4, ${sign} departing area \\d (high|low), Course Rules SHAMROCK\\.$`));
+  expect(said[center + 2]).toMatch(new RegExp(`^99 KINGS 4, ${sign} clear of area \\d (high|low)\\.$`));
+  // Bound for Goliad, Center is told so, and so is Common.
+  const toGoliad = said.indexOf(`Houston Center, ${sign}, Complete KINGS 4, Terminate Goliad.`);
+  expect(said[toGoliad + 1]).toMatch(/departing area \d (high|low), Goliad\.$/);
   // Home: the break, then the downwind and the 180 before the landing call.
   expect(said.lastIndexOf('FAM FTI: The Break')).toBeGreaterThan(out);
   expect(said.lastIndexOf('FAM FTI: Approach')).toBeLessThan(said.findIndex((x) => /180 gear down, full stop/.test(x)));
@@ -438,7 +463,7 @@ withSeed('a Goliad lap and departure bring their procedures, as numbers only', (
   const s = toGoliad(6, 'break', 'lap');
   const said = s.log.map((l) => l.text);
   expect(said).toContain('FAM FTI: The Break');
-  expect(said).toContain('FAM FTI: Landings');
+  expect(said).toContain('FAM FTI: Touch-and-Go Landing');
   expect(said).not.toContain('FAM FTI: Outlying Field Departure');
   // The entry has no numbers of its own (they are the field's), and the pattern has no
   // squadron techniques.
@@ -449,17 +474,34 @@ withSeed('a Goliad lap and departure bring their procedures, as numbers only', (
   expect(pel).toContain('FAM FTI: Precautionary Emergency Landing (PEL)');
 });
 
-test('every FTI number is a figure from its procedure', () => {
+test('every FTI number is a figure from its procedure, or says where it is from', () => {
   Object.entries(FTI_NUMBERS).forEach(([id, rows]) => {
-    const text = FTI[id].rule.map((p) => p.text).join(' ').replace(/\[\[|\]\]/g, '');
+    const text = FTI[id].rule.map((p) => p.text).join(' ').replace(/\[\[|\]\]/g, '').replace(/(\d),(\d{3})/g, '$1$2');
     // A reminder row (the Before Landing Checklist) has no figure.
     rows.filter(([, value]) => value === null).forEach(([label]) => expect(label).toBe('Before Landing Checklist'));
     rows.filter(([, value]) => value !== null).forEach(([label, value]) => {
       expect(label.length).toBeGreaterThan(0);
       expect(/[\d¾⅔]/.test(value)).toBe(true);
-      expect(`${id}: ${text.includes(value) ? value : `${value} not in the text`}`).toBe(`${id}: ${value}`);
+    });
+    // A row whose figures are not the FTI's says whose they are.
+    rows.filter(([, value, from]) => value !== null && from).forEach(([, , from]) => expect(from.length).toBeGreaterThan(10));
+    rows.filter(([, value, from]) => value !== null && !from).forEach(([label, value]) => {
+      // Each figure in the value (thousands without their commas) is in the FTI's text.
+      const figures = value.replace(/(\d),(\d{3})/g, '$1$2').match(/\d+|[¾⅔]/g);
+      const missing = figures.filter((f) => !new RegExp(`(^|[^\\d])${f}($|[^\\d])`).test(text));
+      expect(`${id} ${label}: ${missing.join(', ')}`).toBe(`${id} ${label}: `);
     });
   });
+});
+
+test('callouts are lines to say, or cues in brackets', () => {
+  Object.entries(FTI_CALLOUTS).forEach(([id, lines]) => {
+    expect(FTI_NUMBERS[id]).toBeDefined();
+    expect(lines.some((l) => !isCue(l))).toBe(true);
+  });
+  expect(isCue('[Before Landing Checklist]')).toBe(true);
+  expect(isCue('(Pull)')).toBe(true);
+  expect(isCue('Below 150, gear.')).toBe(false);
 });
 
 withSeed('skipped straight through, the flight is KINGS 4, then Goliad, then home', () => {
@@ -532,9 +574,9 @@ function highWork(block) {
 
 withSeed('high work goes in the block\'s order and stays 500 feet inside it', () => {
   const high = highWork('high');
-  const done = high.log.filter((l) => /^FAM FTI: (G-Warm|Power-On Stall|Spin|Power-Off Stall|Landing Pattern Stalls|Contact Unusual)/.test(l.text)).map((l) => l.text);
+  const done = high.log.filter((l) => /^FAM FTI: (G-Warm|Power-On Stall|Spin|Power-Off Stall|Approach Turn Stall|Contact Unusual)/.test(l.text)).map((l) => l.text);
   // The unusual attitudes have no numbers of their own: their questions are the procedure.
-  expect(done).toEqual(['FAM FTI: G-Warm Maneuver', 'FAM FTI: Power-On Stall', 'FAM FTI: Spin', 'FAM FTI: Power-Off Stall (ELP Stall)', 'FAM FTI: Landing Pattern Stalls']);
+  expect(done).toEqual(['FAM FTI: G-Warm Maneuver', 'FAM FTI: Power-On Stall', 'FAM FTI: Spin', 'FAM FTI: Power-Off Stall (ELP Stall)', 'FAM FTI: Approach Turn Stall']);
   const low = highWork('low');
   expect(low.log.filter((l) => /^FAM FTI: (G-Warm|Spin|Power-On)/.test(l.text)).map((l) => l.text)).toEqual(['FAM FTI: G-Warm Maneuver', 'FAM FTI: Spin', 'FAM FTI: Power-On Stall']);
 });
@@ -665,8 +707,8 @@ withSeed('the readout follows the flight: KINGS 4, Goliad\'s pattern, home', () 
   expect(at(/^Course rules: KINGS 4$/).vhf).toMatchObject({ v: 'CH 22 VHF', station: 'Houston Center' });
   expect(at(/^Goliad RDO, .*, initial /).alt.v).toBe("1,300' MSL");
   expect(at(/^Goliad RDO, .*, initial /).uhf.v).toBe('CH 15 UHF');
-  // Done with Center, the VHF is back on the UHF's button.
-  expect(at(/^Goliad RDO, .*, initial /).vhf).toMatchObject({ v: 'CH 15 VHF', station: 'backup' });
+  // Done with Center, the VHF is on Goliad's CTAF for the position report.
+  expect(at(/^Goliad RDO, .*, initial /).vhf).toMatchObject({ v: 'CH 15 VHF', station: 'Goliad CTAF' });
   // The first gear call is Goliad's downwind, the last home's.
   expect(seen.find((x) => /^Below 150, Gear$/.test(x.text || '')).fly.alt.v).toBe("1,100' MSL");
   expect(at(/^Below 150, Gear$/).alt.v).toBe("800' MSL");
@@ -704,9 +746,11 @@ withSeed('the student picks each maneuver, briefs it, and hears the transit befo
   let s = start(LEGS, { card: { rwy: '13L' } });
   const briefs = [];
   const maneuvers = [];
+  let spinStep = null;
   for (let n = 0; n < 3000 && !s.flags.areaDone; n++) {
     const now = current(s);
     if (now.brief) briefs.push(now.brief);
+    if (now.kind === 'numbers' && now.text === 'FAM FTI: Spin') spinStep = now;
     if (now.kind !== 'choose' && now.kind !== 'ask') { s = say(s); continue; }
     const ids = options(s).map((o) => o.id);
     let id = ['high', 'KINGS 4', 'run'].find((x) => ids.includes(x)) || ids[0];
@@ -723,8 +767,11 @@ withSeed('the student picks each maneuver, briefs it, and hears the transit befo
   expect(new Set(briefs.map((x) => x.split(',')[0])).size).toBe(1);
   // The spin's callouts, and three unusual attitudes answered PCL then stick.
   // The altitude as the spin starts, a little above the setup, and either way round.
-  const spin = said.find((x) => /, stalled, /.test(x));
-  expect(spin).toMatch(/^\d+\.\d, stalled, \d+ knots rising, full (left|right), recover, PCL idle, controls neutral, recover from unusual attitude$/);
+  // The spin is briefed with its way round, and the callout spins that way.
+  const spin = spinStep.callouts.find((x) => /, stalled, /.test(x));
+  expect(spin).toMatch(/^\d+\.\d, stalled, \d+ knots rising, full (left|right), recover, PCL idle, controls neutral, altitude checked, recover from unusual attitude\.$/);
+  expect(spinStep.brief).toMatch(new RegExp(`will be a spin to the ${/full (left|right)/.exec(spin)[1]}\\.`));
+  expect(spinStep.callouts[spinStep.callouts.length - 1]).toBe('Oil pressure in the green, power coming in.');
   const setup = s.hwFlown.find((f) => f.maneuver === 'spin').at;
   expect(Number(spin.split(',')[0]) * 1000).toBeGreaterThanOrEqual(setup + 650);
   expect(Number(spin.split(',')[0]) * 1000).toBeLessThanOrEqual(setup + 850);
@@ -732,13 +779,18 @@ withSeed('the student picks each maneuver, briefs it, and hears the transit befo
   expect(said.filter((x) => /: PCL: (MAX|IDLE|As required)$/.test(x))).toHaveLength(1);
   expect(said.filter((x) => /: control stick: /.test(x))).toHaveLength(1);
   expect(said.filter((x) => /: (PCL|control stick): /.test(x)).some((x) => /inverted/i.test(x.split(':')[0]))).toBe(false);
-  // Another power-on stall is always on offer (up to three); with all flown, only the CUAs.
+  // Another power-on stall is always on offer (up to three); with all flown, the CUAs follow
+  // without a choice.
   expect(maneuvers[1]).toEqual(['powerOnStall', 'spin', 'elpStall', 'landingPatternStall']);
   expect(maneuvers[2]).toEqual(['spin', 'elpStall', 'landingPatternStall', 'powerOnStall']);
-  expect(maneuvers[maneuvers.length - 1]).toEqual(['cuas']);
-  const report = said.findIndex((x) => /^Transiting between maneuvers you climbed/.test(x));
+  expect(maneuvers.some((ids) => ids.includes('cuas'))).toBe(false);
+  // The altitude check, the call to the IP, then the attitude (no airspeed in it).
+  const report = said.findIndex((x) => /^Between maneuvers you climbed .* total\. The minimum possible flying the same maneuvers in the optimal order \(/.test(x));
+  const handOver = said.findIndex((x) => /^(Sir|Ma'am), ready for contact UAs\.$/.test(x));
   expect(report).toBeGreaterThan(0);
-  expect(report).toBeLessThan(said.findIndex((x) => /: PCL: /.test(x)));
+  expect(handOver).toBe(report + 1);
+  expect(handOver).toBeLessThan(said.findIndex((x) => /: PCL: /.test(x)));
+  expect(said.filter((x) => /: PCL: /.test(x)).some((x) => /KIAS/.test(x))).toBe(false);
   expect(said).not.toContain('FAM FTI: Contact Unusual Attitudes');
   expect(said.indexOf('FAM FTI: G-Warm Maneuver')).toBeLessThan(report);
 });
@@ -756,7 +808,8 @@ withSeed('a pattern PEL starts with a simulated emergency: turn, climb, clean, t
   expect(at).toBeGreaterThan(0);
   expect(s.log[at + 1].text).toBe('Turn, climb, clean');
   // The EP's steps, together.
-  expect(s.log[at + 2].text).toMatch(/^(PCL - MINIMUM NECESSARY.*\nPEL - EXECUTE|PEL - EXECUTE)$/s);
+  // "PEL - Execute" is said with the whole PEL after it.
+  expect(s.log[at + 2].text).toMatch(/^(PCL - MINIMUM NECESSARY.*\n)?PEL - EXECUTE\nTurn, climb\/accelerate, clean, check, BIP, determine, deliver, reduce, lower, report$/s);
 });
 
 withSeed('a call\'s second way is said without its "Or…"', () => {
@@ -866,7 +919,7 @@ withSeed('into KRKP from the MUSTANG areas: only the MUSTANG way in, after the c
   // Home: the ATIS again before asking Approach for Shamrock "with information".
   const ask = said.findIndex((x) => /Course Rules SHAMROCK with information/i.test(x));
   expect(said.slice(out + 1, ask).includes('Switching ATIS')).toBe(true);
-  expect(said[ask - 1]).toMatch(/^Navy Corpus information \w+, .*runway 31R in use\.$/);
+  expect(said[ask - 1]).toMatch(/^Navy Corpus information [\w-]+, .*runway 31R in use\.$/);
   // Back on the ground, the route to the line from where the runway was left.
   expect(said).toContain(`Navy Corpus Ground, ${s.card.callSign}, Clear of the active on runway 4, Taxi to my line`);
   expect(said).toContain(`${s.card.callSign}, taxi to the line via runway 4, cross 36, Charlie`);
@@ -1074,9 +1127,16 @@ withSeed('at Goliad the side number stands for the call sign', () => {
   const s = toGoliad(6, 'break');
   const side = s.card.side;
   const goliad = s.log.filter((l) => /^Goliad RDO, /.test(l.text));
-  expect(goliad.length).toBeGreaterThan(0);
-  goliad.forEach((l) => expect(l.text).toMatch(new RegExp(`^Goliad RDO, ${side},`)));
-  expect(s.log.some((l) => l.text === `Goliad RDO, ${s.card.callSign}, initial 11.`)).toBe(false);
+  expect(goliad.length).toBeGreaterThan(1);
+  // Setting up for the initial, a position report on the CTAF, with the whole call sign, after
+  // the RDO gives the runway and before the initial.
+  const said = s.log.map((l) => l.text);
+  const traffic = said.findIndex((x) => x === `Goliad traffic, ${s.card.callSign}, inbound from PT Rusty for the initial runway 11, Goliad`);
+  expect(traffic).toBeGreaterThan(said.findIndex((x) => /^Goliad landing 11\./.test(x)));
+  expect(traffic).toBeLessThan(said.indexOf(goliad[0].text));
+  // The first call gives the whole call sign; after it, the side number.
+  expect(goliad[0].text).toBe(`Goliad RDO, ${s.card.callSign}, initial 11.`);
+  goliad.slice(1).forEach((l) => expect(l.text).toMatch(new RegExp(`^Goliad RDO, ${side},`)));
 });
 
 withSeed('the ATIS is copied off the RDO, before the rule that goes to Approach', () => {

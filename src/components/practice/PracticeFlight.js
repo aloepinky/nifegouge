@@ -3,7 +3,7 @@
 // random emergency when you ask for one. The flight itself is engine.js; this is its page.
 
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { TYPED, current, epsFor, linesOf, options, reduce, start, switchesChannel } from './engine';
+import { TYPED, current, epsFor, isCue, linesOf, options, reduce, start, switchesChannel } from './engine';
 import { radioOf } from './figures';
 import { labelOf, nameOf } from './legs';
 import { firstLetters } from '../briefs/firstLetters';
@@ -56,7 +56,7 @@ const CALLS = {
   taxiBack: 'Taxi back',
   leaving: 'Leaving the aircraft',
   controls: 'Change of controls',
-  spin: 'Spin callouts',
+  cua: 'CUA brief',
   leg: 'Course rules',
   fti: 'FTI numbers',
   rule: 'Course rules',
@@ -223,7 +223,7 @@ function Line({ entry }) {
   return (
     <div className={`pf-line pf-line--${entry.who === 'you' ? 'you' : 'other'}`}>
       <span className="pf-who">{entry.radio || whoOf(entry.who)}</span>
-      <span className="pf-said pf-lines">{['note', 'choice', 'route'].includes(entry.who) || entry.kind === 'rule' ? entry.text : `“${entry.text}”`}</span>
+      <span className="pf-said pf-lines">{['note', 'choice', 'route'].includes(entry.who) || entry.kind === 'rule' || entry.plain ? entry.text : `“${entry.text}”`}</span>
     </div>
   );
 }
@@ -306,6 +306,9 @@ function Numbers({ step, upTo, shown }) {
   // rest are revealed in turn.
   let n = lead;
   const line = step.rows.map(([, value]) => (value === null ? null : n++));
+  // Then the callouts, said in turn; a cue or reminder in brackets just shows.
+  const callouts = step.callouts || [];
+  const said = callouts.map((c) => (isCue(c) ? null : n++));
   return (
     <>
       {step.brief && (
@@ -331,6 +334,18 @@ function Numbers({ step, upTo, shown }) {
           )))}
         </tbody>
       </table>
+      {callouts.length > 0 && (
+        <div className="pf-callouts">
+          <span className="pf-brief-label">Callouts</span>
+          {callouts.map((c, i) => (said[i] === null ? (
+            <span key={i} className="pf-callout pf-callout--cue">{c.replace(/^[[(]|[\])]\.?$/g, '')}</span>
+          ) : (
+            <span key={i} className={!shown && said[i] === upTo ? 'pf-callout pf-callout--next' : 'pf-callout'}>
+              {open(said[i]) ? `“${c}”` : <span className="pf-rule-blank">{FIG.repeat(Math.min(24, c.length))}</span>}
+            </span>
+          )))}
+        </div>
+      )}
     </>
   );
 }
@@ -386,7 +401,7 @@ function Prompt({ step, ep, shown, from }) {
       return (
         <div className="pf-prompt">
           <span className="pf-prompt-context">{step.checklist}, {step.item} of {step.of}</span>
-          <span className="pf-challenge">{step.item === 1 ? 'Immediate response' : 'EP Memory items'}</span>
+          <span className="pf-challenge">{step.sim && step.item === 1 ? 'Immediate response (do)' : step.item === 1 ? 'Immediate response' : step.sim ? 'EP Memory items (say)' : 'EP Memory items'}</span>
         </div>
       );
     }
@@ -537,7 +552,8 @@ function StepCard({ s, dispatch }) {
         <>
           <div className="pf-reply">
             <span className="pf-reply-who">{step.who === 'ip' ? 'IP' : step.who}{step.radio ? ` · ${step.radio}` : ''}</span>
-            <span className="pf-reply-text">“{step.text}”</span>
+            {/* A report (the altitude check) is not something said, so it has no quotes. */}
+            <span className="pf-reply-text">{step.plain ? step.text : `“${step.text}”`}</span>
           </div>
           {step.generated && <p className="pf-when">Generated comms</p>}
           <div className="pf-actions">

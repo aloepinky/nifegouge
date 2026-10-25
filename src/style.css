@@ -10326,4 +10326,8 @@ button.epl-modal-close:hover {
   color: var(--ink);
 }
 .pf-numbers-static th { font-weight: 600; color: var(--ink-accent); }
+.pf-callouts { display: flex; flex-direction: column; gap: 4px; margin: 10px 0 0; }
+.pf-callout { padding: 2px 6px; border-radius: 3px; color: var(--ink); }
+.pf-callout--next { background: var(--wash); }
+.pf-callout--cue { font-weight: 600; color: var(--ink-accent); }
 
