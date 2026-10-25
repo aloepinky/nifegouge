@@ -3,14 +3,17 @@
 // random emergency when you ask for one. The flight itself is engine.js; this is its page.
 
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { TYPED, current, epsFor, isCue, linesOf, options, reduce, start, switchesChannel } from './engine';
+import { TYPED, canSkipTo, current, isCue, linesOf, options, situationsFor, start, switchesChannel } from './engine';
 import { radioOf } from './figures';
-import { labelOf, nameOf } from './legs';
+import { labelOf, nameOf, shortName } from './legs';
 import { firstLetters } from '../briefs/firstLetters';
 import PracticeMap from './PracticeMap';
 import { fetchCourseRules } from '../courserules/courseRulesApi';
 import { readSquadron, writeSquadron } from '../discuss/units';
 import { MANEUVERS, ft } from './highWork';
+import { backable, begin, withHistory } from './history';
+import { flightText } from './report';
+import { DRAFT } from '../programs';
 
 // Before a maneuver: where the last one left you, what this one does to your altitude, and
 // the band the block allows.
@@ -21,7 +24,7 @@ function SetupPrompt({ s, step }) {
     <div className="pf-setup">
       <div className="pf-setup-alt">
         {last ? `The ${last.toLowerCase()} left you at ${ft(s.alt)}.`
-          : `Established in the area at ${ft(s.alt)}, outside the block: ${s.block.top <= s.alt ? 'descend' : 'climb'} into the ${s.block.name.toLowerCase()} (${ft(s.block.bottom)}-${ft(s.block.top)}).`}
+          : `Level outside the block at ${ft(s.alt)}.`}
       </div>
       <div className="pf-when">Next: {m.label}</div>
     </div>
@@ -96,11 +99,25 @@ function nextOf(s) {
   return '';
 }
 
-function StatusBar({ s, dispatch }) {
+// Tools not yet for everyone: on a local copy, or in a browser that has opened the page with
+// ?dev (remembered; ?dev=off forgets it).
+function devTools() {
+  if (DRAFT) return true;
+  try {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get('dev') === 'off') window.localStorage.removeItem('practiceDev');
+    else if (q.has('dev')) window.localStorage.setItem('practiceDev', '1');
+    return window.localStorage.getItem('practiceDev') === '1';
+  } catch (e) {
+    return false;
+  }
+}
+
+function StatusBar({ s, back, dispatch }) {
   const step = current(s);
-  const phase = s.ep ? 'Emergency' : step?.phase || 'Shutdown';
+  const phase = s.ep && !s.ep.situation ? 'Emergency' : step?.phase || 'Shutdown';
   const seen = new Set(s.log.map((l) => l.phase));
-  const fits = epsFor(s);
+  const fits = situationsFor(s);
   // Until the ATIS is heard the runway isn't known, so neither is the departure.
   const where = s.atisHeard && s.route.length > 1 ? labelOf(s.node) : 'KNGP, on the line';
   const doing = s.ep ? s.ep.title : step?.kind === 'checklist' ? 'Calling for a checklist'
@@ -108,24 +125,26 @@ function StatusBar({ s, dispatch }) {
       : step?.choose === 'entryPlan' ? 'Planning the entry'
       : ['maneuver', 'altitude'].includes(step?.choose) ? 'High work' : step?.choose === 'cua' ? 'Unusual attitude'
         : step?.choose === 'checkout' ? 'Checking out' : step?.kind === 'choose' ? 'Picking a leg' : '';
-  const next = s.ep ? (s.ep.done ? 'Resume or end the flight' : 'Next memory step') : nextOf(s);
-  const epBlocked = s.done ? 'The flight is over' : s.ep ? 'Finish this emergency first'
-    : fits.length ? '' : 'No emergency procedure fits this phase of flight';
+  const next = s.ep ? (s.ep.done ? 'Back to the flight' : 'What you do') : nextOf(s);
+  const epBlocked = s.done ? 'The flight is over' : s.ep ? 'Finish this first'
+    : fits.length ? '' : 'Nothing that comes up here fits this moment';
 
   return (
-    <div className={s.ep ? 'pf-status pf-status--ep' : 'pf-status'}>
+    <div className="pf-status">
       <ol className="pf-phases" aria-label="Phases of the flight">
         {phasesFor(s.order).map((p) => {
-          // A stage still ahead can be skipped to; the pattern and landing come round again.
-          const ahead = p !== phase && (!seen.has(p) || p === 'Pattern' || p === 'Landing');
+          // A stage already begun takes the flight back to where it began (everything since is
+          // dropped); one still ahead can be skipped to. The pattern and landing come round again.
+          const behind = back.has(p) && !s.ep;
+          const ahead = !behind && p !== phase && (!seen.has(p) || p === 'Pattern' || p === 'Landing') && canSkipTo(s, p) && !s.done && !s.ep;
           return (
             <li key={p} aria-current={p === phase ? 'step' : undefined}>
               <button
                 type="button"
                 className={p === phase ? 'pf-phase pf-phase--now' : seen.has(p) ? 'pf-phase pf-phase--done' : 'pf-phase'}
-                onClick={() => dispatch({ type: 'skipTo', phase: p })}
-                disabled={!ahead || s.done || !!s.ep}
-                title={ahead ? `Skip to ${p}` : undefined}
+                onClick={() => dispatch(behind ? { type: 'backTo', phase: p } : { type: 'skipTo', phase: p })}
+                disabled={!behind && !ahead}
+                title={behind ? `Back to the start of ${p}` : ahead ? `Skip to ${p}` : !canSkipTo(s, p) && !s.done && !s.ep && p !== phase ? `No ${p.toLowerCase()} on this flight` : undefined}
               >
                 {p}
               </button>
@@ -135,25 +154,29 @@ function StatusBar({ s, dispatch }) {
       </ol>
       <div className="pf-status-row">
         <div className="pf-status-text">
-          <div><span className="pf-status-label">Now</span> {s.ep ? 'EMERGENCY: ' : ''}{doing || phase} <span className="pf-status-where">· {where}</span></div>
+          <div><span className="pf-status-label">Now</span> {doing || phase} <span className="pf-status-where">· {where}</span></div>
           {next && <div><span className="pf-status-label">Next</span> {next}</div>}
         </div>
         <div className="pf-status-buttons">
+          {/* Something that goes wrong short of an emergency: Joker, Bingo, a wave-off…. Not on
+              the live site yet: only here, or in a browser opened once with ?dev. */}
+          {devTools() && (
           <button
             type="button"
-            className="pf-btn pf-btn--ep"
-            onClick={() => dispatch({ type: 'randomEp' })}
+            className="pf-btn"
+            onClick={() => dispatch({ type: 'situation' })}
             disabled={!!epBlocked}
-            title={epBlocked || `One of ${fits.length} emergency procedures that fit this phase of flight`}
+            title={epBlocked || `One of: ${fits.map((x) => x.title).join(', ')}`}
           >
-            Random EP
+            Something happens
           </button>
+          )}
           <button
             type="button"
             className="pf-btn"
             onClick={() => dispatch({ type: 'skipPhase' })}
             disabled={s.done || !!s.ep}
-            title={s.ep ? 'Finish this emergency first' : `Run the rest of ${phase} and go on to the next stage`}
+            title={s.ep ? 'Finish this first' : `Run the rest of ${phase} and go on to the next stage`}
           >
             Skip stage
           </button>
@@ -362,7 +385,7 @@ function AltitudeBox({ s, dispatch }) {
         className="pf-input"
         value={s.cur.typed}
         onChange={(e) => dispatch({ type: 'type', text: e.target.value })}
-        placeholder="Altitude, like 17500 or 17.5"
+        placeholder="e.g. 17,500 or 17.5"
         aria-label="Setup altitude"
         inputMode="decimal"
         autoComplete="off"
@@ -374,11 +397,7 @@ function AltitudeBox({ s, dispatch }) {
   );
 }
 
-function Prompt({ step, ep, shown, from }) {
-  if (ep) {
-    if (step.voice) return <div className="pf-prompt"><strong>{step.challenge}</strong>, after the memory steps</div>;
-    return <div className="pf-prompt">Memory step {step.item} of {step.of}</div>;
-  }
+function Prompt({ step, shown, from }) {
   if (step.kind === 'checklist') {
     return <div className="pf-prompt">Which checklist do you call for now?</div>;
   }
@@ -433,6 +452,8 @@ function Prompt({ step, ep, shown, from }) {
 
 function ChannelBox({ step, shown, from }) {
   if (!step.radio) return <span className="pf-channel">Intercom</span>;
+  // A radio named only by its band ("VHF") says nothing to ask or show.
+  if (/^(UHF|VHF)$/.test(step.radio.trim())) return null;
   const ch = radioOf(step.radio);
   const change = from !== undefined && from !== ch;
   return (
@@ -444,7 +465,15 @@ function ChannelBox({ step, shown, from }) {
   );
 }
 
-function StepCard({ s, dispatch }) {
+// The page's arrow keys, shown faintly on the buttons they work (not on touch screens).
+const Key = ({ k }) => <kbd className="pf-kbd" aria-hidden="true">{k}</kbd>;
+const BackButton = ({ canBack, dispatch }) => (
+  <button type="button" className="pf-btn" onClick={() => dispatch({ type: 'back' })} disabled={!canBack} title="Back a step">
+    <Key k="←" /> Back
+  </button>
+);
+
+function StepCard({ s, canBack, dispatch }) {
   const step = current(s);
   const input = useRef(null);
   const go = useRef(null);
@@ -477,14 +506,12 @@ function StepCard({ s, dispatch }) {
 
   if (ep?.done) {
     return (
-      <div className="pf-card pf-card--ep">
+      <div className="pf-card">
         <h2 className="pf-card-title">{ep.title}</h2>
-        <p className="pf-done">Memory steps complete.</p>
+        <p className="pf-done">Handled. Back to the flight.</p>
         <div className="pf-actions">
-          <button type="button" className="pf-btn pf-btn--go" autoFocus={!ep.ends} onClick={() => dispatch({ type: 'resume' })}>Resume flight</button>
-          <button type="button" className="pf-btn" autoFocus={ep.ends} onClick={() => dispatch({ type: 'end' })}>End flight</button>
+          <button type="button" className="pf-btn pf-btn--go" autoFocus onClick={() => dispatch({ type: 'resume' })}>Resume flight</button>
         </div>
-        <p className="pf-source">Source: {refText(ep.ref)}</p>
       </div>
     );
   }
@@ -500,8 +527,8 @@ function StepCard({ s, dispatch }) {
   };
 
   return (
-    <div className={ep ? 'pf-card pf-card--ep' : 'pf-card'}>
-      {ep && <h2 className="pf-card-title">EMERGENCY: {ep.title}</h2>}
+    <div className="pf-card">
+      {ep && <h2 className="pf-card-title">{ep.title}</h2>}
       {s.skipped && (
         <div className="pf-skipped">
           <div className="pf-skipped-title">
@@ -521,7 +548,7 @@ function StepCard({ s, dispatch }) {
           {step.choose === 'altitude' && <SetupPrompt s={s} step={step} />}
           {step.choose === 'cua' && (
             <div className="pf-setup">
-              <div className="pf-setup-alt">“You have the controls.” {step.attitude.text}.</div>
+              <div className="pf-setup-alt">{step.attitude.text}.</div>
             </div>
           )}
           <div className="pf-prompt">
@@ -529,14 +556,15 @@ function StepCard({ s, dispatch }) {
               : step.choose === 'cua' ? (step.part === 'pcl' ? 'Recover: the PCL?' : 'And the control stick?')
               : step.choose === 'area' ? (step.phase === 'Preflight' ? `Which ${s.plan} area?` : `Which ${s.plan} area are you claiming?`)
               : step.choose === 'block' ? 'High or low block?'
-              : step.choose === 'altitude' ? `Where do you set up for the ${MANEUVERS[step.maneuver].label.toLowerCase()}? Climb, descend or stay where you are.`
+              : step.choose === 'altitude' ? `Where do you set up for the ${MANEUVERS[step.maneuver].label.toLowerCase()}?`
               : step.choose === 'maneuver' ? (s.hwFlown && s.hwFlown.length ? `The ${MANEUVERS[s.lastManeuver].label.toLowerCase()} left you at ${ft(s.alt)}. Which maneuver next?` : 'High work: which maneuver first?')
               : step.choose === 'checkout' ? `Checking out of ${nameOf(s.node).replace(/\s*\d+\s*$/, '')}: which checks?`
               : step.choose === 'order' ? 'High work or low work first?'
                 : step.choose === 'plan' ? 'Which working area is being planned for?'
                   : step.choose === 'olf' ? 'Brief: where is the low work?'
                 : step.choose === 'entry' ? `Entering the field off ${labelOf(step.leg)}: a break or a PEL?`
-                  : step.choose === 'entryPlan' ? `Before you leave the area for ${labelOf(step.field)}: a break or a PEL? Your check-out says which.`
+                  : step.choose === 'runway' ? `Which runway at ${shortName(step.field)}?`
+                  : step.choose === 'entryPlan' ? `Before you leave the area, will you enter ${shortName(step.field)} through a break or a PEL?`
                   : step.choose === 'lap' ? 'This time round: a normal lap or a pattern PEL?'
                     : step.choose === 'field' ? `At ${nameOf(s.node)}. Pick what you do next.`
                   : `At ${nameOf(s.node)}. Pick the next leg below or on the map.`}
@@ -545,6 +573,7 @@ function StepCard({ s, dispatch }) {
             : <Choices opts={options(s)} onChoose={(id) => dispatch({ type: 'choose', id })} />}
           {s.cur.problem && <p className="pf-feedback pf-feedback--wrong">{s.cur.problem}</p>}
           {step.choose === 'cua' && step.ref && <p className="pf-source">Source: {refText(step.ref)}</p>}
+          {canBack && <div className="pf-actions"><BackButton canBack={canBack} dispatch={dispatch} /></div>}
         </>
       )}
 
@@ -557,7 +586,8 @@ function StepCard({ s, dispatch }) {
           </div>
           {step.generated && <p className="pf-when">Generated comms</p>}
           <div className="pf-actions">
-            <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: 'next' })}>Next</button>
+            <BackButton canBack={canBack} dispatch={dispatch} />
+            <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: 'next' })}>Next <Key k="→" /></button>
           </div>
           {step.ref && <p className="pf-source">Source: {refText(step.ref)}</p>}
         </>
@@ -569,7 +599,6 @@ function StepCard({ s, dispatch }) {
           {/* Switching, the channel is asked first; already on it, it just shows. */}
           <Prompt
             step={step}
-            ep={ep}
             shown={s.cur.shown || (s.cur.upTo || 0) >= 1 || (step.kind === 'call' && !s.cur.total && !switchesChannel(step, s.fly))}
             from={s.cur.chFrom}
           />
@@ -599,14 +628,12 @@ function StepCard({ s, dispatch }) {
           {s.cur.hint && !s.cur.shown && !lined && <p className="pf-hint">{firstLetters(answer)}</p>}
           {s.cur.shown && !lined && <p className="pf-shown pf-lines">“{answer}”</p>}
           <div className="pf-actions">
+            <BackButton canBack={canBack} dispatch={dispatch} />
             <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: s.cur.shown ? 'next' : 'reveal' })}>
-              {s.cur.shown ? 'Next' : (s.cur.total || linesOf(step, s.fly)) > 1 ? 'Reveal next' : 'Reveal'}
+              {s.cur.shown ? 'Next' : (s.cur.total || linesOf(step, s.fly)) > 1 ? 'Reveal next' : 'Reveal'} <Key k="→" />
             </button>
             {!s.cur.shown && (s.cur.total || linesOf(step, s.fly)) > 1 && (
               <button type="button" className="pf-btn" onClick={() => dispatch({ type: 'revealAll' })}>Reveal all</button>
-            )}
-            {!s.cur.shown && !lined && (
-              <button type="button" className="pf-btn" onClick={() => dispatch({ type: 'hint' })} disabled={s.cur.hint}>Hint</button>
             )}
           </div>
           {/* A checklist's source names it, so it waits until the answer is out. */}
@@ -618,7 +645,31 @@ function StepCard({ s, dispatch }) {
 }
 
 // The record of the flight, a fold per stage in the order flown.
-function FlightLog({ log }) {
+// For testers: the flight as text, copied and put in the feedback form at the bottom.
+function CopyFlight({ s }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className="pf-btn pf-btn--small pf-log-copy"
+      title="Copy this flight as text and put it in the feedback form at the bottom of the page"
+      onClick={(e) => {
+        // In the log's summary line: copying must not open or close the log.
+        e.preventDefault();
+        e.stopPropagation();
+        const text = flightText(s, { url: window.location.href });
+        try { navigator.clipboard.writeText(text).catch(() => {}); } catch (err) { /* the form still gets it */ }
+        window.dispatchEvent(new CustomEvent('psm-feedback', { detail: { category: 'Bug', text: `What went wrong:\n\n\n${text}` } }));
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+    >
+      {copied ? 'Copied' : 'Copy flight path'}
+    </button>
+  );
+}
+
+function FlightLog({ log, s }) {
   const end = useRef(null);
   const [open, setOpen] = useState(() => typeof window === 'undefined' || !window.matchMedia || window.matchMedia('(min-width: 761px)').matches);
   useEffect(() => { if (open && end.current) end.current.scrollIntoView({ block: 'nearest' }); }, [log.length, open]);
@@ -633,7 +684,7 @@ function FlightLog({ log }) {
 
   return (
     <details className="pf-log" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
-      <summary>Flight log <span className="pf-log-count">{said.length} steps</span></summary>
+      <summary>Flight log <span className="pf-log-count">{said.length} steps</span><CopyFlight s={s} /></summary>
       <div className="pf-log-body">
         {/* One fold per stage flown: the stage you're in is open, and each one closes when the
             flight moves on (it can be opened again). */}
@@ -665,19 +716,10 @@ function FlightLog({ log }) {
   );
 }
 
-// The flight with its history, so a step can be taken back (the left arrow).
-function withHistory(h, action) {
-  if (action.type === 'back') return h.past.length ? { past: h.past.slice(0, -1), now: h.past[h.past.length - 1] } : h;
-  const now = reduce(h.now, action);
-  if (now === h.now) return h;
-  if (action.type === 'legs' || action.type === 'type') return { ...h, now };
-  return { past: [...h.past.slice(-300), h.now], now };
-}
-
-export default function PracticeFlight() {
+function PracticeFlight() {
   const [h, dispatch] = useReducer(withHistory, undefined, () => {
     const squadron = squadronFromStorage();
-    return { past: [], now: start(null, squadron ? { card: { squadron } } : {}) };
+    return begin(start(null, squadron ? { card: { squadron } } : {}));
   });
   const s = h.now;
 
@@ -692,7 +734,11 @@ export default function PracticeFlight() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
   const step = current(s);
-  const onChoose = useCallback((id) => dispatch({ type: 'choose', id }), []);
+  // On the map a field's arrivals are drawn one by one; clicking any picks the field.
+  const onChoose = useCallback((id) => {
+    const field = options(h.now).find((o) => o.legs && o.legs.includes(id));
+    dispatch({ type: 'choose', id: field ? field.id : id });
+  }, [h.now]);
 
   // The legs' radio calls, from the course rules document. Until it arrives (or if it can't be
   // read) the flight uses the study guide's calls.
@@ -703,17 +749,18 @@ export default function PracticeFlight() {
   // Only the choices that are legs go on the map; worked out once per step so the map does not
   // refit while typing.
   const mapOptions = useMemo(
-    () => (s.ep || !s.airborne || !step || !['choose'].includes(step.kind) ? [] : options(s).map((o) => o.id).filter((id) => id.includes('-'))),
+    () => (s.ep || !s.airborne || !step || !['choose'].includes(step.kind) ? [] : options(s).flatMap((o) => o.legs || [o.id]).filter((id) => id.includes('-') && !id.startsWith('to:'))),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [step, s.ep, s.airborne],
   );
 
   return (
     <div className="pf-page">
-      <StatusBar s={s} dispatch={dispatch} />
+      <Notice />
+      <StatusBar s={s} back={backable(h)} dispatch={dispatch} />
       <div className="pf-body">
         <div className="pf-main">
-          <StepCard s={s} dispatch={dispatch} />
+          <StepCard s={s} canBack={h.past.length > 0} dispatch={dispatch} />
           {/* The flight goes on the map once it is flying: until then, only home. */}
           <PracticeMap
             route={s.airborne ? s.route : [s.route[0]]}
@@ -722,8 +769,71 @@ export default function PracticeFlight() {
             onChoose={onChoose}
           />
         </div>
-        <FlightLog log={s.log} />
+        <FlightLog log={s.log} s={s} />
       </div>
     </div>
   );
+}
+
+// Shown once per browser: the page is new and needs the community to test it.
+const NOTICE_KEY = 'practiceFlightNotice';
+function Notice() {
+  const [open, setOpen] = useState(() => {
+    try { return !window.localStorage.getItem(NOTICE_KEY); } catch (e) { return false; }
+  });
+  if (!open) return null;
+  const close = () => {
+    try { window.localStorage.setItem(NOTICE_KEY, '1'); } catch (e) { /* shown again next time */ }
+    setOpen(false);
+  };
+  return (
+    <div className="game-modal-overlay" onClick={close}>
+      <div className="game-modal pf-notice" role="dialog" aria-labelledby="pf-notice-title" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="game-modal-close" onClick={close} aria-label="Close">×</button>
+        <h3 id="pf-notice-title" className="pf-notice-title">Practice Flight is new and in testing</h3>
+        <p>It attempts to simulate all of a FAM flight&apos;s course rules, comms, checklists and general maneuver flow.</p>
+        <p>There are too many possible flights for me to test them all, so it needs your help. If something is wrong, press <strong>Copy flight path</strong> and send it in the feedback form at the bottom of the page, along with a description of what&apos;s wrong.</p>
+        <div className="pf-actions">
+          <button type="button" className="pf-btn pf-btn--go" onClick={close} autoFocus>Continue</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// A fault in drawing the page shows what went wrong and a way on, not a blank page.
+class Boundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null, run: 0 };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  componentDidCatch(error, info) {
+    // eslint-disable-next-line no-console
+    console.error('Practice Flight', error, info && info.componentStack);
+  }
+
+  render() {
+    const { error, run } = this.state;
+    if (!error) return <React.Fragment key={run}>{this.props.children}</React.Fragment>;
+    return (
+      <div className="pf-page">
+        <div className="pf-card">
+          <p className="pf-feedback pf-feedback--wrong">Something went wrong drawing this step.</p>
+          <p className="pf-when">{String(error && error.message ? error.message : error)}</p>
+          <div className="pf-actions">
+            <button type="button" className="pf-btn pf-btn--go" onClick={() => this.setState({ error: null, run: run + 1 })}>Restart</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+
+export default function PracticeFlightPage() {
+  return <Boundary><PracticeFlight /></Boundary>;
 }

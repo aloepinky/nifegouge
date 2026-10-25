@@ -52,12 +52,17 @@ const BUFFER = 500;
 // The block a flight works in (Course Rules Manual: KINGS 4 MOA, 2-24; MUSTANG working
 // altitudes), the altitude it arrives at, and the maneuvers' order. Null where there is no
 // high work (FOXTROT's middle block is too low to spin in).
-export function blockFor(group, which) {
+export function blockFor(group, which, { fromGoliad } = {}) {
   if (group === 'KINGS 4') {
-    // Entered on the transition layer: "Maintain 14,500' MSL until within the lateral confines".
+    // "Maintain 14,500' MSL until within the lateral confines of the MOA. Once within the MOA,
+    // utilize the appropriate transition altitude for direction of flight": the transition
+    // layer is flown "west at 14200' MSL and east at 14700' MSL", and in from Corpus the flight
+    // is westbound. From Goliad the low block is entered from below, on KINGS 4 Common "no
+    // later than 8000' MSL".
+    const arrive = fromGoliad && which === 'low' ? 8000 : 14200;
     return which === 'low'
-      ? { name: 'Low block', bottom: 9000, top: 14000, arrive: 14500, order: ORDERS.low }
-      : { name: 'High block', bottom: 15000, top: 22000, arrive: 14500, order: ORDERS.high };
+      ? { name: 'Low block', bottom: 9000, top: 14000, arrive, order: ORDERS.low }
+      : { name: 'High block', bottom: 15000, top: 22000, arrive, order: ORDERS.high };
   }
   if (/^MUSTANG|^Mustang/.test(group || '')) {
     // "Working altitudes are 6500' MSL to 15,000' MSL"; arriving at the transition's 5,500.
@@ -74,8 +79,8 @@ export function problemWith(maneuver, alt, block) {
   const m = MANEUVERS[maneuver];
   const { floor, ceiling } = limits(block);
   const [lo, hi] = m.change;
-  if (alt < floor) return `${ft(alt)} is below ${ft(floor)}, 500 feet above the bottom of the block.`;
-  if (alt > ceiling) return `${ft(alt)} is above ${ft(ceiling)}, 500 feet below the top of the block.`;
+  if (alt < floor) return `${ft(alt)} is within 500 feet of the bottom of the block. Generally, avoid working within 500' of altitude boundaries.`;
+  if (alt > ceiling) return `${ft(alt)} is within 500 feet of the top of the block. Generally, avoid working within 500' of altitude boundaries.`;
   if (alt + lo < floor) return `${m.label} can lose ${ft(-lo)}: from ${ft(alt)} that is ${ft(alt + lo)}, below ${ft(floor)}.`;
   if (alt + hi > ceiling) return `${m.label} can gain ${ft(hi)}: from ${ft(alt)} that is ${ft(alt + hi)}, above ${ft(ceiling)}.`;
   // A spin climbs before it starts: that peak stays in the block (its top, not 500 feet under

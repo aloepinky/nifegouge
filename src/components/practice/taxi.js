@@ -34,8 +34,10 @@ const OUT = {
 
 // Where the landing rolls out and leaves the runway, and the way to the line from there.
 const IN = {
-  '13L': { exit: 'Yankee', route: ['Yankee', 'Bravo'] },
-  '13R': { exit: 'Yankee', route: ['Yankee', { cross: ['13L'] }, 'Bravo'] },
+  // Off the 13s at Echo, short of Yankee (the user's correction, 2026-10-25): Yankee isn't
+  // reached from 13L's rollout.
+  '13L': { exit: 'Echo', route: ['Echo', 'Yankee', 'Bravo'] },
+  '13R': { exit: 'Echo', route: ['Echo', { cross: ['18', '13L'] }, 'Yankee', 'Bravo'] },
   18: { exit: 'Echo', route: ['Echo', { cross: ['13L'] }, 'Yankee', 'Bravo'] },
   22: { exit: 'Echo', route: ['Echo', { cross: ['13R', '18', '13L'] }, 'Yankee', 'Bravo'] },
   '31R': { exit: 'runway 4', route: ['runway 4', { cross: ['18'] }, 'Charlie'] },

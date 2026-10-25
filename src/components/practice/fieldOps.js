@@ -25,20 +25,38 @@ function resolveOr(comms, mode) {
 const legComms = (legs, id, mode) => (isPattern(id) ? rawComms(legs, id) : resolveOr(rawComms(legs, id), mode));
 const orPel = (legs, leg) => rawComms(legs, leg).some((c) => ALT.test(c.when || '') && /High-Key/i.test(c.text));
 
-// A PEL into a towered field whose calls ask for High-Key but give no PEL calls (Waldron): the
-// arrival's calls up to the initial, then High-Key and Low-Key to Tower, made up for practice
-// in the words of Goliad's.
+// A PEL into a towered field whose calls ask for High-Key but give no PEL calls (Waldron).
+// The Course Rules Manual's Practice PEL entry (2-43): "Request PPEL to Waldron with Corpus
+// Approach. Approach will relay landing runway. Approaching High-Key or when directed,
+// terminate with Approach and switch Waldron Tower (CH 30)." So the request to Approach, then
+// made up for practice in the words of Goliad's: Approach's runway, the termination, and
+// High-Key and Low-Key to Tower. None of the overhead's calls (Camel Humps, touch and go).
+export const WALDRON_PPEL = [
+  { text: 'Request PPEL to Waldron with Corpus Approach. Approach will relay landing runway. Approaching [[High-Key]] or when directed, terminate with Approach and switch Waldron Tower (CH [[30]]). Enter the PPEL (ELP) so that the turn to Low-Key is [[opposite the pattern]] or as directed by Waldron Tower.' },
+  { text: 'CAUTION: do not fly north of the [[Flour Bluff Water Tower]].' },
+];
+export const WALDRON_PPEL_REF = { work: 'Course Rules Manual', loc: 'Ch. 2 — Practice PEL entry (Waldron)', pages: 'p. 2-43' };
 function towerPel(legs, leg) {
   if (!orPel(legs, leg)) return null;
   const calls = callsOf(partsOf(legComms(legs, leg, 'pel')));
-  const upTo = calls.findIndex((c) => /initial|numbers/i.test(c.text));
-  const before = upTo < 0 ? calls : calls.slice(0, upTo);
   const tower = calls.map((c) => /^(\w+ Tower),/.exec(c.text)).find(Boolean);
   if (!tower) return null;
-  const made = (text) => ({ who: 'you', text, generated: true });
+  const ask = calls.find((c) => /request High-Key/i.test(c.text));
+  if (!ask) return null;
+  const made = (text, more = {}) => ({ who: 'you', text, generated: true, ...more });
   return {
     opening: [],
-    before: [...before, made(`${tower[1]}, (Call Sign), High-Key, (RWY #).`)],
+    rule: WALDRON_PPEL,
+    ruleRef: WALDRON_PPEL_REF,
+    before: [
+      ask,
+      made('(Call Sign), Corpus Approach, Waldron landing runway (RWY #).', { who: 'APP' }),
+      made('Corpus Approach, (Call Sign), approaching High-Key, terminate.'),
+      // First call to Tower: intentions; Tower gives the runway and when to report.
+      made(`${tower[1]}, (Call Sign), 5 miles to the south, request practice PEL, runway (RWY #).`, { radio: 'CH 30 UHF' }),
+      made(`(Call Sign), ${tower[1]}, runway (RWY #), report High-Key.`, { who: 'TWR' }),
+      made(`${tower[1]}, (Call Sign), High-Key, (RWY #).`),
+    ],
     after: [made(`${tower[1]}, (Call Sign), Low-Key, gear down.`)],
   };
 }
@@ -143,7 +161,9 @@ export function entryModes(legs, leg) {
 export function fieldModes(legs, field) {
   if (!field) return [];
   const arrivals = Object.keys(legs || {}).filter((id) => fieldOfLeg(id) === field && !isPattern(id) && legComms(legs, id).length);
-  return arrivals.length ? entryModes(legs, arrivals[0]) : [];
+  // Any of its arrivals (Waldron's South Arrivals offer a PEL, its North ones don't).
+  const modes = new Set(arrivals.flatMap((id) => entryModes(legs, id)));
+  return ['break', 'pel'].filter((m) => modes.has(m));
 }
 
 export const canDiscontinue = (legs, leg) => partsOf(legComms(legs, leg)).some(is(DISCONTINUED));
@@ -154,6 +174,20 @@ export const canDiscontinue = (legs, leg) => partsOf(legComms(legs, leg)).some(i
 // pattern's Practice PEL and High-Key calls, Low-Key last.
 // `opening` is the calls up to the initial (the landing call and the RDO's answer), when the
 // field's course rule is asked; `before` the rest up to the Before Landing Checklist.
+// A field's calls that name only a band ("VHF", "UHF"), on the channels its pattern rule
+// gives (Aransas County: "CTAF (CH 21 VHF)", "KRKP common (CH 21 UHF)").
+export function fieldRadios(legs, field) {
+  const pattern = field && choicesFrom(field).find(isPattern);
+  const rule = ((legs && legs[pattern] && legs[pattern].rule) || []).map((p) => p.text.replace(/\[\[|\]\]/g, '')).join(' ');
+  const vhf = /CTAF \(CH (\d+) VHF\)/i.exec(rule);
+  const uhf = /common \(CH (\d+) UHF\)/i.exec(rule);
+  return { VHF: vhf ? `CH ${vhf[1]} VHF` : null, UHF: uhf ? `CH ${uhf[1]} UHF` : null };
+}
+export function onChannels(calls, radios) {
+  if (!calls) return calls;
+  return calls.map((c) => (/^(UHF|VHF)$/.test(c.radio || '') && radios[c.radio] ? { ...c, radio: radios[c.radio] } : c));
+}
+
 export function entryCalls(legs, leg, mode, discontinued) {
   const parts = partsOf(legComms(legs, leg)).filter((p) => !DISCONTINUED.test(p.when));
   const initial = parts.findIndex(is(/initial/i));

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTheme } from './theme';
 
 const MAX_PHOTOS = 3;
@@ -39,6 +39,22 @@ function Footer() {
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
   const { theme, setTheme } = useTheme();
   const dark = theme === 'dark';
+  const box = useRef(null);
+
+  // A page can open the form filled in (Practice Flight's "Copy flight path"):
+  // window.dispatchEvent(new CustomEvent('psm-feedback', { detail: { category, text } })).
+  useEffect(() => {
+    const fill = (e) => {
+      const { category: c, text } = (e && e.detail) || {};
+      setOpen(true);
+      setStatus('idle');
+      if (c) setCategory(c);
+      if (text) setDescription(text);
+      setTimeout(() => box.current && box.current.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
+    };
+    window.addEventListener('psm-feedback', fill);
+    return () => window.removeEventListener('psm-feedback', fill);
+  }, []);
 
   const handlePhotos = (e) => {
     setPhotos(Array.from(e.target.files).slice(0, MAX_PHOTOS));
@@ -71,7 +87,7 @@ function Footer() {
 
   return (
     <footer className="site-footer">
-      <div className="footer-feedback">
+      <div className="footer-feedback" ref={box}>
         <div
           className={`footer-feedback-toggle ${open ? 'open' : ''}`}
           onClick={() => setOpen(!open)}

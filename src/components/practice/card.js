@@ -110,6 +110,9 @@ export function fillCall(text, card, at = {}) {
     .replace(/\(Transition\)/g, at.transition || '(Transition)')
     .replace(/\{rwy\}/g, rwy)
     .replace(/\(RWY ?#\)/g, rwy)
+    // Waldron's calls are written for runway 13 ("Report the initial RWY 13", "Initial 13",
+    // "Numbers 13") on every arrival: the runway in use.
+    .replace(/\b(Report the initial RWY|Initial|Numbers) 13\b(?![LRC])/g, `$1 ${rwy}`)
     .replace(/\(#\) in the pattern/g, '1 in the pattern')
     .replace(/\(Call Sign #2\)/g, other)
     .replace(/__ miles to the \(cardinal direction\)/g, '5 miles to the south')
@@ -136,6 +139,15 @@ export function fillCall(text, card, at = {}) {
     .replace(/\s+\(((?:[^()]|\([^()]*\))*\/(?:[^()]|\([^()]*\))*)\)/g, (m, alts) => ` ${choose(alts.split('/'), at.keywords, at.otherwise)}`)
     .split(', ').map((clause) => (clause.includes(' / ') ? choose(clause.split(' / '), at.keywords, at.otherwise) : clause)).join(', ')
     .replace(/\b(climbing|descending)\/(climbing|descending)\b/g, (m, a) => a)
+    // The choices a call writes with a bare slash, settled by the flight: leaving Waldron by its
+    // East departure, "off Waldron" from upwind and "Abeam the Power Plant" from the 180; home,
+    // or on to the working area; and from upwind or downwind out of a field.
+    .replace(/Abeam the Power Plant\/off Waldron/g, at.departFrom === 'downwind' ? 'Abeam the Power Plant' : 'off Waldron')
+    .replace(/course rules SHAMROCK\/Request South MUSTANG/gi, at.areaAhead ? 'Request South MUSTANG' : 'course rules SHAMROCK')
+    .replace(/\bupwind\/downwind\b/g, at.departFrom || 'upwind')
+    // Off Aransas County with the area still ahead, the intention is the area, not home ("state
+    // intentions (Northern Arrival/Request a working area)").
+    .replace(/(Off Aransas County), Course Rules SHAMROCK (with information [\w-]+)/, (m, a, b) => (at.areaAhead ? `${a} ${b}, request North MUSTANG` : m))
     // A break decided on: the field asked for, not its High-Key.
     .replace(/request High-Key into /g, (m) => (at.entry === 'break' ? 'request ' : m));
 }

@@ -17,7 +17,24 @@ export const isPattern = (id) => id.startsWith('Routes-Traffic Patterns-');
 // The Maintenance Area is for maintenance and check flights, never a student's, so no leg leads
 // there and it is no plan.
 const NOT_FLOWN = new Set(['Working Areas-Mustang Maintenance-196']);
-const nextOf = (id) => (crFeatures[id]?.nextNode || []).filter((n) => crFeatures[n] && !NOT_FLOWN.has(n));
+// Practice-only links, made up so a MUSTANG flight can do its low work first at its usual
+// field (the user's ruling, 2026-10-25); the Course Rules Manual has no paragraph for either.
+// MUSTANG North's is Aransas County: the Foxtrot/North Mustang Transition straight into the
+// KRKP arrivals (whose rule has a North MUSTANG part), and on by KRKP's own departures, which
+// already lead to the areas. MUSTANG South's is Waldron: out by its East Departures, Approach
+// asked for "South MUSTANG" (the call's own alternative) instead of SHAMROCK.
+const KRKP_ARRIVALS = ['Routes-Arrivals-25', 'Routes-Arrivals-26', 'Routes-Arrivals-27', 'Routes-Arrivals-28'];
+const MUSTANG_SOUTH = ['Working Areas-Mustang-197', 'Working Areas-Mustang-198', 'Working Areas-Mustang-199', 'Working Areas-Mustang-200'];
+export const PRACTICE_LINKS = {
+  'Routes-Transitions-153': KRKP_ARRIVALS,
+  'Routes-Departures-91': MUSTANG_SOUTH,
+  'Routes-Departures-92': MUSTANG_SOUTH,
+  'Routes-Departures-93': MUSTANG_SOUTH,
+  'Routes-Departures-94': MUSTANG_SOUTH,
+};
+export const isPracticeLink = (from, to) => (PRACTICE_LINKS[from] || []).includes(to);
+const nextOf = (id) => [...(crFeatures[id]?.nextNode || []), ...(PRACTICE_LINKS[id] || [])]
+  .filter((n, i, all) => crFeatures[n] && !NOT_FLOWN.has(n) && all.indexOf(n) === i);
 
 // The field a leg belongs to: the first part of its folder, "(KNGP) Corpus Christi NAS".
 export const fieldOf = (id) => {
@@ -196,9 +213,18 @@ export function routeToField(field, rwy) {
   return search(departures().filter((d) => runwayOf(d) === rwy), (n) => n === field);
 }
 
-// From an outlying field, the route on to the plan's area: one of its departures first.
-export function routeFromField(field, area) {
-  return search(choicesFrom(field).filter((n) => !isPattern(n)), (n) => n === area);
+// From an outlying field, the route on to the plan's area: one of its departures first, off
+// the runway in use there when it is given.
+export function routeFromField(field, area, rwy) {
+  const out = choicesFrom(field).filter((n) => !isPattern(n));
+  const off = rwy ? out.filter((n) => runwayOf(n) === rwy) : out;
+  return search(off.length ? off : out, (n) => n === area);
+}
+
+// The runways an outlying field is landed on, from its arrivals ("KRKP Arrivals 14").
+export function runwaysAt(field) {
+  const all = Object.keys(crFeatures).filter((id) => !isPattern(id) && nextOf(id).includes(field)).map(runwayOf).filter(Boolean);
+  return [...new Set(all)];
 }
 
 // The outlying fields a flight can do its low work at before its area: reachable off the

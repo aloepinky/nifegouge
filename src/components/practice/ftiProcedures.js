@@ -737,24 +737,6 @@ export const FTI_NUMBERS = {
     ['AOB', '20-45°'],
     ['Landing attitude stall, above final approach speed', '5-10 KIAS'],
   ],
-  // No longer flown: the climb-out (a second takeoff table), the outlying field departure and
-  // the unusual attitudes (their questions are the procedure). An outlying field entry's
-  // figures are the field's.
-  climbOut: [
-    ['Nose attitude, nose high', '7-10°'],
-    ['Climbing attitude approaching', '180 KIAS'],
-  ],
-  olfEntry: [],
-  olfDeparture: [
-    ['Airspeed minimum', '120 KIAS'],
-    ['Gear and flaps up below', '150 KIAS'],
-  ],
-  cuas: [
-    ['Nose high: roll past', '90°'],
-    ['Nose high, slow: torque below', '60%'],
-    ['Nose low: do not exceed', '316 KIAS'],
-    ['Advance the PCL below', '110 KIAS'],
-  ],
 };
 
 // What is said aloud through each procedure, after its numbers, as the user wrote it
@@ -772,7 +754,7 @@ export const FTI_CALLOUTS = {
   gWarm: [
     '(While rolling)',
     "G's coming on, now, now, now.",
-    '(Pull)',
+    '(Pull, 4-5 cycles)',
     'And roll out.',
   ],
   powerOnStall: [

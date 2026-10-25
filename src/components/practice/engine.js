@@ -17,17 +17,17 @@
 // flight picked leg by leg.
 
 import {
-  BEFORE_LANDING, CALLS, CHECKLISTS, EP_PHASES, FULL_STOP, GROUND, VOICE_REPORT, WHEN, WHEN_REF,
+  BEFORE_LANDING, CALLS, CHECKLISTS, EP_PHASES, FULL_STOP, GROUND, WHEN, WHEN_REF,
 } from './famScript';
 import {
   HOME, PLANS, TO_HOME, areaOf, choicesFrom, destinationsOf, fieldLabel, fieldOf, fieldsFor, groupOf,
-  fieldsAhead, isAirfield, isArea, isPattern, labelOf, legCalls, nameOf, routeFromField, routeTo, routeToField, distancesTo,
+  fieldsAhead, isAirfield, isArea, isPattern, labelOf, legCalls, nameOf, routeFromField, routeTo, routeToField, distancesTo, runwaysAt,
   runwayOf, shortName, feature,
 } from './legs';
 import { fillCall, makeCard } from './card';
 import {
   DISCONTINUE_REF, DISCONTINUE_RULE, canDiscontinue, chance, civilian, entryCalls, entryModes, fieldModes, fieldOfLeg, modeLabel,
-  lapCalls, lapModes,
+  fieldRadios, lapCalls, lapModes, onChannels,
 } from './fieldOps';
 import { gradeStep } from './grade';
 import { FTI, FTI_CALLOUTS, FTI_NUMBERS } from './ftiProcedures';
@@ -36,6 +36,7 @@ import {
 } from './highWork';
 import { bandOf, fieldFigures, figuresOf, flyOn, radioOf } from './figures';
 import { VT28 } from './vt28';
+import { SITUATIONS } from './situations';
 import { taxiIn, taxiOut } from './taxi';
 import { EP_ANSWERS, EP_LENGTHS, EP_TITLES } from '../EPDivsData';
 
@@ -57,7 +58,10 @@ export const EP_STEPS = (() => {
 const COURSE_RULES = (id) => ({ work: 'Course Rules Manual', loc: labelOf(id) });
 
 const GOLIAD = 'Point-default-38';
-const TO_GOLIAD = distancesTo(GOLIAD);
+// Each plan's usual outlying field (the user's, 2026-10-25), where a skipped flight does its
+// low work; FOXTROT and Mustang Central have none.
+const PLAN_FIELD = { 'KINGS 4': GOLIAD, 'MUSTANG South': 'Point-default-50', 'MUSTANG North': 'Point-default-21' };
+const TO_FIELD = Object.fromEntries(Object.values(PLAN_FIELD).map((f) => [f, distancesTo(f)]));
 
 // The departure asked for by name ("RUSTY"), or none for the Beach Line, which is asked for as
 // plain "VFR" (Course Rules Manual 2-3, b(2)).
@@ -66,6 +70,11 @@ function departureName(s) {
   const m = /> (.+) Departures$/.exec(feature(dep)?.folderPath || '');
   return m && !/Beach/i.test(m[1]) ? m[1].toUpperCase() : null;
 }
+
+const departFrom = (s, leg) => {
+  const m = /#1 (upwind|downwind)/i.exec(((ruleOf(s, leg) || []).map((p) => p.text).join(' ')).replace(/\[\[|\]\]/g, ''));
+  return m ? m[1].toLowerCase() : undefined;
+};
 
 // What fills a call's blanks at this point in the flight (card.js does the filling).
 function context(s, extra = {}) {
@@ -77,10 +86,14 @@ function context(s, extra = {}) {
   // working area; then wherever the leg being flown goes.
   const olfAhead = s.order === 'low' && s.olf && !s.route.includes(s.olf);
   const pel = s.entryPlan && s.entryPlan.mode === 'pel';
+  // The working area is still ahead until it has been flown; after it the plan names nothing.
+  const areaAhead = !!s.plan && !(s.flags && s.flags.areaDone) && !(s.flags && s.flags.inArea);
+  // High-Key into the field the PEL is planned for, never another field's.
+  const pelTo = pel ? shortName(s.entryPlan.field) : null;
   const keywords = [
-    ...(pel ? ['PPEL', 'High-Key'] : []),
+    ...(pel ? [`High-Key into ${pelTo}`, `High-Key to ${pelTo}`, `PPEL ${pelTo}`] : []),
     ...(s.recovery === 'straight' ? ['Straight-in'] : s.recovery === 'break' ? ['Full Stop'] : []),
-    ...(olfAhead ? [shortName(s.olf), 'VFR to'] : s.plan ? [s.plan, s.plan.split(' ')[0]] : []),
+    ...(olfAhead ? [shortName(s.olf), 'VFR to'] : areaAhead ? [s.plan, s.plan.split(' ')[0]] : []),
     // The leg's own name first ("North to South Transition"), then where it goes.
     ...(extra.leg && nameOf(extra.leg).length > 3 ? [nameOf(extra.leg)] : []),
     ...(extra.leg ? destinationsOf(extra.leg).map((d) => String(d).split(' ')[0]) : []),
@@ -99,6 +112,10 @@ function context(s, extra = {}) {
     nearest: field ? fieldLabel(field) : 'Navy Corpus',
     area: area ? area[1] : undefined,
     entry: s.entryPlan ? s.entryPlan.mode : undefined,
+    areaAhead,
+    // Out of a field, the leg's rule says whether it leaves from upwind or downwind ("When #1
+    // upwind", "When #1 downwind at the 180").
+    departFrom: extra.leg ? departFrom(s, extra.leg) : undefined,
     ...extra,
   };
 }
@@ -419,8 +436,32 @@ function expand(seg, s) {
   }
   if (seg.calls) return callSteps(CALLS[seg.calls].slice(...(seg.slice || [0])), seg, s, undefined, seg.calls);
   if (seg.rule) {
-    return [...ruleSteps(seg.rule, seg, s), ...(seg.then ? callSteps(seg.then, seg, s, COURSE_RULES(seg.rule), 'leg', { leg: seg.rule }) : [])];
+    const then = seg.thenShamrock && shamrockCall(s, seg.thenShamrock);
+    return [...ruleSteps(seg.rule, seg, s), ...(then ? callSteps(then, seg, s, COURSE_RULES(seg.rule), 'leg', { leg: seg.rule }) : [])];
   }
+  if (seg.shamrock) {
+    const calls = shamrockCall(s, seg.shamrock);
+    return calls ? callSteps(calls, seg, s, COURSE_RULES(seg.shamrock), 'field', { leg: seg.shamrock }) : [];
+  }
+  if (seg.weather) {
+    const wx = weatherOf(s, seg.weather);
+    return wx ? callSteps(wx, seg, s, wx[0].ref, 'atis', { rwy: s.card.rwy }) : [];
+  }
+  // Approach, for Waldron: course rules Waldron; on a PEL, direct Waldron, and it "will relay
+  // landing runway" (Course Rules Manual 2-43). Made up for practice; said once the break or
+  // PEL is decided.
+  if (seg.toWaldron !== undefined) {
+    const pel = s.entryPlan && s.entryPlan.mode === 'pel';
+    return callSteps(pel ? [
+      { who: 'APP', text: `(call sign), Corpus Approach, proceed direct Waldron${seg.toWaldron ? `, Waldron landing runway ${seg.toWaldron}` : ''}.`, generated: true },
+      { who: 'you', text: '(call sign), direct Waldron.', generated: true },
+    ] : [
+      { who: 'APP', text: '(call sign), Corpus Approach, proceed course rules Waldron.', generated: true },
+      { who: 'you', text: '(call sign), course rules Waldron.', generated: true },
+    ], seg, s, null, 'leg', { leg: seg.leg });
+  }
+  if (seg.waveOffRoll !== undefined) return chance(s.card.seed, 900 + seg.waveOffRoll) < WAVE_OFF_CHANCE ? waveOff(s, seg) : [];
+  if (seg.simIfPel) return s.entryPlan && s.entryPlan.mode === 'pel' ? expand(simulated(s, seg), s) : [];
   if (seg.kingsOut) {
     const { area, bound } = seg.kingsOut;
     const num = (/(\d+)\s*$/.exec(nameOf(area)) || [])[1];
@@ -480,9 +521,12 @@ function expand(seg, s) {
   }
   if (seg.legCalls) {
     const bound = seg.out && (fieldOfLeg(seg.out) || fieldsAhead(seg.out).find((f) => f !== HOME));
-    const otherwise = bound && bound !== HOME ? `course rules to ${shortName(bound)}` : undefined;
+    const pelTo = s.entryPlan && s.entryPlan.mode === 'pel' && bound === s.entryPlan.field;
+    const otherwise = bound && bound !== HOME ? `${pelTo ? 'request High-Key to' : 'course rules to'} ${shortName(bound)}` : undefined;
     const straight = s.recovery === 'straight' && fieldOf(seg.legCalls) === 'KNGP';
-    const calls = legCalls(seg.legCalls, s.legs).air.slice(...(seg.slice || [0])).filter((c) => !straight || !/Numbers/i.test(c.text));
+    const calls = legCalls(seg.legCalls, s.legs).air.slice(...(seg.slice || [0]))
+      .filter((c) => !straight || !/Numbers/i.test(c.text))
+      .filter((c) => !seg.outOfKings || !/Complete KINGS 4|^99 KINGS 4/i.test(c.text));
     return callSteps(calls, seg, s, COURSE_RULES(seg.legCalls), 'leg', { leg: seg.out || seg.legCalls, otherwise })
       .map((c) => ({ ...c, leg: labelOf(seg.legCalls) }));
   }
@@ -491,14 +535,14 @@ function expand(seg, s) {
   if (seg.choose === 'maneuver' && maneuversLeft(s)[0] === 'cuas') {
     let k = 0;
     const rng = () => chance(s.card.seed, 500 + (s.hwDone || 0) * 10 + k++);
-    const handOver = `${s.card.ip}, ready for contact UAs.`;
+    const handOver = `${s.card.ip}, ready for contact UAs. You have the controls.`;
     return [
       ...expand({ ...seg, choose: undefined, transit: true }, s),
       { kind: 'call', who: 'you', group: 'cua', text: handOver, answer: handOver, phase: seg.phase, stage: seg.stage, ref: FTI.cuas.ref },
       ...expand({ ...seg, choose: undefined, cua: cuaAttitude(rng) }, s),
     ];
   }
-  if (seg.choose) return [{ kind: 'choose', choose: seg.choose, leg: seg.leg, field: seg.field, goliad: seg.goliad, phase: seg.phase, stage: seg.stage }];
+  if (seg.choose) return [{ kind: 'choose', choose: seg.choose, leg: seg.leg, field: seg.field, goliad: seg.goliad, legs: seg.legs, via: seg.via, phase: seg.phase, stage: seg.stage }];
   if (seg.setup) {
     return [{ kind: 'choose', choose: 'altitude', maneuver: seg.setup, phase: seg.phase, stage: seg.stage, text: MANEUVERS[seg.setup].label }];
   }
@@ -553,8 +597,15 @@ const blank = () => ({ typed: '', result: '', first: '', shown: false, hint: fal
 // reached its working area. The area itself is part of the plan: the calls on the way claim it.
 function planned(s) {
   const at = s.steps[s.at];
+  // The runway already picked in the area, flown once its leg is reached.
+  if (s.nextLeg && at && at.kind === 'choose' && at.choose === 'leg' && choicesFrom(s.node).includes(s.nextLeg)) return s.nextLeg;
   if (s.done || !at || at.kind !== 'choose' || at.choose !== 'leg' || !s.path || s.planDone) return null;
-  return s.path[s.path.indexOf(s.node) + 1] || null;
+  const here = s.path.indexOf(s.node);
+  if (here < 0) return null;
+  const next = s.path[here + 1] || null;
+  // The arrival into an outlying field is the student's, by the wind.
+  const field = next && fieldOfLeg(next);
+  return field && field !== HOME && runwayOf(next) ? null : next;
 }
 
 // Airborne, a call "with information" the ATIS is made only once it has been copied again: the
@@ -593,6 +644,100 @@ function spinOf(s) {
   };
 }
 
+const WALDRON_OUT = [
+  [/East Departures/, 'Waldron Tower, (call sign), departing to the east, terminate.'],
+  [/Sunrise Transition/, 'Waldron Tower, (call sign), request Sunrise transition.'],
+  [/Oso Transition/, 'Waldron Tower, (call sign), request Oso transition.'],
+];
+const WALDRON_OUT_REF = { work: 'Course Rules Manual', loc: 'Ch. 2 — Waldron Departures', pages: 'p. 2-46' };
+// The runway in use at an outlying field: the one most into the wind (the wind is the one the
+// ATIS and the field's own weather give). A tie goes to the field's first.
+export function activeRunway(s, field) {
+  const rwys = runwaysAt(field);
+  if (!rwys.length) return null;
+  const off = (r) => Math.abs(((Number(s.card.windDir) - parseInt(r, 10) * 10 + 540) % 360) - 180);
+  return rwys.reduce((best, r) => (off(r) < off(best) ? r : best), rwys[0]);
+}
+// Whether a leg into an outlying field is for the runway in use there.
+export const runwayOk = (s, id) => {
+  const into = fieldOfLeg(id);
+  return !into || into === HOME || !runwayOf(id) || runwayOf(id) === activeRunway(s, into);
+};
+// Whether a pattern or departure at an outlying field is off the runway in use there.
+const onRunway = (s, id) => {
+  if (s.node === HOME || !isAirfield(s.node) || !s.rwy) return true;
+  if (isPattern(id)) return nameOf(id).split(/[/ ]/).includes(s.rwy);
+  return !runwayOf(id) || runwayOf(id) === s.rwy;
+};
+
+// Into Aransas County, in the order its rule gives: "self-announce over KRKP CTAF … Terminate
+// with Corpus Approach, switch CH 21 UHF, TW-4 KRKP Common, and check-in" (Course Rules Manual,
+// KRKP arrivals). The document's calls are the GOLIAD/KINGS 4 way in's ("10 miles to the west,
+// at 2500"); from the MUSTANG areas the self-announce is from the south. On a PEL the
+// self-announce and the check-in say High-Key, and no initial or numbers follow.
+function aransasIn(s, leg, mode, found) {
+  const raw = ((s.baseLegs || s.legs || {})[leg] || {}).comms || [];
+  const find = (re) => raw.find((c) => re.test(c.text));
+  const fromMustang = s.route.some((r) => /^MUSTANG|^FOXTROT/.test(groupOf(r) || '')
+    || r === 'Routes-Transitions-153' || r === 'Routes-Transitions-223');
+  const pel = mode === 'pel';
+  const said = (c, text, more = {}) => ({ who: 'you', text, radio: c && c.radio, ...more });
+  const announce = find(/10 miles/);
+  const lead = !fromMustang ? find(/^Corpus Approach, .*Over Woodsboro/) : null;
+  let text = announce ? announce.text : 'Aransas County Traffic, (Call Sign), 10 miles to the west, at 2500, inbound for a left overhead (RWY #), Aransas County.';
+  // From MUSTANG North 2 and 6, from the south; 1 and 5 (and the Goliad way in), the west (the
+  // user's, 2026-10-25).
+  const area = [...s.route].reverse().find(isArea);
+  const num = area ? (/(\d+)\s*$/.exec(nameOf(area)) || [])[1] : null;
+  if (['2', '6'].includes(num)) text = text.replace(/to the west/, 'to the south');
+  if (pel) text = text.replace(/inbound for a (left|right) overhead/, 'inbound for a high $1 overhead');
+  const approach = fromMustang ? 'CH 17 UHF' : 'CH 6 UHF';
+  const opening = [
+    ...(lead ? [said(lead, lead.text)] : []),
+    said(announce || { radio: 'VHF' }, text, { generated: !announce || fromMustang || pel }),
+    // Out of a MUSTANG area Approach has already terminated the flight (at the check-out).
+    ...(fromMustang && area ? [] : [{ who: 'you', text: 'Corpus Approach, (Call Sign), terminate.', radio: approach, generated: true }]),
+    ...(find(/^Any Texans/) ? [said(find(/^Any Texans/), find(/^Any Texans/).text)] : []),
+    ...(find(/is inbound for the initial/) ? [said(find(/is inbound for the initial/), pel ? '(Call sign) is inbound for High-Key.' : find(/is inbound for the initial/).text, { generated: pel })] : []),
+  ];
+  const before = pel ? found.before : [find(/2 mile Initial/), find(/numbers \(RWY/)].filter(Boolean).map((c) => said(c, c.text));
+  return { ...found, opening, before, ruleFirst: true };
+}
+
+// An outlying field's weather, from its own automated station (its page in the course rules
+// document: "ASOS — VHF 119.275MHz", "ASOS — UHF 14 (353.675MHz)"): the wind the runway in use
+// is picked by. No station listed (Waldron, a towered field), none. Made up for practice, in
+// the station's usual order; an automated station has no information letter.
+function weatherOf(s, field) {
+  const page = s.fields && s.fields[field];
+  const block = ((page && page.blocks) || []).find((b) => /^(ASOS|AWOS|ATIS)$/i.test(b.heading || ''));
+  const line = block && (block.lines || [])[0];
+  // A towered field with no station of its own (Waldron) has KNGP's ATIS (KNGP In Flight
+  // Guide, Waldron page: "ATIS (KNGP) 290.9 / 127.9 (1)"), on the VHF.
+  if (!line && ((page && page.blocks) || []).some((b) => /^Tower$/i.test(b.heading || ''))) {
+    const ref = { work: 'TW-4 In Flight Guide', loc: 'KNWL, Frequencies' };
+    return [
+      { who: 'you', text: 'Switching ATIS', radio: 'CH 1 VHF', station: 'Navy Corpus ATIS', ref },
+      { who: 'ATIS', radio: 'CH 1 VHF', generated: true, atis: true, ref, text: 'Navy Corpus information (ATIS code), wind (wind), altimeter (altimeter), runway {rwy} in use.' },
+    ];
+  }
+  if (!line) return null;
+  const ch = /^(UHF|VHF)\s+(\d{1,2})\b/i.exec(line);
+  const freq = /^(UHF|VHF)\s+(\d{3}\.\d+)/i.exec(line);
+  const radio = ch ? `CH ${ch[2]} ${ch[1].toUpperCase()}` : freq ? `${freq[2]} ${freq[1].toUpperCase()}` : null;
+  if (!radio) return null;
+  const kind = block.heading.toUpperCase();
+  // Its name as said: "Aransas County", "Goliad", "Ingleside".
+  const name = fieldLabel(nameOf(field)).replace(/ \(K[A-Z]{3}\)$/, '').replace(/ (Regional Airport|Airport|NOLF)$/, '');
+  const c = s.card;
+  return [
+    { who: 'you', text: `Switching ${name} ${kind}`, radio, station: `${name} ${kind}` },
+    { who: kind, radio, generated: true, text: `${name} automated weather observation. Wind ${c.windDir} at ${c.windSpeed}. Visibility one zero. Sky clear. Altimeter ${c.altimeter}.` },
+  ].map((x) => ({ ...x, ref: { work: 'Course Rules Manual', loc: `${fieldLabel(nameOf(field))} airfield, ${kind}` } }));
+}
+
+// The outlying field the flight was at last, or home.
+const lastField = (s) => [...s.route].reverse().find(isAirfield) || HOME;
 const KINGS_EXIT_REF = { work: 'Course Rules Manual', loc: 'Ch. 2 — KINGS 4 MOA Exit', pages: 'p. 2-28' };
 const PT_SHAMROCK = 'Point-Arrivals-113';
 const STRAIGHT_IN_REF = { work: 'Course Rules Manual', loc: 'Ch. 2 — SNA VFR Straight-In from PT SHAMROCK', pages: 'p. 2-65' };
@@ -639,7 +784,8 @@ function onlyLeg(s) {
   const at = s.steps[s.at];
   if (s.done || s.ep || !at || at.kind !== 'choose' || at.choose !== 'leg') return null;
   const opts = options(s);
-  return opts.length === 1 ? opts[0].id : null;
+  // A field (its weather and runway to come) is always the student's pick.
+  return opts.length === 1 && !opts[0].legs ? opts[0].id : null;
 }
 
 // ...and a leg the plan already decides is flown, not asked.
@@ -670,6 +816,33 @@ export function start(legs = null, { rng = Math.random, card, fields = null } = 
 export const current = (s) => (s.ep ? s.ep.steps[s.ep.at] : s.steps[s.at]);
 
 // The options a choice step offers, as { id, label }.
+// A field's arrivals, one per runway ("KRKP Arrivals 14", "…18"), are one choice: the field.
+// Its runway is picked after its weather (`runway`).
+function byField(opts, s) {
+  const runwaysAfter = (id) => {
+    const next = choicesFrom(id).filter((n) => runwayOf(n) && fieldOfLeg(n) && fieldOfLeg(n) !== HOME);
+    return next.length > 1 && new Set(next.map(fieldOfLeg)).size === 1 ? next : null;
+  };
+  if (s && s.flags.inArea) {
+    opts = opts.map((o) => {
+      const after = !runwayOf(o.id) && runwaysAfter(o.id);
+      return after ? { ...o, legs: after, via: o.id } : o;
+    });
+  }
+  const into = (o) => {
+    const f = fieldOfLeg(o.id);
+    return f && f !== HOME && runwayOf(o.id) ? f : null;
+  };
+  const out = [];
+  opts.forEach((o) => {
+    const f = into(o);
+    const same = f ? opts.filter((x) => into(x) === f) : [];
+    if (o.via || same.length < 2) { out.push(o); return; }
+    if (!out.some((x) => x.id === `to:${f}`)) out.push({ id: `to:${f}`, label: fieldLabel(nameOf(f)), legs: same.map((x) => x.id) });
+  });
+  return out;
+}
+
 export function options(s) {
   const now = current(s);
   if (!now) return [];
@@ -680,6 +853,7 @@ export function options(s) {
   if (now.choose === 'order') {
     return [{ id: 'high', label: 'High work first' }, { id: 'low', label: 'Low work first' }];
   }
+  if (now.choose === 'runway') return now.legs.map((id) => ({ id, label: `Runway ${runwayOf(id)}` }));
   if (now.choose === 'plan') {
     const pick = s.card.areaPick;
     return [...PLANS].sort((a, b) => (b.id === 'KINGS 4') - (a.id === 'KINGS 4'))
@@ -720,31 +894,42 @@ export function options(s) {
   }
   if (now.choose === 'field') {
     const field = s.node;
-    const legs = choicesFrom(field).filter((id) => inUse(s, id))
+    // Off the runway in use there; a field whose runway isn't known (no arrival names one)
+    // offers them all.
+    const usable = choicesFrom(field).filter((id) => inUse(s, id));
+    const onIt = usable.filter((id) => onRunway(s, id));
+    const legs = (onIt.length ? onIt : usable)
       .map((id) => ({ id, label: isPattern(id) ? `Touch and go: ${labelOf(id)}` : labelOf(id) }));
     if (field === HOME) return [{ id: 'fullStop', label: 'Full stop' }, ...legs.filter((o) => isPattern(o.id))];
     // Low work done: the flight goes on to its working area by the course rules.
-    if (!s.planDone && field === s.olf) {
-      return [{ id: 'toArea', label: `Depart for ${s.plan}` }, ...legs.filter((o) => isPattern(o.id))];
+    if (!s.planDone && field === s.olf && !s.flags.bingo) {
+      return [{ id: 'toArea', label: `Depart for ${s.plan}` }, ...legs.filter((o) => isPattern(o.id) && !s.flags.offField)];
     }
     return stillToDo(s, legs);
   }
   const all = choicesFrom(s.node).filter((id) => inUse(s, id));
   // Arriving at the planned working area: which of its areas.
-  const areas = s.plan && !s.planDone ? all.filter((id) => groupOf(id) === s.plan) : [];
-  return areas.length ? areas.map((id) => ({ id, label: labelOf(id) })) : stillToDo(s, all.map((id) => ({ id, label: labelOf(id) })));
+  // (Low work first, the field comes before the area.)
+  const olfAhead = s.olf && !s.route.includes(s.olf);
+  const areas = s.plan && !s.planDone && !olfAhead ? all.filter((id) => groupOf(id) === s.plan) : [];
+  const legs = olfAhead && !s.flags.inArea ? all.filter((id) => !isArea(id)) : all;
+  return areas.length ? areas.map((id) => ({ id, label: labelOf(id) })) : byField(stillToDo(s, (legs.length ? legs : all).map((id) => ({ id, label: labelOf(id) }))), s);
 }
 
 // Once the high work is done no leg back into a working area is offered, once the low work is
 // done none to an outlying field, and with both done only the way home. (Never all of them: a
 // choice that would leave nothing keeps everything.)
 function stillToDo(s, ids) {
-  const high = s.flags.areaDone;
-  const low = s.route.some((r) => isAirfield(r) && r !== HOME) && !isAirfield(s.node);
+  // At Bingo it is home now, as if both were done.
+  const high = s.flags.areaDone || s.flags.bingo;
+  const low = (s.route.some((r) => isAirfield(r) && r !== HOME) && !isAirfield(s.node)) || s.flags.bingo;
   const ok = (id) => {
-    if (isPattern(id) || id === 'fullStop' || id === 'toArea') return true;
+    // At Joker or Bingo the pattern is left.
+    if (isPattern(id)) return !s.flags.offField || s.node === HOME;
+    if (id === 'fullStop' || id === 'toArea') return !(id === 'toArea' && s.flags.bingo);
     const ahead = isAirfield(id) ? [id] : fieldsAhead(id);
-    if (high && low) return id === HOME || ahead.includes(HOME);
+    // (A working area leads home too, by its exits, but is never the way home.)
+    if (high && low) return !isArea(id) && (id === HOME || ahead.includes(HOME));
     if (high && (isArea(id) || (!ahead.length && !isAirfield(id)))) return false;
     if (low && ahead.length && !ahead.includes(HOME)) return false;
     return true;
@@ -836,7 +1021,10 @@ function shamrockCall(s, id) {
   const text = ((s.legs && s.legs[id] && s.legs[id].rule) || []).map((p) => p.text.replace(/\[\[|\]\]/g, '')).join(' ');
   const m = /Corpus Approach \(CH (\d+)/i.exec(text);
   if (!m) return null;
-  return [{ who: 'you', text: 'Corpus Approach, (call sign), course rules Shamrock with information (ATIS code)', radio: `CH ${m[1]} UHF`, generated: true }];
+  // Where it is said, from the same sentence: "At Woodsboro, contact…", "…NLT 9-mile Point".
+  const at = /At ([^,.]+), contact Corpus Approach/i.exec(text) || /Corpus Approach \(CH \d+[^)]*\) NLT ([^,.]+)/i.exec(text);
+  const where = at ? ` at ${at[1].trim()}` : '';
+  return [{ who: 'you', text: `Corpus Approach, (call sign)${where}, course rules Shamrock with information (ATIS code)`, radio: `CH ${m[1]} UHF`, generated: true }];
 }
 
 // Fly a leg: what comes with it goes in front of the rest of the flight.
@@ -845,6 +1033,8 @@ function fly(s, id) {
   // the MUSTANG areas and one for Goliad and KINGS 4).
   s = { ...s, legs: legsFrom(s, id) };
   const flags = { ...s.flags };
+  if (isAirfield(s.node) && !isPattern(id)) flags.offField = false;
+  if (id === s.nextLeg) s = { ...s, nextLeg: null };
   const air = { stage: 'airborne' };
   const segs = [];
   const planDone = s.planDone || (isArea(id) && groupOf(id) === s.plan);
@@ -858,23 +1048,46 @@ function fly(s, id) {
     // Checking out of KINGS 4: GOOFTWAR bound for Goliad, ABCDONT otherwise, said before the
     // check-out with Houston Center (the exit rule). Both take in the Descent Checklist and the
     // Operations Check, so neither follows on its own.
-    if (groupOf(s.node) === 'KINGS 4') {
-      const goliad = /Goliad/.test(labelOf(id)) || destinationsOf(id).some((d) => /Goliad/.test(d));
+    // Every area's check-out (MUSTANG's too), unless already said picking the field.
+    if (!flags.aidDone) {
+      // Bound for the field itself, not the Goliad Arrivals home.
+      const goliad = !!bound && fieldOf(bound) === 'KNGT';
       segs.push({ ...air, phase: leaving, choose: 'checkout', goliad });
       flags.descentDone = true;
     }
+    flags.aidDone = false;
+    // The field's weather before leaving the block (ABCDONT's "ATIS/WX", GOOFTWAR's "grab
+    // ASOS"), on the other radio while the first stays with Approach or Center.
+    if (bound && bound !== HOME && s.weatherFor !== bound) segs.push({ ...air, phase: leaving, weather: bound });
     const { exit } = areaRules({ ...s, heading: id }, s.node);
     // Out of the area, the heading is to where the leg goes.
     const to = fieldOfLeg(id) ? fieldLabel(nameOf(fieldOfLeg(id))) : destinationsOf(id)[0] || labelOf(id);
     const toward = { figs: { hdg: `toward ${to}` }, from: `leaving ${groupOf(s.node)}` };
-    segs.push({ ...air, phase: leaving, ...(exit
-      ? { ruleList: exit, label: `Course rules: leaving ${groupOf(s.node)}`, ref: COURSE_RULES(areaId(s, s.node)) }
-      : {}), fly: toward });
+    // KINGS 4's exit rule ends with the way to Goliad (its ASOS and CTAF): that part is said
+    // once clear of the area, after the calls on Common.
+    const cut = exit ? exit.findIndex((p) => /^If exiting MOA to go to Goliad/i.test(p.text.replace(/\[\[|\]\]/g, ''))) : -1;
+    const [out, onward] = cut > 0 ? [exit.slice(0, cut), exit.slice(cut)] : [exit, null];
+    const exitRule = (list) => ({ ruleList: list, label: `Course rules: leaving ${groupOf(s.node)}`, ref: COURSE_RULES(areaId(s, s.node)) });
+    segs.push({ ...air, phase: leaving, ...(out ? exitRule(out) : {}), fly: toward });
     // An area's own calls are its check-out ("complete in MUSTANG 1").
     if (legCalls(s.node, s.legs).air.length) segs.push({ ...air, phase: leaving, legCalls: s.node, out: id });
     // KINGS 4 has no calls of its own in the document: the manual's check-out with Houston
     // Center and the departing call on Common, then clear of the area.
     if (groupOf(s.node) === 'KINGS 4') segs.push({ ...air, phase: leaving, kingsOut: { area: s.node, bound } });
+    // Checked out with Approach for Aransas County: direct there, and terminated (made up for
+    // practice; the rule says only "Terminate with Corpus Approach").
+    if (bound && nameOf(bound) === 'KRKP' && legCalls(s.node, s.legs).air.length) {
+      segs.push({ ...air, phase: leaving, leg: s.node, callList: [
+        { who: 'APP', text: '(call sign), Corpus Approach, proceed direct Rockport, radar service terminated, frequency change approved.', generated: true },
+        { who: 'you', text: '(call sign), direct Rockport, frequency change approved.', generated: true },
+      ] });
+    }
+    if (bound && nameOf(bound) === 'KNWL' && legCalls(s.node, s.legs).air.length) {
+      segs.push({ ...air, phase: leaving, leg: s.node, toWaldron: s.nextLeg ? runwayOf(s.nextLeg) : null });
+    }
+    // A PEL planned: the IP's simulated emergency, once checked out and clear of the area.
+    segs.push({ ...air, phase: leaving, simIfPel: true });
+    if (onward && bound && fieldOf(bound) === 'KNGT') segs.push({ ...air, phase: leaving, ...exitRule(onward) });
   }
   if (flags.inArea && !isArea(id)) {
     flags.inArea = false;
@@ -887,6 +1100,15 @@ function fly(s, id) {
   // Out of an outlying field and on to the working area: an Operations Check before entering
   // the block.
   if (isAirfield(s.node) && s.node !== HOME && !isPattern(id)) flags.opsDue = true;
+  // Into a MUSTANG area from an outlying field (Waldron's by a practice-only link, legs.js):
+  // Approach gives the area, as Departure does on the way out from home (made up for practice).
+  if (isArea(id) && /^MUSTANG/.test(groupOf(id) || '') && !flags.inArea && lastField(s) !== HOME) {
+    const n = (/(\d+)\s*$/.exec(nameOf(id)) || [])[1];
+    segs.push({ ...air, phase: phaseOfLeg(id, flags, s.route), leg: id, callList: [
+      { who: 'APP', text: `(call sign), Corpus Approach, proceed to MUSTANG ${n}, work MUSTANG ${n}.`, generated: true },
+      { who: 'you', text: `(call sign), work MUSTANG ${n}.`, generated: true },
+    ] });
+  }
   if (isArea(id) && flags.opsDue && !flags.inArea) {
     flags.opsDue = false;
     segs.push({ ...air, phase: phaseOfLeg(id, flags, s.route), checklist: 'ops', when: WHEN.opsPattern, whenRef: WHEN_REF.opsPattern });
@@ -919,6 +1141,15 @@ function fly(s, id) {
     segs.push({ ...air, phase, choose: 'field' });
     return { ...next, node: id, route: [...s.route, id], segments: [...segs, ...s.segments] };
   }
+  // Out of Waldron, Tower is told first (Course Rules Manual 2-46 to 2-47: terminate with
+  // Waldron Tower, or request a Sunrise or Oso transition with it); made up for practice.
+  const waldronCall = fieldOf(s.node) === 'KNWL' && !isPattern(id) && WALDRON_OUT.find(([re]) => re.test(feature(id)?.folderPath || ''));
+  if (waldronCall) {
+    segs.push({ ...air, phase, leg: id, ref: WALDRON_OUT_REF, callList: [{ who: 'you', radio: 'CH 30 UHF', generated: true, text: waldronCall[1] }] });
+  }
+  // KNGP's Oso Transition legs are its way out to Waldron (Ground, then Waldron Tower): flown
+  // home from Waldron, neither their rule nor their calls are this flight's.
+  const backwards = /^\(KNGP\).*Oso Transition/.test(feature(id)?.folderPath || '') && lastField(s) !== HOME;
   // Course rules are asked in transit. Round the pattern it is calls and procedures only, and
   // a leg into a field is asked during the RDO's calls (landing()).
   const entering = !isPattern(id) && fieldOfLeg(id) && fieldOfLeg(id) !== HOME ? entryModes(s.legs, id) : [];
@@ -926,7 +1157,7 @@ function fly(s, id) {
   if (isArea(id)) {
     const { entry } = areaRules(s, id);
     if (entry && !flags.inArea) segs.push({ ...air, phase, ruleList: entry, label: `Course rules: ${groupOf(id)}`, ref: COURSE_RULES(areaId(s, id)) });
-  } else if (ruleOf(s, id) && !isPattern(id) && !entering.length) segs.push({ ...air, phase, rule: id, classD: needsClassD(s, id) });
+  } else if (ruleOf(s, id) && !isPattern(id) && !entering.length && !backwards) segs.push({ ...air, phase, rule: id, classD: needsClassD(s, id) });
   else if (needsClassD(s, id)) segs.push({ ...air, phase, ruleList: [CLASS_D], label: 'Course rules: VFR departures', ref: CLASS_D_REF });
   // A rule that climbs through 10,000 ft (KINGS 4's "climb to 14,500 MSL") brings the Climb
   // Checklist straight after it.
@@ -954,19 +1185,23 @@ function fly(s, id) {
     return { ...entered, segments: [...segs, ...entered.segments] };
   }
   // A pattern's calls are its lap's (lap()), never the whole list.
-  if (!isPattern(id) && !isArea(id) && legCalls(id, s.legs).air.length) {
+  if (!isPattern(id) && !isArea(id) && !backwards && legCalls(id, s.legs).air.length) {
     const calls = legCalls(id, s.legs).air;
     const claim = calls.findIndex((c) => /^99 KINGS 4/.test(c.text));
     if (claim >= 0 && !s.blockPicked) {
       if (claim > 0) segs.push({ ...air, phase, legCalls: id, slice: [0, claim] });
       if (!s.area) segs.push({ ...air, phase, choose: 'area' });
       segs.push({ ...air, phase, choose: 'block' }, { ...air, phase, legCalls: id, slice: [claim] });
-    } else segs.push({ ...air, phase, legCalls: id });
+    // Out of KINGS 4 the check-out calls are the area's own (kingsOut); a leg that repeats them
+    // (the Aransas Exit) says the rest.
+    } else segs.push({ ...air, phase, legCalls: id, outOfKings: groupOf(s.node) === 'KINGS 4' && !isArea(id) });
   }
+  // Made when it comes up, so a check-out that already said it (MUSTANG's "Course Rules
+  // SHAMROCK with information") counts.
   else if (shamrockCall(s, id)) {
     const ruled = segs.findIndex((x) => x.rule === id);
-    if (ruled >= 0) segs[ruled] = { ...segs[ruled], then: shamrockCall(s, id) };
-    else segs.push({ ...air, phase, leg: id, callList: shamrockCall(s, id) });
+    if (ruled >= 0) segs[ruled] = { ...segs[ruled], thenShamrock: id };
+    else segs.push({ ...air, phase, leg: id, shamrock: id });
   }
   if (isArea(id)) {
     if (!flags.inArea) {
@@ -976,7 +1211,7 @@ function fly(s, id) {
       // Working the area, heading and airspeed are the maneuvers'.
       segs.push({ ...air, phase, checklist: 'psa', when: WHEN.psa, whenRef: WHEN_REF.psa, fly: { figs: { hdg: null, kias: null } } });
       // High work: each maneuver set up at an altitude the student picks, then said.
-      const block = blockFor(groupOf(id), s.card.block);
+      const block = blockFor(groupOf(id), s.card.block, { fromGoliad: s.route.some((r) => fieldOf(r) === 'KNGT') });
       if (block) {
         segs.push({ ...air, phase, choose: 'maneuver' });
         return { ...next, flags, alt: block.arrive, block, hwFlown: [], node: id, route: [...s.route, id], segments: [...segs, { ...air, phase, choose: 'leg' }, ...s.segments] };
@@ -1027,7 +1262,12 @@ function landing(s, phase, leg, calls, keywords, procs = {}, fly = {}) {
   const said = (list = []) => list.map((p) => ({ ...air, ...p }));
   return [
     // Into a field: the landing call and the RDO's answer, then the field's course rule.
-    ...(calls.opening ? [{ ...air, callList: calls.opening, fly: fly.opening }, ...(ruleOf(s, leg) ? [{ ...air, rule: leg }] : [])] : []),
+    // A field's own rule for the way in (Waldron's Practice PEL entry) stands for the arrival's.
+    // (Aransas County's rule says what its first calls are: it comes first.)
+    ...(calls.opening && calls.ruleFirst ? [...(ruleOf(s, leg) ? [{ ...air, rule: leg }] : []), { ...air, callList: calls.opening, fly: fly.opening }] : []),
+    ...(calls.opening && !calls.ruleFirst ? [{ ...air, callList: calls.opening, fly: fly.opening }, ...(calls.rule
+      ? [{ ...air, ruleList: calls.rule, label: `Course rules: ${labelOf(leg)}`, ref: calls.ruleRef }]
+      : ruleOf(s, leg) ? [{ ...air, rule: leg }] : [])] : []),
     ...said(procs.first).map((p, i) => (i || !fly.first ? p : { ...p, fly: fly.first })),
     { ...air, callList: calls.before, fly: fly.before },
     ...(calls.discontinued ? [
@@ -1039,13 +1279,15 @@ function landing(s, phase, leg, calls, keywords, procs = {}, fly = {}) {
     ...BEFORE_LANDING.map((b, i) => ({ ...b, phase, ...(i || !fly.downwind ? {} : { fly: fly.downwind }) })),
     ...said(procs.downwind),
     { ...air, callList: calls.after },
+    // Four landings in ten are waved off (the user's figure, 2026-10-25).
+    { ...air, waveOffRoll: (s.entries || 0) * 100 + (s.laps || 0) },
     { ...air, choose: 'field' },
   ];
 }
 
 const DOWNWIND = [{ fti: 'approach' }];
 const ENTRY = {
-  break: { first: [{ fti: 'olfEntry' }], turn: [{ fti: 'theBreak' }], downwind: DOWNWIND },
+  break: { turn: [{ fti: 'theBreak' }], downwind: DOWNWIND },
   pel: { first: [{ fti: 'pel' }] },
 };
 const LAP = {
@@ -1076,7 +1318,13 @@ function enter(s, leg, mode) {
   const field = fieldOfLeg(leg);
   const n = s.entries || 0;
   const discontinued = mode === 'break' && canDiscontinue(s.legs, leg) && chance(s.card.seed, n) < 1 / 3;
-  const found = entryCalls(s.legs, leg, mode, discontinued);
+  const radios = fieldRadios(s.legs, field);
+  const raw = nameOf(field) === 'KRKP' ? aransasIn(s, leg, mode, entryCalls(s.legs, leg, mode, discontinued)) : entryCalls(s.legs, leg, mode, discontinued);
+  const fromArea = nameOf(field) === 'KNWL' && isArea(s.route[s.route.length - 3] || '');
+  // Into Waldron straight from the area, the request was the check-out's and Approach gave the
+  // runway then: neither is said again.
+  const asked = (c) => fromArea && (/^Corpus Approach, .*(course rules to Waldron|request High-Key to Waldron)/.test(c.text) || /Waldron landing runway/.test(c.text));
+  const found = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, Array.isArray(v) ? onChannels(v.filter((c) => !c.text || !asked(c)), radios) : v]));
   const calls = fieldOf(leg) === 'KNGT' ? { ...found, opening: [...(found.opening || []), goliadTraffic(s, mode)] } : found;
   const f = patternFly(s, field, s.rwy);
   const fly = mode === 'pel' ? { before: f.highKey, downwind: f.lowKey } : { before: f.initial, downwind: f.downwind };
@@ -1104,7 +1352,9 @@ const simulated = (s, now) => ({
 });
 
 function lap(s, pattern, mode) {
-  const calls = lapCalls(s.legs, pattern, mode);
+  const radios = fieldRadios(s.legs, fieldOf(pattern) && (feature(pattern).nextNode || []).find(isAirfield));
+  const lapped = lapCalls(s.legs, pattern, mode);
+  const calls = Object.fromEntries(Object.entries(lapped).map(([k, v]) => [k, Array.isArray(v) ? onChannels(v, radios) : v]));
   const phase = fieldOf(pattern) === 'KNGP' ? 'Landing' : 'Pattern';
   const f = patternFly(s, s.node, s.rwy);
   const fly = mode === 'ppel' ? { first: f.upwind, downwind: f.lowKey } : { first: f.upwind, downwind: f.downwind };
@@ -1135,7 +1385,7 @@ function briefNext(s) {
 // A setup altitude typed for a maneuver (setups() offers the usual ones).
 function setUp(s, now, typed) {
   const at = typedAltitude(typed);
-  if (at === null) return { ...s, cur: { ...s.cur, result: 'incorrect', problem: 'Type an altitude, like 17500 or 17.5.' } };
+  if (at === null) return { ...s, cur: { ...s.cur, result: 'incorrect', problem: 'Type an altitude, e.g. 17,500 or 17.5.' } };
   const problem = problemWith(now.maneuver, at, s.block);
   if (problem) return { ...s, cur: { ...s.cur, result: 'incorrect', problem } };
   const n = s.hwDone || 0;
@@ -1223,22 +1473,43 @@ function choose(s, id, rng = Math.random) {
   // A setup altitude is typed, any altitude at all; one that breaks the block or the maneuver
   // is refused, and said why.
   if (now && now.choose === 'altitude') return setUp(s, now, id);
-  const opt = options(s).find((o) => o.id === id);
+  const all = options(s);
+  // A field's own arrival named directly (a replay, a test) is flown as picked.
+  const opt = all.find((o) => o.id === id) || (now.choose === 'leg' && all.some((o) => o.legs && o.legs.includes(id)) ? { id, label: labelOf(id) } : null);
   if (!opt) return s;
+  // Into an outlying field, the runway is the wind's, not a choice.
+  if ((now.choose === 'leg' || now.choose === 'runway') && !runwayOk(s, id)) {
+    return { ...s, cur: { ...s.cur, result: 'incorrect', problem: `With the wind ${s.card.windDir} at ${s.card.windSpeed}, runway ${runwayOf(id)} would not be the active runway.` } };
+  }
   const logged = { ...s, log: [...s.log, { ...logOf(now, 'choice'), text: opt.label, who: 'choice' }] };
   if (now.kind === 'ask') {
     const segs = id === 'run' ? [{ phase: now.phase, stage: now.stage, checklist: 'climb' }] : [];
     return advance({ ...logged, flags: { ...s.flags, climbDone: id === 'run' }, segments: [...segs, ...s.segments] });
   }
   if (now.choose === 'order') return advance({ ...logged, order: id });
-  // A PEL picked, here or in the area: the IP's simulated emergency comes straight after.
+  // A field picked: out of an area, the check-out aid first (ABCDONT's "ATIS/WX", GOOFTWAR's
+  // "grab ASOS"); then the field's weather; then its runway, by that wind.
+  if (now.choose === 'leg' && (id.startsWith('to:') || opt.via)) {
+    const field = id.startsWith('to:') ? id.slice(3) : fieldOfLeg(opt.legs[0]);
+    const at = seg(now);
+    const segs = [
+      ...(s.flags.inArea ? [{ ...at, choose: 'checkout', goliad: nameOf(field) === 'KNGT' }] : []),
+      { ...at, weather: field },
+      { ...at, choose: 'runway', field, legs: opt.legs, via: opt.via },
+    ];
+    const flags = { ...s.flags, ...(s.flags.inArea ? { aidDone: true, descentDone: true } : {}) };
+    return advance({ ...logged, flags, weatherFor: field, segments: [...segs, ...s.segments] });
+  }
+  // The runway picked; by way of a leg first (the Camel Humps), the runway's arrival after it.
+  if (now.choose === 'runway') return now.via ? advance(fly({ ...logged, nextLeg: id }, now.via)) : advance(fly(logged, id));
+  // A PEL picked at the field: the IP's simulated emergency comes straight after. One planned
+  // in the area comes once clear of it (simIfPel).
   if (now.choose === 'entry') {
     const into = enter(logged, now.leg, id);
     return advance(id === 'pel' ? { ...into, segments: [simulated(logged, now), ...into.segments] } : into);
   }
   if (now.choose === 'entryPlan') {
-    const planned = { ...logged, entryPlan: { field: now.field, mode: id } };
-    return advance(id === 'pel' ? { ...planned, segments: [simulated(logged, now), ...s.segments] } : planned);
+    return advance({ ...logged, entryPlan: { field: now.field, mode: id } });
   }
   if (now.choose === 'lap') return advance(lap(logged, now.leg, id));
   if (now.choose === 'checkout') return advance({ ...logged, segments: [{ ...seg(now), vt28: id }, ...s.segments] });
@@ -1279,7 +1550,7 @@ function choose(s, id, rng = Math.random) {
   if (now.choose === 'plan') return briefNext({ ...logged, plan: id, area: null, blockPicked: false });
   if (now.choose === 'olf') return depart({ ...logged, olf: id }, routeToField(id, s.card.rwy));
   if (id === 'toArea') {
-    const path = routeFromField(s.olf, areaOf(s.plan, s.card.areaPick));
+    const path = routeFromField(s.olf, areaOf(s.plan, s.card.areaPick), s.rwy);
     return advance(fly({ ...logged, path }, path[0]));
   }
   if (id === 'fullStop') {
@@ -1298,20 +1569,31 @@ function choose(s, id, rng = Math.random) {
 function skipChoice(s, target) {
   const now = current(s);
   if (now.kind === 'ask') return 'skip';
-  const opts = options(s).map((o) => o.id);
+  const opts = options(s).map((o) => o.id).filter((id) => now.choose !== 'leg' || runwayOk(s, id));
   if (now.choose === 'plan' && opts.includes('KINGS 4')) return 'KINGS 4';
-  if (now.choose === 'olf' && opts.includes(GOLIAD)) return GOLIAD;
+  if (now.choose === 'runway') return opts.find((id) => runwayOk(s, id)) || opts[0];
+  // A field still to fly to: the field (its runway comes after).
+  const goal = s.olf && !s.route.includes(s.olf) ? s.olf : PLAN_FIELD[s.plan] && !s.route.includes(PLAN_FIELD[s.plan]) && (s.flags.areaDone || s.flags.inArea) ? PLAN_FIELD[s.plan] : null;
+  if (now.choose === 'leg' && goal && opts.includes(`to:${goal}`)) return `to:${goal}`;
+  // Low work first: on to the field briefed.
+  if (now.choose === 'leg' && s.olf && !s.route.includes(s.olf)) {
+    const into = opts.find((id) => fieldOfLeg(id) === s.olf);
+    if (into) return into;
+  }
+  if (now.choose === 'olf' && opts.includes(PLAN_FIELD[s.plan])) return PLAN_FIELD[s.plan];
   if (now.choose === 'altitude') return opts.find((a) => !problemWith(now.maneuver, Number(a), s.block)) || opts[0];
   if (now.choose === 'cua') return CUA_RIGHT[now.attitude.type][now.part];
   if (now.choose === 'block') return s.card.block;
   if (now.choose === 'checkout') return now.goliad ? 'gooftwar' : 'abcdont';
   if (['order', 'plan', 'area', 'olf', 'entry', 'entryPlan', 'lap', 'maneuver', 'recovery'].includes(now.choose)) return opts[0];
-  if (now.choose === 'leg' && (s.flags.areaDone || s.flags.inArea)) {
-    if (!s.route.includes(GOLIAD) && opts.some((id) => TO_GOLIAD[id] !== undefined)) {
-      return opts.reduce((best, id) => ((TO_GOLIAD[id] ?? 99) < (TO_GOLIAD[best] ?? 99) ? id : best), opts[0]);
-    }
+  // Out of the area with the low work still to do: on to the plan's field.
+  const field = PLAN_FIELD[s.plan];
+  if (now.choose === 'leg' && (s.flags.areaDone || s.flags.inArea) && field && !s.route.includes(field)) {
+    const to = TO_FIELD[field];
+    if (opts.some((id) => to[id] !== undefined)) return opts.reduce((best, id) => ((to[id] ?? 99) < (to[best] ?? 99) ? id : best), opts[0]);
   }
-  if (target === 'Pattern' && now.choose === 'field') {
+  // A pattern to skip to is an outlying field's; at home the flight lands.
+  if (target === 'Pattern' && now.choose === 'field' && s.node !== HOME) {
     const pattern = opts.find((id) => isPattern(id));
     if (pattern) return pattern;
   }
@@ -1328,7 +1610,7 @@ function skipChoice(s, target) {
 function skipPhase(s, target) {
   const from = current(s)?.phase;
   const before = s.log.length;
-  for (let n = 0; n < 3000 && !s.done; n++) {
+  for (let n = 0; n < 1500 && !s.done; n++) {
     const now = current(s);
     if (!now || (now.phase !== from && now.kind !== 'auto')) break;
     if (now.kind === 'reply') s = answered(s, 'heard');
@@ -1339,13 +1621,31 @@ function skipPhase(s, target) {
   return { ...s, skipped: { phase: from, told } };
 }
 
-// Skip stage after stage until the flight is in `target` (or over).
+// Whether skipping to `phase` can get there: an outlying field's pattern, and the transit
+// between it and the area, only on a flight with a field still ahead or at one now.
+export function canSkipTo(s, phase) {
+  if (s.done || s.ep) return false;
+  if (phase !== 'Pattern' && phase !== 'Transit') return true;
+  const field = PLAN_FIELD[s.plan];
+  const atField = isAirfield(s.node) && s.node !== HOME;
+  if (phase === 'Pattern') return atField || (!!field && !s.route.includes(field));
+  // Transit is between the field and the area, whichever comes first.
+  return (!!field && !s.route.includes(field)) || (atField && !s.flags.areaDone);
+}
+
+// Skip stage after stage until the flight is in `target` (or over). It stops once home in
+// the landing (nothing before it can come round again) or when a stage gets no further.
 function skipTo(s, target) {
   const from = current(s)?.phase;
   const told = [];
-  for (let n = 0; n < 60 && !s.done && current(s)?.phase !== target; n++) {
+  if (!canSkipTo(s, target)) return s;
+  for (let n = 0; n < 30 && !s.done && current(s)?.phase !== target; n++) {
+    const was = s.log.length;
     s = skipPhase(s, target);
     told.push(...s.skipped.told);
+    const now = current(s)?.phase;
+    if (s.log.length === was) break;
+    if (['Landing', 'Taxi back'].includes(now) && !['Landing', 'Taxi back'].includes(target) && s.node === HOME) break;
   }
   return { ...s, skipped: { phase: from, to: target, told } };
 }
@@ -1468,10 +1768,10 @@ function act(s, action) {
       return s.cur.shown ? answered(s, now.typed ? 'shown' : 'said') : reveal(s, false);
     case 'choose':
       return choose(s, action.id, action.rng);
-    case 'randomEp':
-      return randomEp(s, action.rng || Math.random);
+    case 'situation':
+      return situation(s, action.rng || Math.random);
     case 'resume':
-      return s.ep?.done ? { ...s, ep: null, cur: blank() } : s;
+      return s.ep?.done ? afterSituation({ ...s, ep: null, cur: blank() }, s.ep.effect) : s;
     case 'end':
       return { ...s, done: true, ended: s.ep?.title || 'Ended', ep: null, cur: blank() };
     default:
@@ -1485,30 +1785,100 @@ export function stageOf(s) {
   return current(s)?.stage || null;
 }
 
-export function epsFor(s) {
-  const stage = stageOf(s);
-  return EP_PHASES.map((p, i) => ({ ...p, i })).filter((p) => p.when.includes(stage));
+// --- Situations: what goes wrong short of an emergency (situations.js) -------------------
+
+// What a situation needs to know about the flight, and how it says things.
+function helpers(s, rng = Math.random) {
+  const now = current(s);
+  const phase = now?.phase;
+  const atOlf = isAirfield(s.node) && s.node !== HOME;
+  const atGoliad = atOlf && nameOf(s.node) === 'KNGT';
+  // Round an outlying field's pattern: a lap or an entry under way, its field choice still to come.
+  const inLap = atOlf && (s.segments.some((x) => x.choose === 'field') || (now && now.kind !== 'choose'));
+  const homeBound = ['Recovery', 'Landing'].includes(phase) && s.airborne;
+  const ctx = { ...context(s), ...(atGoliad ? { sideOnly: true } : {}) };
+  const fill = (text) => fillCall(text, s.card, ctx);
+  const tower = phase === 'Landing';
+  return {
+    phase,
+    airborne: !!s.airborne && !s.done,
+    inArea: !!s.flags.inArea,
+    highWorkLeft: !!s.flags.inArea && (['maneuver', 'altitude', 'cua'].includes(now?.choose) || s.segments.some((x) => x.choose === 'maneuver' || x.setup)),
+    atOlf,
+    atGoliad,
+    // A field with someone to direct a wave-off: Goliad's RDO, Waldron Tower.
+    directed: atGoliad || (atOlf && nameOf(s.node) === 'KNWL'),
+    inLap,
+    toGoliadInitial: !!now && now.kind === 'call' && /^Goliad RDO, .*initial/i.test(now.text),
+    homeBound,
+    fuelDone: !!(s.flags.joker || s.flags.bingo),
+    bingo: !!s.flags.bingo,
+    declared: !!s.flags.declared,
+    station: tower ? 'Navy Corpus Tower' : 'Corpus Approach',
+    radio: tower ? 'CH 4 UHF' : undefined,
+    fieldStation: atGoliad ? 'RDO' : 'TWR',
+    roll: rng(),
+    rule: (rule, ref, label) => ruleStep(rule, s, { leg: label, text: label, ref }),
+    numbers: (rows, callouts, ref, label) => ({ kind: 'numbers', who: 'you', group: 'fti', rows, brief: null, callouts, ref, leg: `FAM FTI: ${label}`, text: `FAM FTI: ${label}` }),
+    say: (text, more = {}) => ({ kind: 'call', who: 'you', text: fill(text.replace(/^Sir,/, `${s.card.ip},`)), answer: fill(text.replace(/^Sir,/, `${s.card.ip},`)), ...more }),
+    hear: (who, text, more = {}) => ({ kind: 'reply', who, text: fill(text), ...more }),
+  };
 }
 
-function randomEp(s, rng) {
+// The situations that could come up now.
+export function situationsFor(s) {
+  if (s.done || s.ep) return [];
+  const h = helpers(s, () => 0);
+  return SITUATIONS.filter((x) => x.fits(h));
+}
+
+function situation(s, rng) {
   if (s.ep) return s;
-  const fit = epsFor(s);
+  const fit = situationsFor(s);
   if (!fit.length) return s;
   const pick = fit[Math.floor(rng() * fit.length)];
-  const base = { phase: 'Emergency', stage: stageOf(s), ep: EP_TITLES[pick.i], ref: pick.ref };
-  const steps = EP_STEPS[pick.i].map((text, n) => ({
-    ...base, kind: 'response', who: 'you', text, answer: text, item: n + 1, of: EP_STEPS[pick.i].length,
-    challenge: EP_TITLES[pick.i],
-  }));
-  if (stageOf(s) === 'airborne' || stageOf(s) === 'afterTakeoff') {
-    steps.push({ ...base, kind: 'response', who: 'you', text: VOICE_REPORT.answer, answer: VOICE_REPORT.answer, challenge: VOICE_REPORT.prompt, ref: VOICE_REPORT.ref, voice: true });
-  }
+  const h = helpers(s, rng);
+  const phase = current(s)?.phase;
+  const steps = pick.steps(h).map((x) => ({ ...x, phase, stage: stageOf(s), situation: pick.title }));
   return {
     ...s,
-    ep: { title: EP_TITLES[pick.i], ends: !!pick.ends, ref: pick.ref, steps, at: 0, log: [], done: false },
-    log: [...s.log, { phase: 'Emergency', who: 'ep', text: EP_TITLES[pick.i], result: 'auto', ep: EP_TITLES[pick.i] }],
+    ep: { title: pick.title, situation: true, effect: pick.effect ? pick.effect(h) : null, steps, at: 0, log: [], done: false, ref: null },
+    log: [...s.log, { phase, who: 'situation', text: pick.title, result: 'auto', ep: pick.title, plain: true }],
     cur: blank(),
   };
+}
+
+// A wave-off in the pattern: directed by the RDO or Tower where there is one, else for the
+// aircraft still on the runway; the FTI's procedure (§610), then the call. The lap's choice of
+// what next follows, as after any landing.
+const WAVE_OFF_CHANCE = 0.4;
+function waveOff(s, seg) {
+  const h = helpers(s);
+  const directed = h.directed || s.node === HOME;
+  const proc = SITUATIONS.find((x) => x.id === 'waveOff');
+  const steps = directed ? proc.steps({ ...h, fieldStation: s.node === HOME ? 'TWR' : h.fieldStation })
+    : [h.hear('Outside', 'The aircraft ahead is still on the runway.', { plain: true }), ...proc.steps(h).slice(1)];
+  return steps.map((x) => ({ ...x, phase: seg.phase, stage: seg.stage, situation: 'Wave-off' }));
+}
+
+// After a situation, the flight goes on as it says: out of the area or the field, round again,
+// or home.
+function untilChoice(s, which) {
+  const at = s.segments.findIndex((x) => x.choose === which);
+  if (at < 0) return s;
+  return step({ ...s, steps: [], at: -1, segments: s.segments.slice(at) });
+}
+function afterSituation(s, effect) {
+  const flags = { ...s.flags };
+  if (effect === 'declared') return { ...s, flags: { ...flags, declared: true } };
+  if (effect === 'relap') return untilChoice(s, 'field');
+  if (effect === 'leaveArea') return untilChoice({ ...s, flags: { ...flags, joker: true } }, 'leg');
+  if (effect === 'leaveField') return untilChoice({ ...s, flags: { ...flags, joker: true, offField: true } }, 'field');
+  if (effect === 'bingo') {
+    const out = { ...s, flags: { ...flags, bingo: true, offField: true }, planDone: true };
+    return s.flags.inArea ? untilChoice(out, 'leg') : isAirfield(s.node) ? untilChoice(out, 'field') : out;
+  }
+  return s;
 }
 
 export { nameOf, fieldOf };

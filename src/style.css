@@ -10331,3 +10331,19 @@ button.epl-modal-close:hover {
 .pf-callout--next { background: var(--wash); }
 .pf-callout--cue { font-weight: 600; color: var(--ink-accent); }
 
+.pf-kbd {
+  font: inherit;
+  font-size: 0.85em;
+  opacity: 0.55;
+}
+@media (hover: none) {
+  .pf-kbd { display: none; }
+}
+.game-modal.pf-notice { min-width: 0; width: min(440px, calc(100% - 32px)); padding: 24px; }
+.pf-notice p { color: var(--ink); line-height: 1.5; }
+.pf-notice-title { margin-top: 0; color: var(--ink-strong); }
+/* The step's own buttons: lower than the choices, and set off below them. */
+.pf-card .pf-actions { margin-top: 14px; }
+.pf-card .pf-actions .pf-btn { padding: 3px 10px; font-size: 13px; }
+.pf-log-copy { float: right; margin-top: -1px; font-weight: 400; }
+.pf-btn--small { padding: 2px 8px; font-size: 12px; }

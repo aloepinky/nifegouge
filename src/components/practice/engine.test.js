@@ -1,10 +1,14 @@
-import { EP_STEPS, areaRules, current, epsFor, isCue, options, reduce, start, typedAltitude } from './engine';
+/* eslint-disable no-loop-func -- the drivers below pick from the flight as it stands each time round */
+import { EP_STEPS, activeRunway, areaRules, canSkipTo, current, isCue, options, reduce, runwayOk, situationsFor, start, typedAltitude } from './engine';
 import { taxiIn, taxiOut } from './taxi';
 import { flyOn } from './figures';
 import { CALLS, CHECKLISTS, EP_PHASES } from './famScript';
 import { QUAD_ACTIONS } from '../QuadfoldData';
-import { CAN_GET_HOME, HOME, PLANS, choicesFrom, departures, fieldsAhead as fieldsAheadOf, labelOf } from './legs';
+import { CAN_GET_HOME, HOME, PLANS, choicesFrom, departures, fieldsAhead as fieldsAheadOf, groupOf, isAirfield, isArea, isPattern, labelOf } from './legs';
 import { gradeStep } from './grade';
+import { fieldOfLeg } from './fieldOps';
+import { CAP, backable, begin, phaseOf, withHistory } from './history';
+import { flightText } from './report';
 import { limits, problemWith, transit } from './highWork';
 import { FTI, FTI_CALLOUTS, FTI_NUMBERS } from './ftiProcedures';
 import { fieldFigures, figuresOf } from './figures';
@@ -28,6 +32,10 @@ const rng = (seed) => () => {
   return seed / 2147483648;
 };
 
+// Every choice on offer, a field's arrivals (offered as the field) one by one: a test can name
+// the arrival it wants.
+const optionIds = (s) => options(s).flatMap((o) => (o.legs ? [o.id, ...o.legs] : [o.id]));
+
 // Fly a whole flight, answering every step correctly and picking legs at random; land full
 // stop once the flight has been airborne long enough.
 // `once` are picked the first time they are offered only.
@@ -39,7 +47,10 @@ function fly(seed, { maxLegs = 12, legs = null, first, once = [], card } = {}) {
   for (let n = 0; n < 5000 && !s.done; n++) {
     const step = current(s);
     if (step.kind === 'choose' || step.kind === 'ask') {
-      const opts = options(s);
+      // Into an outlying field, the runway in use (any other is refused); low work first, the field briefed.
+      const fair = options(s).filter((o) => !['leg', 'runway'].includes(step.choose) || runwayOk(s, o.id));
+      const toOlf = s.olf && !s.route.includes(s.olf) && step.choose === 'leg' ? fair.filter((o) => fieldOfLeg(o.id) === s.olf) : [];
+      const opts = toOlf.length ? toOlf : fair;
       if (!opts.length) throw new Error(`no options at ${s.node} (${crFeatures[s.node]?.name}), route ${s.route.join(' > ')}`);
       const full = opts.find((o) => o.id === 'fullStop');
       const one = opts.find((o) => left.includes(o.id));
@@ -206,24 +217,22 @@ test('a working area brings the PSA checklist and leaving it the Descent checkli
   expect(found).toBe(true);
 });
 
-test('a random EP fits the phase, pauses the flight and resumes it', () => {
+test('nothing comes up on the ground; in the air, situations pause the flight and resume it', () => {
   let s = start();
-  expect(current(s).stage).toBe('preflight');
-  expect(epsFor(s)).toHaveLength(0);
-  expect(reduce(s, { type: 'randomEp' })).toBe(s);
-
-  // Pick the area, then run to the radios on the ground.
+  expect(situationsFor(s)).toHaveLength(0);
+  expect(reduce(s, { type: 'situation' })).toBe(s);
   s = brief(s);
-  while (current(s).stage !== 'ground') s = say(s);
+  while (!s.airborne) s = say(s);
+  // Climbing out: a TCAS traffic advisory is one that can come up; the flight waits for it.
+  expect(situationsFor(s).map((x) => x.id)).toContain('tcas');
   const before = current(s);
-  s = reduce(s, { type: 'randomEp', rng: () => 0 });
-  const i = EP_TITLES.indexOf('EMERGENCY ENGINE SHUTDOWN ON THE GROUND');
-  expect(s.ep.title).toBe(EP_TITLES[i]);
+  s = reduce(s, { type: 'situation', rng: () => situationsFor(s).findIndex((x) => x.id === 'tcas') / situationsFor(s).length + 1e-9 });
+  expect(s.ep.title).toBe('TCAS traffic advisory');
+  expect(current(s)).toMatchObject({ kind: 'reply', who: 'TCAS', text: '"TRAFFIC, TRAFFIC"' });
   while (!s.ep.done) s = say(s);
-  expect(s.log[s.log.length - 1]).toMatchObject({ text: EP_STEPS[i][EP_STEPS[i].length - 1], ep: EP_TITLES[i] });
   s = reduce(s, { type: 'resume' });
   expect(s.ep).toBe(null);
-  expect(current(s)).toBe(before);
+  expect(current(s)).toEqual(before);
 });
 
 test('a step marked to be typed is graded, placeholders aside', () => {
@@ -415,8 +424,9 @@ withSeed('going round the pattern is a decision, and no Operations Check is run 
   for (let n = 0; n < 3000 && !s.done; n++) {
     const now = current(s);
     if (now.kind !== 'choose' && now.kind !== 'ask') { s = reduce(s, { type: 'forward' }); continue; }
-    const ids = options(s).map((o) => o.id);
-    const want = ['low', 'KINGS 4', 'Point-default-38', 'break', 'ppel'].find((id) => ids.includes(id));
+    const ids = optionIds(s).filter((x) => now.choose !== 'leg' || runwayOk(s, x));
+    const want = ['low', 'KINGS 4', 'Point-default-38', 'break', 'ppel'].find((id) => ids.includes(id))
+      || (now.choose === 'leg' && s.olf && !s.route.includes(s.olf) ? ids.find((x) => fieldOfLeg(x) === s.olf) : null);
     let id = want || ids[0];
     if (now.choose === 'field' && s.node === 'Point-default-38') id = lapped ? 'toArea' : ids.find((x) => x !== 'toArea');
     if (now.choose === 'lap') lapped = true;
@@ -446,14 +456,11 @@ withSeed('the FTI procedures and VT-28 memory aids come where they are flown', (
   expect(at('Descent')).toBe(-1);
   // Then the manual's check-out with Center and the departing call on Common, and clear.
   const sign = s.card.callSign;
-  // Home from the last time in the area: no field named, Course Rules SHAMROCK.
-  const center = said.lastIndexOf(`Houston Center, ${sign}, Complete KINGS 4, Terminate.`);
-  expect(center).toBeGreaterThan(said.lastIndexOf('Course rules: leaving KINGS 4'));
-  expect(said[center + 1]).toMatch(new RegExp(`^99 KINGS 4, ${sign} departing area \\d (high|low), Course Rules SHAMROCK\\.$`));
-  expect(said[center + 2]).toMatch(new RegExp(`^99 KINGS 4, ${sign} clear of area \\d (high|low)\\.$`));
-  // Bound for Goliad, Center is told so, and so is Common.
+  // Bound for Goliad, Center is told so, and so is Common, then clear of the area.
   const toGoliad = said.indexOf(`Houston Center, ${sign}, Complete KINGS 4, Terminate Goliad.`);
+  expect(toGoliad).toBeGreaterThan(said.indexOf('Course rules: leaving KINGS 4'));
   expect(said[toGoliad + 1]).toMatch(/departing area \d (high|low), Goliad\.$/);
+  expect(said[toGoliad + 2]).toMatch(new RegExp(`^99 KINGS 4, ${sign} clear of area \\d (high|low)\\.$`));
   // Home: the break, then the downwind and the 180 before the landing call.
   expect(said.lastIndexOf('FAM FTI: The Break')).toBeGreaterThan(out);
   expect(said.lastIndexOf('FAM FTI: Approach')).toBeLessThan(said.findIndex((x) => /180 gear down, full stop/.test(x)));
@@ -559,7 +566,7 @@ function highWork(block) {
   for (let n = 0; n < 3000 && !s.done && !(s.flags.areaDone); n++) {
     const now = current(s);
     if (now.kind !== 'choose' && now.kind !== 'ask') { s = reduce(s, { type: 'forward' }); continue; }
-    const ids = options(s).map((o) => o.id);
+    const ids = optionIds(s);
     let id = (now.choose === 'block' ? [block] : ['high', 'KINGS 4', 'run']).find((x) => ids.includes(x)) || ids[0];
     if (now.choose === 'cua') id = cuaRight(s);
     if (now.choose === 'altitude') {
@@ -586,12 +593,13 @@ withSeed('a setup that would break the block is refused, with the reason', () =>
   for (let n = 0; n < 3000 && !(current(s).kind === 'choose' && current(s).choose === 'altitude'); n++) {
     const now = current(s);
     if (now.kind !== 'choose' && now.kind !== 'ask') { s = reduce(s, { type: 'forward' }); continue; }
-    const ids = options(s).map((o) => o.id);
+    const ids = optionIds(s);
     s = reduce(s, { type: 'choose', id: ['high', 'KINGS 4', 'run'].find((x) => ids.includes(x)) || ids[0] });
   }
   expect(current(s).maneuver).toBe('gWarm');
-  // Arriving on the transition layer, outside the block: the first setup climbs into it.
-  expect(s.alt).toBe(14500);
+  // Arriving on the transition layer, westbound at 14,200, outside the block: the first setup
+  // climbs into it.
+  expect(s.alt).toBe(14200);
   expect(options(s).every((o) => /^Climb to/.test(o.label))).toBe(true);
   // Typed: any altitude, written any usual way.
   expect(reduce(s, { type: 'choose', id: 'high' }).cur.problem).toMatch(/Type an altitude/);
@@ -604,7 +612,7 @@ withSeed('a setup that would break the block is refused, with the reason', () =>
   expect(s.fly.kias.v).toBe('200-220 KIAS');
   // The next maneuver is the student's pick.
   expect(current(s).choose).toBe('maneuver');
-  expect(options(s).map((o) => o.id)).toEqual(['powerOnStall', 'spin', 'elpStall', 'landingPatternStall']);
+  expect(optionIds(s)).toEqual(['powerOnStall', 'spin', 'elpStall', 'landingPatternStall']);
   s = reduce(s, { type: 'choose', id: 'powerOnStall' });
   expect(current(s).maneuver).toBe('powerOnStall');
   // The readout has where the G-Warm left you.
@@ -688,12 +696,12 @@ withSeed('the readout follows the flight: KINGS 4, Goliad\'s pattern, home', () 
   for (let n = 0; n < 4000 && !s.done; n++) {
     const now = current(s);
     if (now.kind === 'choose' || now.kind === 'ask') {
-      const ids = options(s).map((o) => o.id);
+      const ids = optionIds(s);
       let id = ['high', 'KINGS 4', 'break', 'lap'].find((x) => ids.includes(x)) || ids[0];
       const { block } = s;
       if (now.choose === 'altitude') id = ids.find((a) => !problemWith(now.maneuver, Number(a), block));
       if (now.choose === 'cua') id = cuaRight(s);
-      if (now.choose === 'leg' && s.flags.inArea) id = ids.find((x) => /^Routes-Arrivals-4[2-5]$/.test(x)) || id;
+      if (now.choose === 'leg' && s.flags.inArea) id = ids.find((x) => /^Routes-Arrivals-4[2-5]$/.test(x) && runwayOk(s, x)) || id;
       if (now.choose === 'field') id = s.node === 'Point-default-95' ? 'fullStop' : ids.find((x) => /Departures/.test(x)) || ids[0];
       s = reduce(s, { type: 'choose', id });
     } else s = reduce(s, { type: 'forward' });
@@ -752,7 +760,7 @@ withSeed('the student picks each maneuver, briefs it, and hears the transit befo
     if (now.brief) briefs.push(now.brief);
     if (now.kind === 'numbers' && now.text === 'FAM FTI: Spin') spinStep = now;
     if (now.kind !== 'choose' && now.kind !== 'ask') { s = say(s); continue; }
-    const ids = options(s).map((o) => o.id);
+    const ids = optionIds(s);
     let id = ['high', 'KINGS 4', 'run'].find((x) => ids.includes(x)) || ids[0];
     const { block } = s;
     if (now.choose === 'altitude') id = ids.find((a) => !problemWith(now.maneuver, Number(a), block));
@@ -784,9 +792,10 @@ withSeed('the student picks each maneuver, briefs it, and hears the transit befo
   expect(maneuvers[1]).toEqual(['powerOnStall', 'spin', 'elpStall', 'landingPatternStall']);
   expect(maneuvers[2]).toEqual(['spin', 'elpStall', 'landingPatternStall', 'powerOnStall']);
   expect(maneuvers.some((ids) => ids.includes('cuas'))).toBe(false);
-  // The altitude check, the call to the IP, then the attitude (no airspeed in it).
+  // The altitude check, the CUA brief handing the IP the controls, then the attitude (no
+  // airspeed in it).
   const report = said.findIndex((x) => /^Between maneuvers you climbed .* total\. The minimum possible flying the same maneuvers in the optimal order \(/.test(x));
-  const handOver = said.findIndex((x) => /^(Sir|Ma'am), ready for contact UAs\.$/.test(x));
+  const handOver = said.findIndex((x) => /^(Sir|Ma'am), ready for contact UAs\. You have the controls\.$/.test(x));
   expect(report).toBeGreaterThan(0);
   expect(handOver).toBe(report + 1);
   expect(handOver).toBeLessThan(said.findIndex((x) => /: PCL: /.test(x)));
@@ -817,12 +826,14 @@ withSeed('a call\'s second way is said without its "Or…"', () => {
   let s = start(LEGS, { card: { rwy: '13L' } });
   const notes = [];
   let lowKey = false;
-  const want = ['low', 'KINGS 4', 'Point-default-38', 'break', 'Routes-Traffic Patterns-39', 'ppel'];
+  const want = ['low', 'KINGS 4', 'Point-default-38', 'break', 'ppel'];
   for (let n = 0; n < 3000 && !lowKey; n++) {
     const now = current(s);
     if (now.kind === 'choose' || now.kind === 'ask') {
-      const ids = options(s).map((o) => o.id);
-      s = reduce(s, { type: 'choose', id: want.find((x) => ids.includes(x)) || ids[0] });
+      const ids = optionIds(s).filter((x) => !['leg', 'runway'].includes(now.choose) || runwayOk(s, x));
+      const pattern = now.choose === 'field' ? ids.find((x) => /Traffic Patterns/.test(x)) : null;
+      const intoField = now.choose === 'leg' ? ids.find((x) => fieldOfLeg(x) === 'Point-default-38') : null;
+      s = reduce(s, { type: 'choose', id: want.find((x) => ids.includes(x)) || pattern || intoField || ids[0] });
     } else {
       if (now.note) notes.push(now.note);
       if (/Pattern Low-Key, gear down/.test(now.text || '')) lowKey = true;
@@ -886,12 +897,12 @@ function mustangToKrkp(entry) {
   for (let n = 0; n < 4000 && !s.done; n++) {
     const now = current(s);
     if (now.kind === 'choose' || now.kind === 'ask') {
-      const ids = options(s).map((o) => o.id);
+      const ids = optionIds(s);
       let id = ['high', 'MUSTANG North', 'skip', entry].find((x) => ids.includes(x)) || ids[0];
       const { block } = s;
       if (now.choose === 'altitude') id = ids.find((a) => !problemWith(now.maneuver, Number(a), block));
       if (now.choose === 'cua') id = cuaRight(s);
-      if (now.choose === 'leg' && s.flags.inArea) id = ids.find((x) => /^Routes-Arrivals-2[5-8]$/.test(x)) || id;
+      if (now.choose === 'leg' && s.flags.inArea) id = ids.find((x) => /^Routes-Arrivals-2[5-8]$/.test(x) && runwayOk(s, x)) || id;
       if (now.choose === 'leg' && !s.flags.inArea && ids.includes('Routes-Arrivals-104')) id = 'Routes-Arrivals-104';
       if (now.choose === 'field') id = s.node === 'Point-default-21' ? ids.find((x) => /Departures/.test(x)) : 'fullStop';
       s = reduce(s, { type: 'choose', id });
@@ -911,7 +922,7 @@ withSeed('into KRKP from the MUSTANG areas: only the MUSTANG way in, after the c
   const words = krkp.rule.map((p) => p.text).join(' ');
   expect(words).toMatch(/North MUSTANG/);
   expect(words).not.toMatch(/Woodsboro|GOLIAD/);
-  expect(said.some((x) => /Woodsboro|10 miles to the west/.test(x))).toBe(false);
+  expect(said.some((x) => /Woodsboro/.test(x))).toBe(false);
   // The check-out, with the area flown, before anything at KRKP.
   const out = said.findIndex((x) => /^Corpus Approach, .*, complete in MUSTANG \d/.test(x));
   expect(out).toBeGreaterThan(0);
@@ -935,7 +946,8 @@ withSeed('into KRKP, a civilian field: the entry is decided in the area, in civi
   expect(pick).toBeLessThan(out);
   expect(said[out]).toMatch(/request High-Key into Aransas County$/);
   // On the CTAF, "high left overhead"; on KRKP common, the rule's "High-Key".
-  expect(said.some((x) => /^Aransas County Traffic, .*, high left overhead, 14, Aransas County\.$/.test(x))).toBe(true);
+  const rwy = activeRunway(s, 'Point-default-21');
+  expect(said.some((x) => new RegExp(`^Aransas County Traffic, .*, high left overhead, ${rwy}, Aransas County\\.$`).test(x))).toBe(true);
   expect(said.some((x) => /^Aransas County Traffic, .*High-Key|Low-Key|practice PEL/.test(x) && /Traffic/.test(x))).toBe(false);
   expect(said.some((x) => /^\w+ \d+, High-Key$/.test(x))).toBe(true);
   // A break decided on asks for the field, not its High-Key.
@@ -950,8 +962,9 @@ function walk(s, want, until, pick = () => null) {
   for (let n = 0; n < 4000 && !s.done && !until(s); n++) {
     const now = current(s);
     if (now.kind === 'choose' || now.kind === 'ask') {
-      const ids = options(s).map((o) => o.id);
-      let id = want.find((x) => ids.includes(x)) || ids[0];
+      const ids = optionIds(s).filter((x) => !['leg', 'runway'].includes(now.choose) || runwayOk(s, x));
+      const toOlf = s.olf && !s.route.includes(s.olf) && now.choose === 'leg' ? ids.find((x) => fieldOfLeg(x) === s.olf) : null;
+      let id = want.find((x) => ids.includes(x)) || toOlf || ids[0];
       const { block } = s;
       if (now.choose === 'altitude') id = ids.find((a) => !problemWith(now.maneuver, Number(a), block));
       if (now.choose === 'cua') id = cuaRight(s);
@@ -998,14 +1011,19 @@ withSeed('KINGS 4\'s block is picked right before claiming it on KINGS 4 Common'
 
 withSeed('once the high and low work are done, only the way home is offered', () => {
   const s = walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'KINGS 4', 'break'],
-    (x) => x.flags.areaDone && x.route.includes('Point-default-38') && x.node !== 'Point-default-38' && current(x).choose === 'leg',
+    (x) => x.done,
     (x, now, ids) => {
-      if (now.choose === 'leg' && x.flags.inArea) return ids.find((i) => /^Routes-Arrivals-4[2-5]$/.test(i));
-      if (now.choose === 'field') return ids.find((i) => /Departures/.test(i));
+      if (now.choose === 'leg' && x.flags.inArea) return ids.find((i) => /^Routes-Arrivals-4[2-5]$/.test(i) && runwayOk(x, i));
+      if (now.choose === 'field' && x.node !== HOME) return ids.find((i) => /Departures/.test(i));
       return null;
     });
-  expect(options(s).length).toBeGreaterThan(0);
-  options(s).forEach((o) => expect(o.id === HOME || fieldsAheadOf(o.id).includes(HOME)).toBe(true));
+  // Out of Goliad after the area: straight home (the one way left is flown without asking),
+  // never back into a working area.
+  const after = s.route.slice(s.route.lastIndexOf('Point-default-38') + 1);
+  expect(s.done).toBe(true);
+  expect(after.some(isArea)).toBe(false);
+  expect(after[after.length - 1]).toBe(HOME);
+  expect(after.filter((id) => !isAirfield(id)).every((id) => fieldsAheadOf(id).includes(HOME) || isPattern(id) || /Shamrock|KNGP/.test(labelOf(id)))).toBe(true);
 });
 
 // --- Only what is this flight's; Waldron; the radios and the reveal ---------------------------
@@ -1034,20 +1052,25 @@ test('a point is named with where it leads', () => {
 // Fly MUSTANG South to Waldron, entering as `entry`.
 const toWaldron = (entry) => walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'MUSTANG South', 'skip', entry],
   (x) => x.route.includes('Point-default-50') && current(x).choose === 'field',
-  (x, now, ids) => (now.choose === 'leg' && (x.flags.inArea || x.flags.areaDone) ? ids.find((i) => /Point-Arrivals-78|Routes-Arrivals-8[6-9]/.test(i)) : null));
+  (x, now, ids) => (now.choose === 'leg' && (x.flags.inArea || x.flags.areaDone) ? ids.find((i) => /Point-Arrivals-78|Routes-Arrivals-8[6-9]/.test(i) && runwayOk(x, i)) : null));
 
 withSeed('into Waldron by a break or a PEL: each says only its own request', () => {
-  const brk = toWaldron('break').log.map((l) => l.text);
-  expect(brk.some((x) => /course rules to Waldron\.$/.test(x))).toBe(true);
+  const flown = toWaldron('break');
+  const rwy = activeRunway(flown, 'Point-default-50');
+  const brk = flown.log.map((l) => l.text);
+  // Asked once, at the check-out, not again on the arrival.
+  expect(brk.filter((x) => /course rules to Waldron\.?$/.test(x))).toHaveLength(1);
   expect(brk.some((x) => /request High-Key to Waldron/.test(x))).toBe(false);
-  expect(brk.some((x) => /Initial 13\.$/.test(x))).toBe(true);
+  expect(brk.some((x) => x.endsWith(`Initial ${rwy}.`))).toBe(true);
   // The check-out names where it is going.
   expect(brk.find((x) => /complete in MUSTANG \d/.test(x))).toMatch(/course rules to Waldron$/);
-  const pel = toWaldron('pel').log.map((l) => l.text);
-  expect(pel.some((x) => /request High-Key to Waldron\.$/.test(x))).toBe(true);
+  const pelFlown = toWaldron('pel');
+  const pelRwy = activeRunway(pelFlown, 'Point-default-50');
+  const pel = pelFlown.log.map((l) => l.text);
+  expect(pel.filter((x) => /request High-Key to Waldron\.?$/.test(x))).toHaveLength(1);
   expect(pel.some((x) => /course rules to Waldron\.$/.test(x))).toBe(false);
-  expect(pel.some((x) => /^Waldron Tower, \w+ \d+, High-Key, 13\.$/.test(x))).toBe(true);
-  expect(pel.some((x) => /Initial 13\.$/.test(x))).toBe(false);
+  expect(pel.some((x) => /^Waldron Tower, \w+ \d+, High-Key, \d+\.$/.test(x) && x.endsWith(`, ${pelRwy}.`))).toBe(true);
+  expect(pel.some((x) => /Initial \d+\.$/.test(x))).toBe(false);
 });
 
 withSeed('a lone leg is flown without asking', () => {
@@ -1149,4 +1172,354 @@ withSeed('the ATIS is copied off the RDO, before the rule that goes to Approach'
   const rule = said.lastIndexOf('Course rules: Goliad Arrivals → PT Shamrock', ask);
   expect(atis).toBeGreaterThan(0);
   expect(atis).toBeLessThan(rule);
+});
+
+withSeed('a PEL planned out of KINGS 4: clear of the area, then the simulated EP, then Goliad', () => {
+  const s = walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'KINGS 4', 'pel'], (x) => x.done,
+    (x, now, ids) => (now.choose === 'leg' && x.flags.inArea ? ids.find((i) => /^KNGT Arrivals/.test(labelOf(i))) : null));
+  const said = s.log.map((l) => l.text);
+  const sign = s.card.callSign;
+  const leaving = said.indexOf('Course rules: leaving KINGS 4');
+  const center = said.indexOf(`Houston Center, ${sign}, Complete KINGS 4, Terminate Goliad.`);
+  const departing = said.findIndex((x) => /^99 KINGS 4, .* departing area \d (high|low), PPEL Goliad\.$/.test(x));
+  const clear = said.findIndex((x) => /^99 KINGS 4, .* clear of area/.test(x));
+  const sim = said.findIndex((x) => /^Simulated, simulated, simulated, /.test(x));
+  const goliad = said.indexOf('Course rules: leaving KINGS 4', leaving + 1);
+  expect(leaving).toBeGreaterThan(0);
+  expect(center).toBeGreaterThan(leaving);
+  expect(departing).toBe(center + 1);
+  expect(clear).toBe(departing + 1);
+  expect(sim).toBeGreaterThan(clear);
+  // The way to Goliad (its ASOS, then CH 15) only after the clear call and the EP.
+  expect(goliad).toBeGreaterThan(sim);
+  expect(said.filter((x) => /^Simulated, simulated/.test(x))).toHaveLength(1);
+});
+
+withSeed('a Waldron PEL: the Practice PEL entry and its calls, never the touch and go', () => {
+  const s = toWaldron('pel');
+  const said = s.log.map((l) => l.text);
+  // The check-out asks for High-Key at Waldron, not another field's.
+  expect(said.find((x) => /complete in MUSTANG \d/.test(x))).toMatch(/request High-Key to Waldron$/);
+  expect(said.some((x) => /Touch and Go/i.test(x))).toBe(false);
+  expect(said.some((x) => /Aransas County/.test(x))).toBe(false);
+  // The manual's PPEL entry in place of the overhead's route.
+  const rule = s.log.find((l) => l.kind === 'rule' && /KNWL/.test(l.text));
+  expect(rule).toBeDefined();
+  expect(said.some((x) => /Cooling Ponds|Shrimp Ponds/.test(x))).toBe(false);
+  // Asked at the check-out; Approach answers direct Waldron with the runway ("Approach will
+  // relay landing runway"); approaching High-Key, terminate; to Tower, intentions first, then
+  // High-Key when told to report it.
+  const ask = said.findIndex((x) => /complete in MUSTANG \d, request High-Key to Waldron$/.test(x));
+  const rwy = activeRunway(s, 'Point-default-50');
+  const runway = said.findIndex((x) => x.endsWith(`Corpus Approach, proceed direct Waldron, Waldron landing runway ${rwy}.`));
+  const term = said.findIndex((x) => /approaching High-Key, terminate\.$/.test(x));
+  const intent = said.findIndex((x) => /^Waldron Tower, .*, request practice PEL, runway \d+\.$/.test(x));
+  const high = said.findIndex((x) => /^Waldron Tower, .*, High-Key, \d+\.$/.test(x) && x.endsWith(`, ${rwy}.`));
+  expect(ask).toBeGreaterThan(0);
+  expect(runway).toBe(ask + 1);
+  expect(said.filter((x) => /request High-Key to Waldron/.test(x))).toHaveLength(1);
+  expect(term).toBeGreaterThan(runway);
+  expect(intent).toBe(term + 1);
+  expect(said[intent + 1].endsWith(`Waldron Tower, runway ${rwy}, report High-Key.`)).toBe(true);
+  expect(high).toBe(intent + 2);
+});
+
+withSeed('leaving Waldron, Tower is told; going home, the call picks SHAMROCK and the runway half', () => {
+  let s = toWaldron('break');
+  s = walk(s, ['fullStop'], (x) => x.done, (x, now, ids) => {
+    if (now.choose === 'field') return ids.find((i) => /East Departures/.test(labelOf(i)));
+    return null;
+  });
+  const said = s.log.map((l) => l.text);
+  const tower = said.findIndex((x) => /^Waldron Tower, .*, departing to the east, terminate\.$/.test(x));
+  expect(tower).toBeGreaterThan(0);
+  const app = said.find((x) => /^Corpus Approach, .* with information/.test(x) && /Waldron|Power Plant/.test(x));
+  expect(app).toMatch(/, (off Waldron|Abeam the Power Plant) with information \w[\w-]*, course rules SHAMROCK\.$/);
+  expect(said.some((x) => /\w\/\w/.test(x) && !/NF\/TO|\d\/\d/.test(x))).toBe(false);
+});
+
+withSeed('the Shamrock check-in says where it is made, and is said once', () => {
+  const goliad = walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'KINGS 4'], (x) => x.done,
+    (x, now, ids) => (now.choose === 'leg' && x.flags.inArea ? ids.find((i) => /Goliad Arrivals/.test(labelOf(i))) : null));
+  expect(goliad.log.map((l) => l.text)).toContain(`Corpus Approach, ${goliad.card.callSign} at Woodsboro, course rules Shamrock with information ${goliad.card.atis}`);
+  // Home from KINGS 4: no field named, Course Rules SHAMROCK, then clear.
+  const home = goliad.log.map((l) => l.text);
+  const center = home.indexOf(`Houston Center, ${goliad.card.callSign}, Complete KINGS 4, Terminate.`);
+  expect(center).toBeGreaterThan(0);
+  expect(home[center + 1]).toMatch(/departing area \d (high|low), Course Rules SHAMROCK\.$/);
+  expect(home[center + 2]).toMatch(/clear of area \d (high|low)\.$/);
+  const north = walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'MUSTANG North', 'skip'], (x) => x.done,
+    (x, now, ids) => (now.choose === 'leg' && x.flags.inArea ? ids.find((i) => /North Arrivals/.test(labelOf(i))) : null));
+  const said = north.log.map((l) => l.text);
+  expect(said.filter((x) => /^Corpus Approach, .*(Course Rules|course rules) SHAMROCK with information/i.test(x))).toHaveLength(1);
+});
+
+withSeed('low work first on MUSTANG: Waldron for South, Aransas County for North, by practice links', () => {
+  const brief = (plan) => {
+    let s = start(LEGS, { card: { rwy: '13L' } });
+    s = reduce(s, { type: 'choose', id: 'low' });
+    const plans = optionIds(s);
+    s = reduce(s, { type: 'choose', id: plan });
+    return { s, plans };
+  };
+  const { plans } = brief('MUSTANG South');
+  expect(plans).toEqual(expect.arrayContaining(['KINGS 4', 'MUSTANG South', 'MUSTANG North']));
+  [['MUSTANG South', 'Point-default-50'], ['MUSTANG North', 'Point-default-21']].forEach(([plan, field]) => {
+    let { s } = brief(plan);
+    s = walk(s, [field, 'break', 'toArea', 'skip'], (x) => x.done);
+    expect(s.done).toBe(true);
+    expect(s.route).toContain(field);
+    expect(s.route.findIndex((r) => groupOf(r) === plan)).toBeGreaterThan(s.route.indexOf(field));
+  });
+});
+
+// --- The audit: random flights, with back, emergencies and skips, never break ------------
+
+const PHASES = ['Taxi', 'Takeoff', 'Departure', 'Pattern', 'Transit', 'Working area', 'Recovery', 'Landing', 'Taxi back'];
+// The page's own history (history.js): back a step, or back to where a stage began.
+const back = (h) => withHistory(h, { type: 'back' });
+const act = (h, action) => withHistory(h, action);
+// Left unfilled on purpose: the base call's names, which the student says.
+const MEANT = /\(IP rank and last name\)|\(Your rank and last name\)/g;
+const LEFTOVER = /(?:^|[^\d])[A-Za-z]+\/[A-Za-z]+|\bXXX\b|___|\((?:call sign|RWY|position|altitude|AC ID)[^)]*\)/i;
+const SLASH_OK = /NF\/TO\/LDG|climb\/accelerate|Foxtrot\/North Mustang|AOA ball/i;
+
+function fuzz(seed, plan, order) {
+  const r = rng(seed);
+  let h = begin(start(LEGS, { rng: rng(seed + 3), fields: FIELDS }));
+  const begun = Date.now();
+  const problems = [];
+  for (let n = 0; n < 6000 && !h.now.done; n++) {
+    const s = h.now;
+    if (s.ep && s.ep.done) { h = act(h, { type: 'resume' }); continue; }
+    const now = current(s);
+    if (!now) { problems.push(`no step, not done, after ${s.log.slice(-2).map((l) => l.text).join(' | ')}`); break; }
+    const roll = r();
+    if (roll < 0.04 && h.past.length) { h = back(h); continue; }
+    if (roll < 0.045) {
+      const to = [...backable(h)];
+      if (to.length) { h = act(h, { type: 'backTo', phase: to[Math.floor(r() * to.length)] }); continue; }
+    }
+    if (roll < 0.05) { h = act(h, { type: 'situation', rng: r }); continue; }
+    if (roll < 0.06) {
+      const t0 = Date.now();
+      h = act(h, { type: 'skipTo', phase: PHASES[Math.floor(r() * PHASES.length)] });
+      if (Date.now() - t0 > 2000) problems.push(`slow skip ${Date.now() - t0} ms`);
+      continue;
+    }
+    if (now.kind === 'choose' || now.kind === 'ask') {
+      const ids = optionIds(s);
+      if (!ids.length) { problems.push(`no options for ${now.choose} at ${labelOf(s.node)}`); break; }
+      let id = ids[Math.floor(r() * ids.length)];
+      if (now.choose === 'order') id = order;
+      if (now.choose === 'plan' && ids.includes(plan)) id = plan;
+      if (now.choose === 'altitude') id = ids.find((a) => !problemWith(now.maneuver, Number(a), s.block)) || ids[0];
+      if (now.choose === 'cua') id = cuaRight(s);
+      // Land in the end: after a while, the way home.
+      if (s.log.length > 400 && ids.includes('fullStop')) id = 'fullStop';
+      h = act(h, { type: 'choose', id });
+    } else h = { ...h, now: say(s) };
+  }
+  if (!h.now.done) problems.push(`not done after ${h.now.log.length} lines at ${labelOf(h.now.node)}`);
+  if (h.now.route.filter(isArea).length > 1) problems.push(`a working area flown twice: ${h.now.route.filter(isArea).map(labelOf).join(', ')}`);
+  if (Date.now() - begun > 8000) problems.push(`slow flight ${Date.now() - begun} ms`);
+  h.now.log.filter((l) => ['call', 'reply'].includes(l.kind) && l.text).forEach((l) => {
+    const t = l.text.replace(MEANT, '');
+    if (LEFTOVER.test(t.replace(SLASH_OK, ''))) problems.push(`unfilled: ${l.text}`);
+  });
+  return problems;
+}
+
+test('random flights with back, emergencies and skips: no throw, no dead end, nothing unfilled', () => {
+  const found = new Map();
+  const cases = ['KINGS 4', 'MUSTANG North', 'MUSTANG South', 'FOXTROT']
+    .flatMap((plan) => ['high', 'low'].flatMap((order) => Array.from({ length: 12 }, () => [plan, order])));
+  cases.forEach(([plan, order], i) => {
+    const seed = i + 1;
+    let problems;
+    try { problems = fuzz(seed, plan, order); } catch (e) { problems = [`threw: ${e.message} ${e.stack.split('\n')[1]}`]; }
+    problems.forEach((p) => found.set(p, `${plan} ${order} seed ${seed}`));
+  });
+  expect([...found].map(([p, where]) => `${where}: ${p}`)).toEqual([]);
+}, 600000);
+
+withSeed('Skip to Pattern on a MUSTANG flight is quick and lands at its field, not home', () => {
+  ['MUSTANG North', 'MUSTANG South', 'FOXTROT'].forEach((plan) => {
+    let s = start(LEGS, { card: { rwy: '13L' } });
+    s = reduce(s, { type: 'choose', id: 'high' });
+    s = reduce(s, { type: 'choose', id: plan });
+    const t0 = Date.now();
+    const out = reduce(s, { type: 'skipTo', phase: 'Pattern' });
+    expect(Date.now() - t0).toBeLessThan(3000);
+    // FOXTROT has no field of its own: nothing to skip to, and the stage button says so.
+    if (plan === 'FOXTROT') expect(canSkipTo(s, 'Pattern')).toBe(false);
+    else expect(current(out).phase).toBe('Pattern');
+  });
+});
+
+// --- Situations: what each one does to the flight ------------------------------------------
+
+// Make situation `id` come up now, say it through, and go back to the flight.
+function happen(s, id) {
+  const fit = situationsFor(s).map((x) => x.id);
+  expect(fit).toContain(id);
+  s = reduce(s, { type: 'situation', rng: () => (fit.indexOf(id) + 0.5) / fit.length });
+  // Every rule in it is cited; every line nobody published is marked generated.
+  // (What sets it off is described, not said: `plain`.)
+  s.ep.steps.forEach((x) => expect(!!x.ref || !!x.generated || !!x.plain || x.kind === 'call').toBe(true));
+  s.ep.steps.filter((x) => x.kind === 'rule').forEach((x) => expect(x.ref).toBeDefined());
+  while (!s.ep.done) s = say(s);
+  return reduce(s, { type: 'resume' });
+}
+const inTheArea = () => walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'KINGS 4'], (x) => current(x).choose === 'maneuver' && x.hwFlown.length === 1);
+
+withSeed('Joker in the area ends the high work: the next thing is the way out', () => {
+  const s = happen(inTheArea(), 'joker');
+  expect(s.flags.joker).toBe(true);
+  expect(current(s).choose).toBe('leg');
+  expect(situationsFor(s).map((x) => x.id)).not.toContain('joker');
+});
+
+withSeed('Bingo in the area: out of it and home, no field, no more area', () => {
+  let s = happen(inTheArea(), 'bingo');
+  expect(s.flags.bingo).toBe(true);
+  s = walk(s, [], (x) => x.done);
+  const after = s.route.slice(s.route.findIndex((r) => isArea(r)) + 1);
+  expect(after.some((r) => isArea(r) || (isAirfield(r) && r !== HOME))).toBe(false);
+  expect(s.done).toBe(true);
+});
+
+withSeed('a wave-off at Goliad goes round again: the next thing is the field choice', () => {
+  let s = walk(start(LEGS, { card: { rwy: '13L' } }), ['low', 'KINGS 4', 'Point-default-38', 'break', 'Routes-Traffic Patterns-39', 'lap'],
+    (x) => x.node === 'Point-default-38' && current(x).kind === 'call' && /180/.test(current(x).text));
+  s = happen(s, 'waveOff');
+  expect(current(s).choose).toBe('field');
+  expect(s.log.some((l) => /, waving off\.$/.test(l.text))).toBe(true);
+});
+
+withSeed('the pattern full at Goliad: hold, then cleared in, then the initial', () => {
+  let s = walk(start(LEGS, { card: { rwy: '13L' } }), ['low', 'KINGS 4', 'Point-default-38', 'break'], (x) => current(x).kind === 'call' && /^Goliad RDO, .*initial/.test(current(x).text));
+  const initial = current(s);
+  s = happen(s, 'full');
+  expect(current(s)).toEqual(initial);
+  expect(s.log.some((l) => /holding over the initial/.test(l.text))).toBe(true);
+});
+
+withSeed('recovering, fuel at landing is declared to whoever you are talking to', () => {
+  let s = walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'KINGS 4'], (x) => x.airborne && current(x).phase === 'Recovery',
+    (x, now, ids) => (now.choose === 'leg' && x.flags.inArea ? ids.find((i) => /Goliad Arrivals/.test(labelOf(i))) : null));
+  s = happen(s, 'fuel');
+  expect(s.log.some((l) => /^Corpus Approach, .*, (minimum fuel|declaring emergency fuel), \d+ pounds\.$/.test(l.text))).toBe(true);
+  expect(situationsFor(s).map((x) => x.id)).not.toContain('fuel');
+});
+
+// --- History: back a step, back to a stage; the report for testers -------------------------
+
+withSeed('a stage begun can be gone back to: the flight is where that stage began, all since gone', () => {
+  let h = begin(start(LEGS, { card: { rwy: '13L' } }));
+  for (let n = 0; n < 400 && phaseOf(h.now) !== 'Working area'; n++) {
+    const now = current(h.now);
+    if (now.kind === 'choose' || now.kind === 'ask') {
+      const ids = options(h.now).map((o) => o.id);
+      h = withHistory(h, { type: 'choose', id: ['high', 'KINGS 4', 'run'].find((x) => ids.includes(x)) || ids[0] });
+    } else h = withHistory(h, { type: 'forward' });
+  }
+  expect(phaseOf(h.now)).toBe('Working area');
+  expect([...backable(h)]).toEqual(expect.arrayContaining(['Preflight', 'Taxi', 'Takeoff', 'Departure']));
+  const taxi = h.marks.find((m) => m.phase === 'Taxi');
+  const back = withHistory(h, { type: 'backTo', phase: 'Taxi' });
+  expect(back.now).toBe(taxi.state);
+  expect(phaseOf(back.now)).toBe('Taxi');
+  expect(back.past).toHaveLength(taxi.depth);
+  expect(back.marks.map((m) => m.phase)).not.toContain('Departure');
+  // Then on again, and back a step at a time to the very start.
+  let b = back;
+  while (b.past.length) b = withHistory(b, { type: 'back' });
+  expect(phaseOf(b.now)).toBe('Preflight');
+  expect(b.marks).toHaveLength(1);
+});
+
+test('the history keeps at most CAP states back', () => {
+  let h = begin(start(LEGS, { card: { rwy: '13L' } }));
+  for (let n = 0; n < CAP + 50; n++) h = withHistory(h, { type: 'squadron', squadron: n % 2 ? 'Boomer' : 'Ranger' });
+  expect(h.past).toHaveLength(CAP);
+});
+
+withSeed('the report for testers says the plan, the route, the choices and the last lines', () => {
+  const s = walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'KINGS 4'], (x) => x.flags.inArea);
+  const text = flightText(s, { url: 'http://localhost/primary/practice', when: new Date('2026-10-25T12:00:00Z') });
+  expect(text.split('\n').slice(0, 2)).toEqual(['Practice Flight report', '2026-10-25T12:00:00.000Z http://localhost/primary/practice']);
+  expect(text).toMatch(new RegExp(`Call sign ${s.card.callSign}, runway 13L`));
+  expect(text).toMatch(/Plan: high work first, KINGS 4/);
+  expect(text).toMatch(/Route: Corpus Christi NAS \(KNGP\) → KNGP Rusty Departures 13L → /);
+  expect(text).toMatch(/Choices: High work first \/ KINGS 4/);
+  expect(text.split('\n').length).toBeLessThanOrEqual(9 + 25);
+});
+
+
+withSeed('out of MUSTANG North to Aransas County: the acronym, its weather, then the runway by the wind; Approach clears you direct; then the EP', () => {
+  let s = start(LEGS, { card: { rwy: '13L', windDir: '150', windSpeed: 12 }, fields: FIELDS });
+  let refused = null;
+  // As the student does: the field, the acronym, its weather, then its runway.
+  s = walk(s, ['high', 'MUSTANG North', 'skip', 'pel', 'abcdont'], (x) => x.done || (x.node === 'Point-default-21' && current(x).choose === 'field'), (x, now, ids) => {
+    if (now.choose === 'leg' && x.flags.inArea) return ids.find((i) => i === 'to:Point-default-21');
+    if (now.choose === 'runway') {
+      const wrong = options(x).map((o) => o.id).find((i) => !runwayOk(x, i));
+      if (wrong && !refused) refused = reduce(x, { type: 'choose', id: wrong }).cur.problem;
+      return ids.find((i) => runwayOk(x, i));
+    }
+    return null;
+  });
+  const fieldOpts = options(s).map((o) => labelOf(o.id));
+  const said = s.log.map((l) => l.text);
+  const at = (re) => said.findIndex((x) => re.test(x));
+  // Wind 150: runway 14, not 18 (or the reciprocals).
+  expect(activeRunway(s, 'Point-default-21')).toBe('14');
+  expect(refused).toMatch(/^With the wind 150 at 12, runway \d+ would not be the active runway\.$/);
+  // The field, the acronym, the weather (VHF, no letter), then the runway: all in the area.
+  const field = said.indexOf('Aransas County Airport (KRKP)');
+  const aid = at(/^VT-28 technique: Checking out of the MOA/);
+  const wx = at(/^Aransas County automated weather observation\. Wind 150 at 12\./);
+  const runway = said.indexOf('Runway 14');
+  const out = at(/complete in MUSTANG \d/);
+  expect(field).toBeGreaterThan(0);
+  expect(aid).toBeGreaterThan(field);
+  expect(wx).toBeGreaterThan(aid);
+  expect(s.log[wx].radio).toBe('119.275 VHF');
+  expect(runway).toBeGreaterThan(wx);
+  expect(out).toBeGreaterThan(runway);
+  // Approach clears you direct and terminates you; then the IP's simulated emergency.
+  const direct = at(/Corpus Approach, proceed direct Rockport, radar service terminated, frequency change approved\.$/);
+  const sim = at(/^Simulated, simulated, simulated, /);
+  expect(direct).toBe(out + 1);
+  expect(said[direct + 1]).toMatch(/, direct Rockport, frequency change approved\.$/);
+  expect(sim).toBeGreaterThan(direct + 1);
+  // In: the rule, the self-announce (from the south off areas 2 and 6, else the west), then
+  // KRKP Common; no second "terminate".
+  const area = (/(\d+)$/.exec(labelOf(s.route.find((r) => isArea(r)))) || [])[1];
+  const rule = at(/^Course rules: KRKP Arrivals 14$/);
+  const announce = at(/^Aransas County Traffic, .*, 10 miles to the (south|west).*inbound for a high left overhead/);
+  expect(rule).toBeGreaterThan(sim);
+  expect(announce).toBe(rule + 1);
+  expect(said[announce]).toMatch(['2', '6'].includes(area) ? /to the south/ : /to the west/);
+  expect(said[announce + 1]).toBe('Any Texans working Aransas County?');
+  expect(said[announce + 2]).toMatch(/is inbound for High-Key\.$/);
+  expect(said.some((x) => /^Corpus Approach, .*, terminate\.$/.test(x))).toBe(false);
+  // At the field: the pattern and departures for runway 14 only.
+  expect(fieldOpts.every((o) => /14/.test(o))).toBe(true);
+});
+
+test('about four landings in ten round a pattern are waved off', () => {
+  let landings = 0;
+  let waved = 0;
+  for (let seed = 1; seed <= 300; seed++) {
+    const s = fly(seed, { legs: LEGS });
+    const said = s.log.map((l) => l.text);
+    // Every landing round a pattern ends in the choice of what next (another lap, a departure, a full stop).
+    landings += s.log.filter((l) => l.result === 'choice' && /^(Touch and go|Full stop|Depart for)|Departures/.test(l.text)).length;
+    waved += said.filter((x) => /, waving off\.$/.test(x)).length;
+  }
+  expect(landings).toBeGreaterThan(100);
+  expect(waved / landings).toBeGreaterThan(0.25);
+  expect(waved / landings).toBeLessThan(0.55);
 });
