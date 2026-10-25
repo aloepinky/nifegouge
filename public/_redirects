@@ -1,1 +1,4 @@
+# A code file that no longer exists (asked for by a copy of the site from before a deploy) is
+# not found, not the app: the app in its place counts as a page view and can't run as code.
+/static/*  /404.html  404
 /*    /index.html   200

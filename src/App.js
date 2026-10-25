@@ -9,6 +9,23 @@ import { usePageViews } from './components/pageviews';
 import { DRAFT, PROGRAMS, PROGRAM_TABS, shown, currentPath } from './components/programs';
 
 const loaders = [];
+const RELOADED = 'psm-chunk-reload';
+
+// A page left open across a deploy asks for code files the deploy removed. Opening a page then
+// reloads once, onto the new site; a second failure within a minute is left to show as an
+// error rather than reload forever. The background preload never reloads: a reader mid-page
+// would lose their place.
+function reloadForNewSite(err) {
+  if (!/ChunkLoadError|Loading (CSS )?chunk/.test(`${err && err.name} ${err && err.message}`)) return false;
+  try {
+    if (Date.now() - Number(sessionStorage.getItem(RELOADED) || 0) < 60000) return false;
+    sessionStorage.setItem(RELOADED, String(Date.now()));
+  } catch (e) {
+    return false;
+  }
+  window.location.reload();
+  return true;
+}
 
 // React.lazy over a loader that is also kept for preloadPages. The import is memoized so the
 // preload and the route share one promise.
@@ -24,7 +41,10 @@ function page(load) {
     return promise;
   };
   loaders.push(once);
-  return lazy(once);
+  return lazy(() => once().catch((err) => {
+    if (reloadForNewSite(err)) return new Promise(() => {});
+    throw err;
+  }));
 }
 
 // Waits for the browser to be idle after the first page has loaded, then fetches every page
