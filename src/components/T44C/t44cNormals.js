@@ -101,7 +101,7 @@ const BEFORE_START = {
       replies: [say('OFF', 'LS')],
     }),
     item('bs8', 'Fuel Panel', 'CHECKED/SET', 'LS', {
-      watch: ['FUEL CROSSFEED', 'Battery Ammeter', 'L FUEL PRESSURE', 'R FUEL PRESSURE'],
+      watch: ['FUEL CROSSFEED', 'Battery Ammeter', 'Battery', 'L FUEL PRESSURE', 'R FUEL PRESSURE'],
       action: [
         'LS performs the following checks:',
         'a. Fuel panel circuit breakers — Set.',

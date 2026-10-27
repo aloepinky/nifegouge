@@ -403,6 +403,10 @@ export const T44C_POSTER = {
         { box: [0.058, 0.225, 0.041, 0.041], label: 'Avionics master',
           action: 'Avionics Master', actions: ['Avionics Master', 'Electrical Panel'], also: ['AUX/BATT/Avionics Master', 'AUX BATT/Avionics Master'],
           values: ['CHECKED/ON', 'OFF'] },
+        // BATT, which Before Start's Fuel Panel step turns ON (FTI Appendix F, item e). Rough,
+        // 2026-10-27: tune with ?spots.
+        { id: 'batt', box: [0.127, 0.336, 0.038, 0.032], label: 'BATT switch',
+          action: 'Battery' },
         { box: [0.218, 0.341, 0.04, 0.032], label: 'GEN NO 1 (left)',
           action: 'Left Generator', actions: ['Left Generator', 'Electrical Panel'], values: ['RESET, ON. Switch, light, load'] },
         { box: [0.314, 0.341, 0.041, 0.03], label: 'GEN NO 2 (right)',
