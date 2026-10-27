@@ -294,7 +294,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, 
           <li><strong>Skip:</strong> Fills the next unanswered step. Found under the right panel (bottom row in Simple Mode)</li>
           <li><strong>All Answers:</strong> Completes all remaining steps</li>
           {!read && <li><strong>Check:</strong> Validates your answers. Enter in any box does the same</li>}
-          {read && <li><strong>Auto Expanded:</strong> Shows the next step's action and response, and follows along as you go</li>}
+          {read && <li><strong>Auto Expanded:</strong> Opens a step's action and response as soon as that step is done</li>}
           {extraLabel && <li><strong>{extraLabel}:</strong> Adds the normal procedures done from memory (engine start, the full anti-ice/deice check, waveoff, pre-stall checks) to the EPs, typed the same way. Game Mode leaves them out</li>}
           <li><strong>Reset:</strong> Clears all answers and feedback</li>
           <li><strong>Random/Sequential Order:</strong> Toggle between a shuffled order and the checklist's own</li>
@@ -340,7 +340,7 @@ function ModeDots({ sets, current, onPick }) {
 // them out, so every leaderboard time is the same EPs.
 //
 // An EP's `practice` is the id of another set; its card then carries a button that switches to
-// that set ("Practice Cases"). Hidden in a game, like every other way off the EPs.
+// that set ("Practice SSE Cases"). Hidden in a game, like every other way off the EPs.
 function EPDrill({ sets, isGameActive = false, ...props }) {
   const [current, setCurrent] = useState(sets ? sets[0].id : null);
   const [full, setFull] = useState(null);
@@ -468,12 +468,11 @@ function Drill({
   const [fit, setFit] = useState({});
   const wasCorrect = useRef({});
   const advanceRef = useRef(null);
-  // `read`: the step whose action is open, and Primary's Auto Expanded, which keeps the next
-  // open step's action showing as the steps are done.
+  // `read`: the step whose action is open, and Auto Expanded, which opens a step's action once
+  // the step is done, the way Auto NWC opens its NWCs.
   const [openAction, setOpenAction] = useState(null);
   const [autoExpand, setAutoExpand] = useState(false);
-  // Closing the panel with Auto Expanded on puts away that step's only; the next step opens again.
-  const [dismissed, setDismissed] = useState(null);
+  const wasDone = useRef({});
 
   const ep = eps[order[pos]];
   const steps = useMemo(() => ep.rows.filter((r) => r.id), [ep]);
@@ -526,6 +525,20 @@ function Drill({
     return () => clearTimeout(at);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results, autoNWC, steps]);
+
+  // Auto Expanded: as Auto NWC, keyed on a step being done (right, or skipped) rather than on the
+  // next one to do, so the action is read after the step is recalled, not before.
+  useEffect(() => {
+    const before = wasDone.current;
+    const isDone = (s2) => results[s2.id] === 'correct' || (!!data[s2.id] && !results[s2.id]);
+    wasDone.current = Object.fromEntries(steps.map((s2) => [s2.id, isDone(s2)]));
+    if (!read || !autoExpand) return undefined;
+    const opened = steps.find((s2) => isDone(s2) && !before[s2.id] && hasAction(s2));
+    if (!opened) return undefined;
+    const at = setTimeout(() => setOpenAction(opened.id), 600);
+    return () => clearTimeout(at);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results, data, autoExpand, steps]);
 
   // The move to the next EP in a game waits a moment after the last Check. Exit, or anything
   // else that ends the game, cancels it, or it would page on and clear the answers afterwards.
@@ -959,12 +972,9 @@ function Drill({
     : null;
   const callRow = lastIn && hasAction(lastIn) ? lastIn : null;
 
-  // The open action: the clicked step's, else with Auto Expanded the next step still to do,
-  // unless its panel was closed. A typed set opens one only from its call.
-  const autoId = autoExpand ? (nextOpen() || {}).id : null;
-  useEffect(() => { if (autoId) setOpenAction(null); }, [autoId]);
-  const autoShown = autoId && autoId !== dismissed ? autoId : null;
-  const actionId = read ? openAction || autoShown : calls ? openAction : null;
+  // The open action: the clicked step's, or the one Auto Expanded opened. A typed set opens one
+  // only from its call or its EXP button.
+  const actionId = read || calls ? openAction : null;
   const actionRow = actionId ? steps.find((s2) => s2.id === actionId && hasAction(s2)) : null;
   const actionLabel = (() => {
     if (!actionRow) return '';
@@ -1050,7 +1060,7 @@ function Drill({
               )}
               {actionRow && (
                 <ActionPanel row={actionRow} label={actionLabel} mark={readMark(actionRow.id)}
-                  onClose={() => { if (openAction) setOpenAction(null); else setDismissed(autoId); }} />
+                  onClose={() => setOpenAction(null)} />
               )}
             </div>
             {showTools && (
@@ -1095,7 +1105,7 @@ function Drill({
               {showTools && <button type="button" onClick={reset}>Reset</button>}
               {showTools && read && (
                 <button type="button" className={`epl-auto-nwc${autoExpand ? ' active' : ''}`} aria-pressed={autoExpand}
-                  onClick={() => { setOpenAction(null); setDismissed(null); setAutoExpand((v) => !v); }}>
+                  onClick={() => { setOpenAction(null); setAutoExpand((v) => !v); }}>
                   Auto Expanded
                 </button>
               )}

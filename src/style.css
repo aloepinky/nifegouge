@@ -8308,7 +8308,7 @@ textarea.incorrect-answer {
   flex-direction: column;
 }
 
-/* "Practice Cases" under an EP card that has another set drilling it (EPDrill `practice`).
+/* "Practice SSE Cases" under an EP card that has another set drilling it (EPDrill `practice`).
    Quiet, like the unlit toggles, so it never reads as part of the procedure. */
 .limits-eps-container button.epl-practice {
   align-self: center;
