@@ -1907,7 +1907,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   height: '20px',
                   borderRadius: '50%',
                   border: '2px solid var(--line-333333)',
-                  backgroundColor: currentDivKey === 'epDivs' ? '#333' : 'var(--surface)',
+                  backgroundColor: currentDivKey === 'epDivs' ? 'var(--ink)' : 'var(--surface)',
                   transition: 'background-color 0.2s'
                 }}></div>
               </div>
@@ -1935,7 +1935,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   height: '20px',
                   borderRadius: '50%',
                   border: '2px solid var(--line-333333)',
-                  backgroundColor: currentDivKey === 'fullEpDivs' ? '#333' : 'var(--surface)',
+                  backgroundColor: currentDivKey === 'fullEpDivs' ? 'var(--ink)' : 'var(--surface)',
                   transition: 'background-color 0.2s'
                 }}></div>
               </div>
@@ -1964,7 +1964,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   height: '20px',
                   borderRadius: '50%',
                   border: '2px solid var(--line-333333)',
-                  backgroundColor: currentDivKey === 'quadDivs' ? '#333' : 'var(--surface)',
+                  backgroundColor: currentDivKey === 'quadDivs' ? 'var(--ink)' : 'var(--surface)',
                   transition: 'background-color 0.2s'
                 }}></div>
               </div>

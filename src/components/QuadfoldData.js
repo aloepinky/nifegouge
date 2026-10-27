@@ -1113,7 +1113,7 @@ const createActionBubbles = (bubbles, fontSizer = '11px') => (
             } else if (item.italic) {
               return <div key={i} style={{fontStyle: 'italic', ...(item.center && {textAlign: 'center'})}}>{item.text}</div>;
             } else if (item.highlight) {
-              return <div key={i} style={{...(item.center && {textAlign: 'center'})}}><span style={{fontStyle: 'italic', backgroundColor: 'yellow'}}>{item.text}</span></div>;
+              return <div key={i} style={{...(item.center && {textAlign: 'center'})}}><span style={{fontStyle: 'italic', backgroundColor: 'yellow', color: '#000'}}>{item.text}</span></div>;
             } else if (item.underline) {
               return <div key={i} style={{textDecoration: 'underline', ...(item.center && {textAlign: 'center'})}}>{item.text}</div>;
             }  else if (item.space) {

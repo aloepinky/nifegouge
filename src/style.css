@@ -8834,6 +8834,11 @@ textarea.incorrect-answer {
   margin: 4px auto 0;
 }
 
+/* Three or more lists: room for a centred label between the end ones. */
+.epl-modes--wide {
+  width: 240px;
+}
+
 .epl-modes-line {
   position: absolute;
   top: 25px;
@@ -9361,6 +9366,22 @@ button.epl-modal-close:hover {
 
 .limits-eps-container button.epl-nwc-btn:hover {
   background-color: #e53935;
+}
+
+/* The cases' EXP chip, the NWC chip's size in the site's button colour: it opens the step's
+   expanded action and response, and stays greyed until the step is in. */
+.limits-eps-container button.epl-exp-btn {
+  background-color: var(--btn-2);
+}
+
+.limits-eps-container button.epl-exp-btn:hover {
+  background-color: var(--btn);
+}
+
+.limits-eps-container button.epl-exp-btn:disabled {
+  background-color: var(--btn-off);
+  opacity: 0.45;
+  cursor: default;
 }
 
 /* On the red title bar the chip is taken out of flow, so the title stays centred on the card

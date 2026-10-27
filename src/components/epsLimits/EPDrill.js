@@ -277,7 +277,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, 
           ) : (
             <li>One EP is shown at a time. Type each step exactly as the checklist prints it, item and setting together: "Mixture - IDLE CUTOFF". EPs are verbatim!</li>
           )}
-          {calls && <li>Once a step is in, what is said for it shows under the card. Say your call before you look. What you say is in bold; click it for what the FTI says to do</li>}
+          {calls && <li>Once a step is in, what is said for it shows under the card. Say your call before you look. What you say is in bold; click it, or a step's <strong>EXP</strong> button, for the expanded action and response</li>}
           {hasPanel && <li>In Full Mode you can click the matching control instead of typing. A click fills the next empty step with that step's whole answer</li>}
           {hasPanel && hasWatch && !read && <li>A normal procedure step you check gauges or lights for also needs each of them clicked, in any order. It stays yellow until the last one is in</li>}
           {hasBand && <li>The cockpit poster is drawn above and beside the EP. Hint and Skip ring the control a step names and scroll it into view; where the poster shows one panel at a time, they bring up the panel it is on</li>}
@@ -316,7 +316,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, 
 // chosen one filled. Styled as `.epl-modes`, copied from TW4Cockpit.js's inline styles.
 function ModeDots({ sets, current, onPick }) {
   return (
-    <div className="epl-modes" role="radiogroup" aria-label="Checklists">
+    <div className={`epl-modes${sets.length > 2 ? ' epl-modes--wide' : ''}`} role="radiogroup" aria-label="Checklists">
       <div className="epl-modes-line" />
       {sets.map((set) => (
         <button key={set.id} type="button" role="radio" aria-checked={set.id === current}
@@ -472,6 +472,8 @@ function Drill({
   // open step's action showing as the steps are done.
   const [openAction, setOpenAction] = useState(null);
   const [autoExpand, setAutoExpand] = useState(false);
+  // Closing the panel with Auto Expanded on puts away that step's only; the next step opens again.
+  const [dismissed, setDismissed] = useState(null);
 
   const ep = eps[order[pos]];
   const steps = useMemo(() => ep.rows.filter((r) => r.id), [ep]);
@@ -786,6 +788,21 @@ function Drill({
     );
   };
 
+  // `calls`: a step is in once it is right or skipped. Its EXP button, where a set has no NWCs,
+  // opens what the FTI says to do and say; it waits for the step, since the panel shows the step.
+  const isIn = (row) => results[row.id] === 'correct' || data[row.id] === answers[row.id];
+  const expButton = (row) => {
+    if (!calls || !hasAction(row)) return null;
+    const ready = isIn(row);
+    return (
+      <button type="button" className="epl-nwc-btn epl-exp-btn" disabled={!ready}
+        title={ready ? 'Show the expanded action and response' : 'Opens once the step is in'}
+        onClick={() => setOpenAction(row.id)}>
+        EXP
+      </button>
+    );
+  };
+
   // Every EP's card, rendered once, hidden, and measured — see the sizer in the middle column
   // below. It carries no state at all, so it reconciles once and never again while you type, and
   // it is real markup rather than an estimate: a decision line that wraps to two lines on a
@@ -822,6 +839,7 @@ function Drill({
               <input type="text" className="epl-input" readOnly tabIndex={-1} defaultValue="" data-step={row.id} />
               {row.who && <span className="epl-who">{row.who}</span>}
               {has(row.id) && <button type="button" className="epl-nwc-btn" tabIndex={-1}>NWC</button>}
+              {calls && hasAction(row) && <button type="button" className="epl-nwc-btn epl-exp-btn" tabIndex={-1}>EXP</button>}
             </div>
           );
         })}
@@ -829,7 +847,7 @@ function Drill({
       </div>
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [eps, nwc, normal, read]);
+  }), [eps, nwc, normal, read, calls]);
 
   // Two measurements off the sizer, both re-run whenever the column changes width.
   // `useLayoutEffect` so they are in place before the browser paints rather than a frame later.
@@ -903,7 +921,7 @@ function Drill({
         if (counts(row)) n += 1;
         if (read) {
           const label = stepLabel(row, n);
-          const open = hasAction(row) ? () => { setAutoExpand(false); setOpenAction(row.id); } : null;
+          const open = hasAction(row) ? () => setOpenAction(row.id) : null;
           return (
             <div key={row.id} className={`epl-step epl-step--read${open ? ' epl-step--open' : ''}`}
               role={open ? 'button' : undefined} tabIndex={open ? 0 : undefined}
@@ -924,6 +942,7 @@ function Drill({
               value={data[row.id] || ''} onChange={(e) => change(row.id, e.target.value)} onKeyDown={onKeyDown} />
             {row.who && <span className="epl-who" title="Who replies">{row.who}</span>}
             {nwcButton(row.id)}
+            {expButton(row)}
           </div>
         );
       })}
@@ -934,15 +953,18 @@ function Drill({
   // `calls`: a typed set whose steps carry what is said (the T-44C's cases). The call shows under
   // the card once its step is in, right or skipped, never before, so the step is still recalled
   // and not read. It is the latest step in, since the steps go in in order; a step with nothing
-  // said but something to do offers that instead.
+  // said but something to do reads "Expanded", which opens it.
   const lastIn = calls
-    ? [...steps].reverse().find((s2) => results[s2.id] === 'correct' || data[s2.id] === answers[s2.id])
+    ? [...steps].reverse().find(isIn)
     : null;
   const callRow = lastIn && hasAction(lastIn) ? lastIn : null;
 
-  // The open action: the clicked step's, or with Auto Expanded the next step still to do. A
-  // typed set opens one only from its call.
-  const actionId = read ? (autoExpand ? (nextOpen() || {}).id : openAction) : calls ? openAction : null;
+  // The open action: the clicked step's, else with Auto Expanded the next step still to do,
+  // unless its panel was closed. A typed set opens one only from its call.
+  const autoId = autoExpand ? (nextOpen() || {}).id : null;
+  useEffect(() => { if (autoId) setOpenAction(null); }, [autoId]);
+  const autoShown = autoId && autoId !== dismissed ? autoId : null;
+  const actionId = read ? openAction || autoShown : calls ? openAction : null;
   const actionRow = actionId ? steps.find((s2) => s2.id === actionId && hasAction(s2)) : null;
   const actionLabel = (() => {
     if (!actionRow) return '';
@@ -1015,7 +1037,7 @@ function Drill({
                   {callRow ? (
                     <button type="button" className="epl-call-say" title="Show what the FTI says to do"
                       onClick={() => setOpenAction(callRow.id)}>
-                      {!(callRow.replies && callRow.replies.length) && <span>What to do: {callRow.challenge}</span>}
+                      {!(callRow.replies && callRow.replies.length) && <span>Expanded</span>}
                       {(callRow.replies || []).map((reply, i) => (
                         <span key={i} className={reply.act ? 'epl-say--act' : reply.ip ? 'epl-say--ip' : 'epl-say'}>
                           {reply.act ? reply.text : <span>&ldquo;{reply.text}&rdquo;</span>}
@@ -1028,7 +1050,7 @@ function Drill({
               )}
               {actionRow && (
                 <ActionPanel row={actionRow} label={actionLabel} mark={readMark(actionRow.id)}
-                  onClose={() => { setOpenAction(null); setAutoExpand(false); }} />
+                  onClose={() => { if (openAction) setOpenAction(null); else setDismissed(autoId); }} />
               )}
             </div>
             {showTools && (
@@ -1073,7 +1095,7 @@ function Drill({
               {showTools && <button type="button" onClick={reset}>Reset</button>}
               {showTools && read && (
                 <button type="button" className={`epl-auto-nwc${autoExpand ? ' active' : ''}`} aria-pressed={autoExpand}
-                  onClick={() => { setOpenAction(null); setAutoExpand((v) => !v); }}>
+                  onClick={() => { setOpenAction(null); setDismissed(null); setAutoExpand((v) => !v); }}>
                   Auto Expanded
                 </button>
               )}
