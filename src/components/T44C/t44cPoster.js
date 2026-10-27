@@ -264,7 +264,13 @@ export const T44C_POSTER = {
         { box: [0.259, 0.883, 0.028, 0.034], label: 'Pitot heat',
           action: 'LEFT & RIGHT PITOT', actions: ['LEFT & RIGHT PITOT', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'], values: ['ON', 'OFF', 'SET', 'CHECKED AS REQUIRED'] },
         { box: [0.291, 0.883, 0.029, 0.035], label: 'Fuel control heat',
-          action: 'Fuel Control Heat', values: ['ON', 'OFF'] },
+          action: 'Fuel Control Heat', actions: ['Fuel Control Heat', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'], values: ['ON', 'OFF'] },
+        // NATOPS §2.20.3.1: the two PULL FOR ENGINE ICE PROTECTION controls below the left
+        // subpanel, which Before Start item 7 pushes in. Rough, 2026-10-27: tune with ?spots.
+        { id: 'ice-vane-l', box: [0.173, 0.932, 0.045, 0.046], label: 'Left engine ice vane control',
+          action: 'Ice Vanes', actions: ['Ice Vanes', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'] },
+        { id: 'ice-vane-r', box: [0.229, 0.932, 0.045, 0.046], label: 'Right engine ice vane control',
+          action: 'Ice Vanes', actions: ['Ice Vanes', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'] },
         { box: [0.325, 0.883, 0.011, 0.033], label: 'Prop deice',
           action: 'Propeller deicer', actions: ['Propeller deicer', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'], also: ['Propeller deice'], values: ['ON', 'OFF (if not previously secured)'] },
         { box: [0.34, 0.882, 0.012, 0.035], label: 'Stall heat',
