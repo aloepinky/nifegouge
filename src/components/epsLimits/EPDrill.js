@@ -643,10 +643,12 @@ function Drill({
   // the control's name once it is in (gradeAnswer reads a bare control as partial, so Check
   // agrees) and the checklist's whole line at the end. A click that adds nothing marks it red and
   // keeps what is already in.
+  // A step with `watchOnly` is its watch list alone: the T-44C's Lights steps, where the
+  // switches are the step and clicking any light switch must not count as one of them.
   const missingOf = (step) => {
     if (!step || !step.watch) return [];
     const have = watched.current[step.id] || [];
-    return [CONTROL, ...step.watch].filter((p) => !have.includes(p));
+    return [...(step.watchOnly ? [] : [CONTROL]), ...step.watch].filter((p) => !have.includes(p));
   };
 
   const watchClick = (step, names, wordings) => {
@@ -655,7 +657,7 @@ function Drill({
     const said = wordings.map((w) => canon(w, aliases));
     const have = watched.current[target] || [];
     const got = [
-      ...(names ? [CONTROL] : []),
+      ...(names && !step.watchOnly ? [CONTROL] : []),
       ...step.watch.filter((w) => said.includes(canon(w, aliases))),
     ].filter((p) => !have.includes(p));
     if (!got.length) {
@@ -664,7 +666,7 @@ function Drill({
     }
     watched.current[target] = [...have, ...got];
     const done = !missingOf(step).length;
-    const line = done ? answer : (watched.current[target].includes(CONTROL) ? controlOf(answer) : '');
+    const line = done ? answer : (step.watchOnly || watched.current[target].includes(CONTROL) ? controlOf(answer) : '');
     const next = { ...data, [target]: line };
     setData(next);
     if (done) delete watched.current[target];

@@ -17,7 +17,10 @@
 //                      the step yellow until each of them is clicked too, in any order, as
 //                      Primary's Engine Start - MONITOR does (epsLimits/EPDrill.js `watchClick`).
 //                      Only what the action names and the poster draws: never PFD flags or audio
-//                      tones.
+//                      tones. A switch the action turns on only at night or in low visibility is
+//                      left to the action text, since the card cannot say which it is.
+//   watchOnly          the watch list is the whole step (the Lights steps' switches): no control
+//                      click of its own, so a switch the step does not set is marked red.
 //
 // A procedure's `normal` draws its card with the checklist card's black title, so a normal
 // memory procedure added to the EPs is never mistaken for one. `critical` (the asterisk) marks
@@ -90,6 +93,8 @@ const BEFORE_START = {
       replies: [say('SET', 'PF')],
     }),
     item('bs6', 'Lights', 'SET', 'LS', {
+      watch: ['Beacon'],
+      watchOnly: true,
       action: [
         'Turn beacons on any time the engines are turning.',
         'Display navigation lights during the period 30 minutes before official sunset until 30 minutes after official sunrise, or at any time when prevailing visibility, as seen from the cockpit, is less than 3 statute miles. Turn on navigation lights during formation taxi.',
@@ -737,6 +742,8 @@ const BEFORE_TAKEOFF = {
     }),
     { decision: 'AFTER CLEARED ONTO THE ACTIVE RUNWAY:' },
     abbrev('bt16', 'Lights', 'SET', 'LS', {
+      watch: ['Left Landing Light', 'Right Landing Light', 'Taxi Light', 'Beacon', 'Strobe'],
+      watchOnly: true,
       action: [
         'LS places the following switches on:',
         'a. LEFT and RIGHT LANDING',
@@ -1116,6 +1123,8 @@ const SECURE = {
       replies: [ip('CLOSED', 'PM')],
     }),
     item('se16', 'Lights', 'OFF', 'LS', {
+      watch: ['Left Landing Light', 'Right Landing Light', 'Taxi Light', 'Ice Light', 'Strobe'],
+      watchOnly: true,
       action: ['Turn off all interior and exterior lights except NAV (if required) and BEACON. Turn NAV (if required) and BEACON off once prop rotation has stopped. Return all rheostats to the full counter-clockwise position. Turn OFF both utility lights and return them to the overhead receptacle.'],
       replies: [say('OFF', 'LS')],
     }),
