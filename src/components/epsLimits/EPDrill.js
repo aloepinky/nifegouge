@@ -656,9 +656,14 @@ function Drill({
     const answer = answers[target];
     const said = wordings.map((w) => canon(w, aliases));
     const have = watched.current[target] || [];
+    // With `controlApart`, a click that is one of the watched pieces counts as that piece only,
+    // not also as the step's control: the T-44C's Before Start 7 takes an anti-ice switch AND
+    // both ice vanes, and the vanes answer the anti-ice steps too. Without it a gauge is both,
+    // as every instrument check needs.
+    const pieces = step.watch.filter((w) => said.includes(canon(w, aliases)));
     const got = [
-      ...(names && !step.watchOnly ? [CONTROL] : []),
-      ...step.watch.filter((w) => said.includes(canon(w, aliases))),
+      ...(names && !step.watchOnly && !(step.controlApart && pieces.length) ? [CONTROL] : []),
+      ...pieces,
     ].filter((p) => !have.includes(p));
     if (!got.length) {
       setResults((r) => ({ ...r, [target]: 'incorrect' }));

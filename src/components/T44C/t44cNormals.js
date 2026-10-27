@@ -21,6 +21,8 @@
 //                      left to the action text, since the card cannot say which it is.
 //   watchOnly          the watch list is the whole step (the Lights steps' switches): no control
 //                      click of its own, so a switch the step does not set is marked red.
+//   controlApart       the step's control is a click of its own even where a watched piece also
+//                      answers the step (Before Start 7: an anti-ice switch and both ice vanes).
 //
 // A procedure's `normal` draws its card with the checklist card's black title, so a normal
 // memory procedure added to the EPs is never mistaken for one. `critical` (the asterisk) marks
@@ -102,6 +104,8 @@ const BEFORE_START = {
       replies: [say('SET', 'LS')],
     }),
     item('bs7', 'Anti-Ice/Deice', 'OFF', 'LS', {
+      watch: ['Left Ice Vane', 'Right Ice Vane'],
+      controlApart: true,
       action: ['LS ensures all anti-ice/deice switches are OFF and ice vane controls are in. Physically push ice vanes to the fully closed position.'],
       replies: [say('OFF', 'LS')],
     }),
@@ -118,7 +122,7 @@ const BEFORE_START = {
       replies: [say('CHECKED/SET', 'LS')],
     }),
     item('bs9', 'Annunciator Panel', 'CHECKED', 'PF', {
-      watch: ['FAULT WARNING'],
+      watch: ['Terrain Warning Lights', 'EMER 121.5', 'FAULT WARNING'],
       action: [
         'a. RS presses and holds Press-to-Test button. LS ensures all annunciator lights, "Terrain," "Pull Up," "Terrain NA," "ESIS On/Off" lights, and EMER 121.5 illuminated, and FAULT WARN light is flashing.',
         'b. LS presses the flashing FAULT WARN light to extinguish.',

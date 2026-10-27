@@ -90,7 +90,12 @@ export const T44C_POSTER = {
         { id: 'terrain-warnings', box: [0.496, 0.252, 0.047, 0.035],
           label: 'Terrain warning lights',
           action: 'Continue Climb at Vx Until All Visual And Voice Warnings Cease',
-          fills: 'Until All Visual And Voice Warnings Cease' },
+          actions: ['Continue Climb at Vx Until All Visual And Voice Warnings Cease', 'Terrain Warning Lights'],
+          fills: { 'Continue Climb at Vx Until All Visual And Voice Warnings Cease': 'Until All Visual And Voice Warnings Cease' } },
+        // The EMER FREQ 121.5 button under the radio tuning unit, which Before Start 9's lamp test
+        // lights. Rough, 2026-10-27: tune with ?spots.
+        { id: 'emer-121', box: [0.630, 0.615, 0.014, 0.029], label: 'EMER FREQ 121.5 button',
+          action: 'EMER 121.5' },
 
         { box: [0.276, 0.826, 0.012, 0.024], label: 'Windshield anti-ice',
           action: 'Windshield Heat', actions: ['Windshield Heat', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'], also: ['WSHLD ANTI-ICE'], values: ['As Required', 'BOTH, Then PILOT'] },
@@ -268,9 +273,9 @@ export const T44C_POSTER = {
         // NATOPS §2.20.3.1: the two PULL FOR ENGINE ICE PROTECTION controls below the left
         // subpanel, which Before Start item 7 pushes in. Rough, 2026-10-27: tune with ?spots.
         { id: 'ice-vane-l', box: [0.173, 0.932, 0.045, 0.046], label: 'Left engine ice vane control',
-          action: 'Ice Vanes', actions: ['Ice Vanes', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'] },
+          action: 'Left Ice Vane', actions: ['Left Ice Vane', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'] },
         { id: 'ice-vane-r', box: [0.229, 0.932, 0.045, 0.046], label: 'Right engine ice vane control',
-          action: 'Ice Vanes', actions: ['Ice Vanes', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'] },
+          action: 'Right Ice Vane', actions: ['Right Ice Vane', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'] },
         { box: [0.325, 0.883, 0.011, 0.033], label: 'Prop deice',
           action: 'Propeller deicer', actions: ['Propeller deicer', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'], also: ['Propeller deice'], values: ['ON', 'OFF (if not previously secured)'] },
         { box: [0.34, 0.882, 0.012, 0.035], label: 'Stall heat',
