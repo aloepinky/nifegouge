@@ -6,7 +6,7 @@ import { CALLS, CHECKLISTS, EP_PHASES } from './famScript';
 import { QUAD_ACTIONS } from '../QuadfoldData';
 import { CAN_GET_HOME, HOME, PLANS, choicesFrom, departures, fieldsAhead as fieldsAheadOf, groupOf, isAirfield, isArea, isPattern, labelOf } from './legs';
 import { gradeStep } from './grade';
-import { fieldOfLeg } from './fieldOps';
+import { fieldOfLeg, onSide as onSideOf, sideOf as sideOfField } from './fieldOps';
 import { CAP, backable, begin, phaseOf, withHistory } from './history';
 import { flightText } from './report';
 import { limits, problemWith, transit } from './highWork';
@@ -947,7 +947,9 @@ withSeed('into KRKP, a civilian field: the entry is decided in the area, in civi
   expect(said[out]).toMatch(/request High-Key into Aransas County$/);
   // On the CTAF, "high left overhead"; on KRKP common, the rule's "High-Key".
   const rwy = activeRunway(s, 'Point-default-21');
-  expect(said.some((x) => new RegExp(`^Aransas County Traffic, .*, high left overhead, ${rwy}, Aransas County\\.$`).test(x))).toBe(true);
+  // The side is the runway's (In Flight Guide: 14 and 36 left, 18 and 32 right).
+  const side = ['18', '32'].includes(rwy) ? 'right' : 'left';
+  expect(said.some((x) => new RegExp(`^Aransas County Traffic, .*, high ${side} overhead, ${rwy}, Aransas County\\.$`).test(x))).toBe(true);
   expect(said.some((x) => /^Aransas County Traffic, .*High-Key|Low-Key|practice PEL/.test(x) && /Traffic/.test(x))).toBe(false);
   expect(said.some((x) => /^\w+ \d+, High-Key$/.test(x))).toBe(true);
   // A break decided on asks for the field, not its High-Key.
@@ -1050,9 +1052,10 @@ test('a point is named with where it leads', () => {
 });
 
 // Fly MUSTANG South to Waldron, entering as `entry`.
-const toWaldron = (entry) => walk(start(LEGS, { card: { rwy: '13L' } }), ['high', 'MUSTANG South', 'skip', entry],
+// With the airfield pages, as the page has them (Waldron's weather, KNGP's ATIS, is copied in the area).
+const toWaldron = (entry) => walk(start(LEGS, { card: { rwy: '13L' }, fields: FIELDS }), ['high', 'MUSTANG South', 'skip', entry],
   (x) => x.route.includes('Point-default-50') && current(x).choose === 'field',
-  (x, now, ids) => (now.choose === 'leg' && (x.flags.inArea || x.flags.areaDone) ? ids.find((i) => /Point-Arrivals-78|Routes-Arrivals-8[6-9]/.test(i) && runwayOk(x, i)) : null));
+  (x, now, ids) => (['leg', 'runway'].includes(now.choose) && (x.flags.inArea || x.flags.areaDone) ? ids.find((i) => /Point-Arrivals-78|Routes-Arrivals-8[6-9]/.test(i) && runwayOk(x, i)) : null));
 
 withSeed('into Waldron by a break or a PEL: each says only its own request', () => {
   const flown = toWaldron('break');
@@ -1213,15 +1216,23 @@ withSeed('a Waldron PEL: the Practice PEL entry and its calls, never the touch a
   const rwy = activeRunway(s, 'Point-default-50');
   const runway = said.findIndex((x) => x.endsWith(`Corpus Approach, proceed direct Waldron, Waldron landing runway ${rwy}.`));
   const term = said.findIndex((x) => /approaching High-Key, terminate\.$/.test(x));
-  const intent = said.findIndex((x) => /^Waldron Tower, .*, request practice PEL, runway \d+\.$/.test(x));
+  const intent = said.findIndex((x) => /^Waldron Tower, .*, request practice PEL, runway \d+, with information [\w-]+\.$/.test(x));
   const high = said.findIndex((x) => /^Waldron Tower, .*, High-Key, \d+\.$/.test(x) && x.endsWith(`, ${rwy}.`));
+  const low = said.findIndex((x) => /^Waldron Tower, .*, Low-Key, gear down\.$/.test(x));
+  const side = ['13', '18'].includes(rwy) ? 'right' : 'left';
   expect(ask).toBeGreaterThan(0);
   expect(runway).toBe(ask + 1);
   expect(said.filter((x) => /request High-Key to Waldron/.test(x))).toHaveLength(1);
   expect(term).toBeGreaterThan(runway);
-  expect(intent).toBe(term + 1);
+  // Terminated: Approach gives Tower's button, read back; then the check-in with the ATIS letter.
+  expect(said[term + 1]).toMatch(/, frequency change approved, contact Waldron Tower channel 30\.$/);
+  expect(said[term + 2]).toMatch(/, frequency change approved, channel 30\.$/);
+  expect(intent).toBe(term + 3);
   expect(said[intent + 1].endsWith(`Waldron Tower, runway ${rwy}, report High-Key.`)).toBe(true);
   expect(high).toBe(intent + 2);
+  // The gear call at Low-Key; Tower clears the option, closed traffic the runway's way.
+  expect(low).toBeGreaterThan(high);
+  expect(said[low + 1].endsWith(`cleared for the option, ${side} closed traffic approved.`)).toBe(true);
 });
 
 withSeed('leaving Waldron, Tower is told; going home, the call picks SHAMROCK and the runway half', () => {
@@ -1522,4 +1533,49 @@ test('about four landings in ten round a pattern are waved off', () => {
   expect(landings).toBeGreaterThan(100);
   expect(waved / landings).toBeGreaterThan(0.25);
   expect(waved / landings).toBeLessThan(0.55);
+});
+
+withSeed('into Waldron on the break: terminate, channel 30 read back, check in with the ATIS letter, cleared break, 180 gear down, the option', () => {
+  // With the airfield pages, as the page has them: Waldron's weather (KNGP's ATIS) is copied in the area.
+  const s = walk(start(LEGS, { card: { rwy: '13L' }, fields: FIELDS }), ['high', 'MUSTANG South', 'skip', 'break'],
+    (x) => x.route.includes('Point-default-50') && current(x).choose === 'field',
+    (x, now, ids) => (['leg', 'runway'].includes(now.choose) && (x.flags.inArea || x.flags.areaDone) ? ids.find((i) => /Point-Arrivals-78|Routes-Arrivals-8[6-9]/.test(i) && runwayOk(x, i)) : null));
+  const said = s.log.map((l) => l.text);
+  const at = (re) => said.findIndex((x) => re.test(x));
+  const term = at(/Camel Humps, Terminate\.$/);
+  expect(term).toBeGreaterThan(0);
+  expect(said[term + 1]).toMatch(/, frequency change approved, contact Waldron Tower channel 30\.$/);
+  expect(said[term + 2]).toMatch(/, frequency change approved, channel 30\.$/);
+  expect(said[term + 3]).toMatch(/^Waldron Tower, .*, Camel Humps for Touch and Go\(s\) with information [\w-]+\.$/);
+  expect(said[term + 4]).toMatch(/Report the initial RWY \d+$/);
+  const numbers = at(/^Waldron Tower, .*, Numbers \d+$/);
+  expect(said[numbers + 1]).toMatch(/, cleared (left|right) break\.$/);
+  const gear = at(/^Waldron Tower, .*, 180, gear down\.$/);
+  expect(gear).toBeGreaterThan(numbers);
+  expect(said[gear + 1]).toMatch(/, cleared for the option, (left|right) closed traffic approved\.$/);
+  expect(said.some((x) => /left downwind approved/.test(x))).toBe(false);
+});
+
+test('each field turns its pattern the way the In Flight Guide says for the runway', () => {
+  const W = 'Point-default-50';
+  expect(['13', '18', '31', '36'].map((r) => sideOfField(LEGS, W, r))).toEqual(['right', 'right', 'left', 'left']);
+  expect(['11', '17', '29', '35'].map((r) => sideOfField(LEGS, 'Point-default-38', r))).toEqual(['left', 'right', 'right', 'left']);
+  expect(['14', '18', '32', '36'].map((r) => sideOfField(LEGS, 'Point-default-21', r))).toEqual(['left', 'right', 'right', 'left']);
+  expect(onSideOf([{ text: 'Aransas County Traffic, (Call Sign), Left crosswind, (RWY #), Aransas County.' }], 'right')[0].text).toMatch(/Right crosswind/);
+});
+
+withSeed('Waldron 13 is a right break, read back; 31 a left', () => {
+  [['130', 'right'], ['310', 'left']].forEach(([wind, side]) => {
+    const s = walk(start(LEGS, { card: { rwy: wind === '130' ? '13L' : '31R', windDir: wind, windSpeed: 10 }, fields: FIELDS }), ['high', 'MUSTANG South', 'skip', 'break'],
+      (x) => x.route.includes('Point-default-50') && current(x).choose === 'field',
+      (x, now, ids) => (['leg', 'runway'].includes(now.choose) && (x.flags.inArea || x.flags.areaDone) ? ids.find((i) => /Point-Arrivals-78|Routes-Arrivals-8[6-9]/.test(i) && runwayOk(x, i)) : null));
+    const said = s.log.map((l) => l.text);
+    // Tower's clearance, then the student's readback, both for the runway's side.
+    const cleared = said.findIndex((x) => x.endsWith(`cleared ${side} break.`));
+    expect(cleared).toBeGreaterThan(0);
+    expect(s.log[cleared].who).toBe('TWR');
+    expect(s.log[cleared + 1].who).toBe('you');
+    expect(said[cleared + 1].endsWith(`, cleared ${side} break.`)).toBe(true);
+    expect(said.some((x) => x.endsWith(`${side} closed traffic approved.`))).toBe(true);
+  });
 });

@@ -27,7 +27,7 @@ import {
 import { fillCall, makeCard } from './card';
 import {
   DISCONTINUE_REF, DISCONTINUE_RULE, canDiscontinue, chance, civilian, entryCalls, entryModes, fieldModes, fieldOfLeg, modeLabel,
-  fieldRadios, lapCalls, lapModes, onChannels,
+  fieldRadios, lapCalls, lapModes, onChannels, onSide, sideOf,
 } from './fieldOps';
 import { gradeStep } from './grade';
 import { FTI, FTI_CALLOUTS, FTI_NUMBERS } from './ftiProcedures';
@@ -704,6 +704,39 @@ function aransasIn(s, leg, mode, found) {
   return { ...found, opening, before, ruleFirst: true };
 }
 
+// Into Waldron by the break (the user's, 2026-10-27, around the Course Rules Manual's calls,
+// 2-40 to 2-45): terminated, Approach approves the frequency change and gives Tower's button,
+// read back; the check-in carries the ATIS letter, so Tower needn't give the weather; the
+// initial and the numbers; Tower clears the break; at the 180 the gear call, and Tower clears
+// the option with closed traffic. Tower's words and the ones the manual doesn't give are made up
+// for practice.
+function waldronIn(s, field, found) {
+  const side = sideOf(s.legs, field, s.rwy);
+  const all = [...(found.opening || []), ...(found.before || [])];
+  const doc = (re) => all.find((c) => re.test(c.text));
+  const made = (who, text, more = {}) => ({ who, text, generated: true, ...more });
+  const said = (c) => (c ? [c] : []);
+  return {
+    ...found,
+    opening: [],
+    before: [
+      ...said(doc(/Camel Humps, Terminate/)),
+      made('APP', '(Call Sign), frequency change approved, contact Waldron Tower channel 30.'),
+      made('you', '(Call Sign), frequency change approved, channel 30.'),
+      made('you', 'Waldron Tower, (Call Sign), Camel Humps for Touch and Go(s) with information (ATIS code).', { radio: 'CH 30 UHF' }),
+      ...said(doc(/Report the initial/)),
+      ...said(doc(/Initial \(?RWY|Initial 13|, Initial/)),
+      ...said(doc(/Numbers/)),
+      made('TWR', `(Call Sign), cleared ${side} break.`),
+      made('you', `(Call Sign), cleared ${side} break.`),
+    ],
+    after: [
+      made('you', 'Waldron Tower, (Call Sign), 180, gear down.'),
+      made('TWR', `(Call Sign), cleared for the option, ${side} closed traffic approved.`),
+    ],
+  };
+}
+
 // An outlying field's weather, from its own automated station (its page in the course rules
 // document: "ASOS — VHF 119.275MHz", "ASOS — UHF 14 (353.675MHz)"): the wind the runway in use
 // is picked by. No station listed (Waldron, a towered field), none. Made up for practice, in
@@ -1319,12 +1352,15 @@ function enter(s, leg, mode) {
   const n = s.entries || 0;
   const discontinued = mode === 'break' && canDiscontinue(s.legs, leg) && chance(s.card.seed, n) < 1 / 3;
   const radios = fieldRadios(s.legs, field);
-  const raw = nameOf(field) === 'KRKP' ? aransasIn(s, leg, mode, entryCalls(s.legs, leg, mode, discontinued)) : entryCalls(s.legs, leg, mode, discontinued);
+  const plain = entryCalls(s.legs, leg, mode, discontinued);
+  const raw = nameOf(field) === 'KRKP' ? aransasIn(s, leg, mode, plain)
+    : nameOf(field) === 'KNWL' && mode === 'break' ? waldronIn(s, field, plain) : plain;
   const fromArea = nameOf(field) === 'KNWL' && isArea(s.route[s.route.length - 3] || '');
   // Into Waldron straight from the area, the request was the check-out's and Approach gave the
   // runway then: neither is said again.
   const asked = (c) => fromArea && (/^Corpus Approach, .*(course rules to Waldron|request High-Key to Waldron)/.test(c.text) || /Waldron landing runway/.test(c.text));
-  const found = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, Array.isArray(v) ? onChannels(v.filter((c) => !c.text || !asked(c)), radios) : v]));
+  const side = sideOf(s.legs, field, s.rwy);
+  const found = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, Array.isArray(v) ? onSide(onChannels(v.filter((c) => !c.text || !asked(c)), radios), side) : v]));
   const calls = fieldOf(leg) === 'KNGT' ? { ...found, opening: [...(found.opening || []), goliadTraffic(s, mode)] } : found;
   const f = patternFly(s, field, s.rwy);
   const fly = mode === 'pel' ? { before: f.highKey, downwind: f.lowKey } : { before: f.initial, downwind: f.downwind };
@@ -1354,7 +1390,16 @@ const simulated = (s, now) => ({
 function lap(s, pattern, mode) {
   const radios = fieldRadios(s.legs, fieldOf(pattern) && (feature(pattern).nextNode || []).find(isAirfield));
   const lapped = lapCalls(s.legs, pattern, mode);
-  const calls = Object.fromEntries(Object.entries(lapped).map(([k, v]) => [k, Array.isArray(v) ? onChannels(v, radios) : v]));
+  const side = sideOf(s.legs, s.node, s.rwy);
+  let calls = Object.fromEntries(Object.entries(lapped).map(([k, v]) => [k, Array.isArray(v) ? onSide(onChannels(v, radios), side) : v]));
+  // Round Waldron with closed traffic approved, the 180 gear call is the only call (the user's,
+  // 2026-10-27); Tower's answer made up for practice.
+  if (nameOf(s.node) === 'KNWL' && mode === 'lap') {
+    calls = { ...calls, opening: undefined, before: [], after: [
+      { who: 'you', text: 'Waldron Tower, (Call Sign), 180, gear down.', generated: true },
+      { who: 'TWR', text: '(Call Sign), cleared for the option.', generated: true },
+    ] };
+  }
   const phase = fieldOf(pattern) === 'KNGP' ? 'Landing' : 'Pattern';
   const f = patternFly(s, s.node, s.rwy);
   const fly = mode === 'ppel' ? { first: f.upwind, downwind: f.lowKey } : { first: f.upwind, downwind: f.downwind };

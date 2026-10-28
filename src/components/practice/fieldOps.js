@@ -7,7 +7,7 @@
 // pattern:"). A part is a call with a `when` and the calls after it that have none; an "Or" part
 // is the other way the one before it can go.
 
-import { choicesFrom, fieldLabel, isAirfield, isPattern, feature, nameOf } from './legs';
+import { choicesFrom, fieldLabel, isAirfield, isPattern, feature, nameOf, runwayOf } from './legs';
 
 const rawComms = (legs, id) => (legs && legs[id] && legs[id].comms) || [];
 const ALT = /^Or\s*(?:…|\.\.\.)\s*$/;
@@ -52,12 +52,20 @@ function towerPel(legs, leg) {
       ask,
       made('(Call Sign), Corpus Approach, Waldron landing runway (RWY #).', { who: 'APP' }),
       made('Corpus Approach, (Call Sign), approaching High-Key, terminate.'),
-      // First call to Tower: intentions; Tower gives the runway and when to report.
-      made(`${tower[1]}, (Call Sign), 5 miles to the south, request practice PEL, runway (RWY #).`, { radio: 'CH 30 UHF' }),
+      // As on the break: Approach gives Tower's button, read back.
+      made(`(Call Sign), frequency change approved, contact ${tower[1]} channel 30.`, { who: 'APP' }),
+      made('(Call Sign), frequency change approved, channel 30.'),
+      // First call to Tower: intentions, with the ATIS letter; Tower gives when to report.
+      made(`${tower[1]}, (Call Sign), 5 miles to the south, request practice PEL, runway (RWY #), with information (ATIS code).`, { radio: 'CH 30 UHF' }),
       made(`(Call Sign), ${tower[1]}, runway (RWY #), report High-Key.`, { who: 'TWR' }),
       made(`${tower[1]}, (Call Sign), High-Key, (RWY #).`),
     ],
-    after: [made(`${tower[1]}, (Call Sign), Low-Key, gear down.`)],
+    // The gear call at Low-Key ("a gear call each pass at the 180 or Low-Key", 2-45), and Tower
+    // clears the option with closed traffic, the pattern's way for the runway.
+    after: [
+      made(`${tower[1]}, (Call Sign), Low-Key, gear down.`),
+      made(`(Call Sign), cleared for the option, ${sideOf(legs, fieldOfLeg(leg), runwayOf(leg))} closed traffic approved.`, { who: 'TWR' }),
+    ],
   };
 }
 
@@ -102,7 +110,27 @@ export const civilian = (field) => !!field && !/NOLF|NAS\b|NALF|Navy/i.test(fiel
 
 // The side a field's pattern is flown to: as its calls say it ("Left crosswind"), else its rule
 // ("will be made to the left"), else left.
-export function sideOf(legs, field) {
+// Which way each field's pattern turns, by runway: the TW-4 In Flight Guide's field pages
+// (KNWL "13 / 18 RIGHT, 31 / 36 LEFT"; KNGT "11 / 35 LEFT, 17 / 29 RIGHT"; KRKP "14 / 36 LEFT,
+// 18 / 32 RIGHT"; KTFP left). The course rules document's calls are written for one runway
+// ("Left crosswind"), so the runway in use decides.
+const PATTERN_SIDE = {
+  KNWL: { 13: 'right', 18: 'right', 31: 'left', 36: 'left' },
+  KNGT: { 11: 'left', 35: 'left', 17: 'right', 29: 'right' },
+  KRKP: { 14: 'left', 36: 'left', 18: 'right', 32: 'right' },
+  KTFP: { 13: 'left', 31: 'left', 14: 'left', 32: 'left' },
+};
+// A field's calls, said for the side of the runway in use ("Left crosswind" → "Right crosswind").
+export function onSide(calls, side) {
+  if (!calls || !side) return calls;
+  const said = (w) => (w[0] === w[0].toUpperCase() ? side[0].toUpperCase() + side.slice(1) : side);
+  return calls.map((c) => (c && c.text ? { ...c, text: c.text.replace(/\b(left|right)(?= (?:crosswind|base|downwind|overhead|break|closed))/gi, said) } : c));
+}
+
+export function sideOf(legs, field, rwy) {
+  const table = PATTERN_SIDE[nameOf(field)];
+  const n = rwy && parseInt(rwy, 10);
+  if (table && table[n]) return table[n];
   const pattern = choicesFrom(field).find(isPattern);
   const leg = (legs && legs[pattern]) || {};
   const words = [...(leg.comms || []).map((c) => c.text), ...(leg.rule || []).map((p) => p.text)].join(' ');
@@ -126,7 +154,7 @@ export function modeLabel(legs, field, mode) {
 // County: "Aircraft executing a PPEL must announce intentions on CTAF (CH 21 VHF) and report
 // "High-Key" on KRKP common (CH 21 UHF)"): its PEL calls, made up for practice from that
 // rule and the field's own CTAF calls. Null elsewhere.
-function ruledPel(legs, field) {
+function ruledPel(legs, field, rwy) {
   const pattern = choicesFrom(field).find(isPattern);
   const rule = ((legs && legs[pattern] && legs[pattern].rule) || []).map((p) => p.text.replace(/\[\[|\]\]/g, '')).join(' ');
   const ctaf = /CTAF \(CH (\d+) VHF\)/i.exec(rule);
@@ -141,7 +169,7 @@ function ruledPel(legs, field) {
   // On the CTAF, civilian words; on the wing's own common, the rule's "High-Key".
   return {
     before: [
-      made(`${m[1]}, (Call Sign), high ${sideOf(legs, field)} overhead, (RWY #), ${m[2]}.`, `CH ${ctaf[1]} VHF`),
+      made(`${m[1]}, (Call Sign), high ${sideOf(legs, field, rwy)} overhead, (RWY #), ${m[2]}.`, `CH ${ctaf[1]} VHF`),
       made('(Call Sign), High-Key', `CH ${common[1]} UHF`),
     ],
     after: callsOf(ppel).slice(-1),
@@ -196,7 +224,7 @@ export function entryCalls(legs, leg, mode, discontinued) {
   if (mode === 'pel') {
     const pattern = patternParts(legs, fieldOfLeg(leg));
     if (!pattern.some(is(/Practice PEL/i)) && !ruledPel(legs, fieldOfLeg(leg)) && towerPel(legs, leg)) return towerPel(legs, leg);
-    const ruled = !pattern.some(is(/Practice PEL/i)) && ruledPel(legs, fieldOfLeg(leg));
+    const ruled = !pattern.some(is(/Practice PEL/i)) && ruledPel(legs, fieldOfLeg(leg), runwayOf(leg));
     // The arrival's calls up to its initial (KRKP's "Any Texans working Aransas County?"), then
     // the High-Key calls in place of the overhead's.
     if (ruled) return { opening: [...opening, ...callsOf(rest).filter((c) => !/initial|numbers|overhead/i.test(c.text))], ...ruled };
