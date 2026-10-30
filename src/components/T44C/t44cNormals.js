@@ -12,15 +12,17 @@
 //   replies            its RESPONSE column, in order: { text, who } for what the student in the
 //                      left seat says (bold in the FTI), `ip: true` for what the instructor says
 //                      (highlighted), `act: true` for a stage direction that is not spoken.
-//   watch              what else the action has the student operate besides the step's control
-//                      (the ice vanes, the elapsed time key, FAULT WARN pressed to cancel), as
-//                      poster wordings (t44cPoster.js). Clicking the control leaves the step
+//   watch              what else the action has the student operate or check besides the step's
+//                      control (the ice vanes, the elapsed time key, FAULT WARN pressed to
+//                      cancel), as poster wordings (t44cPoster.js). A step that only checks
+//                      gauges, moving nothing (Fuel Quantity, Engine Instruments), watches them. Clicking the control leaves the step
 //                      yellow until each of them is clicked too, in any order
 //                      (epsLimits/EPDrill.js `watchClick`). A switch the action turns on only at
 //                      night or in low visibility is left to the action text, since the card
 //                      cannot say which it is.
-//   shows              the gauges and lights the action says to check, note, observe, verify or
-//                      monitor. They are never clicked: they light up with the Hint ring when the
+//   shows              the gauges and lights a switch or lever the step moves makes react, which
+//                      the action says to check, note, observe, verify or monitor (the user's
+//                      rule, 2026-10-30: only a switch causes a reaction). They are never clicked: they light up with the Hint ring when the
 //                      control is clicked (a list), or when the wording keying them is (a map:
 //                      Before Start 8's crossfeed lights FUEL CROSSFEED, each boost pump the
 //                      battery ammeter). Only what the action names and the poster draws: never
@@ -323,7 +325,7 @@ const START_LEFT = {
       replies: [say('OFF')],
     }),
     memory('sl21', 'Fuel Quantity Indicators', 'Checked', 'PF', {
-      shows: ['Left Fuel Quantity', 'Right Fuel Quantity'],
+      watch: ['Left Fuel Quantity', 'Right Fuel Quantity'],
       action: [
         'PF ensures both fuel quantity indicators normal.',
         note('An absence of fuel quantity indications for either wing is indicative of a failure of the corresponding current limiter.'),
@@ -506,7 +508,7 @@ const ENGINE_RUNUP = {
       replies: [say('ON', 'PF')],
     }),
     abbrev('er3', 'Engine Instruments', 'CHECKED', 'PF', {
-      shows: ['ITT', 'Torque', 'Prop RPM', 'N1', 'Fuel Flow', 'Oil Pressure'],
+      watch: ['ITT', 'Torque', 'Prop RPM', 'N1', 'Fuel Flow', 'Oil Pressure'],
       action: [
         'LS ensures both power levers are at IDLE and condition levers are at LOW IDLE. The main point of this check is to ensure N1 is at LOW IDLE to commence Engine Runup if previously increased to support a high generator load after starting engines.',
         warning('Whenever moving the condition levers to LOW IDLE, pinch the levers together, and then move the levers very slowly. If a LOW IDLE stop is weak, or a lever is moved rapidly, flameout may result. Should flameout occur, do not move the condition lever back to LOW IDLE bring it fully into FUEL CUTOFF. The engine may be restarted using the appropriate checklist.'),
@@ -672,12 +674,12 @@ const BEFORE_TAKEOFF = {
       replies: [say('CHECKED/SET', 'PF'), ip('CHECKED/SET', 'PM')],
     }),
     abbrev('bt10', 'Flaps', 'CHECKED/UP', 'PF, PM', {
-      shows: ['Flap Position Indicator'],
+      watch: ['Flap Position Indicator'],
       action: ['Check as previously described, if not already checked. Visually confirm the flap handle, flap position indicator, and flaps are all in the UP position.'],
       replies: [say('CHECKED/UP', 'PF'), ip('CHECKED/UP', 'PM')],
     }),
     abbrev('bt11', 'Altimeters', 'CHECKED/SET', 'PF, PM', {
-      shows: ['ESIS'],
+      watch: ['ESIS'],
       action: [
         'PF and PM perform the following checks:',
         'a. Barometric Altimeter (BA): Set the current altimeter setting on both PFDs and ESIS. Ensure no comparators or warning flags visible on PFD. Ensure the barometric altimeter indicates within ±75 feet of airport elevation and compare LS, RS and ESIS altimeter readings. See the airport diagram for specific field elevations.',
@@ -713,7 +715,7 @@ const BEFORE_TAKEOFF = {
       ],
     }),
     abbrev('bt13', 'Flight Instruments', 'CHECKED/SET', 'PF, PM', {
-      shows: ['PFD', 'ESIS'],
+      watch: ['PFD', 'ESIS'],
       action: [
         'PF and PM check flight instruments for proper indications:',
         'a. Compare flight information on both Primary Flight Displays (PFDs) and the Electronic Standby Instrument System (ESIS). Note any comparators or warning flags.',
@@ -729,7 +731,7 @@ const BEFORE_TAKEOFF = {
       replies: [say('CHECKED/SET', 'PF'), ip('CHECKED/SET', 'PM')],
     }),
     item('bt14', 'Fuel Quantity', '___ LBS, ___ LBS REQUIRED', 'PF', {
-      shows: ['Left Fuel Quantity', 'Right Fuel Quantity'],
+      watch: ['Left Fuel Quantity', 'Right Fuel Quantity'],
       action: [
         'Compare actual fuel load with preflight fuel calculations requirements in accordance with SOP and CNAF M-3710.7 minima.',
         note('With full fuel tanks left and right, quantity indicators with TOTAL selected should indicate within 100 pounds of each other. With NACELLE selected, the maximum difference should be 50 pounds. In either case, quantity shall be outside the yellow arcs and the discrepancy must be noted on the appropriate maintenance form for correction prior to the next flight.'),
@@ -889,7 +891,7 @@ const CLIMB = {
       replies: [ip('UP', 'PM')],
     }),
     abbrev('cl3', 'Instruments/Nacelles', 'CHECKED', 'PF, PM', {
-      shows: ['Engine Instruments', 'PFD', 'Left Fuel Quantity', 'Right Fuel Quantity'],
+      watch: ['Engine Instruments', 'PFD', 'Left Fuel Quantity', 'Right Fuel Quantity'],
       action: INSTRUMENTS_NACELLES,
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
     }),
@@ -906,7 +908,7 @@ const CLIMB = {
       replies: [say('OFF', 'PF'), act('(as required)')],
     }),
     item('cl7', 'Pressurization', 'CHECKED', 'PM', {
-      shows: ['Cabin Altitude', 'Cabin Climb'],
+      watch: ['Cabin Altitude', 'Cabin Climb'],
       action: [
         'Once airborne, pressurization setting is at the discretion of the PIC.',
         'Pressurized, PM checks: - Depending on ambient altitude and system efficiency, the differential (short needle) should increase from zero as the cabin pressurizes. The long needle will indicate cabin altitude. If desired cabin pressure indications are not correct, call for the Loss of Pressurization checklist.',
@@ -923,7 +925,7 @@ const CRUISE = {
   done: '"CRUISE CHECKLIST COMPLETE" (PM)',
   rows: [
     item('cr1', 'Instruments/Nacelles', 'CHECKED', 'PF, PM', {
-      shows: ['Engine Instruments', 'PFD', 'Left Fuel Quantity', 'Right Fuel Quantity'],
+      watch: ['Engine Instruments', 'PFD', 'Left Fuel Quantity', 'Right Fuel Quantity'],
       action: INSTRUMENTS_NACELLES,
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
     }),
@@ -994,7 +996,7 @@ const APPROACH = {
       replies: [say('SET', 'PF'), ip('SET', 'PM')],
     }),
     abbrev('ap7', 'Altimeters', '____.____ SET', 'PF, PM', {
-      shows: ['ESIS'],
+      watch: ['ESIS'],
       action: ['PF and PM set destination altimeter setting in PFDs and ESIS.'],
       replies: [say('___.___ SET', 'PF'), ip('___.___ SET', 'PM')],
     }),
@@ -1075,7 +1077,7 @@ const AFTER_LANDING = {
       replies: [ip('OFF', 'PM')],
     }),
     item('al5', 'Pressurization', 'CHECKED/DEPRESSURIZED', 'PM', {
-      shows: ['Cabin Altitude'],
+      watch: ['Cabin Altitude'],
       action: ['PM checks cabin altitude indicating field elevation (approximately same as barometric altimeter) and differential indicating zero. This ensures the cabin is not pressurized. If cabin is still pressurized, select DUMP.'],
       replies: [ip('CHECKED/DEPRESSURIZED', 'PM')],
     }),
@@ -1141,7 +1143,7 @@ const SECURE = {
     }),
     item('se13', 'Boost Pumps', 'OFF', 'LS', { action: ['LS selects both boost pumps OFF.'], replies: [say('OFF', 'LS')] }),
     item('se14', 'Fuel Quantity (Current Limiters)', 'CHECKED', 'LS', {
-      shows: ['Left Fuel Quantity', 'Right Fuel Quantity'],
+      watch: ['Left Fuel Quantity', 'Right Fuel Quantity'],
       action: ['LS notes normal indication on left and right fuel quantity indicators. If either indicator reads zero, a current limiter is blown.'],
       replies: [say('CHECKED', 'LS')],
     }),
