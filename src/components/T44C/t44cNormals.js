@@ -116,7 +116,7 @@ const BEFORE_START = {
       replies: [say('OFF', 'LS')],
     }),
     item('bs8', 'Fuel Panel', 'CHECKED/SET', 'LS', {
-      watch: ['Crossfeed', 'Left Boost Pump', 'Right Boost Pump', 'Battery'],
+      watch: ['Fuel Circuit Breakers', 'Left Firewall Valve', 'Right Firewall Valve', 'Crossfeed', 'Left Boost Pump', 'Right Boost Pump', 'Battery'],
       watchOnly: true,
       shows: {
         Crossfeed: ['FUEL CROSSFEED'],
@@ -135,9 +135,9 @@ const BEFORE_START = {
       replies: [say('CHECKED/SET', 'LS')],
     }),
     item('bs9', 'Annunciator Panel', 'CHECKED', 'PF', {
-      watch: ['FAULT WARNING'],
-      controlApart: true,
-      shows: ['Annunciator Panel', 'Terrain Warning Lights', 'EMER 121.5', 'FAULT WARNING'],
+      watch: ['Press to Test', 'FAULT WARNING'],
+      watchOnly: true,
+      shows: { 'Press to Test': ['Annunciator Lights', 'Terrain Warning Lights', 'EMER 121.5', 'FAULT WARNING'] },
       action: [
         'a. RS presses and holds Press-to-Test button. LS ensures all annunciator lights, "Terrain," "Pull Up," "Terrain NA," "ESIS On/Off" lights, and EMER 121.5 illuminated, and FAULT WARN light is flashing.',
         'b. LS presses the flashing FAULT WARN light to extinguish.',
@@ -145,6 +145,8 @@ const BEFORE_START = {
       replies: [say('CHECKED', 'PF')],
     }),
     item('bs10', 'Fire Detectors', 'CHECKED', 'PF, PM', {
+      watch: ['FAULT WARNING'],
+      controlApart: true,
       shows: ['FAULT WARNING', 'LH FIRE', 'RH FIRE', 'LH FIRE EXT', 'RH FIRE EXT'],
       action: ['Rotate the Fire Detector Test switch clockwise and ensure illumination of the FAULT WARN, LH and RH FIRE annunciator, and LH and RH FIRE EXT PUSH TO EXT lights. LS first reports "Three" and RS responds "Two" at each selector position. Wait 3 seconds after positioning the switch to each zone to confirm a proper check, then switch to the next zone. Do not cancel the Fault Warning until switch is rotated back to the off position and the FIRE and FIRE EXT lights extinguish.'],
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],

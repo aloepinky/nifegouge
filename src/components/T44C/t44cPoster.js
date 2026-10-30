@@ -120,8 +120,15 @@ export const T44C_POSTER = {
 
         // ---- For the normal checklists (Hollywood). Boxes ROUGH, placed 2026-10-12 off a grid
         // and not yet checked by eye: tune them with ?spots before trusting them. ----
+        // `Annunciator Lights` is this box alone, not the lights drawn over it, so Before Start 9's
+        // lamp test rings the panel as one. An action, not `also`: `also` would make it a spelling
+        // of Annunciator Panel, which every light answers for.
         { box: [0.263, 0.036, 0.464, 0.057], label: 'Annunciator panel',
-          action: 'Annunciator Panel', values: ['CHECKED'] },
+          action: 'Annunciator Panel', actions: ['Annunciator Panel', 'Annunciator Lights'], values: ['CHECKED'] },
+        // PRESS TO TEST, right of the panel past the DIM knob: Before Start 9's lamp test.
+        // 2026-10-30, drawn and checked by eye.
+        { id: 'ann-press-to-test', box: [0.765, 0.046, 0.016, 0.034], label: 'Annunciator PRESS TO TEST button',
+          action: 'Press to Test' },
         // The CABIN DOOR OPEN light in the annunciator row: Before Start item 11 is to ensure the
         // door is locked and this light is out. It sits inside the annunciator panel's box and is
         // drawn over it.
@@ -341,9 +348,13 @@ export const T44C_POSTER = {
       spots: [
         // One step, one control, drawn at each end of the panel. Same `action`, different `id`.
         { id: 'firewall-left', box: [0.15, 0.78, 0.06, 0.2], label: 'Left firewall valve',
-          action: 'Firewall Valve', actions: ['Firewall Valve', 'Fuel Panel'], also: ['Firewall Valves'], values: ['CLOSED', 'OPEN', 'CHECKED/SET'] },
+          action: 'Firewall Valve', actions: ['Firewall Valve', 'Fuel Panel', 'Left Firewall Valve'], also: ['Firewall Valves'], values: ['CLOSED', 'OPEN', 'CHECKED/SET'] },
         { id: 'firewall-right', box: [0.785, 0.78, 0.055, 0.2], label: 'Right firewall valve',
-          action: 'Firewall Valve', actions: ['Firewall Valve', 'Fuel Panel'], also: ['Firewall Valves'], values: ['CLOSED', 'OPEN'] },
+          action: 'Firewall Valve', actions: ['Firewall Valve', 'Fuel Panel', 'Right Firewall Valve'], also: ['Firewall Valves'], values: ['CLOSED', 'OPEN'] },
+        // The FUEL SYSTEM circuit breaker strip between the firewall valves, which Before Start 8
+        // checks set. 2026-10-30, drawn and checked by eye.
+        { id: 'fuel-cbs', box: [0.226, 0.735, 0.542, 0.2], label: 'Fuel system circuit breakers',
+          action: 'Fuel Circuit Breakers', actions: ['Fuel Circuit Breakers', 'Fuel Panel'] },
         // Each pump also answers for itself by side, which Before Start 8 (boost pumps) and After
         // Start 6 (transfer pumps) ask for one at a time, to light what each one moves.
         { id: 'boost-left', box: [0.132, 0.339, 0.044, 0.073], label: 'Left boost pump',
