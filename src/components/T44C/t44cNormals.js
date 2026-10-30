@@ -498,13 +498,13 @@ const AFTER_START = {
 // F104
 
 // Engine Runup 8. The four green lights the auto-ignition and autofeather switches arm, and the
-// test the power levers then run, played over twenty seconds once the power lever is clicked (it
+// test the power levers then run, played over about twenty seconds once the power lever is clicked (it
 // must be last): steps e and f of the action below, each side's lights at its two torques.
 const ARMED_IGN = ['LH AUTO IGNITION ARMED', 'RH AUTO IGNITION ARMED'];
 const ARMED_FEATHER = ['LH AUTOFEATHER ARMED', 'RH AUTOFEATHER ARMED'];
 const AUTOFEATHER_TEST = {
   after: 'Power Lever',
-  end: 20000,
+  end: 21500,
   frames: [
     { at: 0, lit: [...ARMED_IGN, ...ARMED_FEATHER, 'Torque'] },
     // Left power lever back to 410: RH AUTO-FEATHER ARMED and LH AUTO IGNITION ARMED out, LH IGN IND on.
@@ -515,6 +515,10 @@ const AUTOFEATHER_TEST = {
     { at: 10000, lit: [...ARMED_IGN, ...ARMED_FEATHER, 'Torque'] },
     { at: 13000, lit: ['LH AUTO IGNITION ARMED', 'RH AUTOFEATHER ARMED', 'RH IGN IND', 'Torque'] },
     { at: 16000, lit: ['LH AUTO IGNITION ARMED', 'RH IGN IND', 'Torque', 'Prop RPM'], blink: ['RH AUTOFEATHER ARMED'] },
+    // Both power levers to idle: all four, a moment. Then g, the AUTO-FEATHER test switch released
+    // (its two lights out), and h, the ENG AUTO IGN switches off (theirs out), which `end` clears.
+    { at: 19000, lit: [...ARMED_IGN, ...ARMED_FEATHER] },
+    { at: 20000, lit: ARMED_IGN },
   ],
 };
 
