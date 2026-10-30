@@ -9001,6 +9001,17 @@ textarea.incorrect-answer {
   animation: hintPulse 2s ease-in-out infinite;
 }
 
+/* A light a step's `sim` flashes (the AUTO-FEATHER ARMED light as its prop feathers): on and
+   off, not the hint's slow pulse. */
+.epl-react--blink {
+  animation: eplLampBlink 0.6s steps(1, end) infinite;
+}
+
+@keyframes eplLampBlink {
+  0% { outline-color: rgba(255, 235, 59, 0.95); background-color: rgba(255, 255, 0, 0.35); }
+  50% { outline-color: transparent; background-color: transparent; }
+}
+
 /* The Instructions explainer, rendered into <body> so the page's scale transform cannot move it. */
 .epl-modal-overlay {
   position: fixed;

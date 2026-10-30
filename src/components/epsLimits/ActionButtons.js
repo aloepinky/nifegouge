@@ -1,5 +1,5 @@
 import React from 'react';
-import { actionFor, fillsFor, matches, settingsFor } from './controlMatch';
+import { actionFor, fillsFor, matches, settingsFor, wordingsOf } from './controlMatch';
 
 // The steps no control performs. Every checklist has them — Declare MAYDAY, Evacuate Aircraft,
 // Land As Soon As Possible, Maintain Directional Control — and a poster has nowhere to put them,
@@ -35,7 +35,9 @@ export default function ActionButtons({
 }) {
   const press = (rec) => {
     const action = actionFor(rec, next, aliases);
-    fill(action, fillsFor(rec, action, aliases), settingsFor(rec, action, aliases));
+    // `wordingsOf` as the poster's targets pass it, so a step can `watch` a button (the parking
+    // brake steps' Rudder Pedals, by its `Brakes`).
+    fill(action, fillsFor(rec, action, aliases), settingsFor(rec, action, aliases), wordingsOf(rec));
   };
   return (
     <div className="epl-action-group">

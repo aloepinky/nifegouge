@@ -97,12 +97,16 @@ export function PosterRegion({ region, view, className = '', style }) {
         // A hinted control takes `.epl-hint`, which EPDrill scrolls to; a gauge or light the last
         // click moved takes `.epl-react`, the same ring without the scroll.
         const hinted = matches(spot, view.hint, view.alias);
-        const moved = !hinted && view.shown.some((w) => matches(spot, w, view.alias));
+        // A `{ w, blink }` entry is a light a step's `sim` is flashing. Read as an object only: a
+        // plain string has a `blink` too, the browser's old String.prototype.blink().
+        const lit = hinted ? null : view.shown
+          .map((e) => (typeof e === 'string' ? { w: e } : e))
+          .find((e) => matches(spot, e.w, view.alias));
         return (
           <button
             key={spot.id || spot.action}
             type="button"
-            className={`epl-spot${hinted ? ' epl-hint' : ''}${moved ? ' epl-react' : ''}`}
+            className={`epl-spot${hinted ? ' epl-hint' : ''}${lit ? ` epl-react${lit.blink ? ' epl-react--blink' : ''}` : ''}`}
             style={{ left: `${l * 100}%`, top: `${t * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
             title={tip}
             aria-label={tip}

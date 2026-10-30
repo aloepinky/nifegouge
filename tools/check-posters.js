@@ -163,6 +163,16 @@ for (const school of SCHOOLS) {
           if (!records.some((r) => r.box && matches(r, w, aliases))) noControl.push(`${ep.title} :: ${step.text} (shows ${w})`);
         }
       }
+      // A `sim` plays its lights on the poster after its `after` piece, and `last` is a watched
+      // piece: each wording must be something the step and the poster have.
+      for (const piece of [step.last, step.sim && step.sim.after].filter(Boolean)) {
+        if (!(step.watch || []).includes(piece)) noControl.push(`${ep.title} :: ${step.text} (${piece} is not watched)`);
+      }
+      for (const f of (step.sim ? step.sim.frames : [])) {
+        for (const w of [...(f.lit || []), ...(f.blink || [])]) {
+          if (!records.some((r) => r.box && matches(r, w, aliases))) noControl.push(`${ep.title} :: ${step.text} (sim lights ${w})`);
+        }
+      }
       const control = controlOf(step.text);
       const claimants = records.filter((r) => matches(r, control, aliases));
       if (!claimants.length) {

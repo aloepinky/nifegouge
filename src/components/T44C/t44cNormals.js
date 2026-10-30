@@ -75,6 +75,7 @@ const BEFORE_START = {
   done: '"BEFORE START CHECKLIST COMPLETE." (PM)',
   rows: [
     abbrev('bs1', 'Parking Brake', 'SET', 'LS', {
+      watch: ['Brakes'],
       action: [
         'LS ensures brake handle pulled out fully then brakes pumped firm.',
         note('Parking brakes may bleed off after setting. Ensure brakes are set by pulling parking brake handle out and then pumping brakes firm. The right seat pilot cannot set the parking brake.'),
@@ -496,12 +497,34 @@ const AFTER_START = {
 // ---------------------------------------------------------------------------------------
 // F104
 
+// Engine Runup 8. The four green lights the auto-ignition and autofeather switches arm, and the
+// test the power levers then run, played over ten seconds once the power lever is clicked (it
+// must be last): steps e and f of the action below, each side's lights at its two torques.
+const ARMED_IGN = ['LH AUTO IGNITION ARMED', 'RH AUTO IGNITION ARMED'];
+const ARMED_FEATHER = ['LH AUTOFEATHER ARMED', 'RH AUTOFEATHER ARMED'];
+const AUTOFEATHER_TEST = {
+  after: 'Power Lever',
+  end: 10000,
+  frames: [
+    { at: 0, lit: [...ARMED_IGN, ...ARMED_FEATHER, 'Torque'] },
+    // Left power lever back to 410: RH AUTO-FEATHER ARMED and LH AUTO IGNITION ARMED out, LH IGN IND on.
+    { at: 1500, lit: ['RH AUTO IGNITION ARMED', 'LH AUTOFEATHER ARMED', 'LH IGN IND', 'Torque'] },
+    // 200: LH AUTO-FEATHER ARMED flashing as the left prop feathers.
+    { at: 3000, lit: ['RH AUTO IGNITION ARMED', 'LH IGN IND', 'Torque', 'Prop RPM'], blink: ['LH AUTOFEATHER ARMED'] },
+    // Left power lever up to 500: all four.
+    { at: 5000, lit: [...ARMED_IGN, ...ARMED_FEATHER, 'Torque'] },
+    { at: 6500, lit: ['LH AUTO IGNITION ARMED', 'RH AUTOFEATHER ARMED', 'RH IGN IND', 'Torque'] },
+    { at: 8000, lit: ['LH AUTO IGNITION ARMED', 'RH IGN IND', 'Torque', 'Prop RPM'], blink: ['RH AUTOFEATHER ARMED'] },
+  ],
+};
+
 const ENGINE_RUNUP = {
   id: 'engine-runup',
   title: 'Engine Runup',
   done: '"ENGINE RUNUP CHECKLIST COMPLETE." (PM)',
   rows: [
     item('er1', 'Parking Brake', 'SET', 'LS', {
+      watch: ['Brakes'],
       action: ['LS ensures brake handle pulled out fully and brakes pumped firm. PF will keep both feet on the brakes for the entire Runup Checklist. PM will notify the PF if movement is detected and will immediately depress the brakes if any movement is noted.'],
       replies: [say('SET', 'LS'), say('Monitor for movement during runup.', 'PF')],
     }),
@@ -513,7 +536,7 @@ const ENGINE_RUNUP = {
       replies: [say('ON', 'PF')],
     }),
     abbrev('er3', 'Engine Instruments', 'CHECKED', 'PF', {
-      watch: ['ITT', 'Torque', 'Prop RPM', 'N1', 'Fuel Flow', 'Oil Pressure'],
+      watch: ['Power Lever', 'Condition Lever', 'ITT', 'Torque', 'Prop RPM', 'N1', 'Fuel Flow', 'Oil Pressure'],
       action: [
         'LS ensures both power levers are at IDLE and condition levers are at LOW IDLE. The main point of this check is to ensure N1 is at LOW IDLE to commence Engine Runup if previously increased to support a high generator load after starting engines.',
         warning('Whenever moving the condition levers to LOW IDLE, pinch the levers together, and then move the levers very slowly. If a LOW IDLE stop is weak, or a lever is moved rapidly, flameout may result. Should flameout occur, do not move the condition lever back to LOW IDLE bring it fully into FUEL CUTOFF. The engine may be restarted using the appropriate checklist.'),
@@ -530,6 +553,7 @@ const ENGINE_RUNUP = {
       replies: [say('CHECKED', 'PF')],
     }),
     abbrev('er4', 'Manual Feather', 'CHECKED', 'PF', {
+      watch: ['Power Lever'],
       shows: ['Prop RPM'],
       action: [
         'LS performs the following checks:',
@@ -539,6 +563,7 @@ const ENGINE_RUNUP = {
       replies: [say('CHECKED', 'PF')],
     }),
     item('er5', 'Suction & Pneumatic Pressure', 'CHECKED', 'LS', {
+      watch: ['Condition Lever', 'Gyro Suction', 'Pneumatic Pressure'],
       action: [
         'LS ensures suction 4.3-5.9 inches Hg (5.1 ±0.8) and pneumatic pressure 12-20 PSI (16 ±4).',
         'a. Condition levers — HIGH IDLE',
@@ -571,7 +596,13 @@ const ENGINE_RUNUP = {
       replies: [say('CHECKED', 'LS')],
     }),
     item('er8', 'Autofeather/Autoignition', 'CHECKED/OFF', 'LS', {
-      shows: ['LH AUTO IGNITION ARMED', 'RH AUTO IGNITION ARMED', 'LH AUTOFEATHER ARMED', 'RH AUTOFEATHER ARMED', 'LH IGN IND', 'RH IGN IND', 'Torque', 'Prop RPM'],
+      watch: ['Condition Lever', 'Autoignition', 'Power Lever'],
+      last: 'Power Lever',
+      shows: {
+        Autoignition: ARMED_IGN,
+        Autofeather: [...ARMED_IGN, ...ARMED_FEATHER],
+      },
+      sim: AUTOFEATHER_TEST,
       action: [
         'LS performs the following checks:',
         'a. Condition levers - LOW IDLE',
@@ -1129,7 +1160,7 @@ const SECURE = {
       ],
       replies: [ip('OFF', 'PM'), say('Hold the checklist.', 'PF'), say('Continue the checklist.', 'PF')],
     }),
-    abbrev('se7', 'Parking Brake', 'SET', 'LS', { action: ['LS pulls brake handle and pumps brake pedals until firm.'], replies: [say('SET', 'LS')] }),
+    abbrev('se7', 'Parking Brake', 'SET', 'LS', { watch: ['Brakes'], action: ['LS pulls brake handle and pumps brake pedals until firm.'], replies: [say('SET', 'LS')] }),
     item('se8', 'AUX BATT/Avionics Master', 'OFF', 'PF', {
       action: ['PF selects AUX BATT and AVIONICS MASTER switches to OFF.'],
       replies: [say('OFF', 'PF')],
@@ -1174,6 +1205,7 @@ const SECURE = {
     }),
     item('se19', 'Wheels', 'CHOCKED', 'LS', { replies: [say('CHOCKED', 'LS')] }),
     item('se20', 'Parking Brake', 'RELEASED', 'LS', {
+      watch: ['Brakes'],
       action: ['Release the parking brake upon receiving confirmation that the wheels are chocked. Consideration should be given to keeping the parking brake set if parked on an icy or inclined ramp and/or prop wash/jet blast are present.'],
       replies: [say('RELEASED', 'LS'), act('(as required)')],
     }),

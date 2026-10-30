@@ -40,7 +40,8 @@ import { openStep, clickOutcome, FILL } from './stepFlow';
 //   hint                 the action of the next unanswered step once Hint is pressed, else null;
 //                        a panel rings the control that does it
 //   shown                the gauges and lights the last click moved (the step's `shows`), as
-//                        poster wordings; a panel rings them as it rings a hint. Empty otherwise.
+//                        poster wordings, or `{ w, blink }` for a light a `sim` frame flashes;
+//                        a panel rings them as it rings a hint. Empty otherwise.
 //   reveal               `{ control, at }` each time Hint or Skip names a step, `at` counting
 //                        up so the same control twice still registers; a poster uses it to
 //                        bring the panel holding that control to the front. Null otherwise.
@@ -368,11 +369,15 @@ function EPDrill({ sets, isGameActive = false, ...props }) {
   );
 }
 
+// A challenge may break after a slash. "AUTOFEATHER/AUTOIGNITION" is otherwise one word too long
+// for the card's column, and its reply was pushed out over the crewmember beside it.
+const breakSlashes = (text) => String(text).split('/').flatMap((part, i) => (i ? ['/', <wbr key={i} />, part] : [part]));
+
 // A step's line as the checklist card prints it: challenge, a leader, reply.
 function ReadLine({ row }) {
   return (
     <span className="epl-read-line">
-      <span className="epl-read-challenge">{row.challenge}</span>
+      <span className="epl-read-challenge">{breakSlashes(row.challenge)}</span>
       <span className="epl-read-dots" />
       <span className="epl-read-reply">{row.reply}</span>
     </span>
@@ -461,7 +466,26 @@ function Drill({
   const [hint, setHint] = useState(null);
   // The gauges and lights the last click moved (a step's `shows`), ringed as Hint rings until the
   // next click; see showsOf.
-  const [shown, setShown] = useState([]);
+  const [shown, setShownNow] = useState([]);
+  // A step's `sim` plays its lights in sequence (Engine Runup 8's autofeather test); these are its
+  // pending frames, and any new lighting cancels them.
+  const simTimers = useRef([]);
+  const setShown = (list) => {
+    simTimers.current.forEach(clearTimeout);
+    simTimers.current = [];
+    setShownNow(list);
+  };
+  const play = (sim) => {
+    setShown([]);
+    simTimers.current = [
+      ...sim.frames.map((f) => setTimeout(() => setShownNow([
+        ...(f.lit || []),
+        ...(f.blink || []).map((w) => ({ w, blink: true })),
+      ]), f.at)),
+      setTimeout(() => setShownNow([]), sim.end),
+    ];
+  };
+  useEffect(() => () => simTimers.current.forEach(clearTimeout), []);
   const [showList, setShowList] = useState(false);
   const [autoNWC, setAutoNWC] = useState(false);
   const [openNWC, setOpenNWC] = useState(null);
@@ -688,11 +712,16 @@ function Drill({
       ...(names && !step.watchOnly && !(step.controlApart && pieces.length) ? [CONTROL] : []),
       ...pieces,
     ].filter((p) => !have.includes(p));
-    if (!got.length) {
+    // `last` is a piece that must come after every other (Engine Runup 8's power lever, which
+    // runs the test the switches set up): clicked early, it is wrong.
+    const early = step.last && got.includes(step.last)
+      && missingOf(step).some((p) => p !== step.last && !got.includes(p));
+    if (!got.length || early) {
       setResults((r) => ({ ...r, [target]: 'incorrect' }));
       return;
     }
-    setShown(showsOf(step, said, got.includes(CONTROL)));
+    if (step.sim && got.includes(step.sim.after)) play(step.sim);
+    else setShown(showsOf(step, said, got.includes(CONTROL)));
     watched.current[target] = [...have, ...got];
     const done = !missingOf(step).length;
     const line = done ? answer : (step.watchOnly || watched.current[target].includes(CONTROL) ? controlOf(answer) : '');

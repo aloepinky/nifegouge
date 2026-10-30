@@ -391,11 +391,12 @@ export const T44C_POSTER = {
         + 'gauges, the flight hour meter, the pilot\'s emergency static air source lever and the '
         + 'engine circuit breaker block',
       spots: [
-        // Suction & Pneumatic Pressure names two gauges, so it needs both: each supplies its half.
+        // Suction & Pneumatic Pressure names two gauges, so the step watches both (and the
+        // condition levers it is checked at, HIGH IDLE).
         { box: [0.06, 0.12, 0.155, 0.37], label: 'Gyro suction',
-          action: 'Suction & Pneumatic Pressure', actions: ['Suction & Pneumatic Pressure', 'Gyro Suction'], fills: 'Suction &', values: ['CHECKED'] },
+          action: 'Suction & Pneumatic Pressure', actions: ['Suction & Pneumatic Pressure', 'Gyro Suction'], values: ['CHECKED'] },
         { box: [0.255, 0.12, 0.155, 0.37], label: 'Pneumatic pressure',
-          action: 'Suction & Pneumatic Pressure', actions: ['Suction & Pneumatic Pressure', 'Pneumatic Pressure'], fills: 'Pneumatic Pressure - CHECKED', values: ['CHECKED'] },
+          action: 'Suction & Pneumatic Pressure', actions: ['Suction & Pneumatic Pressure', 'Pneumatic Pressure'], values: ['CHECKED'] },
         { box: [0.425, 0.13, 0.15, 0.36], label: 'Oxygen supply pressure',
           action: 'Pressurization/Oxygen', fills: 'Oxygen - CHECKED', values: ['CHECKED'] },
       ],
