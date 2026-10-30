@@ -41,7 +41,7 @@ const SpotEditor = React.lazy(() => import('./SpotEditor'));
 // Everything a poster does that is not markup. A page calls this once with EPDrill's slot api and
 // hands the result to every PosterRegion it draws, so a click behaves the same however the page
 // is laid out.
-export function usePoster({ poster, aliases, fill, hint, next }) {
+export function usePoster({ poster, aliases, fill, hint, shown, next }) {
   const alias = useMemo(() => aliases || aliasesFrom(poster), [aliases, poster]);
 
   // `actionFor` is what a target standing for two controls needs: it answers with whichever of
@@ -72,7 +72,7 @@ export function usePoster({ poster, aliases, fill, hint, next }) {
   const editing = open && params.has('spots') ? (params.get('spots') || '') : null;
   const showBoxes = open && params.has('boxes');
 
-  return { poster, alias, press, hint, next, editing, showBoxes };
+  return { poster, alias, press, hint, shown: shown || [], next, editing, showBoxes };
 }
 
 // One panel image with its targets over it. `view` is what usePoster returned; `className` is how
@@ -94,11 +94,15 @@ export function PosterRegion({ region, view, className = '', style }) {
       {!edit && (region.spots || []).map((spot) => {
         const [l, t, w, h] = spot.box;
         const tip = tipFor(spot, actionFor(spot, view.next, view.alias));
+        // A hinted control takes `.epl-hint`, which EPDrill scrolls to; a gauge or light the last
+        // click moved takes `.epl-react`, the same ring without the scroll.
+        const hinted = matches(spot, view.hint, view.alias);
+        const moved = !hinted && view.shown.some((w) => matches(spot, w, view.alias));
         return (
           <button
             key={spot.id || spot.action}
             type="button"
-            className={`epl-spot${matches(spot, view.hint, view.alias) ? ' epl-hint' : ''}`}
+            className={`epl-spot${hinted ? ' epl-hint' : ''}${moved ? ' epl-react' : ''}`}
             style={{ left: `${l * 100}%`, top: `${t * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
             title={tip}
             aria-label={tip}
@@ -118,9 +122,9 @@ export function PosterRegion({ region, view, className = '', style }) {
 // The default arrangement: a fixed-height band showing one region, with a row of buttons to
 // change region where an aircraft has more than one. Every region is contained in the same box
 // whatever its aspect, so the page does not jump when the region changes.
-export default function CockpitPoster({ poster, fill, hint, reveal, next, aliases }) {
+export default function CockpitPoster({ poster, fill, hint, shown, reveal, next, aliases }) {
   const regions = poster.regions || [];
-  const view = usePoster({ poster, aliases, fill, hint, next });
+  const view = usePoster({ poster, aliases, fill, hint, shown, next });
 
   const [regionId, setRegionId] = useState(regions[0] && regions[0].id);
   const seen = useRef(0);

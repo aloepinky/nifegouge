@@ -344,16 +344,18 @@ export const T44C_POSTER = {
           action: 'Firewall Valve', actions: ['Firewall Valve', 'Fuel Panel'], also: ['Firewall Valves'], values: ['CLOSED', 'OPEN', 'CHECKED/SET'] },
         { id: 'firewall-right', box: [0.785, 0.78, 0.055, 0.2], label: 'Right firewall valve',
           action: 'Firewall Valve', actions: ['Firewall Valve', 'Fuel Panel'], also: ['Firewall Valves'], values: ['CLOSED', 'OPEN'] },
+        // Each pump also answers for itself by side, which Before Start 8 (boost pumps) and After
+        // Start 6 (transfer pumps) ask for one at a time, to light what each one moves.
         { id: 'boost-left', box: [0.132, 0.339, 0.044, 0.073], label: 'Left boost pump',
-          action: 'Boost Pumps', actions: ['Boost Pumps', 'Fuel Panel'], values: ['OFF'] },
+          action: 'Boost Pumps', actions: ['Boost Pumps', 'Fuel Panel', 'Left Boost Pump'], values: ['OFF'] },
         { id: 'boost-right', box: [0.813, 0.346, 0.046, 0.066], label: 'Right boost pump',
-          action: 'Boost Pumps', actions: ['Boost Pumps', 'Fuel Panel'], values: ['OFF'] },
+          action: 'Boost Pumps', actions: ['Boost Pumps', 'Fuel Panel', 'Right Boost Pump'], values: ['OFF'] },
 
         // Normal checklists. Rough, 2026-10-12: tune with ?spots.
         { id: 'transfer-left', box: [0.13, 0.209, 0.048, 0.069], label: 'Left transfer pump',
-          action: 'Transfer Pumps', actions: ['Transfer Pumps', 'Fuel Panel'], values: ['CHECKED/AUTO', 'OFF'] },
+          action: 'Transfer Pumps', actions: ['Transfer Pumps', 'Fuel Panel', 'Left Transfer Pump'], values: ['CHECKED/AUTO', 'OFF'] },
         { id: 'transfer-right', box: [0.813, 0.201, 0.046, 0.081], label: 'Right transfer pump',
-          action: 'Transfer Pumps', actions: ['Transfer Pumps', 'Fuel Panel'], values: ['CHECKED/AUTO', 'OFF'] },
+          action: 'Transfer Pumps', actions: ['Transfer Pumps', 'Fuel Panel', 'Right Transfer Pump'], values: ['CHECKED/AUTO', 'OFF'] },
         { box: [0.811, 0.473, 0.048, 0.072], label: 'Crossfeed',
           action: 'Crossfeed', actions: ['Crossfeed', 'Fuel Panel'], values: ['CHECKED/AUTO', 'CLOSED'] },
         { id: 'fuel-qty-left', box: [0.201, 0.261, 0.203, 0.258], label: 'Left fuel quantity',

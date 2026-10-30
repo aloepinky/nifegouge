@@ -28,7 +28,7 @@ import { openStep, clickOutcome, FILL } from './stepFlow';
 // control or by Skip. A game always runs the first set, the EPs, and the dots are hidden for it.
 //
 // The controls come in through `top`, `left` and `right`, render functions given
-// `{ fill, hint, reveal, resetKey }`:
+// `{ fill, hint, shown, reveal, resetKey }`:
 //   fill(action, part)   writes the open step's own answer, as the checklist prints it, if that
 //                        step names this control; otherwise writes nothing and marks the box
 //                        red. Primary's rule, and the same code - see stepFlow.js. A control
@@ -39,6 +39,8 @@ import { openStep, clickOutcome, FILL } from './stepFlow';
 //                        target answers for, which a step's `watch` list is matched against.
 //   hint                 the action of the next unanswered step once Hint is pressed, else null;
 //                        a panel rings the control that does it
+//   shown                the gauges and lights the last click moved (the step's `shows`), as
+//                        poster wordings; a panel rings them as it rings a hint. Empty otherwise.
 //   reveal               `{ control, at }` each time Hint or Skip names a step, `at` counting
 //                        up so the same control twice still registers; a poster uses it to
 //                        bring the panel holding that control to the front. Null otherwise.
@@ -254,7 +256,7 @@ function NWCModal({ group, current, nwc, hints, onClose }) {
   );
 }
 
-function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, read, calls, extraLabel, onClose }) {
+function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, hasShows, read, calls, extraLabel, onClose }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
@@ -272,7 +274,10 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, 
               <li>One checklist is shown at a time, printed as on the checklist card, with who replies beside each step. <strong>*</strong> is done from memory, <strong>#</strong> is an abbreviated checklist item</li>
               <li>Click a step to see what the FTI says to do and say for it. What you say is in bold; what the instructor says is highlighted</li>
               {hasPanel && <li>In Full Mode, click the control each step names, in order. A step with no control on the poster is passed with Skip</li>}
-              {hasPanel && hasWatch && <li>A step you check gauges or lights for also needs each of them clicked, in any order. It stays yellow until the last one is in</li>}
+              {hasPanel && hasWatch && (hasShows
+                ? <li>A step that takes more than one control needs each of them clicked, in any order. It stays yellow until the last one is in</li>
+                : <li>A step you check gauges or lights for also needs each of them clicked, in any order. It stays yellow until the last one is in</li>)}
+              {hasPanel && hasShows && <li>The gauges and lights a step checks are ringed when you click its control. Look at them; they are not clicked</li>}
             </>
           ) : (
             <li>One EP is shown at a time. Type each step exactly as the checklist prints it, item and setting together: "Mixture - IDLE CUTOFF". EPs are verbatim!</li>
@@ -454,6 +459,9 @@ function Drill({
   const [results, setResults] = useState({});
   const [resetKey, setResetKey] = useState(0);
   const [hint, setHint] = useState(null);
+  // The gauges and lights the last click moved (a step's `shows`), ringed as Hint rings until the
+  // next click; see showsOf.
+  const [shown, setShown] = useState([]);
   const [showList, setShowList] = useState(false);
   const [autoNWC, setAutoNWC] = useState(false);
   const [openNWC, setOpenNWC] = useState(null);
@@ -548,6 +556,7 @@ function Drill({
     setPos(nextPos);
     setResults({});
     setHint(null);
+    setShown([]);
     setReveal(null);
     setShowList(false);
     setOpenNWC(null);
@@ -563,6 +572,7 @@ function Drill({
     setData((d) => ({ ...d, [field]: value }));
     setResults((r) => ({ ...r, [field]: '' }));
     setHint(null);
+    setShown([]);
   };
 
   const check = (current = data) => {
@@ -599,6 +609,7 @@ function Drill({
   // step's setting is the wrong control, not a near miss - controlMatch.js `settingOk`.
   const fill = (action, fragment, values, wordings) => {
     setHint(null);
+    setShown([]);
     const step = nextOpen();
     if (!step) return;
     const target = step.id;
@@ -613,6 +624,7 @@ function Drill({
       setResults((r) => ({ ...r, [target]: 'incorrect' }));
       return;
     }
+    setShown(showsOf(step, (wordings || [action]).map((w) => canon(w, aliases)), true));
 
     // A step that takes more than one control is answered a piece at a time: each control says
     // which part of the step's own text it supplies, and the pieces in hand are written in the
@@ -642,13 +654,24 @@ function Drill({
   // stays yellow until the last arrives, as Primary's Engine Start - MONITOR does. The box shows
   // the control's name once it is in (gradeAnswer reads a bare control as partial, so Check
   // agrees) and the checklist's whole line at the end. A click that adds nothing marks it red and
-  // keeps what is already in.
+  // keeps what is already in. The T-44C's `watch` lists only what the student operates (an ice
+  // vane, the elapsed time key); its gauges and lights are rung by `shows` instead (showsOf).
   // A step with `watchOnly` is its watch list alone: the T-44C's Lights steps, where the
   // switches are the step and clicking any light switch must not count as one of them.
   const missingOf = (step) => {
     if (!step || !step.watch) return [];
     const have = watched.current[step.id] || [];
     return [...(step.watchOnly ? [] : [CONTROL]), ...step.watch].filter((p) => !have.includes(p));
+  };
+
+  // What a click on a step lights up: a `shows` list when the click is the step's control, or
+  // from a `shows` map whatever the clicked wordings key, so each of Before Start 8's boost pumps
+  // rings the battery ammeter. Shown, never required: the student clicks only what they operate.
+  const showsOf = (step, said, isControl) => {
+    const s = step.shows;
+    if (!s) return [];
+    if (Array.isArray(s)) return isControl ? s : [];
+    return Object.entries(s).filter(([k]) => said.includes(canon(k, aliases))).flatMap(([, v]) => v);
   };
 
   const watchClick = (step, names, wordings) => {
@@ -669,6 +692,7 @@ function Drill({
       setResults((r) => ({ ...r, [target]: 'incorrect' }));
       return;
     }
+    setShown(showsOf(step, said, got.includes(CONTROL)));
     watched.current[target] = [...have, ...got];
     const done = !missingOf(step).length;
     const line = done ? answer : (step.watchOnly || watched.current[target].includes(CONTROL) ? controlOf(answer) : '');
@@ -717,6 +741,7 @@ function Drill({
     const text = open ? hintFor(open) : null;
     aim(text);
     setHint(text);
+    setShown([]);
   };
 
   const skip = () => {
@@ -727,6 +752,7 @@ function Drill({
     const next = { ...data, [open.id]: open.text };
     setData(next);
     setHint(null);
+    setShown([]);
     // Primary leaves a skipped step uncoloured until the last one, which checks the whole EP.
     if (open === steps[steps.length - 1]) check(next);
     else setResults((r) => ({ ...r, [open.id]: '' }));
@@ -745,6 +771,7 @@ function Drill({
     setData(next);
     setResults({});
     setHint(null);
+    setShown([]);
     setReveal(null);
     setOpenNWC(null);
     setOpenAction(null);
@@ -791,7 +818,7 @@ function Drill({
   // `normalProcedure` says the card is a normal checklist rather than an EP, so a poster can
   // show the buttons only normal checklists use (T-44C's `normal` actions) and keep them off the
   // EPs, which never name them.
-  const api = { fill, hint, reveal, next: controlOf((nextOpen() || {}).text), resetKey, normalProcedure: normal || !!ep.normal,
+  const api = { fill, hint, shown, reveal, next: controlOf((nextOpen() || {}).text), resetKey, normalProcedure: normal || !!ep.normal,
     // With the set's `extra` procedures added, a page can show both kinds of button on every card,
     // so the column does not change (and give the procedure away) as the cards go by.
     mixed: !!(extraToggle && extraToggle.on) };
@@ -1005,7 +1032,8 @@ function Drill({
         ) : <span className="epl-mode-spacer" />}
       </div>
       {showHelp && <Instructions hasPanel={hasPanel} hasBand={!!top} hasLeft={!!left} hasNWC={hasNWC} hasModes={!!modes}
-        hasWatch={eps.some((e) => e.rows.some((r) => r.watch))} read={read} calls={calls}
+        hasWatch={eps.some((e) => e.rows.some((r) => r.watch))}
+        hasShows={eps.some((e) => e.rows.some((r) => r.shows))} read={read} calls={calls}
         extraLabel={extraToggle && extraToggle.label} onClose={() => setShowHelp(false)} />}
       {openNWC && (
         <NWCModal key={openNWC} group={nwcGroup} current={openNWC} nwc={nwc} hints={nwcHints}

@@ -8992,8 +8992,10 @@ textarea.incorrect-answer {
   text-align: center;
 }
 
-/* The control a Hint points at. */
-.epl-hint {
+/* The control a Hint points at, and (`.epl-react`) the gauges and lights a click on a switch
+   moves, which a step's `shows` lists. A class of their own, so the hint scroll leaves them be. */
+.epl-hint,
+.epl-react {
   outline: 3px solid rgba(255, 235, 59, 0.95);
   outline-offset: 2px;
   animation: hintPulse 2s ease-in-out infinite;

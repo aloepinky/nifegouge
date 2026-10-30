@@ -151,6 +151,18 @@ for (const school of SCHOOLS) {
       for (const w of step.watch || []) {
         if (!records.some((r) => matches(r, w, aliases))) noControl.push(`${ep.title} :: ${step.text} (watches ${w})`);
       }
+      // A step's `shows` are rung on the poster, so each must be a target with a box; a map's
+      // keys are what is clicked to ring them, the step's control or one of its watched pieces.
+      const shows = Array.isArray(step.shows) ? { [controlOf(step.text)]: step.shows } : (step.shows || {});
+      for (const [key, list] of Object.entries(shows)) {
+        if (!Array.isArray(step.shows) && !sameControl(step.text, key, aliases)
+          && !(step.watch || []).some((w) => sameControl(w, key, aliases))) {
+          noControl.push(`${ep.title} :: ${step.text} (shows keyed by ${key}, which the step never clicks)`);
+        }
+        for (const w of list) {
+          if (!records.some((r) => r.box && matches(r, w, aliases))) noControl.push(`${ep.title} :: ${step.text} (shows ${w})`);
+        }
+      }
       const control = controlOf(step.text);
       const claimants = records.filter((r) => matches(r, control, aliases));
       if (!claimants.length) {
