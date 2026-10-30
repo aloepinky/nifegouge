@@ -498,23 +498,23 @@ const AFTER_START = {
 // F104
 
 // Engine Runup 8. The four green lights the auto-ignition and autofeather switches arm, and the
-// test the power levers then run, played over ten seconds once the power lever is clicked (it
+// test the power levers then run, played over twenty seconds once the power lever is clicked (it
 // must be last): steps e and f of the action below, each side's lights at its two torques.
 const ARMED_IGN = ['LH AUTO IGNITION ARMED', 'RH AUTO IGNITION ARMED'];
 const ARMED_FEATHER = ['LH AUTOFEATHER ARMED', 'RH AUTOFEATHER ARMED'];
 const AUTOFEATHER_TEST = {
   after: 'Power Lever',
-  end: 10000,
+  end: 20000,
   frames: [
     { at: 0, lit: [...ARMED_IGN, ...ARMED_FEATHER, 'Torque'] },
     // Left power lever back to 410: RH AUTO-FEATHER ARMED and LH AUTO IGNITION ARMED out, LH IGN IND on.
-    { at: 1500, lit: ['RH AUTO IGNITION ARMED', 'LH AUTOFEATHER ARMED', 'LH IGN IND', 'Torque'] },
+    { at: 3000, lit: ['RH AUTO IGNITION ARMED', 'LH AUTOFEATHER ARMED', 'LH IGN IND', 'Torque'] },
     // 200: LH AUTO-FEATHER ARMED flashing as the left prop feathers.
-    { at: 3000, lit: ['RH AUTO IGNITION ARMED', 'LH IGN IND', 'Torque', 'Prop RPM'], blink: ['LH AUTOFEATHER ARMED'] },
+    { at: 6000, lit: ['RH AUTO IGNITION ARMED', 'LH IGN IND', 'Torque', 'Prop RPM'], blink: ['LH AUTOFEATHER ARMED'] },
     // Left power lever up to 500: all four.
-    { at: 5000, lit: [...ARMED_IGN, ...ARMED_FEATHER, 'Torque'] },
-    { at: 6500, lit: ['LH AUTO IGNITION ARMED', 'RH AUTOFEATHER ARMED', 'RH IGN IND', 'Torque'] },
-    { at: 8000, lit: ['LH AUTO IGNITION ARMED', 'RH IGN IND', 'Torque', 'Prop RPM'], blink: ['RH AUTOFEATHER ARMED'] },
+    { at: 10000, lit: [...ARMED_IGN, ...ARMED_FEATHER, 'Torque'] },
+    { at: 13000, lit: ['LH AUTO IGNITION ARMED', 'RH AUTOFEATHER ARMED', 'RH IGN IND', 'Torque'] },
+    { at: 16000, lit: ['LH AUTO IGNITION ARMED', 'RH IGN IND', 'Torque', 'Prop RPM'], blink: ['RH AUTOFEATHER ARMED'] },
   ],
 };
 
@@ -564,6 +564,7 @@ const ENGINE_RUNUP = {
     }),
     item('er5', 'Suction & Pneumatic Pressure', 'CHECKED', 'LS', {
       watch: ['Condition Lever', 'Gyro Suction', 'Pneumatic Pressure'],
+      shows: { 'Condition Lever': ['N1'] },
       action: [
         'LS ensures suction 4.3-5.9 inches Hg (5.1 ±0.8) and pneumatic pressure 12-20 PSI (16 ±4).',
         'a. Condition levers — HIGH IDLE',
@@ -572,7 +573,8 @@ const ENGINE_RUNUP = {
       replies: [say('CHECKED', 'LS')],
     }),
     item('er6', 'Overspeed Governors', 'CHECKED', 'LS', {
-      shows: ['Prop RPM', 'ITT', 'Torque'],
+      watch: ['Prop Lever', 'Power Lever'],
+      shows: { 'Power Lever': ['Prop RPM'] },
       action: [
         'a. Prop levers – full forward',
         'b. Adjust power levers to ensure prop RPM less than 1900 RPM.',
