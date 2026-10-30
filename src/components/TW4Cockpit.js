@@ -1604,6 +1604,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   <button onClick={() => {
                     setCurrentIndex(currentIndex-1);
                     setCheckResults(emptyResults());
+                    // A Quadfold checklist starts clean each time it is opened (the user, 2026-10-30).
+                    if (currentDivKey === 'quadDivs') { setInputData({}); setCheckResults({}); }
                     setActiveHints({});
                     setAutoExpanded(false);
                     closeChecklistModal();
@@ -1673,6 +1675,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                               setCurrentIndexArray(sequentialArray);
                               setCurrentIndex(idx);
                               setCheckResults(emptyResults());
+                              // A Quadfold checklist starts clean each time it is opened (the user, 2026-10-30).
+                              if (currentDivKey === 'quadDivs') { setInputData({}); setCheckResults({}); }
                               setActiveHints({});
                               setAutoExpanded(false);
                               closeChecklistModal();
@@ -1688,6 +1692,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
                   <button onClick={() => {
                     setCurrentIndex(currentIndex+1);
                     setCheckResults(emptyResults());
+                    // A Quadfold checklist starts clean each time it is opened (the user, 2026-10-30).
+                    if (currentDivKey === 'quadDivs') { setInputData({}); setCheckResults({}); }
                     setActiveHints({});
                     setAutoExpanded(false);
                     closeChecklistModal();

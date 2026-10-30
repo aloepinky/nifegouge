@@ -576,7 +576,10 @@ function Drill({
   // else that ends the game, cancels it, or it would page on and clear the answers afterwards.
   useEffect(() => () => clearTimeout(advanceRef.current), [isGameActive]);
 
+  // A read checklist starts clean each time it is opened: what was skipped or clicked on one is
+  // not carried to the next (the user, 2026-10-30). A typed EP keeps its boxes, as Primary's do.
   const go = (nextPos) => {
+    if (read) setData({});
     setPos(nextPos);
     setResults({});
     setHint(null);
@@ -713,10 +716,14 @@ function Drill({
       ...pieces,
     ].filter((p) => !have.includes(p));
     // `last` is a piece that must come after every other (Engine Runup 8's power lever, which
-    // runs the test the switches set up): clicked early, it is wrong.
+    // runs the test the switches set up): clicked early, it is wrong. `inOrder` holds every piece
+    // to the order listed, the control first (Before Takeoff 1: engage, disconnect at the wheel,
+    // the disconnect bar, then FD).
+    const missing = missingOf(step);
     const early = step.last && got.includes(step.last)
-      && missingOf(step).some((p) => p !== step.last && !got.includes(p));
-    if (!got.length || early) {
+      && missing.some((p) => p !== step.last && !got.includes(p));
+    const outOfOrder = step.inOrder && got.some((p, i) => p !== missing[i]);
+    if (!got.length || early || outOfOrder) {
       setResults((r) => ({ ...r, [target]: 'incorrect' }));
       return;
     }

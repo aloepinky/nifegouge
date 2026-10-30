@@ -29,6 +29,8 @@
 //                      PFD flags or audio tones.
 //   watchOnly          the watch list is the whole step (the Lights steps' switches): no control
 //                      click of its own, so a switch the step does not set is marked red.
+//   inOrder            the control and the watched pieces must come in the order listed
+//                      (Before Takeoff 1); `last` holds only one piece to the end (Engine Runup 8).
 //   controlApart       the step's control is a click of its own even where a watched piece also
 //                      answers the step (Before Start 7: an anti-ice switch and both ice vanes).
 //
@@ -640,6 +642,11 @@ const BEFORE_TAKEOFF = {
   done: '"BEFORE TAKEOFF CHECKLIST COMPLETE." (PM)',
   rows: [
     item('bt1', 'Autopilot/Yaw Damp', 'CHECKED/DISENGAGED', 'PF, PM', {
+      // AP to engage, the control wheel's disconnect (the red AP text flashing on the PFD), the
+      // YD/AP DISC bar down, then FD, in that order.
+      watch: ['Control Wheel', 'AP Disconnect Bar', 'FD Button'],
+      inOrder: true,
+      shows: { 'Control Wheel': [{ w: 'PFD AP Annunciation', blink: true }] },
       action: [
         'PF and PM perform the following checks:',
         'a. PF engages the autopilot and presses the AP/YD disconnect button on the pilot\'s control wheel. Observe that the autopilot disengages and is accompanied by a warning horn and PFD indication. PF then ensures flight controls operate freely. All that is required is small movement of the control wheel and rudder pedals to ensure there are no servos binding.',
@@ -668,6 +675,7 @@ const BEFORE_TAKEOFF = {
       replies: [say('ARMED', 'LS')],
     }),
     item('bt6', 'Anti-Ice/Deice/Radar', 'CHECKED AS REQUIRED', 'PF, PM', {
+      watch: ['PFD Display', 'DCP Radar', 'Menu Advance Knob'],
       shows: ['Generator Load'],
       action: [
         'Full anti-ice/deice checks are practiced during cockpit procedures trainers (CPTs) and must be memorized.',
@@ -691,6 +699,7 @@ const BEFORE_TAKEOFF = {
       ],
     }),
     item('bt7', 'Pressurization', 'SET', 'PM', {
+      watch: ['Rate Control Knob'],
       action: [
         'PM sets:',
         'a. Rate control knob to midpoint of travel (approximately one o\'clock position).',
@@ -704,6 +713,10 @@ const BEFORE_TAKEOFF = {
       replies: [ip('OPEN or CLOSED', 'RS'), act('(as required)')],
     }),
     abbrev('bt9', 'Trim', 'CHECKED/SET', 'PF, PM', {
+      // All three wheels and the control wheel's split switch, which drives the elevator trim
+      // wheel (NATOPS §2.12.3.2).
+      watch: ['Elevator Trim', 'Aileron Trim', 'Rudder Trim', 'Control Wheel'],
+      shows: { 'Control Wheel': ['Elevator Trim'] },
       action: [
         '(normally 0, 0, 2 up)',
         'PF and PM perform the following check:',
@@ -721,7 +734,7 @@ const BEFORE_TAKEOFF = {
       replies: [say('CHECKED/UP', 'PF'), ip('CHECKED/UP', 'PM')],
     }),
     abbrev('bt11', 'Altimeters', 'CHECKED/SET', 'PF, PM', {
-      watch: ['ESIS'],
+      watch: ['ESIS', 'PFD Display'],
       action: [
         'PF and PM perform the following checks:',
         'a. Barometric Altimeter (BA): Set the current altimeter setting on both PFDs and ESIS. Ensure no comparators or warning flags visible on PFD. Ensure the barometric altimeter indicates within ±75 feet of airport elevation and compare LS, RS and ESIS altimeter readings. See the airport diagram for specific field elevations.',
@@ -757,7 +770,7 @@ const BEFORE_TAKEOFF = {
       ],
     }),
     abbrev('bt13', 'Flight Instruments', 'CHECKED/SET', 'PF, PM', {
-      watch: ['PFD', 'ESIS'],
+      watch: ['PFD Display', 'ESIS', 'V/UHF Radio', 'EMER 121.5', 'RTU', 'TACAN', 'SPEED Knob', 'ALT Knob', 'HDG Knob'],
       action: [
         'PF and PM check flight instruments for proper indications:',
         'a. Compare flight information on both Primary Flight Displays (PFDs) and the Electronic Standby Instrument System (ESIS). Note any comparators or warning flags.',
@@ -773,7 +786,6 @@ const BEFORE_TAKEOFF = {
       replies: [say('CHECKED/SET', 'PF'), ip('CHECKED/SET', 'PM')],
     }),
     item('bt14', 'Fuel Quantity', '___ LBS, ___ LBS REQUIRED', 'PF', {
-      watch: ['Left Fuel Quantity', 'Right Fuel Quantity'],
       action: [
         'Compare actual fuel load with preflight fuel calculations requirements in accordance with SOP and CNAF M-3710.7 minima.',
         note('With full fuel tanks left and right, quantity indicators with TOTAL selected should indicate within 100 pounds of each other. With NACELLE selected, the maximum difference should be 50 pounds. In either case, quantity shall be outside the yellow arcs and the discrepancy must be noted on the appropriate maintenance form for correction prior to the next flight.'),
@@ -813,7 +825,7 @@ const BEFORE_TAKEOFF = {
     }),
     { decision: 'AFTER CLEARED ONTO THE ACTIVE RUNWAY:' },
     abbrev('bt16', 'Lights', 'SET', 'LS', {
-      watch: ['Left Landing Light', 'Right Landing Light', 'Taxi Light', 'Beacon', 'Strobe'],
+      watch: ['Left Landing Light', 'Right Landing Light', 'Taxi Light', 'Nav Lights', 'Beacon', 'Strobe'],
       watchOnly: true,
       action: [
         'LS places the following switches on:',

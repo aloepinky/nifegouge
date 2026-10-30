@@ -184,8 +184,36 @@ export const T44C_POSTER = {
         // each gauge supplies its half and the step needs both.
         { box: [0.512, 0.859, 0.04, 0.086], label: 'Cabin altitude and differential',
           action: 'Pressurization/Oxygen', actions: ['Pressurization/Oxygen', 'Cabin Altitude'], fills: 'Pressurization/', values: ['CHECKED'] },
-        { box: [0.335, 0.143, 0.333, 0.078], label: 'Autopilot (FGP)',
-          action: 'Autopilot/Yaw Damp', actions: ['Autopilot/Yaw Damp', 'Flight Instruments', 'PFDs/FGP/ESIS'], also: ['Yaw damp'], values: ['CHECKED/DISENGAGED', 'Off'] },
+        // The flight guidance panel (FGP), a target per control a checklist names, replacing one
+        // box over the whole panel (the user, 2026-10-30): Before Takeoff 1 engages the autopilot
+        // on AP, disconnects it with the control wheel's button and then the YD/AP DISC bar, and
+        // presses each FD; Before Takeoff 13 sets SPEED, HDG and ALT. 2026-10-30, drawn and
+        // checked by eye.
+        { id: 'fgp-ap', box: [0.609, 0.157, 0.013, 0.019], label: 'AP button',
+          action: 'Autopilot/Yaw Damp', values: ['CHECKED/DISENGAGED'] },
+        { id: 'fgp-yd', box: [0.573, 0.157, 0.013, 0.019], label: 'YD button',
+          action: 'Yaw damp', values: ['Off'] },
+        { id: 'fgp-disc', box: [0.603, 0.186, 0.025, 0.025], label: 'YD/AP DISC bar',
+          action: 'AP Disconnect Bar' },
+        { id: 'fgp-fd-pilot', box: [0.347, 0.157, 0.013, 0.019], label: 'FD button (pilot)',
+          action: 'FD Button' },
+        { id: 'fgp-fd-copilot', box: [0.642, 0.157, 0.014, 0.019], label: 'FD button (copilot)',
+          action: 'FD Button' },
+        { id: 'fgp-speed', box: [0.440, 0.185, 0.017, 0.027], label: 'SPEED knob',
+          action: 'SPEED Knob', actions: ['SPEED Knob', 'PFDs/FGP/ESIS'], values: { 'PFDs/FGP/ESIS': ['SET'] } },
+        { id: 'fgp-hdg', box: [0.492, 0.184, 0.017, 0.028], label: 'HDG knob',
+          action: 'HDG Knob', actions: ['HDG Knob', 'PFDs/FGP/ESIS'], values: { 'PFDs/FGP/ESIS': ['SET'] } },
+        { id: 'fgp-alt', box: [0.545, 0.183, 0.016, 0.029], label: 'ALT knob',
+          action: 'ALT Knob', actions: ['ALT Knob', 'PFDs/FGP/ESIS'], values: { 'PFDs/FGP/ESIS': ['SET'] } },
+        // The red AP text across the top of the pilot's PFD, which flashes as the autopilot
+        // disconnects (Before Takeoff 1's note). Rung, never clicked.
+        { id: 'pfd-ap-annunciation', box: [0.161, 0.264, 0.066, 0.026], label: 'PFD autopilot annunciation',
+          action: 'PFD AP Annunciation' },
+        // The lower half of the pilot's PFD, the HSI and its data. One target for the display
+        // (the user, 2026-10-30): the radar test, the altimeter check and the flight instrument
+        // check each look at it.
+        { id: 'pfd-lower', box: [0.134, 0.432, 0.12, 0.166], label: 'PFD (lower display)',
+          action: 'PFD Display', actions: ['PFD Display', 'PFD', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'] },
         // The engine gauges, one target per row: each row is the pair, left engine and right, so
         // one box per instrument rather than one per dial. A step that names a gauge needs THAT
         // gauge; "Engine Instruments" is any of them, oil and fuel flow included (the user's
@@ -217,15 +245,25 @@ export const T44C_POSTER = {
           action: 'Altimeters', also: ['Altitude'], actions: ['Altimeters', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles', 'PFD'], values: ['CHECKED/SET', 'SET', '___.___ SET', '____.____ SET', '5000 feet AGL minimum'] },
         // The pilot's display control panel (DCP), the strip between the PFD and the engine
         // gauges. NATOPS §20.3: the altimeter is set on its BARO knob, and minimums by pushing
-        // REFS and turning the MENU knob. Rough, 2026-10-12: tune with ?spots.
+        // REFS and turning the MENU knob. REFS and the MENU ADV knob are separate targets since
+        // 2026-10-30 (the user): the radar test turns the knob and not REFS. Rough, 2026-10-12:
+        // tune with ?spots.
         { id: 'dcp-baro', box: [0.295, 0.299, 0.013, 0.029], label: 'DCP BARO knob',
           action: 'Altimeters', values: ['CHECKED/SET', 'SET', '___.___ SET', '____.____ SET'] },
-        { id: 'dcp-refs', box: [0.291, 0.376, 0.021, 0.07], label: 'DCP REFS and menu knob',
+        { id: 'dcp-refs', box: [0.291, 0.377, 0.020, 0.018], label: 'DCP REFS button',
           action: 'Minimums', values: ['____ SET'] },
+        { id: 'dcp-menu', box: [0.292, 0.416, 0.017, 0.035], label: 'DCP MENU ADV knob',
+          action: 'Menu Advance Knob' },
+        { id: 'dcp-radar', box: [0.291, 0.497, 0.020, 0.019], label: 'DCP RADAR button',
+          action: 'DCP Radar' },
         { box: [0.417, 0.442, 0.133, 0.177], label: 'MFD',
           action: 'MFD', values: ['CHECKED/SET'] },
-        { box: [0.552, 0.262, 0.127, 0.325], label: 'Radio tuning unit',
-          action: 'Radios/NAVAIDs', values: ['SET'] },
+        // The V/UHF radio above and the radio tuning unit (RTU) below it, two targets since
+        // 2026-10-30 (the user): Before Takeoff 13 sets each.
+        { id: 'vuhf', box: [0.552, 0.263, 0.127, 0.143], label: 'V/UHF radio',
+          action: 'Radios/NAVAIDs', actions: ['Radios/NAVAIDs', 'V/UHF Radio'], values: ['SET'] },
+        { id: 'rtu', box: [0.564, 0.423, 0.11, 0.165], label: 'Radio tuning unit',
+          action: 'Radios/NAVAIDs', actions: ['Radios/NAVAIDs', 'RTU'], values: ['SET'] },
         { box: [0.32, 0.626, 0.084, 0.088], label: 'Oil pressure and temperature',
           action: 'Oil Pressure', actions: ['Oil Pressure', 'Engine Instruments', 'Instruments/Nacelles'],
           values: { 'Oil Pressure': ['Thumbs up to lineman'], 'Engine Instruments': ['CHECKED'] } },
@@ -330,13 +368,14 @@ export const T44C_POSTER = {
           values: ['UP', 'APPROACH', 'APPROACH (Unless Already UP)', 'Approach (Unless Already Up)',
             'As Required', 'Maintain Current Setting', 'CORRESPOND', 'CHECKED/UP', 'Up/Approach/Down'] },
 
-        // Normal checklists. Rough, 2026-10-12: tune with ?spots. Three wheels, one step.
+        // Normal checklists. Rough, 2026-10-12: tune with ?spots. Three wheels, one step; each
+        // also answers by name, since Before Takeoff 9 takes all three.
         { id: 'trim-elevator', box: [0.11, 0.322, 0.092, 0.334], label: 'Elevator trim',
-          action: 'Trim', values: ['CHECKED/SET', 'SET ZERO'] },
+          action: 'Trim', actions: ['Trim', 'Elevator Trim'], values: ['CHECKED/SET', 'SET ZERO'] },
         { id: 'trim-aileron', box: [0.24, 0.67, 0.24, 0.186], label: 'Aileron trim',
-          action: 'Trim', values: ['CHECKED/SET', 'SET ZERO'] },
+          action: 'Trim', actions: ['Trim', 'Aileron Trim'], values: ['CHECKED/SET', 'SET ZERO'] },
         { id: 'trim-rudder', box: [0.619, 0.758, 0.233, 0.178], label: 'Rudder trim',
-          action: 'Trim', values: ['CHECKED/SET', 'SET ZERO'] },
+          action: 'Trim', actions: ['Trim', 'Rudder Trim'], values: ['CHECKED/SET', 'SET ZERO'] },
       ],
     },
     {
@@ -458,9 +497,13 @@ export const T44C_POSTER = {
         { box: [0.477, 0.01, 0.494, 0.403], label: 'FMS',
           action: 'FMS', values: ['CHECKED/SET', 'SET'] },
         { id: 'tacan', box: [0, 0.53, 0.486, 0.121], label: 'TACAN',
-          action: 'Radios/NAVAIDs', values: ['SET'] },
+          action: 'Radios/NAVAIDs', actions: ['Radios/NAVAIDs', 'TACAN'], values: ['SET'] },
         { id: 'cabin-controller', box: [0.145, 0.915, 0.052, 0.039], label: 'Cabin pressure controller',
           action: 'Pressurization', values: ['SET', 'CHECKED', 'CHECKED/DEPRESSURIZED'] },
+        // RATE INC, bottom left of the pressurization panel, which Before Takeoff 7 sets to
+        // mid-travel. 2026-10-30, drawn and checked by eye.
+        { id: 'rate-knob', box: [0.058, 0.958, 0.042, 0.036], label: 'Cabin rate control knob',
+          action: 'Rate Control Knob' },
       ],
     },
   ],

@@ -159,7 +159,8 @@ for (const school of SCHOOLS) {
           && !(step.watch || []).some((w) => sameControl(w, key, aliases))) {
           noControl.push(`${ep.title} :: ${step.text} (shows keyed by ${key}, which the step never clicks)`);
         }
-        for (const w of list) {
+        // An entry is a wording, or `{ w, blink }` for a light that flashes.
+        for (const w of list.map((e) => (typeof e === 'string' ? e : e.w))) {
           if (!records.some((r) => r.box && matches(r, w, aliases))) noControl.push(`${ep.title} :: ${step.text} (shows ${w})`);
         }
       }
