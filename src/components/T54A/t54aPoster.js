@@ -78,6 +78,24 @@ export const T54A_POSTER = {
             Wings: ['Level'],
             Roll: ['Continue planned lateral path'],
           } },
+        // "Above 1,500 feet AGL" is read off the altitude tape or the
+        // radio altitude, the green readout under the attitude indicator. The tape and the VSI
+        // beside it also answer the climb and descent the control wheel flies.
+        { box: [0.215, 0.393, 0.019, 0.127], label: 'Altitude tape',
+          action: 'Above 1,500 feet AGL or established at VFR pattern Altitude',
+          actions: ['Above 1,500 feet AGL or established at VFR pattern Altitude', 'Descend',
+            'Continue climb until all warnings cease and safe terrain clearance assured.'],
+          values: {
+            'Above 1,500 feet AGL or established at VFR pattern Altitude': ['Go to Emergency Shutdown Checklist'],
+            Descend: ['As required'],
+          } },
+        { box: [0.236, 0.41, 0.009, 0.105], label: 'Vertical speed indicator',
+          action: 'Descend',
+          actions: ['Descend', 'Continue climb until all warnings cease and safe terrain clearance assured.'],
+          values: { Descend: ['As required'] } },
+        { box: [0.168, 0.534, 0.014, 0.012], label: 'Radio altitude',
+          action: 'Above 1,500 feet AGL or established at VFR pattern Altitude',
+          values: ['Go to Emergency Shutdown Checklist'] },
         // One step, one control, drawn at each end of the glareshield. Same `action`, different `id`.
         { id: 'fire-ext-left', box: [0.342, 0.109, 0.028, 0.046], label: 'LH engine fire push button',
           action: 'Fire Extinguisher', values: ['As required', 'As required (LS, RS)'] },
@@ -102,9 +120,12 @@ export const T54A_POSTER = {
         { box: [0.128, 0.757, 0.026, 0.031], label: 'Engine auto ignition',
           action: 'Autoignition', actions: ['Autoignition', 'Autofeather/Autoignition'],
           values: { Autoignition: ['ARM (LS)', 'ARM', 'OFF'] } },
+        // "Brakes - Checked, set": "Set indicates the condition of the parking brake" (§7, the
+        // Engine Runup note), so that one Brakes step is answered here; the others are the pedals.
         { box: [0.013, 0.97, 0.02, 0.038], label: 'Parking brake',
           action: 'Stop the aircraft and set the parking brake.',
-          actions: ['Stop the aircraft and set the parking brake.', 'Parking Brake'] },
+          actions: ['Stop the aircraft and set the parking brake.', 'Parking Brake', 'Brakes'],
+          values: { Brakes: ['Checked, set'] } },
         { box: [0.344, 0.816, 0.018, 0.103], label: 'Landing gear handle',
           action: 'Landing Gear', also: ['Gear', 'Landing Gear (when climb established)'],
           values: ['UP', 'As required', 'DN', 'Down/Locked'] },
@@ -118,6 +139,15 @@ export const T54A_POSTER = {
         { id: 'yd-ap-disc', box: [0.593, 0.234, 0.031, 0.027], label: 'YD/AP DISC bar',
           action: 'Autopilot', actions: ['Autopilot', 'Autopilot/Yaw Damp'],
           values: { Autopilot: ['Disengage'] } },
+
+        // The mic selector knob over each seat's audio control panel
+        // (§20.1, "mic selector switch ... mounted directly above the ACP"), MIC OXY / NORM.
+        { id: 'mic-oxy-left', box: [0.072, 0.375, 0.018, 0.034], label: 'MIC OXY/NORM selector (pilot)',
+          action: 'Oxygen Mask/MIC Switch', also: ['Oxygen Mask/MIC switches'],
+          values: ['ON/100%/OXY (PF, PM, OBS)', 'ON/OXY (PF, PM, OBS)'] },
+        { id: 'mic-oxy-right', box: [0.898, 0.374, 0.018, 0.034], label: 'MIC OXY/NORM selector (copilot)',
+          action: 'Oxygen Mask/MIC Switch', also: ['Oxygen Mask/MIC switches'],
+          values: ['ON/100%/OXY (PF, PM, OBS)', 'ON/OXY (PF, PM, OBS)'] },
 
         // Rough, tune with ?spots: the targets the normal flows and checklists add.
         // Glareshield: both MASTER WARNING lights (the Engine Fire Test lights them) and the SDU.
@@ -264,10 +294,14 @@ export const T54A_POSTER = {
           } },
         { box: [0.1, 0.391, 0.886, 0.616], label: 'Control wheel',
           action: 'Control wheel',
-          actions: ['Control wheel', 'Ailerons', 'Flight Controls', 'Controls'],
+          // The flown steps too: descend, maneuver, climb, land or ditch.
+          actions: ['Control wheel', 'Ailerons', 'Flight Controls', 'Controls', 'Descend',
+            'Maneuver as required.', 'Continue climb until all warnings cease and safe terrain clearance assured.',
+            'Land or ditch immediately.'],
           values: {
             'Control wheel': ['Rapidly forward', 'Pull out of dive by exerting smooth steady back pressure'],
             Ailerons: ['Neutralize'],
+            Descend: ['As required'],
           } },
 
         // Rough, tune with ?spots. The pitch trim switch, drawn twice like AP/TRIM MASTER.
@@ -287,10 +321,11 @@ export const T54A_POSTER = {
       spots: [
         // The power levers also stand for the AT button on the right one's head, the knob its "AT"
         // placard points to: "the Autothrottle Disconnect (AT) button on the right power lever"
-        // (§2.17.2.7). Drawn the size of a lever end, it is too small for a target of its own.
+        // (§2.17.2.7), and for the GO AROUND button placarded on the left one's. Drawn the size
+        // of a lever end, neither is big enough for a target of its own.
         { box: [0.045, 0, 0.352, 0.151], label: 'Power levers',
           action: 'POWER levers', also: ['Power'],
-          actions: ['POWER levers', 'Autothrottles', 'Power Quadrant'],
+          actions: ['POWER levers', 'Autothrottles', 'Power Quadrant', 'Go-Around'],
           values: {
             'POWER levers': ['IDLE', 'IDLE (PF)', 'GROUND FINE', 'REVERSE as required', 'As required',
               'As Required (PF)', 'Max Continuous',
@@ -334,12 +369,25 @@ export const T54A_POSTER = {
           action: 'TAWS' },
         { box: [0.041, 0.521, 0.049, 0.012], label: 'CCP TFC key',
           action: 'TCAS/Transponder' },
+        // The ATIS is tuned on a COM radio with each CCP's TUNE knob.
+        { id: 'com-tune-left', box: [0.108, 0.508, 0.058, 0.020], label: 'COM TUNE knob (pilot)',
+          action: 'ATIS', values: ['As required'] },
+        { id: 'com-tune-right', box: [0.830, 0.508, 0.058, 0.020], label: 'COM TUNE knob (copilot)',
+          action: 'ATIS', values: ['As required'] },
+        // Building the approach is loading it in the FMS, and the minimums are set in its
+        // Vspeeds/Mins window (§21.2.6.5).
         { box: [0.25, 0.508, 0.50, 0.099], label: 'FMS keypad',
-          action: 'FMS' },
+          action: 'FMS', actions: ['FMS', 'Build the approach.', 'Minimums'] },
         { id: 'baro-left', box: [0.122, 0.653, 0.062, 0.022], label: 'BARO knob (pilot)',
           action: 'Altimeters' },
         { id: 'baro-right', box: [0.813, 0.652, 0.061, 0.022], label: 'BARO knob (copilot)',
           action: 'Altimeters' },
+        // The TILT knob beside each BARO knob is the weather radar's
+        // control on the Single Knob Panel (§2.9.1.7).
+        { id: 'tilt-left', box: [0.323, 0.653, 0.094, 0.022], label: 'Radar TILT knob (pilot)',
+          action: 'Radar', values: ['As required'] },
+        { id: 'tilt-right', box: [0.583, 0.652, 0.094, 0.022], label: 'Radar TILT knob (copilot)',
+          action: 'Radar', values: ['As required'] },
         // CABIN PRESS (DUMP, PRESS, TEST) and PRESS MODE (ALT, NORM): either is Pressurization.
         { id: 'cabin-press', box: [0.074, 0.802, 0.042, 0.017], label: 'Cabin press switch',
           action: 'Pressurization' },
@@ -401,50 +449,51 @@ export const T54A_POSTER = {
     },
   ],
 
-  // The steps with nothing on the poster to point at.
+  // The steps with nothing on the poster to point at. A button with `actions` stands for several
+  // steps and answers with whichever of them the card asks for next.
   //
-  //   Rudder, Brakes                   on pedals the poster does not draw.
-  //   Oxygen Mask/MIC Switch           the masks and MIC switches are not drawn.
-  //   Announce, Crew, Descend, Evacuate, Land or ditch, Maneuver, Continue climb, Do not
-  //   attempt another start            spoken, flown or decided, not actuated.
-  //   Execute / Go to ... Checklist    cross-references to another procedure.
+  //   Rudder Pedals      the pedals are not drawn ("Brakes - Checked, set" is the parking
+  //                      brake, on the poster).
+  //   Announce, Crew, Evacuate, Verify Propellers Clear, Brief the approach
+  //                      said, briefed or signalled, not actuated.
+  //   No restart         decided, not actuated. (The flown steps are on the control wheel.)
+  //   Engine Clearing, Emer Shutdown, Windmilling Airstart
+  //                      cross-references to another procedure.
+  //   Overhead meters    the battery ammeter and volt-loadmeters, on the overhead panel (§2.8).
+  //   Cabin Door, Seatbelt, Control Lock, Wheels
+  //                      not on the panel.
   actions: [
+    { label: 'Rudder Pedals', action: 'Rudder', actions: ['Rudder', 'Brakes'],
+      values: {
+        Rudder: ['Maintain directional control (PF)', 'Full deflection opposite the direction of the spin',
+          'Neutralize once rotation has stopped'],
+        Brakes: ['As required', 'Check'],
+      } },
     { label: 'Announce "Abort"', ep: true, action: 'Announce "Abort"' },
-    { label: 'Brakes', action: 'Brakes', values: ['As required', 'Check', 'Checked, set'] },
-    { label: 'Rudder', ep: true, action: 'Rudder',
-      values: ['Maintain directional control (PF)', 'Full deflection opposite the direction of the spin',
-        'Neutralize once rotation has stopped'] },
-    { label: 'Oxygen Mask/MIC', ep: true, action: 'Oxygen Mask/MIC Switch', values: ['ON/100%/OXY (PF, PM, OBS)'] },
     { label: 'Crew', action: 'Crew', values: ['Alerted', 'Briefed'] },
-    { label: 'Descend', ep: true, action: 'Descend', values: ['As required'] },
-    { label: 'Maneuver', ep: true, action: 'Maneuver as required.' },
-    { label: 'Continue climb', ep: true, action: 'Continue climb until all warnings cease and safe terrain clearance assured.' },
     { label: 'Evacuate Aircraft', ep: true, action: 'Evacuate Aircraft' },
-    { label: 'Land or ditch', ep: true, action: 'Land or ditch immediately.' },
-    { label: 'No restart', ep: true, action: 'Do not attempt another start until the cause of the hot or hung start has been corrected.' },
+    { label: 'Verify Propellers Clear', normal: true, action: 'Verify Propellers Clear', values: ['Signal Lineman'] },
+    { label: 'Brief the approach', normal: true, action: 'Brief the approach.' },
+    { label: 'No restart', ep: true,
+      action: 'Do not attempt another start until the cause of the hot or hung start has been corrected.' },
     { label: 'Engine Clearing', ep: true, action: 'Engine Clearing Procedure', values: ['Execute'] },
-    { label: 'Emer Shutdown on Ground', ep: true, action: 'Emergency Engine Shutdown on the Ground', values: ['Execute'] },
-    { label: 'Emer Shutdown Checklist', ep: true, action: 'Emergency Shutdown Checklist', values: ['Execute'] },
+    { label: 'Emer Shutdown', ep: true, action: 'Emergency Engine Shutdown on the Ground',
+      actions: ['Emergency Engine Shutdown on the Ground', 'Emergency Shutdown Checklist'],
+      values: {
+        'Emergency Engine Shutdown on the Ground': ['Execute'],
+        'Emergency Shutdown Checklist': ['Execute'],
+      } },
     { label: 'Windmilling Airstart', ep: true, action: 'Windmilling Air Start', values: ['Execute'] },
-    { label: 'Above 1,500 ft AGL', ep: true, action: 'Above 1,500 feet AGL or established at VFR pattern Altitude',
-      values: ['Go to Emergency Shutdown Checklist'] },
-
-    // The normal flows' and checklists' steps with nothing on the poster to point at: the
-    // battery ammeter and DC volt/loadmeters, radar, minimums and the cabin door are not drawn,
-    // and the rest are looked, said or done outside.
-    { label: 'Verify Propellers Clear', action: 'Verify Propellers Clear', values: ['Signal Lineman'], normal: true },
-    { label: 'Battery Ammeter/Loadmeter', action: 'Battery Ammeter/Loadmeter', values: ['Check'], normal: true },
-    { label: 'DC Volt/Loadmeters', action: 'DC Volt/Loadmeters', values: ['Check', 'Checked'], normal: true },
-    { label: 'Cabin Door', action: 'Cabin Door', values: ['CAS message removed', 'Locked, light out'], normal: true },
-    { label: 'Seatbelt', action: 'Seatbelt', values: ['Fastened'], normal: true },
-    { label: 'ATIS', action: 'ATIS', values: ['As required'], normal: true },
-    { label: 'Radar', action: 'Radar', values: ['As required'], normal: true },
-    { label: 'Minimums', action: 'Minimums', normal: true },
-    { label: 'Build the approach', action: 'Build the approach.', normal: true },
-    { label: 'Brief the approach', action: 'Brief the approach.', normal: true },
-    { label: 'Go-Around', action: 'Go-Around', normal: true },
-    { label: 'Control Lock', action: 'Control Lock', values: ['As required'], normal: true },
-    { label: 'Wheels', action: 'Wheels', values: ['Chocked'], normal: true },
+    { label: 'Overhead meters', normal: true, action: 'Battery Ammeter/Loadmeter',
+      actions: ['Battery Ammeter/Loadmeter', 'DC Volt/Loadmeters'],
+      values: {
+        'Battery Ammeter/Loadmeter': ['Check'],
+        'DC Volt/Loadmeters': ['Check', 'Checked'],
+      } },
+    { label: 'Cabin Door', normal: true, action: 'Cabin Door', values: ['CAS message removed', 'Locked, light out'] },
+    { label: 'Seatbelt', normal: true, action: 'Seatbelt', values: ['Fastened'] },
+    { label: 'Control Lock', normal: true, action: 'Control Lock', values: ['As required'] },
+    { label: 'Wheels', normal: true, action: 'Wheels', values: ['Chocked'] },
   ],
 };
 
