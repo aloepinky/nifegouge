@@ -196,7 +196,7 @@ const START_RIGHT = {
       replies: [say('Above 12 percent')],
     }),
     memory('sr3', 'Condition Lever', 'LOW IDLE', 'PF', {
-      shows: ['Generator Voltages', 'N1'],
+      watch: ['Generator Voltages'],
       action: [
         'Check battery voltage above 18 volts.',
         note('Battery voltage should be 18 volts or greater prior to moving the condition lever to LOW IDLE. If less than 18 volts, consideration should be given to terminating the start attempt. If residual voltage remains less than 18 volts a battery change or battery charging is needed before attempting a subsequent start.'),
@@ -221,7 +221,6 @@ const START_RIGHT = {
       replies: [say('OFF')],
     }),
     memory('sr7', 'Oil Pressure', 'Thumbs up to lineman', 'PF', {
-      shows: ['ITT', 'N1'],
       action: OIL_PRESSURE,
       replies: [act('Thumbs up to lineman')],
     }),
@@ -258,7 +257,7 @@ const START_RIGHT = {
     }),
     { note: 'Control check and flap check.' },
     memory('sr10', 'Right Generator', 'Load below .5, OFF', 'PF', {
-      shows: ['Generator Load'],
+      watch: ['Generator Load'],
       action: ['PF checks right generator load and secures generator when load is below 0.5.'],
       replies: [say('Load below .5', 'PF'), say('OFF', 'PF')],
     }),
@@ -296,7 +295,6 @@ const START_LEFT = {
       replies: [say('Monitor ITT')],
     }),
     memory('sl15', 'Condition Lever', 'LOW IDLE', 'PF', {
-      shows: ['N1'],
       action: ['PF moves left condition lever to LOW IDLE after N1 reaches 12% and the right generator has been turned on. PF mentally counts 10 seconds as timing back-up. PM commences timing for 10 seconds when PF moves condition lever to LOW IDLE. Leave right hand anchored on the condition lever until moving it to turn the starter off.'],
       replies: [say('LOW IDLE')],
     }),
@@ -317,7 +315,6 @@ const START_LEFT = {
       replies: [say('OFF')],
     }),
     memory('sl19', 'Oil Pressure', 'Thumbs up to lineman', 'PF', {
-      shows: ['ITT', 'N1'],
       action: OIL_PRESSURE,
       replies: [act('Thumbs up to lineman')],
     }),
