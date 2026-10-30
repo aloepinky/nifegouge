@@ -8994,11 +8994,24 @@ textarea.incorrect-answer {
 
 /* The control a Hint points at, and (`.epl-react`) the gauges and lights a click on a switch
    moves, which a step's `shows` lists. A class of their own, so the hint scroll leaves them be. */
-.epl-hint,
-.epl-react {
+.epl-hint {
   outline: 3px solid rgba(255, 235, 59, 0.95);
   outline-offset: 2px;
   animation: hintPulse 2s ease-in-out infinite;
+}
+
+/* The reaction ring is drawn inside its box with no outer glow: neighbouring annunciator lights
+   sit a pixel or two apart, and the hint's outset ring and 15px glow piled into each other
+   when several were lit at once. */
+.epl-react {
+  outline: 2px solid rgba(255, 235, 59, 0.95);
+  outline-offset: -2px;
+  animation: eplReactPulse 2s ease-in-out infinite;
+}
+
+@keyframes eplReactPulse {
+  0%, 100% { background-color: rgba(255, 255, 0, 0.25); }
+  50% { background-color: rgba(255, 255, 0, 0.45); }
 }
 
 /* A light a step's `sim` flashes (the AUTO-FEATHER ARMED light as its prop feathers): on and
