@@ -740,11 +740,12 @@ function Drill({
   };
 
   // The step a click, Hint and Skip all act on. See stepFlow.js. A step still missing a watched
-  // instrument stays open even after a wrong click has marked it red.
+  // instrument, or holding only some of its pieces (ITT and N1), stays open even after a wrong
+  // click has marked it red: a red step is not done, and the next click must come back to it.
   const nextOpen = () => {
     const id = openStep(fields, {
       value: (f) => data[f],
-      result: (f) => (watched.current[f] ? 'partial' : results[f]),
+      result: (f) => (watched.current[f] || (parts.current[f] && data[f] !== answers[f]) ? 'partial' : results[f]),
       answer: (f) => answers[f],
     });
     return steps.find((s) => s.id === id);

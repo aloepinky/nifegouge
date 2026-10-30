@@ -121,7 +121,7 @@ const BEFORE_START = {
       replies: [say('OFF', 'LS')],
     }),
     item('bs8', 'Fuel Panel', 'CHECKED/SET', 'LS', {
-      watch: ['Fuel Circuit Breakers', 'Left Firewall Valve', 'Right Firewall Valve', 'Crossfeed', 'Left Boost Pump', 'Right Boost Pump', 'Battery'],
+      watch: ['Fuel Circuit Breakers', 'Firewall Valve', 'Crossfeed', 'Left Boost Pump', 'Right Boost Pump', 'Battery'],
       watchOnly: true,
       shows: {
         Crossfeed: ['FUEL CROSSFEED'],
@@ -201,7 +201,7 @@ const START_RIGHT = {
       replies: [say('Above 12 percent')],
     }),
     memory('sr3', 'Condition Lever', 'LOW IDLE', 'PF', {
-      watch: ['Generator Voltages'],
+      watch: ['Battery Voltage'],
       action: [
         'Check battery voltage above 18 volts.',
         note('Battery voltage should be 18 volts or greater prior to moving the condition lever to LOW IDLE. If less than 18 volts, consideration should be given to terminating the start attempt. If residual voltage remains less than 18 volts a battery change or battery charging is needed before attempting a subsequent start.'),

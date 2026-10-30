@@ -271,13 +271,15 @@ export const T44C_POSTER = {
           action: 'Fuel Flow', actions: ['Fuel Flow', 'Engine Instruments', 'Instruments/Nacelles'],
           values: { 'Fuel Flow': ['Note'], 'Engine Instruments': ['CHECKED'] } },
         // NATOPS §2.10.5: each shows its generator's load, and bus voltage while its pushbutton is
-        // pressed, which before a generator is on is the battery voltage Start step 3 checks.
+        // pressed.
         { box: [0.099, 0.693, 0.09, 0.066], label: 'Generator volt-loadmeters',
           action: 'Generator Voltages', also: ['Generator Load'], values: ['CHECKED'] },
         // Gauges and lights the normal checklists read and nothing names as a control. Rough,
         // 2026-10-16: tune with ?spots.
-        { id: 'batt-ammeter', box: [0.057, 0.696, 0.038, 0.082], label: 'Battery ammeter',
-          action: 'Battery Ammeter' },
+        // The BATT gauge reads volts on its left scale and amps on its right, so it is both the
+        // battery ammeter and the battery voltage Start step 3 checks (the user, 2026-10-30).
+        { id: 'batt-ammeter', box: [0.057, 0.696, 0.038, 0.082], label: 'Battery volt-ammeter',
+          action: 'Battery Ammeter', actions: ['Battery Ammeter', 'Battery Voltage'] },
         { id: 'prop-amps', box: [0.055, 0.818, 0.042, 0.062], label: 'Prop deice ammeter',
           action: 'Prop Amps' },
         { id: 'flap-indicator', box: [0.489, 0.752, 0.039, 0.081], label: 'Flap position indicator',
@@ -387,9 +389,9 @@ export const T44C_POSTER = {
       spots: [
         // One step, one control, drawn at each end of the panel. Same `action`, different `id`.
         { id: 'firewall-left', box: [0.15, 0.78, 0.06, 0.2], label: 'Left firewall valve',
-          action: 'Firewall Valve', actions: ['Firewall Valve', 'Fuel Panel', 'Left Firewall Valve'], also: ['Firewall Valves'], values: ['CLOSED', 'OPEN', 'CHECKED/SET'] },
+          action: 'Firewall Valve', actions: ['Firewall Valve', 'Fuel Panel'], also: ['Firewall Valves'], values: ['CLOSED', 'OPEN', 'CHECKED/SET'] },
         { id: 'firewall-right', box: [0.785, 0.78, 0.055, 0.2], label: 'Right firewall valve',
-          action: 'Firewall Valve', actions: ['Firewall Valve', 'Fuel Panel', 'Right Firewall Valve'], also: ['Firewall Valves'], values: ['CLOSED', 'OPEN'] },
+          action: 'Firewall Valve', actions: ['Firewall Valve', 'Fuel Panel'], also: ['Firewall Valves'], values: ['CLOSED', 'OPEN'] },
         // The FUEL SYSTEM circuit breaker strip between the firewall valves, which Before Start 8
         // checks set. 2026-10-30, drawn and checked by eye.
         { id: 'fuel-cbs', box: [0.226, 0.735, 0.542, 0.2], label: 'Fuel system circuit breakers',
