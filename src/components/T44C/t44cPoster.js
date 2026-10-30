@@ -367,6 +367,9 @@ export const T44C_POSTER = {
           action: 'Transfer Pumps', actions: ['Transfer Pumps', 'Fuel Panel', 'Left Transfer Pump'], values: ['CHECKED/AUTO', 'OFF'] },
         { id: 'transfer-right', box: [0.813, 0.201, 0.046, 0.081], label: 'Right transfer pump',
           action: 'Transfer Pumps', actions: ['Transfer Pumps', 'Fuel Panel', 'Right Transfer Pump'], values: ['CHECKED/AUTO', 'OFF'] },
+        // TRANSFER TEST, held to L or R through After Start 6. 2026-10-30, drawn and checked by eye.
+        { id: 'transfer-test', box: [0.468, 0.21, 0.056, 0.095], label: 'Transfer test switch',
+          action: 'Transfer Test' },
         { box: [0.811, 0.473, 0.048, 0.072], label: 'Crossfeed',
           action: 'Crossfeed', actions: ['Crossfeed', 'Fuel Panel'], values: ['CHECKED/AUTO', 'CLOSED'] },
         { id: 'fuel-qty-left', box: [0.201, 0.261, 0.203, 0.258], label: 'Left fuel quantity',

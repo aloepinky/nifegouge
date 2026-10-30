@@ -375,6 +375,7 @@ const AFTER_START = {
       replies: [say('CHECKED', 'LS')],
     }),
     item('as3', 'AUX/BATT/Avionics Master', 'CHECKED/ON', 'PF', {
+      watch: ['AUX BATT Switch'],
       action: [
         'PF performs the following check:',
         'a. Momentarily place AUX/BATT switch to TEST then turn AUX/BATT switch to ON/ARMED position and verify the AUX/ON light illuminates and the RTU powers up.',
@@ -397,7 +398,7 @@ const AFTER_START = {
       replies: [say('FASTENED', 'PF'), ip('FASTENED', 'OBS'), ip('FASTENED', 'PM')],
     }),
     item('as6', 'Transfer Pumps', 'CHECKED/AUTO', 'LS', {
-      watch: ['Left Transfer Pump', 'Right Transfer Pump'],
+      watch: ['Transfer Test', 'Left Transfer Pump', 'Right Transfer Pump'],
       watchOnly: true,
       shows: {
         'Left Transfer Pump': ['LH NO FUEL TRANSFER'],
@@ -413,7 +414,11 @@ const AFTER_START = {
       replies: [say('CHECKED/AUTO', 'LS')],
     }),
     item('as7', 'Crossfeed', 'CHECKED/AUTO', 'LS', {
-      shows: ['L FUEL PRESSURE', 'R FUEL PRESSURE', 'FUEL CROSSFEED'],
+      watch: ['Left Boost Pump', 'Right Boost Pump'],
+      shows: {
+        'Left Boost Pump': ['L FUEL PRESSURE', 'FUEL CROSSFEED'],
+        'Right Boost Pump': ['R FUEL PRESSURE', 'FUEL CROSSFEED'],
+      },
       action: [
         'LS performs the following checks:',
         'a. Crossfeed valve – AUTO',
