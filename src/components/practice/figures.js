@@ -130,6 +130,8 @@ export const bandOf = (ch) => (/VHF/.test(ch) && !/UHF/.test(ch) ? 'vhf' : 'uhf'
 // for the VHF on its own (Houston Center while the UHF is on KINGS 4 Common) unpairs them, and
 // they stay apart until the VHF is let go (`vhf: null`), when it goes back to the UHF's button.
 const button = (ch) => (/CH\s*(\d{1,2})/.exec(ch) || [])[1];
+// A frequency typed in, not a button ("118.775 VHF", an ASOS or a CTAF): no backup pairing.
+const dialed = (ch) => /\b\d{3}\.\d{1,3}\b/.test(ch);
 export function flyOn(fly, figs, from) {
   if (!figs) return fly;
   let next = { ...fly };
@@ -138,14 +140,14 @@ export function flyOn(fly, figs, from) {
     else if (k in figs) delete next[k];
   });
   const tune = (ch, station) => {
-    if (!button(ch)) return;
+    if (!button(ch) && !dialed(ch)) return;
     if (bandOf(ch) === 'vhf') {
       next.vhf = { v: ch, station: station || null, from };
       next.split = true;
       return;
     }
     next.uhf = { v: ch, station: station || null, from };
-    if (!next.split) next.vhf = { v: `CH ${button(ch)} VHF`, station: 'backup', from };
+    if (!next.split && button(ch)) next.vhf = { v: `CH ${button(ch)} VHF`, station: 'backup', from };
   };
   if (figs.chans) figs.chans.forEach((c) => tune(c.ch, c.station));
   else if (figs.ch) tune(figs.ch, figs.station);

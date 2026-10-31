@@ -439,7 +439,7 @@ withSeed('going round the pattern is a decision, and no Operations Check is run 
   expect(said.slice(pick).some((x) => /Practice PEL|, initial /.test(x))).toBe(false);
   expect(said.slice(pick).some((x) => /crosswind pattern PEL/.test(x))).toBe(true);
   expect(said.slice(pick).some((x) => /Pattern Low-Key, gear down/.test(x))).toBe(true);
-  expect(s.log.filter((l) => l.text === 'Operations Check').every((l) => l.phase !== 'Pattern')).toBe(true);
+  expect(s.log.filter((l) => l.text === 'Ops Check').every((l) => l.phase !== 'Pattern')).toBe(true);
 });
 
 withSeed('the FTI procedures and VT-28 memory aids come where they are flown', () => {
@@ -1230,6 +1230,9 @@ withSeed('a Waldron PEL: the Practice PEL entry and its calls, never the touch a
   expect(intent).toBe(term + 3);
   expect(said[intent + 1].endsWith(`Waldron Tower, runway ${rwy}, report High-Key.`)).toBe(true);
   expect(high).toBe(intent + 2);
+  // Tower answers High-Key with when to report next.
+  expect(said[high + 1]).toMatch(/, report Low-Key\.$/);
+  expect(s.log[high + 1].who).toBe('TWR');
   // The gear call at Low-Key; Tower clears the option, closed traffic the runway's way.
   expect(low).toBeGreaterThan(high);
   expect(said[low + 1].endsWith(`cleared for the option, ${side} closed traffic approved.`)).toBe(true);
@@ -1578,4 +1581,156 @@ withSeed('Waldron 13 is a right break, read back; 31 a left', () => {
     expect(said[cleared + 1].endsWith(`, cleared ${side} break.`)).toBe(true);
     expect(said.some((x) => x.endsWith(`${side} closed traffic approved.`))).toBe(true);
   });
+});
+
+// --- Ingleside, Aransas County, leaving a field, the runway once picked -------------------
+
+const KTFP = 'Point-default-0';
+const KRKP = 'Point-default-21';
+// Wind 130: Ingleside's runway 13.
+const toIngleside = (entry) => walk(start(LEGS, { card: { rwy: '13L', windDir: '130', windSpeed: 10 }, fields: FIELDS }), ['high', 'MUSTANG South', 'skip', entry],
+  (x) => x.route.includes(KTFP) && current(x).choose === 'field',
+  (x, now, ids) => (now.choose === 'leg' && x.flags.inArea ? ids.find((i) => i === `to:${KTFP}`) || ids.find((i) => fieldOfLeg(i) === KTFP) : null));
+
+withSeed('into Ingleside on the break: the self-announce, Approach terminates you, then the CTAF calls, base after the checklist', () => {
+  const s = toIngleside('break');
+  const said = s.log.map((l) => l.text);
+  const at = (re) => said.findIndex((x) => re.test(x));
+  expect(s.route).toContain(KTFP);
+  // The weather is its ASOS, typed in on the VHF.
+  const wx = at(/^Ingleside automated weather observation\./);
+  expect(s.log[wx].radio).toBe('118.775 VHF');
+  // The arrival's rule, then the self-announce from the southeast at 2500 on the CTAF.
+  const rule = at(/^Course rules: KTFP /);
+  const announce = at(/^Ingleside Traffic, .*, 10 miles to the southeast, at 2500, inbound for a left overhead 13, Ingleside\.$/);
+  expect(rule).toBeGreaterThan(wx);
+  expect(announce).toBe(rule + 1);
+  expect(s.log[announce].radio).toBe('122.7 VHF');
+  expect(said[announce + 1]).toMatch(/^Corpus Approach, .*, terminate\.$/);
+  expect(said[announce + 2]).toMatch(/, radar service terminated, frequency change approved\.$/);
+  expect(s.log[announce + 2].who).toBe('APP');
+  expect(said[announce + 3]).toMatch(/, frequency change approved\.$/);
+  const initial = at(/^Ingleside Traffic, .*, 2 mile Initial 13 for a left overhead, Ingleside\.$/);
+  const numbers = at(/^Ingleside Traffic, .*, numbers 13 for the left overhead, Ingleside\.$/);
+  const blc = said.indexOf('Before Landing', numbers);
+  const base = at(/^Ingleside Traffic, .*, Left base, 13, touch & go, Ingleside\.$/);
+  expect(initial).toBeGreaterThan(announce);
+  expect(numbers).toBeGreaterThan(initial);
+  expect(blc).toBeGreaterThan(numbers);
+  expect(base).toBeGreaterThan(blc);
+  // The VHF box shows the CTAF.
+  expect(s.fly.vhf.v).toBe('122.7 VHF');
+  expect(options(s).some((o) => /^Touch and go/.test(o.label))).toBe(true);
+});
+
+withSeed('round Ingleside: crosswind before the checklist, base after it; out of it, the departure call, then the Operations Check', () => {
+  let s = toIngleside('break');
+  const from = s.log.length;
+  s = walk(s, ['lap'], (x) => x.log.length > from + 3 && x.node === KTFP && current(x).choose === 'field',
+    (x, now, ids) => (now.choose === 'field' ? ids.find((i) => isPattern(i)) : null));
+  const lap = s.log.slice(from).map((l) => l.text);
+  const cross = lap.findIndex((x) => /, Left crosswind, 13, Ingleside\.$/.test(x));
+  const blc = lap.indexOf('Before Landing');
+  const base = lap.findIndex((x) => /, Left base, 13, touch & go, Ingleside\.$/.test(x));
+  expect(cross).toBeGreaterThanOrEqual(0);
+  expect(blc).toBeGreaterThan(cross);
+  expect(base).toBeGreaterThan(blc);
+  // Out by the Single Departure: Approach in the pattern, the CTAF call, then the Operations Check.
+  const out = s.log.length;
+  s = walk(s, [], (x) => x.log.length > out && x.log.slice(out).some((l) => l.text === 'Ops Check'),
+    (x, now, ids) => (now.choose === 'field' ? ids.find((i) => /Routes-Departures-1[78]$/.test(i)) : null));
+  const left = s.log.slice(out).map((l) => l.text);
+  const ask = left.findIndex((x) => /^Corpus Approach, .*, in the Ingleside pattern, request course rules SHAMROCK with information [\w-]+\.$/.test(x));
+  const dep = left.findIndex((x) => /^Ingleside Traffic, .*, departing to the north, Ingleside\.$/.test(x));
+  const ops = left.indexOf('Ops Check');
+  expect(ask).toBeGreaterThanOrEqual(0);
+  expect(dep).toBeGreaterThan(ask);
+  expect(ops).toBeGreaterThan(dep);
+});
+
+withSeed('a PEL into Ingleside: high overhead to the CTAF, Approach kept until High-Key', () => {
+  const s = toIngleside('pel');
+  const said = s.log.map((l) => l.text);
+  const at = (re) => said.findIndex((x) => re.test(x));
+  const announce = at(/^Ingleside Traffic, .*, inbound for a high left overhead 13, Ingleside\.$/);
+  const high = at(/^Ingleside Traffic, .*, high left overhead, 13, Ingleside\.$/);
+  const term = at(/^Corpus Approach, .*, terminate\.$/);
+  const low = at(/^Ingleside Traffic, .*, high left base, 13, touch & go, Ingleside\.$/);
+  expect(announce).toBeGreaterThan(0);
+  expect(high).toBeGreaterThan(announce);
+  expect(term).toBe(high + 1);
+  expect(low).toBeGreaterThan(term);
+  expect(said.some((x) => /2 mile Initial|numbers 13/.test(x))).toBe(false);
+});
+
+withSeed('the Operations Check is run leaving any outlying field, wherever bound', () => {
+  let seen = 0;
+  for (let seed = 1; seed <= 40; seed++) {
+    const s = fly(seed, { legs: LEGS });
+    // Each time a leg out of an outlying field is flown, an Operations Check follows before the
+    // leg after it.
+    const legged = (l, id) => (l.kind === 'route' || l.result === 'choice') && l.text === labelOf(id);
+    let from = 0;
+    s.route.forEach((r, k) => {
+      if (!k || !isAirfield(s.route[k - 1]) || s.route[k - 1] === HOME || isPattern(r)) return;
+      const i = s.log.findIndex((l, n) => n >= from && legged(l, r));
+      if (i < 0) return;
+      const j = s.route[k + 1] ? s.log.findIndex((l, n) => n > i && legged(l, s.route[k + 1])) : -1;
+      seen += 1;
+      from = i + 1;
+      expect(s.log.slice(i, j < 0 ? undefined : j).some((m) => m.text === 'Ops Check')).toBe(true);
+    });
+  }
+  expect(seen).toBeGreaterThan(0);
+});
+
+withSeed('into Aransas County from KINGS 4: Approach answers the terminate, read back; one runway pick; base after the checklist', () => {
+  const s = walk(start(LEGS, { card: { rwy: '13L', windDir: '150', windSpeed: 12 }, fields: FIELDS }), ['high', 'KINGS 4', 'break', 'abcdont'],
+    (x) => x.route.includes(KRKP) && current(x).choose === 'field',
+    (x, now, ids) => (now.choose === 'leg' && (x.flags.inArea || x.flags.areaDone) ? ids.find((i) => i === `to:${KRKP}`) || ids.find((i) => i === 'Routes-Transitions-202') : null));
+  const said = s.log.map((l) => l.text);
+  const at = (re) => said.findIndex((x) => re.test(x));
+  expect(s.route).toContain(KRKP);
+  const term = at(/^Corpus Approach, .*, terminate\.$/);
+  expect(term).toBeGreaterThan(0);
+  expect(said[term + 1]).toMatch(/, radar service terminated, frequency change approved\.$/);
+  expect(said[term + 2]).toMatch(/, frequency change approved\.$/);
+  const numbers = at(/numbers 14 for the left overhead/);
+  const blc = said.indexOf('Before Landing', numbers);
+  const base = at(/^Aransas County Traffic, .*, Left base, 14, touch & go, Aransas County\.$/);
+  expect(blc).toBeGreaterThan(numbers);
+  expect(base).toBeGreaterThan(blc);
+  // The runway picked once, with the weather in the area; the arrival flown is for it.
+  expect(s.log.filter((l) => l.result === 'choice' && /^Runway \d+$/.test(l.text))).toHaveLength(1);
+});
+
+withSeed('Bingo at an outlying field says that field\'s, from the In Flight Guide', () => {
+  let s = walk(start(LEGS, { card: { rwy: '13L' } }), ['low', 'KINGS 4', 'Point-default-38', 'break', 'Routes-Traffic Patterns-39', 'lap'],
+    (x) => x.node === 'Point-default-38' && current(x).kind === 'call' && /180/.test(current(x).text));
+  s = happen(s, 'bingo');
+  const said = s.log.map((l) => l.text);
+  expect(said.some((x) => /Bingo at KNGT/.test(x))).toBe(true);
+  expect(said.some((x) => /that's Bingo, 400 pounds\. Recovering to Navy Corpus\.$/.test(x))).toBe(true);
+});
+
+test('a frequency typed in goes to its radio, with no backup pairing', () => {
+  const f = flyOn({}, { ch: 'CH 6 UHF', station: 'Corpus Approach' }, 'x');
+  const g = flyOn(f, { ch: '118.775 VHF', station: 'Ingleside ASOS' }, 'y');
+  expect(g.vhf.v).toBe('118.775 VHF');
+  expect(g.uhf.v).toBe('CH 6 UHF');
+});
+
+withSeed('leaving the area by a leg short of the field: its runway right after its weather, and only that runway after', () => {
+  // KINGS 4 by the Aransas Exit, which is not yet an arrival.
+  let s = walk(start(LEGS, { card: { rwy: '13L', windDir: '150', windSpeed: 12 }, fields: FIELDS }), ['high', 'KINGS 4', 'break', 'abcdont'],
+    (x) => x.route.includes(KRKP) && current(x).choose === 'field',
+    (x, now, ids) => (now.choose === 'leg' && x.flags.inArea ? ids.find((i) => i === 'Routes-Transitions-202') : null));
+  const said = s.log.map((l) => l.text);
+  expect(s.route).toContain('Routes-Transitions-202');
+  const wx = said.findIndex((x) => /^Aransas County automated weather observation/.test(x));
+  const runway = said.indexOf('Runway 14');
+  expect(runway).toBe(wx + 1);
+  expect(s.log[runway].result).toBe('choice');
+  expect(s.log.filter((l) => l.result === 'choice' && /^Runway \d+$/.test(l.text))).toHaveLength(1);
+  expect(s.route).toContain('Routes-Arrivals-25');
 });

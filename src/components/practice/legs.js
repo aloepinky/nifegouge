@@ -258,7 +258,7 @@ export function legCalls(id, legs) {
   const comms = (legs && legs[id] && legs[id].comms) || [];
   const mine = (c) => !c.who || c.who === 'AIRCRAFT';
   const ground = (c) => mine(c) && (/^CH 3 UHF/.test(c.radio || '') || /^Navy Corpus Ground/.test(c.text));
-  const shape = (c) => ({ who: mine(c) ? 'you' : c.who, text: c.text, radio: c.radio, when: c.when, after: c.after });
+  const shape = (c) => ({ who: mine(c) ? 'you' : c.who, text: c.text, radio: c.radio, when: c.when, after: c.after, generated: c.generated });
   return {
     ground: comms.filter(ground).map(shape),
     air: comms.filter((c) => !ground(c)).map(shape),

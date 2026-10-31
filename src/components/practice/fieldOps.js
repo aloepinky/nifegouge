@@ -59,6 +59,7 @@ function towerPel(legs, leg) {
       made(`${tower[1]}, (Call Sign), 5 miles to the south, request practice PEL, runway (RWY #), with information (ATIS code).`, { radio: 'CH 30 UHF' }),
       made(`(Call Sign), ${tower[1]}, runway (RWY #), report High-Key.`, { who: 'TWR' }),
       made(`${tower[1]}, (Call Sign), High-Key, (RWY #).`),
+      made('(Call Sign), report Low-Key.', { who: 'TWR' }),
     ],
     // The gear call at Low-Key ("a gear call each pass at the 180 or Low-Key", 2-45), and Tower
     // clears the option with closed traffic, the pattern's way for the runway.
@@ -83,8 +84,16 @@ const shaped = (c) => ({
   text: c.text,
   radio: c.radio,
   when: c.when,
+  generated: c.generated,
 });
 const callsOf = (parts) => parts.flatMap((p) => p.calls.map(shaped));
+
+// A pattern whose calls run on without a part for the 180 (Aransas County's: "Left crosswind",
+// then "Left base"): the base call is made turning base, after the Before Landing Checklist,
+// as its rule says ("CTAF advisory radio calls must be made when turning crosswind and base
+// legs"), not with the crosswind call.
+const BASE = /\bbase\b/i;
+const atBase = (calls) => ({ before: calls.filter((c) => !BASE.test(c.text)), after: calls.filter((c) => BASE.test(c.text)) });
 
 const is = (re) => (p) => re.test(p.when);
 const DISCONTINUED = /^Or if the RDO is unable/i;
@@ -235,7 +244,9 @@ export function entryCalls(legs, leg, mode, discontinued) {
     };
   }
   const before = rest.filter((p) => !AT_180.test(p.when));
-  const after = callsOf(rest.filter(is(AT_180)));
+  let after = callsOf(rest.filter(is(AT_180)));
+  // No 180 call in the arrival: the pattern's base call, turning base (Aransas County, Ingleside).
+  if (!after.length) after = atBase(callsOf(patternParts(legs, fieldOfLeg(leg)).filter((p) => p.when === ''))).after;
   if (!discontinued || initial < 0) return { opening, before: callsOf(before), after };
   const told = partsOf(legComms(legs, leg)).find(is(DISCONTINUED));
   return {
@@ -264,21 +275,17 @@ export function lapCalls(legs, pattern, mode) {
   const parts = partsOf(legComms(legs, pattern));
   const crosswind = parts.filter(is(/^Crosswind/i));
   if (mode === 'ppel') {
-    return {
-      before: callsOf([...crosswind, ...parts.filter(is(/PPEL\/P/i))]),
-      after: callsOf(parts.filter((p) => OR.test(p.when) && /Pattern Low-Key/i.test(p.calls[0].text))),
-      keywords: ['pattern PEL'],
-    };
+    const before = callsOf([...crosswind, ...parts.filter(is(/PPEL\/P/i))]);
+    const after = callsOf(parts.filter((p) => OR.test(p.when) && /Pattern Low-Key/i.test(p.calls[0].text)));
+    return { ...(after.length ? { before, after } : atBase(before)), keywords: ['pattern PEL'] };
   }
   const field = fieldOfLeg(pattern);
   const arrival = choicesFrom(field).length
     ? Object.keys(legs || {}).find((id) => (feature(id)?.nextNode || []).includes(field) && partsOf(legComms(legs, id)).some(is(AT_180)))
     : null;
-  return {
-    before: callsOf([...parts.filter((p) => p.when === ''), ...crosswind]),
-    after: arrival ? callsOf(partsOf(legComms(legs, arrival)).filter(is(AT_180))) : [],
-    keywords: ['touch & go'],
-  };
+  const before = callsOf([...parts.filter((p) => p.when === ''), ...crosswind]);
+  const after = arrival ? callsOf(partsOf(legComms(legs, arrival)).filter(is(AT_180))) : [];
+  return { ...(after.length ? { before, after } : atBase(before)), keywords: ['touch & go'] };
 }
 
 // The RDO directs a discontinued entry about one entry in three: a number from 0 to 1 that is
@@ -293,3 +300,73 @@ export const DISCONTINUE_RULE = [
   { text: 'Immediately turn away from the normal traffic pattern a minimum of [[90]] degrees off the inbound runway heading while maintaining [[break altitude]] until clear of the airfield.' },
 ];
 export const DISCONTINUE_REF = { work: 'Course Rules Manual', loc: 'Ch. 2 — GOLIAD Discontinued Entry', pages: 'p. 2-34' };
+
+// --- A field the document gives no calls for -----------------------------------------------
+
+// Ingleside's arrivals, pattern and departures have no calls in the course rules document, but
+// its page says when they are made ("CTAF calls made when turning crosswind and base legs,
+// intentions announced upon entry/exit, reporting on 2NM initial, and reporting on numbers").
+// Those calls, made up for practice in Aransas County's words, on the CTAF the page gives; the
+// arrival's self-announce from where the arrival comes in: down the intracoastal at 1500' (North
+// Arrivals), past Port Royal at 2500' (East / South), on the Goliad departure's 2,500' (from
+// Goliad), from PT RUSTY (West, from KNGP).
+const SELF_ANNOUNCE = {
+  'North Arrivals': ['northeast', '1500'],
+  'East / South Arrivals': ['southeast', '2500'],
+  'Arrivals from Goliad': ['north', '2500'],
+  'West Arrivals': ['west'],
+  'Arrivals from KNGP': ['west'],
+};
+// Out by its Single Departure, Approach is asked for course rules SHAMROCK while still in the
+// pattern (the departure's rule: "contact Corpus Approach (CH 8 UHF) and request 'course rules
+// to SHAMROCK'"; the In Flight Guide, KTFP: "Get ATIS in pattern").
+export function withCtafCalls(legs, fields) {
+  if (!legs || !fields) return legs;
+  const out = { ...legs };
+  Object.entries(fields).forEach(([field, page]) => {
+    const blocks = page.blocks || [];
+    if (!blocks.some((b) => (b.lines || []).some((l) => /CTAF calls made when turning crosswind and base legs/i.test(l)))) return;
+    const ctaf = blocks.find((b) => /^CTAF$/i.test(b.heading || ''));
+    const f = ctaf && /^(UHF|VHF)\s+(\d{3}\.\d+)/i.exec((ctaf.lines || [])[0] || '');
+    if (!f) return;
+    const radio = `${f[2]} ${f[1].toUpperCase()}`;
+    const name = page.title.replace(/^\(K[A-Z]{3}\)\s*/, '').replace(/ (Regional Airport|Airport|NOLF)$/, '');
+    const say = (text, more = {}) => ({ who: 'AIRCRAFT', radio, text: `${name} Traffic, (Call Sign), ${text}, ${name}.`, generated: true, ...more });
+    const made = (who, text, more = {}) => ({ who, text, generated: true, ...more });
+    const bare = (id) => out[id] && !(out[id].comms || []).length;
+    const folder = (id) => (feature(id)?.folderPath || '').split(' > ').pop();
+    Object.keys(out).filter((id) => fieldOfLeg(id) === field && !isPattern(id) && bare(id)).forEach((id) => {
+      const [from, alt] = SELF_ANNOUNCE[folder(id)] || [];
+      out[id] = { ...out[id], comms: [
+        say([from && `10 miles to the ${from}`, alt && `at ${alt}`, 'inbound for a left overhead (RWY #)'].filter(Boolean).join(', ')),
+        made('AIRCRAFT', 'Corpus Approach, (Call Sign), terminate.', { radio: 'UHF' }),
+        made('APP', '(Call Sign), radar service terminated, frequency change approved.'),
+        made('AIRCRAFT', '(Call Sign), frequency change approved.', { radio: 'UHF' }),
+        say('2 mile Initial (RWY #) for a left overhead', { when: 'At the 2 NM initial:' }),
+        say('numbers (RWY #) for the left overhead'),
+      ] };
+    });
+    choicesFrom(field).filter((id) => isPattern(id) && bare(id)).forEach((id) => {
+      out[id] = { ...out[id], comms: [
+        say('Left crosswind, (RWY #)'),
+        say('Left base, (RWY #), touch & go'),
+        say('high left crosswind, (RWY #)', { when: 'PPEL/P:' }),
+        say('high left base, (RWY #), touch & go'),
+        say('high left overhead, (RWY #)', { when: 'Practice PEL, at High-Key:' }),
+        say('high left base, (RWY #), touch & go', { when: 'Low-Key:' }),
+      ] };
+    });
+    choicesFrom(field).filter((id) => !isPattern(id) && bare(id)).forEach((id) => {
+      const single = /Single Departures/.test(feature(id)?.folderPath || '');
+      out[id] = { ...out[id], comms: [
+        ...(single ? [
+          made('AIRCRAFT', `Corpus Approach, (Call Sign), in the ${name} pattern, request course rules SHAMROCK with information (ATIS code).`, { radio: 'CH 8 UHF' }),
+          made('APP', '(Call Sign), Corpus Approach, radar contact, proceed course rules SHAMROCK.'),
+          made('AIRCRAFT', '(Call Sign), course rules SHAMROCK.', { radio: 'CH 8 UHF' }),
+        ] : []),
+        say('departing to the north'),
+      ] };
+    });
+  });
+  return out;
+}

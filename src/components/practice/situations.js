@@ -28,6 +28,19 @@ const JOKER = [
 const BINGO = [
   { text: 'Bingo fuel is the fuel at which [[recovery]] should be initiated to arrive at the intended destination with the required fuel.' },
 ];
+// Each outlying field's Bingo home, clean, from its page in the In Flight Guide (KNGP IFG
+// FY26): "CLEAN NGP BINGO", the VFR one (the DIRTY one is for the instrument recovery).
+const NGP_BINGO = {
+  KNGT: { lb: 400, page: 'KNGT (2/3)', pages: 'p. 37', via: 'to intercept the VFR Northern Arrival' },
+  KNWL: { lb: 300, page: 'KNWL (2/4)', pages: 'p. 40', via: 'to intercept the VFR Southern Arrival' },
+  KRKP: { lb: 300, page: 'KRKP (2/3)', pages: 'p. 44', via: 'to intercept the VFR Northern Arrival' },
+  KTFP: { lb: 320, page: 'KTFP (2/2)', pages: 'p. 47', via: 'to intercept the VFR Northern Arrival' },
+};
+const bingoAt = (field) => NGP_BINGO[field] && {
+  rule: [{ text: `Clean NGP Bingo at ${field}: [[${NGP_BINGO[field].lb}]] lbs (${NGP_BINGO[field].via}).` }],
+  ref: { work: 'TW-4 In Flight Guide', loc: NGP_BINGO[field].page, pages: NGP_BINGO[field].pages },
+};
+
 const DECLARE = [
   { text: 'Minimum fuel must be declared whenever the estimated usable fuel at the point of landing will be [[200 pounds]] or less. Emergency fuel must be declared whenever the estimated usable fuel at the point of landing will be [[120 pounds]] or less.' },
 ];
@@ -92,7 +105,8 @@ export const SITUATIONS = [
     steps: (h) => [
       h.hear('EICAS', '"Bingo, Bingo"', { plain: true, ref: BINGO_VOICE_REF }),
       h.rule(BINGO, FUEL_REF, 'Bingo fuel'),
-      h.say('Sir, that\'s Bingo. Recovering to Navy Corpus.', { generated: true }),
+      ...(bingoAt(h.field) ? [h.rule(bingoAt(h.field).rule, bingoAt(h.field).ref, `Bingo at ${h.field}`)] : []),
+      h.say(bingoAt(h.field) ? `Sir, that's Bingo, ${NGP_BINGO[h.field].lb} pounds. Recovering to Navy Corpus.` : 'Sir, that\'s Bingo. Recovering to Navy Corpus.', { generated: true }),
     ],
     effect: () => 'bingo',
   },
