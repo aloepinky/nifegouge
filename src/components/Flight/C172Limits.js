@@ -1,7 +1,9 @@
 import React from 'react';
 import useLimitsDrill from '../epsLimits/useLimitsDrill';
 import LimitsControls from '../epsLimits/LimitsControls';
+import { SingleView, SingleHeader, useDrillSingle } from '../epsLimits/SingleLimits';
 import { C172_LIMITS } from './c172Data';
+import { CARDS, NOTES, cardFields } from './c172Cards';
 
 // NIFE's limits table: the C172 limits exam as it is handed out, one box per blank. The table
 // is markup because it is a recreation of the sheet; the answers are data (c172Data.js). A
@@ -24,6 +26,8 @@ const GROUPS = (() => {
 
 function C172Limits({ isGameActive = false, onGameComplete }) {
   const drill = useLimitsDrill(C172_LIMITS, GROUPS, { isGameActive, onGameComplete });
+  // Single Mode: the sheet one box at a time (c172Cards.js).
+  const { single, inp, onKeyDown } = useDrillSingle(drill, CARDS, cardFields, isGameActive);
 
   // One blank.
   const box = (key, placeholder, style) => (
@@ -39,11 +43,12 @@ function C172Limits({ isGameActive = false, onGameComplete }) {
   const WIDE = { width: '100%' };
 
   return (
-    <div className="limits-eps-container" onKeyDown={drill.onKeyDown}>
-      <h1>Aircraft Limits</h1>
+    <div className="limits-eps-container" onKeyDown={onKeyDown}>
+      <SingleHeader title="Aircraft Limits" single={single} isGameActive={isGameActive} />
       <p className="page-subtitle">
         Do not include units, just numbers. For values with a range use the format "min-max" or "min to max"
       </p>
+      {single.on ? <SingleView single={single} notes={NOTES} inp={inp} /> : (
       <div className="limits-table-container">
         <table className="limits-table">
           <thead>
@@ -85,7 +90,8 @@ function C172Limits({ isGameActive = false, onGameComplete }) {
           </tbody>
         </table>
       </div>
-      <LimitsControls drill={drill} isGameActive={isGameActive} />
+      )}
+      <LimitsControls drill={drill} isGameActive={isGameActive} single={single} />
     </div>
   );
 }

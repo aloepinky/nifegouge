@@ -34,7 +34,7 @@ import EPsLimitsShell from './epsLimits/EPsLimitsShell';
 // them. A school with no NWC data passes nothing and simply has neither.
 
 const TABS = [
-  { id: 'eps', label: 'EPs' },
+  { id: 'eps', label: 'EPs/Cockpit' },
   { id: 'limits', label: 'Limits' },
 ];
 
@@ -90,13 +90,13 @@ const SETS = [
     label: 'EPs',
     eps: T44C_EPS,
     nwc: T44C_EP_NWC,
-    title: 'T-44C EMERGENCY PROCEDURES',
+    title: 'T-44C INTERACTIVE COCKPIT',
     footnote: '* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS',
     extra: { label: 'All Memory Procedures', eps: T44C_MEMORY_NORMALS },
   },
   {
     id: 'hollywood', label: 'Hollywood', eps: T44C_HOLLYWOOD, nwc: null, normal: true, read: true, sequential: true,
-    title: 'T-44C NORMAL PROCEDURES', footnote: '* PERFORMED FROM MEMORY · # ABBREVIATED CHECKLIST ITEM',
+    title: 'T-44C INTERACTIVE COCKPIT', footnote: '* PERFORMED FROM MEMORY · # ABBREVIATED CHECKLIST ITEM',
   },
   // The SSE cases (T44C/t44cCases.js), typed from memory like the EPs, with each
   // step's spoken call shown once the step is in (`calls`). Also opened from Engine Failure After

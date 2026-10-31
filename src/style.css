@@ -8250,6 +8250,86 @@ textarea.incorrect-answer {
   min-width: 100px;
 }
 
+/* Single Mode on a limits page (epsLimits/SingleLimits.js): one box of the sheet, drawn as a box
+   of the sheet, with the notes it points to under it and the count of limits below. */
+.epl-single {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.epl-single-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.epl-single-count {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--ink-strong);
+}
+
+.limits-eps-container .epl-single-nav button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.epl-single-card {
+  border: 2px solid var(--line-000000);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.epl-single-title {
+  padding: 16px 16px 0;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.epl-single-body {
+  padding: 18px 16px;
+  font-size: 18px;
+  line-height: 2;
+  text-align: center;
+}
+
+.epl-single-list {
+  margin: 0;
+  padding-left: 2em;
+  text-align: left;
+}
+
+.epl-single-note {
+  border-top: 1px solid var(--line-000000);
+  padding: 12px 16px;
+  font-size: 15px;
+  line-height: 2;
+}
+
+.epl-single-note-n {
+  font-weight: bold;
+}
+
+.epl-single-input {
+  border: none;
+  border-bottom: 1px solid var(--ink-666666);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: center;
+  font: inherit;
+  padding: 0 2px;
+}
+
+.epl-single-input--s { width: 3.5em; }
+.epl-single-input--m { width: 6em; }
+.epl-single-input--l { width: 9em; }
+.epl-single-input--full { width: 100%; text-align: left; }
+
 .epl-row {
   display: flex;
   gap: 20px;

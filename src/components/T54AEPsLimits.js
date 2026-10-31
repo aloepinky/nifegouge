@@ -25,7 +25,7 @@ import EPsLimitsShell from './epsLimits/EPsLimitsShell';
 // page does too: only the flows carry the asterisk. See T54A/t54aNormals.js.
 
 const TABS = [
-  { id: 'eps', label: 'EPs' },
+  { id: 'eps', label: 'EPs/Cockpit' },
   { id: 'limits', label: 'Limits' },
 ];
 
@@ -73,7 +73,7 @@ const SETS = [
     label: 'EPs',
     eps: T54A_EPS,
     nwc: T54A_EP_NWC,
-    title: 'T-54A EMERGENCY PROCEDURES',
+    title: 'T-54A INTERACTIVE COCKPIT',
     footnote: '* DENOTES CRITICAL ACTION MEMORY ITEMS · † REQUIRES CONCURRENCE OF BOTH PILOTS',
     extra: {
       label: 'Include Flows',
@@ -83,7 +83,7 @@ const SETS = [
   },
   {
     id: 'checklists', label: 'Checklists', eps: T54A_CHECKLISTS, nwc: null, normal: true, read: true, sequential: true,
-    title: 'T-54A CHECKLISTS', footnote: '# ABBREVIATED CHECKLIST ITEM · LS/RS LEFT/RIGHT SEAT · PF/PM PILOT FLYING/MONITORING',
+    title: 'T-54A INTERACTIVE COCKPIT', footnote: '# ABBREVIATED CHECKLIST ITEM · LS/RS LEFT/RIGHT SEAT · PF/PM PILOT FLYING/MONITORING',
   },
 ];
 

@@ -13,9 +13,9 @@ const CONTENT = {
   '/t54a/eps-limits': {
     stats: <EpStats platforms={PLATFORMS} byAircraft />,
     icon: 'eps',
-    blurb: 'The T-54A critical action memory items, and the operating limits sheet.',
+    blurb: 'An interactive T-54A cockpit for the EPs and normal checklists, and the operating limits sheet.',
     more: [
-      'The EPs tab tests you on each of the T-54A EPs. Critical action memory items are marked, as are the steps requiring the concurrence of both pilots.',
+      'The EPs/Cockpit tab is an interactive T-54A cockpit for the EPs, the memorized flows and the normal checklists. Critical action memory items are marked, as are the steps requiring the concurrence of both pilots.',
       'The Limits tab is the T-54A operating limits sheet to fill in from memory, with the answers a click away when you are stuck.',
     ],
   },

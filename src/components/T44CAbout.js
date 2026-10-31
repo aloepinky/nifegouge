@@ -14,9 +14,9 @@ const CONTENT = {
   '/t44c/eps-limits': {
     stats: <EpStats platforms={PLATFORMS} byAircraft />,
     icon: 'eps',
-    blurb: 'The T-44C critical action memory items, and the operating limits sheet.',
+    blurb: 'An interactive T-44C cockpit for the EPs and normal procedures, and the operating limits sheet.',
     more: [
-      'The EPs tests you on each of the T-44C EPs and NWCs. Critical action memory items are marked, as are the steps requiring the concurrence of both pilots.',
+      'The EPs/Cockpit tab is an interactive T-44C cockpit for the EPs and NWCs, the normal procedures done from memory, the Hollywood checklists and the SSE cases. Critical action memory items are marked, as are the steps requiring the concurrence of both pilots.',
       'The Limits tab is the T-44C operating limits sheet to fill in from memory, with the answers a click away when you are stuck.',
     ],
   },

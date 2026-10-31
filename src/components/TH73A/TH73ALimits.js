@@ -1,6 +1,9 @@
 import React from 'react';
 import useLimitsDrill from '../epsLimits/useLimitsDrill';
 import LimitsControls from '../epsLimits/LimitsControls';
+import { SingleView, SingleHeader, useDrillSingle } from '../epsLimits/SingleLimits';
+import { CARDS, NOTES, cardFields } from './th73aCards';
+import { GRID, COLUMNS } from './th73aGrid';
 import { TH73A_LIMITS, TH73A_LIMIT_GROUPS } from './th73aData';
 
 // The TH-73A operating limits as a sheet to fill in from memory. Unlike the other schools' sheets
@@ -19,45 +22,11 @@ import { TH73A_LIMITS, TH73A_LIMIT_GROUPS } from './th73aData';
 // Left out on purpose: the CG envelopes (charts), the hoist and cargo hook limits, the baggage
 // compartment, minimum crew and the IFR equipment list.
 
-const DASH = <span className="t44c-dash">---</span>;
-
-// A row of the grid: the label, then its eight cells in column order, the NATOPS's own headings
-// (§4.3 to §4.11): minimum, cautionary, continuous, take-off (5 minutes), maximum take-off
-// (5 minutes), maximum, transient, and the transient's time limit. A cell is a field key,
-// `[key, marker]` for a blank the sheet hangs a note on, or one of the sheet's own printed
-// cells; a note's number is also printed on a row label, as the T-54A sheet prints "(8)" on
-// Max Reverse. A marked cell may give its blank a width of its own (`[key, marker, size]`):
-// the oil temperature's time limit holds "5 MINUTES", which the usual narrow blank cuts off. Every note has its number somewhere on the grid, and only those notes are
-// printed. Every transient's time limit is asked, with its unit.
-const GRID = [
-  // §4.3
-  ['N1 % (2)', 'n1Min', ['n1Caut', '(1)'], 'n1Cont', 'n1Takeoff', 'n1Max', DASH, 'n1Trans', 'n1TransTime'],
-  ['N2 % (3)', 'n2Min', 'n2Caut', 'n2Cont', DASH, DASH, 'n2Max', 'n2Trans', 'n2TransTime'],
-  ['ITT °C', DASH, DASH, 'ittCont', 'ittTakeoff', 'ittMax', DASH, 'ittTrans', 'ittTransTime'],
-  ['ITT STARTING °C (4)', DASH, DASH, DASH, DASH, DASH, 'ittStartMax', 'ittStartTrans', 'ittStartTransTime'],
-  ['TORQUE %', DASH, DASH, 'trqCont', 'trqTakeoff', 'trqMax', DASH, 'trqTrans', 'trqTransTime'],
-  // §4.4
-  ['NR POWER-ON %', 'nrOnMin', 'nrOnCaut', 'nrOnCont', DASH, DASH, 'nrOnMax', 'nrOnTrans', 'nrOnTransTime'],
-  ['NR POWER-OFF % (5)', 'nrOffMin', DASH, 'nrOffCont', DASH, DASH, 'nrOffMax', 'nrOffTrans', 'nrOffTransTime'],
-  // §4.5
-  ['FUEL PRESS PSI', DASH, 'fuelPressCaut', 'fuelPressCont', DASH, DASH, 'fuelPressMax', DASH, DASH],
-  // §4.6
-  ['ENG OIL PRESS PSI', 'engOilPMin', ['engOilPCaut', '(6)'], 'engOilPCont', DASH, DASH, ['engOilPMax', '(7)'], DASH, DASH],
-  ['ENG OIL TEMP °C', DASH, DASH, 'engOilTCont', DASH, DASH, 'engOilTMax', 'engOilTTrans', ['engOilTTransTime', '(8)', 'wide']],
-  // §4.7
-  ['XMSN OIL PRESS PSI', 'xmsnOilPMin', 'xmsnOilPCaut', 'xmsnOilPCont', DASH, DASH, 'xmsnOilPMax', DASH, DASH],
-  ['XMSN OIL TEMP °C', DASH, DASH, 'xmsnOilTCont', DASH, DASH, 'xmsnOilTMax', DASH, DASH],
-  // §4.9, §4.10
-  ['GENERATOR A', DASH, DASH, 'genCont', DASH, DASH, 'genMax', 'genTrans', 'genTransTime'],
-  ['AUX GENERATOR A', DASH, DASH, 'auxGenCont', DASH, DASH, 'auxGenMax', 'auxGenTrans', 'auxGenTransTime'],
-  // §4.11
-  ['HYDRAULIC PSI', 'hydMin', 'hydCaut', 'hydCont', DASH, DASH, 'hydMax', DASH, DASH],
-];
-
-const COLUMNS = ['Minimum', 'Cautionary', 'Continuous', 'Take-off', 'Maximum take-off', 'Maximum', 'Transient', 'Transient time limit'];
 
 function TH73ALimits({ isGameActive = false, onGameComplete }) {
   const drill = useLimitsDrill(TH73A_LIMITS, TH73A_LIMIT_GROUPS, { isGameActive, onGameComplete });
+  // Single Mode: the sheet one box at a time (th73aCards.js).
+  const { single, inp, onKeyDown } = useDrillSingle(drill, CARDS, cardFields, isGameActive);
 
   // One blank. `label` is what a screen reader reads; `size` sets how wide it draws.
   const b = (key, label, size = 'md') => (
@@ -80,13 +49,14 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
   };
 
   return (
-    <div className="limits-eps-container t44c-page" onKeyDown={drill.onKeyDown}>
-      <h1>TH-73A Operating Limits</h1>
+    <div className="limits-eps-container t44c-page" onKeyDown={onKeyDown}>
+      <SingleHeader title="TH-73A Operating Limits" single={single} isGameActive={isGameActive} />
       <p className="page-subtitle">
         Do not include units, just numbers. For values with a range use the format "min-max" or "min to max".
         There is no TH-73A limits exam sheet. This is a custom selection from NATOPS Chapter 4.
       </p>
 
+      {single.on ? <SingleView single={single} notes={NOTES} inp={inp} /> : (
       <div className="t44c-sheet">
         <div className="t44c-gridwrap">
           <table className="t44c-grid">
@@ -252,8 +222,9 @@ function TH73ALimits({ isGameActive = false, onGameComplete }) {
           </section>
         </div>
       </div>
+      )}
 
-      <LimitsControls drill={drill} isGameActive={isGameActive} />
+      <LimitsControls drill={drill} isGameActive={isGameActive} single={single} />
     </div>
   );
 }

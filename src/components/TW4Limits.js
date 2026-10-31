@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { normalizeAnswer, gradeLimit } from '../utils/answerUtils';
 import arrowMove from './epsLimits/arrowKeys';
+import { CARDS, NOTES, cardFields } from './TW4LimitsCards';
+import useSingleMode from './epsLimits/useSingleMode';
+import { SingleView, SingleModeButton, singleInput } from './epsLimits/SingleLimits';
 
 // T-6B Limits Answer Keys. Module scope and exported so the About page can count them.
 export const T6B_LIMITS = {
@@ -132,6 +135,18 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
   useEffect(() => { isGameActiveRef.current = isGameActive; }, [isGameActive]);
   const lockedFieldRef = useRef(null);
 
+  // Single Mode: one box of the sheet at a time (TW4LimitsCards.js, epsLimits/useSingleMode.js).
+  // Next Answer and All Answers fill the card's blanks through this.
+  const fillBlanks = (fields) => {
+    const results = { ...checkResults };
+    const data = { ...limitsData };
+    fields.forEach(f => { data[f] = T6B_LIMITS[f]; results[f] = 'correct'; });
+    setLimitsData(data);
+    setCheckResults(results);
+    return results;
+  };
+  const single = useSingleMode(CARDS, { fieldsOf: cardFields, results: checkResults, fill: fillBlanks });
+
   // Helper function to shuffle array with constraints
   const shuffleIndices = (arr) => {
     // Define groups that should appear together
@@ -261,6 +276,15 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
 
     setLimitsData(prev => ({ ...prev, [field]: value }));
 
+    // In Single Mode a right answer turns green as it is typed; the cursor goes on to the card's
+    // next blank, and the last one brings up the next card.
+    if (single.owns(field) && isCorrectAnswer(value, field) === 'correct') {
+      const results = { ...checkResults, [field]: 'correct' };
+      setCheckResults(results);
+      single.after(results);
+      return;
+    }
+
     // In random mode, check if answer is correct and auto-advance
     if (isRandomMode && field === limitIndices[currentLimitIndex]) {
       const result = isCorrectAnswer(value, field);
@@ -281,9 +305,10 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     setCheckResults(prev => ({ ...prev, [field]: '' }));
   };
 
-  // Auto-start random mode when game begins
+  // Auto-start random mode when game begins. A game is played on the whole sheet.
   useEffect(() => {
     if (isGameActive) {
+      single.exit();
       startRandomMode();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -350,6 +375,12 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     }, 100);
   };
 
+  // The sheet's Random Mode stops when Single Mode starts; the cards have their own.
+  useEffect(() => {
+    if (single.on) stopRandomMode();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [single.on]);
+
   const checkAnswers = () => {
     const results = {};
 
@@ -359,6 +390,7 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     });
 
     setCheckResults(results);
+    if (single.on) single.after(results);
 
     if (isGameActive) {
       const allCorrect = Object.keys(limitsAnswers).every(key => results[key] === 'correct');
@@ -372,6 +404,8 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
   };
 
   const nextAnswer = () => {
+    if (single.on) return single.nextAnswer();
+
     // In random mode, fill the currently highlighted cell
     if (isRandomMode) {
       if (currentLimitIndex >= limitIndices.length) {
@@ -422,6 +456,8 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
   };
 
   const allAnswers = () => {
+    if (single.on) return single.allAnswers();
+
     // Build complete state updates in memory
     const newLimitsData = { ...limitsData };
     const newCheckResults = { ...checkResults };
@@ -448,6 +484,8 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     if (checkResults[field] === 'incorrect') return 'incorrect-answer';
     return '';
   };
+
+  const singleInp = singleInput((f) => limitsData[f] || '', handleLimitsChange, getInputClass);
 
   const limitTableStyle = {
     width: '100%',
@@ -491,14 +529,23 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
     if (e.key === 'Enter' && e.target.tagName === 'INPUT') checkAnswers();
   };
 
+  const randomOn = single.on ? single.random : isRandomMode;
+
   return (
     <>
       <div className="limits-eps-container" onKeyDown={onKeyDown}>
-        <h1 style={{fontSize: '16px', marginBottom: '5px'}}>T-6B OPERATING LIMITATIONS</h1>
-        
+        <div className="epl-header">
+          <span className="epl-mode-spacer" />
+          <h1 style={{fontSize: '16px', marginBottom: '5px'}}>T-6B OPERATING LIMITATIONS</h1>
+          <SingleModeButton single={single} isGameActive={isGameActive} />
+        </div>
+
         <p className="page-subtitle" style={{fontSize: '11px', marginBottom: '10px'}}>
           For values with a range use the format "min-max" or "min to max"
         </p>
+          {single.on ? (
+            <SingleView single={single} notes={NOTES} inp={singleInp} />
+          ) : (
           <div className="limits-page">
             {/* ENGINE OPERATING LIMITS TABLE */}
             <table style={limitTableStyle}>
@@ -970,6 +1017,7 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
               </div>
             </div>
           </div>
+          )}
         {isRandomMode && (
           <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '16px', fontWeight: 'bold' }}>
             Random Mode: Limit {currentLimitIndex + 1} of {limitIndices.length}
@@ -983,18 +1031,20 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
             <button onClick={resetAnswers}>Reset</button>
             <button
               onClick={() => {
-                if (isRandomMode) {
+                if (single.on) {
+                  single.toggleRandom();
+                } else if (isRandomMode) {
                   stopRandomMode();
                 } else {
                   startRandomMode();
                 }
               }}
               style={{
-                backgroundColor: isRandomMode ? '#4CAF50' : 'var(--surface-f0f0f0)',
-                color: isRandomMode ? 'var(--on-brand)' : 'var(--ink-000000)',
-                fontWeight: isRandomMode ? 'bold' : 'normal',
-                border: isRandomMode ? '2px solid #45a049' : '1px solid var(--line-cccccc)',
-                boxShadow: isRandomMode ? 'inset 0 2px 4px rgba(0,0,0,0.2)' : 'none'
+                backgroundColor: randomOn ? '#4CAF50' : 'var(--surface-f0f0f0)',
+                color: randomOn ? 'var(--on-brand)' : 'var(--ink-000000)',
+                fontWeight: randomOn ? 'bold' : 'normal',
+                border: randomOn ? '2px solid #45a049' : '1px solid var(--line-cccccc)',
+                boxShadow: randomOn ? 'inset 0 2px 4px rgba(0,0,0,0.2)' : 'none'
               }}
             >
               Random Mode

@@ -1,7 +1,10 @@
 import React from 'react';
 import useLimitsDrill from '../epsLimits/useLimitsDrill';
 import LimitsControls from '../epsLimits/LimitsControls';
+import { SingleView, SingleHeader, useDrillSingle } from '../epsLimits/SingleLimits';
 import { T44C_LIMITS, T44C_LIMIT_GROUPS } from './t44cData';
+import { CARDS, NOTES, cardFields } from './t44cCards';
+import { GRID, COLUMNS } from './t44cGrid';
 
 // Advanced's limits table: the T-44C operating limits sheet as it is handed out, one box per
 // blank. The markup is a recreation of the sheet; the answers are data (t44cData.js) and the
@@ -9,30 +12,13 @@ import { T44C_LIMITS, T44C_LIMIT_GROUPS } from './t44cData';
 // its own look (`.t44c-*`) rather than NIFE's `.limits-table` or Primary's inline styles.
 //
 // What the sheet prints itself is printed here: every "---", "Indication", "(Min)" and footnote
-// marker, and the prose of notes 6 through 9, which carry no blanks.
-
-const DASH = <span className="t44c-dash">---</span>;
-
-// A row of the engine grid: the label, then its eight cells in column order. A cell is either a
-// field key or one of the sheet's own printed cells.
-const GRID = [
-  ['MAX. ALLOWABLE', 'maxAllowTime', 'maxAllowTq2200', DASH, 'maxAllowItt', 'maxAllowN1', 'maxAllowNp', 'maxAllowOilP', 'maxAllowOilT'],
-  ['MAX. CONTINUOUS (8)', 'maxContTime', 'maxContTq2200', 'maxContTq1900', 'maxContItt', 'maxContN1', 'maxContNp', 'maxContOilP', 'maxContOilT'],
-  ['CRUISE CLIMB', 'cruiseClimbTime', 'cruiseClimbTq2200', 'cruiseClimbTq1900', 'cruiseClimbItt', 'cruiseClimbN1', 'cruiseClimbNp', 'cruiseClimbOilP', 'cruiseClimbOilT'],
-  ['CRUISE', 'cruiseTime', 'cruiseTq2200', 'cruiseTq1900', 'cruiseItt', 'cruiseN1', 'cruiseNp', 'cruiseOilP', 'cruiseOilT'],
-  ['HI-IDLE (1)', 'hiIdleTime', DASH, DASH, DASH, DASH, DASH, DASH, 'hiIdleOilT'],
-  // The sheet hangs footnote 10 on STARTING's Np cell; NATOPS Figure 4.3-1 puts it on LO-IDLE's,
-  // the row note 10 is about (prop rpm with the condition levers at low idle).
-  ['LO-IDLE (2)', 'loIdleTime', DASH, DASH, ['loIdleItt', '6'], DASH, <span key="np">{DASH} <sup>10</sup></span>, ['loIdleOilP', '', '(Min)'], 'loIdleOilT'],
-  ['STARTING', 'startingTime', DASH, DASH, ['startingItt', '4'], DASH, DASH, <span key="ind">Indication</span>, ['startingOilT', '', '(MIN)']],
-  ['ACCELERATION (7)', 'accelTime', 'accelTq', null, 'accelItt', 'accelN1', 'accelNp', DASH, 'accelOilT'],
-  ['MAX. REVERSE', 'maxRevTime', DASH, DASH, 'maxRevItt', 'maxRevN1', 'maxRevNp', 'maxRevOilP', 'maxRevOilT'],
-];
-
-const COLUMNS = ['Max time', 'Torque at 2,200 rpm', 'Torque at 1,900 rpm', 'Max observed ITT', 'N1 percent', 'Np rpm', 'Oil pressure', 'Oil temperature'];
+// marker, and the prose of notes 6 through 9, which carry no blanks. The engine grid's layout is
+// in t44cGrid.js, which Single Mode's cards read too.
 
 function T44CLimits({ isGameActive = false, onGameComplete }) {
   const drill = useLimitsDrill(T44C_LIMITS, T44C_LIMIT_GROUPS, { isGameActive, onGameComplete });
+  // Single Mode: the sheet one box at a time (t44cCards.js).
+  const { single, inp, onKeyDown } = useDrillSingle(drill, CARDS, cardFields, isGameActive);
 
   // One blank. `label` is what a screen reader reads; `size` sets how wide it draws.
   const b = (key, label, size = 'md') => (
@@ -62,12 +48,13 @@ function T44CLimits({ isGameActive = false, onGameComplete }) {
   };
 
   return (
-    <div className="limits-eps-container t44c-page" onKeyDown={drill.onKeyDown}>
-      <h1>T-44C Operating Limits</h1>
+    <div className="limits-eps-container t44c-page" onKeyDown={onKeyDown}>
+      <SingleHeader title="T-44C Operating Limits" single={single} isGameActive={isGameActive} />
       <p className="page-subtitle">
         Do not include units, just numbers. For values with a range use the format "min-max" or "min to max"
       </p>
 
+      {single.on ? <SingleView single={single} notes={NOTES} inp={inp} /> : (
       <div className="t44c-sheet">
         <div className="t44c-gridwrap">
           <table className="t44c-grid">
@@ -259,8 +246,9 @@ function T44CLimits({ isGameActive = false, onGameComplete }) {
           {b('fuelUsable', 'Usable fuel capacity')} U.S. GALLONS ARE USABLE.
         </p>
       </div>
+      )}
 
-      <LimitsControls drill={drill} isGameActive={isGameActive} />
+      <LimitsControls drill={drill} isGameActive={isGameActive} single={single} />
     </div>
   );
 }

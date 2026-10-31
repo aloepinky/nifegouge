@@ -1,6 +1,9 @@
 import React from 'react';
 import useLimitsDrill from '../epsLimits/useLimitsDrill';
 import LimitsControls from '../epsLimits/LimitsControls';
+import { SingleView, SingleHeader, useDrillSingle } from '../epsLimits/SingleLimits';
+import { CARDS, NOTES, cardFields } from './t54aCards';
+import { GRID, COLUMNS } from './t54aGrid';
 import { T54A_LIMITS, T54A_LIMIT_GROUPS } from './t54aData';
 
 // The T-54A operating limits sheet as it is handed out (15 NOV 25 revision, 06 APR 26 update),
@@ -16,27 +19,11 @@ import { T54A_LIMITS, T54A_LIMIT_GROUPS } from './t54aData';
 // but never prints, are added from NATOPS Figure 4.2-3, which carries them on its second page.
 // Labels are the blank sheet's: it asks for V_LR where the answer key prints V_LO.
 
-const DASH = <span className="t44c-dash">---</span>;
-
-// A row of the engine grid: the label, then its six cells in column order. A cell is a field
-// key, `[key, marker]` for a blank the sheet hangs a footnote on, or one of the sheet's own
-// printed cells.
-const GRID = [
-  ['Starting', DASH, ['startingItt', '(5)'], DASH, DASH, DASH, 'startingOilT'],
-  ['Low Idle', DASH, ['loIdleItt', '(6)'], 'loIdleN1', 'loIdleN2', 'loIdleOilP', 'loIdleOilT'],
-  ['High Idle', DASH, DASH, 'hiIdleN1', DASH, DASH, 'hiIdleOilT'],
-  ['Takeoff and Max Cont', ['takeoffTq', '(10)'], 'takeoffItt', 'takeoffN1', ['takeoffN2', '(9)'], 'takeoffOilP', 'takeoffOilT'],
-  ['Cruise Climb', ['cruiseClimbTq', '(7)(10)'], 'cruiseClimbItt', 'cruiseClimbN1', ['cruiseClimbN2', '(9)'], 'cruiseClimbOilP', 'cruiseClimbOilT'],
-  ['Max Cruise', ['maxCruiseTq', '(7)(10)'], 'maxCruiseItt', 'maxCruiseN1', ['maxCruiseN2', '(9)'], 'maxCruiseOilP', 'maxCruiseOilT'],
-  ['Normal Cruise', ['normCruiseTq', '(7)(10)'], 'normCruiseItt', 'normCruiseN1', ['normCruiseN2', '(9)'], 'normCruiseOilP', 'normCruiseOilT'],
-  ['Max Reverse (8)', DASH, 'maxRevItt', 'maxRevN1', 'maxRevN2', 'maxRevOilP', 'maxRevOilT'],
-  ['TRANSIENT', ['transientTq', '(5)'], 'transientItt', 'transientN1', ['transientN2', '(5)'], 'transientOilP', 'transientOilT'],
-];
-
-const COLUMNS = ['Torque', 'Max observed ITT', 'N1 percent', 'Prop rpm N2', 'Oil pressure', 'Oil temperature'];
 
 function T54ALimits({ isGameActive = false, onGameComplete }) {
   const drill = useLimitsDrill(T54A_LIMITS, T54A_LIMIT_GROUPS, { isGameActive, onGameComplete });
+  // Single Mode: the sheet one box at a time (t54aCards.js).
+  const { single, inp, onKeyDown } = useDrillSingle(drill, CARDS, cardFields, isGameActive);
 
   // One blank. `label` is what a screen reader reads; `size` sets how wide it draws.
   const b = (key, label, size = 'md') => (
@@ -59,12 +46,13 @@ function T54ALimits({ isGameActive = false, onGameComplete }) {
   };
 
   return (
-    <div className="limits-eps-container t44c-page" onKeyDown={drill.onKeyDown}>
-      <h1>T-54A Operating Limits</h1>
+    <div className="limits-eps-container t44c-page" onKeyDown={onKeyDown}>
+      <SingleHeader title="T-54A Operating Limits" single={single} isGameActive={isGameActive} />
       <p className="page-subtitle">
         Do not include units, just numbers. For values with a range use the format "min-max" or "min to max"
       </p>
 
+      {single.on ? <SingleView single={single} notes={NOTES} inp={inp} /> : (
       <div className="t44c-sheet">
         <div className="t44c-gridwrap">
           <table className="t44c-grid">
@@ -228,8 +216,9 @@ function T54ALimits({ isGameActive = false, onGameComplete }) {
           </section>
         </div>
       </div>
+      )}
 
-      <LimitsControls drill={drill} isGameActive={isGameActive} />
+      <LimitsControls drill={drill} isGameActive={isGameActive} single={single} />
     </div>
   );
 }

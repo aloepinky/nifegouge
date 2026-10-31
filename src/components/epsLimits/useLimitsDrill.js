@@ -13,6 +13,10 @@ import arrowMove from './arrowKeys';
 //
 // Random mode walks the open blanks one group at a time, each turning green and moving on the
 // moment it is right. A game runs Random mode and ends when the last blank is right.
+//
+// Single Mode (useSingleMode.js) runs on the same answers: `onChange` with `live` marks a blank
+// green the moment it is right and returns the marks as they then stand, and `fill` puts in the
+// answers to the blanks it is given.
 
 function focusHint() {
   setTimeout(() => {
@@ -94,17 +98,23 @@ export default function useLimitsDrill(answers, groups = [], { isGameActive = fa
   // lock below covers the moment it turns green; this covers the moment after, when the queue
   // has moved on but the focus has not yet, and a fast typist's next figures were landing in
   // the box they had just got right.
-  const onChange = (field, value) => {
-    if (locked.current === field) return;
-    if (queue && results[field] === 'correct') return;
+  const onChange = (field, value, live = false) => {
+    if (locked.current === field) return null;
+    if (queue && results[field] === 'correct') return null;
     setData((d) => ({ ...d, [field]: value }));
+    if (live && gradeLimit(value, answers[field]) === 'correct') {
+      const out = { ...results, [field]: 'correct' };
+      setResults(out);
+      return out;
+    }
     if (field === current && gradeLimit(value, answers[field]) === 'correct') {
       locked.current = field;
       setResults((r) => ({ ...r, [field]: 'correct' }));
       setTimeout(advance, 300);
-      return;
+      return null;
     }
     setResults((r) => ({ ...r, [field]: '' }));
+    return null;
   };
 
   const check = () => {
@@ -112,6 +122,15 @@ export default function useLimitsDrill(answers, groups = [], { isGameActive = fa
     for (const k of KEYS) out[k] = gradeLimit(data[k], answers[k]);
     setResults(out);
     if (KEYS.every((k) => out[k] === 'correct')) complete();
+    return out;
+  };
+
+  const fill = (fields) => {
+    const out = { ...results };
+    fields.forEach((k) => { out[k] = 'correct'; });
+    setData((d) => ({ ...d, ...Object.fromEntries(fields.map((k) => [k, answers[k]])) }));
+    setResults(out);
+    return out;
   };
 
   const next = () => {
@@ -151,7 +170,10 @@ export default function useLimitsDrill(answers, groups = [], { isGameActive = fa
 
   return {
     value: (field) => data[field] || '',
+    results,
     onChange,
+    fill,
+    stopRandom,
     inputClass,
     queue,
     at,
