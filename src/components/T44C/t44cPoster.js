@@ -174,11 +174,10 @@ export const T44C_POSTER = {
         { id: 'ann-fault-warning', box: [0.228, 0.036, 0.024, 0.037], label: 'FAULT WARNING light',
           action: 'FAULT WARNING' },
         // The ET line-select key, bottom left of each PFD's bezel beside "< ET". The starter steps
-        // start the elapsed time clock with it and the starter-off steps stop it. Only the copilot's:
-        // the pilot PFD is dark until the avionics master is on, after the starts (the user,
-        // 2026-11-01), so its key answers none of the clock steps.
+        // start the elapsed time clock with it and the starter-off steps stop it. The pilot PFD is
+        // dark until the avionics master is on, so the label says so; the key still counts.
         { id: 'et-pilot', box: [0.117, 0.580, 0.012, 0.018], label: 'Elapsed time key (not usable for start)',
-          action: 'Pilot Elapsed Time Key' },
+          action: 'Elapsed Time Clock', also: ['ET'] },
         { id: 'et-copilot', box: [0.731, 0.580, 0.012, 0.018], label: 'Elapsed time key (copilot PFD)',
           action: 'Elapsed Time Clock', also: ['ET'] },
         // CABIN ALT and differential, beside CABIN CLIMB. The cruise Pressurization/Oxygen check
