@@ -17,7 +17,7 @@ export const FTI = {
         text: "e. Select a reference point. Position the elevator aft of neutral. For crosswinds, position aileron as required into the prevailing winds. To compensate for torque effect when left crosswind is below approximately [[10 knots]], add right aileron at MAX power. Release brakes, dropping your heels to the deck (toes off the brakes)."
       },
       {
-        text: "f. Release the brakes and allow the plane to roll forward momentarily to ensure the nose wheel is centered. Smoothly advance the PCL to MAX in [[2-3 seconds]]. Anticipate the need for right rudder as the engine spools up. Maintain directional control."
+        text: "f. Release the brakes and allow the plane to roll forward momentarily to ensure the nose-wheel is centered. Smoothly advance the PCL to MAX in [[2-3 seconds]]. Anticipate the need for right rudder as the engine spools up. Maintain directional control."
       },
       {
         text: "g. At [[60 KIAS]], check torque is at or above minimum power calculated on the Before Takeoff Checklist and fuel flow less than [[800 lbs]]. If not, abort the takeoff. Verbalize over the ICS \"[[60 knots]], XXX% torque; good flow\" IAW local SOP or Course Rules."
@@ -36,7 +36,7 @@ export const FTI = {
     },
     rule: [
       {
-        text: "j. Check nose attitude at [[7-10°]] nose high and continue acceleration, trimming as necessary. Approaching [[180 KIAS]], set the [[180 knot]] climbing attitude and climb out in accordance with local SOP or Course Rules or departure procedures."
+        text: "j. Check nose attitude at [[7-10°]] nose high and continue acceleration, trimming as necessary. Approaching [[180 KIAS]], set the [[180 knot]] climbing attitude and climb-out in accordance with local SOP or Course Rules or departure procedures."
       }
     ]
   },
@@ -84,7 +84,7 @@ export const FTI = {
     },
     rule: [
       {
-        text: "c. Clear in the direction of turn, then roll into a [[30-60°]] AOB turn, retard PCL to idle (extend speed brake as required) and maintain altitude. AOB and back-stick pressure will vary with wind conditions. Trim for deceleration."
+        text: "c. Clear in the direction of turn, then roll into a [[30-60°]] AOB turn, retard PCL to idle (extend speed-brake as required) and maintain altitude. AOB and back-stick pressure will vary with wind conditions. Trim for deceleration."
       },
       {
         text: "d. Verbally confirm airspeed below [[150 KIAS]] on the ICS. Lower the landing gear after the IP has acknowledged the airspeed call. \"Below 150, Gear,\" is the challenge, and \"Clear\" is the response."
@@ -128,13 +128,13 @@ export const FTI = {
         text: "ii. Maintain proper Downwind, parallel to the runway at [[¾ - 1]] wingtip distance, pattern altitude, and [[120 KIAS]] (using power as required, approximately [[31%]] torque for NF, ~42%TO, ~52%LDG). TRIM."
       },
       {
-        text: "b. No sooner than the Abeam position, TRANSITION. Reduce power as required – approximately [[20%]] torque for all flap settings. TRIM left rudder for the power reduction and nose up for deceleration."
+        text: "b. No sooner than the Abeam position, TRANSITION. Reduce power as required – approximately [[15%]] for TO flaps, and [[18%]] for LDG flaps. TRIM left rudder for the power reduction and nose up for deceleration."
       },
       {
         text: "c. [[180°]] Position"
       },
       {
-        text: "i. Opposite the intended rollout position for no wind, simultaneously lower the nose approximately 2-3 degrees to the NF/TO/LDG approach attitude, maintain [[120/115/110 KIAS]] respectively.",
+        text: "i. Opposite the intended rollout position for no wind, simultaneously reduce power to approximately [[14%]] for NF and lower the nose approximately 2-3 degrees to the NF/TO/LDG approach attitude, maintain [[120/115/110 KIAS]] respectively.",
         sub: true
       },
       {
@@ -230,7 +230,7 @@ export const FTI = {
     ref: {
       work: "FAM FTI",
       loc: "§704 — Precautionary Emergency Landing (PEL)",
-      pages: "p. 7-13"
+      pages: "p. 7-14"
     },
     rule: [
       {
@@ -243,7 +243,7 @@ export const FTI = {
         text: "b. CLIMB or ACCELERATE. If a climb is needed, climb at [[140 KIAS]] using an appropriate power setting to achieve DEGA. If unable to climb due to clouds, icing, etc., increase energy by accelerating to a higher airspeed. Remain clear of clouds until in position to descend and/or decelerate to enter the ELP. If at high altitude, a descent will be required to enter the ELP."
       },
       {
-        text: "c. CLEAN. Ensure aircraft is in a clean configuration by raising landing gear, flaps, and speed brake (as appropriate for the emergency) as soon as possible. Retraction may not be possible if the engine fails. Remember that excess drag inhibits the climb and greatly reduces gliding range."
+        text: "c. CLEAN. Ensure aircraft is in a clean configuration by raising landing gear, flaps, and speed-brake (as appropriate for the emergency) as soon as possible. Retraction may not be possible if the engine fails. Remember that excess drag inhibits the climb and greatly reduces gliding range."
       },
       {
         text: "d. CHECK. Conduct a systematic check of the aircraft and instruments for additional signs of impending engine failure."
@@ -295,7 +295,7 @@ export const FTI = {
         text: "p. Continue the turn towards the base key position. Vary angle of bank as necessary to arrive at a proper base key ([[600-800 feet AGL]], [[120 KIAS]] minimum)."
       },
       {
-        text: "q. Check and report, \"Gear down, flaps TO (or LDG as required), speed brake retracted, Before Landing Checklist complete\" if checklist was not completed."
+        text: "q. Check and report, \"Gear down, flaps TO (or LDG as required), speed-brake retracted, Before Landing Checklist complete\" if checklist was not completed."
       },
       {
         text: "r. When landing is assured, flaps may be lowered to LDG."
@@ -323,7 +323,7 @@ export const FTI = {
         text: "b. CLIMB at [[125 KIAS]], utilizing power setting as appropriate for the simulated emergency."
       },
       {
-        text: "c. CLEAN up the aircraft (as required), gear, flaps, and Speed brake – UP. Report \"aircraft clean\" to your instructor."
+        text: "c. CLEAN up the aircraft (as required), gear, flaps, and Speed-brake – UP. Report \"aircraft clean\" to your instructor."
       },
       {
         text: "d. CHECK Aircraft and engine instruments. Conduct a systematic check of the aircraft for secondary indications."
@@ -335,7 +335,7 @@ export const FTI = {
         text: "f. Ignition Switch – As required."
       },
       {
-        text: "g. Plan – to intercept ELP at or before low key position."
+        text: "g. Plan – to intercept ELP at or before low key position. An effective technique to accomplish this is to set [[4-6%]] torque and lower the landing gear in the downwind with [[100']] of excess altitude for every [[1000']] of runway remaining prior to the low key position."
       },
       {
         text: "h. DETERMINE or verify the intended runway with the instructor."
@@ -372,7 +372,7 @@ export const FTI = {
     },
     rule: [
       {
-        text: "a. CONFIGURATION: Establish the aircraft in the clean configuration. Complete maneuver above [[6000 feet AGL]]."
+        text: "a. CONFIGURATION: Establish the aircraft in the clean configuration. Complete maneuver above [[6000 feet AGL]]. The maneuver may be started at any airspeed, however higher entry airspeeds will result in additional altitude gain. An entry speed of [[150 KIAS]] results in approximately [[1500-2000 feet]] of altitude gain."
       },
       {
         text: "b. CHECKLIST: Perform the Pre-Stalling, Spinning, and Aerobatic Checks."
@@ -390,7 +390,7 @@ export const FTI = {
         text: "f. Complete. Maneuver is complete when the aircraft is wings level with two positive rates of climb (as indicated on the Altimeter and VSI). Be mindful of retarding the PCL with a nose high attitude and lower airspeed."
       },
       {
-        text: "g. Turning Stall. Setup is the same as the straight-ahead stall, except [[20-30°]] angle of bank in either direction is added. Hold the angle of bank with rudder and aileron pressure until un-commanded nose drop and/or unplanned rolling motion. Recovery is the same as for the straight-ahead stall. A precision entry is not as important as proper recognition and recovery from the stall."
+        text: "g. Turning Stall. Setup is the same as the straight-ahead stall, except [[20-30°]] angle of bank in either direction is added. Hold the angle of bank with rudder and aileron pressure until uncommanded nose drop and/or unplanned rolling motion. Recovery is the same as for the straight-ahead stall. A precision entry is not as important as proper recognition and recovery from the stall."
       }
     ]
   },
@@ -477,13 +477,13 @@ export const FTI = {
         text: "c. CLEAR AREA: Clear working area with visual scan, TCAS, and clearing turns as required."
       },
       {
-        text: "d. Roll wings level. If at or below [[150 KIAS]], retard PCL to [[4-6%]] torque and begin decelerating towards best glide speed, [[125 KIAS]]. If above [[150 KIAS]], retard PCL to [[4-6%]] torque and zoom glide to capture best glide speed, [[125 KIAS]]."
+        text: "d. Roll wings level. If at or below [[150 KIAS]], retard PCL to [[4-6%]] torque and begin decelerating towards best glide-speed, [[125 KIAS]]. If above [[150 KIAS]], retard PCL to [[4-6%]] torque and zoom glide to capture best glide-speed, [[125 KIAS]]."
       },
       {
         text: "e. As airspeed approaches [[125 KIAS]], lower nose to the [[125 KIAS]] glide attitude (horizon bisecting windscreen). Crosscheck and Verbalize VSI for [[1350-1500 feet]] per minute sink rate. Re-trim and stabilize."
       },
       {
-        text: "f. Simulate high key and lower the landing gear; Re-trim for [[120 KIAS]] glide speed and commence a [[15-20°]] AOB turn to low key. Complete the Before Landing Checklist."
+        text: "f. Simulate high key and lower the landing gear; Re-trim for [[120 KIAS]] glide-speed and commence a [[15-20°]] AOB turn to low key. Complete the Before Landing Checklist."
       },
       {
         text: "g. Raise the nose to [[5-10°]] nose high attitude and allow airspeed to decay until the first indication of stall (airframe buffet or stick shaker)."
@@ -515,7 +515,7 @@ export const FTI = {
         text: "c. CLEAR AREA: Clear working area with visual scan, TCAS, and clearing turns as required."
       },
       {
-        text: "d. Simulate the transition near the Abeam position IAW Contact FTI landing pattern procedures. Power should be approximately [[20%]] torque, airspeed [[120/115/110 KIAS]] based on flap setting, trimmed in a descending 30o AOB turn to simulate the approach turn to final."
+        text: "d. Simulate the transition near the Abeam position IAW Familiarization FTI landing pattern procedures. Power should be set to [[14/15/18%]] torque commensurate with flap setting, trimmed in a descending 30o AOB turn to simulate the approach turn to final."
       },
       {
         text: "e. Once stabilized on airspeed [[120/115/110 KIAS]] in the simulated approach turn, raise the nose to [[5-10°]] nose high attitude, and retard PCL to idle. Adjust ailerons to maintain AOB between [[20-45°]], and increase back stick pressure to hold the pitch attitude."
@@ -558,7 +558,7 @@ export const FTI = {
     title: "Contact Unusual Attitudes",
     ref: {
       work: "FAM FTI",
-      loc: "§906 — Contact Unusual Attitudes",
+      loc: "§906 — Familiarization Unusual Attitudes",
       pages: "p. 9-6"
     },
     rule: [
@@ -586,7 +586,7 @@ export const FTI = {
         heading: true
       },
       {
-        text: "a. Roll the aircraft to the nearest horizon while simultaneously Retarding PCL to IDLE. Use the speed brake as required."
+        text: "a. Roll the aircraft to the nearest horizon while simultaneously Retarding PCL to IDLE. Use the speed-brake as required."
       },
       {
         text: "b. Do not exceed maximum allowable airspeed ([[316 KIAS]]). Airspeed may continue to increase as the nose is raised, and maximum airspeed can occur just before level flight is attained. G-loading increases during recovery. Accomplish a proper AGSM."
@@ -623,7 +623,7 @@ export const FTI = {
         text: "b. Begin wings level at [[200-220 KIAS]]. Advance PCL to MAX, smoothly roll to [[70-80 degrees]] AOB, allowing the nose to drop slightly below the horizon (no more than [[10 degrees]]), pause momentarily to stop roll and smoothly pull"
       },
       {
-        text: "c. The G-onset rate should be slow and smooth, allowing sufficient time to evaluate the effectiveness of the AGSM and determine G-tolerance. Increase G's to approximately [[4 G's]] for approximately [[4-5 breathing cycles]] in order to allow full cardiovascular response."
+        text: "c. The G-onset rate should be slow and smooth, allowing sufficient time to evaluate the effectiveness of the AGSM and determine G-tolerance. Increase G to approximately [[4G]] for approximately [[4-5 breathing cycles]] in order to allow full cardiovascular response."
       }
     ]
   }
@@ -659,7 +659,8 @@ export const FTI_NUMBERS = {
   approach: [
     ['Downwind speed', '120 KIAS'],
     ['Downwind torque, NF/TO/LDG', '31/42/52%', DOWNWIND_TORQUE],
-    ['Transition torque, all flap settings', '20%'],
+    ['Transition torque, TO/LDG', '15/18%'],
+    ['180 torque, NF', '~14%'],
     ['180 speed, NF/TO/LDG', '120/115/110 KIAS'],
     ['Approach turn AOB', '25-30°'],
     ['90 alt', "450' AGL"],
@@ -697,7 +698,7 @@ export const FTI_NUMBERS = {
     ['Begin at', '200-220 KIAS'],
     ['AOB', '70-80°'],
     ['Nose low, no more than', '10°'],
-    ['G load', "4 G's"],
+    ['G load', '4G'],
     ['Hold for', '4-5 breathing cycles'],
   ],
   powerOnStall: [
@@ -731,7 +732,7 @@ export const FTI_NUMBERS = {
     // A reminder, shown as it is and not asked, before the downwind configuration.
     ['Before Landing Checklist', null],
     ['Downwind speed', '120 KIAS'],
-    ['Transition torque', '20%'],
+    ['Transition torque, NF/TO/LDG', '14/15/18%'],
     ['Approach turn speed, NF/TO/LDG', '120/115/110 KIAS'],
     ['Nose high', '5-10°'],
     ['AOB', '20-45°'],

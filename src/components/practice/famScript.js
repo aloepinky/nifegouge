@@ -170,7 +170,7 @@ export const CALLS = {
 export const VOICE_REPORT = {
   prompt: 'Emergency voice report format',
   answer: 'Identification, Situation, Position, Intention',
-  ref: fti('§707 — Emergency Voice Reports', 'p. 7-21'),
+  ref: fti('§707 — Emergency Voice Reports', 'p. 7-22'),
 };
 
 // The flight's order. `phase` is what the top of the page says you are doing. The working area

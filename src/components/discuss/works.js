@@ -13,7 +13,7 @@
 export const WORKS = [
   { work: 'NATOPS', date: '01AUG23' },
   { work: 'TO 1T-6B-1CL-1', date: '01AUG23' },
-  { work: 'FAM FTI', date: '22OCT21' },
+  { work: 'FAM FTI', date: '09JUL26' },
   { work: 'I FTI', date: '19AUG26' },
   { work: 'VNAV FTI', date: '29JUL26' },
   { work: 'F FTI', date: '08JUN26' },

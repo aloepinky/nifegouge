@@ -43,7 +43,7 @@ import { EP_ANSWERS, EP_LENGTHS, EP_TITLES } from '../EPDivsData';
 const clean = (s) => String(s).replace(/​/g, '').replace(/\s+/g, ' ').trim();
 
 // "PEL - Execute" is said with the whole PEL, in the FTI's memory aid for the NATOPS PEL
-// checklist (FAM FTI §704, p. 7-13).
+// checklist (FAM FTI §704, p. 7-14).
 const PEL_WORDS = 'Turn, climb/accelerate, clean, check, BIP, determine, deliver, reduce, lower, report';
 const withPel = (step) => (/^PEL - EXECUTE$/i.test(step.trim()) ? `${step}\n${PEL_WORDS}` : step);
 
