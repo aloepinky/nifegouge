@@ -81,7 +81,7 @@ export const T54A_POSTER = {
         // "Above 1,500 feet AGL" is read off the altitude tape or the
         // radio altitude, the green readout under the attitude indicator. The tape and the VSI
         // beside it also answer the climb and descent the control wheel flies.
-        { box: [0.215, 0.393, 0.019, 0.127], label: 'Altitude tape',
+        { id: 'altitude-tape', box: [0.215, 0.393, 0.019, 0.127], label: 'Altitude tape',
           action: 'Above 1,500 feet AGL or established at VFR pattern Altitude',
           actions: ['Above 1,500 feet AGL or established at VFR pattern Altitude', 'Descend',
             'Continue climb until all warnings cease and safe terrain clearance assured.'],
@@ -93,7 +93,7 @@ export const T54A_POSTER = {
           action: 'Descend',
           actions: ['Descend', 'Continue climb until all warnings cease and safe terrain clearance assured.'],
           values: { Descend: ['As required'] } },
-        { box: [0.168, 0.534, 0.014, 0.012], label: 'Radio altitude',
+        { id: 'radio-altitude', box: [0.168, 0.534, 0.014, 0.012], label: 'Radio altitude',
           action: 'Above 1,500 feet AGL or established at VFR pattern Altitude',
           values: ['Go to Emergency Shutdown Checklist'] },
         // One step, one control, drawn at each end of the glareshield. Same `action`, different `id`.

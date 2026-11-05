@@ -51,6 +51,14 @@ const CONTENT = {
       "The Course Rules page integrates an interactive course rule map with official text to help you build visual intuition while studying. You can build hypothetical flight paths and test yourself on associated course rules as you progress, quiz yourself on specific areas, or freely explore the Corpus Christi area's course rules.",
     ],
   },
+  '/primary/practice': {
+    icon: 'flight',
+    blurb: 'Fly a whole FAM flight step by step: course rules, comms, checklists and maneuvers.',
+    more: [
+      'The Practice Flight page chair flies an entire TW4 fam flight. Emphasis is placed on course rules, proper comms, checklist timing and maneuver flow.',
+      'It is new and needs testing by the community. If something is wrong, use Copy flight path and paste it into the feedback form at the bottom of the page',
+    ],
+  },
   '/primary/systems': {
     icon: 'systems',
     blurb: 'Six live T-6B schematics: hydraulics, prop, oil, electrical, OBOGS, fuel.',

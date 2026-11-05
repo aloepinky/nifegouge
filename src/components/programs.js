@@ -84,7 +84,9 @@ export const PROGRAM_TABS = {
     { to: '/primary/discuss', label: 'Discussion Items' },
     { to: '/primary/briefs', label: 'Briefs/TOLD' },
     { to: '/primary/courserules', label: 'TW4 Course Rules' },
-    { to: '/primary/practice', label: 'Practice Flight', unlisted: true },
+    // Listed since 2026-11-04. Its Formation preview (/primary/practice/forms) has no tab and
+    // no link from the page: it stays reachable by address only.
+    { to: '/primary/practice', label: 'TW4 Practice Flight' },
     { to: '/primary/systems', label: 'Systems' },
     { to: '/primary/jetlog', label: 'Jet Log' },
   ],

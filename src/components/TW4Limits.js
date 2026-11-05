@@ -136,7 +136,7 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
   const lockedFieldRef = useRef(null);
 
   // Single Mode: one box of the sheet at a time (TW4LimitsCards.js, epsLimits/useSingleMode.js).
-  // Next Answer and All Answers fill the card's blanks through this.
+  // Reveal Answers fills the card's blanks through this.
   const fillBlanks = (fields) => {
     const results = { ...checkResults };
     const data = { ...limitsData };
@@ -404,7 +404,6 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
   };
 
   const nextAnswer = () => {
-    if (single.on) return single.nextAnswer();
 
     // In random mode, fill the currently highlighted cell
     if (isRandomMode) {
@@ -456,7 +455,6 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
   };
 
   const allAnswers = () => {
-    if (single.on) return single.allAnswers();
 
     // Build complete state updates in memory
     const newLimitsData = { ...limitsData };
@@ -1025,8 +1023,12 @@ function TW4Limits({ isGameActive = false, onGameComplete }) {
         )}
         {!isGameActive && (
           <div className="button-row" style={{ justifyContent: 'center', marginTop: '20px' }}>
-            <button onClick={nextAnswer}>Next Answer</button>
-            <button onClick={allAnswers}>All Answers</button>
+            {single.on ? <button onClick={single.reveal}>Reveal Answers</button> : (
+              <>
+                <button onClick={nextAnswer}>Next Answer</button>
+                <button onClick={allAnswers}>All Answers</button>
+              </>
+            )}
             <button onClick={checkAnswers}>Check Answers</button>
             <button onClick={resetAnswers}>Reset</button>
             <button

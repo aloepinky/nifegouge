@@ -103,10 +103,11 @@ export default function useSingleMode(cards, { fieldsOf = (c) => c.fields, resul
     setAt(order[at]);
   };
 
-  // Next Answer fills the card's first open blank, All Answers all of them.
-  const fillCard = (all) => {
+  // Reveal Answers fills the card's open blanks and stays on the card: Next moves on.
+  const reveal = () => {
+    clearTimeout(timer.current);
     const open = fields.filter((f) => results[f] !== 'correct');
-    after(open.length ? fill(all ? open : open.slice(0, 1)) : results);
+    if (open.length) fill(open);
   };
 
   return {
@@ -122,8 +123,7 @@ export default function useSingleMode(cards, { fieldsOf = (c) => c.fields, resul
     toggleRandom,
     prev: () => goTo(at - 1),
     next: () => goTo(at + 1),
-    nextAnswer: () => fillCard(false),
-    allAnswers: () => fillCard(true),
+    reveal,
     // The count under the card: every blank Single Mode asks, and how many are right.
     total: asked.length,
     correct: asked.filter((f) => results[f] === 'correct').length,
