@@ -10,7 +10,7 @@
     "tableItems": 24,
     "uncitedItems": 8,
     "uncitedBlocks": 18,
-    "citedBlocks": 5303,
+    "citedBlocks": 5424,
     "events": 92,
     "hrefRows": 21,
     "unwrittenRows": 5
@@ -351,6 +351,7 @@
       "blind-procedures",
       "cruise-maneuvering",
       "fan-break",
+      "flight-split",
       "formation-arrival-and-departure-procedures",
       "formation-communications",
       "formation-emergency-procedures",
@@ -499,6 +500,11 @@
       "lost-communications",
       "notams"
     ],
+    "NATOPS Instrument Flight Manual": [
+      "airfield-and-runway-lighting",
+      "rate-of-descent-calculation",
+      "takeoff-and-approach-minimums"
+    ],
     "VNAV FTI": [
       "airspace-classification",
       "cloud-clearances",
@@ -646,6 +652,18 @@
       "ifr-flight-planning",
       "seat-height-and-rudder-pedal-adjustment"
     ],
+    "CNATRA TA Manual": [
+      "brief-and-debrief",
+      "dor-tto-policy",
+      "grading-and-standards",
+      "headwork",
+      "scheduling"
+    ],
+    "TW-4 R&I T": [
+      "brief-and-debrief",
+      "cruise-maneuvering",
+      "local-area-flight-procedures-sop"
+    ],
     "VT-6 NATOPS Briefing Guide": [
       "brief-and-debrief"
     ],
@@ -670,6 +688,9 @@
     "14 C.F.R.": [
       "cloud-clearances"
     ],
+    "CNAF 1542.7": [
+      "crm"
+    ],
     "FLIP General Planning": [
       "dd-1801"
     ],
@@ -677,6 +698,9 @@
       "dd-1801",
       "jet-log",
       "missed-approach"
+    ],
+    "Aircrew Systems NATOPS": [
+      "flight-gear-check"
     ],
     "Sim Building Poster": [
       "flight-gear-check"
@@ -702,9 +726,31 @@
       "section-takeoff",
       "visual-signals"
     ],
+    "VT-28 R&I R": [
+      "formation-arrival-and-departure-procedures",
+      "formation-maneuvers",
+      "fuel-planning",
+      "landing-gear-inspection"
+    ],
+    "Course Rules Brief": [
+      "home-field-arrival"
+    ],
     "KNGP IFG": [
       "ifr-pickup",
       "lost-communications"
+    ],
+    "Closed Tower Operating Agreement": [
+      "ifr-to-vfr-transition"
+    ],
+    "VT-28 R&I S": [
+      "precautionary-emergency-landing",
+      "radial-rendezvous",
+      "steady-state-spin-recovery",
+      "takeoff-and-approach-minimums"
+    ],
+    "VT-28 R&I V": [
+      "terminate",
+      "three-cs"
     ]
   },
   "items": [
@@ -1580,7 +1626,7 @@
           "n": 6,
           "work": "FAM FTI",
           "loc": "§914 — Combination Maneuver",
-          "pages": "p. 9-24"
+          "pages": "p. 9-25"
         },
         {
           "n": 7,
@@ -1902,8 +1948,8 @@
         {
           "n": 2,
           "work": "F FTI",
-          "loc": "§609 — Mid-Air/Airborne Damaged Aircraft/Birdstrike",
-          "pages": "p. 6-8"
+          "loc": "§609 — Mid-Air/Airborne Damaged Aircraft/Bird-Strike",
+          "pages": "p. 6-9"
         },
         {
           "n": 3,
@@ -2518,7 +2564,7 @@
           "id": "taxiway",
           "title": "Taxiway lighting",
           "refs": [
-            7
+            9
           ],
           "paras": 0,
           "items": 4,
@@ -2531,7 +2577,7 @@
           "id": "glide-slope",
           "title": "Visual glide slope indicators",
           "refs": [
-            8
+            4
           ],
           "paras": 2,
           "items": 0,
@@ -2543,9 +2589,7 @@
         {
           "id": "pilot-controlled",
           "title": "Pilot-controlled lighting",
-          "refs": [
-            1
-          ],
+          "refs": null,
           "paras": 4,
           "items": 0,
           "figures": [],
@@ -2600,7 +2644,8 @@
       "works": [
         "AIM",
         "FAM FTI",
-        "FIH"
+        "FIH",
+        "NATOPS Instrument Flight Manual"
       ],
       "references": [
         {
@@ -2624,32 +2669,38 @@
         {
           "n": 4,
           "work": "AIM",
-          "loc": "§2-1-4 — Runway Edge Light Systems",
-          "pages": "p. 2-1-6"
+          "loc": "§2-1-2 — Visual Glideslope Indicators",
+          "pages": "p. 2-1-1"
         },
         {
           "n": 5,
-          "work": "AIM",
-          "loc": "§2-1-5 — In-runway Lighting",
-          "pages": "p. 2-1-6"
+          "work": "NATOPS Instrument Flight Manual",
+          "loc": "§20.25 — Pilot Control of Airport Lighting",
+          "pages": "p. 20-55"
         },
         {
           "n": 6,
-          "work": "AIM",
-          "loc": "§2-1-3 — Runway End Identifier Lights (REIL)",
-          "pages": "p. 2-1-6"
+          "work": "NATOPS Instrument Flight Manual",
+          "loc": "§20.22 — Runway Edge Light Systems",
+          "pages": "p. 20-54"
         },
         {
           "n": 7,
-          "work": "AIM",
-          "loc": "§2-1-10 — Taxiway Lights",
-          "pages": "p. 2-1-13"
+          "work": "NATOPS Instrument Flight Manual",
+          "loc": "§20.23 — In-Runway Lighting",
+          "pages": "p. 20-54"
         },
         {
           "n": 8,
-          "work": "AIM",
-          "loc": "§2-1-2 — Visual Glideslope Indicators",
-          "pages": "p. 2-1-1"
+          "work": "NATOPS Instrument Flight Manual",
+          "loc": "§20.21 — Runway End Identifier Lights (REIL)",
+          "pages": "p. 20-54"
+        },
+        {
+          "n": 9,
+          "work": "NATOPS Instrument Flight Manual",
+          "loc": "§20.27 — Taxiway Lights",
+          "pages": "p. 20-57"
         }
       ],
       "coverage": {
@@ -4252,7 +4303,7 @@
           "n": 1,
           "work": "F FTI",
           "loc": "§605 — Blind Procedures",
-          "pages": "p. 6-4"
+          "pages": "p. 6-5"
         },
         {
           "n": 2,
@@ -4276,7 +4327,7 @@
         "wingman-flight-leader-responsibilities"
       ],
       "sourcingLead": null,
-      "lede": "The Formation Lead will keep the flight within the proper operating area and clear of clouds and other aircraft. As Lead, it is important to take the sun into consideration while maneuvering the flight. During early morning flights and late afternoon flights, particularly in the winter months, the sun is lower in the sky and will be more of a factor.",
+      "lede": "Lead will keep the flight within the proper operating area and clear of clouds and other aircraft. As Lead, it is important to take the sun into consideration while maneuvering the flight. During early morning flights and late afternoon flights, particularly in the winter months, the sun is lower in the sky and will be more of a factor.",
       "terms": [
         "VT-6 Formation Supplement",
         "Area and sun management",
@@ -4662,7 +4713,7 @@
           "n": 1,
           "work": "FAM FTI",
           "loc": "§909 — Barrel Roll",
-          "pages": "p. 9-15"
+          "pages": "p. 9-16"
         },
         {
           "n": 2,
@@ -5573,10 +5624,10 @@
           "refs": [
             1
           ],
-          "paras": 3,
+          "paras": 4,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/blind-procedures/mu7ddryw-f-fti-fig-6-1.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/blind-procedures/mvmmaoq8-f-fti-r3-fig-6-1.webp"
           ],
           "tables": [],
           "main": null,
@@ -5603,7 +5654,7 @@
           "id": "vt-6-formation-supplement",
           "title": "VT-6 Formation Supplement",
           "refs": null,
-          "paras": 8,
+          "paras": 7,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -5623,6 +5674,10 @@
         {
           "label": "Rendezvous airspeed",
           "value": "200 KIAS"
+        },
+        {
+          "label": "Join from",
+          "value": "45° bearing line, 1,000 to 2,000 feet"
         }
       ],
       "works": [
@@ -5634,7 +5689,7 @@
           "n": 1,
           "work": "F FTI",
           "loc": "§605 — Blind Procedures",
-          "pages": "p. 6-4"
+          "pages": "p. 6-5"
         },
         {
           "n": 2,
@@ -5650,7 +5705,7 @@
         }
       ],
       "coverage": {
-        "cited": 20,
+        "cited": 21,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -5659,7 +5714,7 @@
         "knock-it-off"
       ],
       "sourcingLead": null,
-      "lede": "Blind is the term used to communicate that visual contact is lost with a member of the formation while maneuvering in VMC. In the event Wing loses sight of Lead in VMC, Wing will immediately call \"(TAC call sign), blind, (altitude)\". The visual aircraft has de-confliction responsibility.",
+      "lede": "In the event Wing loses visual contact of Lead in VMC, Wing will immediately call \"(TAC call sign), blind, (state altitude).\" The visual aircraft has de-confliction responsibility.",
       "terms": [
         "VT-6 Formation Supplement",
         "Single aircraft blind",
@@ -5871,10 +5926,8 @@
         {
           "id": "what-the-brief-covers",
           "title": "Briefing content",
-          "refs": [
-            1
-          ],
-          "paras": 0,
+          "refs": null,
+          "paras": 1,
           "items": 4,
           "figures": [],
           "tables": [],
@@ -5897,10 +5950,21 @@
         {
           "id": "the-debrief",
           "title": "Debrief",
+          "refs": null,
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "tw-4-sop",
+          "title": "TW-4 SOP",
           "refs": [
-            2
+            31
           ],
-          "paras": 3,
+          "paras": 1,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -6013,8 +6077,10 @@
       ],
       "numbers": [],
       "works": [
+        "CNATRA TA Manual",
         "Delta JPPT",
         "NATOPS",
+        "TW-4 R&I T",
         "TW-5 SOP",
         "VT-2 DCON FAM Supplement",
         "VT-2 SOP",
@@ -6193,10 +6259,28 @@
           "work": "VT-6 Standards",
           "loc": "Pre-Flight Brief",
           "pages": "p. 6"
+        },
+        {
+          "n": 29,
+          "work": "CNATRA TA Manual",
+          "loc": "§508 — Brief",
+          "pages": "p. 5-6"
+        },
+        {
+          "n": 30,
+          "work": "CNATRA TA Manual",
+          "loc": "§509 — Debrief",
+          "pages": "p. 5-6"
+        },
+        {
+          "n": 31,
+          "work": "TW-4 R&I T",
+          "loc": "§1 — Systems Briefs",
+          "pages": "p. 3"
         }
       ],
       "coverage": {
-        "cited": 46,
+        "cited": 49,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -6218,6 +6302,7 @@
         "Preparation",
         "VT-27 SOP",
         "VT-28 SOP",
+        "TW-4 SOP",
         "TW-5 SOP",
         "VT-2 SOP",
         "VT-3 SOP",
@@ -7348,7 +7433,7 @@
           "n": 1,
           "work": "FAM FTI",
           "loc": "§914 — Combination Maneuver",
-          "pages": "p. 9-24"
+          "pages": "p. 9-25"
         },
         {
           "n": 2,
@@ -7719,7 +7804,7 @@
         {
           "n": 1,
           "work": "FAM FTI",
-          "loc": "§906 — Contact Unusual Attitudes",
+          "loc": "§906 — Familiarization Unusual Attitudes",
           "pages": "p. 9-6"
         },
         {
@@ -7995,7 +8080,7 @@
           "id": "tem",
           "title": "Threat and error management",
           "refs": null,
-          "paras": 3,
+          "paras": 4,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -8018,6 +8103,7 @@
         }
       ],
       "works": [
+        "CNAF 1542.7",
         "CNAF 3710",
         "FAM FTI",
         "NATOPS"
@@ -8040,10 +8126,16 @@
           "work": "NATOPS",
           "loc": "Ch. 8-2 — Threat and Error Management",
           "pages": "p. 8-2-1"
+        },
+        {
+          "n": 4,
+          "work": "CNAF 1542.7",
+          "loc": "Encl. (2) — Definitions",
+          "pages": "Encl. (2), p. 1"
         }
       ],
       "coverage": {
-        "cited": 19,
+        "cited": 20,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -8701,7 +8793,7 @@
           "refs": [
             1
           ],
-          "paras": 4,
+          "paras": 5,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -8716,8 +8808,21 @@
           "refs": [
             1
           ],
-          "paras": 0,
+          "paras": 1,
           "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "tw-4-sop",
+          "title": "TW-4 SOP",
+          "refs": [
+            5
+          ],
+          "paras": 1,
+          "items": 0,
           "figures": [],
           "tables": [],
           "main": null,
@@ -8756,7 +8861,7 @@
             4
           ],
           "paras": 6,
-          "items": 14,
+          "items": 12,
           "figures": [],
           "tables": [
             "tbl-v6-cruise-stages"
@@ -8792,16 +8897,13 @@
           "value": "1G"
         },
         {
-          "label": "Power above 10K",
+          "label": "Power",
           "value": "80% torque"
-        },
-        {
-          "label": "Power below 10K",
-          "value": "70% torque"
         }
       ],
       "works": [
         "F FTI",
+        "TW-4 R&I T",
         "VT-27 SOP",
         "VT-28 SOP",
         "VT-6 Formation Supplement"
@@ -8811,7 +8913,7 @@
           "n": 1,
           "work": "F FTI",
           "loc": "§407 — Cruise Maneuvering",
-          "pages": "p. 4-15"
+          "pages": "p. 4-23"
         },
         {
           "n": 2,
@@ -8830,6 +8932,12 @@
           "work": "VT-6 Formation Supplement",
           "loc": "§V — Cruise Maneuvering and Tail Chase",
           "pages": "p. 21"
+        },
+        {
+          "n": 5,
+          "work": "TW-4 R&I T",
+          "loc": "§1 — Formation operations in Central",
+          "pages": "p. 2"
         }
       ],
       "coverage": {
@@ -8843,7 +8951,7 @@
         "tail-chase"
       ],
       "sourcingLead": null,
-      "lede": "Cruise maneuvering will build on the two dimensional fundamentals learned while adding the challenge of maneuvering in the vertical plane as well. During VMC parade turns into and away, Wing was limited to one side or the other from Lead while conducting level turns. Cruise maneuvering will use a fixed power setting, but Wing will now have the ability to change sides as required, using radius of turn principles to maintain the 60° cruise bearing line.",
+      "lede": "Cruise maneuvering will build on the two-dimensional pursuit curve fundamentals while adding the challenge of maneuvering in the vertical plane. During parade turns, Wing was not permitted to use cross-unders to change pursuit geometry. In contrast, cruise maneuvering will use a fixed power setting, but will enable Wing to maintain the 60° cruise bearing line using radius of turn principles, changing sides as required to achieve lead, lag, or pure pursuit.",
       "terms": [
         "Cruise position/maneuvering",
         "VT-6 Formation Supplement",
@@ -8853,7 +8961,8 @@
         "Common errors",
         "Technique",
         "VT-27 SOP",
-        "VT-28 SOP"
+        "VT-28 SOP",
+        "TW-4 SOP"
       ]
     },
     {
@@ -9964,7 +10073,7 @@
           "id": "training-time-out",
           "title": "Training time out",
           "refs": null,
-          "paras": 2,
+          "paras": 4,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -9975,7 +10084,7 @@
           "id": "drop-on-request",
           "title": "Drop on request",
           "refs": null,
-          "paras": 1,
+          "paras": 2,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -10012,6 +10121,7 @@
       "numbers": [],
       "works": [
         "CNAF 3710",
+        "CNATRA TA Manual",
         "Delta JPPT",
         "FAM FTI",
         "TW-4 Briefing Guide",
@@ -10053,10 +10163,16 @@
           "work": "TW-5 SOP",
           "loc": "App. D §D.1 — Briefing Guide",
           "pages": "p. D-1"
+        },
+        {
+          "n": 7,
+          "work": "CNATRA TA Manual",
+          "loc": "§106 — Drop on Request (DOR) and Training-Time-Out (TTO) Policy",
+          "pages": "p. 1-2"
         }
       ],
       "coverage": {
-        "cited": 5,
+        "cited": 8,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -11766,7 +11882,7 @@
           "n": 2,
           "work": "FAM FTI",
           "loc": "§704 — Precautionary Emergency Landing (PEL)",
-          "pages": "p. 7-13"
+          "pages": "p. 7-14"
         }
       ],
       "coverage": {
@@ -13136,7 +13252,7 @@
           "n": 2,
           "work": "FAM FTI",
           "loc": "§706 — Engine Failure During Flight (Power Loss)",
-          "pages": "p. 7-18"
+          "pages": "p. 7-19"
         },
         {
           "n": 3,
@@ -13717,7 +13833,7 @@
         },
         {
           "id": "pattern",
-          "title": "Pattern calls and rejoin",
+          "title": "Gear down call",
           "refs": [
             1
           ],
@@ -13732,7 +13848,7 @@
       "numbers": [
         {
           "label": "Fan break bank",
-          "value": "45° AOB"
+          "value": "45 to 60° AOB"
         },
         {
           "label": "Lead holds power for",
@@ -13746,7 +13862,7 @@
         {
           "n": 1,
           "work": "F FTI",
-          "loc": "§502 — The Break",
+          "loc": "§503 — The Break",
           "pages": "p. 5-2"
         }
       ],
@@ -13761,7 +13877,7 @@
       "sourcingLead": null,
       "lede": "There are two methods of executing the break: interval break or fan break. The fan break is an alternate entry method, initiated with interval by Lead giving the \"follow me\" signal to Wing.",
       "terms": [
-        "Pattern calls and rejoin",
+        "Gear down call",
         "Fan break",
         "Execution"
       ]
@@ -14275,9 +14391,7 @@
         {
           "id": "survival-vest",
           "title": "Survival vest",
-          "refs": [
-            5
-          ],
+          "refs": null,
           "paras": 0,
           "items": 5,
           "figures": [],
@@ -14352,6 +14466,7 @@
         }
       ],
       "works": [
+        "Aircrew Systems NATOPS",
         "Delta JPPT",
         "NATOPS",
         "Sim Building Poster",
@@ -14400,6 +14515,12 @@
           "work": "VT-6 SOP",
           "loc": "§201 — Flight Equipment",
           "pages": "p. 2-1"
+        },
+        {
+          "n": 8,
+          "work": "Aircrew Systems NATOPS",
+          "loc": "§4.2.4 — LPU-23 Series Life Preserver Assembly with FLU-8 Series Automatic Inflation Assembly",
+          "pages": "p. 4-114"
         }
       ],
       "coverage": {
@@ -14596,12 +14717,64 @@
       ],
       "sections": [
         {
+          "id": "considerations",
+          "title": "Considerations",
+          "refs": [
+            3
+          ],
+          "paras": 1,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "separation",
+          "title": "Separation",
+          "refs": [
+            3
+          ],
+          "paras": 0,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "deconfliction",
+          "title": "Deconfliction",
+          "refs": [
+            3
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "procedure",
+          "title": "Procedure",
+          "refs": [
+            3
+          ],
+          "paras": 0,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "tw-4-formation-supplement",
           "title": "TW-4 Formation Supplement",
           "refs": [
             1
           ],
-          "paras": 1,
+          "paras": 2,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -14622,8 +14795,18 @@
           "further": null
         }
       ],
-      "numbers": [],
+      "numbers": [
+        {
+          "label": "Altitude separation",
+          "value": "500 feet minimum"
+        },
+        {
+          "label": "Heading change",
+          "value": "30° minimum"
+        }
+      ],
       "works": [
+        "F FTI",
         "TW-4 Formation Supplement",
         "VT-6 Formation Supplement"
       ],
@@ -14639,10 +14822,16 @@
           "work": "VT-6 Formation Supplement",
           "loc": "§IV — In-Flight Formation Split",
           "pages": "p. 19"
+        },
+        {
+          "n": 3,
+          "work": "F FTI",
+          "loc": "§411 — Splitting a Flight",
+          "pages": "p. 4-31"
         }
       ],
       "coverage": {
-        "cited": 7,
+        "cited": 24,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -14651,13 +14840,17 @@
         "radial-rendezvous"
       ],
       "sourcingLead": null,
-      "lede": "The objective of an in-flight split is to split up a formation so that individual aircraft can safely separate into different working blocks to facilitate single ship high work training. Safe separation can be attained through the use of visual, altitude, lateral, heading, airspeed, or timing differentials. Most commonly, it is best to use a combination of Altitude and Heading separation to achieve a safe flight split.",
+      "lede": "There are many times where an operational or environmental constraint will make operating single ship advantageous. It is vital that all aircrew are familiar and proficient in safely separating a flight in the middle of a mission.",
       "terms": [
         "Dissolving the flight (flight split)",
         "TW-4 Formation Supplement",
         "VT-6 Formation Supplement",
         "Inflight split",
-        "Flight split"
+        "Considerations",
+        "Deconfliction",
+        "Flight split",
+        "Separation",
+        "Procedure"
       ]
     },
     {
@@ -15204,7 +15397,7 @@
           "refs": [
             1
           ],
-          "paras": 3,
+          "paras": 2,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -15217,7 +15410,7 @@
           "refs": [
             2
           ],
-          "paras": 4,
+          "paras": 5,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -15301,6 +15494,19 @@
           "further": null
         },
         {
+          "id": "vt-28-sop",
+          "title": "VT-28 SOP",
+          "refs": [
+            14
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "common-errors",
           "title": "Common errors",
           "refs": [
@@ -15332,57 +15538,66 @@
           "value": "30° AOB maximum"
         },
         {
+          "label": "Torque once Wing is joined",
+          "value": "up to 90%"
+        },
+        {
+          "label": "Climb speed once Wing is joined",
+          "value": "180 KIAS"
+        },
+        {
           "label": "Maximum closure",
           "value": "40 KIAS"
         },
         {
           "label": "Lead torque on descent",
-          "value": "15% minimum"
+          "value": "no less than 20%, 15% minimum"
         },
         {
-          "label": "Wing breaks no earlier than",
+          "label": "Wing breaks after Lead",
           "value": "3 seconds"
         },
         {
-          "label": "Interval break separation",
-          "value": "1500 feet"
+          "label": "Break separation, nose to tail",
+          "value": "1500 feet minimum"
         }
       ],
       "works": [
         "F FTI",
         "TW-5 SOP",
         "VT-2 Formation Supplement",
+        "VT-28 R&I R",
         "VT-6 Formation Supplement"
       ],
       "references": [
         {
           "n": 1,
           "work": "F FTI",
-          "loc": "§303 — Initial Rendezvous/Departure/Climbout",
+          "loc": "§303 — Initial Rendezvous/Departure/Climb-Out Following Interval Takeoff",
           "pages": "p. 3-3"
         },
         {
           "n": 2,
           "work": "F FTI",
           "loc": "§304 — Running Rendezvous",
-          "pages": "p. 3-4"
+          "pages": "p. 3-3"
         },
         {
           "n": 3,
           "work": "F FTI",
-          "loc": "§501 — Recovery Overview",
+          "loc": "§501 — VFR Course Rules Recovery",
           "pages": "p. 5-1"
         },
         {
           "n": 4,
           "work": "F FTI",
-          "loc": "§502 — The Break",
+          "loc": "§503 — The Break",
           "pages": "p. 5-2"
         },
         {
           "n": 5,
           "work": "F FTI",
-          "loc": "§506 — Section Missed Approach",
+          "loc": "§507 — Section Missed Approach",
           "pages": "p. 5-6"
         },
         {
@@ -15426,10 +15641,22 @@
           "work": "VT-6 Formation Supplement",
           "loc": "§II — Formation Sequence Communication Script",
           "pages": "p. 8"
+        },
+        {
+          "n": 13,
+          "work": "F FTI",
+          "loc": "§502 — Speed Brake Use",
+          "pages": "p. 5-2"
+        },
+        {
+          "n": 14,
+          "work": "VT-28 R&I R",
+          "loc": "§4 — CAT III (FORM)",
+          "pages": "p. 2"
         }
       ],
       "coverage": {
-        "cited": 40,
+        "cited": 43,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -15439,7 +15666,7 @@
         "formation-maneuvers"
       ],
       "sourcingLead": null,
-      "lede": "Once safely airborne, Lead levels off to clear the pattern complying with local course rules departure procedures; once clear of the pattern, Lead sets 80% torque and climbs at 160 KIAS until Wing is in position. The recovery will generally be a VMC recovery via local course rules for the break entry. Approaching the initial VFR entry point, Lead will direct Wing to the Parade Position with enough time to get stabilized prior to the break, then give Wing the appropriate visual signal and conduct the break with clearance from tower.",
+      "lede": "Once safely airborne, Lead levels off to clear the pattern complying with local course rules departure procedures; once clear of the pattern, Lead sets 80% torque and climbs at 160 KIAS (or the pre-briefed airspeed) until Wing is in position. Prior to entering Tower's airspace, Lead should clear Wing back into parade position for the break and ensure Wing joins on the proper side for the direction of the break. Lead will give Wing the appropriate visual signal (kiss off or come with me) and conduct the break with clearance from Tower.",
       "terms": [
         "Formation arrival and departure procedures",
         "VT-2 Formation Supplement",
@@ -15449,6 +15676,7 @@
         "Running rendezvous",
         "Common errors",
         "Break entry",
+        "VT-28 SOP",
         "TW-5 SOP",
         "Arrival"
       ]
@@ -15481,10 +15709,21 @@
         {
           "id": "call-signs",
           "title": "Call signs",
+          "refs": null,
+          "paras": 3,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "radio-names",
+          "title": "Radio names",
           "refs": [
             1
           ],
-          "paras": 2,
+          "paras": 1,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -15494,10 +15733,8 @@
         {
           "id": "tactical-frequency",
           "title": "Tactical frequency",
-          "refs": [
-            1
-          ],
-          "paras": 3,
+          "refs": null,
+          "paras": 4,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -15507,10 +15744,8 @@
         {
           "id": "changing-frequency",
           "title": "Frequency changes",
-          "refs": [
-            1
-          ],
-          "paras": 3,
+          "refs": null,
+          "paras": 5,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -15568,25 +15803,12 @@
           "tables": [],
           "main": null,
           "further": null
-        },
-        {
-          "id": "common-errors",
-          "title": "Common errors",
-          "refs": [
-            1
-          ],
-          "paras": 0,
-          "items": 3,
-          "figures": [],
-          "tables": [],
-          "main": null,
-          "further": null
         }
       ],
       "numbers": [
         {
           "label": "TAC call sign length",
-          "value": "1 to 2 syllables"
+          "value": "No more than 2 syllables"
         },
         {
           "label": "Pre-briefed TAC frequencies",
@@ -15604,7 +15826,7 @@
           "n": 1,
           "work": "F FTI",
           "loc": "§106 — Formation Communications",
-          "pages": "p. 1-8"
+          "pages": "p. 1-9"
         },
         {
           "n": 2,
@@ -15635,10 +15857,22 @@
           "work": "VT-6 Formation Supplement",
           "loc": "§III — Other Field Operations",
           "pages": "p. 17"
+        },
+        {
+          "n": 7,
+          "work": "F FTI",
+          "loc": "§102 — Flight Discipline",
+          "pages": "p. 1-1"
+        },
+        {
+          "n": 8,
+          "work": "F FTI",
+          "loc": "Appendix C — Communications and Radio Calls",
+          "pages": "p. C-1"
         }
       ],
       "coverage": {
-        "cited": 28,
+        "cited": 30,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -15648,7 +15882,7 @@
         "lost-communication-procedures"
       ],
       "sourcingLead": null,
-      "lede": "Your visual or radio communications within the flight must be clear and timely to avoid confusion. The flight will essentially use two call signs: an ATC call sign to communicate with outside agencies and a tactical (TAC) call sign selected by the flight for inter-flight communications. The Formation Lead will conduct all communications with outside controlling agencies, and Wing will monitor and back Lead up as necessary. Lead and Wing must always have direct communication with each other via the pre-briefed tactical frequency, which is confirmed with a positive check-in each time the tactical frequency is changed.",
+      "lede": "Your visual or radio communications within the flight must be clear and timely to avoid confusion. The flight will essentially use two call-signs: an official call-sign depicted on the flight schedule used to communicate with outside agencies and a tactical (TAC) call-sign selected by the flight for intra-flight communications. The lead aircraft will conduct all communications with outside controlling agencies. Wing will monitor and back Lead up as necessary. Lead and Wing must always have direct communication with each other via the pre-briefed tactical frequency, which is confirmed with a positive check-in each time the TAC frequency is changed.",
       "terms": [
         "Formation tactical voice communications",
         "VT-2 Formation Supplement",
@@ -15657,7 +15891,7 @@
         "Radio or visual signal",
         "Tactical frequency",
         "Frequency changes",
-        "Common errors",
+        "Radio names",
         "Call signs",
         "TW-5 SOP"
       ]
@@ -15703,7 +15937,7 @@
         },
         {
           "id": "perch",
-          "title": "Perch position",
+          "title": "Support position",
           "refs": [
             1
           ],
@@ -15769,11 +16003,11 @@
       ],
       "numbers": [
         {
-          "label": "Perch position bearing",
+          "label": "Support position bearing",
           "value": "30 to 60° bearing lines"
         },
         {
-          "label": "Perch position separation",
+          "label": "Support position separation",
           "value": "500 feet"
         }
       ],
@@ -15816,14 +16050,14 @@
         "landing-gear-inspection"
       ],
       "sourcingLead": null,
-      "lede": "There are additional considerations when handling emergency situations in formation. As Lead, remember to take into account all actions that will affect the Wing. As Wingman, maintain situational awareness at all times and be ready to assist as requested. In formation, the greatest immediate threat during an emergency is a mid-air collision within the flight. The threat can be alleviated by immediately communicating and taking additional separation, weather permitting, as appropriate.",
+      "lede": "There are additional considerations when handling emergency situations in formation. As Lead, remember to consider all actions that will affect the Wing. As Wing, always maintain situational awareness and be ready to assist as requested. In formation, the greatest immediate threat during an emergency is a mid-air collision within the flight. The threat can be alleviated by immediately communicating and taking additional separation, weather permitting, as appropriate.",
       "terms": [
         "Formation emergency procedures",
         "VT-2 Formation Supplement",
         "VT-6 Formation Supplement",
         "Backup assistance",
+        "Support position",
         "Lead assignment",
-        "Perch position",
         "ATC call signs",
         "Section EP"
       ]
@@ -15852,12 +16086,12 @@
           "id": "interval-takeoff",
           "title": "Interval takeoff",
           "refs": [
-            7
+            6
           ],
           "paras": 3,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/formation-maneuvers/mu74gpni-f-fti-fig-3-2.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/formation-maneuvers/mvmmb0k9-f-fti-r3-fig-3-2.webp"
           ],
           "tables": [],
           "main": null,
@@ -15893,14 +16127,14 @@
         },
         {
           "id": "crossunder",
-          "title": "Crossunder",
+          "title": "Cross-under",
           "refs": [
             3
           ],
           "paras": 4,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/formation-maneuvers/mu7ddqic-f-fti-fig-4-5.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/formation-maneuvers/mvmmb0pq-f-fti-r3-fig-4-6.webp"
           ],
           "tables": [],
           "main": null,
@@ -15912,10 +16146,10 @@
           "refs": [
             4
           ],
-          "paras": 3,
+          "paras": 4,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/formation-maneuvers/mu74gq5i-f-fti-fig-4-6.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/formation-maneuvers/mvmmb0v9-f-fti-r3-fig-4-7.webp"
           ],
           "tables": [],
           "main": null,
@@ -15925,7 +16159,7 @@
           "id": "underrun",
           "title": "Underrun",
           "refs": [
-            8
+            7
           ],
           "paras": 1,
           "items": 5,
@@ -15940,10 +16174,10 @@
           "refs": [
             5
           ],
-          "paras": 1,
+          "paras": 2,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/formation-maneuvers/mu74gq9d-f-fti-fig-4-10.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/formation-maneuvers/mvmmb1j8-f-fti-r3-fig-4-12.webp"
           ],
           "tables": [],
           "main": null,
@@ -15952,10 +16186,23 @@
           ]
         },
         {
+          "id": "vt-28-sop",
+          "title": "VT-28 SOP",
+          "refs": [
+            12
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "vt-2-formation-supplement",
           "title": "VT-2 Formation Supplement",
           "refs": [
-            9
+            8
           ],
           "paras": 1,
           "items": 0,
@@ -16001,8 +16248,8 @@
           "value": "180° approximately"
         },
         {
-          "label": "Parade rate of roll",
-          "value": "30° AOB in 4 to 5 seconds"
+          "label": "Parade turn bank, if the situation dictates",
+          "value": "45° AOB, with a radio call"
         },
         {
           "label": "B&R airspeed",
@@ -16011,11 +16258,20 @@
         {
           "label": "Standard breakup turn",
           "value": "180°"
+        },
+        {
+          "label": "Wing break",
+          "value": "3 seconds after Lead"
+        },
+        {
+          "label": "B&R trail",
+          "value": "800-1000 feet"
         }
       ],
       "works": [
         "F FTI",
         "VT-2 Formation Supplement",
+        "VT-28 R&I R",
         "VT-6 Formation Supplement"
       ],
       "references": [
@@ -16029,71 +16285,71 @@
           "n": 2,
           "work": "F FTI",
           "loc": "§403 — Parade Turns",
-          "pages": "p. 4-3"
+          "pages": "p. 4-5"
         },
         {
           "n": 3,
           "work": "F FTI",
-          "loc": "§404 — Crossunder",
-          "pages": "p. 4-7"
+          "loc": "§404 — Cross-under",
+          "pages": "p. 4-9"
         },
         {
           "n": 4,
           "work": "F FTI",
           "loc": "§405 — Breakup and Rendezvous",
-          "pages": "p. 4-9"
+          "pages": "p. 4-12"
         },
         {
           "n": 5,
           "work": "F FTI",
           "loc": "§406 — Cruise Formation",
-          "pages": "p. 4-14"
+          "pages": "p. 4-20"
         },
         {
           "n": 6,
-          "work": "F FTI",
-          "loc": "Appendix A — Glossary",
-          "pages": "p. A-1"
-        },
-        {
-          "n": 7,
           "work": "F FTI",
           "loc": "§301 — Interval Takeoff",
           "pages": "p. 3-2"
         },
         {
-          "n": 8,
+          "n": 7,
           "work": "F FTI",
-          "loc": "§305 — Rendezvous Underrun",
-          "pages": "p. 3-5"
+          "loc": "§306 — Rendezvous Underrun",
+          "pages": "p. 3-7"
         },
         {
-          "n": 9,
+          "n": 8,
           "work": "VT-2 Formation Supplement",
           "loc": "VT-2 Formation Briefing Guide",
           "pages": "p. 6"
         },
         {
-          "n": 10,
+          "n": 9,
           "work": "VT-6 Formation Supplement",
           "loc": "§VII — Formation Expanded Briefing Guide",
           "pages": "p. 29"
         },
         {
-          "n": 11,
+          "n": 10,
           "work": "VT-6 Formation Supplement",
           "loc": "§I — General Overview and Guidance",
           "pages": "p. 6"
         },
         {
-          "n": 12,
+          "n": 11,
           "work": "VT-6 Formation Supplement",
           "loc": "§II — Formation Sequence Communication Script",
           "pages": "p. 9"
+        },
+        {
+          "n": 12,
+          "work": "VT-28 R&I R",
+          "loc": "§4 — CAT III (FORM)",
+          "pages": "p. 2"
         }
       ],
       "coverage": {
-        "cited": 44,
+        "cited": 49,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -16102,7 +16358,7 @@
         "lead-lag-and-pure-pursuit"
       ],
       "sourcingLead": null,
-      "lede": "Parade Position is the basis for all maneuvers in this chapter. It is a fixed position on the left or right 45° bearing from Lead with sufficient wingtip clearance and step-down, utilizing the checkpoints below. Once the flight is established in the area and Ops Checks are complete, the parade sequence begins: a series of tasks which allow both students the opportunity to practice flying basic formation positions and maneuvers.",
+      "lede": "Parade Position is the basis for all maneuvers in this chapter. It is a fixed position on the left/right 45° bearing from Lead with sufficient wingtip clearance and step-down, utilizing the checkpoints below.",
       "terms": [
         "VT-2 Formation Supplement",
         "VT-6 Formation Supplement",
@@ -16113,7 +16369,8 @@
         "Parade position",
         "Common errors",
         "Parade turns",
-        "Crossunder",
+        "Cross-under",
+        "VT-28 SOP",
         "Underrun"
       ]
     },
@@ -16181,7 +16438,13 @@
           "n": 3,
           "work": "F FTI",
           "loc": "§104 — Radius of Turn",
-          "pages": "p. 1-4"
+          "pages": "p. 1-5"
+        },
+        {
+          "n": 4,
+          "work": "F FTI",
+          "loc": "Appendix A — Glossary",
+          "pages": "p. A-1"
         }
       ],
       "coverage": {
@@ -16194,7 +16457,7 @@
         "parade-sequence-checkpoints"
       ],
       "sourcingLead": null,
-      "lede": "Good formation flying is the result of anticipation and the use of small, timely corrections about all three axes. Strive to maintain perfect positioning, but understand that Wing will only be there for a fleeting moment. What makes a good formation pilot is the ability to recognize and limit deviations and make timely and efficient corrections.",
+      "lede": "Good formation flying is the result of anticipation and the use of small, timely corrections about all three axes. Strive to maintain perfect positioning; however, understand that Wing will only be there for a fleeting moment. What makes a good formation pilot is the ability to recognize and limit deviations and make timely and efficient corrections.",
       "terms": [
         "Formation position corrections",
         "Correction method",
@@ -16226,7 +16489,7 @@
             1
           ],
           "paras": 2,
-          "items": 3,
+          "items": 4,
           "figures": [],
           "tables": [],
           "main": null,
@@ -16238,7 +16501,7 @@
           "refs": [
             2
           ],
-          "paras": 4,
+          "paras": 5,
           "items": 0,
           "figures": [
             null
@@ -16253,8 +16516,8 @@
           "refs": [
             2
           ],
-          "paras": 1,
-          "items": 3,
+          "paras": 2,
+          "items": 9,
           "figures": [],
           "tables": [],
           "main": null,
@@ -16270,7 +16533,9 @@
           "items": 3,
           "figures": [],
           "tables": [],
-          "main": null,
+          "main": [
+            "fuel-planning"
+          ],
           "further": null
         },
         {
@@ -16336,13 +16601,13 @@
           "n": 2,
           "work": "F FTI",
           "loc": "§202 — Taxi",
-          "pages": "p. 2-1"
+          "pages": "p. 2-2"
         },
         {
           "n": 3,
           "work": "F FTI",
-          "loc": "§107 — Fuel Awareness",
-          "pages": "p. 1-10"
+          "loc": "§107 — Fuel Awareness and Operations Checks",
+          "pages": "p. 1-12"
         },
         {
           "n": 4,
@@ -16376,7 +16641,7 @@
         }
       ],
       "coverage": {
-        "cited": 22,
+        "cited": 31,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -16388,7 +16653,7 @@
         "formation-arrival-and-departure-procedures"
       ],
       "sourcingLead": null,
-      "lede": "Teamwork is an essential element to good formation. Studying, setting up a briefing space, briefing, pre-flight, post-flight, and debrief should all be a team effort, and these ground procedures are common to all formation flights. Aircraft issue and preflight will be conducted in the same manner as any syllabus flight. Knowing the fuel state of both aircraft at all times is essential.",
+      "lede": "Teamwork is an essential element to good formation. Studying, setting up a briefing space, briefing, preflight, postflight, and debrief should all be a team effort, and these ground procedures are common to all formation flights. Aircraft issue and preflight will be conducted in the same manner as any syllabus flight. Lead must know each aircraft's fuel state throughout the sortie.",
       "terms": [
         "Formation preflight planning",
         "TW-4 Formation Supplement",
@@ -16759,6 +17024,30 @@
           "further": null
         },
         {
+          "id": "joker-calculation",
+          "title": "Joker calculation",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "ops-checks",
+          "title": "Operations checks",
+          "refs": null,
+          "paras": 1,
+          "items": 3,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "calls",
           "title": "Calls and resets",
           "refs": [
@@ -16788,7 +17077,7 @@
           "id": "vt-2-formation-supplement",
           "title": "VT-2 Formation Supplement",
           "refs": null,
-          "paras": 3,
+          "paras": 2,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -16805,21 +17094,44 @@
           "tables": [],
           "main": null,
           "further": null
+        },
+        {
+          "id": "vt-28-sop",
+          "title": "VT-28 SOP",
+          "refs": [
+            9
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
         }
       ],
-      "numbers": [],
+      "numbers": [
+        {
+          "label": "Mandatory OPS checks",
+          "value": "3"
+        },
+        {
+          "label": "Fuel reported",
+          "value": "Rounded down to the nearest 10 pounds"
+        }
+      ],
       "works": [
         "F FTI",
         "TW-4 Formation Supplement",
         "VT-2 Formation Supplement",
+        "VT-28 R&I R",
         "VT-6 Formation Supplement"
       ],
       "references": [
         {
           "n": 1,
           "work": "F FTI",
-          "loc": "§107 — Fuel Awareness",
-          "pages": "p. 1-10"
+          "loc": "§107 — Fuel Awareness and Operations Checks",
+          "pages": "p. 1-12"
         },
         {
           "n": 2,
@@ -16836,36 +17148,42 @@
         {
           "n": 4,
           "work": "VT-2 Formation Supplement",
-          "loc": "VT-2 Formation Briefing Guide",
-          "pages": "p. 6"
-        },
-        {
-          "n": 5,
-          "work": "VT-2 Formation Supplement",
           "loc": "VT-2 Formation Comm Sequence",
           "pages": "p. 13"
         },
         {
-          "n": 6,
+          "n": 5,
           "work": "VT-6 Formation Supplement",
           "loc": "§I — General Overview and Guidance",
           "pages": "p. 4"
         },
         {
-          "n": 7,
+          "n": 6,
           "work": "VT-6 Formation Supplement",
           "loc": "§III — Other Field Operations",
           "pages": "p. 17"
         },
         {
-          "n": 8,
+          "n": 7,
           "work": "VT-6 Formation Supplement",
           "loc": "§VI — Capstone",
           "pages": "p. 26"
+        },
+        {
+          "n": 8,
+          "work": "F FTI",
+          "loc": "Appendix C — Communications and Radio Calls",
+          "pages": "p. C-1"
+        },
+        {
+          "n": 9,
+          "work": "VT-28 R&I R",
+          "loc": "§4 — CAT III (FORM)",
+          "pages": "p. 2"
         }
       ],
       "coverage": {
-        "cited": 8,
+        "cited": 15,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -16873,14 +17191,17 @@
         "flight-split"
       ],
       "sourcingLead": null,
-      "lede": "Knowing the fuel state of both aircraft at all times is essential. Lead must know the aircraft with the lowest fuel state in the flight for planning purposes, and the same information is critical if Wing has to assume the Lead. To determine the flight's fuel state, Lead will direct Operations Checks, commonly referred to as \"Ops Checks\", at various points during the flight, then use the lowest fuel state in the flight for planning purposes. Understanding the definitions of Joker, Bingo, and Divert Fuel is required.",
+      "lede": "To make timely decisions and execute the mission, Lead must know each aircraft's fuel state throughout the sortie. The same information is critical if Wing must assume the Lead. To determine the flight's fuel state, Lead will direct Operations Checks (OPS) at various points during the flight, then use the lowest fuel state in the flight for planning purposes. Understanding the definitions of Joker, Bingo, and Divert Fuel is required.",
       "terms": [
         "TW-4 Formation Supplement",
         "VT-2 Formation Supplement",
         "VT-6 Formation Supplement",
+        "Joker calculation",
+        "Operations checks",
         "Calls and resets",
         "Fuel planning",
-        "Fuel states"
+        "Fuel states",
+        "VT-28 SOP"
       ]
     },
     {
@@ -18285,10 +18606,8 @@
         {
           "id": "how-they-chain",
           "title": "Standards and progression",
-          "refs": [
-            1
-          ],
-          "paras": 3,
+          "refs": null,
+          "paras": 4,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -18299,6 +18618,32 @@
           "id": "who-decides",
           "title": "Instructor judgment",
           "refs": null,
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "maneuver-grades",
+          "title": "Maneuver grades",
+          "refs": [
+            7
+          ],
+          "paras": 1,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "event-grades",
+          "title": "Event grades",
+          "refs": [
+            8
+          ],
           "paras": 2,
           "items": 0,
           "figures": [],
@@ -18322,6 +18667,7 @@
       ],
       "numbers": [],
       "works": [
+        "CNATRA TA Manual",
         "Delta JPPT",
         "VT-2 SOP"
       ],
@@ -18355,10 +18701,28 @@
           "work": "VT-2 SOP",
           "loc": "§107 — Unsatisfactory SNA Event",
           "pages": "p. 2"
+        },
+        {
+          "n": 6,
+          "work": "CNATRA TA Manual",
+          "loc": "§601 — Objectivity in Measurement",
+          "pages": "p. 6-2"
+        },
+        {
+          "n": 7,
+          "work": "CNATRA TA Manual",
+          "loc": "§602 — Grading",
+          "pages": "p. 6-2"
+        },
+        {
+          "n": 8,
+          "work": "CNATRA TA Manual",
+          "loc": "§608 — Overall Event Grades",
+          "pages": "p. 6-7"
         }
       ],
       "coverage": {
-        "cited": 13,
+        "cited": 22,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -18373,6 +18737,8 @@
         "Standards and progression",
         "ATF, ATS, CTS and MIF",
         "Instructor judgment",
+        "Maneuver grades",
+        "Event grades",
         "Definitions",
         "VT-2 SOP"
       ]
@@ -18707,26 +19073,26 @@
         {
           "n": 1,
           "work": "F FTI",
-          "loc": "§306 — Section Takeoff",
-          "pages": "p. 3-8"
+          "loc": "§307 — Section Takeoff",
+          "pages": "p. 3-11"
         },
         {
           "n": 2,
           "work": "F FTI",
           "loc": "§106 — Formation Communications",
-          "pages": "p. 1-8"
+          "pages": "p. 1-9"
         },
         {
           "n": 3,
           "work": "F FTI",
           "loc": "§407 — Cruise Maneuvering",
-          "pages": "p. 4-15"
+          "pages": "p. 4-23"
         },
         {
           "n": 4,
           "work": "F FTI",
-          "loc": "§501 — Recovery Overview",
-          "pages": "p. 5-1"
+          "loc": "Appendix C — Communications and Radio Calls",
+          "pages": "p. C-1"
         },
         {
           "n": 5,
@@ -18737,8 +19103,14 @@
         {
           "n": 6,
           "work": "F FTI",
-          "loc": "§505 — NORDO Approach",
+          "loc": "§506 — Section No Radio (NORDO) Approaches",
           "pages": "p. 5-5"
+        },
+        {
+          "n": 7,
+          "work": "F FTI",
+          "loc": "Appendix B — Visual Signals",
+          "pages": "p. B-1"
         }
       ],
       "coverage": {
@@ -18751,7 +19123,7 @@
         "hefoe"
       ],
       "sourcingLead": null,
-      "lede": "Your visual or radio communications within the flight must be clear and timely to avoid confusion. The Wingman should have time to acknowledge the signal before Lead executes the maneuver.",
+      "lede": "Your visual or radio communications within the flight must be clear and timely to avoid confusion. Wing should have time to acknowledge the signal before Lead executes the maneuver.",
       "terms": [
         "Signals inside procedures",
         "Hand signals"
@@ -18931,10 +19303,24 @@
           "tables": [],
           "main": null,
           "further": null
+        },
+        {
+          "id": "grading-limits",
+          "title": "Exclusions",
+          "refs": [
+            2
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
         }
       ],
       "numbers": [],
       "works": [
+        "CNATRA TA Manual",
         "Delta JPPT"
       ],
       "references": [
@@ -18943,10 +19329,16 @@
           "work": "Delta JPPT",
           "loc": "Ch. IX — Course Training Standards",
           "pages": "p. IX-2"
+        },
+        {
+          "n": 2,
+          "work": "CNATRA TA Manual",
+          "loc": "§603 — Grading Considerations",
+          "pages": "p. 6-3"
         }
       ],
       "coverage": {
-        "cited": 6,
+        "cited": 7,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -18961,6 +19353,7 @@
       "terms": [
         "Graded behaviors",
         "Components",
+        "Exclusions",
         "Headwork"
       ]
     },
@@ -19067,7 +19460,7 @@
           "paras": 1,
           "items": 5,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/hefoe/mu1nunmw-hefoe.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/hefoe/mvmmapnx-f-fti-r3-fig-b-8.webp"
           ],
           "tables": [],
           "main": null,
@@ -19115,7 +19508,7 @@
         "formation-emergency-procedures"
       ],
       "sourcingLead": null,
-      "lede": "HEFOE is a method of signaling system failure when NORDO, using hand signals during the day or a flashlight at night. In the event aircrew encounter an in-flight emergency while NORDO, they will pass the condition of the aircraft to the other aircraft using HEFOE hand signals. The use of HEFOE signals assumes that one or both aircraft are NORDO.",
+      "lede": "HEFOE is a method of signaling system failure when NORDO, using hand signals during the day or a flashlight at night. In the event aircrew encounter an in-flight emergency while NORDO, they will pass the condition of the aircraft to the other aircraft using HEFOE acronym hand signals. The use of HEFOE signals assumes that one or both aircraft are NORDO. The HEFOE acronym is a standard across Naval Aviation and stands for, in order, Hydraulics, Electrical, Fuel, OBOGS, and Engine.",
       "terms": [
         "Procedure",
         "HEFOE",
@@ -20243,9 +20636,7 @@
         {
           "id": "shamrock",
           "title": "SHAMROCK",
-          "refs": [
-            1
-          ],
+          "refs": null,
           "paras": 3,
           "items": 0,
           "figures": [],
@@ -20361,6 +20752,7 @@
         }
       ],
       "works": [
+        "Course Rules Brief",
         "Course Rules Manual",
         "VT-27 SOP",
         "VT-28 SOP"
@@ -20389,6 +20781,12 @@
           "work": "VT-28 SOP",
           "loc": "§3.4 — Landing Procedures",
           "pages": "p. 11"
+        },
+        {
+          "n": 5,
+          "work": "Course Rules Brief",
+          "loc": "Section 5 — Arrivals to NGP",
+          "pages": "slide 113"
         }
       ],
       "coverage": {
@@ -22258,10 +22656,8 @@
         {
           "id": "cancelling",
           "title": "TW-4 SOP",
-          "refs": [
-            2
-          ],
-          "paras": 2,
+          "refs": null,
+          "paras": 3,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -22283,6 +22679,7 @@
       "numbers": [],
       "works": [
         "CNAF 3710",
+        "Closed Tower Operating Agreement",
         "TW-4 SOP",
         "TW-5 SOP"
       ],
@@ -22322,10 +22719,16 @@
           "work": "TW-5 SOP",
           "loc": "§7.4 — South Military Operating Area",
           "pages": "p. 7-10"
+        },
+        {
+          "n": 7,
+          "work": "Closed Tower Operating Agreement",
+          "loc": "§4.c(3) — Arrivals",
+          "pages": "p. 3"
         }
       ],
       "coverage": {
-        "cited": 7,
+        "cited": 8,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -22923,7 +23326,7 @@
           "n": 6,
           "work": "FAM FTI",
           "loc": "§704 — Precautionary Emergency Landing (PEL)",
-          "pages": "p. 7-13"
+          "pages": "p. 7-14"
         },
         {
           "n": 7,
@@ -23301,7 +23704,7 @@
           "n": 2,
           "work": "FAM FTI",
           "loc": "§704 — Precautionary Emergency Landing (PEL)",
-          "pages": "p. 7-13"
+          "pages": "p. 7-14"
         }
       ],
       "coverage": {
@@ -23583,7 +23986,7 @@
           "refs": [
             1
           ],
-          "paras": 2,
+          "paras": 3,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -23691,7 +24094,7 @@
         }
       ],
       "coverage": {
-        "cited": 8,
+        "cited": 9,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -23699,7 +24102,7 @@
         "formation-emergency-procedures"
       ],
       "sourcingLead": null,
-      "lede": "If a formation flight inadvertently enters IMC conditions, Lead will transition to an instrument scan. If unable to return to VMC, ensure proper terrain clearance and contact ATC to pick up an IFR clearance for the flight, or separate clearances for each individual aircraft.",
+      "lede": "If a formation flight inadvertently enters IMC conditions, Lead will transition to an instrument scan. If unable to return to VMC, ensure proper terrain clearance and contact ATC to obtain an IFR clearance for the flight, or separate clearances for each individual aircraft.",
       "terms": [
         "Inadvertent instrument flight",
         "VT-6 Formation Supplement",
@@ -24944,8 +25347,8 @@
           "refs": [
             1
           ],
-          "paras": 2,
-          "items": 0,
+          "paras": 3,
+          "items": 12,
           "figures": [],
           "tables": [],
           "main": null,
@@ -24954,9 +25357,7 @@
         {
           "id": "the-call",
           "title": "Phraseology",
-          "refs": [
-            1
-          ],
+          "refs": null,
           "paras": 2,
           "items": 0,
           "figures": [],
@@ -24984,7 +25385,7 @@
             4
           ],
           "paras": 1,
-          "items": 11,
+          "items": 10,
           "figures": [],
           "tables": [],
           "main": null,
@@ -25016,7 +25417,7 @@
           "n": 1,
           "work": "F FTI",
           "loc": "§409 — Terminate and Knock-It-Off Procedures",
-          "pages": "p. 4-21"
+          "pages": "p. 4-28"
         },
         {
           "n": 2,
@@ -25035,10 +25436,16 @@
           "work": "VT-2 Formation Supplement",
           "loc": "VT-2 Formation Briefing Guide",
           "pages": "p. 6"
+        },
+        {
+          "n": 5,
+          "work": "F FTI",
+          "loc": "Appendix C — Communications and Radio Calls",
+          "pages": "p. C-1"
         }
       ],
       "coverage": {
-        "cited": 30,
+        "cited": 42,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -25049,7 +25456,7 @@
         "tail-chase"
       ],
       "sourcingLead": null,
-      "lede": "Knock-it-off is a radio call used by a flight member to alert the formation to cease maneuvering. It is used when safety of flight is an issue, such as an emergency, a traffic threat, or a crewmember who has G-locked due to poor Anti-G Straining Maneuver execution during Tail Chase. This radio call should be preserved as an \"unexpected stop and attention getter\" and may be initiated by any flight member.",
+      "lede": "Knock-it-off (KIO) is a call to cease all air combat maneuvers, attacks, activities, or exercises (training use only). KIO is used when safety of flight is an issue and can be called by any aircrew.",
       "terms": [
         "Knock-it-off/terminate procedures",
         "VT-2 Formation Supplement",
@@ -25093,7 +25500,7 @@
           "refs": [
             1
           ],
-          "paras": 2,
+          "paras": 3,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -25130,6 +25537,10 @@
           "value": "~52%"
         },
         {
+          "label": "Transition torque",
+          "value": "~18%"
+        },
+        {
           "label": "Sight picture",
           "value": "⅔ ground, ⅓ sky"
         }
@@ -25146,7 +25557,7 @@
         }
       ],
       "coverage": {
-        "cited": 7,
+        "cited": 9,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -25267,7 +25678,7 @@
           "refs": [
             1
           ],
-          "paras": 5,
+          "paras": 4,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -25304,7 +25715,7 @@
           "id": "vt-28-sop",
           "title": "VT-28 SOP",
           "refs": null,
-          "paras": 1,
+          "paras": 2,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -25349,6 +25760,7 @@
         "NATOPS",
         "VT-2 Formation Supplement",
         "VT-27 SOP",
+        "VT-28 R&I R",
         "VT-28 SOP",
         "VT-3 SOP"
       ],
@@ -25357,13 +25769,13 @@
           "n": 1,
           "work": "F FTI",
           "loc": "§607 — Unsafe Landing Gear Indications",
-          "pages": "p. 6-7"
+          "pages": "p. 6-8"
         },
         {
           "n": 2,
           "work": "F FTI",
           "loc": "§608 — Airborne Landing Gear Inspection",
-          "pages": "p. 6-8"
+          "pages": "p. 6-9"
         },
         {
           "n": 3,
@@ -25394,6 +25806,12 @@
           "work": "VT-3 SOP",
           "loc": "Encl. (4) §3 — Emergencies / Crew Coordination",
           "pages": "Encl. (4) p. 2"
+        },
+        {
+          "n": 8,
+          "work": "VT-28 R&I R",
+          "loc": "§4 — CAT III (FORM)",
+          "pages": "p. 2"
         }
       ],
       "coverage": {
@@ -25405,7 +25823,7 @@
         "formation-emergency-procedures"
       ],
       "sourcingLead": null,
-      "lede": "The aircraft with an unsafe gear indication should climb to an emergency orbit or delta pattern in accordance with local SOP or Course Rules, and coordinate with the Wingman to get an airborne landing gear inspection. The inspection should be conducted at a minimum of 2000 feet AGL. At no time shall student solos join-up to inspect landing gear.",
+      "lede": "The aircraft with an unsafe gear indication should climb to an emergency orbit or delta pattern in accordance with local SOP or Course Rules, and coordinate with Wing to get an airborne landing gear inspection. The inspection should be conducted at a minimum of 2000 feet AGL.",
       "terms": [
         "VT-2 Formation Supplement",
         "Landing gear inspection",
@@ -25596,7 +26014,7 @@
         },
         {
           "label": "Torque at the transition",
-          "value": "~20%"
+          "value": "14/15/18% by flap"
         },
         {
           "label": "Simulated approach turn",
@@ -25791,6 +26209,10 @@
           "value": "31 / 42 / 52%"
         },
         {
+          "label": "Approach turn torque",
+          "value": "14 / 15 / 18%"
+        },
+        {
           "label": "Approach turn airspeed",
           "value": "120 / 115 / 110 KIAS"
         },
@@ -25878,7 +26300,7 @@
         }
       ],
       "coverage": {
-        "cited": 47,
+        "cited": 48,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -25951,7 +26373,7 @@
           "paras": 1,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/lead-lag-and-pure-pursuit/mu74gp6v-f-fti-fig-1-4.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/lead-lag-and-pure-pursuit/mvmmaxk9-f-fti-r3-fig-1-4.webp"
           ],
           "tables": [],
           "main": [
@@ -25975,7 +26397,7 @@
           "n": 2,
           "work": "F FTI",
           "loc": "§104 — Radius of Turn",
-          "pages": "p. 1-4"
+          "pages": "p. 1-5"
         }
       ],
       "coverage": {
@@ -26679,9 +27101,7 @@
         {
           "id": "working-areas",
           "title": "Working areas",
-          "refs": [
-            2
-          ],
+          "refs": null,
           "paras": 1,
           "items": 0,
           "figures": [],
@@ -26794,6 +27214,7 @@
       ],
       "works": [
         "Course Rules Manual",
+        "TW-4 R&I T",
         "TW-4 SOP",
         "VT-27 SOP",
         "VT-28 SOP"
@@ -26900,6 +27321,18 @@
           "work": "VT-28 SOP",
           "loc": "§3.8 — Radio Procedures",
           "pages": "p. 12"
+        },
+        {
+          "n": 18,
+          "work": "TW-4 R&I T",
+          "loc": "§6 — Kings 4 Altimeter Setting",
+          "pages": "p. 3"
+        },
+        {
+          "n": 19,
+          "work": "TW-4 R&I T",
+          "loc": "§7 — Course Rules \"Auto-Switch\" Frequency Update",
+          "pages": "p. 3"
         }
       ],
       "coverage": {
@@ -28257,7 +28690,7 @@
           "refs": [
             4
           ],
-          "paras": 3,
+          "paras": 2,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -28280,7 +28713,7 @@
       ],
       "numbers": [
         {
-          "label": "Wing kissed off at",
+          "label": "Wing kissed off no later than",
           "value": "1 mile"
         }
       ],
@@ -28300,7 +28733,7 @@
         {
           "n": 2,
           "work": "F FTI",
-          "loc": "§505 — NORDO Approach",
+          "loc": "§506 — Section No Radio (NORDO) Approaches",
           "pages": "p. 5-5"
         },
         {
@@ -28323,7 +28756,7 @@
         }
       ],
       "coverage": {
-        "cited": 22,
+        "cited": 21,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -28332,7 +28765,7 @@
         "formation-emergency-procedures"
       ],
       "sourcingLead": null,
-      "lede": "Radio failure in a formation is a potentially confusing and hazardous situation. If NORDO (No Radio), all radios have failed. The formation should maintain VMC if able. The lead position should be offered to the NORDO aircraft in order to troubleshoot and attempt to re-establish radio communications. If radio contact cannot be re-established, the aircraft with the good radios shall take the Lead position to return to base.",
+      "lede": "Radio failure in a formation is a potentially confusing and hazardous situation. If NORDO (No Radio), all radios have failed. The formation should maintain VMC if able. The lead position may be offered, conditions permitting, to the NORDO aircraft to troubleshoot and attempt to re-establish radio communications. If radio contact cannot be re-established, the aircraft with the working radios shall take the lead position to return to base.",
       "terms": [
         "Lost communication procedures",
         "VT-2 Formation Supplement",
@@ -28587,7 +29020,7 @@
           "refs": [
             1
           ],
-          "paras": 0,
+          "paras": 1,
           "items": 3,
           "figures": [],
           "tables": [],
@@ -28634,6 +29067,19 @@
           "further": null
         },
         {
+          "id": "rejoin-or-separate",
+          "title": "Rejoin or separate recovery",
+          "refs": [
+            1
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "inside-faf",
           "title": "Final approach segment",
           "refs": [
@@ -28664,7 +29110,7 @@
           "title": "VT-6 Formation Supplement",
           "refs": null,
           "paras": 3,
-          "items": 9,
+          "items": 6,
           "figures": [],
           "tables": [],
           "main": null,
@@ -28687,6 +29133,10 @@
         {
           "label": "Lead climbs or descends",
           "value": "500 feet beyond lost sight altitude"
+        },
+        {
+          "label": "Inside the FAF, turn away no more than",
+          "value": "1 dot of CDI deflection"
         }
       ],
       "works": [
@@ -28731,8 +29181,9 @@
         "formation-emergency-procedures"
       ],
       "sourcingLead": null,
-      "lede": "Lost sight is the term used by the Wingman to communicate that they have lost visual contact with the Lead aircraft during IMC conditions. During IMC formation flight, Wing will have very little reference to attitude, as their scan should be nearly solely on Lead's aircraft. If Wing loses sight of Lead, it may take Wing several seconds to transition to an effective instrument scan and transmit the \"lost sight\" radio call. For this reason, a smooth reduction of power once lost sight conditions are recognized is essential to reduce the likelihood of a mid-air.",
+      "lede": "Lost sight is the term used by Wing to communicate that they have lost visual contact with the Lead aircraft during IMC conditions. During IMC formation flight, Wing will have very little reference to attitude, as their scan should be nearly solely on Lead's aircraft. If Wing loses sight of Lead, it may take Wing several seconds to transition to an effective instrument scan and transmit the \"lost sight\" radio call. For this reason, a smooth reduction of power once lost sight conditions are recognized is essential to reduce the likelihood of a mid-air.",
       "terms": [
+        "Rejoin or separate recovery",
         "VT-6 Formation Supplement",
         "Final approach segment",
         "Lost sight procedures",
@@ -30620,7 +31071,7 @@
           "refs": [
             1
           ],
-          "paras": 3,
+          "paras": 4,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -30657,6 +31108,10 @@
           "value": "~31%"
         },
         {
+          "label": "Torque at the 180",
+          "value": "~14%"
+        },
+        {
           "label": "Sight picture",
           "value": "½ sky, ½ ground"
         },
@@ -30683,7 +31138,7 @@
         }
       ],
       "coverage": {
-        "cited": 9,
+        "cited": 11,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -34256,7 +34711,7 @@
             1
           ],
           "paras": 1,
-          "items": 9,
+          "items": 8,
           "figures": [],
           "tables": [],
           "main": null,
@@ -34296,14 +34751,14 @@
         },
         {
           "id": "crossunder",
-          "title": "Crossunder",
+          "title": "Cross-under",
           "refs": [
             6
           ],
           "paras": 1,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/parade-sequence-checkpoints/mu73tsxg-f-fti-fig-4-5.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/parade-sequence-checkpoints/mvmmb3cz-f-fti-r3-fig-4-6.webp"
           ],
           "tables": [],
           "main": null,
@@ -34315,7 +34770,7 @@
           "refs": [
             4
           ],
-          "paras": 2,
+          "paras": 4,
           "items": 0,
           "figures": [
             null
@@ -34371,11 +34826,23 @@
         },
         {
           "label": "Parade turns",
-          "value": "4 × ~180°"
+          "value": "~180° per turn"
         },
         {
           "label": "Rendezvous bearing",
-          "value": "60°"
+          "value": "45°"
+        },
+        {
+          "label": "Rendezvous trail",
+          "value": "800-1000 feet"
+        },
+        {
+          "label": "Rendezvous step-up",
+          "value": "50 to 100 feet"
+        },
+        {
+          "label": "Rendezvous turn",
+          "value": "45-60° AOB"
         },
         {
           "label": "Lead change wingtip clearance",
@@ -34391,7 +34858,7 @@
         {
           "n": 1,
           "work": "F FTI",
-          "loc": "§401 — The Parade Sequence",
+          "loc": "§401 — Flight Sequence Section",
           "pages": "p. 4-1"
         },
         {
@@ -34404,25 +34871,25 @@
           "n": 3,
           "work": "F FTI",
           "loc": "§403 — Parade Turns",
-          "pages": "p. 4-3"
+          "pages": "p. 4-5"
         },
         {
           "n": 4,
           "work": "F FTI",
           "loc": "§405 — Breakup and Rendezvous",
-          "pages": "p. 4-9"
+          "pages": "p. 4-12"
         },
         {
           "n": 5,
           "work": "F FTI",
           "loc": "§410 — Lead Change Procedure",
-          "pages": "p. 4-22"
+          "pages": "p. 4-29"
         },
         {
           "n": 6,
           "work": "F FTI",
-          "loc": "§404 — Crossunder",
-          "pages": "p. 4-7"
+          "loc": "§404 — Cross-under",
+          "pages": "p. 4-9"
         },
         {
           "n": 7,
@@ -34438,7 +34905,7 @@
         }
       ],
       "coverage": {
-        "cited": 45,
+        "cited": 49,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -34448,7 +34915,7 @@
         "tail-chase"
       ],
       "sourcingLead": null,
-      "lede": "Once the flight is established in the area and Ops Checks are complete, begin the parade sequence. The parade sequence is a series of tasks which allow both students the opportunity to practice flying basic formation positions and maneuvers. Parade Position is a fixed position on the left/right 45º bearing from Lead with sufficient wingtip clearance and step-down. The perfect Parade Position is transitory, and every correction has a corresponding re-correction to ensure Altitude (step-down), Bearing line, and Closure/Separation (the A-B-Cs) are correct.",
+      "lede": "Parade Position is a fixed position on the left/right 45° bearing from Lead with sufficient wingtip clearance and step-down. The perfect Parade Position is transitory, and every correction has a corresponding re-correction to ensure Altitude (step-down), Bearing line, and Closeness (the A-B-Cs) are correct.",
       "terms": [
         "Parade sequence checkpoints",
         "TW-4 Formation Supplement",
@@ -34456,8 +34923,8 @@
         "Breakup and rendezvous",
         "Parade position",
         "Parade turns",
+        "Cross-under",
         "Lead change",
-        "Crossunder",
         "Sequence"
       ]
     },
@@ -34784,6 +35251,10 @@
         {
           "label": "Climb at",
           "value": "125 KIAS"
+        },
+        {
+          "label": "Excess altitude in the downwind",
+          "value": "100 feet per 1000 feet of runway to low key"
         }
       ],
       "works": [
@@ -34805,7 +35276,7 @@
         }
       ],
       "coverage": {
-        "cited": 22,
+        "cited": 23,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -35511,7 +35982,7 @@
         "three-cs"
       ],
       "sourcingLead": null,
-      "lede": "Stall the aircraft in a power-on condition to demonstrate the proper recovery when power is available. Aircraft pitch and bank angle will be held constant until un-commanded nose drop and/or unplanned rolling motion. An entry speed of 150 KIAS results in about 1500 to 2000 feet altitude gain.",
+      "lede": "Stall the aircraft in a power-on condition to demonstrate the proper recovery when power is available. Aircraft pitch and bank angle will be held constant until uncommanded nose drop and/or unplanned rolling motion. The maneuver may be started at any airspeed, however higher entry airspeeds will result in additional altitude gain. An entry speed of 150 KIAS results in approximately 1500 to 2000 feet of altitude gain.",
       "terms": [
         "Power-on stalls",
         "Common errors",
@@ -35629,10 +36100,8 @@
         {
           "id": "after-you-land",
           "title": "VT-28 SOP",
-          "refs": [
-            4
-          ],
-          "paras": 2,
+          "refs": null,
+          "paras": 3,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -35716,6 +36185,7 @@
         "FAM FTI",
         "NATOPS",
         "VT-27 SOP",
+        "VT-28 R&I S",
         "VT-28 SOP",
         "VT-6 SOP"
       ],
@@ -35730,7 +36200,7 @@
           "n": 2,
           "work": "FAM FTI",
           "loc": "§704 — Precautionary Emergency Landing (PEL)",
-          "pages": "p. 7-13"
+          "pages": "p. 7-14"
         },
         {
           "n": 3,
@@ -35755,10 +36225,16 @@
           "work": "VT-6 SOP",
           "loc": "§212 — Post PEL Launch Authority",
           "pages": "p. 2-3"
+        },
+        {
+          "n": 7,
+          "work": "VT-28 R&I S",
+          "loc": "§3 — CAT II (DCON/NCON)",
+          "pages": "p. 1"
         }
       ],
       "coverage": {
-        "cited": 70,
+        "cited": 71,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -36433,7 +36909,7 @@
           "id": "when",
           "title": "Applicability",
           "refs": [
-            1
+            2
           ],
           "paras": 2,
           "items": 0,
@@ -36445,13 +36921,11 @@
         {
           "id": "circle",
           "title": "Rendezvous circle",
-          "refs": [
-            1
-          ],
+          "refs": null,
           "paras": 1,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/radial-rendezvous/mu74gq15-f-fti-fig-3-5.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/radial-rendezvous/mvmmaz16-f-fti-r3-fig-3-7.webp"
           ],
           "tables": [],
           "main": null,
@@ -36463,7 +36937,7 @@
           "refs": [
             1
           ],
-          "paras": 2,
+          "paras": 1,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -36473,8 +36947,19 @@
         {
           "id": "wing",
           "title": "Wing",
+          "refs": null,
+          "paras": 4,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "post",
+          "title": "Join",
           "refs": [
-            1
+            3
           ],
           "paras": 2,
           "items": 0,
@@ -36484,12 +36969,12 @@
           "further": null
         },
         {
-          "id": "post",
-          "title": "Post and lead/lag",
+          "id": "vt-28-sop",
+          "title": "VT-28 SOP",
           "refs": [
-            1
+            4
           ],
-          "paras": 2,
+          "paras": 1,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -36503,7 +36988,7 @@
           "value": "30° AOB"
         },
         {
-          "label": "Rendezvous airspeed",
+          "label": "Lead's orbit",
           "value": "200 KIAS"
         },
         {
@@ -36515,23 +37000,50 @@
           "value": "90°"
         },
         {
+          "label": "Wing's detach turn",
+          "value": "Approximately 60° AOB, 200 KIAS"
+        },
+        {
           "label": "Wing's altitude",
           "value": "500 feet below"
+        },
+        {
+          "label": "Join range",
+          "value": "1,000 to 2,000 feet"
         }
       ],
       "works": [
-        "F FTI"
+        "F FTI",
+        "VT-28 R&I S"
       ],
       "references": [
         {
           "n": 1,
           "work": "F FTI",
-          "loc": "§308 — Instrument Departures",
-          "pages": "p. 3-10"
+          "loc": "§311 — Radial/DME or Rendezvous",
+          "pages": "p. 3-15"
+        },
+        {
+          "n": 2,
+          "work": "F FTI",
+          "loc": "§310 — Instrument Departures When Section Takeoff Not Feasible",
+          "pages": "p. 3-14"
+        },
+        {
+          "n": 3,
+          "work": "F FTI",
+          "loc": "§605 — Blind Procedures",
+          "pages": "p. 6-5"
+        },
+        {
+          "n": 4,
+          "work": "VT-28 R&I S",
+          "loc": "§4 — CAT III (FORM)",
+          "pages": "p. 2"
         }
       ],
       "coverage": {
-        "cited": 15,
+        "cited": 19,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -36541,14 +37053,15 @@
         "lead-lag-and-pure-pursuit"
       ],
       "sourcingLead": null,
-      "lede": "A Blind Rendezvous, referred to as a TACAN rendezvous in fleet aircraft, is a visual circular rendezvous employed to rendezvous a flight above the weather after takeoff, or during the mission if the flight is separated. It is normally executed in a left-hand turn tangent to the briefed fix at a specified airspeed, altitude, and direction, inbound or outbound. The fix will be a VFR ground reference, an FMS reference point, or a radial/DME fix.",
+      "lede": "A Radial/DME rendezvous is a visual carrier rendezvous employed to join a flight above a cloud deck after takeoff or during the mission if the flight is separated. Fleet aircraft will execute an initial rendezvous using the ship's TACAN. The radial rendezvous is normally executed in a left-hand turn tangent to a briefed fix (radial/DME) at a specified airspeed, altitude, and direction (inbound or outbound).",
       "terms": [
         "Radial rendezvous",
         "Rendezvous circle",
-        "Post and lead/lag",
         "Applicability",
+        "VT-28 SOP",
         "Lead",
-        "Wing"
+        "Wing",
+        "Join"
       ]
     },
     {
@@ -36564,10 +37077,8 @@
         {
           "id": "formulas",
           "title": "Formulas",
-          "refs": [
-            1
-          ],
-          "paras": 0,
+          "refs": null,
+          "paras": 1,
           "items": 0,
           "figures": [],
           "tables": [
@@ -36611,11 +37122,16 @@
         {
           "label": "Maximum, non-precision final",
           "value": "1000 fpm"
+        },
+        {
+          "label": "3° descent rate",
+          "value": "groundspeed ÷ 2 × 10 fpm"
         }
       ],
       "works": [
         "I FTI",
-        "Instrument Procedures Handbook"
+        "Instrument Procedures Handbook",
+        "NATOPS Instrument Flight Manual"
       ],
       "references": [
         {
@@ -36641,10 +37157,16 @@
           "work": "I FTI",
           "loc": "§906 — Precision Approach Radar (PAR)",
           "pages": "p. 9-27"
+        },
+        {
+          "n": 5,
+          "work": "NATOPS Instrument Flight Manual",
+          "loc": "§20.4.5 — Vertical Descent Angle (VDA) on Nonprecision Approaches",
+          "pages": "p. 20-19"
         }
       ],
       "coverage": {
-        "cited": 7,
+        "cited": 9,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -37469,7 +37991,7 @@
         {
           "n": 5,
           "work": "FAM FTI",
-          "loc": "§413 — Postflight Checks",
+          "loc": "§413 — Post Flight Checks",
           "pages": "p. 4-12"
         },
         {
@@ -37645,6 +38167,19 @@
       ],
       "sections": [
         {
+          "id": "cnatra-limits",
+          "title": "CNATRA limits",
+          "refs": [
+            29
+          ],
+          "paras": 0,
+          "items": 4,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "vt-27-sop",
           "title": "VT-27 SOP",
           "refs": null,
@@ -37724,6 +38259,7 @@
       ],
       "numbers": [],
       "works": [
+        "CNATRA TA Manual",
         "TW-5 SOP",
         "VT-2 DCON FAM Supplement",
         "VT-2 SOP",
@@ -37900,10 +38436,16 @@
           "work": "VT-6 SOP",
           "loc": "§108 — Student Crew Rest",
           "pages": "p. 1-3"
+        },
+        {
+          "n": 29,
+          "work": "CNATRA TA Manual",
+          "loc": "§501 — Scheduling",
+          "pages": "p. 5-1"
         }
       ],
       "coverage": {
-        "cited": 46,
+        "cited": 50,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -37914,9 +38456,10 @@
         "grading-and-standards"
       ],
       "sourcingLead": null,
-      "lede": "Each squadron publishes its own limits on crew day and crew rest, and on what may be scheduled in a day.",
+      "lede": "CNATRA sets the limits on a student's workday, crew rest and workweek. Each squadron publishes its own limits on crew day and crew rest, and on what may be scheduled in a day.",
       "terms": [
         "VT-2 DCON FAM Supplement",
+        "CNATRA limits",
         "Scheduling",
         "VT-27 SOP",
         "VT-28 SOP",
@@ -38088,7 +38631,7 @@
           "paras": 2,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/section-approach-procedures/mu74gqdh-f-fti-fig-5-1.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/section-approach-procedures/mvmmanj8-f-fti-r3-fig-5-1.webp"
           ],
           "tables": [],
           "main": null,
@@ -38099,6 +38642,19 @@
           "title": "Requirements",
           "refs": [
             1
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "vfr-straight-in",
+          "title": "Section VFR straight-in",
+          "refs": [
+            3
           ],
           "paras": 2,
           "items": 0,
@@ -38127,12 +38683,24 @@
           "value": "1000 feet and 3 miles"
         },
         {
+          "label": "Gear and flaps signal, slowing below",
+          "value": "140 KIAS"
+        },
+        {
           "label": "Configure within",
           "value": "5 miles of the FAF"
         },
         {
           "label": "Final airspeed",
-          "value": "120 KIAS"
+          "value": "125 to 130 KIAS"
+        },
+        {
+          "label": "VFR straight-in, Lead configured by",
+          "value": "3 NM from the runway"
+        },
+        {
+          "label": "VFR straight-in, Wing gear and flaps below",
+          "value": "150 KIAS"
         }
       ],
       "works": [
@@ -38143,7 +38711,7 @@
         {
           "n": 1,
           "work": "F FTI",
-          "loc": "§503 — Section Approaches",
+          "loc": "§504 — Section Approaches",
           "pages": "p. 5-3"
         },
         {
@@ -38151,10 +38719,16 @@
           "work": "VT-6 Formation Supplement",
           "loc": "§II — Formation Sequence Communication Script",
           "pages": "p. 12"
+        },
+        {
+          "n": 3,
+          "work": "F FTI",
+          "loc": "§508 — Section VFR Straight In",
+          "pages": "p. 5-6"
         }
       ],
       "coverage": {
-        "cited": 19,
+        "cited": 24,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -38162,11 +38736,12 @@
         "fan-break"
       ],
       "sourcingLead": null,
-      "lede": "The Section Approach is used to expedite the recovery or for mutual support during certain emergencies. The key to a good formation approach is for Lead to fly a smooth, accurate instrument or visual approach, and for Wing to be proactive about maintaining position and complying with signals. Wing should also be prepared to assume the responsibilities of Lead at any time.",
+      "lede": "The Section Approach is used for IMC recoveries or for mutual support during certain emergencies. The key to a good formation approach is for Lead to fly a smooth, accurate instrument or visual approach, and for Wing to be proactive about maintaining position and complying with signals. Wing should also be prepared to assume the Lead responsibilities at any time.",
       "terms": [
         "Section approach procedures",
         "VT-6 Formation Supplement",
         "Configuration and final",
+        "Section VFR straight-in",
         "Pre-FAF tasks",
         "Requirements",
         "Planning"
@@ -38222,7 +38797,7 @@
           "paras": 2,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/section-pel/mu74gqhm-f-fti-fig-6-2.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/section-pel/mvmmas8y-f-fti-r3-fig-6-2.webp"
           ],
           "tables": [],
           "main": null,
@@ -38258,7 +38833,13 @@
           "n": 1,
           "work": "F FTI",
           "loc": "§606 — Section Precautionary Emergency Landing (PEL)",
-          "pages": "p. 6-6"
+          "pages": "p. 6-7"
+        },
+        {
+          "n": 2,
+          "work": "F FTI",
+          "loc": "Appendix C — Communications and Radio Calls",
+          "pages": "p. C-1"
         }
       ],
       "coverage": {
@@ -38270,7 +38851,7 @@
         "emergency-field-selection"
       ],
       "sourcingLead": null,
-      "lede": "If the Lead aircraft experiences an emergency, a radio call should be made quickly to allow Wing to get separation in order to allow Lead to maneuver as needed. The new Wing will transition to the Perch Position, assist in clearing the flight path, and monitor the PEL aircraft's performance.",
+      "lede": "If the Lead aircraft experiences an emergency, a radio call should be made quickly to allow Wing to get separation in order to allow Lead to maneuver as needed. The new Wing will transition to the support position, assist in clearing the flight path, and monitor the PEL aircraft's performance.",
       "terms": [
         "Section PEL procedures",
         "Detachment and waveoff",
@@ -38305,7 +38886,7 @@
           "refs": [
             1
           ],
-          "paras": 0,
+          "paras": 1,
           "items": 4,
           "figures": [],
           "tables": [],
@@ -38321,7 +38902,7 @@
           "paras": 1,
           "items": 0,
           "figures": [
-            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/section-takeoff/mu7ddrrl-f-fti-fig-3-1.webp"
+            "https://pinksheetmafia-discuss.s3.us-east-2.amazonaws.com/figures/primary/section-takeoff/mvmmayiu-f-fti-r3-fig-3-1.webp"
           ],
           "tables": [],
           "main": null,
@@ -38333,7 +38914,7 @@
           "refs": [
             1
           ],
-          "paras": 3,
+          "paras": 4,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -38412,6 +38993,10 @@
           "value": "150 feet"
         },
         {
+          "label": "Extra runway over single-aircraft TOLD roll",
+          "value": "1,000 feet"
+        },
+        {
           "label": "Crosswind, dry",
           "value": "10 knots"
         },
@@ -38437,7 +39022,7 @@
         },
         {
           "label": "Rotate at",
-          "value": "5 to 10 knots before Vr"
+          "value": "80 KIAS"
         },
         {
           "label": "Nose strut extension",
@@ -38446,6 +39031,10 @@
         {
           "label": "Gear retraction above",
           "value": "110 KIAS"
+        },
+        {
+          "label": "Gear retraction, recommended",
+          "value": "115 to 120 KIAS"
         }
       ],
       "works": [
@@ -38457,14 +39046,14 @@
         {
           "n": 1,
           "work": "F FTI",
-          "loc": "§306 — Section Takeoff",
-          "pages": "p. 3-8"
+          "loc": "§307 — Section Takeoff",
+          "pages": "p. 3-11"
         },
         {
           "n": 2,
           "work": "F FTI",
-          "loc": "§307 — Section Abort",
-          "pages": "p. 3-10"
+          "loc": "§308 — Section Abort",
+          "pages": "p. 3-13"
         },
         {
           "n": 3,
@@ -38486,7 +39075,7 @@
         }
       ],
       "coverage": {
-        "cited": 34,
+        "cited": 38,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -38496,7 +39085,7 @@
         "aborted-takeoff"
       ],
       "sourcingLead": null,
-      "lede": "The section takeoff has many practical advantages. It is frequently used to expedite departures and alleviates the necessity for a rendezvous in poor weather conditions. Wing will fly formation from brake release to rotation and into the airborne phase. Early detection and correction for changes in relative motion are the keys to performing a good section takeoff.",
+      "lede": "The section takeoff has many practical advantages. It is frequently used to expedite departures in VMC and IMC conditions and alleviates the need to obtain two separate IFR clearances with a follow on VMC rendezvous. Wing will fly formation from brake release to rotation and into the airborne phase. Early detection and correction for changes in relative motion are the keys to performing a good section takeoff.",
       "terms": [
         "VT-2 Formation Supplement",
         "Brake release and roll",
@@ -38958,7 +39547,7 @@
           "n": 1,
           "work": "FAM FTI",
           "loc": "§521 — Slip",
-          "pages": "p. 5-31"
+          "pages": "p. 5-32"
         }
       ],
       "coverage": {
@@ -39325,7 +39914,7 @@
           "id": "procedure",
           "title": "Extension and retraction",
           "refs": [
-            1
+            5
           ],
           "paras": 2,
           "items": 0,
@@ -39337,10 +39926,8 @@
         {
           "id": "wing-use",
           "title": "Wing use",
-          "refs": [
-            2
-          ],
-          "paras": 3,
+          "refs": null,
+          "paras": 4,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -39358,30 +39945,36 @@
         {
           "n": 1,
           "work": "F FTI",
-          "loc": "§501 — Recovery Overview",
-          "pages": "p. 5-1"
+          "loc": "§502 — Speed Brake Use",
+          "pages": "p. 5-2"
         },
         {
           "n": 2,
           "work": "F FTI",
           "loc": "§406 — Cruise Formation",
-          "pages": "p. 4-14"
+          "pages": "p. 4-20"
         },
         {
           "n": 3,
           "work": "F FTI",
-          "loc": "§305 — Rendezvous Underrun",
-          "pages": "p. 3-5"
+          "loc": "§306 — Rendezvous Underrun",
+          "pages": "p. 3-7"
         },
         {
           "n": 4,
           "work": "F FTI",
-          "loc": "§502 — The Break",
+          "loc": "§503 — The Break",
           "pages": "p. 5-2"
+        },
+        {
+          "n": 5,
+          "work": "F FTI",
+          "loc": "Appendix C — Communications and Radio Calls",
+          "pages": "p. C-1"
         }
       ],
       "coverage": {
-        "cited": 5,
+        "cited": 6,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -39390,7 +39983,7 @@
         "formation-arrival-and-departure-procedures"
       ],
       "sourcingLead": null,
-      "lede": "During the recovery phase, Lead may elect to use the speed brake to increase descent rates or decelerate the formation. The speed brake is a drag device and is therefore less effective as the airspeed is reduced. Extending and retracting the speed brake will induce pitch changes that may need to be counteracted. It is imperative that Lead maintains a stable platform and is clear about the intended use of the speed brake to preclude any closure issues between Lead and Wing.",
+      "lede": "During the recovery phase, Lead may elect to use the speed brake to increase descent rates or decelerate the formation. The speed brake is a drag device and is less effective as the airspeed is reduced. Extending and retracting the speed brake will induce pitch changes which may need to be counteracted. It is imperative that Lead maintains a stable platform and is clear about their intended use of the speed brake to preclude excessive closure between Lead and Wing.",
       "terms": [
         "Speed brake use as a section",
         "Extension and retraction",
@@ -40571,6 +41164,19 @@
           "further": null
         },
         {
+          "id": "vt-28-sop",
+          "title": "VT-28 SOP",
+          "refs": [
+            3
+          ],
+          "paras": 1,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
           "id": "common-errors",
           "title": "Common errors",
           "refs": [
@@ -40608,7 +41214,8 @@
       ],
       "works": [
         "FAM FTI",
-        "VT-2 DCON FAM Supplement"
+        "VT-2 DCON FAM Supplement",
+        "VT-28 R&I S"
       ],
       "references": [
         {
@@ -40622,10 +41229,16 @@
           "work": "VT-2 DCON FAM Supplement",
           "loc": "VT-2 Expanded NATOPS Brief",
           "pages": "p. 21"
+        },
+        {
+          "n": 3,
+          "work": "VT-28 R&I S",
+          "loc": "§3 — CAT II (DCON/NCON)",
+          "pages": "p. 1"
         }
       ],
       "coverage": {
-        "cited": 19,
+        "cited": 20,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -40642,6 +41255,7 @@
         "Common errors",
         "Recognition",
         "Procedure",
+        "VT-28 SOP",
         "Pullout"
       ]
     },
@@ -41372,12 +41986,12 @@
           "value": "4G, 180° minimum"
         },
         {
-          "label": "Power",
-          "value": "MAX above 10K"
+          "label": "Wing break",
+          "value": "3 seconds after Lead"
         },
         {
           "label": "Power",
-          "value": "90% torque below 10K"
+          "value": "MAX, regardless of altitude"
         },
         {
           "label": "Floor",
@@ -41388,11 +42002,11 @@
           "value": "500 feet above block bottom, if higher"
         },
         {
-          "label": "G range",
+          "label": "Lead G range",
           "value": "1 to 6"
         },
         {
-          "label": "Minimum airspeed",
+          "label": "Lead minimum airspeed",
           "value": "110 KIAS"
         },
         {
@@ -41411,8 +42025,8 @@
         {
           "n": 1,
           "work": "F FTI",
-          "loc": "§408 — Tail Chase",
-          "pages": "p. 4-19"
+          "loc": "§408 — Tail Chase Exercise",
+          "pages": "p. 4-26"
         },
         {
           "n": 2,
@@ -41451,7 +42065,7 @@
         "hand-signals"
       ],
       "sourcingLead": null,
-      "lede": "Through the use of lead, lag, and pure pursuit, students will further learn the basics of how flight paths relate to each other in the dynamic maneuvering of the Tail Chase. Tail Chase demonstrates the effects of lead and lag pursuit on nose-to-tail distance through the use of aerobatic maneuvering.",
+      "lede": "Tail Chase demonstrates the effects of lead, lag, and pure pursuit on nose-to-tail distance through the use of aerobatic maneuvering.",
       "terms": [
         "TW-4 Formation Supplement",
         "VT-6 Formation Supplement",
@@ -41523,11 +42137,22 @@
         {
           "id": "continuing-below-minimums",
           "title": "Descent below minimums",
-          "refs": [
-            4
-          ],
+          "refs": null,
           "paras": 3,
           "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "vt-28-sop",
+          "title": "VT-28 SOP",
+          "refs": [
+            7
+          ],
+          "paras": 1,
+          "items": 2,
           "figures": [],
           "tables": [],
           "main": null,
@@ -41549,7 +42174,9 @@
         }
       ],
       "works": [
-        "CNAF 3710"
+        "CNAF 3710",
+        "NATOPS Instrument Flight Manual",
+        "VT-28 R&I S"
       ],
       "references": [
         {
@@ -41575,10 +42202,28 @@
           "work": "CNAF 3710",
           "loc": "§5.3.5.4 — Criteria for Continuing Instrument Approaches to a Landing",
           "pages": "p. 5-28"
+        },
+        {
+          "n": 5,
+          "work": "NATOPS Instrument Flight Manual",
+          "loc": "§20.13.1 — Landing Minimums",
+          "pages": "p. 20-38"
+        },
+        {
+          "n": 6,
+          "work": "NATOPS Instrument Flight Manual",
+          "loc": "§20.14 — Missed Approach",
+          "pages": "p. 20-42"
+        },
+        {
+          "n": 7,
+          "work": "VT-28 R&I S",
+          "loc": "§2 — CAT I (INAV)",
+          "pages": "p. 1"
         }
       ],
       "coverage": {
-        "cited": 10,
+        "cited": 13,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -41597,7 +42242,8 @@
         "Takeoff and approach minimums",
         "Descent below minimums",
         "Approach minimums",
-        "Takeoff minimums"
+        "Takeoff minimums",
+        "VT-28 SOP"
       ]
     },
     {
@@ -41633,7 +42279,7 @@
           "refs": [
             1
           ],
-          "paras": 2,
+          "paras": 3,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -41670,6 +42316,10 @@
           "value": "~42%"
         },
         {
+          "label": "Transition torque",
+          "value": "~15%"
+        },
+        {
           "label": "Consider TO flaps above",
           "value": "10 knots crosswind"
         }
@@ -41692,7 +42342,7 @@
         }
       ],
       "coverage": {
-        "cited": 7,
+        "cited": 9,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -41861,7 +42511,7 @@
           "refs": [
             1
           ],
-          "paras": 1,
+          "paras": 2,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -41874,9 +42524,22 @@
           "id": "the-call",
           "title": "Phraseology",
           "refs": [
-            1
+            3
           ],
           "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
+        },
+        {
+          "id": "vt-28-sop",
+          "title": "VT-28 SOP",
+          "refs": [
+            4
+          ],
+          "paras": 1,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -41887,7 +42550,7 @@
           "id": "vt-6-formation-supplement",
           "title": "VT-6 Formation Supplement",
           "refs": null,
-          "paras": 3,
+          "paras": 1,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -41898,6 +42561,7 @@
       "numbers": [],
       "works": [
         "F FTI",
+        "VT-28 R&I V",
         "VT-6 Formation Supplement"
       ],
       "references": [
@@ -41905,19 +42569,25 @@
           "n": 1,
           "work": "F FTI",
           "loc": "§409 — Terminate and Knock-It-Off Procedures",
-          "pages": "p. 4-21"
+          "pages": "p. 4-28"
         },
         {
           "n": 2,
           "work": "VT-6 Formation Supplement",
-          "loc": "§VII — Formation Expanded Briefing Guide",
-          "pages": "p. 31"
+          "loc": "§II — Formation Sequence Communication Script",
+          "pages": "p. 10"
         },
         {
           "n": 3,
-          "work": "VT-6 Formation Supplement",
-          "loc": "§II — Formation Sequence Communication Script",
-          "pages": "p. 10"
+          "work": "F FTI",
+          "loc": "Appendix C — Communications and Radio Calls",
+          "pages": "p. C-1"
+        },
+        {
+          "n": 4,
+          "work": "VT-28 R&I V",
+          "loc": "§4 — CAT III (FORM)",
+          "pages": "p. 2"
         }
       ],
       "coverage": {
@@ -41929,12 +42599,13 @@
         "cruise-maneuvering"
       ],
       "sourcingLead": null,
-      "lede": "Terminate is a radio call, normally initiated by the Flight Lead, to terminate an exercise or maneuvering. This differs from the knock-it-off call in that it is anticipated and expected, such as after cruise maneuvering. Wing will request, or Lead will direct, a terminate.",
+      "lede": "Terminate is used to cease maneuvering for a non-safety related situation. In training, it means cease local engagement without affecting the overall exercise. Lead or Wing will direct a terminate.",
       "terms": [
         "VT-6 Formation Supplement",
         "Applicability",
         "Phraseology",
-        "Terminate"
+        "Terminate",
+        "VT-28 SOP"
       ]
     },
     {
@@ -42004,6 +42675,19 @@
           "tables": [],
           "main": null,
           "further": null
+        },
+        {
+          "id": "vt-28-sop",
+          "title": "VT-28 SOP",
+          "refs": [
+            3
+          ],
+          "paras": 2,
+          "items": 0,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
         }
       ],
       "numbers": [
@@ -42026,7 +42710,8 @@
       ],
       "works": [
         "FAM FTI",
-        "VT-27 SOP"
+        "VT-27 SOP",
+        "VT-28 R&I V"
       ],
       "references": [
         {
@@ -42040,10 +42725,16 @@
           "work": "VT-27 SOP",
           "loc": "Ch. 5 §4 — Contact",
           "pages": "p. 5-1"
+        },
+        {
+          "n": 3,
+          "work": "VT-28 R&I V",
+          "loc": "§3 — CAT II (DCON/NCON)",
+          "pages": "p. 1"
         }
       ],
       "coverage": {
-        "cited": 11,
+        "cited": 13,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -42058,6 +42749,7 @@
         "Recovery floor",
         "Components",
         "VT-27 SOP",
+        "VT-28 SOP",
         "Three Cs"
       ]
     },
@@ -44298,7 +44990,7 @@
           "refs": [
             1
           ],
-          "paras": 1,
+          "paras": 4,
           "items": 0,
           "figures": [],
           "tables": [],
@@ -44347,6 +45039,19 @@
           "tables": [],
           "main": null,
           "further": null
+        },
+        {
+          "id": "common-errors",
+          "title": "Common errors",
+          "refs": [
+            1
+          ],
+          "paras": 0,
+          "items": 5,
+          "figures": [],
+          "tables": [],
+          "main": null,
+          "further": null
         }
       ],
       "numbers": [],
@@ -44360,7 +45065,7 @@
           "n": 1,
           "work": "F FTI",
           "loc": "§106 — Formation Communications",
-          "pages": "p. 1-8"
+          "pages": "p. 1-9"
         },
         {
           "n": 2,
@@ -44382,7 +45087,7 @@
         }
       ],
       "coverage": {
-        "cited": 13,
+        "cited": 21,
         "uncited": 0,
         "uncitedIds": []
       },
@@ -44391,11 +45096,12 @@
         "formation-communications"
       ],
       "sourcingLead": null,
-      "lede": "Your visual or radio communications within the flight must be clear and timely to avoid confusion. The Wingman should have time to acknowledge the signal before Lead executes the maneuver. Visual signals will generally be given to Wing when in parade.",
+      "lede": "Your visual or radio communications within the flight must be clear and timely to avoid confusion. Wing should have time to acknowledge the signal before Lead executes the maneuver. Visual signals are to be used to the max extent practical with the radio used for clarification or under IMC conditions. Visual signals will generally be given to Wing when in parade but can be passed in Admin Cruise or Cruise if the situation dictates.",
       "terms": [
         "VT-2 Formation Supplement",
         "VT-6 Formation Supplement",
         "Visual signals",
+        "Common errors",
         "Signal set",
         "Execution"
       ]
@@ -45491,7 +46197,7 @@
         "formation-position-corrections"
       ],
       "sourcingLead": null,
-      "lede": "The Designated Flight Lead is an administrative position, that in Primary is the instructor pilot designated on the flight schedule by the commanding officer. The Designated Flight Lead is the pilot who is ultimately responsible for the mission objectives and the safe and orderly conduct of the flight, and may fly in either position during the conduct of the flight. The Formation Lead is a physical position that may change throughout the flight: the pilot at the controls who is flying the lead position and is responsible for immediate conduct of the flight.",
+      "lede": "The Designated Flight Lead is an administrative position, where in Primary, the instructor pilot is designated on the flight schedule by the commanding officer. The Designated Flight Lead is the pilot who is ultimately responsible for the mission objectives and the safe and orderly conduct of the flight, and may fly in either position during the conduct of the flight. The lead aircraft is a physical position that may change throughout the flight, referenced as Lead. The pilot at the controls who is flying the lead position is responsible for the immediate conduct of the flight.",
       "terms": [
         "Wingman/flight leader responsibilities",
         "Formation Lead",
@@ -45595,7 +46301,7 @@
           "n": 1,
           "work": "FAM FTI",
           "loc": "§908 — Wingover",
-          "pages": "p. 9-12"
+          "pages": "p. 9-13"
         }
       ],
       "coverage": {

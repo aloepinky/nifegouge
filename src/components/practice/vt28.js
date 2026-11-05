@@ -5,9 +5,14 @@
 // techniques, only procedures written in NATOPS or the FTI." Pure data.
 //
 // Each line is [cue, what it stands for]. Said from memory, the cue shows its first letter
-// and the rest is blank, as a course rule's marked words are.
+// and the rest is blank, as a course rule's marked words are. A line with a third entry is
+// not the handout's: it gives the FTI's figure where the FTI has since changed it, and names
+// where that figure is from (checked there by tools/practice-verify.js).
 
 const ref = (pages) => ({ work: 'VT-28 Student Standardization Handout', loc: 'Techniques and Memory Aids', pages });
+// The handout (July 2025) says "Set ~20% torque for all flap settings at the transition point";
+// FAM FTI Rev 5 (09JUL26) replaced that with 14/15/18% by flap setting, NF's at the 180.
+const FTI_TORQUE = { work: 'FAM FTI', loc: '§606 — Approach', pages: 'p. 6-7' };
 
 const AIDS = {
   break: {
@@ -27,7 +32,7 @@ const AIDS = {
     ref: ref('p. 10'),
     lines: [
       ['FLAPS', 'From 120 KIAS level on downwind, set desired flaps then add power (~31% NF, ~42% TF, ~52% LF)'],
-      ['POWER', 'Set ~20% torque for all flap settings at the transition point'],
+      ['POWER', 'Torque 14% NF, 15% TF, 18% LF (FAM FTI; NF at the 180)', FTI_TORQUE],
       ['PITCH', 'Slight nose up to arrest descent and bleed off airspeed (as required)'],
       ['TRIM', 'Trim the aircraft (generally requiring nose up trim)'],
       ['TURN', 'At the 180, slightly relax the nose to capture 120 KIAS (NF), 115 KIAS (TF), 110 KIAS (LF).'],
@@ -113,5 +118,8 @@ export const VT28 = Object.fromEntries(Object.entries(AIDS).map(([id, aid]) => [
   title: aid.title,
   ref: aid.ref,
   technique: true,
-  rule: aid.lines.map(([cue, says]) => ({ text: `${blank(cue)} – [[${says.replace(/[[\]]/g, '')}]]` })),
+  rule: aid.lines.map(([cue, says, from]) => ({
+    text: `${blank(cue)} – [[${says.replace(/[[\]]/g, '')}]]`,
+    ...(from ? { ref: from } : {}),
+  })),
 }]));

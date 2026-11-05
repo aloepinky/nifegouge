@@ -27,7 +27,7 @@ where to look, not what to fix.
 | `href` rows (not items) | 21 |
 | Label-only rows (no page yet) | 5 |
 | Tables | 28 (in 24 items) |
-| Cited blocks | 5303 |
+| Cited blocks | 5424 |
 | Uncited blocks | 18 (in 8 items) |
 
 ## Publications cited
@@ -39,8 +39,8 @@ where to look, not what to fix.
 | I FTI | 82 |
 | TW-5 SOP | 43 |
 | VT-28 SOP | 33 |
+| F FTI | 31 |
 | VT-27 SOP | 30 |
-| F FTI | 30 |
 | CNAF 3710 | 26 |
 | VT-3 SOP | 23 |
 | VT-6 Formation Supplement | 21 |
@@ -54,18 +54,28 @@ where to look, not what to fix.
 | AIM | 10 |
 | Delta JPPT | 9 |
 | FIH | 5 |
+| CNATRA TA Manual | 5 |
 | Checklist Study Guide | 5 |
 | TW-4 Formation Supplement | 5 |
+| VT-28 R&I R | 4 |
+| VT-28 R&I S | 4 |
+| NATOPS Instrument Flight Manual | 3 |
 | Instrument Procedures Handbook | 3 |
+| TW-4 R&I T | 3 |
 | VT-2 INAV Supplement | 3 |
 | TW-4 Briefing Guide | 2 |
 | IFR Supplement | 2 |
 | KNGP IFG | 2 |
+| VT-28 R&I V | 2 |
 | VT-6 NATOPS Briefing Guide | 1 |
 | VT-6 Standards | 1 |
 | 14 C.F.R. | 1 |
+| CNAF 1542.7 | 1 |
 | FLIP General Planning | 1 |
+| Aircrew Systems NATOPS | 1 |
 | Sim Building Poster | 1 |
+| Course Rules Brief | 1 |
+| Closed Tower Operating Agreement | 1 |
 
 ## Items
 
@@ -85,7 +95,7 @@ figures with no reference marker and no section-level `refs`.
 | Aircraft departs prepared surface | `aircraft-departs-prepared-surface` | FAM | FAM2201 FAM3103 FAM3301 | NATOPS, TW-5 SOP |  |  |
 | Aircraft discrepancy reporting | `aircraft-discrepancy-reporting` | FAM | FAM1301 | VT-2 SOP, VT-27 SOP, VT-28 SOP, VT-6 SOP |  |  |
 | Aircraft issue | `aircraft-issue` | FAM | FAM1301 | CNAF 3710, VT-28 SOP |  |  |
-| Airfield and runway lighting | `airfield-and-runway-lighting` | FAM, N | FAM4601 N6101 | AIM, FAM FTI, FIH |  |  |
+| Airfield and runway lighting | `airfield-and-runway-lighting` | FAM, N | FAM4601 N6101 | AIM, FAM FTI, FIH, NATOPS Instrument Flight Manual |  |  |
 | Airspace classification | `airspace-classification` | I, N | I4303 N3101 N4101 | VNAV FTI |  |  |
 | Airspeed changes | `airspeed-changes` | I | I2101 | I FTI |  | maneuver |
 | Airway navigation | `airway-navigation` | I | I4201 | I FTI |  |  |
@@ -113,7 +123,7 @@ figures with no reference marker and no section-level `refs`.
 | Blind procedures | `blind-procedures` | F | F4101 | F FTI, VT-6 Formation Supplement |  |  |
 | Blindfold cockpit check | `blindfold-cockpit-check` | FAM | FAM2101 | Delta JPPT |  |  |
 | Brake failure | `brake-failure` | FAM | FAM4101 | NATOPS |  |  |
-| Brief and debrief | `brief-and-debrief` | FAM | FAM1301 | Delta JPPT, NATOPS, TW-5 SOP, VT-2 DCON FAM Supplement, VT-2 SOP, VT-27 SOP, VT-28 SOP, VT-3 SOP, VT-6 NATOPS Briefing Guide, VT-6 SOP, VT-6 Standards |  |  |
+| Brief and debrief | `brief-and-debrief` | FAM | FAM1301 | CNATRA TA Manual, Delta JPPT, NATOPS, TW-4 R&I T, TW-5 SOP, VT-2 DCON FAM Supplement, VT-2 SOP, VT-27 SOP, VT-28 SOP, VT-3 SOP, VT-6 NATOPS Briefing Guide, VT-6 SOP, VT-6 Standards |  |  |
 | CDI reverse sensing precautions | `cdi-reverse-sensing-precautions` | I | I3206 | I FTI |  |  |
 | CFS and ejection CRM | `cfs-and-ejection-crm` | FAM | FAM2102 | FAM FTI, TW-4 Briefing Guide, TW-5 SOP, VT-2 DCON FAM Supplement, VT-2 SOP, VT-3 SOP |  |  |
 | Change of route or destination | `change-of-route-or-destination` | I | I6202 I4302 | AIM, I FTI, IFR Supplement |  |  |
@@ -126,13 +136,13 @@ figures with no reference marker and no section-level `refs`.
 | Constant airspeed climbs and descents | `constant-airspeed-climbs-and-descents` | I | I2101 | I FTI |  | maneuver |
 | Contact unusual attitudes | `contact-unusual-attitudes` | FAM | FAM3102 FAM4104 FAM3401 FAM4701 | FAM FTI, VT-27 SOP, VT-28 SOP |  | maneuver |
 | Controlled ejection | `controlled-ejection` | FAM | FAM2201 | FAM FTI, NATOPS, TW-5 SOP, VT-28 SOP |  |  |
-| Crew resource management | `crm` | FAM, I | FAM6102 I4101 | CNAF 3710, FAM FTI, NATOPS |  |  |
+| Crew resource management | `crm` | FAM, I | FAM6102 I4101 | CNAF 1542.7, CNAF 3710, FAM FTI, NATOPS |  |  |
 | Crosswind computations | `crosswind-computations` | FAM | FAM3103 | FAM FTI, NATOPS |  |  |
 | Crosswind full stops | `crosswind-full-stops` | FAM | FAM3103 | FAM FTI |  | maneuver |
 | Crosswind limits | `crosswind-limits` | FAM | FAM3103 | NATOPS, TW-4 SOP, TW-5 SOP |  |  |
 | Crosswind takeoff and landings | `crosswind-takeoff-and-landings` | FAM | FAM3103 FAM3103 FAM6202 FAM4104 FAM3301 FAM4202 | FAM FTI |  | maneuver |
 | Crosswind touch-and-goes | `crosswind-touch-and-goes` | FAM | FAM3103 | FAM FTI |  | maneuver |
-| Cruise maneuvering | `cruise-maneuvering` | F, CS | F4104 CS2101 | F FTI, VT-27 SOP, VT-28 SOP, VT-6 Formation Supplement |  | maneuver |
+| Cruise maneuvering | `cruise-maneuvering` | F, CS | F4104 CS2101 | F FTI, TW-4 R&I T, VT-27 SOP, VT-28 SOP, VT-6 Formation Supplement |  | maneuver |
 | Day emergency procedures | `day-emergencies` | N | N4101 | VNAV FTI |  |  |
 | DD-175-1 weather brief | `dd-175-1-weather-brief` | I | I4301 | CNAF 3710, I FTI, TW-4 SOP, TW-5 SOP, VT-27 SOP |  |  |
 | DD-1801 | `dd-1801` | I | I4301 | CNAF 3710, Course Rules Manual, FLIP General Planning, TW-5 SOP, VT-2 INAV Supplement, VT-28 SOP |  |  |
@@ -141,7 +151,7 @@ figures with no reference marker and no section-level `refs`.
 | Discontinued entry (TW-5) | `discontinued-entry-tw-5` | FAM | FAM4301 | TW-5 SOP, VT-3 SOP |  |  |
 | Discontinued entry (TW-4) | `discontinued-entry` | FAM | FAM4301 | Course Rules Manual, VT-3 SOP |  |  |
 | Divert to alternate | `divert-to-alternate` | I | I4302 | I FTI, IFR Supplement |  |  |
-| DOR/TTO policy | `dor-tto-policy` | FAM | FAM1301 | CNAF 3710, Delta JPPT, FAM FTI, TW-4 Briefing Guide, TW-5 SOP |  |  |
+| DOR/TTO policy | `dor-tto-policy` | FAM | FAM1301 | CNAF 3710, CNATRA TA Manual, Delta JPPT, FAM FTI, TW-4 Briefing Guide, TW-5 SOP |  |  |
 | Dual concurrence/response CRM | `dual-concurrence-response-crm` | FAM | FAM2101 | Checklist Study Guide, FAM FTI |  |  |
 | Ejection seat and CFS | `ejection-seat-and-cfs` | FAM | FAM4101 | NATOPS, VT-2 SOP, VT-6 SOP |  |  |
 | Ejection | `ejection` | FAM | FAM2201 FAM3202 FAM4203 | FAM FTI, NATOPS |  |  |
@@ -172,22 +182,22 @@ figures with no reference marker and no section-level `refs`.
 | Fire on ground | `fire-on-ground` | FAM | FAM2102 | NATOPS |  |  |
 | Fire warning in flight | `fire-warning-in-flight` | FAM | FAM2201 | NATOPS |  |  |
 | Flap failures | `flap-failures` | FAM | FAM4303 | NATOPS |  |  |
-| Flight gear check | `flight-gear-check` | FAM | FAM1301 | Delta JPPT, NATOPS, Sim Building Poster, VT-2 SOP, VT-6 SOP |  |  |
+| Flight gear check | `flight-gear-check` | FAM | FAM1301 | Aircrew Systems NATOPS, Delta JPPT, NATOPS, Sim Building Poster, VT-2 SOP, VT-6 SOP |  |  |
 | Flight Service Station | `flight-service-station` | I | I4301 | AIM, FIH, I FTI |  |  |
-| Flight split | `flight-split` | CS | CS1101 CS2102 | TW-4 Formation Supplement, VT-6 Formation Supplement |  | maneuver |
+| Flight split | `flight-split` | CS | CS1101 CS2102 | F FTI, TW-4 Formation Supplement, VT-6 Formation Supplement |  | maneuver |
 | FMS arrivals | `fms-arrivals` | I | I4202 | NATOPS |  |  |
 | FMS flight plan usage | `fms-flight-plan-usage` | I | I4202 | I FTI, NATOPS |  |  |
 | FMS procedures | `fms-procedures` | N | N4101 | NATOPS |  |  |
 | Forced landing | `forced-landing` | FAM | FAM3202 FAM4201 | FAM FTI, NATOPS |  | maneuver |
-| Formation arrival and departure procedures | `formation-arrival-and-departure-procedures` | F | F2101 | F FTI, TW-5 SOP, VT-2 Formation Supplement, VT-6 Formation Supplement |  | maneuver |
+| Formation arrival and departure procedures | `formation-arrival-and-departure-procedures` | F | F2101 | F FTI, TW-5 SOP, VT-2 Formation Supplement, VT-28 R&I R, VT-6 Formation Supplement |  | maneuver |
 | Formation communications | `formation-communications` | F | F1201 F2101 | F FTI, TW-5 SOP, VT-2 Formation Supplement, VT-6 Formation Supplement |  |  |
 | Formation emergency procedures | `formation-emergency-procedures` | F, CS | F1201 CS1101 | F FTI, VT-2 Formation Supplement, VT-6 Formation Supplement |  |  |
-| Formation maneuvers | `formation-maneuvers` | F | F3101 | F FTI, VT-2 Formation Supplement, VT-6 Formation Supplement |  | maneuver |
+| Formation maneuvers | `formation-maneuvers` | F | F3101 | F FTI, VT-2 Formation Supplement, VT-28 R&I R, VT-6 Formation Supplement |  | maneuver |
 | Formation position corrections | `formation-position-corrections` | F | F2101 | F FTI |  | maneuver |
 | Formation preflight planning | `formation-preflight-planning` | F | F1201 | F FTI, TW-4 Formation Supplement, VT-2 Formation Supplement, VT-6 Formation Supplement |  |  |
 | Formation squadron SOP | `formation-squadron-sop` | F | F1201 | TW-4 SOP, TW-5 SOP, VT-2 Formation Supplement, VT-27 SOP, VT-28 SOP, VT-3 SOP, VT-6 Formation Supplement, VT-6 SOP |  |  |
 | Fuel cutoff gate finger lift guard | `fuel-cutoff-gate-finger-lift-guard` | FAM | FAM1301 | NATOPS |  |  |
-| Fuel planning | `fuel-planning` | CS | CS1101 | F FTI, TW-4 Formation Supplement, VT-2 Formation Supplement, VT-6 Formation Supplement |  |  |
+| Fuel planning | `fuel-planning` | CS | CS1101 | F FTI, TW-4 Formation Supplement, VT-2 Formation Supplement, VT-28 R&I R, VT-6 Formation Supplement |  |  |
 | Fuel system | `fuel-system` | FAM | FAM4302 | NATOPS |  |  |
 | Full-stop landings | `full-stop-landings` | FAM | FAM3102 FAM4302 | FAM FTI, VT-27 SOP, VT-28 SOP |  | maneuver |
 | GCA pattern | `gca-pattern` | I, CS | I2102 CS3101 | I FTI |  | maneuver |
@@ -197,13 +207,13 @@ figures with no reference marker and no section-level `refs`.
 | GPS flight modes | `gps-flight-modes` | I | I3201 | NATOPS |  |  |
 | GPS holding | `gps-holding` | I | I3201 | I FTI |  | maneuver |
 | GPS procedures | `gps-procedures` | I | I3201 | I FTI |  |  |
-| ATF, ATS, CTS and MIF | `grading-and-standards` | FAM | FAM1301 | Delta JPPT, VT-2 SOP |  |  |
+| ATF, ATS, CTS and MIF | `grading-and-standards` | FAM | FAM1301 | CNATRA TA Manual, Delta JPPT, VT-2 SOP |  |  |
 | Ground handling signals | `ground-handling-signals` | FAM | FAM2101 | Checklist Study Guide, NATOPS |  |  |
 | Ground-speed calculations | `ground-speed-calculations` | I | I6202 | I FTI |  |  |
 | Half cuban eight | `half-cuban-eight` | FAM | FAM3401 | FAM FTI |  | maneuver |
 | Hand signals | `hand-signals` | F | F1201 F4101 | F FTI |  |  |
 | Hard landings | `hard-landings` | FAM | FAM4303 | FAM FTI, NATOPS |  |  |
-| Headwork | `headwork` | FAM | FAM1301 | Delta JPPT |  |  |
+| Headwork | `headwork` | FAM | FAM1301 | CNATRA TA Manual, Delta JPPT |  |  |
 | Heavy-weight landing considerations | `heavy-weight-landing-considerations` | FAM | FAM4302 | FAM FTI |  |  |
 | HEFOE | `hefoe` | F | F4101 | F FTI |  |  |
 | High altitude approach | `high-altitude-approach` | I | I3204 I4303 | I FTI |  | maneuver |
@@ -212,7 +222,7 @@ figures with no reference marker and no section-level `refs`.
 | Holding entry | `holding-entry` | I | I2203 | I FTI |  | maneuver |
 | Holding | `holding` | I | I6102 I3102 I4101 | I FTI |  | maneuver |
 | Home field arrival (TW-5) | `home-field-arrival-tw-5` | FAM | FAM6101 FAM4103 | TW-5 SOP |  |  |
-| Home field arrival (TW-4) | `home-field-arrival` | FAM | FAM6101 FAM4103 | Course Rules Manual, VT-27 SOP, VT-28 SOP |  |  |
+| Home field arrival (TW-4) | `home-field-arrival` | FAM | FAM6101 FAM4103 | Course Rules Brief, Course Rules Manual, VT-27 SOP, VT-28 SOP |  |  |
 | Hot start | `hot-start` | FAM | FAM2102 | NATOPS |  |  |
 | HSI orientation | `hsi-orientation` | I | I2201 | I FTI |  |  |
 | HUD | `hud` | FAM, N | FAM3103 FAM4101 FAM3401 N3101 | NATOPS |  |  |
@@ -226,7 +236,7 @@ figures with no reference marker and no section-level `refs`.
 | IFR flight planning | `ifr-flight-planning` | I | I4301 I4490 | CNAF 3710, Delta JPPT, I FTI, TW-4 SOP, TW-5 SOP, VT-2 DCON FAM Supplement, VT-27 SOP, VT-28 SOP, VT-6 SOP |  |  |
 | IFR pick-up | `ifr-pickup` | CS | CS3101 | CNAF 3710, KNGP IFG, TW-5 SOP |  |  |
 | IFR Supplement | `ifr-supplement` | I | I4302 | I FTI | 6 |  |
-| IFR to VFR transition | `ifr-to-vfr-transition` | CS | CS1101 | CNAF 3710, TW-4 SOP, TW-5 SOP |  |  |
+| IFR to VFR transition | `ifr-to-vfr-transition` | CS | CS1101 | CNAF 3710, Closed Tower Operating Agreement, TW-4 SOP, TW-5 SOP |  |  |
 | IFR unusual attitudes | `ifr-unusual-attitudes` | I | I2103 | I FTI |  | maneuver |
 | ILS approach | `ils-approach` | I | I6102 I3104 I4102 | CNAF 3710, I FTI |  | maneuver |
 | ILS full procedure turn | `ils-full-procedure-turn` | I | I3205 | I FTI |  | maneuver |
@@ -248,7 +258,7 @@ figures with no reference marker and no section-level `refs`.
 | Knock-it-off | `knock-it-off` | F, CS | F4104 CS2101 | F FTI, TW-5 SOP, VT-2 Formation Supplement, VT-6 Formation Supplement |  |  |
 | Landing flap landings | `landing-flap-landings` | FAM | FAM3102 FAM4102 | FAM FTI |  | maneuver |
 | Landing gear emergency extension | `landing-gear-emergency-extension` | FAM | FAM2202 | NATOPS |  |  |
-| Landing gear inspection | `landing-gear-inspection` | F | F4104 | F FTI, NATOPS, VT-2 Formation Supplement, VT-27 SOP, VT-28 SOP, VT-3 SOP |  |  |
+| Landing gear inspection | `landing-gear-inspection` | F | F4104 | F FTI, NATOPS, VT-2 Formation Supplement, VT-27 SOP, VT-28 R&I R, VT-28 SOP, VT-3 SOP |  |  |
 | Landing irregularities | `landing-irregularities` | FAM | FAM4102 | FAM FTI |  | maneuver |
 | Landing pattern stalls | `landing-pattern-stalls` | FAM | FAM3101 FAM4102 | FAM FTI |  | maneuver |
 | Landing pattern | `landing-pattern` | FAM | FAM3102 FAM4102 | FAM FTI, VT-28 SOP, VT-3 SOP, VT-6 SOP |  | maneuver |
@@ -257,7 +267,7 @@ figures with no reference marker and no section-level `refs`.
 | Local area departure (TW-5) | `local-area-departure-tw-5` | FAM | FAM3101 FAM3102 FAM4101 | TW-5 SOP, VT-3 SOP |  |  |
 | Local area departure (TW-4) | `local-area-departure` | FAM | FAM3101 FAM3102 FAM4101 | Course Rules Manual |  |  |
 | Local area flight procedures (TW-5) | `local-area-flight-procedures-sop-tw-5` | FAM | FAM4204 | TW-5 SOP, VT-2 DCON FAM Supplement, VT-6 SOP |  |  |
-| Local area flight procedures (TW-4) | `local-area-flight-procedures-sop` | FAM | FAM4204 | Course Rules Manual, TW-4 SOP, VT-27 SOP, VT-28 SOP |  |  |
+| Local area flight procedures (TW-4) | `local-area-flight-procedures-sop` | FAM | FAM4204 | Course Rules Manual, TW-4 R&I T, TW-4 SOP, VT-27 SOP, VT-28 SOP |  |  |
 | Local cross-country SOP (TW-5) | `local-cross-country-sop-tw-5` | N | N4101 | TW-5 SOP, VT-2 SOP, VT-6 SOP |  |  |
 | Local cross-country SOP (TW-4) | `local-cross-country-sop` | N | N4101 | TW-4 SOP, VT-27 SOP, VT-28 SOP |  |  |
 | Local night VNAV SOP (TW-5) | `local-night-vnav-sop-tw-5` | FAM, N | FAM4601 N6101 | TW-5 SOP, VT-6 SOP |  |  |
@@ -314,7 +324,7 @@ figures with no reference marker and no section-level `refs`.
 | Point-to-point | `point-to-point` | I | I2202 I3104 | I FTI |  | maneuver |
 | Power-off stall | `power-off-stall` | FAM | FAM3101 FAM4102 | FAM FTI |  | maneuver |
 | Power-on stalls | `power-on-stalls` | FAM | FAM3101 FAM4102 | FAM FTI |  | maneuver |
-| Precautionary emergency landing | `precautionary-emergency-landing` | FAM | FAM2202 FAM3201 FAM6401 FAM4201 | FAM FTI, NATOPS, VT-27 SOP, VT-28 SOP, VT-6 SOP |  | maneuver |
+| Precautionary emergency landing | `precautionary-emergency-landing` | FAM | FAM2202 FAM3201 FAM6401 FAM4201 | FAM FTI, NATOPS, VT-27 SOP, VT-28 R&I S, VT-28 SOP, VT-6 SOP |  | maneuver |
 | Any previously discussed familiarization items | `previously-discussed-familiarization-items` | FAM, CS | FAM4490 CS3101 CS3102 | — |  | generated |
 | Any previously discussed item | `previously-discussed-items` | I | I4490 | — |  | generated |
 | Any previously discussed maneuver | `previously-discussed-maneuvers` | FAM, F, CS | FAM4304 FAM4490 F4290 CS4101 CS4102 CS4290 | — |  | generated |
@@ -322,8 +332,8 @@ figures with no reference marker and no section-level `refs`.
 | Progressive spin | `progressive-spin` | FAM | FAM4702 | NATOPS |  | maneuver |
 | Radial-arc intercepts | `radial-arc-intercepts` | I | I2202 | I FTI |  | maneuver |
 | Radial intercept procedures | `radial-intercept-procedures` | I | I2201 | I FTI |  | maneuver |
-| Radial rendezvous | `radial-rendezvous` | CS | CS1101 CS2102 | F FTI |  | maneuver |
-| Rate of descent calculation | `rate-of-descent-calculation` | — | — | I FTI, Instrument Procedures Handbook |  | orphan |
+| Radial rendezvous | `radial-rendezvous` | CS | CS1101 CS2102 | F FTI, VT-28 R&I S |  | maneuver |
+| Rate of descent calculation | `rate-of-descent-calculation` | — | — | I FTI, Instrument Procedures Handbook, NATOPS Instrument Flight Manual |  | orphan |
 | Recommended altitudes | `recommended-altitudes` | I | I3103 | I FTI |  |  |
 | Route management | `route-management` | N | N3101 N4101 | VNAV FTI |  |  |
 | Runaway trim | `runaway-trim` | FAM | FAM2202 | NATOPS |  |  |
@@ -332,7 +342,7 @@ figures with no reference marker and no section-level `refs`.
 | S-1 pattern | `s-1-pattern` | I | I2102 | I FTI |  | maneuver |
 | Safety check and call | `safety-check-call` | FAM | FAM2101 | Checklist Study Guide, FAM FTI, NATOPS, VT-6 SOP |  |  |
 | SCATSAFE maneuver | `scatsafe` | FAM | FAM6201 FAM4103 | FAM FTI |  | maneuver |
-| Scheduling | `scheduling` | FAM | FAM1301 | TW-5 SOP, VT-2 DCON FAM Supplement, VT-2 SOP, VT-27 SOP, VT-28 SOP, VT-3 SOP, VT-6 SOP |  |  |
+| Scheduling | `scheduling` | FAM | FAM1301 | CNATRA TA Manual, TW-5 SOP, VT-2 DCON FAM Supplement, VT-2 SOP, VT-27 SOP, VT-28 SOP, VT-3 SOP, VT-6 SOP |  |  |
 | Seat height and rudder pedal adjustment | `seat-height-and-rudder-pedal-adjustment` | GND, FAM | G0102 FAM1301 | Delta JPPT, NATOPS |  |  |
 | Section approach procedures | `section-approach-procedures` | CS | CS2101 | F FTI, VT-6 Formation Supplement |  | maneuver |
 | Section PEL | `section-pel` | F, CS | F4103 CS2101 | F FTI |  | maneuver |
@@ -353,17 +363,17 @@ figures with no reference marker and no section-level `refs`.
 | Standard time corrections | `standard-time-corrections` | N | N3101 N4101 | VNAV FTI |  |  |
 | Standard terminal arrival | `star` | I | I3202 I4304 | I FTI |  |  |
 | Station passage | `station-passage` | I | I2201 | I FTI |  |  |
-| Steady-state spin recovery | `steady-state-spin-recovery` | FAM | FAM3101 | FAM FTI, VT-2 DCON FAM Supplement |  | maneuver |
+| Steady-state spin recovery | `steady-state-spin-recovery` | FAM | FAM3101 | FAM FTI, VT-2 DCON FAM Supplement, VT-28 R&I S |  | maneuver |
 | Steep turns | `steep-turns` | I | I2101 | I FTI |  | maneuver |
 | Stereo routes | `stereo-routes` | I | I4201 | CNAF 3710, Course Rules Manual, I FTI, TW-5 SOP |  |  |
 | Strange Field operations | `strange-field-operations` | I | I4301 | I FTI, NATOPS, TW-4 SOP, TW-5 SOP, VT-2 SOP, VT-27 SOP, VT-28 SOP, VT-6 SOP |  |  |
 | Strike of ground object | `strike-of-ground-object` | FAM | FAM4101 | FAM FTI, NATOPS |  |  |
 | Tail chase | `tail-chase` | — | — | F FTI, TW-4 Formation Supplement, VT-27 SOP, VT-28 SOP, VT-6 Formation Supplement |  | maneuver, orphan |
-| Takeoff and approach minimums | `takeoff-and-approach-minimums` | I | I4204 I4301 I4490 | CNAF 3710 |  |  |
+| Takeoff and approach minimums | `takeoff-and-approach-minimums` | I | I4204 I4301 I4490 | CNAF 3710, NATOPS Instrument Flight Manual, VT-28 R&I S |  |  |
 | Takeoff flap landings | `takeoff-flap-landings` | FAM | FAM3102 FAM4102 | FAM FTI |  | maneuver |
 | Teardrop approach | `teardrop-approach` | I | I6101 I3101 | I FTI |  | maneuver |
-| Terminate | `terminate` | F | F4104 | F FTI, VT-6 Formation Supplement |  |  |
-| Three Cs | `three-cs` | FAM | FAM6201 | FAM FTI, VT-27 SOP |  |  |
+| Terminate | `terminate` | F | F4104 | F FTI, VT-28 R&I V, VT-6 Formation Supplement |  |  |
+| Three Cs | `three-cs` | FAM | FAM6201 | FAM FTI, VT-27 SOP, VT-28 R&I V |  |  |
 | Time on target | `time-on-target` | N | N4101 | VNAV FTI |  |  |
 | Timed turns | `timed-turns` | I | I2101 | I FTI |  | maneuver |
 | Tire failures | `tire-failures` | FAM | FAM4102 | NATOPS |  |  |
@@ -434,7 +444,7 @@ the item, and its section headings. Longest first.
 - `blind-procedures` — VT-6 Formation Supplement · Single aircraft blind · Both aircraft blind · Blind procedures · Blind sun
 - `blindfold-cockpit-check` — Blindfold cockpit check · Syllabus notes · Controls
 - `brake-failure` — Brake failure · Brake fade · Procedure
-- `brief-and-debrief` — VT-6 NATOPS Briefing Guide · VT-2 DCON FAM Supplement · Brief and debrief · Crew coordination · Briefing content · VT-6 Standards · Preparation · VT-27 SOP · VT-28 SOP · TW-5 SOP · VT-2 SOP · VT-3 SOP · VT-6 SOP · Debrief
+- `brief-and-debrief` — VT-6 NATOPS Briefing Guide · VT-2 DCON FAM Supplement · Brief and debrief · Crew coordination · Briefing content · VT-6 Standards · Preparation · VT-27 SOP · VT-28 SOP · TW-4 SOP · TW-5 SOP · VT-2 SOP · VT-3 SOP · VT-6 SOP · Debrief
 - `cdi-reverse-sensing-precautions` — CDI reverse sensing precautions · Back course approaches · Front course setting
 - `cfs-and-ejection-crm` — VT-2 DCON FAM Supplement · CFS and ejection CRM · Controlled ejection · TW-4 Briefing Guide · Loss of ICS · TW-5 SOP · VT-2 SOP · VT-3 SOP
 - `change-of-route-or-destination` — Change of route or destination (inflight) · Change of flight plan while airborne · Change of route or destination · Change of flight plan · ATC request
@@ -453,7 +463,7 @@ the item, and its section headings. Longest first.
 - `crosswind-limits` — Crosswind component · Crosswind limits · Wind limitations · TW-4 SOP · TW-5 SOP
 - `crosswind-takeoff-and-landings` — Crosswind takeoffs/touch-and-goes/full-stop landings · Crosswind takeoff/touch-and-go/full-stop landings · Crosswind takeoff/approach/landing · Crosswind takeoff and landings · Crosswind landings · Crosswind takeoff · Takeoff · Landing
 - `crosswind-touch-and-goes` — Crosswind touch-and-goes · Crosswind T&Gs · Common errors · Procedure · Climbout
-- `cruise-maneuvering` — Cruise position/maneuvering · VT-6 Formation Supplement · Differences from parade · Cruise maneuvering · Parade to cruise · Common errors · Technique · VT-27 SOP · VT-28 SOP
+- `cruise-maneuvering` — Cruise position/maneuvering · VT-6 Formation Supplement · Differences from parade · Cruise maneuvering · Parade to cruise · Common errors · Technique · VT-27 SOP · VT-28 SOP · TW-4 SOP
 - `day-emergencies` — Precautionary emergency landing · Any applicable day emergency · Day emergency procedures · Lost communications · Route altitudes · Lost aircraft
 - `dd-175-1-weather-brief` — DD-175-1 weather brief · Applicability · CNAF 3710 · VT-27 SOP · TW-4 SOP · TW-5 SOP · Sources
 - `dd-1801` — VT-2 INAV Supplement · Form instructions · TW-4 course rules · TW-5 course rules · CNAF 3710 · VT-28 SOP · DD-1801
@@ -486,7 +496,7 @@ the item, and its section headings. Longest first.
 - `engine-malfunctions` — Engine malfunctions · Fire warning · Indications
 - `engine-system` — Power management · Engine system · Gas generator · Power section
 - `faf-to-map-timing-adjustments` — FAF-to-MAP timing adjustments · Interpolation
-- `fan-break` — Pattern calls and rejoin · Fan break · Execution
+- `fan-break` — Gear down call · Fan break · Execution
 - `feeder-fixes` — Feeder fixes · Purpose
 - `feeder-routes` — Feeder routes · Purpose
 - `feet-to-rudder-placement` — Feet to rudder placement · Ground operations · Pedal pressure
@@ -495,20 +505,20 @@ the item, and its section headings. Longest first.
 - `flap-failures` — Loss of flap power · Flap restrictions · Flap failures · Procedure
 - `flight-gear-check` — Flight gear check · Seat survival kit · Syllabus notes · Survival vest · VT-2 SOP · VT-6 SOP
 - `flight-service-station` — Flight Service Station · Weather and NOTAMs · Contact methods · VOR test signal · Flight plans · FSS
-- `flight-split` — Dissolving the flight (flight split) · TW-4 Formation Supplement · VT-6 Formation Supplement · Inflight split · Flight split
+- `flight-split` — Dissolving the flight (flight split) · TW-4 Formation Supplement · VT-6 Formation Supplement · Inflight split · Considerations · Deconfliction · Flight split · Separation · Procedure
 - `fms-arrivals` — Approach transition · STAR selection · Terminal phase · FMS arrivals
 - `fms-flight-plan-usage` — FMS flight plan usage (SID/STAR, holding, and approach) · FMS flight plan usage · Database retrieval · Loaded procedures · Discontinuities
 - `fms-procedures` — Operational capabilities · FMS procedures · Direct-to · Controls · Nearest · Routes · GPS
 - `forced-landing` — Forced landing · Low energy · Procedure · Touchdown
-- `formation-arrival-and-departure-procedures` — Formation arrival and departure procedures · VT-2 Formation Supplement · VT-6 Formation Supplement · Section missed approach · Departure and climbout · Running rendezvous · Common errors · Break entry · TW-5 SOP · Arrival
-- `formation-communications` — Formation tactical voice communications · VT-2 Formation Supplement · VT-6 Formation Supplement · Formation communications · Radio or visual signal · Tactical frequency · Frequency changes · Common errors · Call signs · TW-5 SOP
-- `formation-emergency-procedures` — Formation emergency procedures · VT-2 Formation Supplement · VT-6 Formation Supplement · Backup assistance · Lead assignment · Perch position · ATC call signs · Section EP
-- `formation-maneuvers` — VT-2 Formation Supplement · VT-6 Formation Supplement · Breakup and rendezvous · Formation maneuvers · Interval takeoff · Cruise formation · Parade position · Common errors · Parade turns · Crossunder · Underrun
+- `formation-arrival-and-departure-procedures` — Formation arrival and departure procedures · VT-2 Formation Supplement · VT-6 Formation Supplement · Section missed approach · Departure and climbout · Running rendezvous · Common errors · Break entry · VT-28 SOP · TW-5 SOP · Arrival
+- `formation-communications` — Formation tactical voice communications · VT-2 Formation Supplement · VT-6 Formation Supplement · Formation communications · Radio or visual signal · Tactical frequency · Frequency changes · Radio names · Call signs · TW-5 SOP
+- `formation-emergency-procedures` — Formation emergency procedures · VT-2 Formation Supplement · VT-6 Formation Supplement · Backup assistance · Support position · Lead assignment · ATC call signs · Section EP
+- `formation-maneuvers` — VT-2 Formation Supplement · VT-6 Formation Supplement · Breakup and rendezvous · Formation maneuvers · Interval takeoff · Cruise formation · Parade position · Common errors · Parade turns · Cross-under · VT-28 SOP · Underrun
 - `formation-position-corrections` — Formation position corrections · Correction method · Position keeping
 - `formation-preflight-planning` — Formation preflight planning · TW-4 Formation Supplement · VT-2 Formation Supplement · VT-6 Formation Supplement · Integrity check · Fuel awareness · Outbound · Taxi
 - `formation-squadron-sop` — VT-2 Formation Supplement · VT-6 Formation Supplement · Formation squadron SOP · Squadron SOP · VT-27 SOP · VT-28 SOP · TW-4 SOP · TW-5 SOP · VT-3 SOP · VT-6 SOP
 - `fuel-cutoff-gate-finger-lift-guard` — Fuel cutoff gate finger lift guard · Purpose
-- `fuel-planning` — TW-4 Formation Supplement · VT-2 Formation Supplement · VT-6 Formation Supplement · Calls and resets · Fuel planning · Fuel states
+- `fuel-planning` — TW-4 Formation Supplement · VT-2 Formation Supplement · VT-6 Formation Supplement · Joker calculation · Operations checks · Calls and resets · Fuel planning · Fuel states · VT-28 SOP
 - `fuel-system` — Quantity probes · Auto balance · Fuel system · Indications · Supply
 - `full-stop-landings` — Flare and touchdown · Brakes and steering · Full-stop landings · Landing transition · Common errors · Procedure · VT-27 SOP · VT-28 SOP
 - `gca-pattern` — Missed approach · Common errors · GCA pattern · Procedure
@@ -518,13 +528,13 @@ the item, and its section headings. Longest first.
 - `gps-flight-modes` — Approach mode exit · GPS flight modes · Terminal · En route · Approach
 - `gps-holding` — Holding waypoints · Course reversals · Abeam position · GPS holding
 - `gps-procedures` — Database retrieval · GPS procedures · Limitations
-- `grading-and-standards` — Standards and progression · ATF, ATS, CTS and MIF · Instructor judgment · Definitions · VT-2 SOP
+- `grading-and-standards` — Standards and progression · ATF, ATS, CTS and MIF · Instructor judgment · Maneuver grades · Event grades · Definitions · VT-2 SOP
 - `ground-handling-signals` — Ground handling signals · Doctrine · Signals
 - `ground-speed-calculations` — Ground-speed calculations · Wind components · Formulas
 - `half-cuban-eight` — Half cuban eight · Common errors · Procedure
 - `hand-signals` — Signals inside procedures · Hand signals
 - `hard-landings` — Hard landings · Limitations · Response · Causes
-- `headwork` — Graded behaviors · Components · Headwork
+- `headwork` — Graded behaviors · Components · Exclusions · Headwork
 - `heavy-weight-landing-considerations` — Heavy-weight landing considerations · Approach airspeed
 - `hefoe` — Procedure · HEFOE · Code
 - `high-altitude-approach` — High altitude approach · High-altitude approach · Penetration · Procedure
@@ -590,7 +600,7 @@ the item, and its section headings. Longest first.
 - `lost-aircraft-procedures` — Lost aircraft procedures · Unfamiliar field landing · Five Cs
 - `lost-communication-procedures` — Lost communication procedures · VT-2 Formation Supplement · VT-6 Formation Supplement · Initial signals · Troubleshooting · NORDO approach · HEFOE signals · Recovery · VT-3 SOP
 - `lost-communications` — Lost communications (FIH) · Expect further clearance · IMC lost communications · Lost communications · Clearance limit · Altitude · KNGP IFG · TW-5 SOP · General · In VMC · Route
-- `lost-sight-procedures` — VT-6 Formation Supplement · Final approach segment · Lost sight procedures · Climbs and descents · Straight and level · Immediate actions · VT-3 SOP · Turns
+- `lost-sight-procedures` — Rejoin or separate recovery · VT-6 Formation Supplement · Final approach segment · Lost sight procedures · Climbs and descents · Straight and level · Immediate actions · VT-3 SOP · Turns
 - `low-fuel-pressure` — Low fuel pressure · Procedure · Causes
 - `maneuvering-speeds` — Airspeed limitations · Maneuvering speeds · Maneuvering speed
 - `memorized-checklists` — Critical-phase checklists · VT-2 DCON FAM Supplement · Memorized checklists · Printed checklists · Boldface steps · VT-28 SOP · TW-5 SOP · VT-2 SOP · VT-3 SOP · VT-6 SOP
@@ -626,7 +636,7 @@ the item, and its section headings. Longest first.
 - `over-the-station-intercepts` — Over-the-station intercepts · Double-the-angle method · Common errors · Procedure
 - `par-approach` — Missed approach criteria · Radar approach types · Transition to final · Controller calls · Common errors · PAR approach · Procedure · CNAF 3710 · Minimums · PAR
 - `par-without-glideslope` — PAR without glideslope · Final approach · Common errors · PAR W/O GS · Procedure · CNAF 3710
-- `parade-sequence-checkpoints` — Parade sequence checkpoints · TW-4 Formation Supplement · VT-6 Formation Supplement · Breakup and rendezvous · Parade position · Parade turns · Lead change · Crossunder · Sequence
+- `parade-sequence-checkpoints` — Parade sequence checkpoints · TW-4 Formation Supplement · VT-6 Formation Supplement · Breakup and rendezvous · Parade position · Parade turns · Cross-under · Lead change · Sequence
 - `pattern-adjustments-for-crosswinds` — Pattern adjustments for crosswinds · Overshoot and undershoot · Crab correction · Common errors · Procedure · Gusts
 - `pcl-cutoff-and-inadvertent-engine-shutdown` — PCL cutoff and inadvertent engine shutdown · Relight prohibition · PCL interconnect · Cutoff gate
 - `pel-from-the-pattern` — PEL from the pattern · Common errors · Procedure · VT-27 SOP · PEL/P · Entry
@@ -643,7 +653,7 @@ the item, and its section headings. Longest first.
 - `progressive-spin` — Progressive spin · Recognition · Recovery
 - `radial-arc-intercepts` — Radial-arc intercepts · Variations · Procedure
 - `radial-intercept-procedures` — Radial intercept procedures · Radial versus course · Intercept angle · Common errors · Procedure
-- `radial-rendezvous` — Radial rendezvous · Rendezvous circle · Post and lead/lag · Applicability · Lead · Wing
+- `radial-rendezvous` — Radial rendezvous · Rendezvous circle · Applicability · VT-28 SOP · Lead · Wing · Join
 - `rate-of-descent-calculation` — Rate of descent calculation · Non-precision approaches · Final approach · Formulas
 - `recommended-altitudes` — Recommended altitudes · Descent to MDA · Purpose
 - `route-management` — Checkpoint procedures · Correction criteria · Weather deviations · Route management · Route altitudes · Visual fixing
@@ -653,9 +663,9 @@ the item, and its section headings. Longest first.
 - `s-1-pattern` — Rate and power · Common errors · S-1 pattern · Procedure
 - `safety-check-call` — Safety check/call prior to cockpit entry and departing aircraft · Safety check and call · Cockpit entry · Cockpit exit · Postflight · VT-6 SOP
 - `scatsafe` — SCATSAFE maneuver · Demonstrations · Common errors · Procedure
-- `scheduling` — VT-2 DCON FAM Supplement · Scheduling · VT-27 SOP · VT-28 SOP · TW-5 SOP · VT-2 SOP · VT-3 SOP · VT-6 SOP
+- `scheduling` — VT-2 DCON FAM Supplement · CNATRA limits · Scheduling · VT-27 SOP · VT-28 SOP · TW-5 SOP · VT-2 SOP · VT-3 SOP · VT-6 SOP
 - `seat-height-and-rudder-pedal-adjustment` — Seat height and rudder pedal adjustment · Rudder pedals · Seat height
-- `section-approach-procedures` — Section approach procedures · VT-6 Formation Supplement · Configuration and final · Pre-FAF tasks · Requirements · Planning
+- `section-approach-procedures` — Section approach procedures · VT-6 Formation Supplement · Configuration and final · Section VFR straight-in · Pre-FAF tasks · Requirements · Planning
 - `section-pel` — Section PEL procedures · Detachment and waveoff · Section PEL · Lead change · Wing duties
 - `section-takeoff` — VT-2 Formation Supplement · Brake release and roll · Rotation and climb · Section takeoff · Section abort · Common errors · Restrictions · TW-5 SOP · Line-up
 - `securing-rear-cockpit-for-solo` — Securing the rear cockpit for solo · Securing rear cockpit for solo · Rear cockpit switches · Rear cockpit tie down · TW-5 SOP
@@ -674,17 +684,17 @@ the item, and its section headings. Longest first.
 - `standard-time-corrections` — Standard time corrections · Off-course maneuvering · Proportional method · Fuel considerations · Ten percent method
 - `star` — Standard terminal arrival · Descend via · Definition · Acceptance · STAR
 - `station-passage` — Station passage · Indications
-- `steady-state-spin-recovery` — Steady-state spin recovery · VT-2 DCON FAM Supplement · Common errors · Recognition · Procedure · Pullout
+- `steady-state-spin-recovery` — Steady-state spin recovery · VT-2 DCON FAM Supplement · Common errors · Recognition · Procedure · VT-28 SOP · Pullout
 - `steep-turns` — Common errors · Steep turns · Procedure
 - `stereo-routes` — Stereo routes (canned flight plans) · TW-4 course rules · TW-5 course rules · Coded departures · Stereo routes · CNAF 3710
 - `strange-field-operations` — Strange Field operations · Postflight inspection · Fuel packet · VT-27 SOP · VT-28 SOP · TW-4 SOP · TW-5 SOP · VT-2 SOP · VT-6 SOP
 - `strike-of-ground-object` — Strike of ground object · Shutdown criteria · Common errors · Prevention
 - `tail-chase` — TW-4 Formation Supplement · VT-6 Formation Supplement · Tail chase · Maneuvers · VT-27 SOP · VT-28 SOP · Limits · Rejoin · Entry
-- `takeoff-and-approach-minimums` — CNAF M-3710.7 takeoff and approach minimums · CNAF M-3710.7 takeoff/approach minimums · Takeoff and approach minimums · Descent below minimums · Approach minimums · Takeoff minimums
+- `takeoff-and-approach-minimums` — CNAF M-3710.7 takeoff and approach minimums · CNAF M-3710.7 takeoff/approach minimums · Takeoff and approach minimums · Descent below minimums · Approach minimums · Takeoff minimums · VT-28 SOP
 - `takeoff-flap-landings` — Takeoff flap landings · Takeoff flap landing · Applicability · Approach
 - `teardrop-approach` — Remain-within distance · Training substitution · Teardrop approach · Tear drop · Procedure · Teardrop
-- `terminate` — VT-6 Formation Supplement · Applicability · Phraseology · Terminate
-- `three-cs` — Recovery criteria · Recovery floor · Components · VT-27 SOP · Three Cs
+- `terminate` — VT-6 Formation Supplement · Applicability · Phraseology · Terminate · VT-28 SOP
+- `three-cs` — Recovery criteria · Recovery floor · Components · VT-27 SOP · VT-28 SOP · Three Cs
 - `time-on-target` — En-route corrections · Target checkpoint · Time on target · Elapsed time · Hard times · Jet log · TOT
 - `timed-turns` — Rate and bank · Rate analysis · Common errors · Timed turns · Timed-turns · Procedure
 - `tire-failures` — Maximum braking · Tire failures · Procedures
@@ -701,7 +711,7 @@ the item, and its section headings. Longest first.
 - `vfr-chart-preparation` — VFR chart preparation · Route and checkpoints · Charts and equipment · Distance and timing · Continuation fuel · Magnetic course · Time on target · Chart handling · Data boxes · Landmarks
 - `vfr-field-entry-departure` — VFR field entry/departure (AIM) · VFR field entry-departure (AIM) · Tower-controlled airports · Traffic pattern altitudes · Approach control service · Segmented circle system · CTAF and self-announce · Uncontrolled pattern · Light signals
 - `visual-descent-point` — Visual descent point · Unpublished VDPs · Use on final · Computation · VDP
-- `visual-signals` — VT-2 Formation Supplement · VT-6 Formation Supplement · Visual signals · Signal set · Execution
+- `visual-signals` — VT-2 Formation Supplement · VT-6 Formation Supplement · Visual signals · Common errors · Signal set · Execution
 - `visual-straight-in` — Visual straight-in · TW-4 course rules · TW-5 course rules · Common errors · Box pattern · Procedure · VT-27 SOP · VT-28 SOP
 - `vn-diagram` — Load factor envelope · T-6B VN diagram · V-n diagram
 - `vor-approach-procedures` — VOR approach procedures · Descent from the FAF · Common errors · Description · Transitions · Procedure

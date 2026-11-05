@@ -88,7 +88,9 @@ const unmark = (s) => s.replace(/\[\[|\]\]/g, '');
 const { FTI } = loadSrc(path.join(ROOT, 'src/components/practice/ftiProcedures.js'));
 const { VT28 } = loadSrc(path.join(ROOT, 'src/components/practice/vt28.js'));
 Object.entries(FTI).forEach(([id, p]) => p.rule.forEach((para, n) => add(unmark(para.text).replace(/^[a-z]+\. /, ''), p.ref, `FTI ${id} ${n + 1}`)));
-Object.entries(VT28).forEach(([id, p]) => p.rule.forEach((line, n) => add(unmark(line.text).replace(' – ', ' '), p.ref, `VT-28 ${id} ${n + 1}`)));
+Object.entries(VT28).forEach(([id, p]) => p.rule.forEach((line, n) => add(line.ref ? unmark(line.text).split(' – ').slice(1).join(' – ') : unmark(line.text).replace(' – ', ' '), line.ref || p.ref, `VT-28 ${id} ${n + 1}`)));
+// (A line with its own `ref` is a figure from that publication under the handout's cue, so only
+// what follows the cue is looked for there.)
 
 let missing = 0;
 lines.forEach(({ text, ref, where }) => {
