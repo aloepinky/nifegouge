@@ -272,3 +272,12 @@ export function partChanged(before, after, id) {
 export function reportsFor(data, ref) {
   return (data.pubs || []).filter((p) => refMatches(ref, p));
 }
+
+// The publication reports that touch any reference on a page, each once, for the publish step
+// to offer settling everywhere ({ id, name }).
+export function pubsOnPage(data, item) {
+  const refs = (item && item.references) || [];
+  return ((data && data.pubs) || [])
+    .filter((p) => refs.some((ref) => refMatches(ref, p)))
+    .map((p) => ({ id: p.id, name: reportName(p) }));
+}

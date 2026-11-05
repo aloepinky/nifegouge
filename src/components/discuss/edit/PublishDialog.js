@@ -12,7 +12,18 @@ import { saveItem, getAuthor, setAuthor } from '../discussApi';
 // `marked` lists the parts of the page readers have marked outdated ({ id, title, changed }).
 // The publisher ticks the ones the edit brings up to date, which clears their marks; a part the
 // edit changed starts ticked.
-function PublishDialog({ slug, baseRev, item, marked = [], onPublished, onConflict, onCancel }) {
+//
+// `pubs` lists the publications this page cites that someone reported updated ({ id, name }).
+// Ticking one says the site now follows the new edition, which takes the warning off every
+// page that cites it, not just this one. None starts ticked.
+function PublishDialog({ slug, baseRev, item, marked = [], pubs = [], onPublished, onConflict, onCancel }) {
+  const [settling, setSettling] = useState(() => new Set());
+  const toggleReport = (id) => setSettling((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    return next;
+  });
   const [author, setAuthorField] = useState(getAuthor);
   const [summary, setSummary] = useState('');
   const [clearing, setClearing] = useState(() => new Set(marked.filter((m) => m.changed).map((m) => m.id)));
@@ -36,7 +47,8 @@ function PublishDialog({ slug, baseRev, item, marked = [], onPublished, onConfli
     setAuthor(name);
     try {
       const clearOutdated = marked.map((m) => m.id).filter((id) => clearing.has(id));
-      const result = await saveItem(slug, baseRev, item, { author: name, summary: summary.trim(), clearOutdated });
+      const resolvePubs = pubs.map((p) => p.id).filter((id) => settling.has(id));
+      const result = await saveItem(slug, baseRev, item, { author: name, summary: summary.trim(), clearOutdated, resolvePubs });
       onPublished({ ...result, author: name, summary: summary.trim() });
     } catch (err) {
       if (err.status === 409) {
@@ -86,7 +98,23 @@ function PublishDialog({ slug, baseRev, item, marked = [], onPublished, onConfli
           ))}
         </fieldset>
       )}
-      {error && <p className="discuss-editor-warn">{error}</p>}
+      {pubs.length > 0 && (
+        <fieldset className="discuss-editor-field discuss-publish-outdated">
+          <legend className="discuss-editor-label">Publication reported updated</legend>
+          <p className="discuss-editor-hint">
+            Someone reported a new edition of a publication this page cites. Tick it once the
+            site follows the new edition. The warning comes off every page that cites it, not
+            just this one.
+          </p>
+          {pubs.map((p) => (
+            <label key={p.id} className="discuss-publish-outdated-row">
+              <input type="checkbox" checked={settling.has(p.id)} onChange={() => toggleReport(p.id)} />
+              {p.name} is up to date on the site
+            </label>
+          ))}
+        </fieldset>
+      )}
+      {error &&<p className="discuss-editor-warn">{error}</p>}
       <div className="discuss-editor-buttons">
         <button
           type="button"

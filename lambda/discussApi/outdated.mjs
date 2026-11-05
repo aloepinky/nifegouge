@@ -3,7 +3,9 @@ import { GetCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { getDynamo, CONFIG } from './clients.mjs';
 import { HttpError, cleanText, ok, parseBody } from './http.mjs';
 import { putJson } from './mirror.mjs';
-import { itemId } from './namespace.mjs';
+import { itemId, isNamespaced } from './namespace.mjs';
+import { touchedBy } from './pubMatch.mjs';
+import { listItemMetas, newestItem } from './store.mjs';
 
 // Outdated marks: the first thing a reader can do to a discussion item short of editing it.
 //
@@ -17,12 +19,19 @@ import { itemId } from './namespace.mjs';
 //
 // Both are undone by an edit: whoever publishes a section can say it is up to date, which
 // clears its marks and records when (`cleared`), so a publication report made before that time
-// no longer tints it. A report made after it does.
+// no longer tints it. A report made after it does. And whoever publishes a page citing a
+// reported publication can settle the report itself (`resolvePubs`), which takes it off every
+// page at once: the way a reissue is closed out without an admin. If nobody ticks it, it
+// settles on its own once every part it tints, on every page, has been said to be up to date
+// since it was made (`settleCleared`). Its row keeps the parts still waiting, `open:
+// { <school>/<slug>: [<target>] }`, worked out the first time a publish needs it (by reading
+// every page) and kept current by each publish of a page it touches.
 //
 // Table DiscussOutdated, partition `id` (S), one row per page and one per report:
 //   page#<school>/<slug>  { page, ver, marks: { <target>: { n, voters, notes, at } },
 //                           cleared: { <target>|'*': iso } }
-//   pub#<hash>            { ver, work, scope, part, school, n, voters, notes, first, at, hidden? }
+//   pub#<hash>            { ver, work, scope, part, school, n, voters, notes, first, at, hidden?,
+//                           open?, resolved?: { at, by, page, rev, auto? } }
 //
 // The whole table is mirrored as one file after every write. It is small by nature (a row per
 // page anyone has marked), and every page and the landing page need it all:
@@ -97,7 +106,7 @@ const freshPage = (school, slug) => () => ({
 // ---------------------------------------------------------------------------------------
 // Mirror
 
-export async function rebuildOutdatedMirror() {
+async function allRows() {
   const rows = [];
   let start;
   do {
@@ -108,6 +117,11 @@ export async function rebuildOutdatedMirror() {
     rows.push(...(out.Items || []));
     start = out.LastEvaluatedKey;
   } while (start);
+  return rows;
+}
+
+export async function rebuildOutdatedMirror() {
+  const rows = await allRows();
 
   const pages = {};
   const pubs = [];
@@ -207,6 +221,9 @@ export async function reportOutdatedPubHandler(event) {
       already = true;
       return false;
     }
+    // Every vote moves the report's time on, and a part cleared before it is tinted again, so
+    // what it tints is worked out afresh at the next publish (also when it had settled).
+    delete row.open;
     row.voters = [...row.voters, voter];
     row.n += 1;
     row.notes = addNote(row.notes, note, at);
@@ -237,6 +254,108 @@ export async function clearOutdated(school, slug, targets) {
     }
   });
   return rebuildOutdatedMirror();
+}
+
+// Called by save-item after a revision is written: the publisher said these publication reports
+// are dealt with, the site now follows the new edition, so the report stops tinting every page,
+// not just this one. Only a report on a work this page cites can be settled from it. The report
+// is not deleted: its count goes to zero (so the mirror leaves it out), and who settled it from
+// which revision is kept. A later report of the same part counts from zero again.
+const sameWork = (a, b) => String(a || '').toLowerCase().replace(/\s+/g, ' ').trim()
+  === String(b || '').toLowerCase().replace(/\s+/g, ' ').trim();
+export async function resolvePubs(school, slug, item, ids, { author, rev } = {}) {
+  const list = [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === 'string' && /^[0-9a-f]{16}$/.test(x)))].slice(0, 20);
+  if (!list.length) return null;
+  const cited = ((item && item.references) || []).map((r) => r.work);
+  const at = now();
+  let settled = 0;
+  for (const id of list) {
+    const row = await getRow(`pub#${id}`);
+    if (!row || row.hidden || !(row.n > 0) || !cited.some((w) => sameWork(w, row.work))) continue;
+    await change(row.id, () => null, (r) => {
+      if (!(r.n > 0)) return false;
+      r.n = 0;
+      r.voters = [];
+      r.resolved = { at, by: author || '', page: itemId(school, slug), rev: rev || null };
+    });
+    settled += 1;
+  }
+  return settled ? rebuildOutdatedMirror() : null;
+}
+
+// When a part of a page was last said to be up to date: its own clearing or the whole page's.
+const clearedAt = (pageRow, target) => {
+  const c = (pageRow && pageRow.cleared) || {};
+  return [c[target], c['*']].filter(Boolean).sort().pop() || '';
+};
+// The parts of `item` that `report` still tints: those it touches, less those said to be up to
+// date after it was made.
+const stillTinted = (item, report, pageRow) => touchedBy(item, report)
+  .filter((t) => !(clearedAt(pageRow, t) > report.at));
+
+// Every page's newest document, keyed as the outdated rows key pages. A page at both its
+// namespaced key and its legacy bare one is read once, at the namespaced key (as the index does).
+async function everyPage() {
+  const metas = (await listItemMetas()).filter((m) => !m.hidden);
+  const taken = new Set(metas.filter((m) => isNamespaced(m.slug)).map((m) => m.slug));
+  const wanted = metas
+    .map((m) => ({ m, id: isNamespaced(m.slug) ? m.slug : itemId((m.flags || {}).school, m.slug) }))
+    .filter(({ m, id }) => isNamespaced(m.slug) || !taken.has(id));
+  // Some 1,400 pages across the schools, two reads each: 25 at a time, inside the Lambda's 30 s.
+  const out = [];
+  for (let i = 0; i < wanted.length; i += 25) {
+    const batch = await Promise.all(wanted.slice(i, i + 25).map(async ({ m, id }) => {
+      const newest = await newestItem(m.slug);
+      return newest ? { id, item: JSON.parse(newest.row.docJson) } : null;
+    }));
+    out.push(...batch.filter(Boolean));
+  }
+  return out;
+}
+
+// Called by save-item after the clearing and settling above: the reports this page touches (or
+// touched) have the page's parts that are still tinted written down, and a report with none left
+// anywhere settles itself. Returns the rebuilt mirror when anything settled, else null.
+export async function settleCleared(school, slug, item, { rev } = {}) {
+  const pageId = itemId(school, slug);
+  const rows = await allRows();
+  const pageRows = new Map(rows.filter((r) => r.id.startsWith('page#')).map((r) => [r.page, r]));
+  const live = rows.filter((r) => r.id.startsWith('pub#') && !r.hidden && r.n > 0);
+  let pages = null; // read once, only if a report has never had its parts worked out
+  let settled = 0;
+  for (const report of live) {
+    const here = stillTinted(item, report, pageRows.get(pageId));
+    if (!report.open && !touchedBy(item, report).length) continue;
+    if (report.open && !report.open[pageId] && !here.length) continue;
+    let open = report.open;
+    if (!open) {
+      pages = pages || await everyPage();
+      open = {};
+      for (const p of pages) {
+        // This page as just saved, not as the store read it a moment ago.
+        const parts = p.id === pageId ? here : stillTinted(p.item, report, pageRows.get(p.id));
+        if (parts.length) open[p.id] = parts;
+      }
+    } else {
+      open = { ...open };
+      if (here.length) open[pageId] = here;
+      else delete open[pageId];
+    }
+    const done = Object.keys(open).length === 0;
+    await change(report.id, () => null, (r) => {
+      if (!(r.n > 0) || r.hidden) return false;
+      if (done) {
+        r.n = 0;
+        r.voters = [];
+        delete r.open;
+        r.resolved = { at: now(), by: '', page: pageId, rev: rev || null, auto: true };
+      } else {
+        r.open = open;
+      }
+    });
+    if (done) settled += 1;
+  }
+  return settled ? rebuildOutdatedMirror() : null;
 }
 
 // POST hide-outdated-pub (admin) { id, hidden }: takes down a report made in error.

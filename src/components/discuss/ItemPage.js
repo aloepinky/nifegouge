@@ -25,7 +25,7 @@ import { squadronsFor, isOthers, hasSeveralUnits, unitOf, readSquadron, writeSqu
 import { useDiscussData } from './DiscussData';
 import {
   useOutdated, setOutdated, sectionState, numbersBlock, markedByMe, markOutdated, markedParts,
-  partChanged, reportsFor, citedRefs,
+  partChanged, reportsFor, citedRefs, pubsOnPage,
 } from './outdated';
 import {
   MarkLink, MarkPanel, OutdatedNote, outdatedClass, PubLink, PubReportForm, RefReports,
@@ -994,6 +994,8 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   // What the publish step offers to clear: every marked part, ticked where the edit changed it.
   const markedNow = readOnly ? [] : markedParts(outdated, school, item)
     .map((m) => ({ ...m, changed: partChanged(item, view, m.id) }));
+  // And the publication reports the page cites, which publishing can settle everywhere.
+  const pubsNow = readOnly ? [] : pubsOnPage(outdated, view);
   const lastUpdated = record.contentUpdatedAt || record.updatedAt;
   const numbersState = stateOf('numbers', numbersBlock(view));
 
@@ -1056,6 +1058,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
           baseRev={draftBase}
           item={view}
           marked={markedNow}
+          pubs={pubsNow}
           onPublished={onPublished}
           onConflict={() => { setConflictError(null); setConflict(true); }}
           onCancel={() => setPublishing(false)}

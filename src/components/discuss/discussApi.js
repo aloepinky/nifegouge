@@ -166,10 +166,13 @@ export function useItem(slug) {
 
 // -> { slug, rev, updatedAt, contentUpdatedAt, outdated? }. `clearOutdated` names the sections
 // the publisher says are now up to date, which clears their outdated marks (outdated.js).
-export function saveItem(slug, baseRev, item, { author, summary, clearOutdated }) {
+// `resolvePubs` names publication reports the publisher says the site has caught up with,
+// which takes their warning off every page.
+export function saveItem(slug, baseRev, item, { author, summary, clearOutdated, resolvePubs }) {
   return post('save-item', {
     slug, baseRev, item, author, summary, school: corpusSchool,
     ...(clearOutdated && clearOutdated.length ? { clearOutdated } : {}),
+    ...(resolvePubs && resolvePubs.length ? { resolvePubs } : {}),
   });
 }
 

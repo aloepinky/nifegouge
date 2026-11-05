@@ -11,7 +11,7 @@ import {
 import { checkItem, checkSlug } from './lint.mjs';
 import { relinkEvent } from './syllabi.mjs';
 import { itemId, splitItemId, schoolNs } from './namespace.mjs';
-import { clearOutdated, targetsOf } from './outdated.mjs';
+import { clearOutdated, resolvePubs, settleCleared, targetsOf } from './outdated.mjs';
 
 // Discuss item pages. Open editing: anyone may publish a revision, every revision is kept,
 // and a bad one is undone by restoring the one before it. What a revision records is who
@@ -136,7 +136,19 @@ export async function saveItemHandler(event) {
   const saved = await saveItem(key, baseRev, item, { author: cleanAuthor(body.author), summary, contentAt });
   await afterWrite(saved.meta, saved.row);
   // The publisher said these sections are up to date (`clearOutdated`, '*' for the page).
-  const outdated = await clearOutdated(school, slug, body.clearOutdated);
+  const cleared = await clearOutdated(school, slug, body.clearOutdated);
+  // And these publication reports are dealt with everywhere (`resolvePubs`, report ids). Each
+  // call returns the rebuilt mirror when it wrote anything; the later one is the newer.
+  const resolved = await resolvePubs(school, slug, item, body.resolvePubs, { author: cleanAuthor(body.author), rev: saved.row.rev });
+  // A report nobody ticked settles itself once every part it tints, on every page, is said to
+  // be up to date. The revision is already saved, so a failure here is logged, not returned.
+  let settled = null;
+  try {
+    settled = await settleCleared(school, slug, item, { rev: saved.row.rev });
+  } catch (error) {
+    console.error('settleCleared', slug, error);
+  }
+  const outdated = settled || resolved || cleared;
   return ok({
     slug,
     rev: saved.row.rev,

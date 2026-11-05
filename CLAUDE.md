@@ -206,6 +206,15 @@ matching in `discuss/outdated.js` (tested), UI in `discuss/OutdatedMarks.js`;
 - **Clearing**: the publish step lists the marked parts, the ones the edit changed ticked;
   `save-item`'s `clearOutdated` zeroes their marks and records `cleared[id]`, so reports made
   before it stop tinting. Nothing is deleted.
+- **Settling a report** (since 2026-11-04): the publish step also lists the publication reports
+  the page cites, unticked; ticking one (`save-item`'s `resolvePubs`, report ids) takes it off
+  every page, and only a page citing that work can. Unticked, a report settles itself once every
+  part it tints on every page is cleared after it (`settleCleared`): its row keeps the parts
+  still waiting (`open`), worked out on the first publish that needs it by reading every page,
+  and dropped by any new vote, since a vote moves its time on. A settled report keeps
+  `resolved` (`auto: true` when it settled itself) and counts from one if made again. The
+  matching is copied to the server as `lambda/discussApi/pubMatch.mjs`; change it with
+  `outdated.js`, whose agreement `outdated-api-test.mjs` checks. No new route or header.
 - **Last updated** under the title is the mirror's `contentUpdatedAt`: a revision that changes
   only the gouge keeps the previous one (`contentAt` on the revision row).
 

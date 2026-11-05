@@ -1,4 +1,4 @@
-import { chapterOf, chapterKey, refMatches, sectionState, markedParts, partChanged, reportName } from './outdated';
+import { chapterOf, chapterKey, refMatches, sectionState, markedParts, partChanged, reportName, pubsOnPage } from './outdated';
 
 const natops = (loc, pages) => ({ n: 1, work: 'NATOPS', loc, pages });
 const report = (scope, part, extra = {}) => ({ work: 'NATOPS', scope, part, n: 1, at: '2026-10-20T00:00:00Z', ...extra });
@@ -68,4 +68,17 @@ test('a changed part is told from an unchanged one', () => {
   expect(partChanged(item, after, 's1')).toBe(true);
   expect(partChanged(item, after, 's2')).toBe(false);
   expect(partChanged(item, after, 'numbers')).toBe(false);
+});
+
+test('the publish step offers each report a page cites, once', () => {
+  const data = {
+    pages: {},
+    pubs: [
+      { id: 'aaaa', ...report('chapter', '4') },
+      { id: 'bbbb', ...report('chapter', '7') },
+      { id: 'cccc', work: 'AIM', scope: 'pub', part: '', n: 1, at: '2026-10-20T00:00:00Z' },
+    ],
+  };
+  expect(pubsOnPage(data, item)).toEqual([{ id: 'aaaa', name: 'NATOPS Ch. 4' }, { id: 'cccc', name: 'AIM' }]);
+  expect(pubsOnPage(null, item)).toEqual([]);
 });

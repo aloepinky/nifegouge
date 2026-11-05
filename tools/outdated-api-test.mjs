@@ -73,7 +73,18 @@ const page = {
   references: [{ n: 1, work: 'NATOPS', loc: 'Ch. 4 — Operating Limitations', pages: 'p. 4-1' }],
 };
 
-const imported = await op('import-items', { body: { items: [page] }, headers: admin });
+// A second page citing NATOPS Ch. 4, so a report on it is not settled by clearing the first.
+const other = {
+  slug: 'flap-checks',
+  title: 'Flap checks',
+  aircraft: 'T-6B',
+  school,
+  lede: 'The flap checks.',
+  sections: [{ id: 'chk-01', title: 'Checks', paras: [{ id: 'c-01', text: 'Check the flaps.', refs: [1] }] }],
+  references: [{ n: 1, work: 'NATOPS', loc: 'Ch. 4 — Operating Limitations', pages: 'p. 4-2' }],
+};
+
+const imported = await op('import-items', { body: { items: [page, other] }, headers: admin });
 ok(imported.status === 200, 'the page imports');
 
 const A = 'browser-aaaa-1111';
@@ -152,6 +163,69 @@ ok(r.status === 200 && r.outdated.pubs.length === 1, 'an admin takes a report do
 
 r = await op('rebuild-index', { body: { what: 'outdated' }, headers: admin });
 ok(r.status === 200 && r.outdated.pubs === 1, 'rebuild-index rebuilds the outdated mirror');
+
+// Settling a publication report from a page that cites it takes it off every page.
+const chapterId = read('outdated/index.json').pubs[0].id;
+r = await op('save-item', {
+  body: {
+    slug: page.slug, school, baseRev: 4, summary: 'Cites the AIM now', resolvePubs: [chapterId],
+    item: { ...edited, references: [{ n: 1, work: 'AIM', loc: '§1-1-9 — ILS', pages: 'p. 1-1-10' }] },
+  },
+});
+ok(r.status === 200 && read('outdated/index.json').pubs.length === 1, 'a page that does not cite the publication cannot settle its report');
+await mark({ target: 'lim-02', voter: B });
+r = await op('save-item', {
+  body: { slug: page.slug, school, baseRev: 5, summary: 'Caught up with IC 4', item: edited, clearOutdated: ['lim-02'], resolvePubs: [chapterId, 'nonsense'] },
+});
+ok(r.status === 200 && r.outdated.pubs.length === 0, 'a page that cites it settles the report everywhere');
+ok(!r.outdated.pages['primary/flap-limits'].marks['lim-02'] && r.outdated.pages['primary/flap-limits'].cleared['lim-02'],
+  'the sections ticked in the same publish are still cleared');
+r = await report({ scope: 'chapter', part: 'Ch. 4', voter: A });
+ok(r.already === false && r.outdated.pubs.length === 1 && r.outdated.pubs[0].n === 1, 'a settled report, made again, counts from one');
+
+// Nobody ticks it: it settles itself once every part it tints, on every page, is up to date.
+r = await op('save-item', {
+  body: { slug: page.slug, school, baseRev: 6, summary: 'All current', item: edited, clearOutdated: ['*'] },
+});
+ok(r.status === 200 && read('outdated/index.json').pubs.length === 1, 'clearing one page leaves a report another page still shows');
+r = await op('save-item', {
+  body: { slug: other.slug, school, baseRev: 1, summary: 'Checks current', item: { ...other, lede: 'The flap checks, current.' }, clearOutdated: ['chk-01'] },
+});
+ok(r.status === 200 && r.outdated && r.outdated.pubs.length === 0, 'clearing the last part it tints settles the report everywhere');
+
+// A vote after the clearing tints again, and the parts are worked out afresh.
+r = await report({ scope: 'chapter', part: 'Ch. 4', voter: B });
+ok(r.outdated.pubs.length === 1, 'reported again after settling, it shows again');
+r = await op('save-item', {
+  body: { slug: page.slug, school, baseRev: 7, summary: 'Checked again', item: edited, clearOutdated: ['*'] },
+});
+ok(read('outdated/index.json').pubs.length === 1, 'the earlier clearing of the other page no longer counts');
+
+// The server's matching is the browser's: the same answers for the same references.
+const { loadSrc } = await import(pathToFileURL(path.join(ROOT, 'tools', 'lib', 'loadSrc.js')));
+const client = loadSrc(path.join(ROOT, 'src', 'components', 'discuss', 'outdated.js'));
+const server = await load(path.join(LAMBDA, 'pubMatch.mjs'));
+const refs = [
+  { work: 'NATOPS', loc: 'Ch. 4 — Operating Limitations', pages: 'p. 4-1' },
+  { work: 'NATOPS', loc: '§12.2.3 — CAS Caution Messages' },
+  { work: 'AIM', loc: '§1-1-9 — ILS' },
+  { work: 'FAM FTI', loc: '§606 — Approach', pages: 'p. 6-6' },
+  { work: 'VNAV FTI', loc: 'Appendix A — Glossary' },
+  { work: 'CNAF 3710', loc: 'Encl. (2) — Weather', pages: 'p. 2-1' },
+  { work: 'TW-4 SOP', loc: 'Course Rules', pages: 'p. 7-3' },
+];
+const reports = [
+  { work: 'NATOPS', scope: 'chapter', part: 'Ch. 4' }, { work: 'NATOPS', scope: 'chapter', part: '12' },
+  { work: 'NATOPS', scope: 'section', part: '§12.2' }, { work: 'aim', scope: 'section', part: '1-1' },
+  { work: 'FAM FTI', scope: 'pub', part: '' }, { work: 'FAM FTI', scope: 'chapter', part: '6' },
+  { work: 'FAM FTI', scope: 'section', part: 'Approach' }, { work: 'VNAV FTI', scope: 'chapter', part: 'Appendix A' },
+  { work: 'CNAF 3710', scope: 'chapter', part: 'encl 2' }, { work: 'TW-4 SOP', scope: 'chapter', part: '7' },
+];
+const disagree = [];
+for (const ref of refs) for (const rep of reports) {
+  if (client.refMatches(ref, rep) !== server.refMatches(ref, rep)) disagree.push(`${ref.work} ${ref.loc} / ${rep.work} ${rep.scope} ${rep.part}`);
+}
+ok(disagree.length === 0, `the server matches references as the browser does${disagree.length ? `: ${disagree.join('; ')}` : ''}`);
 
 if (failures) {
   console.log(`\n${failures} failed`);
