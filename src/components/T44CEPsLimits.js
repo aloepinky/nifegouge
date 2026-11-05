@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import T44CLimits from './T44C/T44CLimits';
 import { T44C_EPS, T44C_EP_NWC } from './T44C/t44cData';
 import { T44C_HOLLYWOOD, T44C_MEMORY_NORMALS } from './T44C/t44cNormals';
 import { T44C_CASES } from './T44C/t44cCases';
+import { SCENARIOS } from './T44C/t44cEngine';
+import { createT44CEngine, RANDOM } from './T44C/t44cEngineStore';
 import { T44C_POSTER, T44C_ALIASES, t44cRegion } from './T44C/t44cPoster';
 import ActionButtons from './epsLimits/ActionButtons';
 import { PosterRegion, usePoster } from './epsLimits/CockpitPoster';
@@ -46,6 +48,17 @@ const FUEL = t44cRegion('fuel');
 const GAUGES = t44cRegion('gauges');
 const CONSOLE = ['quadrant', 'elec'].map(t44cRegion);
 
+// The Abnormal Start EP as a checklist line, for the Hollywood checklists, which do not list it
+// but are sent to it when a start is aborted (EPDrill `detours`).
+const DETOURS = T44C_EPS.filter((e) => e.id === 'abnormal-start').map((e) => ({
+  ...e,
+  rows: e.rows.map((r) => {
+    if (!r.text) return r;
+    const [challenge, ...rest] = r.text.split(' - ');
+    return { ...r, challenge, reply: rest.join(' - ') };
+  }),
+}));
+
 // Each slot is its own component, not a call inside one render function: EPDrill renders a slot
 // only in Full Mode, so a hook called inline in a slot function would come and go with the
 // Simple/Full switch. They hold no state between them — a click reads the open step and writes
@@ -63,6 +76,43 @@ function Console(api) {
       {CONSOLE.map((region) => (
         <PosterRegion key={region.id} region={region} view={view} className="epl-band-frame--fluid" />
       ))}
+    </div>
+  );
+}
+
+// The start procedures' own controls, while the engine model runs (T44C/t44cEngine.js), right
+// above the checklist card: which start to practise, Random start (a scenario drawn afresh for
+// each start, and not shown until the start is aborted or done). There is no button for the
+// Abnormal Start EP (removed, the user, 2026-11-04): a second press of the condition lever
+// during a start opens it (EPDrill `abortedBy`), from the Hollywood checklists too.
+// Under them, what the gauges said when a step went in too early, and once the start is over,
+// which start it was. Text goes here, over the card, never in the side columns, which hold
+// only controls (the user, 2026-11-04). The slot keeps its height on every card, so the card
+// never moves.
+function StartControls({ engine, reset, epId, engineNote }) {
+  const snap = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
+  const starting = snap.active && (epId === 'start-right' || epId === 'start-left');
+  const choose = (id) => { engine.setScenario(id); reset(); };
+  const said = snap.active && (engineNote || (snap.outcome && `This was a ${snap.outcome.toLowerCase()}.`));
+  return (
+    <div className="t44c-start">
+      <div className="t44c-start-row">
+        {starting && (
+        <>
+          <label>
+            Start
+            <select value={snap.scenario} onChange={(e) => choose(e.target.value)}>
+              {SCENARIOS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+              <option value={RANDOM}>Random</option>
+            </select>
+          </label>
+          <button type="button" onClick={() => choose(RANDOM)} title="A start drawn at random, and not shown">
+            Random start
+          </button>
+        </>
+        )}
+      </div>
+      {snap.active && <p className="t44c-start-note" role="status">{said || ''}</p>}
     </div>
   );
 }
@@ -108,13 +158,19 @@ const SETS = [
 ];
 
 function T44CEPs(game) {
+  // One model for the page, so a start carries on into the Abnormal Start EP and back.
+  const [engine] = useState(createT44CEngine);
+  useEffect(() => () => engine.dispose(), [engine]);
   return (
     <EPDrill
       {...game}
+      engine={engine}
+      detours={DETOURS}
       sets={SETS}
       aliases={T44C_ALIASES}
       sideWidth={[300, 300]}
       top={(api) => <MainPanel {...api} />}
+      above={(api) => (api.engine ? <StartControls {...api} /> : null)}
       left={(api) => <LeftSide {...api} />}
       right={(api) => <Console {...api} />}
     />

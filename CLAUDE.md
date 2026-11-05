@@ -715,6 +715,63 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
 - T-44C: critical-action steps only, checked against NATOPS. Site
   follows NATOPS over the exam sheet in two places (`Firewall Valve`, `Prop Lever - Full Forward`);
   otherwise reproduces the sheet's style. 118 limits verified; three stored as min/max pairs.
+- T-44C starts, the Engine Runup and the Full Anti-Ice/Deice Check run a live engine model
+  (starts since 2026-11-03, the other two since 2026-11-04): `T44C/t44cEngine.js` (pure, tested
+  in `t44cEngine.test.js`), clocked by `t44cEngineStore.js`, passed to EPDrill as `engine`.
+  After Start (fuel pressure, crossfeed and no-fuel-transfer lights, the avionics load) runs on
+  it too. `STEP_EVENTS[procedure][id]` is what a step's control does, `<id>:<piece>` a watched
+  piece, `<id>#<n>` the nth piece of its `sequence` (After Start's ids repeat Abnormal Start's,
+  hence the procedure). Since the engines answer the levers, multi-control steps list their
+  `sequence` (t44cNormals.js; the user, 2026-11-04): Runup 6 is prop, power (under 1900 rpm),
+  test switch, power again; Runup 8 the condition levers first and the power levers last;
+  After Start 7 seven clicks (CLOSED then AUTO is one). The power lever is a position whose
+  N1 HIGH IDLE raises only near the idle stop, so LOW IDLE at the 1900 rpm setting leaves
+  about 524 lb-ft (the user's figure). Skip fires a step's remaining events and runs the model
+  on until the next step's gate passes or the engines settle (store `skip`), so a skipped step
+  leaves the gauges where the next step expects them. ESIS ON/OFF is the button above the
+  display; PROP REV NOT READY lights with a prop lever out of full forward. An Abnormal Start
+  opened as a detour is drawn red, as an EP. Light-off is passed the moment ITT reads above 30 °C;
+  Abnormal Start 3 is refused until the starter itself has run 40 s (gates take the procedure,
+  since After Start repeats its ids). After Start 2 is both PRESS FOR VOLTS buttons (spots with an
+  `engineInput`, poked into the model whatever step is open); each shows 28.25 on its meter for
+  3 s. The stopwatch is drawn only on the starts and Abnormal Start. A
+  scripted check rings its own gauges in place of the click's (`highlight` in the model,
+  `useEngineRings` in CockpitPoster): Runup 6 Np, then ITT and torque, then none; Runup 8 torque
+  to each light's flash, then Np a second later. Each test draws every engine's switch points
+  afresh (truncated normal, 410 ±50 and 200 ±40, the FTI's; `drawAuto`). The battery is owed for every starter-second, assisted or
+  not; the generator load holds flat as long as the starter ran, then falls on 20 s (9716). The runup's lever
+  moves are scripted for the student once the control is clicked (`script`), and the
+  autofeather and auto-ignition lights follow torque (410/225 lb-ft, 9718), the feathering one
+  flashing. Fuel quantity counts down from the fuel flow on the fuel panel's gauges; prop amps
+  read on the main panel. Shots still wanted are in that folder's `filming-list.md`. The
+  poster's gauge windows (`readouts` on the main region) show its digits, drawn larger than
+  the window so they read at page width, and the needle-only gauges (oil, battery,
+  generators, suction, pneumatic, oxygen) carry digits as the instructor station's repeater
+  draws them. A stopwatch, drawn as an iPad on a stand left of the pilot's PFD (`stopwatch`
+  box), is the elapsed time clock the student runs: the whole iPad answers for it, as the ET
+  keys do, and either starts or stops it. Under it in small red is the starter's actual time.
+  N1 off the plateau answers the condition lever, never the generator (the user's ruling). The GEN OUT and IGN IND lights are lit by the
+  model, not by a `shows` ring. Size readout text in container units on the child only:
+  the box's own padding in `cqw` or `%` swells the box. Every curve is from the sim repeater
+  clips catalogued in `_reference-docs/T44C Advanced/Fundamental References/Quadfold Videos and
+  Photos/engine-videos.md`, timed from its own input. When an input belongs is the FTI's (`gate`);
+  a click before then is refused with the reason. Normal, hot, hung and no-start starts (or
+  Random, drawn per start and never shown) are picked right above the checklist card. The hot
+  start runs on past the clip to 1150 °C (the user's figure). A second condition lever press
+  during a start cuts the fuel and opens Abnormal Start with its step 1 done (EPDrill
+  `abortedBy`), from the Hollywood checklists too, which do not list it (EPDrill `detours`: a
+  procedure shown over the card until Previous or Next). Once a start is aborted or done, the
+  slot over the card says which start it was. Text goes in that slot, never in the side
+  columns, which hold only controls (the user, 2026-11-04). The left start finds the right engine at HIGH IDLE
+  (the FTI's step 8 to 23), and a right generator goes on only at 70 to 73 percent N1. The
+  generators share one load, split evenly between those on line (9716: 0.75 alone, then
+  0.38 and 0.39), the bus's own plus what the battery start is owed.
+  Don't add a curve no clip shows.
+- A step that only looks at an instrument is `look: true` (t44cNormals.js), and so is, in
+  effect, a step whose control is in and which is missing only instruments (`glances`, set from
+  `GAUGES` there). Clicking a later step's control with nothing but such steps between does
+  them too (EPDrill `lookAhead`), and only once that click is taken: a click the gauges refuse
+  passes nothing. The elapsed time clock is operated, not a gauge.
 - T-54A: two sets, EPs | Checklists (`T54A/t54aNormals.js`, NATOPS Ch. 7). NATOPS §7.2 keeps
   memorized flows apart from read checklists, so the page does: flows are typed and asterisked
   and drilled only with the EPs, under "Include Flows" (an `extra` with its own footnote);

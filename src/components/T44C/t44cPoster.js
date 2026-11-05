@@ -30,6 +30,9 @@ import { aliasesFrom } from '../epsLimits/controlMatch';
 // CUT OFF on the condition levers). The power levers are the un-captioned pair carrying the
 // REVERSE gate.
 
+// A readout's box from its centre and size, all in the region's fractions.
+const around = (key, cx, cy, w, h) => ({ key, box: [cx - w / 2, cy - h / 2, w, h] });
+
 export const T44C_POSTER = {
   regions: [
     {
@@ -40,6 +43,31 @@ export const T44C_POSTER = {
         + 'buttons on the glareshield, pilot and copilot PFDs either side of the engine gauges '
         + 'and navigation displays, and the lower sub-panel with the lights, anti-ice and heat '
         + 'switch rows, the landing gear handle, the environmental group and the breaker stacks',
+      // Where the start procedures' engine model (t44cEngine.js) writes its readings. Each
+      // engine gauge's digital window is centred where the image's dark window rectangle is,
+      // and drawn twice the window's size or more, so it can be read at the page's width. The
+      // oil, battery and generator gauges are needles only; their readouts sit on the dial, as
+      // the instructor station's repeater draws them. `around` is the centre and the size.
+      readouts: [
+        ...[['itt', 0.3021], ['trq', 0.3990], ['np', 0.4965], ['n1', 0.5940]].flatMap(([gauge, cy]) => [
+          around(`L.${gauge}`, 0.3393, cy, 0.036, 0.032),
+          around(`R.${gauge}`, 0.3827, cy, 0.036, 0.032),
+        ]),
+        around('L.ff', 0.4260, 0.6915, 0.036, 0.032),
+        around('R.ff', 0.4695, 0.6915, 0.036, 0.032),
+        // Oil: temperature left, pressure right, below the dial's hub.
+        around('L.oilT', 0.3303, 0.6800, 0.019, 0.030), around('L.oilP', 0.3503, 0.6800, 0.019, 0.030),
+        around('R.oilT', 0.3739, 0.6800, 0.019, 0.030), around('R.oilP', 0.3939, 0.6800, 0.019, 0.030),
+        // The battery: volts left, amps right.
+        around('B.volts', 0.0654, 0.7560, 0.021, 0.030), around('B.amps', 0.0864, 0.7560, 0.021, 0.030),
+        around('L.gen', 0.1204, 0.7130, 0.030, 0.030),
+        around('R.gen', 0.1667, 0.7130, 0.030, 0.030),
+        // The prop deice ammeter, on the dial's face.
+        around('B.prop', 0.0760, 0.8500, 0.026, 0.030),
+      ],
+      // The stopwatch: an iPad on a stand left of the pilot's PFD, over the bare panel and the
+      // headset jack, which carry no target. It answers for the elapsed time clock itself.
+      stopwatch: [0.010, 0.290, 0.100, 0.355],
       spots: [
         // The pilot's PFD. Airspeed is the tape and pitch and bank are the attitude sphere beside
         // it, so the two targets abut exactly as the two readouts do. Only the left seat's is a
@@ -147,6 +175,8 @@ export const T44C_POSTER = {
           action: 'LH NO FUEL TRANSFER', actions: ['LH NO FUEL TRANSFER', 'Annunciator Panel'] },
         { id: 'ann-fuel-crossfeed', box: [0.511, 0.038, 0.032, 0.026], label: 'FUEL CROSSFEED light',
           action: 'FUEL CROSSFEED', actions: ['FUEL CROSSFEED', 'Annunciator Panel'] },
+        { id: 'ann-prop-rev-not-ready', box: [0.511, 0.062, 0.032, 0.026], label: 'PROP REV NOT READY light',
+          action: 'PROP REV NOT READY', actions: ['PROP REV NOT READY', 'Annunciator Panel'] },
         { id: 'ann-rh-no-fuel-transfer', box: [0.634, 0.037, 0.031, 0.026], label: 'RH NO FUEL TRANSFER light',
           action: 'RH NO FUEL TRANSFER', actions: ['RH NO FUEL TRANSFER', 'Annunciator Panel'] },
         { id: 'ann-r-fuel-pressure', box: [0.665, 0.037, 0.032, 0.026], label: 'R FUEL PRESSURE light',
@@ -240,8 +270,12 @@ export const T44C_POSTER = {
             'Engine Instruments': ['CHECKED'],
           },
           fills: { 'ITT and N1': 'N1 stable above 50%' } },
+        // The standby display, set and read (its altimeter, Before Takeoff 11, Approach 7); the
+        // ESIS ON/OFF button above it is what Engine Runup 2 and Secure 6 press.
         { box: [0.415, 0.278, 0.071, 0.16], label: 'ESIS',
-          action: 'ESIS', actions: ['ESIS', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'], values: ['ON', 'OFF', 'CHECKED/SET', 'SET'] },
+          action: 'ESIS Display', actions: ['ESIS Display', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles'], values: ['CHECKED/SET', 'SET'] },
+        { id: 'esis-power', box: [0.445, 0.236, 0.015, 0.030], label: 'ESIS ON/OFF button',
+          action: 'ESIS', values: ['ON', 'OFF'] },
         { box: [0.226, 0.285, 0.027, 0.143], label: 'Altimeter (pilot PFD)',
           action: 'Altimeters', also: ['Altitude'], actions: ['Altimeters', 'Flight Instruments', 'PFDs/FGP/ESIS', 'Instruments/Nacelles', 'PFD'], values: ['CHECKED/SET', 'SET', '___.___ SET', '____.____ SET', '5000 feet AGL minimum'] },
         // The pilot's display control panel (DCP), the strip between the PFD and the engine
@@ -272,9 +306,15 @@ export const T44C_POSTER = {
           action: 'Fuel Flow', actions: ['Fuel Flow', 'Engine Instruments', 'Instruments/Nacelles'],
           values: { 'Fuel Flow': ['Note'], 'Engine Instruments': ['CHECKED'] } },
         // NATOPS §2.10.5: each shows its generator's load, and bus voltage while its pushbutton is
-        // pressed.
+        // pressed. The PRESS FOR VOLTS pushbuttons are the two black buttons below and left of
+        // each meter (the user, 2026-11-04); a press shows that meter's volts in the engine model
+        // whatever step is open, as the real button does (`engineInput`).
         { box: [0.099, 0.693, 0.09, 0.066], label: 'Generator volt-loadmeters',
-          action: 'Generator Voltages', also: ['Generator Load'], values: ['CHECKED'] },
+          action: 'Generator Load', values: ['CHECKED'] },
+        { id: 'volts-l', box: [0.0952, 0.7593, 0.014, 0.028], label: 'Left PRESS FOR VOLTS button',
+          action: 'Generator Voltages', actions: ['Generator Voltages', 'Left Generator Voltage'], values: ['CHECKED'], engineInput: { pressVolts: 'L' } },
+        { id: 'volts-r', box: [0.1417, 0.7593, 0.014, 0.028], label: 'Right PRESS FOR VOLTS button',
+          action: 'Generator Voltages', actions: ['Generator Voltages', 'Right Generator Voltage'], values: ['CHECKED'], engineInput: { pressVolts: 'R' } },
         // Gauges and lights the normal checklists read and nothing names as a control. Rough,
         // 2026-10-16: tune with ?spots.
         // The BATT gauge reads volts on its left scale and amps on its right, so it is both the
@@ -387,6 +427,11 @@ export const T44C_POSTER = {
       src: '/images/t44c-fuel.webp',
       alt: 'T-44C fuel control panel: left and right fuel quantity gauges, transfer pump, boost '
         + 'pump and crossfeed switches, and the red firewall valve handles at each end',
+      // The fuel quantity in pounds over each gauge's hub, as the repeater draws it.
+      readouts: [
+        around('L.qty', 0.3031, 0.4083, 0.105, 0.070),
+        around('R.qty', 0.6840, 0.4083, 0.105, 0.070),
+      ],
       spots: [
         // One step, one control, drawn at each end of the panel. Same `action`, different `id`.
         { id: 'firewall-left', box: [0.15, 0.78, 0.06, 0.2], label: 'Left firewall valve',
@@ -432,12 +477,18 @@ export const T44C_POSTER = {
       alt: 'T-44C right side panel: gyro suction, pneumatic pressure and oxygen supply pressure '
         + 'gauges, the flight hour meter, the pilot\'s emergency static air source lever and the '
         + 'engine circuit breaker block',
+      // The engine model's readings on the three dials, over each hub, as the repeater draws them.
+      readouts: [
+        around('S.suction', 0.1389, 0.300, 0.105, 0.105),
+        around('S.pneumatic', 0.3317, 0.300, 0.105, 0.105),
+        around('S.oxygen', 0.5017, 0.308, 0.125, 0.105),
+      ],
       spots: [
         // Suction & Pneumatic Pressure names two gauges, so the step watches both (and the
         // condition levers it is checked at, HIGH IDLE).
-        { box: [0.06, 0.12, 0.155, 0.37], label: 'Gyro suction',
+        { id: 'gyro-suction', box: [0.06, 0.12, 0.155, 0.37], label: 'Gyro suction',
           action: 'Suction & Pneumatic Pressure', actions: ['Suction & Pneumatic Pressure', 'Gyro Suction'], values: ['CHECKED'] },
-        { box: [0.255, 0.12, 0.155, 0.37], label: 'Pneumatic pressure',
+        { id: 'pneumatic-pressure', box: [0.255, 0.12, 0.155, 0.37], label: 'Pneumatic pressure',
           action: 'Suction & Pneumatic Pressure', actions: ['Suction & Pneumatic Pressure', 'Pneumatic Pressure'], values: ['CHECKED'] },
         { box: [0.425, 0.13, 0.15, 0.36], label: 'Oxygen supply pressure',
           action: 'Pressurization/Oxygen', fills: 'Oxygen - CHECKED', values: ['CHECKED'] },
@@ -465,12 +516,16 @@ export const T44C_POSTER = {
         // regulator on the side console (§2.19.2), which the sheet does not draw — a named control
         // that is drawn gets a target even when its partner is missing.
         { id: 'mic-pilot', box: [0.363, 0.478, 0.025, 0.022], label: "Pilot's MIC MASK/BOOM",
-          action: 'Oxygen Mask/MIC Switches (100 Percent)', also: ['Oxygen Mask Mic'], values: ['As Required', 'CHECKED/OPEN'] },
+          action: 'Oxygen Mask/MIC Switches (100 Percent)', also: ['Oxygen Mask Mic'],
+          actions: ['Oxygen Mask/MIC Switches (100 Percent)', "Pilot's MIC Switch"], values: ['As Required', 'CHECKED/OPEN'] },
         // The same control drawn twice, so the same settings: a record answers only the settings
         // it lists (controlMatch.js `settingsFor`), and the copilot's listing one fewer made it
         // refuse the Oxygen Mask Mic check the pilot's answered.
         { id: 'mic-copilot', box: [0.847, 0.478, 0.022, 0.024], label: "Copilot's MIC MASK/BOOM",
-          action: 'Oxygen Mask/MIC Switches (100 Percent)', values: ['As Required', 'CHECKED/OPEN'] },
+          // Each seat's own name (in `actions`, not `also`, which would make the two one control)
+          // is what After Start's Oxygen Mask Mic watches: both switches.
+          action: 'Oxygen Mask/MIC Switches (100 Percent)',
+          actions: ['Oxygen Mask/MIC Switches (100 Percent)', "Copilot's MIC Switch"], values: ['As Required', 'CHECKED/OPEN'] },
         { box: [0.376, 0.232, 0.043, 0.036], label: 'Auxiliary battery',
           action: 'AUX BATT Switch', actions: ['AUX BATT Switch', 'Electrical Panel'], values: ['OFF'] },
         { box: [0.0855, 0.32, 0.306, 0.022], label: 'Master switch gang bar',

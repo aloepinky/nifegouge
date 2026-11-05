@@ -18,8 +18,8 @@
 //                      gauges, moving nothing (Fuel Quantity, Engine Instruments), watches them. Clicking the control leaves the step
 //                      yellow until each of them is clicked too, in any order
 //                      (epsLimits/EPDrill.js `watchClick`). A switch the action turns on only at
-//                      night or in low visibility is left to the action text, since the card
-//                      cannot say which it is.
+//                      night or in low visibility (NAV, ICE) is left to the action text, since
+//                      the card cannot say which it is (the user, again 2026-11-04).
 //   shows              the gauges and lights a switch or lever the step moves makes react, which
 //                      the action says to check, note, observe, verify or monitor (the user's
 //                      rule, 2026-10-30: only a switch causes a reaction). They are never clicked: they light up with the Hint ring when the
@@ -30,9 +30,22 @@
 //   watchOnly          the watch list is the whole step (the Lights steps' switches): no control
 //                      click of its own, so a switch the step does not set is marked red.
 //   inOrder            the control and the watched pieces must come in the order listed
-//                      (Before Takeoff 1); `last` holds only one piece to the end (Engine Runup 8).
+//                      (Before Takeoff 1); `last` holds only one piece to the end.
+//   sequence           the pieces that must come in the action's order, the control as CONTROL,
+//                      a switch as often as the action moves it (After Start 7's crossfeed and
+//                      boost pumps), a list for pieces either way round. The engine model answers
+//                      the levers, so they go in the order the FTI moves them (the user,
+//                      2026-11-04). Pieces not in it (the gauges) come at any time.
 //   controlApart       the step's control is a click of its own even where a watched piece also
 //                      answers the step (Before Start 7: an anti-ice switch and both ice vanes).
+//   look               the step only looks at an instrument and moves nothing (N1, Fuel Flow, ITT
+//                      and N1, the fuel quantity checks). A click on a LATER step's control, with
+//                      nothing but such steps between, does those steps too: from Condition
+//                      Lever - LOW IDLE straight to Starter - OFF greens Fuel Flow and ITT and N1
+//                      (the user, 2026-11-03). Clicking the gauge still does the step on its own.
+//   glances            the watch pieces that are instruments, set from GAUGES at the end of the
+//                      file, never typed: with the control in, a step missing only these is
+//                      passed the same way.
 //
 // A procedure's `normal` draws its card with the checklist card's black title, so a normal
 // memory procedure added to the EPs is never mistaken for one. `critical` (the asterisk) marks
@@ -67,6 +80,8 @@ const caution = (text) => ({ caution: text });
 const warning = (text) => ({ warning: text });
 
 const THREE_WAY = act('Perform 3-way change of controls.');
+// A step's own control in a `sequence` (epsLimits/EPDrill.js uses the same token).
+const CONTROL = '(control)';
 
 // ---------------------------------------------------------------------------------------
 // F101
@@ -96,7 +111,10 @@ const BEFORE_START = {
       action: ['PF and PM ensure flap handle corresponds visually with flap position. Flap indicator will be inoperative with no power on the aircraft, and needle in the 10 O\'clock position when battery off.'],
       replies: [say('CORRESPOND', 'PF'), ip('CORRESPOND', 'PM')],
     }),
+    // Every lever the action sets, in any order (the user, 2026-11-02).
     abbrev('bs5', 'Power Quadrant', 'SET', 'PF', {
+      watch: ['Power Lever', 'Prop Lever', 'Condition Lever'],
+      watchOnly: true,
       action: [
         'PF ensures condition lever(s) are at FUEL CUTOFF and sets friction.',
         'PF moves props from FEATHER to full forward and sets friction.',
@@ -123,6 +141,9 @@ const BEFORE_START = {
     item('bs8', 'Fuel Panel', 'CHECKED/SET', 'LS', {
       watch: ['Fuel Circuit Breakers', 'Firewall Valve', 'Crossfeed', 'Left Boost Pump', 'Right Boost Pump', 'Battery'],
       watchOnly: true,
+      // c. the crossfeed open, then closed.
+      sequence: ['Fuel Circuit Breakers', 'Firewall Valve', 'Crossfeed', 'Crossfeed',
+        ['Left Boost Pump', 'Right Boost Pump'], 'Battery'],
       shows: {
         Crossfeed: ['FUEL CROSSFEED'],
         'Left Boost Pump': ['Battery Ammeter'],
@@ -197,6 +218,7 @@ const START_RIGHT = {
       replies: [act('(start clock)'), say('On, Ignition, rotation')],
     }),
     memory('sr2', 'N1', 'Above 12 percent', 'PF', {
+      look: true,
       action: ['Ensure N1 rising above 12%.'],
       replies: [say('Above 12 percent')],
     }),
@@ -210,8 +232,9 @@ const START_RIGHT = {
       ],
       replies: [say('LOW IDLE')],
     }),
-    memory('sr4', 'Fuel Flow', 'Note', 'PF', { action: FUEL_FLOW }),
+    memory('sr4', 'Fuel Flow', 'Note', 'PF', { look: true, action: FUEL_FLOW }),
     memory('sr5', 'ITT and N1', 'Light-off, N1 stable above 50%', 'PF', {
+      look: true,
       action: [
         '(1090 C maximum) PF should announce light-off from ITT gauge.',
         'Start ITT must not exceed 1,090 ºC for greater than 2 seconds.',
@@ -226,6 +249,7 @@ const START_RIGHT = {
       replies: [say('OFF')],
     }),
     memory('sr7', 'Oil Pressure', 'Thumbs up to lineman', 'PF', {
+      look: true,
       action: OIL_PRESSURE,
       replies: [act('Thumbs up to lineman')],
     }),
@@ -287,6 +311,7 @@ const START_LEFT = {
       replies: [act('(start clock)'), say('ON ignition, rotation')],
     }),
     memory('sl12', 'N1', 'Above 12 percent', 'PF', {
+      look: true,
       action: ['Ensure N1 rising above 12%'],
       replies: [say('Above 12 percent')],
     }),
@@ -296,6 +321,7 @@ const START_LEFT = {
       replies: [say('Reset, On')],
     }),
     memory('sl14', 'Right Engine', 'Monitor ITT', 'PF', {
+      look: true,
       action: ['Pause momentarily to observe the right ITT. If ITT is likely to exceed 790 ºC, abort the start by turning off the left starter. Re-attempt the start with the right engine at 85% N1. A small rise in ITT is normal.'],
       replies: [say('Monitor ITT')],
     }),
@@ -303,8 +329,9 @@ const START_LEFT = {
       action: ['PF moves left condition lever to LOW IDLE after N1 reaches 12% and the right generator has been turned on. PF mentally counts 10 seconds as timing back-up. PM commences timing for 10 seconds when PF moves condition lever to LOW IDLE. Leave right hand anchored on the condition lever until moving it to turn the starter off.'],
       replies: [say('LOW IDLE')],
     }),
-    memory('sl16', 'Fuel Flow', 'Note', 'PF', { action: FUEL_FLOW }),
+    memory('sl16', 'Fuel Flow', 'Note', 'PF', { look: true, action: FUEL_FLOW }),
     memory('sl17', 'ITT and N1', 'Light-off, N1 stable above 50%', 'PF', {
+      look: true,
       action: [
         'Monitor both engines',
         '(1090 C maximum) PF should announce light-off from ITT gauge.',
@@ -320,6 +347,7 @@ const START_LEFT = {
       replies: [say('OFF')],
     }),
     memory('sl19', 'Oil Pressure', 'Thumbs up to lineman', 'PF', {
+      look: true,
       action: OIL_PRESSURE,
       replies: [act('Thumbs up to lineman')],
     }),
@@ -328,6 +356,7 @@ const START_LEFT = {
       replies: [say('OFF')],
     }),
     memory('sl21', 'Fuel Quantity Indicators', 'Checked', 'PF', {
+      look: true,
       watch: ['Left Fuel Quantity', 'Right Fuel Quantity'],
       action: [
         'PF ensures both fuel quantity indicators normal.',
@@ -374,6 +403,9 @@ const AFTER_START = {
       replies: [ip('SET', 'RS')],
     }),
     item('as2', 'Generator Voltages', 'CHECKED', 'LS', {
+      // Both PRESS FOR VOLTS buttons, in either order (the user, 2026-11-04).
+      watch: ['Left Generator Voltage', 'Right Generator Voltage'],
+      watchOnly: true,
       action: ['LS simultaneously presses both PRESS FOR VOLTS pushbuttons on DC BUS meters and checks voltages 27.45-29.05 Volts (28.25 ±0.8).'],
       replies: [say('CHECKED', 'LS')],
     }),
@@ -387,7 +419,10 @@ const AFTER_START = {
       ],
       replies: [say('ICS check', 'PF'), ip('Loud and clear, how me?', 'PM'), say('Loud and clear, CHECKED/ON', 'PF')],
     }),
+    // Both seats' MIC switches: the action sets them on all audio control panels.
     item('as4', 'Oxygen Mask Mic', 'CHECKED/OPEN', 'PM, OBS', {
+      watch: ["Pilot's MIC Switch", "Copilot's MIC Switch"],
+      watchOnly: true,
       action: [
         'a. PM set MIC switches to MASK on all audio control panels (ACP).',
         'b. PM momentarily set each Oxygen mask to EMER, then return to 100%.',
@@ -403,6 +438,7 @@ const AFTER_START = {
     item('as6', 'Transfer Pumps', 'CHECKED/AUTO', 'LS', {
       watch: ['Transfer Test', 'Left Transfer Pump', 'Right Transfer Pump'],
       watchOnly: true,
+      sequence: ['Transfer Test', 'Left Transfer Pump', 'Transfer Test', 'Right Transfer Pump'],
       shows: {
         'Left Transfer Pump': ['LH NO FUEL TRANSFER'],
         'Right Transfer Pump': ['RH NO FUEL TRANSFER'],
@@ -418,6 +454,9 @@ const AFTER_START = {
     }),
     item('as7', 'Crossfeed', 'CHECKED/AUTO', 'LS', {
       watch: ['Left Boost Pump', 'Right Boost Pump'],
+      // a, b, d, e (CLOSED then AUTO, one click: the user, 2026-11-04), then f, the right.
+      sequence: [CONTROL, 'Left Boost Pump', 'Left Boost Pump', CONTROL,
+        'Right Boost Pump', 'Right Boost Pump', CONTROL],
       shows: {
         'Left Boost Pump': ['L FUEL PRESSURE', 'FUEL CROSSFEED'],
         'Right Boost Pump': ['R FUEL PRESSURE', 'FUEL CROSSFEED'],
@@ -435,6 +474,7 @@ const AFTER_START = {
       replies: [say('CHECKED/AUTO', 'LS')],
     }),
     item('as8', 'Generator Load', 'CHECKED', 'LS', {
+      look: true,
       action: [
         'LS checks left and right generator load within 0.1. If either individual load is above .5 or field elevation is above 5000 feet, increase N1 to support the higher load. Match both condition levers at the same N1 setting if a position above LOW IDLE is required (refer to NATOPS, Figure 4.3-1).',
         '(0.5-0.75% load = 57% N1 or higher)',
@@ -487,6 +527,7 @@ const AFTER_START = {
       ],
     }),
     item('as11', 'Turn Indicator', 'CHECKED', 'PF', {
+      look: true,
       action: ['Only one direction for turn needle is required.'],
       replies: [say('CHECKED', 'PF')],
     }),
@@ -499,30 +540,11 @@ const AFTER_START = {
 // ---------------------------------------------------------------------------------------
 // F104
 
-// Engine Runup 8. The four green lights the auto-ignition and autofeather switches arm, and the
-// test the power levers then run, played over about twenty seconds once the power lever is clicked (it
-// must be last): steps e and f of the action below, each side's lights at its two torques.
+// Engine Runup 8's four green lights, and every other light and gauge the runup moves, are the
+// engine model's (t44cEngine.js), which moves the levers through the test once the power lever
+// is clicked (it must be last).
 const ARMED_IGN = ['LH AUTO IGNITION ARMED', 'RH AUTO IGNITION ARMED'];
 const ARMED_FEATHER = ['LH AUTOFEATHER ARMED', 'RH AUTOFEATHER ARMED'];
-const AUTOFEATHER_TEST = {
-  after: 'Power Lever',
-  end: 21500,
-  frames: [
-    { at: 0, lit: [...ARMED_IGN, ...ARMED_FEATHER, 'Torque'] },
-    // Left power lever back to 410: RH AUTO-FEATHER ARMED and LH AUTO IGNITION ARMED out, LH IGN IND on.
-    { at: 3000, lit: ['RH AUTO IGNITION ARMED', 'LH AUTOFEATHER ARMED', 'LH IGN IND', 'Torque'] },
-    // 200: LH AUTO-FEATHER ARMED flashing as the left prop feathers.
-    { at: 6000, lit: ['RH AUTO IGNITION ARMED', 'LH IGN IND', 'Torque', 'Prop RPM'], blink: ['LH AUTOFEATHER ARMED'] },
-    // Left power lever up to 500: all four.
-    { at: 10000, lit: [...ARMED_IGN, ...ARMED_FEATHER, 'Torque'] },
-    { at: 13000, lit: ['LH AUTO IGNITION ARMED', 'RH AUTOFEATHER ARMED', 'RH IGN IND', 'Torque'] },
-    { at: 16000, lit: ['LH AUTO IGNITION ARMED', 'RH IGN IND', 'Torque', 'Prop RPM'], blink: ['RH AUTOFEATHER ARMED'] },
-    // Both power levers to idle: all four, a moment. Then g, the AUTO-FEATHER test switch released
-    // (its two lights out), and h, the ENG AUTO IGN switches off (theirs out), which `end` clears.
-    { at: 19000, lit: [...ARMED_IGN, ...ARMED_FEATHER] },
-    { at: 20000, lit: ARMED_IGN },
-  ],
-};
 
 const ENGINE_RUNUP = {
   id: 'engine-runup',
@@ -543,6 +565,7 @@ const ENGINE_RUNUP = {
     }),
     abbrev('er3', 'Engine Instruments', 'CHECKED', 'PF', {
       watch: ['Power Lever', 'Condition Lever', 'ITT', 'Torque', 'Prop RPM', 'N1', 'Fuel Flow', 'Oil Pressure'],
+      sequence: ['Power Lever', 'Condition Lever', CONTROL],
       action: [
         'LS ensures both power levers are at IDLE and condition levers are at LOW IDLE. The main point of this check is to ensure N1 is at LOW IDLE to commence Engine Runup if previously increased to support a high generator load after starting engines.',
         warning('Whenever moving the condition levers to LOW IDLE, pinch the levers together, and then move the levers very slowly. If a LOW IDLE stop is weak, or a lever is moved rapidly, flameout may result. Should flameout occur, do not move the condition lever back to LOW IDLE bring it fully into FUEL CUTOFF. The engine may be restarted using the appropriate checklist.'),
@@ -560,6 +583,7 @@ const ENGINE_RUNUP = {
     }),
     abbrev('er4', 'Manual Feather', 'CHECKED', 'PF', {
       watch: ['Power Lever'],
+      sequence: ['Power Lever', CONTROL],
       shows: ['Prop RPM'],
       action: [
         'LS performs the following checks:',
@@ -570,6 +594,7 @@ const ENGINE_RUNUP = {
     }),
     item('er5', 'Suction & Pneumatic Pressure', 'CHECKED', 'LS', {
       watch: ['Condition Lever', 'Gyro Suction', 'Pneumatic Pressure'],
+      sequence: ['Condition Lever', CONTROL],
       shows: { 'Condition Lever': ['N1'] },
       action: [
         'LS ensures suction 4.3-5.9 inches Hg (5.1 ±0.8) and pneumatic pressure 12-20 PSI (16 ±4).',
@@ -580,6 +605,9 @@ const ENGINE_RUNUP = {
     }),
     item('er6', 'Overspeed Governors', 'CHECKED', 'LS', {
       watch: ['Prop Lever', 'Power Lever'],
+      // a, b (under 1900 rpm), c (the test switch held), d (the power levers again, up into the
+      // overspeed governor); e and f follow by themselves (the user, 2026-11-04).
+      sequence: ['Prop Lever', 'Power Lever', CONTROL, 'Power Lever'],
       shows: { 'Power Lever': ['Prop RPM'] },
       action: [
         'a. Prop levers – full forward',
@@ -605,12 +633,12 @@ const ENGINE_RUNUP = {
     }),
     item('er8', 'Autofeather/Autoignition', 'CHECKED/OFF', 'LS', {
       watch: ['Condition Lever', 'Autoignition', 'Power Lever'],
-      last: 'Power Lever',
+      // a, c, d, then e: the power levers run the test.
+      sequence: ['Condition Lever', 'Autoignition', CONTROL, 'Power Lever'],
       shows: {
         Autoignition: ARMED_IGN,
         Autofeather: [...ARMED_IGN, ...ARMED_FEATHER],
       },
-      sim: AUTOFEATHER_TEST,
       action: [
         'LS performs the following checks:',
         'a. Condition levers - LOW IDLE',
@@ -734,7 +762,7 @@ const BEFORE_TAKEOFF = {
       replies: [say('CHECKED/UP', 'PF'), ip('CHECKED/UP', 'PM')],
     }),
     abbrev('bt11', 'Altimeters', 'CHECKED/SET', 'PF, PM', {
-      watch: ['ESIS', 'PFD Display'],
+      watch: ['ESIS Display', 'PFD Display'],
       action: [
         'PF and PM perform the following checks:',
         'a. Barometric Altimeter (BA): Set the current altimeter setting on both PFDs and ESIS. Ensure no comparators or warning flags visible on PFD. Ensure the barometric altimeter indicates within ±75 feet of airport elevation and compare LS, RS and ESIS altimeter readings. See the airport diagram for specific field elevations.',
@@ -770,7 +798,7 @@ const BEFORE_TAKEOFF = {
       ],
     }),
     abbrev('bt13', 'Flight Instruments', 'CHECKED/SET', 'PF, PM', {
-      watch: ['PFD Display', 'ESIS', 'V/UHF Radio', 'EMER 121.5', 'RTU', 'TACAN', 'SPEED Knob', 'ALT Knob', 'HDG Knob'],
+      watch: ['PFD Display', 'ESIS Display', 'V/UHF Radio', 'EMER 121.5', 'RTU', 'TACAN', 'SPEED Knob', 'ALT Knob', 'HDG Knob'],
       action: [
         'PF and PM check flight instruments for proper indications:',
         'a. Compare flight information on both Primary Flight Displays (PFDs) and the Electronic Standby Instrument System (ESIS). Note any comparators or warning flags.',
@@ -786,6 +814,7 @@ const BEFORE_TAKEOFF = {
       replies: [say('CHECKED/SET', 'PF'), ip('CHECKED/SET', 'PM')],
     }),
     item('bt14', 'Fuel Quantity', '___ LBS, ___ LBS REQUIRED', 'PF', {
+      look: true,
       action: [
         'Compare actual fuel load with preflight fuel calculations requirements in accordance with SOP and CNAF M-3710.7 minima.',
         note('With full fuel tanks left and right, quantity indicators with TOTAL selected should indicate within 100 pounds of each other. With NACELLE selected, the maximum difference should be 50 pounds. In either case, quantity shall be outside the yellow arcs and the discrepancy must be noted on the appropriate maintenance form for correction prior to the next flight.'),
@@ -825,7 +854,7 @@ const BEFORE_TAKEOFF = {
     }),
     { decision: 'AFTER CLEARED ONTO THE ACTIVE RUNWAY:' },
     abbrev('bt16', 'Lights', 'SET', 'LS', {
-      watch: ['Left Landing Light', 'Right Landing Light', 'Taxi Light', 'Nav Lights', 'Beacon', 'Strobe'],
+      watch: ['Left Landing Light', 'Right Landing Light', 'Taxi Light', 'Beacon', 'Strobe'],
       watchOnly: true,
       action: [
         'LS places the following switches on:',
@@ -895,7 +924,12 @@ const ANTI_ICE_CHECK = {
     memory('ai2d', 'LEFT & RIGHT FUEL VENT', 'ON', undefined, { shows: ['Generator Load'], sub: 'd' }),
     memory('ai2e', 'WSHLD ANTI-ICE', 'BOTH, Then PILOT', undefined, { shows: ['Generator Load'], sub: 'e' }),
     { note: '3. Upon completion of anti-ice checks, place all switches OFF.' },
-    memory('ai4', 'N1', '70 percent (both engines)', undefined, { num: 4 }),
+    // N1 is set with the condition levers (HIGH IDLE is 70 to 73 percent; the FTI's own version
+    // of this step reads "Condition levers — HIGH / LOW IDLE"), so they answer it and the N1
+    // gauge only lights: a gauge never stands in for a drawn control.
+    memory('ai4', 'N1', '70 percent (both engines)', undefined, {
+      num: 4, watch: ['Condition Lever'], watchOnly: true, shows: { 'Condition Lever': ['N1'] },
+    }),
     memory('ai5', 'DE-ICE CYCLE', 'SINGLE, Then MANUAL', undefined, {
       shows: ['Pneumatic Pressure', 'Gyro Suction'],
       num: 5,
@@ -915,7 +949,7 @@ const ANTI_ICE_CHECK = {
     { note: 'Boots inflate, then deflate in 7 to 8 seconds in SINGLE. Pneumatic pressure 12 to 20 psi.' },
     memory('ai6', 'Propeller deice', 'OFF (if not previously secured)', undefined, { num: 6 }),
     memory('ai7', 'N1', 'IDLE (both engines)', undefined, {
-      num: 7,
+      num: 7, watch: ['Condition Lever'], watchOnly: true, shows: { 'Condition Lever': ['N1'] },
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
     }),
   ],
@@ -945,6 +979,7 @@ const CLIMB = {
       replies: [ip('UP', 'PM')],
     }),
     abbrev('cl3', 'Instruments/Nacelles', 'CHECKED', 'PF, PM', {
+      look: true,
       watch: ['Engine Instruments', 'PFD', 'Left Fuel Quantity', 'Right Fuel Quantity'],
       action: INSTRUMENTS_NACELLES,
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
@@ -979,6 +1014,7 @@ const CRUISE = {
   done: '"CRUISE CHECKLIST COMPLETE" (PM)',
   rows: [
     item('cr1', 'Instruments/Nacelles', 'CHECKED', 'PF, PM', {
+      look: true,
       watch: ['Engine Instruments', 'PFD', 'Left Fuel Quantity', 'Right Fuel Quantity'],
       action: INSTRUMENTS_NACELLES,
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
@@ -1050,7 +1086,7 @@ const APPROACH = {
       replies: [say('SET', 'PF'), ip('SET', 'PM')],
     }),
     abbrev('ap7', 'Altimeters', '____.____ SET', 'PF, PM', {
-      watch: ['ESIS'],
+      watch: ['ESIS Display'],
       action: ['PF and PM set destination altimeter setting in PFDs and ESIS.'],
       replies: [say('___.___ SET', 'PF'), ip('___.___ SET', 'PM')],
     }),
@@ -1197,6 +1233,7 @@ const SECURE = {
     }),
     item('se13', 'Boost Pumps', 'OFF', 'LS', { action: ['LS selects both boost pumps OFF.'], replies: [say('OFF', 'LS')] }),
     item('se14', 'Fuel Quantity (Current Limiters)', 'CHECKED', 'LS', {
+      look: true,
       watch: ['Left Fuel Quantity', 'Right Fuel Quantity'],
       action: ['LS notes normal indication on left and right fuel quantity indicators. If either indicator reads zero, a current limiter is blown.'],
       replies: [say('CHECKED', 'LS')],
@@ -1262,6 +1299,24 @@ const PRE_STALL = {
     memory('ps6', 'Stall Speeds', 'Reviewed'),
   ],
 };
+
+// The watched pieces that are instruments, looked at and never moved (poster wordings). Each
+// step's are copied to its `glances`: once the step's own control is in, the step is done as
+// far as the hand goes, so a click on a later step's control may pass it like a look step
+// (EPDrill `lookAhead`): Condition Lever - LOW IDLE with the 18-volt battery check not clicked,
+// then the starter (the user, 2026-11-03). The elapsed time clock is not one: it is operated.
+const GAUGES = new Set([
+  'Battery Voltage', 'Generator Load', 'Left Fuel Quantity', 'Right Fuel Quantity',
+  'Engine Instruments', 'ITT', 'Torque', 'Prop RPM', 'N1', 'Fuel Flow', 'Oil Pressure',
+  'Gyro Suction', 'Pneumatic Pressure', 'Flap Position Indicator', 'Cabin Altitude', 'Cabin Climb',
+  'PFD',
+]);
+[BEFORE_START, START_RIGHT, START_LEFT, AFTER_START, ENGINE_RUNUP, BEFORE_TAKEOFF, ANTI_ICE_CHECK,
+  CLIMB, CRUISE, DESCENT, APPROACH, LANDING, AFTER_LANDING, SECURE, WAVEOFF, PRE_STALL]
+  .forEach((p) => p.rows.forEach((row) => {
+    const g = (row.watch || []).filter((w) => GAUGES.has(w));
+    if (g.length) row.glances = g;
+  }));
 
 // Every normal checklist, in the order they are run, with the full anti-ice/deice check after
 // the Before Takeoff Checklist whose item 6 calls for it. Read, not typed: see EPDrill `read`.

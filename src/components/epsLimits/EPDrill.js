@@ -22,10 +22,10 @@ import { openStep, clickOutcome, FILL } from './stepFlow';
 //
 // `sets` turns the page into Primary's EPs / Quadfold switch: several lists of procedures,
 // `[{ id, label, eps, title, footnote, nwc, normal, read, sequential, extra }]`, chosen by the
-// dots under the buttons. `normal` draws the card as a normal checklist (black title, as the
+// Checklists dropdown under the title. `normal` draws the card as a normal checklist (black title, as the
 // checklist card prints it). `read` is the Quadfold's way of working: the steps are printed, not
 // typed; clicking one opens its `action` and `replies`, and a step is done by clicking its
-// control or by Skip. A game always runs the first set, the EPs, and the dots are hidden for it.
+// control or by Skip. A game always runs the first set, the EPs, and the dropdown is hidden for it.
 //
 // The controls come in through `top`, `left` and `right`, render functions given
 // `{ fill, hint, shown, reveal, resetKey }`:
@@ -133,6 +133,26 @@ const MIN_STEP_FONT = 6;
 
 // The piece of a `watch` step that is the step's own control rather than an instrument.
 const CONTROL = '(control)';
+
+// Where a step's `sequence` stands, given the sequence pieces clicked so far in the order they
+// came: the pieces any one of which may come next, and every piece still to come. An entry that
+// is a list is a group whose members come in any order (both boost pumps).
+const seqNext = (seq, done) => {
+  let at = 0;
+  for (let i = 0; i < seq.length; i += 1) {
+    const group = Array.isArray(seq[i]) ? seq[i] : [seq[i]];
+    const got = [];
+    while (at < done.length && got.length < group.length && group.includes(done[at]) && !got.includes(done[at])) {
+      got.push(done[at]);
+      at += 1;
+    }
+    if (got.length < group.length) {
+      const left = group.filter((m) => !got.includes(m));
+      return { next: left, rest: [...left, ...seq.slice(i + 1).flat()] };
+    }
+  }
+  return { next: [], rest: [] };
+};
 
 const NWC_KINDS = [
   ['warnings', 'warning', 'Warning'],
@@ -310,7 +330,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, 
         <ul>
           <li>Use <strong>Previous/Next</strong> to move between EPs</li>
           <li><strong>Game Mode</strong>, in the bar above, times you through every EP; each one moves on when it is all correct</li>
-          {hasModes && <li>Switch between the EPs and the normal checklists with the dots under the buttons. Game Mode always runs the EPs</li>}
+          {hasModes && <li>Switch between the EPs and the normal checklists with the Checklists dropdown under the title. Game Mode always runs the EPs</li>}
         </ul>
       </div>
     </div>,
@@ -320,18 +340,16 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, 
 
 // Primary's switch between its EP lists and the Quadfold: a line with a dot per set, the
 // chosen one filled. Styled as `.epl-modes`, copied from TW4Cockpit.js's inline styles.
-function ModeDots({ sets, current, onPick }) {
+// The switch between a page's lists (EPs, Hollywood, SSE Cases): a dropdown under the page's
+// title. It was a row of dots under the buttons, and students missed it (the user, 2026-11-03).
+function ModeSelect({ sets, current, onPick }) {
   return (
-    <div className={`epl-modes${sets.length > 2 ? ' epl-modes--wide' : ''}`} role="radiogroup" aria-label="Checklists">
-      <div className="epl-modes-line" />
-      {sets.map((set) => (
-        <button key={set.id} type="button" role="radio" aria-checked={set.id === current}
-          className={`epl-modes-stop${set.id === current ? ' active' : ''}`} onClick={() => onPick(set.id)}>
-          <span className="epl-modes-label">{set.label}</span>
-          <span className="epl-modes-dot" />
-        </button>
-      ))}
-    </div>
+    <label className="epl-modes-select">
+      <span className="epl-modes-select-label">Checklists</span>
+      <select value={current} onChange={(e) => onPick(e.target.value)}>
+        {sets.map((set) => <option key={set.id} value={set.id}>{set.label}</option>)}
+      </select>
+    </label>
   );
 }
 
@@ -365,7 +383,7 @@ function EPDrill({ sets, isGameActive = false, ...props }) {
         open: setCurrent,
         labelOf: (setId) => `Practice ${(sets.find((s) => s.id === setId) || {}).label || ''}`,
       }}
-      modes={isGameActive ? null : <ModeDots sets={sets} current={set.id} onPick={setCurrent} />} />
+      modes={isGameActive ? null : <ModeSelect sets={sets} current={set.id} onPick={setCurrent} />} />
   );
 }
 
@@ -441,7 +459,7 @@ function Drill({
   eps, title, footnote, top, above, left, right, sideWidth = 200,
   aliases = DEFAULT_ALIASES, normal = false, read = false, calls = false, sequential = false, modes = null, extraToggle = null,
   practice = null, initialFull = null, onFull,
-  nwc, nwcHints, isGameActive = false, onGameComplete,
+  nwc, nwcHints, isGameActive = false, onGameComplete, engine = null, detours = [],
 }) {
   // One number sets both columns; a pair sets them separately, which a bespoke layout needs —
   // Advanced hangs a column of buttons on the left and a stack of three panels on the right.
@@ -452,7 +470,8 @@ function Drill({
   useEffect(() => { onFull?.(full); }, [full]);
   // A normal checklist's card takes the black title, and so does a normal procedure added to
   // the EPs (`e.normal`), so it is never mistaken for an EP.
-  const cardClassFor = (e) => `epl-card${normal || e.normal ? ' epl-card--normal' : ''}`;
+  // A detour (Abnormal Start opened from the Hollywood checklists) is an EP, red as on the EPs.
+  const cardClassFor = (e) => `epl-card${(normal && !detours.includes(e)) || e.normal ? ' epl-card--normal' : ''}`;
   const [showHelp, setShowHelp] = useState(false);
   const [reveal, setReveal] = useState(null);
   const aimSeq = useRef(0);
@@ -506,8 +525,36 @@ function Drill({
   const [autoExpand, setAutoExpand] = useState(false);
   const wasDone = useRef({});
 
-  const ep = eps[order[pos]];
+  // `detours`: procedures the drill may be sent to that are not in its own list (the T-44C's
+  // Abnormal Start, opened by aborting a start in the Hollywood checklists). One is shown in
+  // place of the list's card until Previous or Next, which go back into the list.
+  const [detour, setDetour] = useState(null);
+  const ep = (detour && detours.find((d) => d.id === detour)) || eps[order[pos]];
   const steps = useMemo(() => ep.rows.filter((r) => r.id), [ep]);
+
+  // `engine`: a model of the engines the poster draws live (the T-44C's starts,
+  // T44C/t44cEngineStore.js). It hears which procedure is open, refuses a step's control while
+  // the gauges say it is too early (`engineNote` says why), and is told each control that goes
+  // in. Everything else about a step is as without it.
+  const [engineNote, setEngineNote] = useState(null);
+  useEffect(() => {
+    if (!engine) return;
+    engine.open(isGameActive ? null : ep.id);
+    setEngineNote(null);
+  }, [engine, ep.id, isGameActive]);
+  // A refused click: marked wrong, and the reason shown.
+  const tooEarly = (step, piece) => {
+    const why = engine && !isGameActive ? engine.gate(step.id, piece) : null;
+    if (!why) return false;
+    setResults((r) => ({ ...r, [step.id]: 'incorrect' }));
+    setEngineNote(why);
+    return true;
+  };
+  // A step's control went in (no `suffix`), one of its watched pieces (`:<piece>`), or the nth
+  // piece of its `sequence` (`#<n>`).
+  const fire = (step, suffix = '') => {
+    if (engine && !isGameActive) engine.fire(`${step.id}${suffix}`);
+  };
   const answers = useMemo(() => Object.fromEntries(steps.map((s) => [s.id, s.text])), [steps]);
   const fields = Object.keys(answers);
   const showTools = !isGameActive;
@@ -578,9 +625,10 @@ function Drill({
 
   // A read checklist starts clean each time it is opened: what was skipped or clicked on one is
   // not carried to the next (the user, 2026-10-30). A typed EP keeps its boxes, as Primary's do.
-  const go = (nextPos) => {
+  const go = (nextPos, detourId = null) => {
     if (read) setData({});
     setPos(nextPos);
+    setDetour(detourId);
     setResults({});
     setHint(null);
     setShown([]);
@@ -634,23 +682,103 @@ function Drill({
   // control and divide its settings between them (the T-44C's CABIN PRESS switch and cabin
   // pressure controller are both "Pressurization"), so a click on one that does not list the
   // step's setting is the wrong control, not a near miss - controlMatch.js `settingOk`.
+  // Steps that only look at an instrument (`look`, or a step with its control in and only
+  // instruments left, `glances`) need not be clicked one by one: a click on a later step's
+  // control, with nothing but such steps between, does them too, the way the eye
+  // has already been over the gauges by the time the hand moves on. From Condition Lever - LOW
+  // IDLE straight to Starter - OFF does Fuel Flow and ITT and N1. Returns the step the click
+  // answers and the look steps it passes, or null. A look step the click itself belongs to (its
+  // own gauge, a watched piece) is not passed.
+  const lookAhead = (open, action, values, said) => {
+    const belongs = (s) => (sameControl(answers[s.id], action, aliases) && settingOk(values, answers[s.id]))
+      || (s.watch && s.watch.some((w) => said.includes(canon(w, aliases))));
+    if (!passable(open) || belongs(open)) return null;
+    const passed = [];
+    for (let i = steps.indexOf(open); i < steps.length; i += 1) {
+      const s = steps[i];
+      if (s !== open && belongs(s)) return { step: s, passed };
+      if (!passable(s)) return null;
+      passed.push(s);
+    }
+    return null;
+  };
+  // A look step, or a step whose own control is in and which is missing only instruments
+  // (`glances`): Condition Lever - LOW IDLE with its battery-voltage check not clicked.
+  const passable = (s) => {
+    if (s.look) return true;
+    const missing = missingOf(s);
+    return missing.length > 0 && missing.every((p) => (s.glances || []).includes(p));
+  };
+
+  // The engine model may take a click as an abort: the T-44C's condition lever pressed again
+  // during a start. The fuel is already cut on the gauges; the drill opens the procedure that
+  // click begins with its step done, or where the list has no such procedure, says so.
+  const abortedBy = (wordings) => {
+    if (!engine || isGameActive || !engine.abortByLever) return false;
+    const hit = engine.abortByLever(wordings);
+    if (!hit) return false;
+    const target = eps.find((e) => e.id === hit.epId) || detours.find((d) => d.id === hit.epId);
+    const row = target && target.rows.find((r) => r.id === hit.stepId);
+    if (!row) {
+      setEngineNote('Condition lever to FUEL CUTOFF: the start is aborted.');
+      return true;
+    }
+    openEp(hit.epId);
+    setData((d) => ({ ...d, [row.id]: row.text }));
+    setResults({ [row.id]: 'correct' });
+    return true;
+  };
+
   const fill = (action, fragment, values, wordings) => {
     setHint(null);
     setShown([]);
-    const step = nextOpen();
+    if (abortedBy(wordings || [action])) return;
+    let step = nextOpen();
     if (!step) return;
+    setEngineNote(null);
+
+    // The click may be for a step past the look steps in front of it (lookAhead). If the gauges
+    // say that step is too early, nothing is passed; otherwise the passed steps are done as the
+    // checklist prints them, and the click goes on as though that step were the open one.
+    let base = data;
+    let passed = {};
+    const ahead = lookAhead(step, action, values, (wordings || [action]).map((w) => canon(w, aliases)));
+    if (ahead) {
+      const control = sameControl(answers[ahead.step.id], action, aliases);
+      if (control && tooEarly(ahead.step, fragment)) return;
+      base = { ...data };
+      for (const s of ahead.passed) {
+        base[s.id] = answers[s.id];
+        passed[s.id] = 'correct';
+      }
+      step = ahead.step;
+    }
+    // Marked once the click is taken, never before: a refused click passes nothing.
+    const pass = () => {
+      for (const id of Object.keys(passed)) {
+        delete parts.current[id];
+        delete watched.current[id];
+      }
+      // A copy: the updater runs at render, after `passed` is emptied below.
+      const marks = passed;
+      if (Object.keys(marks).length) setResults((r) => ({ ...r, ...marks }));
+      passed = {};
+    };
     const target = step.id;
     const answer = answers[target];
 
     const names = sameControl(answer, action, aliases) && settingOk(values, answer);
     if (step.watch) {
-      watchClick(step, names, wordings || [action]);
+      watchClick(step, names, wordings || [action], base, pass);
       return;
     }
     if (clickOutcome(names ? 1 : 0, 1) !== FILL) {
       setResults((r) => ({ ...r, [target]: 'incorrect' }));
       return;
     }
+    if (tooEarly(step, fragment)) return;
+    pass();
+    fire(step);
     setShown(showsOf(step, (wordings || [action]).map((w) => canon(w, aliases)), true));
 
     // A step that takes more than one control is answered a piece at a time: each control says
@@ -666,7 +794,7 @@ function Drill({
       ? parts.current[target].slice().sort((a, b) => answer.indexOf(a) - answer.indexOf(b)).join(' ')
       : answer;
 
-    const next = { ...data, [target]: line };
+    const next = { ...base, [target]: line };
     setData(next);
     const mark = gradeAnswer(line, answer);
     // Completing the last step checks the whole EP, as Primary does and as Skip does here. A
@@ -685,10 +813,17 @@ function Drill({
   // vane, the elapsed time key); its gauges and lights are rung by `shows` instead (showsOf).
   // A step with `watchOnly` is its watch list alone: the T-44C's Lights steps, where the
   // switches are the step and clicking any light switch must not count as one of them.
+  // A step's `sequence` holds the pieces that must come in that order, the control as
+  // '(control)', a piece as often as it is moved (After Start 7's crossfeed and boost pumps), a
+  // list for pieces that may come in either order. What is not in it may come at any time.
   const missingOf = (step) => {
     if (!step || !step.watch) return [];
     const have = watched.current[step.id] || [];
-    return [...(step.watchOnly ? [] : [CONTROL]), ...step.watch].filter((p) => !have.includes(p));
+    const all = [...(step.watchOnly ? [] : [CONTROL]), ...step.watch];
+    if (!step.sequence) return all.filter((p) => !have.includes(p));
+    const inSeq = new Set(step.sequence.flat());
+    const { rest } = seqNext(step.sequence, have.filter((p) => inSeq.has(p)));
+    return [...rest, ...all.filter((p) => !inSeq.has(p) && !have.includes(p))];
   };
 
   // What a click on a step lights up: a `shows` list when the click is the step's control, or
@@ -701,7 +836,7 @@ function Drill({
     return Object.entries(s).filter(([k]) => said.includes(canon(k, aliases))).flatMap(([, v]) => v);
   };
 
-  const watchClick = (step, names, wordings) => {
+  const watchClick = (step, names, wordings, base = data, pass = () => {}) => {
     const target = step.id;
     const answer = answers[target];
     const said = wordings.map((w) => canon(w, aliases));
@@ -711,10 +846,25 @@ function Drill({
     // both ice vanes, and the vanes answer the anti-ice steps too. Without it a gauge is both,
     // as every instrument check needs.
     const pieces = step.watch.filter((w) => said.includes(canon(w, aliases)));
-    const got = [
+    const named = [
       ...(names && !step.watchOnly && !(step.controlApart && pieces.length) ? [CONTROL] : []),
       ...pieces,
-    ].filter((p) => !have.includes(p));
+    ];
+    // With a `sequence`, the click must be its next piece, or one of the pieces outside it; a
+    // piece of the sequence out of its turn is wrong (Engine Runup 8: the condition levers to LOW
+    // IDLE first, the power levers last). `turn` is the place in the sequence this click takes.
+    const inSeq = new Set((step.sequence || []).flat());
+    const doneSeq = have.filter((p) => inSeq.has(p));
+    const turn = doneSeq.length;
+    const where = step.sequence ? seqNext(step.sequence, doneSeq) : { next: [], rest: [] };
+    const due = where.next;
+    const hit = named.filter((p) => due.includes(p)).slice(0, 1);
+    const got = step.sequence
+      ? [...hit, ...named.filter((p) => !inSeq.has(p) && !have.includes(p))]
+      : named.filter((p) => !have.includes(p));
+    // Only a piece still to come can be out of turn: a gauge that also answers for a control
+    // already in (Engine Runup 3's instruments) is just the gauge.
+    const outOfTurn = !!step.sequence && !hit.length && named.some((p) => where.rest.includes(p));
     // `last` is a piece that must come after every other (Engine Runup 8's power lever, which
     // runs the test the switches set up): clicked early, it is wrong. `inOrder` holds every piece
     // to the order listed, the control first (Before Takeoff 1: engage, disconnect at the wheel,
@@ -723,16 +873,24 @@ function Drill({
     const early = step.last && got.includes(step.last)
       && missing.some((p) => p !== step.last && !got.includes(p));
     const outOfOrder = step.inOrder && got.some((p, i) => p !== missing[i]);
-    if (!got.length || early || outOfOrder) {
+    if (!got.length || early || outOfOrder || outOfTurn) {
       setResults((r) => ({ ...r, [target]: 'incorrect' }));
       return;
     }
+    if (got.includes(CONTROL)) {
+      if (tooEarly(step, null)) return;
+      fire(step);
+    }
+    got.filter((p) => p !== CONTROL).forEach((p) => fire(step, `:${p}`));
+    // The sequence's place too, for a piece that does something different each time it is moved.
+    if (hit.length) fire(step, `#${turn + 1}`);
+    pass();
     if (step.sim && got.includes(step.sim.after)) play(step.sim);
     else setShown(showsOf(step, said, got.includes(CONTROL)));
     watched.current[target] = [...have, ...got];
     const done = !missingOf(step).length;
     const line = done ? answer : (step.watchOnly || watched.current[target].includes(CONTROL) ? controlOf(answer) : '');
-    const next = { ...data, [target]: line };
+    const next = { ...base, [target]: line };
     setData(next);
     if (done) delete watched.current[target];
     if (done && target === steps[steps.length - 1].id) check(next);
@@ -785,7 +943,14 @@ function Drill({
     const open = nextOpen();
     if (!open) return;
     aim(open.text);
+    // A skipped step still does what it does, every control of it not yet in, and the engines
+    // jump on to where the next step finds them.
+    if (engine && !isGameActive) {
+      const after = steps[steps.indexOf(open) + 1];
+      engine.skip(skipKeys(open), after ? after.id : null);
+    }
     delete watched.current[open.id];
+    setEngineNote(null);
     const next = { ...data, [open.id]: open.text };
     setData(next);
     setHint(null);
@@ -793,6 +958,21 @@ function Drill({
     // Primary leaves a skipped step uncoloured until the last one, which checks the whole EP.
     if (open === steps[steps.length - 1]) check(next);
     else setResults((r) => ({ ...r, [open.id]: '' }));
+  };
+
+  // The events a step's pieces not yet clicked would have fired, in order (see `fire`).
+  const skipKeys = (step) => {
+    if (!step.watch) return [step.id];
+    const have = watched.current[step.id] || [];
+    const keyOf = (p) => (p === CONTROL ? step.id : `${step.id}:${p}`);
+    if (!step.sequence) return missingOf(step).map(keyOf);
+    const inSeq = new Set(step.sequence.flat());
+    const done = have.filter((p) => inSeq.has(p)).length;
+    const { rest } = seqNext(step.sequence, have.filter((p) => inSeq.has(p)));
+    return [
+      ...rest.flatMap((p, i) => [keyOf(p), `${step.id}#${done + i + 1}`]),
+      ...missingOf(step).slice(rest.length).map(keyOf),
+    ];
   };
 
   const allAnswers = () => {
@@ -816,6 +996,8 @@ function Drill({
     parts.current = {};
     watched.current = {};
     setResetKey((k) => k + 1);
+    if (engine && !isGameActive) engine.open(ep.id, true);
+    setEngineNote(null);
   };
 
   const toggleOrder = () => {
@@ -830,6 +1012,13 @@ function Drill({
     setRandom(false);
     setOrder(eps.map((_, k) => k));
     go(i);
+  };
+
+  // Another procedure by id: the list's own, or a detour shown over the current card.
+  const openEp = (id) => {
+    const i = eps.findIndex((e) => e.id === id);
+    if (i >= 0) jump(i);
+    else if (detours.some((d) => d.id === id)) go(pos, id);
   };
 
   const cls = (f) => {
@@ -858,7 +1047,13 @@ function Drill({
   const api = { fill, hint, shown, reveal, next: controlOf((nextOpen() || {}).text), resetKey, normalProcedure: normal || !!ep.normal,
     // With the set's `extra` procedures added, a page can show both kinds of button on every card,
     // so the column does not change (and give the procedure away) as the cards go by.
-    mixed: !!(extraToggle && extraToggle.on) };
+    mixed: !!(extraToggle && extraToggle.on),
+    // The engine model, the reason its last refusal gave, Reset, and a way to open another of
+    // the list's procedures by id (a start's Abnormal Start), or null where it is not listed.
+    engine: isGameActive ? null : engine, engineNote, reset,
+    openEp,
+    hasEp: (id) => eps.some((e) => e.id === id) || detours.some((d) => d.id === id),
+    epId: ep.id };
 
   // The NWC affordance: a step or a title only grows one when the publication prints something
   // against it, so its presence is itself information.
@@ -1061,7 +1256,10 @@ function Drill({
     <div className="limits-eps-container epl-page" ref={pageRef}>
       <div className="epl-header">
         <button type="button" onClick={() => setShowHelp(true)}>Instructions</button>
-        <h1>{title}</h1>
+        <div className="epl-title">
+          <h1>{title}</h1>
+          {modes}
+        </div>
         {hasPanel ? (
           <button type="button" className={`epl-mode${full ? '' : ' epl-mode--simple'}`} onClick={() => setFull((f) => !f)}>
             {full ? 'Simple Mode' : 'Full Mode'}
@@ -1137,7 +1335,7 @@ function Drill({
             </div>
             {showTools && (
               <div className="navigation-buttons">
-                <button type="button" onClick={() => go(pos - 1)} disabled={pos === 0}>Previous</button>
+                <button type="button" onClick={() => go(detour ? pos : pos - 1)} disabled={!detour && pos === 0}>Previous</button>
                 <span className="epl-counter" ref={listRef}>
                   <button type="button" className="epl-count" aria-haspopup="listbox" aria-expanded={showList}
                     onClick={() => setShowList((v) => !v)}>
@@ -1194,7 +1392,6 @@ function Drill({
                 </button>
               )}
             </div>
-            {modes}
           </div>
 
           {full && right && (

@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { DRAFT } from '../programs';
 import { actionFor, aliasesFrom, fillsFor, matches, settingsFor, wordingsOf } from './controlMatch';
 
@@ -41,7 +41,7 @@ const SpotEditor = React.lazy(() => import('./SpotEditor'));
 // Everything a poster does that is not markup. A page calls this once with EPDrill's slot api and
 // hands the result to every PosterRegion it draws, so a click behaves the same however the page
 // is laid out.
-export function usePoster({ poster, aliases, fill, hint, shown, next }) {
+export function usePoster({ poster, aliases, fill, hint, shown, next, engine }) {
   const alias = useMemo(() => aliases || aliasesFrom(poster), [aliases, poster]);
 
   // `actionFor` is what a target standing for two controls needs: it answers with whichever of
@@ -53,6 +53,11 @@ export function usePoster({ poster, aliases, fill, hint, shown, next }) {
   // lights is matched against: the left fuel gauge is `Fuel Quantity` and `Left Fuel Quantity`.
   const press = (spot) => {
     const action = actionFor(spot, next, alias);
+    // An elapsed time key runs the engine model's clock whatever step it answers, as the real one
+    // starts and stops whenever it is pressed.
+    if (engine && wordingsOf(spot).some((w) => /elapsed time clock/i.test(w))) engine.toggleClock();
+    // So does a control with an `engineInput`, such as a PRESS FOR VOLTS button.
+    if (engine && spot.engineInput && engine.poke) engine.poke(spot.engineInput);
     fill(action, fillsFor(spot, action, alias), settingsFor(spot, action, alias), wordingsOf(spot));
   };
 
@@ -72,7 +77,109 @@ export function usePoster({ poster, aliases, fill, hint, shown, next }) {
   const editing = open && params.has('spots') ? (params.get('spots') || '') : null;
   const showBoxes = open && params.has('boxes');
 
-  return { poster, alias, press, hint, shown: shown || [], next, editing, showBoxes };
+  return { poster, alias, press, hint, shown: shown || [], next, editing, showBoxes, engine: engine || null };
+}
+
+// A live engine model (EPDrill's `engine`, T44C/t44cEngineStore.js), read through
+// useSyncExternalStore so a tick re-renders only what reads it. `useEngineOn` re-renders only
+// when the model switches on or off.
+const NO_ENGINE = { subscribe: () => () => {}, getSnapshot: () => null };
+const useEngine = (engine) => {
+  const e = engine || NO_ENGINE;
+  return useSyncExternalStore(e.subscribe, e.getSnapshot);
+};
+const useEngineOn = (engine) => {
+  const e = engine || NO_ENGINE;
+  return useSyncExternalStore(e.subscribe, () => !!(e.getSnapshot() || {}).active);
+};
+// The gauges a scripted check is ringing, as one string so a tick re-renders only on a change;
+// null when the click's own rings stand.
+const useEngineRings = (engine) => {
+  const e = engine || NO_ENGINE;
+  const key = useSyncExternalStore(e.subscribe, () => {
+    const snap = e.getSnapshot() || {};
+    return snap.active && Array.isArray(snap.highlight) ? snap.highlight.join('|') : null;
+  });
+  return key === null ? null : key.split('|').filter(Boolean);
+};
+
+// The stopwatch: an iPad on a stand beside the pilot's PFD, running the Clock app's stopwatch.
+// Its big figures are the elapsed time clock as the student runs it, and the whole iPad is a
+// target that answers for the clock (the steps that start and stop it), as the PFD's elapsed
+// time keys do. Under the figures, small and red, the time the starter has actually been on,
+// so the two can be compared. The buttons only show whether the clock is running.
+const clock = (t) => {
+  const cs = Math.floor(t * 100);
+  const mm = String(Math.floor(cs / 6000)).padStart(2, '0');
+  const ss = String(Math.floor(cs / 100) % 60).padStart(2, '0');
+  return `${mm}:${ss}.${String(cs % 100).padStart(2, '0')}`;
+};
+
+const IPAD_TARGET = { id: 'ipad-stopwatch', action: 'Elapsed Time Clock', also: ['ET'], label: 'Stopwatch' };
+
+function Stopwatch({ box, watch, limit, view }) {
+  const [l, t, w, h] = box;
+  const { clock: ck, starter } = watch;
+  const over = starter && limit && starter.t > limit;
+  const label = `Stopwatch, ${clock(ck.t)}${ck.running ? ', running' : ''}. Press to ${ck.running ? 'stop' : 'start'} the clock`;
+  return (
+    <button type="button" className={`epl-ipad${ck.running ? ' epl-ipad--running' : ''}`}
+      title="Stopwatch: the elapsed time clock" aria-label={label}
+      style={{ left: `${l * 100}%`, top: `${t * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }}
+      onClick={() => view.press(IPAD_TARGET)}>
+      <span className="epl-ipad-body">
+        <span className="epl-ipad-screen">
+          <span className="epl-ipad-title">Stopwatch</span>
+          <span className="epl-ipad-time" role="timer">{clock(ck.t)}</span>
+          <span className={`epl-ipad-starter${over ? ' epl-ipad-starter--over' : ''}`}>
+            {starter ? `${starter.side === 'L' ? 'L' : 'R'} STARTER ${clock(starter.t)}` : 'STARTER --:--.--'}
+          </span>
+          <span className="epl-ipad-buttons">
+            <span className="epl-ipad-btn">{ck.running ? 'Lap' : 'Reset'}</span>
+            <span className="epl-ipad-btn epl-ipad-btn--go">{ck.running ? 'Stop' : 'Start'}</span>
+          </span>
+        </span>
+      </span>
+      <span className="epl-ipad-stand" aria-hidden="true" />
+    </button>
+  );
+}
+
+// What the model shows on one region: each gauge's digital window (a region's `readouts`,
+// `{ key: 'L.itt', box }`, box in the region's fractions like a spot's), drawn as the gauge's
+// own green digits; and each annunciator the model drives lit in place, by brightening the
+// legend the drawing already carries in its own colour. Under the targets, and never clicked.
+function EngineLayer({ engine, region, alias, view }) {
+  const snap = useEngine(engine);
+  if (!snap || !snap.active) return null;
+  const lit = (region.spots || []).filter((spot) => spot.box
+    && snap.lights.some((w) => matches(spot, w, alias)));
+  return (
+    <>
+      {(region.readouts || []).map(({ key, box }) => {
+        const [side, gauge] = key.split('.');
+        const text = ((snap.readouts || {})[side] || {})[gauge];
+        if (text === undefined) return null;
+        const [l, t, w, h] = box;
+        // `--chars` lets the digits fill the box's height unless they would overrun its width.
+        return (
+          <span key={key} className="epl-readout" aria-hidden="true"
+            style={{ left: `${l * 100}%`, top: `${t * 100}%`, width: `${w * 100}%`, height: `${h * 100}%`, '--chars': Math.max(3, text.length) }}>
+            <span>{text}</span>
+          </span>
+        );
+      })}
+      {region.stopwatch && snap.stopwatch && <Stopwatch box={region.stopwatch} watch={snap.stopwatch} limit={snap.starterLimit} view={view} />}
+      {lit.map((spot) => {
+        const [l, t, w, h] = spot.box;
+        return (
+          <span key={spot.id || spot.action} aria-hidden="true"
+            className={`epl-ann-lit${(snap.blinking || []).some((w) => matches(spot, w, alias)) ? ' epl-ann-lit--blink' : ''}`}
+            style={{ left: `${l * 100}%`, top: `${t * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }} />
+        );
+      })}
+    </>
+  );
 }
 
 // One panel image with its targets over it. `view` is what usePoster returned; `className` is how
@@ -85,12 +192,18 @@ export function PosterRegion({ region, view, className = '', style }) {
   const first = ((view.poster.regions || [])[0] || {}).id;
   const edit = view.editing !== null
     && (view.editing === region.id || (view.editing === '' && region.id === first));
+  // While the model runs, the lights it drives are lit by it, so a click does not ring them too.
+  const engineOn = useEngineOn(view.engine);
+  const driven = engineOn ? (view.engine.getSnapshot().drives || []) : [];
+  const rings = useEngineRings(view.engine);
+  const shown = rings || view.shown;
   return (
     <div
       className={`epl-band-frame${view.showBoxes ? ' epl-band-frame--boxes' : ''}${className ? ` ${className}` : ''}`}
       style={style}
     >
       <img src={region.src} alt={region.alt} />
+      {!edit && view.engine && <EngineLayer engine={view.engine} region={region} alias={view.alias} view={view} />}
       {!edit && (region.spots || []).map((spot) => {
         const [l, t, w, h] = spot.box;
         const tip = tipFor(spot, actionFor(spot, view.next, view.alias));
@@ -99,8 +212,9 @@ export function PosterRegion({ region, view, className = '', style }) {
         const hinted = matches(spot, view.hint, view.alias);
         // A `{ w, blink }` entry is a light a step's `sim` is flashing. Read as an object only: a
         // plain string has a `blink` too, the browser's old String.prototype.blink().
-        const lit = hinted ? null : view.shown
+        const lit = hinted ? null : shown
           .map((e) => (typeof e === 'string' ? { w: e } : e))
+          .filter((e) => !driven.includes(e.w))
           .find((e) => matches(spot, e.w, view.alias));
         return (
           <button
