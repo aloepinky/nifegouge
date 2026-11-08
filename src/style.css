@@ -10016,28 +10016,16 @@ button.epl-modal-close:hover {
 }
 
 .pf-exchange-heading {
+  margin-bottom: 8px;
+}
+
+.pf-exchange-heading .pf-prompt {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
-  margin-bottom: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--ink-accent);
-}
-
-.pf-exchange-channel {
-  padding: 6px 10px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--wash);
-  color: var(--ink);
-  font-size: 14px;
-  text-transform: none;
-  letter-spacing: normal;
+  margin: 0;
 }
 
 .pf-exchange-lines {

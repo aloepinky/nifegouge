@@ -27,6 +27,9 @@ test('read-through shows both sides and one Next advances the exchange', () => {
   expect(within(exchange).getAllByText('Two Pins In')).toHaveLength(2);
   expect(within(exchange).getByText('Pilot')).toBeTruthy();
   expect(within(exchange).getByText('IP')).toBeTruthy();
+  expect(within(exchange).getByText('At the aircraft')).toBeTruthy();
+  expect(within(exchange).getByText('Intercom')).toBeTruthy();
+  expect(screen.queryByText('Exchange')).toBeNull();
   expect(screen.queryByRole('button', { name: /Reveal/ })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /Next/ }));
   expect(screen.getByText('Switching ATIS', { exact: false })).toBeTruthy();
@@ -73,7 +76,9 @@ test('radio exchange keeps its channel and speaker labels separate from the word
   const exchange = screen.getByRole('region', { name: 'Voice exchange' });
   expect(within(exchange).getByText('CH 1 UHF')).toBeTruthy();
   expect(within(exchange).getByText('Pilot')).toBeTruthy();
-  expect(within(exchange).getByText('ATIS')).toBeTruthy();
+  expect(within(exchange).getAllByText('ATIS')).toHaveLength(2);
+  expect(within(exchange).getByText(/Copy ATIS and verify/)).toBeTruthy();
+  expect(screen.getAllByText(/Copy ATIS and verify/)).toHaveLength(1);
   expect(within(exchange).getByText('Switching ATIS')).toBeTruthy();
   expect(within(exchange).getByText('Generated comms')).toBeTruthy();
 });
