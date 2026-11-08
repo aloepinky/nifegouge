@@ -1,6 +1,6 @@
 /* eslint-disable no-loop-func -- the drivers below pick from the flight as it stands each time round */
-import { EP_STEPS, activeRunway, areaRules, canSkipTo, current, isCue, options, readThrough, reduce, runwayOk, situationsFor, start, typedAltitude } from './engine';
-import { NORTH_FLOW, RUNWAYS, makeCard } from './card';
+import { EP_STEPS, activeRunway, areaRules, canSkipTo, current, isCue, options, practiceAnswer, readThrough, reduce, runwayOk, situationsFor, start, typedAltitude } from './engine';
+import { NORTH_FLOW, RUNWAYS, homeRunwaysForWind, makeCard } from './card';
 import { taxiIn, taxiOut } from './taxi';
 import { flyOn } from './figures';
 import { CALLS, CHECKLISTS, EP_PHASES } from './famScript';
@@ -10,7 +10,7 @@ import { gradeStep } from './grade';
 import { fieldOfLeg, onSide as onSideOf, sideOf as sideOfField } from './fieldOps';
 import { CAP, backable, begin, phaseOf, withHistory } from './history';
 import { flightText } from './report';
-import { limits, problemWith, transit } from './highWork';
+import { MANEUVERS, blockFor, limits, problemWith, transit } from './highWork';
 import { FTI, FTI_CALLOUTS, FTI_NUMBERS } from './ftiProcedures';
 import { fieldFigures, figuresOf } from './figures';
 import { EP_LENGTHS, EP_TITLES } from '../EPDivsData';
@@ -58,7 +58,7 @@ function fly(seed, { maxLegs = 12, legs = null, first, once = [], card } = {}) {
       if (one) left.splice(left.indexOf(one.id), 1);
       const pick = one || (first && opts.find((o) => [].concat(first).includes(o.id))) || (full && picked >= maxLegs ? full : opts[Math.floor(r() * opts.length)]);
       picked += 1;
-      s = reduce(s, { type: 'choose', id: picked > maxLegs * 3 && full ? full.id : pick.id });
+      s = reduce(s, { type: 'choose', id: step.choose === 'weather' ? 'random' : picked > maxLegs * 3 && full ? full.id : pick.id });
     } else {
       s = reduce(s, { type: 'revealAll' });
       s = reduce(s, { type: 'next' });
@@ -184,11 +184,96 @@ test('invalid home runway fails explicitly', () => {
 });
 
 test('home runway picker follows Back when undoing a new flight', () => {
-  const s = brief(start(null, { card: { rwy: '04' } }));
+  const s = brief(start(null, { card: { rwy: '04', windDir: '040' } }));
   const h = withHistory(begin(s), { type: 'restart', rwy: '13L' });
   const back = withHistory(h, { type: 'back' }).now;
   expect(back.card.rwy).toBe('04');
   expect(back.runwayChoice).toBe('04');
+});
+
+test.each(RUNWAYS)('preflight preset $rwy keeps the flight identity and sets consistent wind', ({ rwy, hdg }) => {
+  const ordered = reduce(start(null, { rng: rng(7) }), { type: 'choose', id: 'high' });
+  expect(current(ordered).choose).toBe('plan');
+  const before = reduce(ordered, { type: 'choose', id: 'KINGS 4' });
+  expect(current(before).choose).toBe('weather');
+  const after = reduce(before, { type: 'choose', id: rwy });
+  expect(current(after).text).toBe('Two Pins In');
+  expect(after.order).toBe('high');
+  expect(after.card).toMatchObject({
+    rwy, hdg, windDir: String(hdg).padStart(3, '0'), north: NORTH_FLOW.includes(rwy),
+    callSign: before.card.callSign, squawk: before.card.squawk, seed: before.card.seed,
+    windSpeed: before.card.windSpeed,
+  });
+  expect(after.atisHeard).toBe(false);
+  expect(after.route[0]).toBe(HOME);
+  expect(crFeatures[after.path[0]].name).toBe(rwy);
+});
+
+test('custom wind picks a favored runway and permits parallels without changing wind', () => {
+  const s = reduce(reduce(start(), { type: 'choose', id: 'low' }), { type: 'choose', id: 'KINGS 4' });
+  const custom = reduce(s, { type: 'choose', id: '31R', windDir: '140' });
+  expect(custom.card).toMatchObject({ rwy: '13L', windDir: '140', north: false });
+  const parallel = reduce(s, { type: 'choose', id: '13R', windDir: '140' });
+  expect(parallel.card).toMatchObject({ rwy: '13R', windDir: '140' });
+  expect(homeRunwaysForWind('360').map((r) => r.rwy)).toEqual(['36']);
+  expect(homeRunwaysForWind('001').map((r) => r.rwy)).toEqual(['36']);
+  const invalid = reduce(s, { type: 'choose', id: '13R', windDir: '361' });
+  expect(current(invalid).choose).toBe('weather');
+  expect(invalid.card).toBe(s.card);
+  expect(invalid.cur.problem).toMatch(/001 to 360/);
+});
+
+test.each(RUNWAYS)('recovery from $rwy keeps wind and restricts landing runways', ({ rwy, hdg }) => {
+  let s = brief(start(null, { card: { rwy, windDir: String(hdg), windSpeed: 10 } }));
+  s = reduce(s, { type: 'skipTo', phase: 'Recovery' });
+  expect(current(s).choose).toBe('homeRunway');
+  expect(s.homeRunwayChosen).not.toBe(true);
+  const before = s;
+  const candidates = options(s);
+  expect(candidates.map((o) => o.id).sort()).toEqual(homeRunwaysForWind(hdg).map((r) => r.rwy).sort());
+  const landing = candidates[candidates.length - 1].id;
+  const h = withHistory(begin(s), { type: 'choose', id: landing });
+  s = h.now;
+  expect(s.card).toMatchObject({ rwy: landing, windDir: String(hdg).padStart(3, '0'), windSpeed: 10 });
+  expect(s.departureCard.rwy).toBe(rwy);
+  expect(s.homeRunwayChosen).toBe(true);
+  expect(withHistory(h, { type: 'back' }).now).toBe(before);
+  s = reduce(s, { type: 'skipTo', phase: 'Landing' });
+  expect(s.done).toBe(false);
+  expect(current(s).phase).toBe('Landing');
+  expect(s.log.filter((l) => l.who === 'choice' && /Same as departure|Runway \d/.test(l.text)).length).toBeGreaterThan(0);
+  s = reduce(s, { type: 'skipTo', phase: 'Taxi back' });
+  expect(s.rwy).toBe(landing);
+});
+
+test('an OLF runway is asked after its weather and before entering its pattern', () => {
+  const field = Object.keys(crFeatures).find((key) => crFeatures[key].name === 'KNGT');
+  let s = brief(start(null, {
+    card: { rwy: '13L', windDir: '140', windSpeed: 10 },
+    fields: { [field]: { blocks: [{ heading: 'ASOS', lines: ['VHF 119.1MHz'] }] } },
+  }));
+  s = reduce(s, { type: 'skipTo', phase: 'Working area' });
+  s = { ...s, steps: [{ kind: 'choose', choose: 'leg', phase: 'Working area', stage: 'airborne' }], at: 0, segments: [] };
+  const fieldOption = options(s).find((o) => o.id === `to:${field}` || o.legs?.some((id) => fieldOfLeg(id) === field));
+  expect(fieldOption).toBeTruthy();
+  s = reduce(s, { type: 'choose', id: fieldOption.id });
+  for (let i = 0; i < 100 && current(s).choose !== 'runway' && !s.done; i++) {
+    const now = current(s);
+    if (now.kind === 'choose' || now.kind === 'ask') {
+      const opt = options(s).find((o) => runwayOk(s, o.id));
+      s = reduce(s, { type: 'choose', id: opt.id });
+    } else s = reduce(s, { type: 'readNext' });
+  }
+  expect(current(s)).toMatchObject({ choose: 'runway', field });
+  expect(s.log.some((l) => /automated weather observation. Wind 140 at 10/.test(l.text))).toBe(true);
+  const rwy = activeRunway(s, field);
+  const choice = options(s).find((o) => runwayOk(s, o.id));
+  s = reduce(s, { type: 'choose', id: choice.id });
+  expect(s.olfRwy).toEqual({ field, rwy });
+  expect(s.card.windDir).toBe('140');
+  s = reduce(s, { type: 'skipTo', phase: 'Pattern' });
+  expect(current(s).phase).toBe('Pattern');
+  expect(s.rwy).toBe(rwy);
 });
 
 test('a step is said, then revealed, then left', () => {
@@ -376,6 +461,8 @@ test('every plan has a route off every runway it is offered for', () => {
     // Every area offered for each plan has a route, and the brief then goes.
     opts.forEach((o) => {
       let t = reduce(s, { type: 'choose', id: o.id });
+      t = reduce(t, { type: 'choose', id: rwy });
+      expect(t.cur.problem).toBeUndefined();
       options(t).forEach((a) => {
         let u = reduce(t, { type: 'choose', id: a.id });
         if (current(u).choose === 'block') u = reduce(u, { type: 'choose', id: 'high' });
@@ -991,6 +1078,108 @@ test('a setup altitude is typed any usual way', () => {
   expect(typedAltitude('high')).toBeNull();
 });
 
+test('callsign changes update pending calls and squawk without rewriting earlier calls or weather', () => {
+  const card = makeCard(rng(1), { squadron: 'Ranger', side: '749' });
+  expect(card.callSign).toBe('Ranger 749');
+  expect(card.squawk).toBe('5549');
+  const s = { ...start(null, { card }), at: 1, steps: [
+    { kind: 'call', text: 'Ranger 749, taxi', answer: 'Ranger 749, taxi' },
+    { kind: 'call', group: 'ground', text: 'Ranger 749, squawk 5549', answer: 'Ranger 749, squawk 5549' },
+    { kind: 'reply', group: 'ground', text: '749, read-back correct' },
+    { kind: 'reply', text: `Other aircraft ${card.other}` },
+  ], log: [{ who: 'you', text: 'Ranger 749, taxi' }],
+    cur: { typed: 'old answer', shown: false, result: 'incorrect' } };
+  const next = reduce(s, { type: 'callsign', side: '812' });
+  expect(next.card).toEqual({ ...s.card, side: '812', callSign: 'Ranger 812', squawk: '5612' });
+  expect(next.log).toBe(s.log);
+  expect(next.steps[0]).toBe(s.steps[0]);
+  expect(current(next).answer).toBe('Ranger 812, squawk 5612');
+  expect(readThrough(next).following[0].text).toBe('812, read-back correct');
+  expect(next.steps[3].text).toBe(`Other aircraft ${card.other}`);
+  expect(next.cur.typed).toBe('');
+  const boomer = reduce(next, { type: 'squadron', squadron: 'Boomer' });
+  expect(current(boomer).answer).toBe('Boomer 812, squawk 5612');
+  const restarted = reduce(boomer, { type: 'restart' });
+  expect(restarted.card.callSign).toBe('Boomer 812');
+  expect(restarted.card.squawk).toBe('5612');
+  expect(reduce(restarted, { type: 'restart' }).card.callSign).toBe('Boomer 812');
+});
+
+test.each(['', '12', '699', '900', 'abc', '8120'])('invalid callsign number %s reports an error without changing the flight card', (side) => {
+  const s = start(null);
+  const next = reduce(s, { type: 'callsign', side });
+  expect(next.card).toBe(s.card);
+  expect(next.cur.problem).toBe('Enter a callsign number from 700 to 899.');
+});
+
+test.each(['high', 'low'])('Practice setup answers fit every maneuver in the %s block', (which) => {
+  const block = blockFor('KINGS 4', which);
+  for (const maneuver of Object.keys(MANEUVERS)) {
+    for (const alt of [block.arrive, block.bottom, block.top, 17500]) {
+      const s = { ...start(null), block, alt, at: 0,
+        steps: [{ kind: 'choose', choose: 'altitude', maneuver, phase: 'Working area' }], segments: [] };
+      const worked = practiceAnswer(s);
+      expect(problemWith(maneuver, Number(worked.id), block)).toBeNull();
+      expect(practiceAnswer(s)).toEqual(worked);
+      expect(s.alt).toBe(alt);
+      const next = reduce(s, { type: 'readNext' });
+      expect(next.setupAt).toBe(Number(worked.id));
+      expect(next.cur.problem).toBeFalsy();
+    }
+  }
+});
+
+test.each([
+  ['high', 'pcl'], ['high', 'stick'], ['low', 'pcl'], ['low', 'stick'],
+  ['inverted', 'pcl'], ['inverted', 'stick'],
+])('Practice shows and applies the %s attitude %s answer', (type, part) => {
+  const s = { ...start(null), at: 0, steps: [
+    { kind: 'choose', choose: 'cua', attitude: { type, text: type }, part, text: part },
+    { kind: 'reply', who: 'ip', text: 'Recovered' },
+  ], segments: [] };
+  const worked = practiceAnswer(s);
+  expect(options(s)).toContainEqual(worked);
+  const next = reduce(s, { type: 'readNext' });
+  expect(current(next).text).toBe('Recovered');
+  expect(next.log.at(-1).text).toContain(worked.label);
+});
+
+test('Practice answers checkout checks but leaves flight-planning choices interactive', () => {
+  for (const goliad of [true, false]) {
+    const s = { ...start(null), at: 0, steps: [{ kind: 'choose', choose: 'checkout', goliad }] };
+    expect(practiceAnswer(s).id).toBe(goliad ? 'gooftwar' : 'abcdont');
+  }
+  for (const choose of ['order', 'plan', 'weather', 'homeRunway', 'maneuver', 'block', 'entry']) {
+    const s = { ...start(null), at: 0, steps: [{ kind: 'choose', choose }] };
+    expect(practiceAnswer(s)).toBeNull();
+    expect(reduce(s, { type: 'readNext' })).toBe(s);
+  }
+});
+
+test.each([10, 130, 270, 350])('Practice uses the wind-favored runway for every OLF with wind %s', (windDir) => {
+  const fields = Object.keys(crFeatures).filter((id) => isAirfield(id) && id !== HOME);
+  let checked = 0;
+  for (const field of fields) {
+    const s = { ...start(null), at: 0, card: { ...makeCard(), windDir },
+      steps: [{ kind: 'choose', choose: 'runway', field, early: true }], segments: [] };
+    if (!activeRunway(s, field)) continue;
+    checked++;
+    const worked = practiceAnswer(s);
+    expect(worked.id).toBe(`rwy:${activeRunway(s, field)}`);
+    expect(runwayOk(s, worked.id)).toBe(true);
+    const next = reduce(s, { type: 'readNext' });
+    expect(next.olfRwy).toEqual({ field, rwy: activeRunway(s, field) });
+    expect(next.card.windDir).toBe(windDir);
+    expect(next.cur.problem).toBeFalsy();
+    const legs = Object.keys(crFeatures).filter((id) => fieldOfLeg(id) === field);
+    const arrivals = { ...s, steps: [{ kind: 'choose', choose: 'runway', field, legs }] };
+    const arrivalAnswer = practiceAnswer(arrivals);
+    expect(arrivalAnswer).toBeTruthy();
+    expect(runwayOk(arrivals, arrivalAnswer.id)).toBe(true);
+  }
+  expect(checked).toBeGreaterThan(0);
+});
+
 // Fly MUSTANG North, then into KRKP, then home by Shamrock.
 function mustangToKrkp(entry) {
   let s = start(LEGS, { card: { rwy: '31R' }, fields: FIELDS });
@@ -1375,6 +1564,7 @@ withSeed('low work first on MUSTANG: Waldron for South, Aransas County for North
     s = reduce(s, { type: 'choose', id: 'low' });
     const plans = optionIds(s);
     s = reduce(s, { type: 'choose', id: plan });
+    s = reduce(s, { type: 'choose', id: 'random' });
     return { s, plans };
   };
   const { plans } = brief('MUSTANG South');
@@ -1463,6 +1653,7 @@ withSeed('Skip to Pattern on a MUSTANG flight is quick and lands at its field, n
     let s = start(LEGS, { card: { rwy: '13L' } });
     s = reduce(s, { type: 'choose', id: 'high' });
     s = reduce(s, { type: 'choose', id: plan });
+    s = reduce(s, { type: 'choose', id: 'random' });
     const t0 = Date.now();
     const out = reduce(s, { type: 'skipTo', phase: 'Pattern' });
     expect(Date.now() - t0).toBeLessThan(3000);

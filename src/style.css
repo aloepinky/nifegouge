@@ -9865,6 +9865,11 @@ button.epl-modal-close:hover {
   border-color: var(--bad-text);
 }
 
+.pf-status-toggle,
+.pf-status-compact {
+  display: none;
+}
+
 .pf-phases {
   display: flex;
   gap: 4px;
@@ -9943,12 +9948,36 @@ button.epl-modal-close:hover {
   flex: none;
 }
 
-.pf-option {
-  display: inline-flex;
-  align-items: center;
+.pf-weather {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 16px;
+}
+
+.pf-weather-field {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
+  flex: 1 1 180px;
+  min-width: 0;
   font-size: 13px;
-  color: var(--ink);
+}
+
+.pf-weather-field .pf-input {
+  flex: none;
+  height: 32px;
+  padding: 0 8px;
+}
+
+.pf-weather p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.pf-weather-preview {
+  font-size: 14px;
+  color: var(--ink-strong);
 }
 
 /* A course rule said from memory: the marked words blank until revealed. */
@@ -10087,6 +10116,30 @@ button.epl-modal-close:hover {
   font-weight: 600;
   color: var(--ink-strong);
   margin-bottom: 4px;
+}
+
+.pf-setup--altitude {
+  margin-bottom: 20px;
+}
+
+.pf-setup-label {
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.pf-setup--altitude .pf-setup-alt {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.pf-worked-answer {
+  margin: 4px 0 20px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink-strong);
 }
 
 .pf-flightcard {
@@ -10526,17 +10579,6 @@ button.epl-modal-close:hover {
   border-left-color: var(--ink-accent);
 }
 
-.pf-rule-summary {
-  margin: 10px 0;
-}
-
-.pf-rule-fly {
-  margin-top: 2px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink-accent);
-}
-
 /* An FTI procedure's numbers. */
 .pf-numbers {
   border-collapse: collapse;
@@ -10603,6 +10645,60 @@ button.epl-modal-close:hover {
 }
 
 @media (max-width: 760px) {
+  .pf-status-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 32px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .pf-status-toggle:hover {
+    background: var(--wash);
+    color: var(--ink-strong);
+  }
+
+  .pf-status-toggle:focus-visible {
+    outline: 2px solid var(--line-accent);
+    outline-offset: 2px;
+  }
+
+  .pf-status {
+    overflow-anchor: none;
+  }
+
+  .pf-status-compact {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .pf-status-details {
+    display: none;
+  }
+
+  .pf-status--expanded .pf-status-details {
+    display: block;
+    margin-top: 8px;
+    max-height: calc(60vh - 58px);
+    max-height: calc(60dvh - 58px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .pf-main {
+    overflow-anchor: none;
+  }
+
   .pf-page {
     padding: 8px 16px 32px;
   }
@@ -10730,6 +10826,8 @@ button.epl-modal-close:hover {
 .pf-rule-piece--next { background: var(--wash); border-radius: 3px; }
 .pf-rule-cite { display: block; font-size: 0.8rem; color: var(--ink-muted); }
 .pf-select {
+  font: inherit;
+  font-size: 14px;
   height: 32px;
   padding: 0 8px;
   border: 1px solid var(--line);
@@ -10737,6 +10835,23 @@ button.epl-modal-close:hover {
   background: var(--surface);
   color: var(--ink);
 }
+
+.pf-callsign {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pf-callsign-input {
+  box-sizing: border-box;
+  width: 64px;
+}
+
+.pf-callsign-error {
+  font-size: 12px;
+  color: var(--ink);
+}
+
 .pf-numbers-static th { font-weight: 600; color: var(--ink-accent); }
 .pf-callouts { display: flex; flex-direction: column; gap: 4px; margin: 10px 0 0; }
 .pf-callout { padding: 2px 6px; border-radius: 3px; color: var(--ink); }

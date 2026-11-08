@@ -13,8 +13,9 @@
 //
 // Decisions come when a pilot makes them, not when the Course Rules page offers them: the
 // working area is picked before engine start, as it is filed and briefed, and the course rules
-// route to it is flown without asking; the runway is the ATIS's. Only from the area on is the
-// flight picked leg by leg.
+// route to it is flown without asking. Preflight presets or a custom wind set the weather;
+// runway questions use that same wind throughout. Only from the area on is the flight picked
+// leg by leg.
 
 import {
   BEFORE_LANDING, CALLS, CHECKLISTS, EP_PHASES, FULL_STOP, GROUND, WHEN, WHEN_REF,
@@ -24,7 +25,7 @@ import {
   fieldsAhead, isAirfield, isArea, isPattern, labelOf, legCalls, nameOf, routeFromField, routeTo, routeToField, distancesTo, runwaysAt,
   runwayOf, shortName, feature,
 } from './legs';
-import { fillCall, makeCard } from './card';
+import { RUNWAYS, fillCall, homeRunwaysForWind, makeCard, withHomeRunway } from './card';
 import {
   DISCONTINUE_REF, DISCONTINUE_RULE, canDiscontinue, chance, civilian, entryCalls, entryModes, fieldModes, fieldOfLeg, modeLabel,
   fieldRadios, lapCalls, lapModes, onChannels, onSide, sideOf, withCtafCalls,
@@ -32,13 +33,14 @@ import {
 import { gradeStep } from './grade';
 import { FTI, FTI_CALLOUTS, FTI_NUMBERS } from './ftiProcedures';
 import {
-  MANEUVERS, after, blockFor, ft, label as setupLabel, problemWith, setups, transit,
+  MANEUVERS, after, blockFor, ft, label as setupLabel, problemWith, setups, setupWindow, transit,
 } from './highWork';
 import { bandOf, fieldFigures, figuresOf, flyOn, radioOf } from './figures';
 import { VT28 } from './vt28';
 import { SITUATIONS } from './situations';
 import { taxiIn, taxiOut } from './taxi';
 import { EP_ANSWERS, EP_LENGTHS, EP_TITLES } from '../EPDivsData';
+import { crFeatures } from '../CourseRulesFeatures';
 
 const clean = (s) => String(s).replace(/​/g, '').replace(/\s+/g, ' ').trim();
 
@@ -544,7 +546,7 @@ function expand(seg, s) {
       ...expand({ ...seg, choose: undefined, cua: cuaAttitude(rng) }, s),
     ];
   }
-  if (seg.choose) return [{ kind: 'choose', choose: seg.choose, leg: seg.leg, field: seg.field, goliad: seg.goliad, legs: seg.legs, via: seg.via, early: seg.early, phase: seg.phase, stage: seg.stage }];
+  if (seg.choose) return [{ kind: 'choose', choose: seg.choose, leg: seg.leg, field: seg.field, goliad: seg.goliad, legs: seg.legs, via: seg.via, early: seg.early, resumeLeg: seg.resumeLeg, phase: seg.phase, stage: seg.stage }];
   if (seg.setup) {
     return [{ kind: 'choose', choose: 'altitude', maneuver: seg.setup, phase: seg.phase, stage: seg.stage, text: MANEUVERS[seg.setup].label }];
   }
@@ -865,7 +867,8 @@ export function start(given = null, { rng = Math.random, card, fields = null } =
   // Ingleside's calls, which the document leaves out (fieldOps.js).
   const legs = withCtafCalls(given, fields);
   return advance({
-    legs, baseLegs: legs, fields, fly: {}, airborne: false, card: makeCard(rng, card), runwayChoice: (card && card.rwy) || '', atisHeard: false, order: null, plan: null, olf: null, path: null, planDone: false, skipped: null,
+    legs, baseLegs: legs, fields, fly: {}, airborne: false, card: makeCard(rng, card), runwayChoice: (card && card.rwy) || '', departureCard: null, homeRunwayChosen: false, atisHeard: false, order: null, plan: null, olf: null, path: null, planDone: false, skipped: null,
+    sideChoice: (card && card.side) || '',
     steps: [], at: -1, segments: GROUND, log: [], route: [HOME], node: HOME, rwy: null,
     entries: 0, alt: null, block: null, hwDone: 0, hwFlown: [],
     flags: { inArea: false, areaDone: false, descentDone: false },
@@ -913,13 +916,25 @@ export function options(s) {
   if (now.choose === 'order') {
     return [{ id: 'high', label: 'High work first' }, { id: 'low', label: 'Low work first' }];
   }
+  if (now.choose === 'weather') {
+    return [{ id: 'random', label: 'Random' }, ...RUNWAYS.map(({ rwy }) => ({ id: rwy, label: `Runway ${rwy}` }))];
+  }
+  if (now.choose === 'homeRunway') {
+    const favored = homeRunwaysForWind(s.card.windDir);
+    const same = favored.find(({ rwy }) => rwy === s.card.rwy);
+    return [
+      ...(same ? [{ id: same.rwy, label: `Same as departure (${same.rwy})` }] : []),
+      ...favored.filter(({ rwy }) => rwy !== same?.rwy).map(({ rwy }) => ({ id: rwy, label: `Runway ${rwy}` })),
+    ];
+  }
   // Picked once its weather is heard, before the legs to it (`early`); or among its arrivals.
   if (now.choose === 'runway' && !now.legs) return runwaysAt(now.field).map((r) => ({ id: `rwy:${r}`, label: `Runway ${r}` }));
   if (now.choose === 'runway') return now.legs.map((id) => ({ id, label: `Runway ${runwayOf(id)}` }));
   if (now.choose === 'plan') {
     const pick = s.card.areaPick;
     return [...PLANS].sort((a, b) => (b.id === 'KINGS 4') - (a.id === 'KINGS 4'))
-      .filter((p) => routeTo(p.id, s.card.rwy, pick) && (s.order !== 'low' || fieldsFor(p.id, s.card.rwy, pick).length))
+      .filter((p) => RUNWAYS.some(({ rwy }) => routeTo(p.id, rwy, pick)
+        && (s.order !== 'low' || fieldsFor(p.id, rwy, pick).length)))
       .map((p) => ({ id: p.id, label: p.label }));
   }
   if (now.choose === 'entry') {
@@ -1094,6 +1109,23 @@ function shamrockCall(s, id) {
 
 // Fly a leg: what comes with it goes in front of the rest of the flight.
 function fly(s, id) {
+  // Ask before expanding any return-route calls or rules with the landing runway.
+  if (!s.homeRunwayChosen && phaseOfLeg(id, s.flags, s.route) === 'Recovery') {
+    return { ...s, steps: [], at: -1, segments: [
+      { phase: 'Recovery', stage: 'airborne', choose: 'homeRunway', resumeLeg: id },
+      ...s.segments,
+    ] };
+  }
+  const into = fieldOfLeg(id);
+  if (!s.flags.inArea && !isPattern(id) && into && into !== HOME && runwayOf(id) && s.olfRwy?.field !== into) {
+    const phase = phaseOfLeg(id, s.flags, s.route);
+    return { ...s, steps: [], at: -1, weatherFor: into, segments: [
+      ...(s.weatherFor === into ? [] : [{ phase, stage: 'airborne', weather: into }]),
+      { phase, stage: 'airborne', choose: 'runway', field: into, early: true, resumeLeg: id },
+      ...s.segments,
+    ] };
+  }
+  if (into && !isPattern(id) && runwayOf(id)) s = { ...s, rwy: runwayOf(id) };
   // A leg's rule and calls for the way this flight comes to it (KRKP's arrivals have a part for
   // the MUSTANG areas and one for Goliad and KINGS 4).
   s = { ...s, legs: legsFrom(s, id) };
@@ -1131,10 +1163,8 @@ function fly(s, id) {
       segs.push({ ...air, phase: leaving, weather: bound });
       s = { ...s, weatherFor: bound };
     }
-    // Then its runway, by that wind: every leg on is for it. A leg straight into the field has
-    // already said which.
-    if (bound && bound !== HOME && runwayOf(id) && fieldOfLeg(id) === bound) s = { ...s, olfRwy: { field: bound, rwy: runwayOf(id) } };
-    else if (bound && bound !== HOME && !(s.olfRwy && s.olfRwy.field === bound) && runwaysAt(bound).length > 1) {
+    // Then its runway, by that wind: ask even where the leg leads straight into the field.
+    if (bound && bound !== HOME && !(s.olfRwy && s.olfRwy.field === bound) && runwaysAt(bound).length > 0) {
       segs.push({ ...air, phase: leaving, choose: 'runway', field: bound, early: true });
     }
     const { exit } = areaRules({ ...s, heading: id }, s.node);
@@ -1553,7 +1583,7 @@ export function cuaAttitude(rng = Math.random) {
   return { type, text: `${bank}° of bank to the ${side}, nose ${pitch ? `${pitch}° low` : 'on the horizon'}` };
 }
 
-function choose(s, id, rng = Math.random) {
+function choose(s, id, rng = Math.random, windDir) {
   const now = current(s);
   // A setup altitude is typed, any altitude at all; one that breaks the block or the maneuver
   // is refused, and said why.
@@ -1562,23 +1592,53 @@ function choose(s, id, rng = Math.random) {
   // A field's own arrival named directly (a replay, a test) is flown as picked.
   const opt = all.find((o) => o.id === id) || (now.choose === 'leg' && all.some((o) => o.legs && o.legs.includes(id)) ? { id, label: labelOf(id) } : null);
   if (!opt) return s;
+  if (now.choose === 'weather' && windDir !== undefined && (!/^\d{1,3}$/.test(String(windDir)) || Number(windDir) < 1 || Number(windDir) > 360)) {
+    return { ...s, cur: { ...s.cur, problem: 'Enter a wind direction from 001 to 360 degrees.' } };
+  }
   // Into an outlying field, the runway is the wind's, not a choice.
   if ((now.choose === 'leg' || now.choose === 'runway') && !runwayOk(s, id)) {
-    return { ...s, cur: { ...s.cur, result: 'incorrect', problem: `With the wind ${s.card.windDir} at ${s.card.windSpeed}, runway ${runwayOf(id)} would not be the active runway.` } };
+    const rwy = id.startsWith('rwy:') ? id.slice(4) : runwayOf(id);
+    return { ...s, cur: { ...s.cur, result: 'incorrect', problem: `With the wind ${s.card.windDir} at ${s.card.windSpeed}, runway ${rwy} would not be the active runway.` } };
   }
   const logged = { ...s, log: [...s.log, { ...logOf(now, 'choice'), text: opt.label, who: 'choice' }] };
   if (now.choose === 'runway' && now.early) {
     const rwy = id.replace(/^rwy:/, '');
-    if (rwy !== activeRunway(s, now.field)) {
-      return { ...s, cur: { ...s.cur, result: 'incorrect', problem: `With the wind ${s.card.windDir} at ${s.card.windSpeed}, runway ${rwy} would not be the active runway.` } };
-    }
-    return advance({ ...logged, olfRwy: { field: now.field, rwy } });
+    const picked = { ...logged, olfRwy: { field: now.field, rwy } };
+    return advance(now.resumeLeg ? fly(picked, now.resumeLeg) : picked);
   }
   if (now.kind === 'ask') {
     const segs = id === 'run' ? [{ phase: now.phase, stage: now.stage, checklist: 'climb' }] : [];
     return advance({ ...logged, flags: { ...s.flags, climbDone: id === 'run' }, segments: [...segs, ...s.segments] });
   }
   if (now.choose === 'order') return advance({ ...logged, order: id });
+  if (now.choose === 'weather') {
+    const direction = windDir === undefined ? (id === 'random' ? s.card.windDir : RUNWAYS.find((r) => r.rwy === id).hdg) : windDir;
+    const favored = homeRunwaysForWind(direction);
+    const wanted = id === 'random' ? s.card.rwy : id;
+    const rwy = favored.some((r) => r.rwy === wanted) ? wanted : favored[0].rwy;
+    const card = withHomeRunway(s.card, rwy, direction);
+    if (!routeTo(s.plan, rwy, card.areaPick) || (s.order === 'low' && !fieldsFor(s.plan, rwy, card.areaPick).length)) {
+      return { ...s, cur: { ...s.cur, problem: `No practice route to ${s.plan} is available from runway ${rwy}. Choose another runway preset or wind direction.` } };
+    }
+    const log = [...s.log, { ...logOf(now, 'choice'), who: 'choice',
+      text: `Practice weather: wind ${card.windDir} at ${card.windSpeed} knots, KNGP runway ${rwy}` }];
+    return briefNext({ ...logged, log, card, departureCard: card, runwayChoice: id === 'random' && !s.runwayChoice ? '' : rwy });
+  }
+  if (now.choose === 'homeRunway') {
+    // A return leg chosen before this question may need its parallel-runway counterpart.
+    let leg = now.resumeLeg;
+    if (fieldOf(leg) === 'KNGP' && runwayOf(leg) && !feature(leg).name.split('/').includes(id)) {
+      leg = Object.keys(crFeatures).find((key) => feature(key).folderPath === feature(now.resumeLeg).folderPath
+        && feature(key).name.split('/').includes(id));
+      if (!leg) throw new Error(`No home arrival for runway ${id}`);
+    }
+    const card = withHomeRunway(s.card, id);
+    const log = [...logged.log];
+    if (leg !== now.resumeLeg && log.length > 1 && log[log.length - 2].text === labelOf(now.resumeLeg)) {
+      log[log.length - 2] = { ...log[log.length - 2], text: labelOf(leg) };
+    }
+    return advance(fly({ ...logged, log, card, homeRunwayChosen: true, atisAirborne: false }, leg));
+  }
   // A field picked: out of an area, the check-out aid first (ABCDONT's "ATIS/WX", GOOFTWAR's
   // "grab ASOS"); then the field's weather; then its runway, by that wind.
   if (now.choose === 'leg' && (id.startsWith('to:') || opt.via)) {
@@ -1586,7 +1646,11 @@ function choose(s, id, rng = Math.random) {
     // Its runway already picked: straight on (the check-out comes with the leg out of the area).
     const known = s.olfRwy && s.olfRwy.field === field && opt.legs.find((l) => runwayOf(l) === s.olfRwy.rwy);
     if (known) return opt.via ? advance(fly({ ...logged, nextLeg: known }, opt.via)) : advance(fly(logged, known));
-    const at = seg(now);
+    const at = {
+      ...seg(now),
+      phase: s.flags.inArea
+        ? phaseOfLeg(opt.via || opt.legs[0], { ...s.flags, inArea: false, areaDone: true }, s.route) : now.phase,
+    };
     const segs = [
       ...(s.flags.inArea ? [{ ...at, choose: 'checkout', goliad: nameOf(field) === 'KNGT' }] : []),
       ...(s.weatherFor === field ? [] : [{ ...at, weather: field }]),
@@ -1645,7 +1709,7 @@ function choose(s, id, rng = Math.random) {
     ...st, path, node: path[0], rwy: s.card.rwy, route: [HOME, path[0]],
     segments: [...st.segments, { phase: 'Departure', stage: 'airborne', choose: 'leg' }],
   });
-  if (now.choose === 'plan') return briefNext({ ...logged, plan: id, area: null, blockPicked: false });
+  if (now.choose === 'plan') return advance({ ...logged, plan: id, area: null, blockPicked: false });
   if (now.choose === 'olf') return depart({ ...logged, olf: id }, routeToField(id, s.card.rwy));
   if (id === 'toArea') {
     const path = routeFromField(s.olf, areaOf(s.plan, s.card.areaPick), s.rwy);
@@ -1669,6 +1733,8 @@ function skipChoice(s, target) {
   if (now.kind === 'ask') return 'skip';
   const opts = options(s).map((o) => o.id).filter((id) => now.choose !== 'leg' || runwayOk(s, id));
   if (now.choose === 'plan' && opts.includes('KINGS 4')) return 'KINGS 4';
+  if (now.choose === 'weather') return 'random';
+  if (now.choose === 'homeRunway') return opts[0];
   if (now.choose === 'runway') return now.early ? `rwy:${activeRunway(s, now.field)}` : opts.find((id) => runwayOk(s, id)) || opts[0];
   // A field still to fly to: the field (its runway comes after).
   const goal = s.olf && !s.route.includes(s.olf) ? s.olf : PLAN_FIELD[s.plan] && !s.route.includes(PLAN_FIELD[s.plan]) && (s.flags.areaDone || s.flags.inArea) ? PLAN_FIELD[s.plan] : null;
@@ -1816,6 +1882,26 @@ function answered(s, result) {
 // The steps the student says (and reveals); the other kinds are said for them or are choices.
 export const TYPED = new Set(['call', 'response', 'checklist', 'rule', 'numbers']);
 
+// Worked answers for knowledge checks; route, weather and maneuver choices stay interactive.
+export function practiceAnswer(s) {
+  const now = current(s);
+  if (now?.choose === 'runway') {
+    return options(s).find((o) => runwayOk(s, o.id));
+  }
+  if (now?.choose === 'altitude') {
+    const { lo, hi } = setupWindow(now.maneuver, s.block);
+    const at = Math.min(hi, Math.max(lo, s.alt));
+    return { id: String(at), label: setupLabel(at, s.alt) };
+  }
+  if (now?.choose === 'cua') {
+    return options(s).find((o) => o.id === CUA_RIGHT[now.attitude.type][now.part]);
+  }
+  if (now?.choose === 'checkout') {
+    return options(s).find((o) => o.id === (now.goliad ? 'gooftwar' : 'abcdont'));
+  }
+  return null;
+}
+
 // Preview the current conversation; do not generate future segments or log a
 // response until Next. This keeps reading and going back free of flight side effects.
 export function readThrough(s) {
@@ -1837,6 +1923,27 @@ export function readThrough(s) {
   return { state, following };
 }
 
+function changeIdentity(s, squadron, side) {
+  const card = { ...s.card, squadron, side, callSign: `${squadron} ${side}`,
+    squawk: `${side[0] === '7' ? '55' : '56'}${side.slice(1)}` };
+  const identity = new RegExp(`\\b(?:Boomer|Ranger) \\d{3}\\b|\\b(?:${s.card.side}|${s.card.squawk})\\b`, 'g');
+  const replace = (text) => typeof text === 'string' ? text.replace(identity, (match) => {
+    if (match === s.card.callSign) return card.callSign;
+    if (match === s.card.side) return card.side;
+    if (match === s.card.squawk) return card.squawk;
+    return match;
+  }) : text;
+  // Calls already expanded for the current conversation need the new identity too.
+  const update = (step) => !['call', 'reply', 'auto'].includes(step.kind) ? step : {
+    ...step, text: replace(step.text),
+    answer: Array.isArray(step.answer) ? step.answer.map(replace) : replace(step.answer),
+  };
+  const steps = s.steps.map((step, i) => i < s.at ? step : update(step));
+  const ep = s.ep ? { ...s.ep, steps: s.ep.steps.map((step, i) => i < s.ep.at ? step : update(step)) } : s.ep;
+  const cur = current(s)?.kind === 'call' ? { ...s.cur, typed: '', result: '', first: '', hint: false } : s.cur;
+  return { ...s, card, steps, ep, cur };
+}
+
 export function reduce(s, action) {
   if (action.type === 'legs') {
     const legs = withCtafCalls(action.legs, action.fields || s.fields);
@@ -1850,15 +1957,20 @@ export function reduce(s, action) {
 }
 
 function act(s, action) {
-  if (s.done && action.type !== 'restart') return s;
+  if (s.done && !['restart', 'callsign', 'squadron'].includes(action.type)) return s;
   const now = current(s);
   switch (action.type) {
     case 'restart': {
       const rwy = action.rwy === undefined ? s.runwayChoice : action.rwy;
-      return start(s.baseLegs || s.legs, { fields: s.fields, card: { squadron: s.card.squadron, ...(rwy ? { rwy } : {}) } });
+      const weather = rwy && rwy === s.runwayChoice && s.departureCard
+        ? { windDir: s.departureCard.windDir, windSpeed: s.departureCard.windSpeed } : {};
+      return start(s.baseLegs || s.legs, { fields: s.fields, card: { squadron: s.card.squadron,
+        ...(s.sideChoice ? { side: s.sideChoice } : {}), ...(rwy ? { rwy } : {}), ...weather } });
     }
     case 'readNext': {
       if (!now || (s.ep && s.ep.done)) return s;
+      const worked = practiceAnswer(s);
+      if (worked) return choose(s, worked.id);
       if (now.kind !== 'reply' && !TYPED.has(now.kind)) return s;
       const { state, following } = readThrough(s);
       let next = answered(state, now.kind === 'reply' ? 'heard' : 'read');
@@ -1871,9 +1983,13 @@ function act(s, action) {
     }
     case 'squadron': {
       // Boomer (VT-27) or Ranger (VT-28): the call sign from here on.
-      const card = { ...s.card, squadron: action.squadron, callSign: `${action.squadron} ${s.card.side}` };
-      return { ...s, card };
+      return changeIdentity(s, action.squadron, s.card.side);
     }
+    case 'callsign':
+      if (!/^[78]\d{2}$/.test(action.side)) {
+        return { ...s, cur: { ...s.cur, problem: 'Enter a callsign number from 700 to 899.' } };
+      }
+      return { ...changeIdentity(s, s.card.squadron, action.side), sideChoice: action.side };
     case 'type':
       return { ...s, cur: { ...s.cur, typed: action.text, result: '' } };
     case 'check': {
@@ -1903,7 +2019,7 @@ function act(s, action) {
       if (!TYPED.has(now.kind)) return s;
       return s.cur.shown ? answered(s, now.typed ? 'shown' : 'said') : reveal(s, false);
     case 'choose':
-      return choose(s, action.id, action.rng);
+      return choose(s, action.id, action.rng, action.windDir);
     case 'situation':
       return situation(s, action.rng || Math.random);
     case 'resume':

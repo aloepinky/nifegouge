@@ -1,12 +1,14 @@
 // /primary/practice — a contact flight from the line to the line, said out step by step: every
 // checklist response, intercom and radio call, the course rules legs picked as you fly, and a
 // random emergency when you ask for one. The flight itself is engine.js; this is its page.
-// Read-through shows a whole conversation at once. Quiz keeps the reveal/check drill.
-// Choosing a home runway restarts the flight; Random lets the simulated ATIS choose it.
+// Read-through shows a whole conversation and worked knowledge checks. Quiz keeps the drill.
+// Preflight weather presets and custom wind set the runways for the whole practice flight.
+// The toolbar's callsign number updates future calls and its matching squawk.
+// Mobile keeps flight info folded and returns to the card after navigation, never to the log.
 
-import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { TYPED, canSkipTo, current, isCue, linesOf, options, readThrough, situationsFor, start, switchesChannel } from './engine';
-import { NORTH_FLOW, RUNWAYS } from './card';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { TYPED, canSkipTo, current, isCue, linesOf, options, practiceAnswer, readThrough, situationsFor, start, switchesChannel } from './engine';
+import { NORTH_FLOW, RUNWAYS, homeRunwaysForWind } from './card';
 import { radioOf } from './figures';
 import { labelOf, nameOf, shortName } from './legs';
 import { firstLetters } from '../briefs/firstLetters';
@@ -24,12 +26,13 @@ function SetupPrompt({ s, step }) {
   const m = MANEUVERS[step.maneuver];
   const last = s.lastManeuver ? MANEUVERS[s.lastManeuver].label : null;
   return (
-    <div className="pf-setup">
+    <div className="pf-setup pf-setup--altitude">
+      <div className="pf-setup-label">Current altitude</div>
       <div className="pf-setup-alt">
         {last ? `The ${last.toLowerCase()} left you at ${ft(s.alt)}.`
           : `Level outside the block at ${ft(s.alt)}.`}
       </div>
-      <div className="pf-when">Next: {m.label}</div>
+      <div className="pf-when">Next maneuver: {m.label}</div>
     </div>
   );
 }
@@ -97,7 +100,9 @@ function nextOf(s) {
   if (seg.checklist) return 'A checklist';
   if (seg.calls) return CALLS[seg.calls] || '';
   if (seg.legCalls) return `Calls for ${labelOf(seg.legCalls)}`;
-  if (seg.choose) return seg.choose === 'plan' ? 'Pick the working area' : 'Pick the next leg';
+  if (seg.choose) return seg.choose === 'weather' ? 'Set the practice weather'
+    : seg.choose === 'homeRunway' ? 'Pick the landing runway'
+      : seg.choose === 'plan' ? 'Pick the working area' : 'Pick the next leg';
   if (seg.ask) return 'Climb Checklist?';
   return '';
 }
@@ -116,7 +121,40 @@ function devTools() {
   }
 }
 
+function CallsignNumber({ side, dispatch }) {
+  const [text, setText] = useState(side);
+  useEffect(() => { setText(side); }, [side]);
+  const invalid = !/^[78]\d{2}$/.test(text);
+  return (
+    <div className="pf-callsign">
+      <input
+        className="pf-select pf-callsign-input"
+        aria-label="Callsign number"
+        aria-invalid={invalid}
+        aria-describedby={invalid ? 'pf-callsign-error' : undefined}
+        title="Callsign number (700–899)"
+        inputMode="numeric"
+        maxLength={3}
+        value={text}
+        onChange={(e) => {
+          const value = e.target.value;
+          setText(value);
+          if (/^[78]\d{2}$/.test(value)) dispatch({ type: 'callsign', side: value });
+        }}
+      />
+      {invalid && <span id="pf-callsign-error" className="pf-callsign-error">Use 700–899</span>}
+    </div>
+  );
+}
+
 function StatusBar({ s, back, dispatch, quiz, setQuiz }) {
+  const [expanded, setExpanded] = useState(false);
+  const scrollPosition = useRef(null);
+  useLayoutEffect(() => {
+    if (scrollPosition.current === null) return;
+    window.scrollTo({ top: scrollPosition.current, behavior: 'instant' });
+    scrollPosition.current = null;
+  }, [expanded]);
   const step = current(s);
   const phase = s.ep && !s.ep.situation ? 'Emergency' : step?.phase || 'Shutdown';
   const seen = new Set(s.log.map((l) => l.phase));
@@ -124,7 +162,7 @@ function StatusBar({ s, back, dispatch, quiz, setQuiz }) {
   // Until the ATIS is heard the runway isn't known, so neither is the departure.
   const where = s.atisHeard && s.route.length > 1 ? labelOf(s.node) : 'KNGP, on the line';
   const doing = s.ep ? s.ep.title : step?.kind === 'checklist' ? 'Calling for a checklist'
-    : step?.group ? CALLS[step.group] : ['plan', 'area', 'block', 'order', 'olf'].includes(step?.choose) ? 'Briefing'
+    : step?.group ? CALLS[step.group] : ['plan', 'area', 'block', 'order', 'olf', 'weather'].includes(step?.choose) ? 'Briefing'
       : step?.choose === 'entryPlan' ? 'Planning the entry'
       : ['maneuver', 'altitude'].includes(step?.choose) ? 'High work' : step?.choose === 'cua' ? 'Unusual attitude'
         : step?.choose === 'checkout' ? 'Checking out' : step?.kind === 'choose' ? 'Picking a leg' : '';
@@ -133,7 +171,20 @@ function StatusBar({ s, back, dispatch, quiz, setQuiz }) {
     : fits.length ? '' : 'Nothing that comes up here fits this moment';
 
   return (
-    <div className="pf-status">
+    <div className={expanded ? 'pf-status pf-status--expanded' : 'pf-status'}>
+      <button type="button" className="pf-status-toggle" aria-expanded={expanded}
+        aria-controls="pf-status-details" onClick={() => {
+          if (window.matchMedia('(max-width: 760px)').matches) scrollPosition.current = window.scrollY;
+          setExpanded(!expanded);
+        }}>
+        <span>Flight settings &amp; info</span>
+        <span>{expanded ? 'Collapse ▴' : 'Expand ▾'}</span>
+      </button>
+      {!expanded && <div className="pf-status-compact">
+        <div><span className="pf-status-label">Now</span> {doing || phase}</div>
+        {next && <div><span className="pf-status-label">Next</span> {next}</div>}
+      </div>}
+      <div id="pf-status-details" className="pf-status-details">
       <ol className="pf-phases" aria-label="Phases of the flight">
         {phasesFor(s.order).map((p) => {
           // A stage already begun takes the flight back to where it began (everything since is
@@ -161,27 +212,6 @@ function StatusBar({ s, back, dispatch, quiz, setQuiz }) {
           {next && <div><span className="pf-status-label">Next</span> {next}</div>}
         </div>
         <div className="pf-status-buttons">
-          <label className="pf-option">
-            <input type="checkbox" checked={quiz} onChange={(e) => setQuiz(e.target.checked)} />
-            Quiz
-          </label>
-          <label className="pf-option" title="Changing the home runway starts a new flight">
-            KNGP runway
-            <select
-              className="pf-select"
-              value={s.runwayChoice}
-              onChange={(e) => dispatch({ type: 'restart', rwy: e.target.value })}
-            >
-              <option value="">Random</option>
-              {[true, false].map((north) => (
-                <optgroup key={String(north)} label={north ? 'North flow' : 'South flow'}>
-                  {RUNWAYS.filter(({ rwy }) => NORTH_FLOW.includes(rwy) === north).map(({ rwy }) => (
-                    <option key={rwy} value={rwy}>{rwy}</option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-          </label>
           {/* Something that goes wrong short of an emergency: Joker, Bingo, a wave-off…. Not on
               the live site yet: only here, or in a browser opened once with ?dev. */}
           {devTools() && (
@@ -205,6 +235,15 @@ function StatusBar({ s, back, dispatch, quiz, setQuiz }) {
             Skip stage
           </button>
           <button type="button" className="pf-btn" onClick={() => dispatch({ type: 'restart' })}>Restart</button>
+          <select
+            className="pf-select"
+            aria-label="Flight mode"
+            value={quiz ? 'quiz' : 'practice'}
+            onChange={(e) => setQuiz(e.target.value === 'quiz')}
+          >
+            <option value="practice">Practice Mode</option>
+            <option value="quiz">Quiz Mode</option>
+          </select>
           {/* The squadron is the one picked on Discussion Items (My squadron), and the other way. */}
           <select
             className="pf-select"
@@ -218,10 +257,12 @@ function StatusBar({ s, back, dispatch, quiz, setQuiz }) {
             <option value="Boomer">Boomer (VT-27)</option>
             <option value="Ranger">Ranger (VT-28)</option>
           </select>
+          <CallsignNumber side={s.card.side} dispatch={dispatch} />
         </div>
       </div>
       <Readout fly={s.fly || {}} />
       <FlightCard s={s} />
+      </div>
     </div>
   );
 }
@@ -300,6 +341,62 @@ function Exchange({ lines, context, note, example }) {
 }
 
 // Choice buttons, with the runway legs gathered under their route ("Rusty Departures": 04 13L …).
+function WeatherSetup({ s, dispatch }) {
+  const [preset, setPreset] = useState(s.runwayChoice || 'random');
+  const [direction, setDirection] = useState(s.card.windDir);
+  const [customWind, setCustomWind] = useState(false);
+  const valid = /^\d{1,3}$/.test(direction) && Number(direction) >= 1 && Number(direction) <= 360;
+  const favored = valid ? homeRunwaysForWind(direction) : [];
+  const runway = favored.find(({ rwy }) => rwy === (preset === 'random' ? s.card.rwy : preset)) || favored[0];
+  const setRunway = (value) => {
+    setPreset(value);
+    if (value === 'random') {
+      setDirection(s.card.windDir);
+      setCustomWind(false);
+    } else if (!customWind || !favored.some(({ rwy }) => rwy === value)) {
+      setDirection(String(RUNWAYS.find(({ rwy }) => rwy === value).hdg).padStart(3, '0'));
+      setCustomWind(false);
+    }
+  };
+  const setWind = (value) => {
+    setDirection(value);
+    setCustomWind(true);
+    if (/^\d{1,3}$/.test(value) && Number(value) >= 1 && Number(value) <= 360) {
+      const matches = homeRunwaysForWind(value);
+      setPreset(matches.some(({ rwy }) => rwy === preset) ? preset : matches[0].rwy);
+    }
+  };
+  return (
+    <form className="pf-weather" onSubmit={(e) => {
+      e.preventDefault();
+      dispatch({ type: 'choose', id: preset, windDir: direction });
+    }}>
+      <label className="pf-weather-field">
+        KNGP runway preset
+        <select className="pf-select" value={preset} onChange={(e) => setRunway(e.target.value)}>
+          <option value="random">Random</option>
+          {[true, false].map((north) => (
+            <optgroup key={String(north)} label={north ? 'North flow' : 'South flow'}>
+              {RUNWAYS.filter(({ rwy }) => NORTH_FLOW.includes(rwy) === north).map(({ rwy }) => (
+                <option key={rwy} value={rwy}>{rwy}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </label>
+      <label className="pf-weather-field">
+        Wind direction (degrees)
+        <input className="pf-input" type="number" min="1" max="360" step="1" required
+          value={direction} onChange={(e) => setWind(e.target.value)} />
+      </label>
+      <p className="pf-when">Presets set the wind direction. Custom wind selects a wind-favored runway; you can choose either parallel runway.</p>
+      {runway && <p className="pf-weather-preview">Wind {String(Number(direction)).padStart(3, '0')} at {s.card.windSpeed} knots · KNGP runway {runway.rwy} · {NORTH_FLOW.includes(runway.rwy) ? 'North' : 'South'} flow</p>}
+      <p className="pf-when">This simulated wind is used for ATIS and every airfield throughout the flight.</p>
+      <button type="submit" className="pf-btn pf-btn--go">Continue</button>
+    </form>
+  );
+}
+
 function Choices({ opts, onChoose }) {
   const groups = [];
   opts.forEach((o) => {
@@ -325,12 +422,6 @@ function Choices({ opts, onChoose }) {
   );
 }
 
-// A paragraph's figures, as the readout takes them.
-function FlyLine({ figs }) {
-  const parts = [figs.alt, figs.hdg, figs.kias, figs.ch && [figs.ch, figs.station].filter(Boolean).join(' ')].filter(Boolean);
-  return parts.length ? <div className="pf-rule-fly">{parts.join(' · ')}</div> : null;
-}
-
 // A rule's text with its marked words blanked (a line as long as the word) or filled in.
 function Words({ text, filled }) {
   return text.split(/\[\[([^[\]]+)\]\]/).map((part, j) => (j % 2
@@ -339,8 +430,7 @@ function Words({ text, filled }) {
 }
 
 // A course rule revealed a piece at a time (engine.js piecesOf): each sentence with a blank, so
-// every change of altitude, airspeed, heading or channel is its own stop. A revealed piece shows
-// what it says to fly.
+// every change of altitude, airspeed, heading or channel is its own stop.
 function Rule({ step, upTo, shown }) {
   const pieces = (step.pieces || []).map((x, k) => ({ ...x, k }));
   const open = (k) => shown || k < upTo;
@@ -350,8 +440,6 @@ function Rule({ step, upTo, shown }) {
         if (p.heading) return <div key={i} className="pf-rule-heading"><Words text={p.text} filled /></div>;
         const mine = pieces.filter((x) => x.para === i);
         const next = !shown && mine.some((x) => x.k === upTo);
-        // A trailing colon introduces the next paragraph; do not insert a readout between them.
-        const summary = /:\s*$/.test(p.text) ? [] : mine.filter((x) => open(x.k));
         return (
           <div key={i} className={next ? 'pf-rule-para pf-rule-para--next' : 'pf-rule-para'}>
             <p className={p.sub ? 'pf-rule-sub' : undefined}>
@@ -362,11 +450,6 @@ function Rule({ step, upTo, shown }) {
               )) : <Words text={p.text} filled />}
             </p>
             {p.cite && <span className="pf-rule-cite">{p.cite}</span>}
-            {summary.some((x) => Object.keys(x.figs).length > 0) && (
-              <div className="pf-rule-summary">
-                {summary.map((x) => <FlyLine key={x.k} figs={x.figs} />)}
-              </div>
-            )}
           </div>
         );
       })}
@@ -532,12 +615,14 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
   const step = current(s);
   const input = useRef(null);
   const go = useRef(null);
+  const worked = !quiz && practiceAnswer(s);
   const ep = s.ep;
   const typed = step && TYPED.has(step.kind);
   const reply = isReply(step);
 
   // Enter (or Space) reveals, then goes on: the button keeps the focus from step to step.
   useEffect(() => {
+    if (document.activeElement?.classList.contains('pf-callsign-input')) return;
     const el = step?.typed ? input.current : go.current;
     if ((typed || reply) && el) el.focus({ preventScroll: true });
   }, [step, typed, reply]);
@@ -576,7 +661,7 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
   // A rule or a procedure's numbers is revealed line by line, in place.
   const lined = step.kind === 'rule' || step.kind === 'numbers';
   const exchangeRadio = step.radio || following.find((line) => line.radio)?.radio;
-  const showExchange = s.cur.shown && !lined;
+  const showExchange = s.cur.shown && !lined && step.kind !== 'checklist';
   const prompt = (
     <Prompt
       step={!quiz && exchangeRadio ? { ...step, radio: exchangeRadio } : step}
@@ -620,24 +705,38 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
               : step.choose === 'cua' ? (step.part === 'pcl' ? 'Recover: the PCL?' : 'And the control stick?')
               : step.choose === 'area' ? (step.phase === 'Preflight' ? `Which ${s.plan} area?` : `Which ${s.plan} area are you claiming?`)
               : step.choose === 'block' ? 'High or low block?'
-              : step.choose === 'altitude' ? `Where do you set up for the ${MANEUVERS[step.maneuver].label.toLowerCase()}?`
+              : step.choose === 'altitude' ? (worked ? `Before the ${MANEUVERS[step.maneuver].label.toLowerCase()}:`
+                : `Where do you set up for the ${MANEUVERS[step.maneuver].label.toLowerCase()}?`)
               : step.choose === 'maneuver' ? (s.hwFlown && s.hwFlown.length ? `The ${MANEUVERS[s.lastManeuver].label.toLowerCase()} left you at ${ft(s.alt)}. Which maneuver next?` : 'High work: which maneuver first?')
               : step.choose === 'checkout' ? `Checking out of ${nameOf(s.node).replace(/\s*\d+\s*$/, '')}: which checks?`
               : step.choose === 'order' ? 'High work or low work first?'
+                : step.choose === 'weather' ? 'Set the practice weather'
+                : step.choose === 'homeRunway' ? 'Which KNGP runway for landing?'
                 : step.choose === 'plan' ? 'Which working area is being planned for?'
                   : step.choose === 'olf' ? 'Brief: where is the low work?'
                 : step.choose === 'entry' ? `Entering the field off ${labelOf(step.leg)}: a break or a PEL?`
-                  : step.choose === 'runway' ? `Which runway at ${shortName(step.field)}?`
+                  : step.choose === 'runway' ? (worked ? `Wind-favored runway at ${shortName(step.field)}:`
+                    : `Which runway at ${shortName(step.field)}?`)
                   : step.choose === 'entryPlan' ? `Before you leave the area, will you enter ${shortName(step.field)} through a break or a PEL?`
                   : step.choose === 'lap' ? 'This time round: a normal lap or a pattern PEL?'
                     : step.choose === 'field' ? `At ${nameOf(s.node)}. Pick what you do next.`
                   : `At ${nameOf(s.node)}. Pick the next leg below or on the map.`}
           </div>
-          {step.choose === 'altitude' ? <AltitudeBox s={s} dispatch={dispatch} />
+          {worked ? <p className="pf-worked-answer">{worked.label}</p>
+            : step.choose === 'weather' ? <WeatherSetup s={s} dispatch={dispatch} />
+            : step.choose === 'altitude' ? <AltitudeBox s={s} dispatch={dispatch} />
             : <Choices opts={options(s)} onChoose={(id) => dispatch({ type: 'choose', id })} />}
-          {s.cur.problem && <p className="pf-feedback pf-feedback--wrong">{s.cur.problem}</p>}
+          {['homeRunway', 'runway'].includes(step.choose) && (
+            <p className="pf-when">Wind {s.card.windDir} at {s.card.windSpeed} knots{step.choose === 'homeRunway' ? ' · Same weather as departure' : worked ? '' : ' · Choose the wind-favored runway'}</p>
+          )}
+          {!worked && s.cur.problem && <p className="pf-feedback pf-feedback--wrong">{s.cur.problem}</p>}
           {step.choose === 'cua' && step.ref && <p className="pf-source">Source: {refText(step.ref)}</p>}
-          {canBack && <div className="pf-actions"><BackButton canBack={canBack} dispatch={dispatch} /></div>}
+          {(canBack || worked) && (
+            <div className="pf-actions">
+              <BackButton canBack={canBack} dispatch={dispatch} />
+              {worked && <button type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: 'readNext' })}>Next <Key k="→" /></button>}
+            </div>
+          )}
         </>
       )}
 
@@ -662,6 +761,7 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
           {/* A call's channel is its first line: shown once revealed, the call after. */}
           {/* Switching, the channel is asked first; already on it, it just shows. */}
           {!showExchange && step.kind !== 'numbers' && prompt}
+          {step.kind === 'checklist' && s.cur.shown && <p className="pf-worked-answer">{answer}</p>}
           {step.kind === 'rule' && <Rule step={step} upTo={s.cur.upTo || 0} shown={s.cur.shown} />}
           {step.kind === 'numbers' && (
             <section className="pf-procedure" aria-label={step.leg}>
@@ -738,9 +838,13 @@ function CopyFlight({ s }) {
 }
 
 function FlightLog({ log, s }) {
-  const end = useRef(null);
+  const panel = useRef(null);
   const [open, setOpen] = useState(() => typeof window === 'undefined' || !window.matchMedia || window.matchMedia('(min-width: 761px)').matches);
-  useEffect(() => { if (open && end.current) end.current.scrollIntoView({ block: 'nearest' }); }, [log.length, open]);
+  useEffect(() => {
+    if (open && panel.current && window.matchMedia('(min-width: 761px)').matches) {
+      panel.current.scrollTop = panel.current.scrollHeight;
+    }
+  }, [log.length, open]);
 
   const groups = [];
   log.forEach((l, i) => {
@@ -751,7 +855,7 @@ function FlightLog({ log, s }) {
   const said = log.filter((l) => RESULT[l.result]);
 
   return (
-    <details className="pf-log" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+    <details ref={panel} className="pf-log" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary>Flight log <span className="pf-log-count">{said.length} steps</span><CopyFlight s={s} /></summary>
       <div className="pf-log-body">
         {/* One fold per stage flown: the stage you're in is open, and each one closes when the
@@ -778,7 +882,6 @@ function FlightLog({ log, s }) {
             </details>
           );
         })}
-        <div ref={end} />
       </div>
     </details>
   );
@@ -786,11 +889,26 @@ function FlightLog({ log, s }) {
 
 function PracticeFlight() {
   const [quiz, setQuiz] = useState(false);
-  const [h, dispatch] = useReducer(withHistory, undefined, () => {
+  const main = useRef(null);
+  const navigation = useRef(false);
+  const [h, rawDispatch] = useReducer(withHistory, undefined, () => {
     const squadron = squadronFromStorage();
     return begin(start(null, squadron ? { card: { squadron } } : {}));
   });
+  const dispatch = useCallback((action) => {
+    navigation.current = !['type', 'callsign', 'squadron', 'legs'].includes(action.type);
+    rawDispatch(action);
+  }, []);
   const s = h.now;
+  useEffect(() => {
+    if (!navigation.current) return;
+    navigation.current = false;
+    if (!window.matchMedia('(max-width: 760px)').matches || !main.current) return;
+    const status = main.current.closest('.pf-page').querySelector('.pf-status');
+    const offset = getComputedStyle(status).position === 'sticky'
+      ? Math.max(0, status.getBoundingClientRect().bottom) + 12 : 12;
+    window.scrollBy({ top: main.current.getBoundingClientRect().top - offset, behavior: 'instant' });
+  }, [s]);
 
   // Right arrow follows the selected mode; left arrow goes back. Not while typing in a box.
   useEffect(() => {
@@ -807,13 +925,13 @@ function PracticeFlight() {
   const onChoose = useCallback((id) => {
     const field = options(h.now).find((o) => o.legs && o.legs.includes(id));
     dispatch({ type: 'choose', id: field ? field.id : id });
-  }, [h.now]);
+  }, [h.now, dispatch]);
 
   // The legs' radio calls, from the course rules document. Until it arrives (or if it can't be
   // read) the flight uses the study guide's calls.
   useEffect(() => {
     fetchCourseRules().then((r) => r && r.doc && dispatch({ type: 'legs', legs: r.doc.legs || {}, fields: r.doc.airfields || {} }), () => {});
-  }, []);
+  }, [dispatch]);
 
   // Only the choices that are legs go on the map; worked out once per step so the map does not
   // refit while typing.
@@ -829,7 +947,7 @@ function PracticeFlight() {
       <StatusBar s={quiz ? s : readThrough(s).state} back={backable(h)} dispatch={dispatch}
         quiz={quiz} setQuiz={setQuiz} />
       <div className="pf-body">
-        <div className="pf-main">
+        <div ref={main} className="pf-main">
           <StepCard s={s} canBack={h.past.length > 0} dispatch={dispatch} quiz={quiz} />
           {/* The flight goes on the map once it is flying: until then, only home. */}
           <PracticeMap

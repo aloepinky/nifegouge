@@ -41,6 +41,18 @@ function pickRunway(rng) {
 
 const three = (deg) => String(((deg % 360) + 360) % 360 || 360).padStart(3, '0');
 
+export function homeRunwaysForWind(direction) {
+  const angle = (hdg) => Math.abs(((Number(direction) - hdg + 540) % 360) - 180);
+  const best = Math.min(...RUNWAYS.map(({ hdg }) => angle(hdg)));
+  return RUNWAYS.filter(({ hdg }) => angle(hdg) === best);
+}
+
+export function withHomeRunway(card, rwy, direction = card.windDir) {
+  const runway = RUNWAYS.find((r) => r.rwy === rwy);
+  if (!runway) throw new Error(`Unknown home runway: ${rwy}`);
+  return { ...card, rwy, hdg: runway.hdg, north: NORTH_FLOW.includes(rwy), windDir: three(direction) };
+}
+
 export function makeCard(rng = Math.random, given = {}) {
   const runway = given.rwy ? RUNWAYS.find((r) => r.rwy === given.rwy) : pickRunway(rng);
   if (!runway) throw new Error(`Unknown home runway: ${given.rwy}`);
@@ -49,12 +61,13 @@ export function makeCard(rng = Math.random, given = {}) {
   const tail = String(between(rng, 0, 99)).padStart(2, '0');
   const drawn = pick(rng, SQUADRONS);
   const squadron = given.squadron || drawn;
-  const side = `${hundred}${between(rng, 0, 4)}${tail.slice(1)}`;
+  const generatedSide = `${hundred}${between(rng, 0, 4)}${tail.slice(1)}`;
+  const side = given.side || generatedSide;
   return {
     squadron,
     side,
     callSign: `${squadron} ${side}`,
-    squawk: `${hundred === '7' ? '55' : '56'}${side.slice(1)}`,
+    squawk: `${side[0] === '7' ? '55' : '56'}${side.slice(1)}`,
     atis: pick(rng, PHONETIC),
     windDir: three(dir),
     windSpeed: between(rng, 4, 15),
