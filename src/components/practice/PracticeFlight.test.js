@@ -83,7 +83,7 @@ test('radio exchange keeps its channel and speaker labels separate from the word
   expect(within(exchange).getByText('Generated comms')).toBeTruthy();
 });
 
-test('readback retains the earlier pilot and controller lines in the exchange', () => {
+test('whole clearance conversation appears at once and Next leaves it', () => {
   render(<PracticeFlightPage />);
   finishBrief();
   for (let i = 0; i < 12 && !screen.queryByText(/read-back correct/); i++) {
@@ -96,4 +96,10 @@ test('readback retains the earlier pilot and controller lines in the exchange', 
   expect(within(exchange).getAllByText('Pilot').length).toBeGreaterThan(1);
   expect(within(exchange).getAllByText('CLR')).toHaveLength(2);
   expect(screen.queryByText('Intercom')).toBeNull();
+  expect(within(exchange).getByText('Switching Clearance')).toBeTruthy();
+  expect(within(exchange).getByText(/If your flight profile/)).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+  expect(within(screen.getByRole('region', { name: 'Voice exchange' })).queryByText(/read-back correct/)).toBeNull();
+  fireEvent.keyDown(document.body, { key: 'ArrowLeft' });
+  expect(within(screen.getByRole('region', { name: 'Voice exchange' })).getByText(/read-back correct/)).toBeTruthy();
 });

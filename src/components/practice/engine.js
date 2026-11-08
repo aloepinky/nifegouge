@@ -1816,20 +1816,25 @@ function answered(s, result) {
 // The steps the student says (and reveals); the other kinds are said for them or are choices.
 export const TYPED = new Set(['call', 'response', 'checklist', 'rule', 'numbers']);
 
-// Preview only the current segment's replies; do not generate future segments or log a
+// Preview the current conversation; do not generate future segments or log a
 // response until Next. This keeps reading and going back free of flight side effects.
 export function readThrough(s) {
   const now = current(s);
   const state = now && TYPED.has(now.kind) && !s.cur.shown ? reveal(s, true) : s;
-  const replies = [];
-  if (!s.ep && now && TYPED.has(now.kind)) {
+  const following = [];
+  if (!s.ep && now && !now.plain && ['call', 'reply'].includes(now.kind)) {
+    let radio = now.radio;
     for (const next of s.steps.slice(s.at + 1)) {
-      if (next.kind === 'auto') continue;
-      if (next.kind !== 'reply') break;
-      replies.push(next);
+      if (!['call', 'reply', 'auto'].includes(next.kind)) break;
+      if (next.plain) break;
+      if (next.group !== now.group || next.phase !== now.phase || next.leg !== now.leg) break;
+      if (next.kind === 'call' && !now.group) break;
+      if (radio && next.radio && radio !== next.radio) break;
+      radio = next.radio || radio;
+      following.push(next);
     }
   }
-  return { state, replies };
+  return { state, following };
 }
 
 export function reduce(s, action) {
@@ -1854,13 +1859,13 @@ function act(s, action) {
     }
     case 'readNext': {
       if (!now || (s.ep && s.ep.done)) return s;
-      if (now.kind === 'reply') return answered(s, 'heard');
-      if (!TYPED.has(now.kind)) return s;
-      const { state, replies } = readThrough(s);
-      let next = answered(state, 'read');
-      for (const reply of replies) {
-        if (current(next) !== reply) break;
-        next = answered(next, 'heard');
+      if (now.kind !== 'reply' && !TYPED.has(now.kind)) return s;
+      const { state, following } = readThrough(s);
+      let next = answered(state, now.kind === 'reply' ? 'heard' : 'read');
+      for (const line of following) {
+        if (line.kind === 'auto') continue;
+        if (current(next) !== line) break;
+        next = answered(line.kind === 'reply' ? next : readThrough(next).state, line.kind === 'reply' ? 'heard' : 'read');
       }
       return next;
     }

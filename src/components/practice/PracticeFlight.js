@@ -1,7 +1,7 @@
 // /primary/practice — a contact flight from the line to the line, said out step by step: every
 // checklist response, intercom and radio call, the course rules legs picked as you fly, and a
 // random emergency when you ask for one. The flight itself is engine.js; this is its page.
-// Read-through shows the call and its replies together. Quiz keeps the reveal/check drill.
+// Read-through shows a whole conversation at once. Quiz keeps the reveal/check drill.
 // Choosing a home runway restarts the flight; Random lets the simulated ATIS choose it.
 
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
@@ -289,6 +289,7 @@ function Exchange({ lines, context, note, example }) {
             <span className="pf-exchange-speaker">{line.who === 'you' ? 'Pilot' : whoOf(line.who)}</span>
             <div className="pf-exchange-body">
               <p className="pf-lines">{line.text}</p>
+              {line.note && <span className="pf-when">{line.note}</span>}
               {line.generated && <span className="pf-when">Generated comms</span>}
             </div>
           </div>
@@ -521,7 +522,7 @@ const BackButton = ({ canBack, dispatch }) => (
 );
 
 function StepCard({ s: flight, canBack, dispatch, quiz }) {
-  const { state: s, replies } = quiz ? { state: flight, replies: [] } : readThrough(flight);
+  const { state: s, following } = quiz ? { state: flight, following: [] } : readThrough(flight);
   const step = current(s);
   const input = useRef(null);
   const go = useRef(null);
@@ -568,16 +569,7 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
   const answer = Array.isArray(step.answer) ? step.answer[0] : step.answer;
   // A rule or a procedure's numbers is revealed line by line, in place.
   const lined = step.kind === 'rule' || step.kind === 'numbers';
-  const exchangeBefore = [];
-  if (!quiz && !ep && step.kind === 'call' && step.group) {
-    for (let i = s.at - 1; i >= 0; i--) {
-      const previous = s.steps[i];
-      if (previous.group !== step.group || !['call', 'reply'].includes(previous.kind)) break;
-      if (previous.radio && step.radio && previous.radio !== step.radio) break;
-      exchangeBefore.unshift(previous);
-    }
-  }
-  const exchangeRadio = step.radio || exchangeBefore.find((line) => line.radio)?.radio || replies.find((line) => line.radio)?.radio;
+  const exchangeRadio = step.radio || following.find((line) => line.radio)?.radio;
   const showExchange = s.cur.shown && !lined;
   const prompt = (
     <Prompt
@@ -603,7 +595,7 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
           {s.skipped.told.length ? s.skipped.told.map((l, i) => <Line key={i} entry={l} />) : <div className="pf-when">Nothing new.</div>}
         </div>
       )}
-      {!ep && !s.skipped && recent.length > 0 && !exchangeBefore.length && (
+      {!ep && !s.skipped && recent.length > 0 && (
         <div className="pf-recent" aria-label="Just said">
           {recent.map((l, i) => <Line key={s.log.length - recent.length + i} entry={l} />)}
         </div>
@@ -650,10 +642,10 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
               <span className="pf-reply-who">{whoOf(step.who)}</span>
               <span className="pf-reply-text">{step.text}</span>
             </div>
-          ) : <Exchange lines={[step]} context={<Prompt step={step} shown />} note={step.note} example={step.example} />}
+          ) : <Exchange lines={[{ ...step, note: null }, ...following]} context={prompt} note={step.note} example={step.example} />}
           <div className="pf-actions">
             <BackButton canBack={canBack} dispatch={dispatch} />
-            <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: 'next' })}>Next <Key k="→" /></button>
+            <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: quiz ? 'next' : 'readNext' })}>Next <Key k="→" /></button>
           </div>
           {step.ref && <p className="pf-source">Source: {refText(step.ref)}</p>}
         </>
@@ -690,7 +682,7 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
           {s.cur.hint && !s.cur.shown && !lined && <p className="pf-hint">{firstLetters(answer)}</p>}
           {showExchange && (
             <Exchange context={prompt} note={step.note} example={step.example}
-              lines={[...exchangeBefore, { ...step, who: 'you', text: answer }, ...replies]} />
+              lines={[{ ...step, who: 'you', text: answer, note: null }, ...following]} />
           )}
           <div className="pf-actions">
             <BackButton canBack={canBack} dispatch={dispatch} />

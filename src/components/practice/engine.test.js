@@ -93,12 +93,12 @@ const brief = (s) => {
 
 test('read-through previews a call and reply without advancing or logging', () => {
   const s = brief(start(null, { rng: rng(1) }));
-  const { state, replies } = readThrough(s);
+  const { state, following } = readThrough(s);
   expect(current(state)).toBe(current(s));
   expect(state.cur.shown).toBe(true);
   expect(s.cur.shown).toBe(false);
   expect(state.log).toBe(s.log);
-  expect(replies.map((reply) => reply.text)).toEqual(['Two Pins In']);
+  expect(following.filter((line) => line.kind === 'reply').map((line) => line.text)).toEqual(['Two Pins In']);
   const next = reduce(s, { type: 'readNext' });
   expect(next.log.slice(s.log.length).filter((l) => l.who !== 'note').map((l) => l.result)).toEqual(['read', 'heard']);
   expect(current(next).group).toBe('atis');
@@ -131,6 +131,35 @@ test('read-through leaves choices and completed flights alone', () => {
   expect(reduce(s, { type: 'readNext' })).toBe(s);
   const done = { ...s, done: true };
   expect(reduce(done, { type: 'readNext' })).toBe(done);
+});
+
+test('read-through batches all clearance turns but quiz advances only one', () => {
+  let s = brief(start(null, { rng: rng(10) }));
+  while (current(s).group !== 'clearanceDelivery') s = reduce(s, { type: 'readNext' });
+  const { following } = readThrough(s);
+  expect(following.filter((line) => line.kind === 'call')).toHaveLength(2);
+  expect(following.filter((line) => line.kind === 'reply')).toHaveLength(2);
+  const h = withHistory(begin(s), { type: 'readNext' });
+  expect(current(h.now).group).toBe('channel3');
+  expect(h.now.log.slice(s.log.length).filter((l) => l.result === 'read')).toHaveLength(3);
+  expect(withHistory(h, { type: 'back' }).now).toBe(s);
+  expect(current(say(s)).group).toBe('clearanceDelivery');
+});
+
+test.each(['choose', 'checklist', 'rule', 'numbers'])('conversation grouping stops before %s', (kind) => {
+  const s = brief(start(null, { rng: rng(11) }));
+  const first = { ...current(s), kind: 'call', group: 'test' };
+  const stop = { ...first, kind };
+  const state = { ...s, steps: [first, stop, { ...first, kind: 'reply' }], at: 0 };
+  expect(readThrough(state).following).toEqual([]);
+});
+
+test('conversation grouping stops at channel, group and leg changes', () => {
+  const s = brief(start(null, { rng: rng(12) }));
+  const first = { ...current(s), kind: 'call', radio: 'CH 2 UHF', group: 'test', leg: 'one' };
+  for (const change of [{ radio: 'CH 3 UHF' }, { group: 'other' }, { leg: 'two' }, { kind: 'reply', plain: true }]) {
+    expect(readThrough({ ...s, steps: [first, { ...first, ...change }], at: 0 }).following).toEqual([]);
+  }
 });
 
 test.each(RUNWAYS.map(({ rwy }) => rwy))('home runway %s determines flow, heading and restart', (rwy) => {
