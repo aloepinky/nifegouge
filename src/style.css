@@ -10526,6 +10526,10 @@ button.epl-modal-close:hover {
   border-left-color: var(--ink-accent);
 }
 
+.pf-rule-summary {
+  margin: 10px 0;
+}
+
 .pf-rule-fly {
   margin-top: 2px;
   font-size: 13px;

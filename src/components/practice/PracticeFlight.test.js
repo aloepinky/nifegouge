@@ -1,17 +1,51 @@
 import React from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import PracticeFlightPage from './PracticeFlight';
+import { fetchCourseRules } from '../courserules/courseRulesApi';
+import { crFeatures } from '../CourseRulesFeatures';
+import { labelOf } from './legs';
 
 jest.mock('./PracticeMap', () => () => <div aria-label="Practice map" />);
 jest.mock('../courserules/courseRulesApi', () => ({
-  fetchCourseRules: () => Promise.resolve(null),
+  fetchCourseRules: jest.fn(),
 }));
 
 beforeEach(() => {
+  fetchCourseRules.mockResolvedValue(null);
   window.localStorage.clear();
   window.localStorage.setItem('practiceFlightNotice', '1');
   window.matchMedia = jest.fn(() => ({ matches: true }));
   Element.prototype.scrollIntoView = jest.fn();
+});
+
+test('rule summaries are separated from prose and do not interrupt a trailing introduction', async () => {
+  const id = Object.keys(crFeatures).find((key) => labelOf(key) === 'KNGP Rusty Departures 31R');
+  expect(id).toBeTruthy();
+  fetchCourseRules.mockResolvedValue({
+    doc: { legs: { [id]: { rule: [
+      { text: 'HDG [[315°]]. When clear of pattern:' },
+      { text: 'Turn direct to [[PT RUSTY]]. Climb and maintain [[2500\']] MSL and [[200]] KIAS.' },
+    ] } } },
+  });
+  await act(async () => { render(<PracticeFlightPage />); });
+  fireEvent.change(screen.getByRole('combobox', { name: 'KNGP runway' }), { target: { value: '31R' } });
+  finishBrief();
+  fireEvent.click(screen.getByRole('button', { name: 'Departure', exact: true }));
+  for (let i = 0; i < 20 && !document.querySelector('.pf-rule'); i++) {
+    fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+  }
+  const paragraphs = document.querySelectorAll('.pf-rule-para');
+  expect(paragraphs).toHaveLength(2);
+  expect(paragraphs[0].textContent).toBe('HDG 315°. When clear of pattern:');
+  expect(paragraphs[0].querySelector('.pf-rule-summary')).toBeNull();
+  const summary = paragraphs[1].querySelector('.pf-rule-summary');
+  expect(summary.textContent).toContain('direct PT RUSTY');
+  expect(summary.textContent).not.toContain('315');
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Quiz' }));
+  expect(document.querySelector('.pf-rule-summary')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Reveal all', exact: true }));
+  expect(document.querySelectorAll('.pf-rule-blank')).toHaveLength(0);
+  expect(document.querySelector('.pf-rule-summary').textContent).toContain('direct PT RUSTY');
 });
 
 function finishBrief() {

@@ -350,6 +350,8 @@ function Rule({ step, upTo, shown }) {
         if (p.heading) return <div key={i} className="pf-rule-heading"><Words text={p.text} filled /></div>;
         const mine = pieces.filter((x) => x.para === i);
         const next = !shown && mine.some((x) => x.k === upTo);
+        // A trailing colon introduces the next paragraph; do not insert a readout between them.
+        const summary = /:\s*$/.test(p.text) ? [] : mine.filter((x) => open(x.k));
         return (
           <div key={i} className={next ? 'pf-rule-para pf-rule-para--next' : 'pf-rule-para'}>
             <p className={p.sub ? 'pf-rule-sub' : undefined}>
@@ -360,7 +362,11 @@ function Rule({ step, upTo, shown }) {
               )) : <Words text={p.text} filled />}
             </p>
             {p.cite && <span className="pf-rule-cite">{p.cite}</span>}
-            {mine.filter((x) => open(x.k)).map((x) => <FlyLine key={x.k} figs={x.figs} />)}
+            {summary.some((x) => Object.keys(x.figs).length > 0) && (
+              <div className="pf-rule-summary">
+                {summary.map((x) => <FlyLine key={x.k} figs={x.figs} />)}
+              </div>
+            )}
           </div>
         );
       })}
