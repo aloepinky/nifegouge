@@ -10007,7 +10007,8 @@ button.epl-modal-close:hover {
   color: var(--ink-strong);
 }
 
-.pf-exchange {
+.pf-exchange,
+.pf-procedure {
   margin: 12px 0;
   padding: 12px 16px;
   border-left: 4px solid var(--line-accent);
@@ -10539,10 +10540,17 @@ button.epl-modal-close:hover {
   font-size: 15px;
 }
 
+.pf-procedure .pf-challenge {
+  font-size: 15px;
+  font-weight: 600;
+}
+
 .pf-numbers th,
 .pf-numbers td {
-  padding: 4px 12px 4px 8px;
+  padding: 8px;
+  border: 0;
   border-bottom: 1px solid var(--line);
+  background: transparent;
   text-align: left;
   vertical-align: top;
 }
@@ -10553,8 +10561,8 @@ button.epl-modal-close:hover {
 }
 
 .pf-numbers td {
-  font-weight: 700;
-  color: var(--ink-accent);
+  font-weight: 600;
+  color: var(--ink-strong);
 }
 
 .pf-numbers-next th {

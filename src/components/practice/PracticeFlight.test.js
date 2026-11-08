@@ -103,3 +103,18 @@ test('whole clearance conversation appears at once and Next leaves it', () => {
   fireEvent.keyDown(document.body, { key: 'ArrowLeft' });
   expect(within(screen.getByRole('region', { name: 'Voice exchange' })).getByText(/read-back correct/)).toBeTruthy();
 });
+
+test('procedure panel keeps table values visible when reading and hidden in Quiz', () => {
+  render(<PracticeFlightPage />);
+  finishBrief();
+  fireEvent.click(screen.getByRole('button', { name: 'Takeoff', exact: true }));
+  for (let i = 0; i < 20 && !screen.queryByRole('region', { name: 'FAM FTI: Takeoff' }); i++) {
+    fireEvent.click(screen.getByRole('button', { name: /Next/ }));
+  }
+  const panel = screen.getByRole('region', { name: 'FAM FTI: Takeoff' });
+  expect(within(panel).getByRole('table')).toBeTruthy();
+  expect(within(panel).getByText('60 KIAS')).toBeTruthy();
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Quiz' }));
+  expect(within(panel).queryByText('60 KIAS')).toBeNull();
+  expect(within(panel).getByRole('table')).toBeTruthy();
+});

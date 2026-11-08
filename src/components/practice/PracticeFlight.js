@@ -655,9 +655,14 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
         <>
           {/* A call's channel is its first line: shown once revealed, the call after. */}
           {/* Switching, the channel is asked first; already on it, it just shows. */}
-          {!showExchange && prompt}
+          {!showExchange && step.kind !== 'numbers' && prompt}
           {step.kind === 'rule' && <Rule step={step} upTo={s.cur.upTo || 0} shown={s.cur.shown} />}
-          {step.kind === 'numbers' && <Numbers step={step} upTo={s.cur.upTo || 0} shown={s.cur.shown} />}
+          {step.kind === 'numbers' && (
+            <section className="pf-procedure" aria-label={step.leg}>
+              {prompt}
+              <Numbers step={step} upTo={s.cur.upTo || 0} shown={s.cur.shown} />
+            </section>
+          )}
           {!showExchange && step.note && <p className="pf-when">{step.note}</p>}
           {!showExchange && step.example && <p className="pf-when">The study guide's example call.</p>}
           {!showExchange && step.generated && <p className="pf-when">Generated comms</p>}
