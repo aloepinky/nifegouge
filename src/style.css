@@ -10007,6 +10007,87 @@ button.epl-modal-close:hover {
   color: var(--ink-strong);
 }
 
+.pf-exchange {
+  margin: 12px 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--line-accent);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.pf-exchange-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-accent);
+}
+
+.pf-exchange-channel {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--wash);
+  color: var(--ink);
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.pf-exchange-lines {
+  display: grid;
+  gap: 5px;
+}
+
+.pf-exchange-line {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.pf-exchange-line--pilot {
+  margin: 0 -8px;
+  padding: 8px;
+  border-top-color: transparent;
+  border-radius: 6px;
+  background: var(--wash);
+}
+
+.pf-exchange-speaker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  color: var(--ink-muted);
+}
+
+.pf-exchange-line--pilot .pf-exchange-speaker {
+  color: var(--ink-accent);
+}
+
+.pf-exchange-body {
+  min-width: 0;
+}
+
+.pf-exchange-body p {
+  margin: 0;
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 600;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  color: var(--ink-strong);
+}
+
 /* High work: where the last maneuver left you, and what the next one needs. */
 .pf-setup {
   margin: 0 0 8px;

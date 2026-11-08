@@ -275,6 +275,29 @@ function Line({ entry }) {
   );
 }
 
+function Exchange({ lines }) {
+  const radio = lines.find((line) => line.radio)?.radio;
+  return (
+    <section className="pf-exchange" aria-label="Voice exchange">
+      <div className="pf-exchange-heading">
+        <span>Exchange</span>
+        {radio && <span className="pf-exchange-channel">{radio}</span>}
+      </div>
+      <div className="pf-exchange-lines">
+        {lines.map((line, i) => (
+          <div key={i} className={line.who === 'you' ? 'pf-exchange-line pf-exchange-line--pilot' : 'pf-exchange-line'}>
+            <span className="pf-exchange-speaker">{line.who === 'you' ? 'Pilot' : whoOf(line.who)}</span>
+            <div className="pf-exchange-body">
+              <p className="pf-lines">{line.text}</p>
+              {line.generated && <span className="pf-when">Generated comms</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // Choice buttons, with the runway legs gathered under their route ("Rusty Departures": 04 13L …).
 function Choices({ opts, onChoose }) {
   const groups = [];
@@ -545,6 +568,16 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
   const answer = Array.isArray(step.answer) ? step.answer[0] : step.answer;
   // A rule or a procedure's numbers is revealed line by line, in place.
   const lined = step.kind === 'rule' || step.kind === 'numbers';
+  const exchangeBefore = [];
+  if (!quiz && !ep && step.kind === 'call' && step.group) {
+    for (let i = s.at - 1; i >= 0; i--) {
+      const previous = s.steps[i];
+      if (previous.group !== step.group || !['call', 'reply'].includes(previous.kind)) break;
+      if (previous.radio && step.radio && previous.radio !== step.radio) break;
+      exchangeBefore.unshift(previous);
+    }
+  }
+  const exchangeRadio = step.radio || exchangeBefore.find((line) => line.radio)?.radio || replies.find((line) => line.radio)?.radio;
   const onKey = (e) => {
     if (e.key !== 'Enter') return;
     e.preventDefault();
@@ -562,7 +595,7 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
           {s.skipped.told.length ? s.skipped.told.map((l, i) => <Line key={i} entry={l} />) : <div className="pf-when">Nothing new.</div>}
         </div>
       )}
-      {!ep && !s.skipped && recent.length > 0 && (
+      {!ep && !s.skipped && recent.length > 0 && !exchangeBefore.length && (
         <div className="pf-recent" aria-label="Just said">
           {recent.map((l, i) => <Line key={s.log.length - recent.length + i} entry={l} />)}
         </div>
@@ -604,12 +637,12 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
 
       {reply && (
         <>
-          <div className="pf-reply">
-            <span className="pf-reply-who">{step.who === 'ip' ? 'IP' : step.who}{step.radio ? ` · ${step.radio}` : ''}</span>
-            {/* A report (the altitude check) is not something said, so it has no quotes. */}
-            <span className="pf-reply-text">{step.plain ? step.text : `“${step.text}”`}</span>
-          </div>
-          {step.generated && <p className="pf-when">Generated comms</p>}
+          {step.plain ? (
+            <div className="pf-reply">
+              <span className="pf-reply-who">{whoOf(step.who)}</span>
+              <span className="pf-reply-text">{step.text}</span>
+            </div>
+          ) : <Exchange lines={[step]} />}
           <div className="pf-actions">
             <BackButton canBack={canBack} dispatch={dispatch} />
             <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: 'next' })}>Next <Key k="→" /></button>
@@ -623,7 +656,7 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
           {/* A call's channel is its first line: shown once revealed, the call after. */}
           {/* Switching, the channel is asked first; already on it, it just shows. */}
           <Prompt
-            step={step}
+            step={!quiz && exchangeRadio ? { ...step, radio: exchangeRadio } : step}
             shown={s.cur.shown || (s.cur.upTo || 0) >= 1 || (step.kind === 'call' && !s.cur.total && !switchesChannel(step, s.fly))}
             from={s.cur.chFrom}
           />
@@ -651,14 +684,9 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
           {s.cur.result === 'partial' && !s.cur.shown && <p className="pf-feedback pf-feedback--partial">Close: something is missing or extra.</p>}
           {s.cur.result === 'incorrect' && !s.cur.shown && <p className="pf-feedback pf-feedback--wrong">Not that. Try again, or ask for a hint.</p>}
           {s.cur.hint && !s.cur.shown && !lined && <p className="pf-hint">{firstLetters(answer)}</p>}
-          {s.cur.shown && !lined && <p className="pf-shown pf-lines">“{answer}”</p>}
-          {replies.map((reply, i) => (
-            <div key={i} className="pf-reply">
-              <span className="pf-reply-who">{whoOf(reply.who)}{reply.radio ? ` · ${reply.radio}` : ''}</span>
-              <span className="pf-reply-text">{reply.plain ? reply.text : `“${reply.text}”`}</span>
-              {reply.generated && <span className="pf-when">Generated comms</span>}
-            </div>
-          ))}
+          {s.cur.shown && !lined && (
+            <Exchange lines={[...exchangeBefore, { ...step, who: 'you', text: answer }, ...replies]} />
+          )}
           <div className="pf-actions">
             <BackButton canBack={canBack} dispatch={dispatch} />
             <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: !quiz ? 'readNext' : s.cur.shown ? 'next' : 'reveal' })}>
