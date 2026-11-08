@@ -10081,7 +10081,7 @@ button.epl-modal-close:hover {
 
 .pf-exchange-body p {
   margin: 0;
-  font-size: clamp(16px, 2vw, 20px);
+  font-size: clamp(15px, 1.6vw, 17px);
   font-weight: 600;
   line-height: 1.55;
   overflow-wrap: anywhere;
