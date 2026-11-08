@@ -1,9 +1,12 @@
 // /primary/practice — a contact flight from the line to the line, said out step by step: every
 // checklist response, intercom and radio call, the course rules legs picked as you fly, and a
 // random emergency when you ask for one. The flight itself is engine.js; this is its page.
+// Read-through shows the call and its replies together. Quiz keeps the reveal/check drill.
+// Choosing a home runway restarts the flight; Random lets the simulated ATIS choose it.
 
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { TYPED, canSkipTo, current, isCue, linesOf, options, situationsFor, start, switchesChannel } from './engine';
+import { TYPED, canSkipTo, current, isCue, linesOf, options, readThrough, situationsFor, start, switchesChannel } from './engine';
+import { NORTH_FLOW, RUNWAYS } from './card';
 import { radioOf } from './figures';
 import { labelOf, nameOf, shortName } from './legs';
 import { firstLetters } from '../briefs/firstLetters';
@@ -77,9 +80,9 @@ const whoOf = (w) => WHO[w] || w;
 
 const refText = (ref) => (ref ? [ref.work, ref.loc, ref.pages].filter(Boolean).join(', ') : '');
 
-const RESULT = { said: 'Said', correct: 'Correct', partial: 'Partly right', shown: 'Answer shown' };
+const RESULT = { said: 'Said', read: 'Read', correct: 'Correct', partial: 'Partly right', shown: 'Answer shown' };
 const isReply = (step) => step && step.kind === 'reply';
-const MARK = { said: '', correct: '✓', partial: '≈', shown: '?' };
+const MARK = { said: '', read: '', correct: '✓', partial: '≈', shown: '?' };
 
 // What comes after the step on screen, in a few words.
 function nextOf(s) {
@@ -113,7 +116,7 @@ function devTools() {
   }
 }
 
-function StatusBar({ s, back, dispatch }) {
+function StatusBar({ s, back, dispatch, quiz, setQuiz }) {
   const step = current(s);
   const phase = s.ep && !s.ep.situation ? 'Emergency' : step?.phase || 'Shutdown';
   const seen = new Set(s.log.map((l) => l.phase));
@@ -158,6 +161,27 @@ function StatusBar({ s, back, dispatch }) {
           {next && <div><span className="pf-status-label">Next</span> {next}</div>}
         </div>
         <div className="pf-status-buttons">
+          <label className="pf-option">
+            <input type="checkbox" checked={quiz} onChange={(e) => setQuiz(e.target.checked)} />
+            Quiz
+          </label>
+          <label className="pf-option" title="Changing the home runway starts a new flight">
+            KNGP runway
+            <select
+              className="pf-select"
+              value={s.runwayChoice}
+              onChange={(e) => dispatch({ type: 'restart', rwy: e.target.value })}
+            >
+              <option value="">Random</option>
+              {[true, false].map((north) => (
+                <optgroup key={String(north)} label={north ? 'North flow' : 'South flow'}>
+                  {RUNWAYS.filter(({ rwy }) => NORTH_FLOW.includes(rwy) === north).map(({ rwy }) => (
+                    <option key={rwy} value={rwy}>{rwy}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
           {/* Something that goes wrong short of an emergency: Joker, Bingo, a wave-off…. Not on
               the live site yet: only here, or in a browser opened once with ?dev. */}
           {devTools() && (
@@ -473,7 +497,8 @@ const BackButton = ({ canBack, dispatch }) => (
   </button>
 );
 
-function StepCard({ s, canBack, dispatch }) {
+function StepCard({ s: flight, canBack, dispatch, quiz }) {
+  const { state: s, replies } = quiz ? { state: flight, replies: [] } : readThrough(flight);
   const step = current(s);
   const input = useRef(null);
   const go = useRef(null);
@@ -496,8 +521,8 @@ function StepCard({ s, canBack, dispatch }) {
       <div className="pf-card">
         <h2 className="pf-card-title">{s.ended ? `Flight ended: ${s.ended}` : 'Engine shutdown complete'}</h2>
         <p className="pf-done">
-          {said.length} steps said, {s.route.length - 1} legs flown.
-          {said.length !== count('said') && ` Typed: ${count('correct')} right first time, ${count('partial')} partly right, ${count('shown')} looked up.`}
+          {said.length - count('read')} steps said, {count('read')} read, {s.route.length - 1} legs flown.
+          {said.some((l) => ['correct', 'partial', 'shown'].includes(l.result)) && ` Typed: ${count('correct')} right first time, ${count('partial')} partly right, ${count('shown')} looked up.`}
         </p>
         <button type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: 'restart' })}>Fly again</button>
       </div>
@@ -607,7 +632,7 @@ function StepCard({ s, canBack, dispatch }) {
           {step.note && <p className="pf-when">{step.note}</p>}
           {step.example && <p className="pf-when">The study guide's example call.</p>}
           {step.generated && <p className="pf-when">Generated comms</p>}
-          {step.typed && !s.cur.shown && (
+          {quiz && step.typed && !s.cur.shown && (
           <div className="pf-answer">
             <input
               ref={input}
@@ -627,9 +652,16 @@ function StepCard({ s, canBack, dispatch }) {
           {s.cur.result === 'incorrect' && !s.cur.shown && <p className="pf-feedback pf-feedback--wrong">Not that. Try again, or ask for a hint.</p>}
           {s.cur.hint && !s.cur.shown && !lined && <p className="pf-hint">{firstLetters(answer)}</p>}
           {s.cur.shown && !lined && <p className="pf-shown pf-lines">“{answer}”</p>}
+          {replies.map((reply, i) => (
+            <div key={i} className="pf-reply">
+              <span className="pf-reply-who">{whoOf(reply.who)}{reply.radio ? ` · ${reply.radio}` : ''}</span>
+              <span className="pf-reply-text">{reply.plain ? reply.text : `“${reply.text}”`}</span>
+              {reply.generated && <span className="pf-when">Generated comms</span>}
+            </div>
+          ))}
           <div className="pf-actions">
             <BackButton canBack={canBack} dispatch={dispatch} />
-            <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: s.cur.shown ? 'next' : 'reveal' })}>
+            <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: !quiz ? 'readNext' : s.cur.shown ? 'next' : 'reveal' })}>
               {s.cur.shown ? 'Next' : (s.cur.total || linesOf(step, s.fly)) > 1 ? 'Reveal next' : 'Reveal'} <Key k="→" />
             </button>
             {!s.cur.shown && (s.cur.total || linesOf(step, s.fly)) > 1 && (
@@ -717,22 +749,23 @@ function FlightLog({ log, s }) {
 }
 
 function PracticeFlight() {
+  const [quiz, setQuiz] = useState(false);
   const [h, dispatch] = useReducer(withHistory, undefined, () => {
     const squadron = squadronFromStorage();
     return begin(start(null, squadron ? { card: { squadron } } : {}));
   });
   const s = h.now;
 
-  // Right arrow: reveal, then on; left arrow: back a step. Not while typing in a box.
+  // Right arrow follows the selected mode; left arrow goes back. Not while typing in a box.
   useEffect(() => {
     const onKey = (e) => {
       if (e.altKey || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
       if (e.key === 'ArrowLeft') { e.preventDefault(); dispatch({ type: 'back' }); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); dispatch({ type: 'forward' }); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); dispatch({ type: quiz ? 'forward' : 'readNext' }); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [dispatch, quiz]);
   const step = current(s);
   // On the map a field's arrivals are drawn one by one; clicking any picks the field.
   const onChoose = useCallback((id) => {
@@ -757,10 +790,11 @@ function PracticeFlight() {
   return (
     <div className="pf-page">
       <Notice />
-      <StatusBar s={s} back={backable(h)} dispatch={dispatch} />
+      <StatusBar s={quiz ? s : readThrough(s).state} back={backable(h)} dispatch={dispatch}
+        quiz={quiz} setQuiz={setQuiz} />
       <div className="pf-body">
         <div className="pf-main">
-          <StepCard s={s} canBack={h.past.length > 0} dispatch={dispatch} />
+          <StepCard s={s} canBack={h.past.length > 0} dispatch={dispatch} quiz={quiz} />
           {/* The flight goes on the map once it is flying: until then, only home. */}
           <PracticeMap
             route={s.airborne ? s.route : [s.route[0]]}

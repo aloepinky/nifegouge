@@ -1,5 +1,6 @@
 /* eslint-disable no-loop-func -- the drivers below pick from the flight as it stands each time round */
-import { EP_STEPS, activeRunway, areaRules, canSkipTo, current, isCue, options, reduce, runwayOk, situationsFor, start, typedAltitude } from './engine';
+import { EP_STEPS, activeRunway, areaRules, canSkipTo, current, isCue, options, readThrough, reduce, runwayOk, situationsFor, start, typedAltitude } from './engine';
+import { NORTH_FLOW, RUNWAYS, makeCard } from './card';
 import { taxiIn, taxiOut } from './taxi';
 import { flyOn } from './figures';
 import { CALLS, CHECKLISTS, EP_PHASES } from './famScript';
@@ -89,6 +90,77 @@ const brief = (s) => {
   }
   return s;
 };
+
+test('read-through previews a call and reply without advancing or logging', () => {
+  const s = brief(start(null, { rng: rng(1) }));
+  const { state, replies } = readThrough(s);
+  expect(current(state)).toBe(current(s));
+  expect(state.cur.shown).toBe(true);
+  expect(s.cur.shown).toBe(false);
+  expect(state.log).toBe(s.log);
+  expect(replies.map((reply) => reply.text)).toEqual(['Two Pins In']);
+  const next = reduce(s, { type: 'readNext' });
+  expect(next.log.slice(s.log.length).filter((l) => l.who !== 'note').map((l) => l.result)).toEqual(['read', 'heard']);
+  expect(current(next).group).toBe('atis');
+});
+
+test('read-through advances an exchange in one history action and Back restores it', () => {
+  const s = brief(start(null, { rng: rng(2) }));
+  const h = withHistory(begin(s), { type: 'readNext' });
+  expect(h.past).toHaveLength(1);
+  expect(withHistory(h, { type: 'back' }).now).toBe(s);
+});
+
+test('read-through reveals all channel lines while quiz retains incremental reveal', () => {
+  let s = brief(start(null, { rng: rng(3) }));
+  s = reduce(s, { type: 'readNext' });
+  expect(current(s).group).toBe('atis');
+  const preview = readThrough(s).state;
+  expect(preview.cur.shown).toBe(true);
+  expect(preview.cur.total).toBe(2);
+  expect(preview.fly.uhf).toBeDefined();
+  expect(s.fly.uhf).toBeUndefined();
+  const quiz = reduce(s, { type: 'reveal' });
+  expect(quiz.cur.shown).toBe(false);
+  expect(quiz.cur.upTo).toBe(1);
+});
+
+test('read-through leaves choices and completed flights alone', () => {
+  const s = start(null, { rng: rng(4) });
+  expect(readThrough(s).state).toBe(s);
+  expect(reduce(s, { type: 'readNext' })).toBe(s);
+  const done = { ...s, done: true };
+  expect(reduce(done, { type: 'readNext' })).toBe(done);
+});
+
+test.each(RUNWAYS.map(({ rwy }) => rwy))('home runway %s determines flow, heading and restart', (rwy) => {
+  const card = makeCard(rng(5), { rwy });
+  expect(card.rwy).toBe(rwy);
+  expect(card.north).toBe(NORTH_FLOW.includes(rwy));
+  expect(card.hdg).toBe(RUNWAYS.find((r) => r.rwy === rwy).hdg);
+  const s = start(null, { card: { squadron: 'Ranger' } });
+  const next = reduce(s, { type: 'restart', rwy });
+  expect(next.card.rwy).toBe(rwy);
+  expect(next.card.north).toBe(card.north);
+  expect(next.card.squadron).toBe('Ranger');
+  expect(next.runwayChoice).toBe(rwy);
+  expect(reduce(next, { type: 'restart' }).card.rwy).toBe(rwy);
+  expect(reduce(next, { type: 'restart', rwy: '' }).runwayChoice).toBe('');
+  expect(next.atisHeard).toBe(false);
+  expect(next.route).toEqual([HOME]);
+});
+
+test('invalid home runway fails explicitly', () => {
+  expect(() => makeCard(rng(6), { rwy: '99' })).toThrow('Unknown home runway: 99');
+});
+
+test('home runway picker follows Back when undoing a new flight', () => {
+  const s = brief(start(null, { card: { rwy: '04' } }));
+  const h = withHistory(begin(s), { type: 'restart', rwy: '13L' });
+  const back = withHistory(h, { type: 'back' }).now;
+  expect(back.card.rwy).toBe('04');
+  expect(back.runwayChoice).toBe('04');
+});
 
 test('a step is said, then revealed, then left', () => {
   let s = start();

@@ -15,7 +15,7 @@ const PHONETIC = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf
   'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu'];
 
 // KNGP's runways, by how often a day's wind favours them; the 13s most of all.
-const RUNWAYS = [
+export const RUNWAYS = [
   { rwy: '13L', hdg: 130, weight: 4 },
   { rwy: '13R', hdg: 130, weight: 2 },
   { rwy: '31R', hdg: 310, weight: 1.5 },
@@ -43,6 +43,7 @@ const three = (deg) => String(((deg % 360) + 360) % 360 || 360).padStart(3, '0')
 
 export function makeCard(rng = Math.random, given = {}) {
   const runway = given.rwy ? RUNWAYS.find((r) => r.rwy === given.rwy) : pickRunway(rng);
+  if (!runway) throw new Error(`Unknown home runway: ${given.rwy}`);
   const dir = Math.round((runway.hdg + between(rng, -30, 30)) / 10) * 10;
   const hundred = pick(rng, ['7', '8']);
   const tail = String(between(rng, 0, 99)).padStart(2, '0');

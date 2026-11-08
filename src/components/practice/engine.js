@@ -865,7 +865,7 @@ export function start(given = null, { rng = Math.random, card, fields = null } =
   // Ingleside's calls, which the document leaves out (fieldOps.js).
   const legs = withCtafCalls(given, fields);
   return advance({
-    legs, baseLegs: legs, fields, fly: {}, airborne: false, card: makeCard(rng, card), atisHeard: false, order: null, plan: null, olf: null, path: null, planDone: false, skipped: null,
+    legs, baseLegs: legs, fields, fly: {}, airborne: false, card: makeCard(rng, card), runwayChoice: (card && card.rwy) || '', atisHeard: false, order: null, plan: null, olf: null, path: null, planDone: false, skipped: null,
     steps: [], at: -1, segments: GROUND, log: [], route: [HOME], node: HOME, rwy: null,
     entries: 0, alt: null, block: null, hwDone: 0, hwFlown: [],
     flags: { inArea: false, areaDone: false, descentDone: false },
@@ -1816,6 +1816,22 @@ function answered(s, result) {
 // The steps the student says (and reveals); the other kinds are said for them or are choices.
 export const TYPED = new Set(['call', 'response', 'checklist', 'rule', 'numbers']);
 
+// Preview only the current segment's replies; do not generate future segments or log a
+// response until Next. This keeps reading and going back free of flight side effects.
+export function readThrough(s) {
+  const now = current(s);
+  const state = now && TYPED.has(now.kind) && !s.cur.shown ? reveal(s, true) : s;
+  const replies = [];
+  if (!s.ep && now && TYPED.has(now.kind)) {
+    for (const next of s.steps.slice(s.at + 1)) {
+      if (next.kind === 'auto') continue;
+      if (next.kind !== 'reply') break;
+      replies.push(next);
+    }
+  }
+  return { state, replies };
+}
+
 export function reduce(s, action) {
   if (action.type === 'legs') {
     const legs = withCtafCalls(action.legs, action.fields || s.fields);
@@ -1832,8 +1848,22 @@ function act(s, action) {
   if (s.done && action.type !== 'restart') return s;
   const now = current(s);
   switch (action.type) {
-    case 'restart':
-      return start(s.baseLegs || s.legs, { fields: s.fields, card: { squadron: s.card.squadron } });
+    case 'restart': {
+      const rwy = action.rwy === undefined ? s.runwayChoice : action.rwy;
+      return start(s.baseLegs || s.legs, { fields: s.fields, card: { squadron: s.card.squadron, ...(rwy ? { rwy } : {}) } });
+    }
+    case 'readNext': {
+      if (!now || (s.ep && s.ep.done)) return s;
+      if (now.kind === 'reply') return answered(s, 'heard');
+      if (!TYPED.has(now.kind)) return s;
+      const { state, replies } = readThrough(s);
+      let next = answered(state, 'read');
+      for (const reply of replies) {
+        if (current(next) !== reply) break;
+        next = answered(next, 'heard');
+      }
+      return next;
+    }
     case 'squadron': {
       // Boomer (VT-27) or Ranger (VT-28): the call sign from here on.
       const card = { ...s.card, squadron: action.squadron, callSign: `${action.squadron} ${s.card.side}` };

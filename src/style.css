@@ -9938,8 +9938,17 @@ button.epl-modal-close:hover {
 
 .pf-status-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   flex: none;
+}
+
+.pf-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink);
 }
 
 /* A course rule said from memory: the marked words blank until revealed. */
