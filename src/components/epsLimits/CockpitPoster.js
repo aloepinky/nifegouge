@@ -1,6 +1,6 @@
 import React, { Suspense, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { DRAFT } from '../programs';
-import { actionFor, aliasesFrom, fillsFor, matches, settingsFor, wordingsOf } from './controlMatch';
+import { actionFor, aliasesFrom, canon, fillsFor, matches, settingsFor, wordingsOf } from './controlMatch';
 
 // The cockpit poster: a photograph or a panel diagram with a click target on every control the
 // EPs name. Clicking one fills the step, the way Primary's poster does.
@@ -58,6 +58,9 @@ export function usePoster({ poster, aliases, fill, hint, shown, next, engine }) 
     if (engine && wordingsOf(spot).some((w) => /elapsed time clock/i.test(w))) engine.toggleClock();
     // So does a control with an `engineInput`, such as a PRESS FOR VOLTS button.
     if (engine && spot.engineInput && engine.poke) engine.poke(spot.engineInput);
+    // A `free` control (the T-44C's annunciator DIM knob) is worked whenever the student likes:
+    // it fills a step only when the open step names it, and is never marked wrong.
+    if (spot.free && canon(next, alias) !== canon(action, alias)) return;
     fill(action, fillsFor(spot, action, alias), settingsFor(spot, action, alias), wordingsOf(spot));
   };
 
@@ -154,6 +157,8 @@ function EngineLayer({ engine, region, alias, view }) {
   if (!snap || !snap.active) return null;
   const lit = (region.spots || []).filter((spot) => spot.box
     && snap.lights.some((w) => matches(spot, w, alias)));
+  // The DIM knob's check fades the lit lights (t44cEngine.js annLevel).
+  const level = snap.annLevel ?? 1;
   return (
     <>
       {(region.readouts || []).map(({ key, box }) => {
@@ -170,12 +175,17 @@ function EngineLayer({ engine, region, alias, view }) {
         );
       })}
       {region.stopwatch && snap.stopwatch && <Stopwatch box={region.stopwatch} watch={snap.stopwatch} limit={snap.starterLimit} view={view} />}
+      {/* The lamp test: every cell of the panel (a region's `lampTest` boxes), but a dead bulb. */}
+      {region.lampTest && snap.lampTest && region.lampTest.map(([l, t, w, h], i) => (i === snap.lampTest.dark ? null : (
+        <span key={`lamp-${l}-${t}`} aria-hidden="true" className="epl-ann-lit"
+          style={{ left: `${l * 100}%`, top: `${t * 100}%`, width: `${w * 100}%`, height: `${h * 100}%`, '--ann-level': level }} />
+      )))}
       {lit.map((spot) => {
         const [l, t, w, h] = spot.box;
         return (
           <span key={spot.id || spot.action} aria-hidden="true"
             className={`epl-ann-lit${(snap.blinking || []).some((w) => matches(spot, w, alias)) ? ' epl-ann-lit--blink' : ''}`}
-            style={{ left: `${l * 100}%`, top: `${t * 100}%`, width: `${w * 100}%`, height: `${h * 100}%` }} />
+            style={{ left: `${l * 100}%`, top: `${t * 100}%`, width: `${w * 100}%`, height: `${h * 100}%`, '--ann-level': level }} />
         );
       })}
     </>

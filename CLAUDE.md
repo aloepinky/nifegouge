@@ -731,8 +731,8 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   it too. `STEP_EVENTS[procedure][id]` is what a step's control does, `<id>:<piece>` a watched
   piece, `<id>#<n>` the nth piece of its `sequence` (After Start's ids repeat Abnormal Start's,
   hence the procedure). Since the engines answer the levers, multi-control steps list their
-  `sequence` (t44cNormals.js; the user, 2026-11-04): Runup 6 is prop, power (under 1900 rpm),
-  test switch, power again; Runup 8 the condition levers first and the power levers last;
+  `sequence` (t44cNormals.js; the user, 2026-11-04 and 11-08): Runup 6 is prop, test switch,
+  power (HIGH IDLE leaves the props under 1900 rpm); Runup 8 the condition levers first and the power levers last;
   After Start 7 seven clicks (CLOSED then AUTO is one). The power lever is a position whose
   N1 HIGH IDLE raises only near the idle stop, so LOW IDLE at the 1900 rpm setting leaves
   about 524 lb-ft (the user's figure). Skip fires a step's remaining events and runs the model
@@ -748,7 +748,23 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   `useEngineRings` in CockpitPoster): Runup 6 Np, then ITT and torque, then none; Runup 8 torque
   to each light's flash, then Np a second later. Each test draws every engine's switch points
   afresh (truncated normal, 410 ±50 and 200 ±40, the FTI's; `drawAuto`). The battery is owed for every starter-second, assisted or
-  not; the generator load holds flat as long as the starter ran, then falls on 20 s (9716). The runup's lever
+  not; it is paid back from the generator coming on, on 19 s, so a lone generator is below .5 about 20 s on (the user's figure, over 9716's flat 20 s). Chaos (2026-11-04): a slider above the card sets the odds that a check goes
+  wrong, and a Discrepancy button says it has. `T44C/t44cFaults.js` lists every fault (step,
+  when it shows, what it was, its causes with sources; the user chose the steps and struck the
+  unsourced ones), the model draws its effects by id (`drawn`, `chaosLights`,
+  `chaosReadouts`, `engineFx`), and the store draws one as a step opens (`arm`, once a run),
+  finds it (`discrepancy`, which puts it right) or reports it gone past (`onMiss`). Gone past
+  means a click on a LATER step, leaving the card, or Runup 8's test ending; never the click that
+  shows it (RH GEN OUT staying lit as the right generator goes on is missed only when the left
+  generator is clicked; the user, 2026-11-05). A standing condition (`early`: door, loads, fuel
+  imbalance) is drawn as the card opens, so it shows before its step. Faults never wait on each
+  other (`state.faults`, a list): at 100 percent every step that has faults draws one (the user,
+  2026-11-08). Discrepancy finds the seen faults of the open step and those before it first, so
+  CABIN DOOR OPEN stays lit while an earlier step's fault is found. The fuel gauge's current
+  limiter fails only once the right generator is off after the left start (the start broke it). Before Start and Before Takeoff now run on the model too (Before Start: boost
+  pumps 11 A each; the lamp test lights all 30 cells of the panel, blanks included, from the
+  poster's `lampTest` grid; the fire detector test is one 3-second turn, the knob being
+  undrawable through its zones). The runup's lever
   moves are scripted for the student once the control is clicked (`script`), and the
   autofeather and auto-ignition lights follow torque (410/225 lb-ft, 9718), the feathering one
   flashing. Fuel quantity counts down from the fuel flow on the fuel panel's gauges; prop amps
@@ -764,8 +780,16 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   the box's own padding in `cqw` or `%` swells the box. Every curve is from the sim repeater
   clips catalogued in `_reference-docs/T44C Advanced/Fundamental References/Quadfold Videos and
   Photos/engine-videos.md`, timed from its own input. When an input belongs is the FTI's (`gate`);
-  a click before then is refused with the reason. Normal, hot, hung and no-start starts (or
-  Random, drawn per start and never shown) are picked right above the checklist card. The hot
+  a click before then is refused with the reason. Normal, long (N1 50 percent 41 s after the
+  starter), hot, hung and three no starts (no light-off, no fuel flow, no rotation; the sim's,
+  2026-11-08), or Random, drawn per start and never shown, are picked right above the checklist
+  card; with no rotation the condition lever, already at cutoff, opens Abnormal Start. The
+  gauges are dark until the battery is on (oxygen excepted). HIGH IDLE to LOW IDLE takes about
+  8 s; the feather time constant is 11 s. A poster spot may be `free` (CockpitPoster): it fills
+  only a step that names it and is never marked wrong, so the annunciator DIM knob (a click runs its check: the
+  lit lights fade evenly to out and back to full bright, twice, 2.5 s a cycle; `annLevel`) and the FUEL QUANTITY TOTAL-NACELLE switch (nacelle 61 gal at 6.75 lb, NATOPS §2.9) work any time. Runup 8's
+  late switch faults show once torque is below 360 or 160 with the light unchanged, and finding
+  one stops the test (`stopTest`). The hot
   start runs on past the clip to 1150 °C (the user's figure). A second condition lever press
   during a start cuts the fuel and opens Abnormal Start with its step 1 done (EPDrill
   `abortedBy`), from the Hollywood checklists too, which do not list it (EPDrill `detours`: a

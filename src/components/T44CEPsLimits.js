@@ -89,11 +89,14 @@ function Console(api) {
 // which start it was. Text goes here, over the card, never in the side columns, which hold
 // only controls (the user, 2026-11-04). The slot keeps its height on every card, so the card
 // never moves.
-function StartControls({ engine, reset, epId, engineNote }) {
+// Chaos, on every card the model runs (2026-11-04): the slider sets the odds that a step goes
+// wrong (T44C/t44cFaults.js), and Discrepancy is how the student says it has.
+function StartControls({ engine, reset, epId, engineNote, discrepancy }) {
   const snap = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
   const starting = snap.active && (epId === 'start-right' || epId === 'start-left');
   const choose = (id) => { engine.setScenario(id); reset(); };
   const said = snap.active && (engineNote || (snap.outcome && `This was a ${snap.outcome.toLowerCase()}.`));
+  const odds = Math.round((snap.chaos || 0) * 100);
   return (
     <div className="t44c-start">
       <div className="t44c-start-row">
@@ -109,6 +112,17 @@ function StartControls({ engine, reset, epId, engineNote }) {
           <button type="button" onClick={() => choose(RANDOM)} title="A start drawn at random, and not shown">
             Random start
           </button>
+        </>
+        )}
+        {snap.active && (
+        <>
+          <label className="t44c-chaos" title="The odds that a check goes wrong">
+            Chaos
+            <input type="range" min="0" max="100" step="5" value={odds}
+              onChange={(e) => engine.setChaos(Number(e.target.value) / 100)} />
+            <span className="t44c-chaos-value">{odds}%</span>
+          </label>
+          <button type="button" onClick={discrepancy}>Discrepancy</button>
         </>
         )}
       </div>

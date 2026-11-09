@@ -1,4 +1,5 @@
-import { blinking, bothRunning, gate, gateOf, initial, input, lights, MODEL_LIGHTS, outcome, PROCEDURES, readouts, SCENARIOS, settled, startLeftFrom, step, STARTER_LIMIT, STEP_EVENTS, stopwatch } from './t44cEngine';
+import { annLevel, blinking, bothRunning, faultSeen, gate, gateOf, initial, input, lampTest, lights, MODEL_LIGHTS, outcome, PROCEDURES, readouts, SCENARIOS, settled, startLeftFrom, step, STARTER_LIMIT, STEP_EVENTS, stopwatch } from './t44cEngine';
+import { drawFault, faultById, faultsFor, faultText } from './t44cFaults';
 
 // t44cEngine.js run against the clock, for EPDrill: the drill says which procedure is open and
 // which step's control went in, and the poster subscribes to what the windows and lights show
@@ -12,6 +13,18 @@ import { blinking, bothRunning, gate, gateOf, initial, input, lights, MODEL_LIGH
 // scenario drawn only as `outcome`, once the start is aborted or done.
 
 const KEY = 't44cStartScenario';
+// Chaos: the odds, 0 to 1, that a step with faults draws one as it comes up (t44cFaults.js).
+const CHAOS_KEY = 't44cChaos';
+const readChaos = () => {
+  try {
+    const v = Number(window.localStorage.getItem(CHAOS_KEY));
+    return Number.isFinite(v) && v >= 0 && v <= 1 ? v : 0;
+  } catch {
+    return 0;
+  }
+};
+// The step an event key belongs to: `er6#4` and `er8:Power Lever` are Engine Runup 6 and 8's.
+const stepOfKey = (key) => key.split(/[:#]/)[0];
 export const RANDOM = 'random';
 const draw = (choice) => (choice === RANDOM
   ? SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)].id
@@ -30,6 +43,18 @@ const readScenario = () => {
 
 export function createT44CEngine() {
   let scenario = readScenario();
+  let chaos = readChaos();
+  // Each step draws once a run (the procedure's steps already drawn for), and a fault the student
+  // goes past is told to the drill through `onMiss`.
+  let drawnFor = new Set();
+  // The open card's step ids in order (EPDrill, through `arm`): a fault is gone past by a click
+  // on a later step, not an earlier one.
+  let order = [];
+  // The Engine Runup 8 faults whose scripted test has begun while they were in sight.
+  let lateRan = new Set();
+  // The step open now, which the Discrepancy button looks at first.
+  let openStep = null;
+  const missListeners = new Set();
   let procedure = null;
   let state = null;
   let snapshot = { active: false };
@@ -39,13 +64,34 @@ export function createT44CEngine() {
 
   const publish = () => {
     snapshot = state && procedure
-      ? { active: true, procedure, scenario, outcome: outcome(state), readouts: readouts(state), lights: lights(state), blinking: blinking(state), drives: MODEL_LIGHTS,
-        highlight: state.highlight ?? null,
+      ? { active: true, procedure, scenario, chaos, outcome: outcome(state), readouts: readouts(state), lights: lights(state), blinking: blinking(state), lampTest: lampTest(state), drives: MODEL_LIGHTS,
+        highlight: state.highlight ?? null, annLevel: annLevel(state),
         // The stopwatch only on the starts, which time their starters (the user, 2026-11-04).
         stopwatch: TIMED.has(procedure) ? stopwatch(state) : null, starterLimit: STARTER_LIMIT }
-      : { active: false, scenario };
+      : { active: false, scenario, chaos };
     listeners.forEach((l) => l());
   };
+
+  const faults = () => (state && state.faults) || [];
+  // Faults put right (found or gone past): taken off, and each one's `reset` applied.
+  const clear = (list) => {
+    if (!list.length) return;
+    state = { ...state, faults: faults().filter((f) => !list.includes(f)) };
+    for (const f of list) for (const e of faultById(f.id).reset || []) state = input(state, e);
+  };
+  // Faults the student went past: cleared, and the drill told which step each was and what.
+  const missed = (list) => {
+    if (!list.length) return;
+    clear(list);
+    for (const f of list) {
+      lateRan.delete(f.id);
+      const told = { stepId: faultById(f.id).step, ...faultText(f) };
+      missListeners.forEach((l) => l(told));
+    }
+  };
+  const at = (id) => order.indexOf(id);
+  // Whether step `id` comes after step `than` on the card.
+  const later = (id, than) => (at(id) >= 0 && at(than) >= 0 ? at(id) > at(than) : id !== than);
 
   const stop = () => {
     if (timer) clearInterval(timer);
@@ -58,6 +104,14 @@ export function createT44CEngine() {
     // (in tenth-second steps) so the start has moved on as far as the clock has.
     state = step(state, Math.min(60, (now - last) / 1000));
     last = now;
+    // A fault on Engine Runup 8 is gone past when its test, once begun, ends.
+    const ended = [];
+    for (const f of faults()) {
+      if (!f.seen || !faultById(f.id).late) continue;
+      if (state.script) lateRan.add(f.id);
+      else if (lateRan.has(f.id)) ended.push(f);
+    }
+    missed(ended);
     publish();
     if (settled(state)) stop();
   };
@@ -69,6 +123,7 @@ export function createT44CEngine() {
   };
 
   const fresh = (kind) => {
+    drawnFor = new Set();
     state = initial(kind, draw(scenario));
     publish();
     run();
@@ -95,6 +150,14 @@ export function createT44CEngine() {
       const changed = epId !== procedure;
       const prev = procedure;
       procedure = epId;
+      if (changed || again) {
+        drawnFor = new Set();
+        // Next or Previous with a fault in sight: gone past, as a click on the next step would be.
+        if (state) state = faultSeen(state);
+        if (changed && state) missed(faults().filter((f) => f.seen));
+        if (state) state = { ...state, faults: [] };
+        lateRan = new Set();
+      }
       if (kind === null) {
         if (!state) state = initial('cold', draw(scenario));
         publish();
@@ -126,9 +189,81 @@ export function createT44CEngine() {
       return gate(state, stepId, piece, procedure);
     },
 
+    // The step now open (EPDrill), and the card's steps in order: with chaos on, the step may
+    // draw one of its faults, once a run. A fault that is a standing condition (`early`: a door
+    // not secure, the loads split or high) is drawn as the card opens instead, so it is there
+    // before its step as it would be in the aeroplane. Faults do not wait on each other: a
+    // standing one left showing never stops the steps after it drawing theirs, so at 100
+    // percent every step that can go wrong does (the user, 2026-11-08).
+    arm(stepId, stepIds) {
+      if (!state || !procedure || !stepId) return;
+      if (stepIds) order = stepIds;
+      openStep = stepId;
+      const roll = (step, early) => {
+        const key = early ? `${step}(early)` : step;
+        if (drawnFor.has(key)) return;
+        drawnFor.add(key);
+        const defs = faultsFor(procedure, step).filter((d) => !!d.early === early);
+        if (!defs.length || !(Math.random() < chaos)) return;
+        const def = defs[Math.floor(Math.random() * defs.length)];
+        state = faultSeen({ ...state, faults: [...faults(), drawFault(def)] });
+      };
+      const before = state.faults;
+      if (!drawnFor.has('(card)')) {
+        drawnFor.add('(card)');
+        [...new Set(faultsFor(procedure, null).filter((d) => d.early).map((d) => d.step))]
+          .forEach((step) => roll(step, true));
+      }
+      roll(stepId, false);
+      if (state.faults !== before) {
+        publish();
+        run();
+      }
+    },
+
+    // The Discrepancy button. The faults the student can see are found: put right, and what each
+    // was and what could cause it are the answer (a list). Those of the open step and the steps
+    // before it are taken first, so a standing fault shown early (CABIN DOOR OPEN from the
+    // battery on) stays lit while an earlier step's goes; it is found by itself when nothing else
+    // is showing (the user, 2026-11-08). Null when nothing is wrong yet.
+    discrepancy() {
+      if (!state) return null;
+      state = faultSeen(state);
+      const seen = faults().filter((f) => f.seen);
+      if (!seen.length) return null;
+      const due = seen.filter((f) => !openStep || !later(faultById(f.id).step, openStep));
+      const found = due.length ? due : seen;
+      clear(found);
+      for (const f of found) lateRan.delete(f.id);
+      publish();
+      run();
+      return found.map(faultText);
+    },
+
+    onMiss(l) {
+      missListeners.add(l);
+      return () => missListeners.delete(l);
+    },
+
+    chaos: () => chaos,
+    setChaos(v) {
+      chaos = Math.min(1, Math.max(0, v));
+      try { window.localStorage.setItem(CHAOS_KEY, String(chaos)); } catch { /* private window */ }
+      publish();
+    },
+
     // A step's control went in: whatever it does to the engines.
     fire(stepId) {
       if (!state || !procedure) return;
+      // A control of another step, with a fault in sight: the student has gone past it. Not one
+      // of the faulted step's own clicks, so the click that shows a fault (RH GEN OUT staying lit
+      // as the right generator goes on) is never itself the miss (the user, 2026-11-05).
+      state = faultSeen(state);
+      missed(faults().filter((f) => f.seen && later(stepOfKey(stepId), faultById(f.id).step)));
+      // A fault's own control: it shows from here.
+      if (faults().some((f) => !f.seen && f.at === stepId)) {
+        state = { ...state, faults: faults().map((f) => (!f.seen && f.at === stepId ? { ...f, seen: true } : f)) };
+      }
       // Any click hands the rings back to the click, from a scripted check's.
       const had = state.highlight != null;
       state = { ...state, highlight: null };
@@ -149,7 +284,9 @@ export function createT44CEngine() {
     skip(keys, nextId) {
       if (!state || !procedure) return;
       const events = STEP_EVENTS[procedure] || {};
-      state = { ...state, highlight: null };
+      // A skipped step's faults go with it.
+      const skipped = new Set(keys.map(stepOfKey));
+      state = { ...state, highlight: null, faults: faults().filter((f) => !skipped.has(faultById(f.id).step)) };
       for (const k of keys) for (const e of events[k] || []) state = input(state, e);
       const ready = (s) => {
         if (s.script) return false;
@@ -188,8 +325,13 @@ export function createT44CEngine() {
       if (!state || (procedure !== 'start-right' && procedure !== 'start-left')) return null;
       if (!wordings.some((w) => /condition lever/i.test(w))) return null;
       const e = state.engines[state.starting];
-      if (e.cond === 'cutoff' || e.starter === 'off') return null;
-      state = input(state, { side: 'starting', cond: 'cutoff' });
+      if (e.starter === 'off') return null;
+      // No rotation (N1 still at nothing seconds after the starter): the fuel is already off, so
+      // the condition lever clicked confirms it at FUEL CUTOFF and opens the Abnormal Start.
+      const still = e.cond === 'cutoff' && e.starterT > 3 && e.n1 < 5;
+      if (e.cond === 'cutoff' && !still) return null;
+      if (!still) state = input(state, { side: 'starting', cond: 'cutoff' });
+      else state = { ...state, engines: { ...state.engines, [state.starting]: { ...e, aborted: true } } };
       publish();
       run();
       return { epId: 'abnormal-start', stepId: 'as1' };

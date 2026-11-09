@@ -539,9 +539,38 @@ function Drill({
   const [engineNote, setEngineNote] = useState(null);
   useEffect(() => {
     if (!engine) return;
-    engine.open(isGameActive ? null : ep.id);
+    // The note first: leaving a card with a fault in sight is a miss, said on the next card.
     setEngineNote(null);
+    engine.open(isGameActive ? null : ep.id);
   }, [engine, ep.id, isGameActive]);
+  // Chaos (T44C/t44cFaults.js): a fault the student went past is marked wrong on its step, and
+  // what it was and what could cause it are said. `missedRef` holds those steps, so a look step
+  // passed by the same click that went past it is not then marked right.
+  const missedRef = useRef(new Set());
+  const say = (lead, told) => `${lead} ${told.what} Possible causes: ${told.causes.join(' ')}`;
+  useEffect(() => {
+    if (!engine || !engine.onMiss) return undefined;
+    return engine.onMiss((told) => {
+      missedRef.current.add(told.stepId);
+      setResults((r) => ({ ...r, [told.stepId]: 'incorrect' }));
+      // Several gone past at once (a click past two steps' faults) are all said.
+      setEngineNote((n) => (n && n.startsWith('Missed:') ? `${n} ${say('Missed:', told)}` : say('Missed:', told)));
+    });
+  }, [engine]);
+  // The Discrepancy button: right when a fault is showing (it is put right, and its causes
+  // said), wrong on the open step when nothing is.
+  const discrepancy = () => {
+    if (!engine || isGameActive) return;
+    const found = engine.discrepancy();
+    if (found) {
+      const list = Array.isArray(found) ? found : [found];
+      setEngineNote(list.map((f) => say('Discrepancy found:', f)).join(' '));
+      return;
+    }
+    const open = nextOpen();
+    if (open) setResults((r) => ({ ...r, [open.id]: 'incorrect' }));
+    setEngineNote('No discrepancy: everything is reading as it should.');
+  };
   // A refused click: marked wrong, and the reason shown.
   const tooEarly = (step, piece) => {
     const why = engine && !isGameActive ? engine.gate(step.id, piece) : null;
@@ -639,6 +668,7 @@ function Drill({
     wasCorrect.current = {};
     parts.current = {};
     watched.current = {};
+    missedRef.current = new Set();
     setResetKey((k) => k + 1);
   };
 
@@ -760,7 +790,8 @@ function Drill({
         delete watched.current[id];
       }
       // A copy: the updater runs at render, after `passed` is emptied below.
-      const marks = passed;
+      const marks = Object.fromEntries(Object.entries(passed)
+        .map(([id, m]) => [id, missedRef.current.has(id) ? 'incorrect' : m]));
       if (Object.keys(marks).length) setResults((r) => ({ ...r, ...marks }));
       passed = {};
     };
@@ -995,6 +1026,7 @@ function Drill({
     wasCorrect.current = {};
     parts.current = {};
     watched.current = {};
+    missedRef.current = new Set();
     setResetKey((k) => k + 1);
     if (engine && !isGameActive) engine.open(ep.id, true);
     setEngineNote(null);
@@ -1038,6 +1070,12 @@ function Drill({
   };
 
   const onKeyDown = (e) => { if (e.key === 'Enter') check(); };
+  // Chaos: each step may draw a fault as it comes up (the engine draws once a run).
+  const openId = (nextOpen() || {}).id || null;
+  useEffect(() => {
+    if (engine && !isGameActive && engine.arm) engine.arm(openId, fields);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engine, isGameActive, openId, ep.id, resetKey]);
   // The control the checklist is asking for next, every render rather than only on Hint. A
   // target carrying more than one step reads it to pick which one to fill; nothing uses it to
   // move the poster, which stays the job of `reveal`.
@@ -1045,6 +1083,8 @@ function Drill({
   // show the buttons only normal checklists use (T-44C's `normal` actions) and keep them off the
   // EPs, which never name them.
   const api = { fill, hint, shown, reveal, next: controlOf((nextOpen() || {}).text), resetKey, normalProcedure: normal || !!ep.normal,
+    // Chaos: the Discrepancy button, for a page that draws one beside its engine controls.
+    discrepancy,
     // With the set's `extra` procedures added, a page can show both kinds of button on every card,
     // so the column does not change (and give the procedure away) as the cards go by.
     mixed: !!(extraToggle && extraToggle.on),

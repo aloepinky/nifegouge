@@ -47,7 +47,7 @@ it('skips the overspeed governor check to 1900 rpm with the switch released', ()
   engine.open('engine-runup');
   engine.skip(['er5:Condition Lever', 'er5#1', 'er5', 'er5#2'], 'er6');
   expect(engine.getSnapshot().readouts.R.n1).toBe('71.5');
-  engine.skip(['er6:Prop Lever', 'er6#1', 'er6:Power Lever', 'er6#2', 'er6', 'er6#3', 'er6:Power Lever', 'er6#4'], 'er7');
+  engine.skip(['er6:Prop Lever', 'er6#1', 'er6', 'er6#2', 'er6:Power Lever', 'er6#3'], 'er7');
   expect(Math.abs(Number(engine.getSnapshot().readouts.R.np) - 1900)).toBeLessThan(25);
   engine.dispose();
 });

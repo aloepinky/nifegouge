@@ -1,4 +1,4 @@
-import { blinking, gate, initial, input, lights, outcome, readouts, settled, startLeftFrom, step, STEP_EVENTS, stopwatch } from './t44cEngine';
+import { annLevel, blinking, gate, initial, input, lights, outcome, readouts, settled, startLeftFrom, step, STEP_EVENTS, stopwatch } from './t44cEngine';
 
 // Each start run the way its clip ran it, clicks at the clip's own times, and read back at the
 // clip's own frames (engine-videos-readings.md, beside the clips in _reference-docs).
@@ -83,6 +83,33 @@ describe('the abnormal starts', () => {
     expect(out[40].lit).toBe(false);
   });
 
+  it('with no fuel flow, the condition lever is in and FF stays at 0 (the sim, 2026-11-08)', () => {
+    const events = [[0, { side: 'R', starter: 'on' }], [12, { side: 'R', cond: 'low' }]];
+    const { out } = run(initial('cold', 'noFuel'), events, 30, 'R', [25, 30]);
+    expect(out[25].ff).toBeLessThan(1);
+    expect(out[30].lit).toBe(false);
+    near(out[30].n1, 17.5, 0.2);
+  });
+
+  it('with no rotation, IGN IND lights and N1 stays at 0 (the sim, 2026-11-08)', () => {
+    const { s } = run(initial('cold', 'noRotation'), [[0, { side: 'R', starter: 'on' }]], 10, 'R');
+    expect(s.engines.R.n1).toBe(0);
+    expect(lights(s)).toContain('RH IGN IND');
+  });
+
+  it('a long start reaches 50 percent N1 41 s after the starter, whenever the fuel went in', () => {
+    for (const fuelAt of [10, 13]) {
+      let st = input(initial('cold', 'long'), { side: 'R', starter: 'on' });
+      let t = 0;
+      while (st.engines.R.n1 <= 50 && t < 80) {
+        if (Math.abs(t - fuelAt) < 0.05) st = input(st, { side: 'R', cond: 'low' });
+        st = step(st, 0.1);
+        t += 0.1;
+      }
+      near(t, 41, 0.6);
+    }
+  });
+
   it('fuel cut off brings ITT below 790 °C at once and back toward the plateau on the starter', () => {
     const events = [[1.5, { side: 'R', starter: 'on' }], [13.5, { side: 'R', cond: 'low' }],
       [39, { side: 'starting', cond: 'cutoff' }]];
@@ -159,12 +186,11 @@ describe('the needle gauges and the stopwatch', () => {
       [30.5, { side: 'L', starter: 'off' }], [45.5, { side: 'R', gen: true }], [53, { side: 'L', gen: true }]];
     const base = startLeftFrom(initial('rightRunning'));
     const at = (t) => readouts(run(base, ev, t, 'L').s);
-    near(Number(at(48).R.gen), 0.75, 0.03); // the right alone
-    near(Number(at(52).R.gen), 0.75, 0.03); // held while the ammeter is pegged
-    // Split evenly the moment the left joins, and held through the clip's end.
+    near(Number(at(45.6).R.gen), 0.75, 0.03); // the right alone, as it comes on
+    // Split evenly the moment the left joins (9716 read 0.38 each; the payback since then is
+    // the user's 20 s figure, which 9716 doesn't show).
     expect(Number(at(55).R.gen)).toBe(Number(at(55).L.gen));
-    near(Number(at(55).R.gen), 0.38, 0.02);
-    near(Number(at(66).R.gen), 0.38, 0.02);
+    expect(Number(at(55).R.gen)).toBeLessThan(Number(at(53.1).R.gen) + 0.001);
     // Paid back minutes on: the bus's own load through a start, 0.18 each.
     near(Number(at(600).R.gen), 0.18, 0.02);
     near(at(600).B.volts, 28.2, 0.1);
@@ -176,14 +202,14 @@ describe('the needle gauges and the stopwatch', () => {
     expect(readouts(r).R.gen).toBe('1.00');
   });
 
-  it('holds a lone generator flat as long as the starter ran, then below .5 within a minute', () => {
+  it('pays a lone generator back to below .5 about 20 s after it comes on (the user, 2026-11-05)', () => {
     // 9716's 25.5 s of starter.
     const ev = [[0, { side: 'R', starter: 'on' }], [8, { side: 'R', cond: 'low' }],
       [25.5, { side: 'R', starter: 'off' }], [40, { side: 'R', gen: true }]];
     const at = (t) => Number(readouts(run(initial('cold'), ev, t, 'R').s).R.gen);
-    near(at(41), 0.75, 0.03);
-    near(at(60), 0.75, 0.03);
-    expect(at(100)).toBeLessThan(0.5);
+    near(at(40.1), 0.75, 0.03);
+    expect(at(55)).toBeGreaterThan(0.5);
+    expect(at(62)).toBeLessThan(0.5);
   });
 
   it('brings suction and pneumatic up only as N1 reaches idle', () => {
@@ -268,13 +294,13 @@ describe('the engine runup (IMG_9718, 9737)', () => {
 
   it('stops Np at the overspeed governor, then sets 1900 rpm (Runup 6)', () => {
     let s = runFor(fireAll(idle, 'er5:Condition Lever'), 20);
-    // b. A little under 1900 rpm; c. the test switch held, which moves nothing.
-    s = runFor(fireAll(fireAll(s, 'er6#2'), 'er6'), 15);
-    near(s.engines.R.np, 1850, 20);
+    // b. HIGH IDLE leaves the props under 1900 rpm; c. the test switch held, which moves nothing.
+    s = runFor(fireAll(s, 'er6'), 2);
+    expect(s.engines.R.np).toBeLessThan(1900);
     const trqBefore = s.engines.R.trq;
     const ittBefore = s.engines.R.itt;
     // d. The power levers again: Np stops in the 1900 to 2100 range while torque and ITT climb.
-    s = fireAll(s, 'er6#4');
+    s = fireAll(s, 'er6#3');
     let peak = 0;
     let trqPeak = 0;
     let ittPeak = 0;
@@ -426,9 +452,7 @@ describe('the 2026-11-04 rulings', () => {
 
   it('rings Np, then ITT and torque, then nothing through the overspeed governor check', () => {
     let s = step(fire(initial('runup'), 'engine-runup', 'er5:Condition Lever'), 20);
-    s = step(fire(s, 'engine-runup', 'er6#2'), 6);
-    expect(s.engines.R.np).toBeGreaterThan(1800); // quickly under 1900
-    s = step(fire(fire(s, 'engine-runup', 'er6'), 'engine-runup', 'er6#4'), 0.2);
+    s = step(fire(fire(s, 'engine-runup', 'er6'), 'engine-runup', 'er6#3'), 0.2);
     expect(s.highlight).toEqual(['Prop RPM']);
     const seen = [];
     for (let i = 0; i < 300 && s.script; i += 1) {
@@ -441,7 +465,7 @@ describe('the 2026-11-04 rulings', () => {
 
   it('rings torque, then Np, through each side of the autofeather test', () => {
     let s = step(fire(initial('runup'), 'engine-runup', 'er5:Condition Lever'), 20);
-    s = step(fire(fire(fire(s, 'engine-runup', 'er6#2'), 'engine-runup', 'er6'), 'engine-runup', 'er6#4'), 40);
+    s = step(fire(fire(s, 'engine-runup', 'er6'), 'engine-runup', 'er6#3'), 40);
     s = step(fire(s, 'engine-runup', 'er8:Condition Lever'), 8);
     s = fire(fire(s, 'engine-runup', 'er8:Autoignition'), 'engine-runup', 'er8');
     s = fire(s, 'engine-runup', 'er8:Power Lever');
@@ -480,5 +504,40 @@ describe('the autofeather switch points', () => {
     expect(at(430, 500)).not.toContain('RH AUTOFEATHER ARMED');
     expect(at(450, 390)).not.toContain('RH IGN IND'); // above its 380
     expect(at(450, 390)).toContain('LH AUTOFEATHER ARMED');
+  });
+});
+
+describe('the sim notes of 2026-11-08', () => {
+  it('takes about 8 s from HIGH IDLE to LOW IDLE on the condition levers', () => {
+    let s = initial('runup');
+    s = step(input(s, { side: 'both', cond: 'high' }), 25);
+    s = input(s, { side: 'both', cond: 'low' });
+    let t = 0;
+    while (s.engines.L.n1 > 53 && t < 30) { s = step(s, 0.1); t += 0.1; }
+    near(t, 8, 1.5);
+  });
+
+  it('keeps the gauges dark until the battery is on', () => {
+    const s = initial('beforeStart');
+    expect(readouts(s).L.itt).toBeUndefined();
+    expect(readouts(s).B.volts).toBeUndefined();
+    expect(readouts(input(s, { battery: true })).L.itt).toBe('30');
+  });
+});
+
+describe('the DIM knob and the fuel quantity switch', () => {
+  it('reads the nacelle tanks at NACELLE, and the total again at TOTAL (NATOPS §2.9.8)', () => {
+    let s = step(initial('runup'), 1);
+    const total = Number(readouts(s).L.qty);
+    s = input(s, { qtySel: true });
+    near(Number(readouts(s).L.qty), 412, 2); // 61 gallons at 6.75 lb
+    s = input(s, { qtySel: true });
+    expect(Number(readouts(s).L.qty)).toBe(total);
+  });
+
+  it('fades the annunciators evenly to out and back to full bright, twice', () => {
+    const s = input(initial('runup'), { annDim: true });
+    const at = (t) => Math.round(annLevel(step(s, t)) * 100) / 100;
+    expect([0, 0.625, 1.25, 1.875, 2.5, 3.75, 5.5].map(at)).toEqual([1, 0.5, 0, 0.5, 1, 0, 1]);
   });
 });

@@ -25,14 +25,21 @@
 // Repeater digits are plain units whatever the dial captions say: ITT in °C, torque in lb-ft,
 // Np in rpm, N1 in percent, fuel flow in pph.
 
+import { faultById, HEATERS, LAMP_CELLS } from './t44cFaults';
+
 export const SIDES = ['L', 'R'];
 
 // What a student can choose to practise. The clip each one comes from is in its table below.
+// The three no starts are the sim's (the user, 2026-11-08): no light-off (fuel flowing, nothing
+// lights), no fuel flow (the condition lever in, FF at 0) and no rotation (IGN IND lit, N1 at 0).
 export const SCENARIOS = [
   { id: 'normal', label: 'Normal start' },
+  { id: 'long', label: 'Long start' },
   { id: 'hot', label: 'Hot start' },
   { id: 'hung', label: 'Hung start' },
-  { id: 'noLightoff', label: 'No start' },
+  { id: 'noLightoff', label: 'No start (no light-off)' },
+  { id: 'noFuel', label: 'No start (no fuel flow)' },
+  { id: 'noRotation', label: 'No start (no rotation)' },
 ];
 
 const AMBIENT = 30; // °C: every cold engine in the clips read 30, and the sim's RAT was 30 °C
@@ -110,6 +117,14 @@ const NORMAL = {
     [14.5, 106], [16.5, 105], [20, 104]],
 };
 
+// A long start (the user, 2026-11-08): a normal start's curves drawn out in time, so N1 reaches
+// 50 percent 41 seconds after the starter went on, past the starter's 40-second limit. The
+// stretch is set at light-off from how long the starter has run by then; no clip shows one.
+const LONG = { to50: 41 };
+
+// When a normal start's N1 reaches 50 percent, after light-off.
+const T50 = 10.5 + (2 * (50 - 45.2)) / (50.55 - 45.2);
+
 // IMG_9715, the left engine with the right generator on: fuel flow overshoots to 163 against a
 // normal start's 102 and ITT climbs past 850, where the student cut the fuel 9 seconds after
 // light-off. N1, torque and Np kept a normal start's pace (40.9 % against 39 at 8 s, from an N1
@@ -167,6 +182,7 @@ const RUN = [
   [86.2, 640, 1940, 261, 608],
   [89.0, 760, 2060, 295, 625], // extrapolated
   [92.0, 900, 2160, 330, 662], // extrapolated: the overspeed governor check's torque and ITT
+  [96.0, 1080, 2360, 375, 705], // extrapolated: a failed overspeed governor's 2350 (the user)
 ];
 const COLS = { trq: 1, np: 2, ff: 3, itt: 4 };
 const run = (n1, k) => at(RUN.map((r) => [r[0], r[COLS[k]]]), n1);
@@ -192,7 +208,9 @@ const IDLE = {
   max: 101.5,
   fade: 2.36,
   ittDrift: { from: 608, over: 60 },
-  n1: { rate: 2.85, runRate: 4, k: 0.9, decelTau: 1.5 },
+  // HIGH IDLE to LOW IDLE on the condition levers takes about 8 seconds (the user's sim
+  // notes, 2026-11-08), slower than a power lever pulled back (9718's 86.1 to 74.9 in 2 s).
+  n1: { rate: 2.85, runRate: 4, k: 0.9, decelTau: 1.5, idleDropTau: 2.7 },
   tau: 3,
   // Np close behind N1 under the governor: 9718's power up read N1 76.2, 82.4, 86.2 and Np
   // 1547, 1757, 1885 at the same 2-second marks, about a second behind.
@@ -207,9 +225,9 @@ const ACCEL = { itt: 20, ff: 7, tau: 0.5 };
 
 // Where the levers put N1: the condition lever's idle, and the power lever's share of the way
 // from there to the maximum.
-const leverAt = (cond, p) => IDLE.low.n1 + (IDLE.max - IDLE.low.n1) * p
-  + (idleN1(cond) - IDLE.low.n1) * (1 - p) ** IDLE.fade;
-const leverN1 = (e) => leverAt(e.cond, e.pwr);
+const leverAt = (cond, p, short = 0) => IDLE.low.n1 + (IDLE.max - IDLE.low.n1) * p
+  + (idleN1(cond) - (cond === 'high' ? short : 0) - IDLE.low.n1) * (1 - p) ** IDLE.fade;
+const leverN1 = (e, fx = {}) => leverAt(e.cond, e.pwr, fx.shortIdle || 0);
 // The lever position that gives `n1` at a condition-lever setting (0 at or below its idle).
 const leverFor = (cond, n1) => {
   if (n1 <= idleN1(cond)) return 0;
@@ -229,16 +247,20 @@ const GEN = { itt: 45, ff: 8, tau: 3 };
 
 // The props. FEATHER: Np falls toward 400 rpm (9718 opened on both props feathered at low idle,
 // 395 and 415 rpm, with torque up at 266 and 247 lb-ft) about as 9718's autofeathering props
-// fell (1328, 1248, 1114 rpm 2 s apart; 1564 to 1100 in 10 s): a 14-second time constant. The
+// fell (1328, 1248, 1114 rpm 2 s apart; 1564 to 1100 in 10 s): a 14-second time constant, made
+// 11 since the user found the sim's autofeather slightly faster (notes, 2026-11-08). The
 // primary governor check, the levers at the feather detent, holds Np near 1710 (9737's 1704;
 // FTI 1600 to 1800) at the same power, so torque rises (611 to 773 lb-ft). The overspeed
 // governor, its test switch held, stops Np at 2000 (the FTI's 1900 to 2100; no clip shows it).
 const PROP = {
   feathered: 400,
-  featherTau: 14,
+  featherTau: 11,
   featherTrq: 150, // lb-ft a feathered prop adds at low idle, fading out by 67 % N1
   detent: 1710,
   overspeed: 2000,
+  // Where a failed overspeed governor lets Np go with the test switch held: 2350 rpm, as the
+  // sim showed it (the user, 2026-11-08), past the primary governor's 2200 (NATOPS §2.8.3).
+  osgFailed: 2350,
 };
 
 // ENG AUTO IGN on: AUTO IGNITION ARMED above about 410 lb-ft, the igniters firing (IGN IND)
@@ -275,6 +297,13 @@ const BUS_RUNNING = 0.46;
 // 9714), 1180 and 1172 as 9718's runup began. It goes down by what the fuel flow burns (9718:
 // 1180 to 1174 in 124 s at 160 to 260 pph).
 const FUEL = { cold: { L: 1194, R: 1194 }, runup: { L: 1180, R: 1172 } };
+
+// The FUEL QUANTITY TOTAL-NACELLE switch (NATOPS §2.9.8): at NACELLE each gauge shows its nacelle
+// tank only. A nacelle tank holds 61 gallons and is used down to 42, then kept between 42 and 51
+// by its transfer pump until the wing tanks are empty (NATOPS §2.9); at the FTI's JP-5 6.75 lb a
+// gallon (ME FTI, fuel planning). Taken as full at the start.
+const NACELLE = { full: 61 * 6.75, low: 42 * 6.75 };
+const nacelleOf = (total, burned) => (total <= NACELLE.low ? total : Math.max(NACELLE.low, NACELLE.full - burned));
 
 // The fuel panel's switches, for After Start 6 and 7, and the lights they light, from the FTI's
 // action (no clip shows them): a boost pump off with the crossfeed at AUTO lights its FUEL
@@ -330,18 +359,18 @@ const BLEED = {
 // second its starter ran, generator-assisted or not: 9716's is a battery start, and that the
 // FTI's assisted left start leaves the same is the user's reading of it (2026-11-04: about 0.75
 // with the right generator on after the left start, 0.38 a side once the left joins). Paid back
-// in two parts: the load holds flat while the battery ammeter is pegged, for as long as the
-// starter ran (9716 held its total 0.75 to 0.77 for the 20 s it showed after the generator came
-// on, the ammeter pegged throughout), then falls on a 20-second time constant, so a lone
-// generator after a 25-second start is below .5 (Start step 10) about 45 s after it came on.
-// Both the hold and the fall past it are guesses no clip shows (filming-list.md item 1).
+// from the moment a generator is on line, on a 19-second time constant, so a lone generator
+// after a 23 to 29 s start is below .5 (Start step 10) about 20 s after it came on (the user's
+// figure, 2026-11-05). That overrides 9716, whose total held 0.75 to 0.77 for the 20 s it
+// showed after the generator came on, the ammeter pegged throughout; no clip times the fall
+// (filming-list.md item 1).
 const ELEC = {
   start: { motoring: 21.2, fuelled: 19.5, recovered: 21.0, amps: -60, drySag: 0.035, sagAfter: 15 },
   assisted: { volts: 23.4, amps: -57, charged: 27.0 },
   battery: { volts: 23.7, amps: -22, drop: 2.6 },
   charging: { one: 27.9, two: 28.1, full: 28.2, amps: 60, taper: 0.03 },
   load: { bus: 0.36, perStarterSecond: 0.0152, max: 0.8, full: 1.0 },
-  rechargeTau: 20, // seconds; what the battery is owed falls on this, once the hold is over
+  rechargeTau: 19, // seconds; what the battery is owed falls on this with a generator on line
   tau: 0.5,
 };
 
@@ -350,6 +379,61 @@ const ELEC = {
 // should read 28.25). The button is held in the aircraft; here a click holds it 3 seconds (the
 // user).
 const VOLTS = { reads: '28.25', held: 3 };
+
+// The anti-ice heaters' generator load, shared between the generators on line. No clip shows
+// them (filming-list.md item 31): the site's guesses, small beside the bus, and none for the lip
+// boots, which work only in flight (NATOPS §2.20.3.2).
+const HEAT_LOAD = { pitot: 0.04, stall: 0.02, lip: 0, vent: 0.03, wshld: 0.1 };
+
+// Chaos (t44cFaults.js): the faults drawn so far on this card, each `{ id, params, seen }`, as
+// many at once as the chaos slider draws (at 100 percent, one on every step that has any; the
+// user, 2026-11-08). `drawn` is a fault's parameters while it is drawn at all. A light that
+// fails to come on is dark from the start; one that stays lit is lit only once the fault is
+// `seen`, when it should have gone out.
+const faultsOf = (state) => state.faults || [];
+const faultOf = (state, test) => faultsOf(state).find(test) || null;
+const drawn = (state, id) => { const f = faultOf(state, (x) => x.id === id); return f ? f.params : null; };
+const drawnLike = (state, prefix) => { const f = faultOf(state, (x) => x.id.startsWith(prefix)); return f ? f.params : null; };
+
+// The boost pumps drawing on the battery, less a dead one (chaos).
+const pumpsOn = (state) => {
+  if (!state.fuelSys) return 2;
+  const nd = drawn(state, 'bs-boost-nodraw');
+  return SIDES.filter((k) => state.fuelSys.boost[k] && !(nd && nd.side === k)).length;
+};
+
+// Marks each drawn fault seen once its `when` holds.
+export function faultSeen(state) {
+  const list = faultsOf(state);
+  let changed = false;
+  const next = list.map((f) => {
+    if (f.seen) return f;
+    const def = faultById(f.id);
+    if (!(def && def.when && def.when(state, f.params))) return f;
+    changed = true;
+    return { ...f, seen: true };
+  });
+  return changed ? { ...state, faults: next } : state;
+}
+
+// The engine side of a fault, for stepEngine: its own engine's.
+const engineFx = (state, side) => {
+  const fx = {};
+  if (side === 'R' && drawn(state, 'sl-itt-rise')) fx.ittAdd = 290;
+  const mf = drawn(state, 'er-mf-nofeather');
+  if (mf && mf.side === side) fx.noManualFeather = true;
+  const slow = drawn(state, 'er-mf-slow');
+  if (slow && slow.side === side) fx.slowUnfeather = true;
+  if (drawn(state, 'er-short-idle')) fx.shortIdle = 11;
+  if (drawn(state, 'er-osg-fail')) fx.osgFail = true;
+  const det = drawn(state, 'er-pgov-detent');
+  if (det && det.side === side) fx.detent = det.np;
+  const ret = drawn(state, 'er-pgov-return');
+  if (ret && ret.side === side) fx.returnCap = 1770;
+  const nf = drawn(state, 'er-nofeather');
+  if (nf && nf.side === side) fx.noFeather = true;
+  return fx;
+};
 
 // --------------------------------------------------------------------------------------------
 // State
@@ -411,6 +495,13 @@ const running = (cond = 'high', oilT = 37) => ({
 // owed, in generator load (0 charged, 0.39 after a 25-second battery start). `lastStarter` is the starter whose time the
 // stopwatch shows under its own; `clock` is the elapsed time clock the student starts and stops.
 export function initial(kind = 'cold', scenario = 'normal') {
+  // Before Start: both engines cold, the boost pumps and the battery still off (Before Start 8
+  // turns them on). The boost pumps draw on the battery ammeter from the hot battery bus.
+  if (kind === 'beforeStart') {
+    const s = initial('cold', scenario);
+    return { ...s, starting: null, fuelSys: { ...FUEL_SYS(), boost: { L: false, R: false } },
+      elec: { ...s.elec, battery: false, amps: 0 } };
+  }
   if (kind === 'runup' || kind === 'afterStart') {
     const L = { ...running('low', 48), gen: true, genG: BUS_RUNNING / 2 };
     const R = { ...running('low', 58), gen: true, genG: BUS_RUNNING / 2 };
@@ -418,7 +509,7 @@ export function initial(kind = 'cold', scenario = 'normal') {
       t: 0, starting: null, engines: { L, R }, fuel: { ...FUEL.runup }, afTest: false, script: null,
       fuelSys: FUEL_SYS(),
       // After Start finds the avionics off; the runup finds them on (After Start 3).
-      elec: { volts: ELEC.charging.full, amps: 0, deficit: 0,
+      elec: { volts: ELEC.charging.full, amps: 0, deficit: 0, battery: true, heat: {},
         bus: kind === 'afterStart' ? ELEC.load.bus : BUS_RUNNING, propDeice: false,
         suction: at(BLEED.suction, IDLE.low.n1), pneumatic: at(BLEED.pneumatic, IDLE.low.n1) },
       lastStarter: null, clock: { running: false, t: 0 },
@@ -429,7 +520,8 @@ export function initial(kind = 'cold', scenario = 'normal') {
   const starting = kind === 'rightRunning' ? 'L' : 'R';
   const engines = { L: left, R: right };
   engines[starting] = { ...engines[starting], scenario };
-  const base = { volts: ELEC.battery.volts, amps: ELEC.battery.amps, deficit: 0, bus: ELEC.load.bus, propDeice: false };
+  const base = { volts: ELEC.battery.volts, amps: ELEC.battery.amps, deficit: 0, bus: ELEC.load.bus, propDeice: false,
+    battery: true, heat: {} };
   const elec = kind === 'rightRunning'
     // The right start's battery paid back by Start step 10, its generator off below .5.
     ? { ...base, suction: at(BLEED.suction, IDLE.high.n1), pneumatic: at(BLEED.pneumatic, IDLE.high.n1) }
@@ -461,6 +553,12 @@ export function input(state, event) {
     return { ...state, clock: state.clock.running ? { ...state.clock, running: false } : { running: true, t: 0 } };
   }
   if (event.script) return { ...state, script: { steps: event.script, i: 0, t: 0 } };
+  // A discrepancy found mid-test: the test stopped there, the power levers back to IDLE and the
+  // feathering props released (the switches stay, so the test can be run again).
+  if (event.stopTest) {
+    const engines = Object.fromEntries(SIDES.map((k) => [k, { ...state.engines[k], pwr: 0, pwrGoal: 0, pwrRate: null, feathering: false }]));
+    return { ...state, script: null, highlight: [], engines };
+  }
   // The gauges to ring while a scripted check runs (by their poster wordings), in place of the
   // click's own; [] rings none, null hands back to the click's.
   if (event.highlight !== undefined) return { ...state, highlight: event.highlight };
@@ -468,26 +566,47 @@ export function input(state, event) {
   if (event.pressVolts) {
     return { ...state, voltsUntil: { ...(state.voltsUntil || {}), [event.pressVolts]: state.t + VOLTS.held } };
   }
+  // The battery switch; the annunciator lamp test held; FAULT WARNING flashing until pressed;
+  // the fire detector test switch's zone (0 OFF); an anti-ice heater on or off.
+  if (event.battery !== undefined) return { ...state, elec: { ...state.elec, battery: event.battery } };
+  if (event.annTest !== undefined) return { ...state, annTest: event.annTest };
+  // The annunciator DIM knob checked (annLevel); the FUEL QUANTITY switch.
+  if (event.annDim) return { ...state, dimFrom: state.t };
+  if (event.qtySel) return { ...state, qtySel: state.qtySel === 'nacelle' ? 'total' : 'nacelle' };
+  if (event.faultWarn !== undefined) return { ...state, faultWarn: event.faultWarn };
+  if (event.fireZone !== undefined) return { ...state, fireZone: event.fireZone };
+  if (event.heat) return { ...state, elec: { ...state.elec, heat: { ...(state.elec.heat || {}), [event.heat]: true } } };
+  if (event.heatOff) return { ...state, elec: { ...state.elec, heat: {} } };
   if (event.xfeed || event.boost || event.flicker) {
     const f = { ...(state.fuelSys || FUEL_SYS()) };
     if (event.xfeed) {
-      // 'reset' is CLOSED then AUTO, one movement of the switch.
+      // 'reset' is CLOSED then AUTO, one movement of the switch; OPEN opens the valve whatever
+      // the pressure (NATOPS §2.9.6.1).
       f.xfeed = event.xfeed === 'reset' ? 'auto' : event.xfeed;
-      if (event.xfeed !== 'auto') f.open = false;
+      f.open = event.xfeed === 'open';
     }
     if (event.boost) f.boost = { ...f.boost, ...event.boost };
     // Both boost pumps on again: the valve closes and FUEL CROSSFEED goes out (the user,
     // 2026-11-04).
     if (f.boost.L && f.boost.R) f.open = false;
     if (event.boost && Object.values(event.boost).includes(false)) f.openT = 0;
-    if (event.flicker) f.flicker = [...f.flicker, { light: event.flicker, until: state.t + XFEED.flicker }];
+    // Chaos: a transfer pump that does not flicker its light.
+    const tp = drawn(state, 'as-transfer');
+    const dark = tp && event.flicker === `${tp.side === 'L' ? 'LH' : 'RH'} NO FUEL TRANSFER`;
+    if (event.flicker && !dark) f.flicker = [...f.flicker, { light: event.flicker, until: state.t + XFEED.flicker }];
     return { ...state, fuelSys: f };
   }
   if (event.afTest !== undefined) return { ...state, afTest: event.afTest };
   // New switch points for each engine (`rand` for tests).
   if (event.drawAuto) {
     const rand = typeof event.drawAuto === 'function' ? event.drawAuto : Math.random;
-    return { ...state, auto: { L: drawAuto(rand), R: drawAuto(rand) } };
+    const auto = { L: drawAuto(rand), R: drawAuto(rand) };
+    // Chaos: a torque switch out of tolerance.
+    const sw = drawn(state, 'er-swap');
+    if (sw) auto[sw.side] = { ...auto[sw.side], arm: sw.arm };
+    const fl = drawn(state, 'er-flash');
+    if (fl) auto[fl.side] = { ...auto[fl.side], feather: fl.feather };
+    return { ...state, auto };
   }
   if (event.propDeice !== undefined) return { ...state, elec: { ...state.elec, propDeice: event.propDeice } };
   if (event.side === 'both') {
@@ -503,10 +622,14 @@ export function input(state, event) {
     if (e.cond === 'cutoff' && event.cond !== 'cutoff') e.fuelT = 0;
     // Fuel cut on an engine being started: the start is aborted.
     if (event.cond === 'cutoff' && e.cond !== 'cutoff' && e.starter !== 'off') e.aborted = true;
+    // HIGH IDLE to LOW IDLE: N1 comes down at the condition lever's pace (IDLE.n1.idleDropTau).
+    if (e.cond === 'high' && event.cond === 'low') e.idleDrop = true;
     e.cond = event.cond;
     if (event.cond === 'cutoff') e.lit = false;
   }
-  if (event.gen !== undefined) e.gen = event.gen;
+  // Chaos: a generator that does not come on line.
+  const out = drawn(state, `sl-gen-out-${side}`);
+  if (event.gen !== undefined && !(out && event.gen)) e.gen = event.gen;
   if (event.pwr !== undefined || event.pwrNp !== undefined) {
     // Said as the N1 wanted at the condition lever's present setting (`pwr`), or the prop rpm
     // wanted (`pwrNp`), and a rate in percent N1 a second; kept as the lever's position, which
@@ -520,6 +643,8 @@ export function input(state, event) {
   if (event.pwrHold) e.pwrGoal = e.pwr;
   if (event.bus !== undefined) return { ...state, elec: { ...state.elec, bus: event.bus } };
   if (event.prop) e.prop = event.prop;
+  if (event.prop === 'detent') e.visitedDetent = true;
+  if (event.prop === 'feather') e.visitedFeather = true;
   if (event.osgTest !== undefined) e.osgTest = event.osgTest;
   if (event.autoIgn !== undefined) e.autoIgn = event.autoIgn;
   const lastStarter = event.starter && event.starter !== 'off' ? side : state.lastStarter;
@@ -530,7 +655,7 @@ export function input(state, event) {
 // Time
 
 // `load` is this engine's generator load (0 off line).
-function stepEngine(e0, dt, load = 0) {
+function stepEngine(e0, dt, load = 0, fx = {}) {
   const e = { ...e0 };
   const n1Before = e.n1;
   const npBefore = e.np;
@@ -541,7 +666,8 @@ function stepEngine(e0, dt, load = 0) {
   }
   const motoring = e.starter !== 'off';
   if (motoring) e.starterT += dt;
-  const fuel = e.cond !== 'cutoff';
+  // A no start with no fuel flow: the condition lever in, and nothing reaching the engine.
+  const fuel = e.cond !== 'cutoff' && e.scenario !== 'noFuel';
   // The fuel, not the starter, lifts N1 off the plateau before light-off.
   const plateau = fuel && e.starter === 'on' ? MOTOR.fuelled : MOTOR.plateau;
   const plateauTau = fuel && e.n1 >= MOTOR.plateau - 0.5 ? MOTOR.fuelledTau : MOTOR.tau;
@@ -556,6 +682,7 @@ function stepEngine(e0, dt, load = 0) {
       e.everLit = true;
       e.litT = 0;
       e.plateauOffset = Math.max(0, e.n1 - MOTOR.plateau);
+      e.stretch = e.scenario === 'long' ? Math.max(1, (LONG.to50 - e.starterT) / T50) : 1;
     }
   }
   if (e.lit) e.litT += dt;
@@ -566,9 +693,10 @@ function stepEngine(e0, dt, load = 0) {
 
   if (e.lit) {
     const s = scen(e);
-    const t = e.litT;
+    // A long start runs the same curves slower (LONG).
+    const t = e.litT / (e.stretch || 1);
     // Where N1 is going: the condition lever's idle, or higher where the power lever asks.
-    const idle = { n1: leverN1(e) };
+    const idle = { n1: leverN1(e, fx) };
     const inTable = (pts) => pts && t <= end(pts) && e.cond !== 'high' && !e.pwr;
 
     // N1
@@ -582,7 +710,8 @@ function stepEngine(e0, dt, load = 0) {
       const rate = e.n1 >= 50 ? IDLE.n1.runRate : IDLE.n1.rate;
       e.n1 = Math.min(idle.n1, e.n1 + Math.min(rate, IDLE.n1.k * (idle.n1 - e.n1)) * dt);
     } else {
-      e.n1 = toward(e.n1, idle.n1, IDLE.n1.decelTau, dt);
+      if (e.idleDrop && (e.pwr > 0 || e.n1 < idle.n1 + 0.3)) e.idleDrop = false;
+      e.n1 = toward(e.n1, idle.n1, e.idleDrop ? IDLE.n1.idleDropTau : IDLE.n1.decelTau, dt);
     }
     e.dn1 = toward(e.dn1, (e.n1 - n1Before) / dt, ACCEL.tau, dt);
     const accel = s !== HUNG && !inTable(NORMAL.n1);
@@ -600,15 +729,20 @@ function stepEngine(e0, dt, load = 0) {
         : IDLE.ittDrift.from + (settledItt - IDLE.ittDrift.from)
           * Math.min(1, Math.max(0, t - end(NORMAL.itt)) / IDLE.ittDrift.over);
       const over = accel ? ACCEL.itt * Math.max(0, e.dn1) : 0;
-      e.itt = toward(e.itt, drift + genItt + over, IDLE.tau, dt);
+      // A chaos ITT rise grows with the generator's load (the left start's, on the right engine).
+      e.itt = toward(e.itt, drift + genItt + over + (fx.ittAdd || 0) * Math.min(1, e.genG), IDLE.tau, dt);
     }
 
     // Torque and Np, through the prop
     const free = run(e.n1, 'np');
     let npGoal = free;
-    if (e.prop === 'detent') npGoal = Math.min(free, PROP.detent);
-    if (e.osgTest) npGoal = Math.min(npGoal, PROP.overspeed);
-    const feathered = e.prop === 'feather' || e.feathering;
+    if (e.prop === 'detent') npGoal = Math.min(free, fx.detent || PROP.detent);
+    // Chaos: a test solenoid that does not reset the overspeed governor (see PROP.osgFailed).
+    if (e.osgTest) npGoal = Math.min(npGoal, fx.osgFail ? PROP.osgFailed : PROP.overspeed);
+    if (fx.returnCap && e.visitedDetent && e.prop === 'fwd') npGoal = Math.min(npGoal, fx.returnCap);
+    const feathered = (e.prop === 'feather' && !fx.noManualFeather) || (e.feathering && !fx.noFeather);
+    // Chaos: a prop slow to come out of feather (Runup 4) unfeathers on a longer time constant.
+    const unfeatherTau = fx.slowUnfeather && e.visitedFeather && e.prop === 'fwd' ? 8 : IDLE.npTau;
     // The same power through a prop held slower is more torque.
     const trqGoal = run(e.n1, 'trq') * (feathered ? 1 : free / Math.max(1, npGoal))
       + (e.prop === 'feather' ? PROP.featherTrq * Math.min(1, Math.max(0, 1 - (e.n1 - IDLE.low.n1) / 15)) : 0);
@@ -617,7 +751,7 @@ function stepEngine(e0, dt, load = 0) {
       if (inTable(pts)) e[k] = at(pts, t);
       else if (s === HUNG) e[k] = toward(e[k], HUNG.beyond[k][0], HUNG.beyond[k][1], dt);
       else if (k === 'np' && feathered) e.np = toward(e.np, PROP.feathered, PROP.featherTau, dt);
-      else e[k] = toward(e[k], k === 'np' ? npGoal : trqGoal, k === 'np' ? IDLE.npTau : IDLE.tau, dt);
+      else e[k] = toward(e[k], k === 'np' ? npGoal : trqGoal, k === 'np' ? unfeatherTau : IDLE.tau, dt);
     }
 
     // Fuel flow
@@ -629,12 +763,14 @@ function stepEngine(e0, dt, load = 0) {
     else e.ff = toward(e.ff, run(e.n1, 'ff') + genFf + (accel ? ACCEL.ff * e.dn1 : 0), IDLE.tau / 2, dt);
   } else {
     // Not burning: motoring on the starter, or running down.
-    if (motoring && e.starterT > MOTOR.delay) {
+    // A no start with no rotation: the starter engaged and the igniters firing, nothing turning.
+    const turns = motoring && e.starterT > MOTOR.delay && e.scenario !== 'noRotation';
+    if (turns) {
       e.n1 = e.n1 <= plateau ? toward(e.n1, plateau, plateauTau, dt) : toward(e.n1, plateau, SHUTDOWN.n1.onStarter, dt);
     } else if (!motoring) {
       e.n1 = toward(e.n1, 0, SHUTDOWN.n1.off, dt);
     }
-    const spinning = motoring && e.starterT > MOTOR.delay;
+    const spinning = turns;
     e.np = toward(e.np, spinning ? MOTOR.np : 0, SHUTDOWN.np, dt);
     e.trq = toward(e.trq, spinning ? MOTOR.trq : 0, SHUTDOWN.trq, dt);
     e.itt = e.itt > SHUTDOWN.itt.target + 10
@@ -659,32 +795,46 @@ function stepEngine(e0, dt, load = 0) {
 
 // One generator's load: full while it carries the other engine's start, else its even share of
 // the bus (with the prop deice, if it is on) and of what the battery is owed.
-const genLoad = (e, otherStarting, el, online) => {
+const genLoad = (e, otherStarting, el, online, heat = 0) => {
   if (!e.gen) return 0;
   if (otherStarting) return ELEC.load.full;
-  const bus = (el.bus ?? ELEC.load.bus) + (el.propDeice ? DEICE.load : 0);
+  const bus = (el.bus ?? ELEC.load.bus) + (el.propDeice ? DEICE.load : 0) + heat;
   return Math.min(ELEC.load.full, (bus + el.deficit) / Math.max(1, online));
 };
+// The heaters on, less a dead one and plus lip boots heating on the ground (chaos).
+const heatOf = (state) => Object.keys((state.elec && state.elec.heat) || {}).reduce((sum, h) => {
+  const dead = drawnLike(state, 'ai-heat-dead');
+  if (dead && dead.heater === h) return sum;
+  return sum + (h === 'lip' && drawn(state, 'ai-lip-rise') ? 0.06 : HEAT_LOAD[h] || 0);
+}, 0);
 const loadsOf = (state) => {
   const { L, R } = state.engines;
   const online = L.gen + R.gen;
-  return {
-    L: genLoad(L, R.starter !== 'off', state.elec, online),
-    R: genLoad(R, L.starter !== 'off', state.elec, online),
+  const heat = heatOf(state);
+  const loads = {
+    L: genLoad(L, R.starter !== 'off', state.elec, online, heat),
+    R: genLoad(R, L.starter !== 'off', state.elec, online, heat),
   };
+  // Chaos: the loads split unevenly, or high.
+  const split = drawn(state, 'sl-gen-split') || drawn(state, 'as-load-split');
+  if (split && L.gen && R.gen) {
+    const other = split.side === 'L' ? 'R' : 'L';
+    loads[split.side] += 0.12;
+    loads[other] = Math.max(0, loads[other] - 0.12);
+  }
+  if (drawn(state, 'as-load-high')) for (const k of SIDES) if (state.engines[k].gen) loads[k] += 0.33;
+  return loads;
 };
 
-function stepElec(el, engines, dt) {
+function stepElec(el, engines, dt, pumps = 2) {
   const { L, R } = engines;
   const online = L.gen || R.gen;
   const starter = [L, R].find((e) => e.starter !== 'off');
   let volts;
   let amps;
   let { deficit } = el;
-  let hold = el.hold || 0;
   if (starter) {
     deficit = Math.min(ELEC.load.max, deficit + ELEC.load.perStarterSecond * dt);
-    hold += dt;
   }
   if (starter && online) {
     // Generator assisted: the battery charging as the start accelerates.
@@ -699,15 +849,16 @@ function stepElec(el, engines, dt) {
     amps = s.amps;
   } else if (online) {
     const c = ELEC.charging;
-    if (hold > 0) hold = Math.max(0, hold - dt);
-    else deficit *= Math.exp(-dt / ELEC.rechargeTau);
-    if (deficit < 1e-4) { deficit = 0; hold = 0; }
+    deficit *= Math.exp(-dt / ELEC.rechargeTau);
+    if (deficit < 1e-4) deficit = 0;
     const owed = Math.min(1, deficit / c.taper); // pegged at +60 until nearly paid back
     volts = c.full - ((L.gen && R.gen ? c.full - c.two : c.full - c.one) * owed);
     amps = c.amps * owed;
   } else {
     volts = ELEC.battery.volts - ELEC.battery.drop * deficit;
-    amps = ELEC.battery.amps;
+    // The -22 A of the clips is with both boost pumps on (Before Start 8d leaves them so): taken as
+    // 11 A a pump, the site's split.
+    amps = ELEC.battery.amps * (pumps / 2);
   }
   // Bleed air from whichever engine is turning faster.
   const n1 = Math.max(L.n1, R.n1);
@@ -716,15 +867,15 @@ function stepElec(el, engines, dt) {
     volts: toward(el.volts, volts, ELEC.tau, dt),
     amps: toward(el.amps, amps, ELEC.tau, dt),
     deficit,
-    hold,
     suction: toward(el.suction, at(BLEED.suction, n1), BLEED.tau, dt),
     pneumatic: toward(el.pneumatic, at(BLEED.pneumatic, n1), BLEED.tau, dt),
   };
 }
 
-function stepFuelSys(f, h, t) {
+function stepFuelSys(f, h, t, noOpen = null) {
   if (!f) return f;
-  const off = !f.boost.L || !f.boost.R;
+  // Chaos: no open signal from one side (After Start 7).
+  const off = SIDES.some((k) => !f.boost[k] && k !== noOpen);
   const openT = off && f.xfeed === 'auto' && !f.open ? f.openT + h : f.openT;
   return {
     ...f,
@@ -786,14 +937,16 @@ export function step(state, dt) {
     s = runScript(s, h);
     const loads = loadsOf(s);
     const { L, R } = s.engines;
-    const engines = { L: stepEngine(L, h, loads.L), R: stepEngine(R, h, loads.R) };
+    const engines = { L: stepEngine(L, h, loads.L, engineFx(s, 'L')), R: stepEngine(R, h, loads.R, engineFx(s, 'R')) };
+    const pumps = pumpsOn(s);
+    const noOpen = drawn(s, 'as-xfeed-noopen');
     const clock = s.clock.running ? { ...s.clock, t: s.clock.t + h } : s.clock;
     const fuel = s.fuel && {
       L: Math.max(0, s.fuel.L - (engines.L.ff * h) / 3600),
       R: Math.max(0, s.fuel.R - (engines.R.ff * h) / 3600),
     };
-    s = autofeather({ ...s, t: s.t + h, engines, elec: stepElec(s.elec, engines, h), clock, fuel,
-      fuelSys: stepFuelSys(s.fuelSys, h, s.t + h) });
+    s = faultSeen(autofeather({ ...s, t: s.t + h, engines, elec: stepElec(s.elec, engines, h, pumps), clock, fuel, fuel0: s.fuel0 || s.fuel,
+      fuelSys: stepFuelSys(s.fuelSys, h, s.t + h, noOpen && noOpen.side) }));
     left -= h;
   }
   return s;
@@ -809,6 +962,9 @@ export function step(state, dt) {
 const whole = (v) => String(Math.round(v));
 const pos = (v) => String(Math.max(0, Math.round(v)));
 export function readouts(state) {
+  // Before Start 8: the gauges come on with the battery (the user's sim notes, 2026-11-08). The
+  // oxygen supply gauge is taken as a direct-reading one and shows throughout.
+  if (state.elec.battery === false) return { L: {}, R: {}, B: {}, S: { oxygen: String(BLEED.oxygen) } };
   const out = {};
   const loads = loadsOf(state);
   for (const side of SIDES) {
@@ -823,13 +979,45 @@ export function readouts(state) {
       oilP: pos(e.oilP),
       gen: state.t < ((state.voltsUntil || {})[side] ?? -1) ? VOLTS.reads : loads[side].toFixed(2),
       // The fuel gauges read pounds; the repeater shows them whole.
-      qty: whole(state.fuel ? state.fuel[side] : 0),
+      qty: whole(!state.fuel ? 0 : state.qtySel === 'nacelle'
+        ? nacelleOf(state.fuel[side], (state.fuel0 || state.fuel)[side] - state.fuel[side]) : state.fuel[side]),
     };
   }
   const el = state.elec;
   out.B = { volts: el.volts.toFixed(1), amps: whole(el.amps), prop: (el.propDeice ? DEICE.amps : 0).toFixed(1) };
   out.S = { suction: Math.max(0, el.suction).toFixed(1), pneumatic: Math.max(0, el.pneumatic).toFixed(1),
     oxygen: String(BLEED.oxygen) };
+  return chaosReadouts(state, out);
+}
+
+// Chaos (t44cFaults.js): what a drawn fault does to the readings.
+function chaosReadouts(state, out) {
+  const put = (k, gauge, v) => { out[k] = { ...out[k], [gauge]: String(v) }; };
+  const pressed = (k) => state.t < ((state.voltsUntil || {})[k] ?? -1);
+  for (const f of faultsOf(state)) {
+    const p = f.params;
+    switch (f.id) {
+      case 'as-volts': if (pressed(p.side)) put(p.side, 'gen', p.volts); break;
+      // From the right generator going off after the left start (the start broke it).
+      case 'sl-fuel-zero': if (f.seen) put(p.side, 'qty', 0); break;
+      case 'bt-fuel': put(p.side, 'qty', Math.round(Number(out[p.side].qty) - 135)); break;
+      case 'er-np-idle': if (f.seen) put(p.side, 'np', p.np); break;
+      case 'er-itt-idle':
+        if (f.seen) {
+          put(p.side, 'itt', Math.max(Number(out[p.side].itt), 700) + 6);
+          put(p.side, 'gen', (Number(out[p.side].gen) + 0.3).toFixed(2));
+        }
+        break;
+      case 'er-oil-low': if (f.seen) put(p.side, 'oilP', p.psi); break;
+      case 'er-n1-idle': if (f.seen) put(p.side, 'n1', p.n1); break;
+      case 'er-bleed-low':
+        if (f.seen) { put('S', 'pneumatic', '9.6'); put('S', 'suction', '3.9'); }
+        break;
+      case 'ai-amps': if (state.elec.propDeice) put('B', 'prop', p.amps); break;
+      case 'ai-pneu-low': if (f.seen) put('S', 'pneumatic', '9.8'); break;
+      default:
+    }
+  }
   return out;
 }
 
@@ -863,38 +1051,102 @@ export function lights(state) {
     if (e.starter === 'on' || autoBelow) out.push(`${name} IGN IND`);
     if (e.autoIgn && e.lit && !autoBelow) out.push(`${name} AUTO IGNITION ARMED`);
     if (armed(state, side) && e.lit) out.push(`${name} AUTOFEATHER ARMED`);
-    if (!e.gen) out.push(`${name} GEN OUT`);
+    // GEN OUT once the battery is on (Before Start 8e), as the panel is then powered.
+    if (!e.gen && state.elec.battery !== false) out.push(`${name} GEN OUT`);
   }
   // Gear down (on the ground, always) and a prop lever out of full forward (9718, 9737).
   if (SIDES.some((side) => state.engines[side].prop !== 'fwd')) out.push('PROP REV NOT READY');
   const f = state.fuelSys;
   if (f) {
+    const noOpen = drawn(state, 'as-xfeed-noopen');
     for (const side of SIDES) {
-      if (!f.boost[side] && !f.open && state.engines[side].lit) out.push(`${side} FUEL PRESSURE`);
+      if (!f.boost[side] && !f.open && state.engines[side].lit && !(noOpen && noOpen.side === side)) out.push(`${side} FUEL PRESSURE`);
     }
     if (f.open) out.push('FUEL CROSSFEED');
     f.flicker.forEach((x) => out.push(x.light));
   }
-  return out;
+  // Before Start 10: the test lights FAULT WARNING, both FIRE lights and both FIRE EXT lights
+  // (NATOPS §2.5).
+  if (state.fireZone) {
+    const fz = drawn(state, 'bs-fire-zone');
+    for (const side of SIDES) {
+      if (fz && fz.side === side) continue;
+      const n = side === 'L' ? 'LH' : 'RH';
+      out.push(`${n} FIRE`, `${n} FIRE EXT`);
+    }
+  }
+  if (state.faultWarn) out.push('FAULT WARNING');
+  return chaosLights(state, out);
+}
+
+// Before Start 9's lamp test: every cell of the annunciator panel lit (the poster's `lampTest`
+// grid draws them), but a drawn dead bulb, by its place in t44cFaults.js LAMP_CELLS. Null when
+// the test is not held.
+export function lampTest(state) {
+  if (!state.annTest) return null;
+  const bulb = drawn(state, 'bs-bulb');
+  return { dark: bulb ? bulb.cell : null };
+}
+
+// Chaos (t44cFaults.js): what a drawn fault does to the lights.
+// The poster's wording for a lamp-test cell where the placard differs.
+const CELL_WORDING = { 'LH FUEL PRESSURE': 'L FUEL PRESSURE', 'RH FUEL PRESSURE': 'R FUEL PRESSURE', 'CABIN DOOR OPEN': 'Cabin Door' };
+
+function chaosLights(state, lit) {
+  let out = lit;
+  // A dead bulb stays dark in the lamp test even where the model would light it (GEN OUT).
+  const bulb = state.annTest && drawn(state, 'bs-bulb');
+  const dead = bulb && LAMP_CELLS[bulb.cell];
+  if (dead) out = out.filter((w) => w !== (CELL_WORDING[dead] || dead));
+  const drop = (w) => { out = out.filter((x) => x !== w); };
+  for (const f of faultsOf(state)) {
+    const p = f.params;
+    const side = p.side === 'L' ? 'LH' : 'RH';
+    switch (f.id) {
+      case 'bs-xfeed-dark': drop('FUEL CROSSFEED'); break;
+      case 'bs-xfeed-stuck': if (f.seen) out.push('FUEL CROSSFEED'); break;
+      case 'bs-fuelpress': if (state.elec.battery) out.push(`${p.side} FUEL PRESSURE`); break;
+      case 'bs-door': out.push('Cabin Door'); break;
+      case 'sl-gen-out-L': case 'sl-gen-out-R': break; // the generator stays off: GEN OUT as usual
+      case 'as-boost-failed': case 'as-xfeed-stuck': if (f.seen) out.push('FUEL CROSSFEED'); break;
+      case 'er-af-dark': if (state.afTest) drop(`${side} AUTOFEATHER ARMED`); break;
+      default:
+    }
+  }
+  return [...new Set(out)];
 }
 
 // The lit lights that flash: an AUTOFEATHER ARMED light while its prop feathers (FTI).
 export function blinking(state) {
-  return SIDES.filter((side) => state.engines[side].feathering)
-    .map((side) => `${side === 'L' ? 'LH' : 'RH'} AUTOFEATHER ARMED`);
+  return [...SIDES.filter((side) => state.engines[side].feathering)
+    .map((side) => `${side === 'L' ? 'LH' : 'RH'} AUTOFEATHER ARMED`), ...(state.faultWarn ? ['FAULT WARNING'] : [])];
 }
 
 // The lights this file drives: the poster draws these from the model, never as a click's ring.
 export const MODEL_LIGHTS = ['LH IGN IND', 'RH IGN IND', 'LH GEN OUT', 'RH GEN OUT',
   'LH AUTO IGNITION ARMED', 'RH AUTO IGNITION ARMED', 'LH AUTOFEATHER ARMED', 'RH AUTOFEATHER ARMED',
   'L FUEL PRESSURE', 'R FUEL PRESSURE', 'FUEL CROSSFEED', 'LH NO FUEL TRANSFER', 'RH NO FUEL TRANSFER',
-  'PROP REV NOT READY'];
+  'PROP REV NOT READY', 'FAULT WARNING', 'LH FIRE', 'RH FIRE', 'LH FIRE EXT', 'RH FIRE EXT',
+  'Cabin Door', 'Annunciator Lights'];
 
 // Whether the engines have stopped changing, so the clock can rest. A running engine never has:
 // its fuel quantity goes down.
+// The DIM knob's check (the user, 2026-11-08): from full bright the lights fade evenly to out,
+// come back evenly to full bright, and do it once more, DIM_SWEEP seconds each way. The lit
+// lights' level now, 1 full bright to 0 out.
+const DIM_SWEEP = 1.25; // so one cycle, out and back, is 2.5 s (the user, 2026-11-08)
+const DIM_CHECK = 4 * DIM_SWEEP;
+export const annLevel = (state) => {
+  const d = state.t - (state.dimFrom ?? -Infinity);
+  if (!(d >= 0 && d < DIM_CHECK)) return 1;
+  const x = (d % (2 * DIM_SWEEP)) / DIM_SWEEP; // 0 to 2 over one sweep down and up
+  return x <= 1 ? 1 - x : x - 1;
+};
+
 export function settled(state) {
   const charging = (state.engines.L.gen || state.engines.R.gen) && state.elec.deficit > 0.01;
-  return !charging && !state.clock.running && !state.script && SIDES.every((side) => {
+  const checking = state.t - (state.dimFrom ?? -Infinity) < DIM_CHECK;
+  return !charging && !checking && !state.clock.running && !state.script && SIDES.every((side) => {
     const e = state.engines[side];
     const still = e.starter === 'off' && e.cond === 'cutoff' && e.n1 < 0.05 && e.itt < AMBIENT + 1;
     return still && Math.abs(e.genG) < 0.01;
@@ -921,12 +1173,14 @@ export function outcome(state) {
 // runup and the anti-ice check pick the engines up as the last of them left them, both
 // running, and otherwise find them at LOW IDLE (t44cEngineStore.js `open`).
 export const PROCEDURES = {
+  'before-start': 'beforeStart',
   'start-right': 'cold',
   'start-left': 'rightRunning',
   'abnormal-start': null,
   'after-start': 'afterStart',
   'engine-runup': 'runup',
   'anti-ice-check': 'runup',
+  'before-takeoff': 'runup',
 };
 
 // Whether a state can be carried into a procedure that wants both engines running.
@@ -956,12 +1210,21 @@ const fourLit = (s) => FOUR.every((w) => lights(s).includes(w)) && !SIDES.some((
 const NP = ['Prop RPM'];
 const OSG_UP = [
   { do: [{ highlight: NP }, { side: 'both', pwr: 92, rate: 2 }] },
-  { until: (s) => s.engines.L.np >= PROP.overspeed - 5 && s.engines.R.np >= PROP.overspeed - 5, max: 20 },
+  { if: (s) => !!drawn(s, 'er-osg-fail'), do: [{ side: 'both', pwr: 96, rate: 2 }] },
+  { until: (s) => (drawn(s, 'er-osg-fail') ? Math.max(s.engines.L.np, s.engines.R.np) > PROP.osgFailed - 15
+    : s.engines.L.np >= PROP.overspeed - 5 && s.engines.R.np >= PROP.overspeed - 5), max: 25 },
   { do: [{ highlight: ['ITT', 'Torque'] }] },
   { wait: 3 },
   { do: [{ highlight: [] }, { side: 'both', pwrNp: 1900, rate: 3 }] },
   { wait: 5 },
   { do: [{ side: 'both', osgTest: false }] },
+];
+// Before Start 10: the FIRE DETECTION switch at a test position for the FTI's 3 seconds, then
+// OFF; FAULT WARNING flashes until it is pressed after. One turn, not the three zones: the
+// poster's knob cannot be turned through them (the user, 2026-11-05).
+const FIRE_TEST = [
+  { do: [{ fireZone: 1 }, { faultWarn: true }] }, { wait: 3 },
+  { do: [{ fireZone: 0 }] },
 ];
 const PRIMARY_GOV = [
   { do: [{ side: 'both', prop: 'detent' }] },
@@ -1007,6 +1270,20 @@ const AUTOFEATHER_TEST = [
 // is one of a step's watched pieces (its `watch`) clicked, `<step>#<n>` the nth piece of its
 // `sequence`.
 export const STEP_EVENTS = {
+  'before-start': {
+    // 8: c, the crossfeed OPEN then CLOSED; d, the boost pumps; e, the battery.
+    'bs8#3': [{ xfeed: 'open' }],
+    'bs8#4': [{ xfeed: 'closed' }],
+    'bs8:Left Boost Pump': [{ boost: { L: true } }],
+    'bs8:Right Boost Pump': [{ boost: { R: true } }],
+    'bs8:Battery': [{ battery: true }],
+    // 9: the lamp test held until FAULT WARNING is pressed.
+    'bs9:Press to Test': [{ annTest: true }, { faultWarn: true }],
+    'bs9:FAULT WARNING': [{ annTest: false }, { faultWarn: false }],
+    // 10: the fire detector test, then FAULT WARNING pressed.
+    bs10: [{ script: FIRE_TEST }],
+    'bs10:FAULT WARNING': [{ faultWarn: false }, { fireZone: 0 }],
+  },
   'start-right': {
     sr1: [{ side: 'R', starter: 'on' }],
     sr3: [{ side: 'R', cond: 'low' }],
@@ -1046,10 +1323,10 @@ export const STEP_EVENTS = {
     'er4:Power Lever': [{ side: 'both', pwr: 0 }],
     er4: [{ script: MANUAL_FEATHER }],
     'er5:Condition Lever': [{ side: 'both', cond: 'high' }],
-    // 6: the power levers a little under 1900 rpm, the test switch held, the power levers again.
-    'er6#2': [{ side: 'both', pwrNp: 1850 }],
+    // 6: the test switch held, then the power levers up into the overspeed governor. HIGH IDLE
+    // leaves the props under 1900 rpm, so b needs no lever of its own (the user, 2026-11-08).
     er6: [{ side: 'both', osgTest: true }],
-    'er6#4': [{ script: OSG_UP }],
+    'er6#3': [{ script: OSG_UP }],
     er7: [{ script: PRIMARY_GOV }],
     'er8:Condition Lever': [{ side: 'both', cond: 'low' }],
     'er8:Autoignition': [{ side: 'both', autoIgn: true }],
@@ -1058,9 +1335,15 @@ export const STEP_EVENTS = {
   },
   'anti-ice-check': {
     ai1: [{ propDeice: true }],
-    'ai4:Condition Lever': [{ side: 'both', cond: 'high' }],
+    ...Object.fromEntries(Object.entries(HEATERS).map(([step, heat]) => [step, [{ heat }]])),
+
+    // 3, between the steps: every anti-ice switch OFF, then N1 to 70 percent.
+    'ai4:Condition Lever': [{ heatOff: true }, { side: 'both', cond: 'high' }],
     ai6: [{ propDeice: false }],
     'ai7:Condition Lever': [{ side: 'both', cond: 'low' }],
+  },
+  'before-takeoff': {
+    bt20: [{ side: 'both', cond: 'high' }],
   },
   'abnormal-start': {
     as1: [{ side: 'starting', cond: 'cutoff' }],

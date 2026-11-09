@@ -421,7 +421,8 @@ const AFTER_START = {
     }),
     // Both seats' MIC switches: the action sets them on all audio control panels.
     item('as4', 'Oxygen Mask Mic', 'CHECKED/OPEN', 'PM, OBS', {
-      watch: ["Pilot's MIC Switch", "Copilot's MIC Switch"],
+      // The oxygen supply gauge read too (the user's sim notes, 2026-11-08).
+      watch: ["Pilot's MIC Switch", "Copilot's MIC Switch", 'Oxygen Supply Pressure'],
       watchOnly: true,
       action: [
         'a. PM set MIC switches to MASK on all audio control panels (ACP).',
@@ -605,9 +606,10 @@ const ENGINE_RUNUP = {
     }),
     item('er6', 'Overspeed Governors', 'CHECKED', 'LS', {
       watch: ['Prop Lever', 'Power Lever'],
-      // a, b (under 1900 rpm), c (the test switch held), d (the power levers again, up into the
-      // overspeed governor); e and f follow by themselves (the user, 2026-11-04).
-      sequence: ['Prop Lever', 'Power Lever', CONTROL, 'Power Lever'],
+      // a, c (the test switch held), d (the power levers, up into the overspeed governor); b
+      // needs no click, HIGH IDLE leaving the props under 1900 rpm, and e and f follow by
+      // themselves (the user, 2026-11-04 and 2026-11-08).
+      sequence: ['Prop Lever', CONTROL, 'Power Lever'],
       shows: { 'Power Lever': ['Prop RPM'] },
       action: [
         'a. Prop levers – full forward',
@@ -1308,7 +1310,7 @@ const PRE_STALL = {
 const GAUGES = new Set([
   'Battery Voltage', 'Generator Load', 'Left Fuel Quantity', 'Right Fuel Quantity',
   'Engine Instruments', 'ITT', 'Torque', 'Prop RPM', 'N1', 'Fuel Flow', 'Oil Pressure',
-  'Gyro Suction', 'Pneumatic Pressure', 'Flap Position Indicator', 'Cabin Altitude', 'Cabin Climb',
+  'Gyro Suction', 'Pneumatic Pressure', 'Oxygen Supply Pressure', 'Flap Position Indicator', 'Cabin Altitude', 'Cabin Climb',
   'PFD',
 ]);
 [BEFORE_START, START_RIGHT, START_LEFT, AFTER_START, ENGINE_RUNUP, BEFORE_TAKEOFF, ANTI_ICE_CHECK,

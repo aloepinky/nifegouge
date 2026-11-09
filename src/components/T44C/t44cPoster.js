@@ -68,6 +68,12 @@ export const T44C_POSTER = {
       // The stopwatch: an iPad on a stand left of the pilot's PFD, over the bare panel and the
       // headset jack, which carry no target. It answers for the elapsed time clock itself.
       stopwatch: [0.010, 0.290, 0.100, 0.355],
+      // Every cell of the annunciator panel, 15 columns by 2 rows, left to right and top row
+      // first, as t44cFaults.js LAMP_CELLS names them: the lamp test (Before Start 9) lights them
+      // all, the blank ones included. Measured off the panel image; the columns fall on the light
+      // boxes below (FUEL CROSSFEED the ninth, RH GEN OUT the last).
+      lampTest: [[0.038, 0.024], [0.062, 0.025]].flatMap(([top, h]) => Array.from({ length: 15 },
+        (_, i) => [0.2647 + i * 0.03074, top, 0.029, h])),
       spots: [
         // The pilot's PFD. Airspeed is the tape and pitch and bank are the attitude sphere beside
         // it, so the two targets abut exactly as the two readouts do. Only the left seat's is a
@@ -157,6 +163,11 @@ export const T44C_POSTER = {
         // 2026-10-30, drawn and checked by eye.
         { id: 'ann-press-to-test', box: [0.765, 0.046, 0.016, 0.034], label: 'Annunciator PRESS TO TEST button',
           action: 'Press to Test' },
+        // The DIM knob beside it, checked dim and bright twice over (After Start 6's note: a panel
+        // set too dim hides the transfer pump flicker). No step names it, so it is `free`.
+        // 2026-11-08, placed by eye off the drawing.
+        { id: 'ann-dim', box: [0.735, 0.042, 0.019, 0.042], label: 'Annunciator DIM knob',
+          action: 'Annunciator Dim', free: true, engineInput: { annDim: true } },
         // The CABIN DOOR OPEN light in the annunciator row: Before Start item 11 is to ensure the
         // door is locked and this light is out. It sits inside the annunciator panel's box and is
         // drawn over it.
@@ -454,6 +465,11 @@ export const T44C_POSTER = {
           action: 'Transfer Pumps', actions: ['Transfer Pumps', 'Fuel Panel', 'Left Transfer Pump'], values: ['CHECKED/AUTO', 'OFF'] },
         { id: 'transfer-right', box: [0.813, 0.201, 0.046, 0.081], label: 'Right transfer pump',
           action: 'Transfer Pumps', actions: ['Transfer Pumps', 'Fuel Panel', 'Right Transfer Pump'], values: ['CHECKED/AUTO', 'OFF'] },
+        // FUEL QUANTITY TOTAL-NACELLE (NATOPS §2.9.8): Before Takeoff checks both, and the climb
+        // and cruise Instruments/Nacelles put it back to TOTAL. `free`, as no step's control is
+        // it. 2026-11-08, placed by eye off the drawing.
+        { id: 'fuel-qty-switch', box: [0.48, 0.385, 0.04, 0.08], label: 'Fuel quantity TOTAL/NACELLE switch',
+          action: 'Fuel Quantity Switch', free: true, engineInput: { qtySel: true } },
         // TRANSFER TEST, held to L or R through After Start 6. 2026-10-30, drawn and checked by eye.
         { id: 'transfer-test', box: [0.468, 0.21, 0.056, 0.095], label: 'Transfer test switch',
           action: 'Transfer Test' },
@@ -491,7 +507,7 @@ export const T44C_POSTER = {
         { id: 'pneumatic-pressure', box: [0.255, 0.12, 0.155, 0.37], label: 'Pneumatic pressure',
           action: 'Suction & Pneumatic Pressure', actions: ['Suction & Pneumatic Pressure', 'Pneumatic Pressure'], values: ['CHECKED'] },
         { box: [0.425, 0.13, 0.15, 0.36], label: 'Oxygen supply pressure',
-          action: 'Pressurization/Oxygen', fills: 'Oxygen - CHECKED', values: ['CHECKED'] },
+          action: 'Pressurization/Oxygen', actions: ['Pressurization/Oxygen', 'Oxygen Supply Pressure'], fills: 'Oxygen - CHECKED', values: ['CHECKED'] },
       ],
     },
     {

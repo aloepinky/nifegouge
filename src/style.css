@@ -56,6 +56,7 @@
   --surface-f0f0f0: #f0f0f0;
   --surface-eceff1: #eceff1;
   --surface-eeeeee: #eeeeee;
+  --skipped-bg: #cfe5ec;
   --surface-e8f0f3: #e8f0f3;
   --surface-e0f7fa: #e0f7fa;
   --surface-e8eff2: #e8eff2;
@@ -316,6 +317,7 @@
   --surface-f0f0f0: #172127;
   --surface-eceff1: #172027;
   --surface-eeeeee: #223038;
+  --skipped-bg: #1a3a40;
   --surface-e8f0f3: #172227;
   --surface-e0f7fa: #172527;
   --surface-e8eff2: #172227;
@@ -8482,9 +8484,11 @@ textarea.incorrect-answer {
   text-transform: uppercase;
 }
 
-/* Skipped: filled, not yet checked. */
+/* Skipped: filled, not yet checked. Marked as the right, partial and wrong answers are, a tint
+   and a 1px border of one colour, in the site's teal (the user, 2026-11-08). */
 .epl-read--done {
-  background-color: var(--surface-eeeeee);
+  background-color: var(--skipped-bg);
+  border-color: #26a69a;
 }
 
 /* The PM's closing call under a checklist. */
@@ -9233,6 +9237,12 @@ textarea.incorrect-answer {
   box-shadow: 0 0 6px 1px rgba(255, 200, 90, 0.5);
 }
 
+/* The annunciator DIM knob's check: the lit lights fade with the knob (`--ann-level`, 1 full
+   bright to 0 out), set from the model a tenth of a second at a time. */
+.epl-ann-lit {
+  opacity: var(--ann-level, 1);
+}
+
 /* An AUTOFEATHER ARMED light while its prop feathers: on and off. */
 .epl-ann-lit--blink {
   animation: eplAnnBlink 0.6s steps(1, end) infinite;
@@ -9269,18 +9279,30 @@ textarea.incorrect-answer {
   min-height: 32px;
 }
 
-/* What the gauges said when a step went in too early, or which start it was: two lines held
-   whether empty or not, so the card under it never moves. */
+/* What the gauges said when a step went in too early, which start it was, or a chaos fault and
+   its causes: four lines held whether empty or not, so the card under it never moves. */
 .t44c-start-note {
   font-size: 13px;
   color: var(--ink);
-  min-height: calc(2 * 1.35em);
+  min-height: calc(4 * 1.35em);
 }
 
 .t44c-start label {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* The chaos slider: the odds a check goes wrong, its figure fixed-width so the row stays put. */
+.t44c-chaos input[type="range"] {
+  width: 110px;
+  accent-color: var(--ink-accent);
+}
+
+.t44c-chaos-value {
+  min-width: 3.2em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .t44c-start select {
