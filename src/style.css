@@ -2677,6 +2677,115 @@ textarea.incorrect-answer {
 
 .told-cg-none { color: var(--ink-muted); }
 
+/* The T-44C card (T44C/T44CTold.js), drawn as the printed sheet: a frame, two rules across it
+   and an underline for each blank, staggered across its three columns. */
+.t44c-told-card {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 8px;
+  border: 1px solid var(--ink);
+}
+
+.t44c-told .told-table { margin-bottom: 0; }
+
+.t44c-told .told-table th {
+  border: none;
+  background: none;
+  color: var(--ink);
+  padding: 10px 8px 4px;
+}
+
+.t44c-told .told-table input {
+  padding: 3px 2px 1px;
+  border-bottom: 1px solid var(--ink);
+  color: var(--ink);
+}
+
+.t44c-told .told-table input:focus {
+  outline: none;
+  background: none;
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.t44c-told .told-table input[readonly] { cursor: default; box-shadow: none; }
+
+.t44c-told .told-table td { border: none; padding: 5px 8px; }
+
+.t44c-told .told-table td.t44c-told-blank { padding: 4px 8px; }
+
+.t44c-told-lines { border-top: 1px solid var(--ink); }
+
+.t44c-told-lines td:nth-child(n+2) { width: 17%; }
+
+.told-table td.t44c-told-label { text-align: left; font-weight: bold; font-size: 14px; }
+
+.told-table td.t44c-told-label.is-sub { padding-left: 22px; font-weight: normal; }
+
+.t44c-told-n { display: inline-block; min-width: 1.4em; }
+
+.told-table td.t44c-told-note { text-align: left; }
+
+.told-table.t44c-told-head td.t44c-told-label { white-space: nowrap; }
+
+.t44c-told .told-table .t44c-told-gap td {
+  height: 26px;
+  padding: 0 8px;
+  vertical-align: bottom;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.t44c-told-foot {
+  max-width: 640px;
+  margin: 8px auto 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.t44c-told-charts {
+  display: flex;
+  gap: 16px;
+  max-width: 640px;
+  margin: 0 auto 12px;
+  font-size: 13px;
+}
+
+.t44c-told-charts label { display: flex; flex: 1 1 auto; align-items: baseline; gap: 6px; font-weight: bold; white-space: nowrap; }
+
+.t44c-told-charts input {
+  flex: 1 1 44px;
+  width: 44px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 3px 2px 1px;
+  border: none;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--ink);
+  font-size: 14px;
+  text-align: center;
+}
+
+.t44c-told-charts input:focus { outline: none; box-shadow: 0 1px 0 var(--ink); }
+
+.t44c-told-actions { margin-top: 16px; text-align: center; }
+
+/* Too narrow for the three labels beside their blanks: each label sits over its blank. */
+@media (max-width: 700px) {
+  .t44c-told-charts label { flex: 1 1 0; flex-direction: column; align-items: stretch; justify-content: flex-end; gap: 2px; white-space: normal; }
+
+  .t44c-told-charts input { flex: none; width: 100%; }
+}
+
+/* Six cells across leave no room for a BuNo on a phone: one label and blank to a line. */
+@media (max-width: 480px) {
+  .t44c-told-head tbody tr { display: grid; grid-template-columns: 7.5em 1fr; }
+
+  .t44c-told-lines td:nth-child(n+2) { width: 20%; }
+}
+
 .told-notes {
   margin-top: 30px;
   padding: 20px;
