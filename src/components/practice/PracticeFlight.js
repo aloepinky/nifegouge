@@ -2,13 +2,13 @@
 // checklist response, intercom and radio call, the course rules legs picked as you fly, and a
 // random emergency when you ask for one. The flight itself is engine.js; this is its page.
 // Read-through shows a whole conversation and worked knowledge checks. Quiz keeps the drill.
-// Preflight weather presets and custom wind set the runways for the whole practice flight.
+// Preflight, the wind: random at every ATIS and field weather, random once, or a KNGP runway's.
 // The toolbar's callsign number updates future calls and its matching squawk.
 // Mobile keeps flight info folded and returns to the card after navigation, never to the log.
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { TYPED, canSkipTo, current, isCue, linesOf, options, practiceAnswer, readThrough, situationsFor, start, switchesChannel } from './engine';
-import { NORTH_FLOW, RUNWAYS, homeRunwaysForWind } from './card';
+import { TYPED, activeRunway, canSkipTo, current, isCue, linesOf, options, practiceAnswer, readThrough, situationsFor, start, switchesChannel, windFor } from './engine';
+import { NORTH_FLOW, RUNWAYS, drawWind, homeRunwaysForWind, three } from './card';
 import { radioOf } from './figures';
 import { labelOf, nameOf, shortName } from './legs';
 import { firstLetters } from '../briefs/firstLetters';
@@ -100,7 +100,7 @@ function nextOf(s) {
   if (seg.checklist) return 'A checklist';
   if (seg.calls) return CALLS[seg.calls] || '';
   if (seg.legCalls) return `Calls for ${labelOf(seg.legCalls)}`;
-  if (seg.choose) return seg.choose === 'weather' ? 'Set the practice weather'
+  if (seg.choose) return seg.choose === 'weather' ? 'Pick the wind'
     : seg.choose === 'homeRunway' ? 'Pick the landing runway'
       : seg.choose === 'plan' ? 'Pick the working area' : 'Pick the next leg';
   if (seg.ask) return 'Climb Checklist?';
@@ -121,29 +121,23 @@ function devTools() {
   }
 }
 
-function CallsignNumber({ side, dispatch }) {
-  const [text, setText] = useState(side);
-  useEffect(() => { setText(side); }, [side]);
-  const invalid = !/^[78]\d{2}$/.test(text);
+// Empty until a number is typed; a 7XX or 8XX number becomes the call sign as it is typed.
+function CallsignNumber({ chosen, dispatch }) {
+  const [text, setText] = useState(chosen || '');
   return (
-    <div className="pf-callsign">
-      <input
-        className="pf-select pf-callsign-input"
-        aria-label="Callsign number"
-        aria-invalid={invalid}
-        aria-describedby={invalid ? 'pf-callsign-error' : undefined}
-        title="Callsign number (700–899)"
-        inputMode="numeric"
-        maxLength={3}
-        value={text}
-        onChange={(e) => {
-          const value = e.target.value;
-          setText(value);
-          if (/^[78]\d{2}$/.test(value)) dispatch({ type: 'callsign', side: value });
-        }}
-      />
-      {invalid && <span id="pf-callsign-error" className="pf-callsign-error">Use 700–899</span>}
-    </div>
+    <input
+      className="pf-select pf-callsign-input"
+      aria-label="Callsign number"
+      placeholder="Callsign #"
+      inputMode="numeric"
+      maxLength={3}
+      value={text}
+      onChange={(e) => {
+        const value = e.target.value;
+        setText(value);
+        if (/^[78]\d{2}$/.test(value)) dispatch({ type: 'callsign', side: value });
+      }}
+    />
   );
 }
 
@@ -177,7 +171,7 @@ function StatusBar({ s, back, dispatch, quiz, setQuiz }) {
           if (window.matchMedia('(max-width: 760px)').matches) scrollPosition.current = window.scrollY;
           setExpanded(!expanded);
         }}>
-        <span>Flight settings &amp; info</span>
+        <span>Settings and info</span>
         <span>{expanded ? 'Collapse ▴' : 'Expand ▾'}</span>
       </button>
       {!expanded && <div className="pf-status-compact">
@@ -257,7 +251,7 @@ function StatusBar({ s, back, dispatch, quiz, setQuiz }) {
             <option value="Boomer">Boomer (VT-27)</option>
             <option value="Ranger">Ranger (VT-28)</option>
           </select>
-          <CallsignNumber side={s.card.side} dispatch={dispatch} />
+          <CallsignNumber chosen={s.sideChoice} dispatch={dispatch} />
         </div>
       </div>
       <Readout fly={s.fly || {}} />
@@ -297,10 +291,18 @@ function FlightCard({ s }) {
     <dl className="pf-flightcard">
       <div><dt>Call sign</dt><dd>{c.callSign}</dd></div>
       <div><dt>Squawk</dt><dd>{c.squawk}</dd></div>
-      <div>
-        <dt>ATIS</dt>
-        <dd>{s.atisHeard ? `${c.atis}: wind ${c.windDir} at ${c.windSpeed}, altimeter ${c.altimeter}, runway ${c.rwy} (${c.north ? 'North' : 'South'} Flow)` : 'not yet copied'}</dd>
-      </div>
+      {/* The weather last heard: KNGP's ATIS, or an outlying field's once it is copied. */}
+      {s.heardWx ? (
+        <div>
+          <dt>{shortName(s.heardWx.field)}</dt>
+          <dd>{`Wind ${s.heardWx.windDir} at ${s.heardWx.windSpeed}, runway ${activeRunway(s, s.heardWx.field)}`}</dd>
+        </div>
+      ) : (
+        <div>
+          <dt>ATIS</dt>
+          <dd>{s.atisHeard ? `${c.atis}: wind ${c.windDir} at ${c.windSpeed}, altimeter ${c.altimeter}, runway ${c.rwy} (${c.north ? 'North' : 'South'} Flow)` : 'not yet copied'}</dd>
+        </div>
+      )}
       {s.plan && <div><dt>Area</dt><dd>{s.path ? nameOf(s.path[s.path.length - 1]) : s.plan}</dd></div>}
       {s.block && <div><dt>{s.block.name}</dt><dd>{ft(s.block.bottom)}-{ft(s.block.top)}</dd></div>}
     </dl>
@@ -340,62 +342,59 @@ function Exchange({ lines, context, note, example }) {
   );
 }
 
-// Choice buttons, with the runway legs gathered under their route ("Rusty Departures": 04 13L …).
+// The wind for the flight: random at every ATIS and field weather, random once, or a KNGP
+// runway's (within 20 degrees of it). Each pick, and New wind, draws a wind afresh; the
+// direction can be typed over.
+const WIND_HELP = {
+  every: 'Wind is randomly generated for every ATIS/AWOS.',
+  once: 'Wind is randomly generated once at the start of the flight.',
+};
 function WeatherSetup({ s, dispatch }) {
-  const [preset, setPreset] = useState(s.runwayChoice || 'random');
-  const [direction, setDirection] = useState(s.card.windDir);
-  const [customWind, setCustomWind] = useState(false);
-  const valid = /^\d{1,3}$/.test(direction) && Number(direction) >= 1 && Number(direction) <= 360;
-  const favored = valid ? homeRunwaysForWind(direction) : [];
-  const runway = favored.find(({ rwy }) => rwy === (preset === 'random' ? s.card.rwy : preset)) || favored[0];
-  const setRunway = (value) => {
-    setPreset(value);
-    if (value === 'random') {
-      setDirection(s.card.windDir);
-      setCustomWind(false);
-    } else if (!customWind || !favored.some(({ rwy }) => rwy === value)) {
-      setDirection(String(RUNWAYS.find(({ rwy }) => rwy === value).hdg).padStart(3, '0'));
-      setCustomWind(false);
-    }
+  const [pick, setPick] = useState(s.windPick || 'every');
+  const [wind, setWind] = useState({ windDir: s.card.windDir, windSpeed: s.card.windSpeed });
+  const draw = (value) => {
+    const runway = RUNWAYS.find(({ rwy }) => rwy === value);
+    setWind(drawWind(Math.random, runway ? runway.hdg : null));
   };
-  const setWind = (value) => {
-    setDirection(value);
-    setCustomWind(true);
-    if (/^\d{1,3}$/.test(value) && Number(value) >= 1 && Number(value) <= 360) {
-      const matches = homeRunwaysForWind(value);
-      setPreset(matches.some(({ rwy }) => rwy === preset) ? preset : matches[0].rwy);
-    }
-  };
+  // Any number is a wind direction, said to the nearest 10 degrees (135 is 140, 370 is 010);
+  // only an empty box is not. The browser's own check is off (noValidate): its message is not
+  // the site's.
+  const valid = /^\d{1,3}$/.test(wind.windDir);
+  const favored = valid ? homeRunwaysForWind(wind.windDir) : [];
+  const runway = favored.find(({ rwy }) => rwy === pick) || favored[0];
   return (
-    <form className="pf-weather" onSubmit={(e) => {
+    <form className="pf-weather" noValidate onSubmit={(e) => {
       e.preventDefault();
-      dispatch({ type: 'choose', id: preset, windDir: direction });
+      if (valid) dispatch({ type: 'choose', id: pick, windDir: wind.windDir, windSpeed: wind.windSpeed });
     }}>
       <label className="pf-weather-field">
-        KNGP runway preset
-        <select className="pf-select" value={preset} onChange={(e) => setRunway(e.target.value)}>
-          <option value="random">Random</option>
+        Wind
+        <select className="pf-select" value={pick} onChange={(e) => { setPick(e.target.value); draw(e.target.value); }}>
+          <option value="every">Random every time</option>
+          <option value="once">Random once</option>
           {[true, false].map((north) => (
-            <optgroup key={String(north)} label={north ? 'North flow' : 'South flow'}>
+            <optgroup key={String(north)} label={north ? 'North Flow' : 'South Flow'}>
               {RUNWAYS.filter(({ rwy }) => NORTH_FLOW.includes(rwy) === north).map(({ rwy }) => (
-                <option key={rwy} value={rwy}>{rwy}</option>
+                <option key={rwy} value={rwy}>Runway {rwy}</option>
               ))}
             </optgroup>
           ))}
         </select>
       </label>
       <label className="pf-weather-field">
-        Wind direction (degrees)
-        <input className="pf-input" type="number" min="1" max="360" step="1" required
-          value={direction} onChange={(e) => setWind(e.target.value)} />
+        Wind direction
+        <input className="pf-input" type="number" min="0" max="360" step="10" placeholder="001 to 360"
+          value={wind.windDir} onChange={(e) => setWind({ ...wind, windDir: e.target.value })} />
       </label>
-      <p className="pf-when">Presets set the wind direction. Custom wind selects a wind-favored runway; you can choose either parallel runway.</p>
-      {runway && <p className="pf-weather-preview">Wind {String(Number(direction)).padStart(3, '0')} at {s.card.windSpeed} knots · KNGP runway {runway.rwy} · {NORTH_FLOW.includes(runway.rwy) ? 'North' : 'South'} flow</p>}
-      <p className="pf-when">This simulated wind is used for ATIS and every airfield throughout the flight.</p>
-      <button type="submit" className="pf-btn pf-btn--go">Continue</button>
+      <button type="button" className="pf-btn" onClick={() => draw(pick)}>New wind</button>
+      <p className="pf-when">{WIND_HELP[pick] || 'Wind is kept constant for the whole flight.'}</p>
+      {runway && <p className="pf-weather-preview">Wind {three(Math.round(Number(wind.windDir) / 10) * 10)} at {wind.windSpeed} knots, runway {runway.rwy}, {NORTH_FLOW.includes(runway.rwy) ? 'North' : 'South'} Flow.</p>}
+      <button type="submit" className="pf-btn pf-btn--go" disabled={!valid}>Continue</button>
     </form>
   );
 }
+
+// Choice buttons, with the runway legs gathered under their route ("Rusty Departures": 04 13L …).
 
 function Choices({ opts, onChoose }) {
   const groups = [];
@@ -710,12 +709,12 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
               : step.choose === 'maneuver' ? (s.hwFlown && s.hwFlown.length ? `The ${MANEUVERS[s.lastManeuver].label.toLowerCase()} left you at ${ft(s.alt)}. Which maneuver next?` : 'High work: which maneuver first?')
               : step.choose === 'checkout' ? `Checking out of ${nameOf(s.node).replace(/\s*\d+\s*$/, '')}: which checks?`
               : step.choose === 'order' ? 'High work or low work first?'
-                : step.choose === 'weather' ? 'Set the practice weather'
+                : step.choose === 'weather' ? 'Wind for this flight'
                 : step.choose === 'homeRunway' ? 'Which KNGP runway for landing?'
                 : step.choose === 'plan' ? 'Which working area is being planned for?'
                   : step.choose === 'olf' ? 'Brief: where is the low work?'
                 : step.choose === 'entry' ? `Entering the field off ${labelOf(step.leg)}: a break or a PEL?`
-                  : step.choose === 'runway' ? (worked ? `Wind-favored runway at ${shortName(step.field)}:`
+                  : step.choose === 'runway' ? (worked ? `Runway in use at ${shortName(step.field)}:`
                     : `Which runway at ${shortName(step.field)}?`)
                   : step.choose === 'entryPlan' ? `Before you leave the area, will you enter ${shortName(step.field)} through a break or a PEL?`
                   : step.choose === 'lap' ? 'This time round: a normal lap or a pattern PEL?'
@@ -726,9 +725,10 @@ function StepCard({ s: flight, canBack, dispatch, quiz }) {
             : step.choose === 'weather' ? <WeatherSetup s={s} dispatch={dispatch} />
             : step.choose === 'altitude' ? <AltitudeBox s={s} dispatch={dispatch} />
             : <Choices opts={options(s)} onChoose={(id) => dispatch({ type: 'choose', id })} />}
-          {['homeRunway', 'runway'].includes(step.choose) && (
-            <p className="pf-when">Wind {s.card.windDir} at {s.card.windSpeed} knots{step.choose === 'homeRunway' ? ' · Same weather as departure' : worked ? '' : ' · Choose the wind-favored runway'}</p>
-          )}
+          {['homeRunway', 'runway'].includes(step.choose) && (() => {
+            const w = windFor(s, step.choose === 'runway' ? step.field : null);
+            return <p className="pf-when">Wind {w.windDir} at {w.windSpeed} knots.</p>;
+          })()}
           {!worked && s.cur.problem && <p className="pf-feedback pf-feedback--wrong">{s.cur.problem}</p>}
           {step.choose === 'cua' && step.ref && <p className="pf-source">Source: {refText(step.ref)}</p>}
           {(canBack || worked) && (

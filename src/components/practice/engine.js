@@ -25,7 +25,7 @@ import {
   fieldsAhead, isAirfield, isArea, isPattern, labelOf, legCalls, nameOf, routeFromField, routeTo, routeToField, distancesTo, runwaysAt,
   runwayOf, shortName, feature,
 } from './legs';
-import { RUNWAYS, fillCall, homeRunwaysForWind, makeCard, withHomeRunway } from './card';
+import { RUNWAYS, drawWind, fillCall, homeRunwaysForWind, makeCard, nextAtis, withHomeRunway } from './card';
 import {
   DISCONTINUE_REF, DISCONTINUE_RULE, canDiscontinue, chance, civilian, entryCalls, entryModes, fieldModes, fieldOfLeg, modeLabel,
   fieldRadios, lapCalls, lapModes, onChannels, onSide, sideOf, withCtafCalls,
@@ -153,6 +153,12 @@ function callSteps(calls, seg, s, ref, group, extra) {
   const toRdo = (c) => c.who === 'you' && /^Goliad RDO/i.test(c.text);
   const named = s.log.some((l) => l.who === 'you' && /^Goliad RDO/i.test(l.text) && l.text.includes(s.card.callSign));
   const first = goliad && !named ? calls.findIndex(toRdo) : -1;
+  // A call at or into an outlying field gives that field's wind.
+  // KNGP's ATIS is KNGP's wherever it is copied.
+  const where = group === 'atis' && !seg.weather ? null
+    : seg.weather || [extra && extra.leg, seg.leg, seg.legCalls].map((x) => x && fieldOfLeg(x)).find(Boolean)
+      || (isAirfield(s.node) ? s.node : null);
+  const card = cardAt(s, where);
   return calls.map((c) => (SWITCHING[c.text] && !c.radio ? { ...c, radio: SWITCHING[c.text][0], station: SWITCHING[c.text][1] } : c)).map((c, i) => {
     const ctx = goliad && i !== first && !/^Goliad traffic/i.test(c.text) ? { ...base, sideOnly: true } : base;
     return {
@@ -162,10 +168,11 @@ function callSteps(calls, seg, s, ref, group, extra) {
     kind: c.who === 'you' ? 'call' : c.who === 'note' ? 'auto' : 'reply',
     who: c.who,
     radio: c.radio,
-    text: fillCall(c.text, s.card, ctx),
-    answer: fillCall(c.text, s.card, ctx),
+    text: fillCall(c.text, card, ctx),
+    answer: fillCall(c.text, card, ctx),
     generated: c.generated,
     atis: c.atis,
+    wxField: c.wxField,
     note: noteOf(c.note || c.when),
     after: c.after,
     example: c.example,
@@ -274,6 +281,8 @@ function ruleSteps(id, seg, s) {
 // area (its altitudes and entry) and what is said leaving it. The KINGS 4 areas other than 1
 // say "See Kings 1".
 const KINGS_1 = 'Working Areas-King-203';
+// FOXTROT 2's rule is "Refer to Fox 1".
+const FOXTROT_1 = 'Working Areas-Foxtrot-189';
 // MUSTANG 5-8 have only their special rules; the rest is their half's (North 1, South 3).
 const MUSTANG_BASE = { 'MUSTANG North': 'Working Areas-Mustang-191', 'MUSTANG South': 'Working Areas-Mustang-197' };
 const EXIT = /^(?:special\s+)?exit/i;
@@ -288,7 +297,7 @@ function areaRule(s, id) {
     const [ownIn, ownOut] = split(own);
     return [...baseIn, ...ownIn, ...baseOut, ...ownOut];
   }
-  return own || (groupOf(id) === 'KINGS 4' ? ruleOf(s, KINGS_1) : null);
+  return own || (groupOf(id) === 'KINGS 4' ? ruleOf(s, KINGS_1) : groupOf(id) === 'FOXTROT' ? ruleOf(s, FOXTROT_1) : null);
 }
 
 // The sentences of a rule that are this flight's: none for solos, none for MUSTANG areas other
@@ -436,6 +445,7 @@ function expand(seg, s) {
       ], seg, s, undefined, 'departure') : []),
     ];
   }
+  if (seg.calls === 'atis') return callSteps(CALLS.atis, seg, s, undefined, 'atis', { rwy: s.card.rwy });
   if (seg.calls) return callSteps(CALLS[seg.calls].slice(...(seg.slice || [0])), seg, s, undefined, seg.calls);
   if (seg.rule) {
     const then = seg.thenShamrock && shamrockCall(s, seg.thenShamrock);
@@ -552,13 +562,17 @@ function expand(seg, s) {
   }
   // Before contact unusual attitudes: the altitude the high work spent getting to its setups.
   if (seg.transit) {
-    const t = transit(s.hwFlown || [], s.block, s.block.arrive);
+    const flown = s.hwFlown || [];
+    const t = transit(flown, s.block, s.block.arrive);
     const over = t.spent - t.best;
+    const names = (list) => list.map((m) => MANEUVERS[m].label).join(', ');
     return [{
       kind: 'reply', who: 'Altitude check', plain: true, phase: seg.phase, stage: seg.stage,
-      text: `Between maneuvers you climbed ${ft(t.climbed)} and descended ${ft(t.descended)} for ${ft(t.spent)} total. `
-        + `The minimum possible flying the same maneuvers in the optimal order (${t.order.map((m) => MANEUVERS[m].label.toLowerCase()).join(', ')}), was ${ft(t.best)}`
-        + `${over > 0 ? `, so ${ft(over)} more than needed.` : '. No altitude wasted.'}`,
+      text: `Between maneuvers you climbed ${ft(t.climbed)} and descended ${ft(t.descended)}, ${ft(t.spent)} in all. `
+        + `Your order: ${names(flown.map((f) => f.maneuver))}. `
+        + (over > 0
+          ? `Best order for these maneuvers as they came out: ${names(t.order)}, ${ft(t.best)} in all. Your order used ${ft(over)} more.`
+          : 'That was the best order: no altitude wasted.'),
     }];
   }
   // A pattern PEL starts with the IP's simulated emergency: turn, climb, clean, then its step.
@@ -593,6 +607,7 @@ const logOf = (step, result, said) => ({
   said,
   ep: step.ep,
   plain: step.plain,
+  choose: step.choose,
 });
 
 const blank = () => ({ typed: '', result: '', first: '', shown: false, hint: false });
@@ -656,10 +671,24 @@ const WALDRON_OUT = [
 const WALDRON_OUT_REF = { work: 'Course Rules Manual', loc: 'Ch. 2 — Waldron Departures', pages: 'p. 2-46' };
 // The runway in use at an outlying field: the one most into the wind (the wind is the one the
 // ATIS and the field's own weather give). A tie goes to the field's first.
+// The wind at an outlying field. With the practice weather random every time, each visit to a
+// field has a wind of its own, drawn from the flight's seed so the reducer stays pure; otherwise,
+// and at KNGP, it is the card's.
+export function windFor(s, field) {
+  const own = { windDir: s.card.windDir, windSpeed: s.card.windSpeed };
+  if (s.windMode !== 'every' || !field || field === HOME) return own;
+  const visit = (s.left && s.left[field]) || 0;
+  const key = [...String(field)].reduce((n, ch) => n + ch.charCodeAt(0), 0);
+  let k = 0;
+  return drawWind(() => chance(s.card.seed, 7000 + key + visit * 97 + k++));
+}
+const cardAt = (s, field) => ({ ...s.card, ...windFor(s, field) });
+
 export function activeRunway(s, field) {
   const rwys = runwaysAt(field);
   if (!rwys.length) return null;
-  const off = (r) => Math.abs(((Number(s.card.windDir) - parseInt(r, 10) * 10 + 540) % 360) - 180);
+  const { windDir } = windFor(s, field);
+  const off = (r) => Math.abs(((Number(windDir) - parseInt(r, 10) * 10 + 540) % 360) - 180);
   return rwys.reduce((best, r) => (off(r) < off(best) ? r : best), rwys[0]);
 }
 // Whether a leg into an outlying field is for the runway in use there.
@@ -778,7 +807,7 @@ function weatherOf(s, field) {
     const ref = { work: 'TW-4 In Flight Guide', loc: 'KNWL, Frequencies' };
     return [
       { who: 'you', text: 'Switching ATIS', radio: 'CH 1 VHF', station: 'Navy Corpus ATIS', ref },
-      { who: 'ATIS', radio: 'CH 1 VHF', generated: true, atis: true, ref, text: 'Navy Corpus information (ATIS code), wind (wind), altimeter (altimeter), runway {rwy} in use.' },
+      { who: 'ATIS', radio: 'CH 1 VHF', generated: true, atis: true, wxField: field, ref, text: 'Navy Corpus information (ATIS code), wind (wind), altimeter (altimeter), runway {rwy} in use.' },
     ];
   }
   if (!line) return null;
@@ -789,10 +818,10 @@ function weatherOf(s, field) {
   const kind = block.heading.toUpperCase();
   // Its name as said: "Aransas County", "Goliad", "Ingleside".
   const name = fieldLabel(nameOf(field)).replace(/ \(K[A-Z]{3}\)$/, '').replace(/ (Regional Airport|Airport|NOLF)$/, '');
-  const c = s.card;
+  const c = cardAt(s, field);
   return [
     { who: 'you', text: `Switching ${name} ${kind}`, radio, station: `${name} ${kind}` },
-    { who: kind, radio, generated: true, text: `${name} automated weather observation. Wind ${c.windDir} at ${c.windSpeed}. Visibility one zero. Sky clear. Altimeter ${c.altimeter}.` },
+    { who: kind, radio, generated: true, wxField: field, text: `${name} automated weather observation. Wind ${c.windDir} at ${c.windSpeed}. Visibility one zero. Sky clear. Altimeter ${c.altimeter}.` },
   ].map((x) => ({ ...x, ref: { work: 'Course Rules Manual', loc: `${fieldLabel(nameOf(field))} airfield, ${kind}` } }));
 }
 
@@ -863,11 +892,11 @@ function advance(s) {
 // `legs` is the course rules document's legs, for their radio calls; without it the flight
 // still flies, with the study guide's own calls where a leg would have given its own.
 // `card` overrides any part of the made-up flight card (the tests pin the runway).
-export function start(given = null, { rng = Math.random, card, fields = null } = {}) {
-  // Ingleside's calls, which the document leaves out (fieldOps.js).
-  const legs = withCtafCalls(given, fields);
+export function start(given = null, { rng = Math.random, card, fields = null, windMode = 'once', windPick = '' } = {}) {
+  // Ingleside's calls and FOXTROT's, which the document leaves out (fieldOps.js, foxtrotCalls).
+  const legs = withFoxtrotCalls(withCtafCalls(given, fields));
   return advance({
-    legs, baseLegs: legs, fields, fly: {}, airborne: false, card: makeCard(rng, card), runwayChoice: (card && card.rwy) || '', departureCard: null, homeRunwayChosen: false, atisHeard: false, order: null, plan: null, olf: null, path: null, planDone: false, skipped: null,
+    legs, baseLegs: legs, fields, fly: {}, airborne: false, card: makeCard(rng, card), runwayChoice: (card && card.rwy) || '', windMode, windPick, heardWx: null, left: {}, departureCard: null, homeRunwayChosen: false, atisHeard: false, order: null, plan: null, olf: null, path: null, planDone: false, skipped: null,
     sideChoice: (card && card.side) || '',
     steps: [], at: -1, segments: GROUND, log: [], route: [HOME], node: HOME, rwy: null,
     entries: 0, alt: null, block: null, hwDone: 0, hwFlown: [],
@@ -917,15 +946,17 @@ export function options(s) {
     return [{ id: 'high', label: 'High work first' }, { id: 'low', label: 'Low work first' }];
   }
   if (now.choose === 'weather') {
-    return [{ id: 'random', label: 'Random' }, ...RUNWAYS.map(({ rwy }) => ({ id: rwy, label: `Runway ${rwy}` }))];
+    return [
+      { id: 'once', label: 'Random once' }, { id: 'every', label: 'Random every time' },
+      ...RUNWAYS.map(({ rwy }) => ({ id: rwy, label: `Runway ${rwy}` })),
+    ];
   }
   if (now.choose === 'homeRunway') {
-    const favored = homeRunwaysForWind(s.card.windDir);
-    const same = favored.find(({ rwy }) => rwy === s.card.rwy);
-    return [
-      ...(same ? [{ id: same.rwy, label: `Same as departure (${same.rwy})` }] : []),
-      ...favored.filter(({ rwy }) => rwy !== same?.rwy).map(({ rwy }) => ({ id: rwy, label: `Runway ${rwy}` })),
-    ];
+    // The runways the wind favours that this way home has an arrival for.
+    const departed = (s.departureCard || s.card).rwy;
+    return homeRunwaysForWind(s.card.windDir).filter(({ rwy }) => !now.resumeLeg || homeLeg(now.resumeLeg, rwy))
+      .sort((a, b) => (b.rwy === departed) - (a.rwy === departed))
+      .map(({ rwy }) => ({ id: rwy, label: rwy === departed ? `Same as departure (${rwy})` : `Runway ${rwy}` }));
   }
   // Picked once its weather is heard, before the legs to it (`early`); or among its arrivals.
   if (now.choose === 'runway' && !now.legs) return runwaysAt(now.field).map((r) => ({ id: `rwy:${r}`, label: `Runway ${r}` }));
@@ -1027,6 +1058,34 @@ function inUse(s, id) {
   return name.split('/').includes(s.card.rwy);
 }
 
+// FOXTROT's calls. The course rules document has none for its areas, so they are made up for
+// practice from its rule (Course Rules Manual 2-21): "Approaching the southern boundary of the
+// FOXTROT training area terminate with Corpus Approach", "Switch to FOXTROT Common (CH 22 UHF)
+// for advisories and area coordination", "State area departing and intentions prior to vacating
+// any FOXTROT block on FOXTROT Common UHF 337.8", and on the way home "contact Corpus Approach
+// (CH 8) with current ATIS information and intentions". The flight works the middle block
+// (highWork.js blockFor). Its own example is "99 Fox, anybody working Fox 2 High."
+const FOXTROT_AREAS = { 'Working Areas-Foxtrot-189': '1', 'Working Areas-Foxtrot-190': '2' };
+const foxtrotIn = (id) => [
+  { who: 'you', radio: 'CH 8 UHF', text: 'Corpus Approach, (call sign), terminate Foxtrot.', generated: true },
+  { who: 'APP', text: '(call sign), radar service terminated, frequency change approved.', generated: true },
+  { who: 'you', radio: 'CH 8 UHF', text: '(call sign), frequency change approved.', generated: true },
+  { who: 'you', radio: 'CH 22 UHF', text: `99 Fox, anybody working Fox ${FOXTROT_AREAS[id]} Middle?`, generated: true },
+  { who: 'you', radio: 'CH 22 UHF', text: `99 Fox, (call sign), working Fox ${FOXTROT_AREAS[id]} Middle.`, generated: true },
+];
+function withFoxtrotCalls(legs) {
+  if (!legs) return legs;
+  const out = { ...legs };
+  Object.entries(FOXTROT_AREAS).forEach(([id, n]) => {
+    if ((out[id]?.comms || []).length) return;
+    out[id] = { ...out[id], comms: [
+      { who: 'AIRCRAFT', radio: 'CH 22 UHF', text: `99 Fox, (Call Sign), departing Fox ${n} Middle.`, generated: true },
+      { who: 'AIRCRAFT', radio: 'CH 8 UHF', text: 'Corpus Approach, (Call Sign), complete in FOXTROT, request High-Key into Aransas County / Course Rules SHAMROCK with information ALPHA / North to South transition', generated: true },
+    ] };
+  });
+  return out;
+}
+
 // The flight's stages, as the strip at the top names them. Departure: home to the first working
 // area or outlying field. Transit: between the two. Pattern: at an outlying field, from its entry
 // to leaving it. Recovery: the course rules home. Landing: at home, from the entry to the full stop.
@@ -1107,25 +1166,39 @@ function shamrockCall(s, id) {
   return [{ who: 'you', text: `Corpus Approach, (call sign)${where}, course rules Shamrock with information (ATIS code)`, radio: `CH ${m[1]} UHF`, generated: true }];
 }
 
+// The way home `leg` for KNGP runway `rwy`: the leg itself when it is for that runway or for
+// none, else its parallel-runway counterpart in the same folder; null when there is none.
+function homeLeg(leg, rwy) {
+  if (fieldOf(leg) !== 'KNGP' || !runwayOf(leg)) return leg;
+  const named = (key) => (feature(key)?.name || '').split('/').includes(rwy);
+  if (named(leg)) return leg;
+  return Object.keys(crFeatures).find((key) => feature(key).folderPath === feature(leg).folderPath && named(key)) || null;
+}
+
 // Fly a leg: what comes with it goes in front of the rest of the flight.
 function fly(s, id) {
-  // Ask before expanding any return-route calls or rules with the landing runway.
-  if (!s.homeRunwayChosen && phaseOfLeg(id, s.flags, s.route) === 'Recovery') {
+  // Headed home, KNGP's ATIS is copied again (withAtis, where the manual's calls put it) and the
+  // landing runway picked once it is (answered). With the weather random every time, the ATIS
+  // is a new one.
+  if (!s.homeAsk && !s.homeRunwayChosen && phaseOfLeg(id, s.flags, s.route) === 'Recovery') {
+    let { card } = s;
+    if (s.windMode === 'every') {
+      let k = 0;
+      const wind = drawWind(() => chance(card.seed, 8000 + k++));
+      const rwy = homeRunwaysForWind(wind.windDir)[0].rwy;
+      card = { ...withHomeRunway({ ...card, ...wind }, rwy, wind.windDir), atis: nextAtis(card.atis) };
+    }
+    s = { ...s, card, atisAirborne: false, homeAsk: true };
+  }
+  // A leg for a KNGP runway reached with the runway not yet picked (no call on the way home
+  // copied the ATIS): the ATIS and the pick now, before it.
+  if (s.homeAsk && !s.homeRunwayChosen && fieldOf(id) === 'KNGP' && runwayOf(id)) {
     return { ...s, steps: [], at: -1, segments: [
+      ...(s.atisAirborne ? [] : [{ phase: 'Recovery', stage: 'airborne', calls: 'atis' }]),
       { phase: 'Recovery', stage: 'airborne', choose: 'homeRunway', resumeLeg: id },
       ...s.segments,
     ] };
   }
-  const into = fieldOfLeg(id);
-  if (!s.flags.inArea && !isPattern(id) && into && into !== HOME && runwayOf(id) && s.olfRwy?.field !== into) {
-    const phase = phaseOfLeg(id, s.flags, s.route);
-    return { ...s, steps: [], at: -1, weatherFor: into, segments: [
-      ...(s.weatherFor === into ? [] : [{ phase, stage: 'airborne', weather: into }]),
-      { phase, stage: 'airborne', choose: 'runway', field: into, early: true, resumeLeg: id },
-      ...s.segments,
-    ] };
-  }
-  if (into && !isPattern(id) && runwayOf(id)) s = { ...s, rwy: runwayOf(id) };
   // A leg's rule and calls for the way this flight comes to it (KRKP's arrivals have a part for
   // the MUSTANG areas and one for Goliad and KINGS 4).
   s = { ...s, legs: legsFrom(s, id) };
@@ -1134,7 +1207,7 @@ function fly(s, id) {
   // Out of an outlying field, wherever bound: an Operations Check once on the way, after the
   // leg's rule and calls (the user's, 2026-10-30). Its runway and weather stay behind.
   const leavingField = isAirfield(s.node) && s.node !== HOME && !isPattern(id);
-  if (leavingField) s = { ...s, olfRwy: null, weatherFor: null };
+  if (leavingField) s = { ...s, olfRwy: null, weatherFor: null, left: { ...s.left, [s.node]: ((s.left && s.left[s.node]) || 0) + 1 } };
   if (id === s.nextLeg) s = { ...s, nextLeg: null };
   const air = { stage: 'airborne' };
   const segs = [];
@@ -1163,8 +1236,10 @@ function fly(s, id) {
       segs.push({ ...air, phase: leaving, weather: bound });
       s = { ...s, weatherFor: bound };
     }
-    // Then its runway, by that wind: ask even where the leg leads straight into the field.
-    if (bound && bound !== HOME && !(s.olfRwy && s.olfRwy.field === bound) && runwaysAt(bound).length > 0) {
+    // Then its runway, by that wind: every leg on is for it. A leg straight into the field has
+    // already said which.
+    if (bound && bound !== HOME && runwayOf(id) && fieldOfLeg(id) === bound) s = { ...s, olfRwy: { field: bound, rwy: runwayOf(id) } };
+    else if (bound && bound !== HOME && !(s.olfRwy && s.olfRwy.field === bound) && runwaysAt(bound).length > 1) {
       segs.push({ ...air, phase: leaving, choose: 'runway', field: bound, early: true });
     }
     const { exit } = areaRules({ ...s, heading: id }, s.node);
@@ -1308,6 +1383,7 @@ function fly(s, id) {
   if (isArea(id)) {
     if (!flags.inArea) {
       flags.inArea = true;
+      if (FOXTROT_AREAS[id]) segs.push({ ...air, phase, leg: id, callList: foxtrotIn(id) });
       // Elsewhere (the MUSTANG areas) whether the flight climbs through 10,000 ft is asked.
       if (!flags.climbDone) segs.push({ ...air, phase, ask: 'climb' });
       // Working the area, heading and airspeed are the maneuvers'.
@@ -1583,8 +1659,10 @@ export function cuaAttitude(rng = Math.random) {
   return { type, text: `${bank}° of bank to the ${side}, nose ${pitch ? `${pitch}° low` : 'on the horizon'}` };
 }
 
-function choose(s, id, rng = Math.random, windDir) {
+function choose(s, id, rng = Math.random, windDir, windSpeed) {
   const now = current(s);
+  // "random" is the old name for random once.
+  if (now && now.choose === 'weather' && id === 'random') id = 'once';
   // A setup altitude is typed, any altitude at all; one that breaks the block or the maneuver
   // is refused, and said why.
   if (now && now.choose === 'altitude') return setUp(s, now, id);
@@ -1592,9 +1670,8 @@ function choose(s, id, rng = Math.random, windDir) {
   // A field's own arrival named directly (a replay, a test) is flown as picked.
   const opt = all.find((o) => o.id === id) || (now.choose === 'leg' && all.some((o) => o.legs && o.legs.includes(id)) ? { id, label: labelOf(id) } : null);
   if (!opt) return s;
-  if (now.choose === 'weather' && windDir !== undefined && (!/^\d{1,3}$/.test(String(windDir)) || Number(windDir) < 1 || Number(windDir) > 360)) {
-    return { ...s, cur: { ...s.cur, problem: 'Enter a wind direction from 001 to 360 degrees.' } };
-  }
+  // Any number of degrees is a wind (taken round to 001-360); only no number is not.
+  if (now.choose === 'weather' && windDir !== undefined && !/^\d{1,3}$/.test(String(windDir))) return s;
   // Into an outlying field, the runway is the wind's, not a choice.
   if ((now.choose === 'leg' || now.choose === 'runway') && !runwayOk(s, id)) {
     const rwy = id.startsWith('rwy:') ? id.slice(4) : runwayOf(id);
@@ -1612,32 +1689,35 @@ function choose(s, id, rng = Math.random, windDir) {
   }
   if (now.choose === 'order') return advance({ ...logged, order: id });
   if (now.choose === 'weather') {
-    const direction = windDir === undefined ? (id === 'random' ? s.card.windDir : RUNWAYS.find((r) => r.rwy === id).hdg) : windDir;
+    // Random every time, random once, or a runway: the wind given (drawn on the page), else the
+    // card's for random and the runway's heading for a runway.
+    const mode = id === 'every' || id === 'once' ? id : 'preset';
+    // A wind typed is given to the nearest 10 degrees, as an ATIS gives it.
+    const direction = windDir === undefined ? (mode === 'preset' ? RUNWAYS.find((r) => r.rwy === id).hdg : s.card.windDir)
+      : Math.round(Number(windDir) / 10) * 10;
     const favored = homeRunwaysForWind(direction);
-    const wanted = id === 'random' ? s.card.rwy : id;
+    const wanted = mode === 'preset' ? id : s.card.rwy;
     const rwy = favored.some((r) => r.rwy === wanted) ? wanted : favored[0].rwy;
-    const card = withHomeRunway(s.card, rwy, direction);
+    const card = withHomeRunway({ ...s.card, ...(windSpeed === undefined ? {} : { windSpeed }) }, rwy, direction);
     if (!routeTo(s.plan, rwy, card.areaPick) || (s.order === 'low' && !fieldsFor(s.plan, rwy, card.areaPick).length)) {
-      return { ...s, cur: { ...s.cur, problem: `No practice route to ${s.plan} is available from runway ${rwy}. Choose another runway preset or wind direction.` } };
+      return { ...s, cur: { ...s.cur, problem: `No course rules route to ${s.plan} from runway ${rwy}. Pick another runway or wind.` } };
     }
     const log = [...s.log, { ...logOf(now, 'choice'), who: 'choice',
-      text: `Practice weather: wind ${card.windDir} at ${card.windSpeed} knots, KNGP runway ${rwy}` }];
-    return briefNext({ ...logged, log, card, departureCard: card, runwayChoice: id === 'random' && !s.runwayChoice ? '' : rwy });
+      text: `${{ every: 'Random every time', once: 'Random once', preset: `Runway ${rwy}` }[mode]}: wind ${card.windDir} at ${card.windSpeed}, runway ${rwy}` }];
+    return briefNext({ ...logged, log, card, departureCard: card, windMode: mode, windPick: mode === 'preset' ? rwy : id, runwayChoice: mode === 'preset' ? rwy : '' });
   }
   if (now.choose === 'homeRunway') {
-    // A return leg chosen before this question may need its parallel-runway counterpart.
-    let leg = now.resumeLeg;
-    if (fieldOf(leg) === 'KNGP' && runwayOf(leg) && !feature(leg).name.split('/').includes(id)) {
-      leg = Object.keys(crFeatures).find((key) => feature(key).folderPath === feature(now.resumeLeg).folderPath
-        && feature(key).name.split('/').includes(id));
-      if (!leg) throw new Error(`No home arrival for runway ${id}`);
-    }
+    // A return leg chosen before this question may need its parallel-runway counterpart
+    // (options() offers only runways that have one).
+    const leg = now.resumeLeg ? homeLeg(now.resumeLeg, id) : null;
+    if (now.resumeLeg && !leg) return s;
     const card = withHomeRunway(s.card, id);
     const log = [...logged.log];
-    if (leg !== now.resumeLeg && log.length > 1 && log[log.length - 2].text === labelOf(now.resumeLeg)) {
-      log[log.length - 2] = { ...log[log.length - 2], text: labelOf(leg) };
-    }
-    return advance(fly({ ...logged, log, card, homeRunwayChosen: true, atisAirborne: false }, leg));
+    // The leg already logged as flown is logged as the one flown.
+    const flownAt = leg && leg !== now.resumeLeg ? log.map((l) => l.who === 'route' && l.text).lastIndexOf(labelOf(now.resumeLeg)) : -1;
+    if (flownAt >= 0) log[flownAt] = { ...log[flownAt], text: labelOf(leg) };
+    const picked = { ...logged, log, card, homeRunwayChosen: true };
+    return advance(leg ? fly(picked, leg) : picked);
   }
   // A field picked: out of an area, the check-out aid first (ABCDONT's "ATIS/WX", GOOFTWAR's
   // "grab ASOS"); then the field's weather; then its runway, by that wind.
@@ -1646,11 +1726,7 @@ function choose(s, id, rng = Math.random, windDir) {
     // Its runway already picked: straight on (the check-out comes with the leg out of the area).
     const known = s.olfRwy && s.olfRwy.field === field && opt.legs.find((l) => runwayOf(l) === s.olfRwy.rwy);
     if (known) return opt.via ? advance(fly({ ...logged, nextLeg: known }, opt.via)) : advance(fly(logged, known));
-    const at = {
-      ...seg(now),
-      phase: s.flags.inArea
-        ? phaseOfLeg(opt.via || opt.legs[0], { ...s.flags, inArea: false, areaDone: true }, s.route) : now.phase,
-    };
+    const at = seg(now);
     const segs = [
       ...(s.flags.inArea ? [{ ...at, choose: 'checkout', goliad: nameOf(field) === 'KNGT' }] : []),
       ...(s.weatherFor === field ? [] : [{ ...at, weather: field }]),
@@ -1768,9 +1844,16 @@ function skipChoice(s, target) {
   return pool.reduce((best, id) => ((TO_HOME[id] ?? 99) < (TO_HOME[best] ?? 99) ? id : best), pool[0]);
 }
 
+// What a skip shows of what was said and picked on the way: only what later decisions need
+// (the user's, 2026-11-08): the weather (ATIS, a field's ASOS or AWOS), runways, a squawk, an
+// area given, and the picks that shape the rest of the flight.
+const TOLD_CHOICES = new Set(['order', 'plan', 'area', 'block', 'weather', 'olf', 'entryPlan', 'entry', 'runway', 'homeRunway', 'recovery']);
+const TOLD = /\bin use\b|automated weather observation|squawk \d|work MUSTANG|landing runway/i;
+const toldOf = (log) => log.filter((l) => (l.result === 'choice' && TOLD_CHOICES.has(l.choose))
+  || (l.kind === 'reply' && (l.who === 'ATIS' || TOLD.test(l.text))));
+
 // Run the rest of the stage: every step said for you and every choice made, until the flight
-// is into the next stage. What the student would have been told on the way (clearances, the
-// legs flown, what was picked) is kept to show them.
+// is into the next stage. What the student needs from it is kept to show them (toldOf).
 function skipPhase(s, target) {
   const from = current(s)?.phase;
   const before = s.log.length;
@@ -1780,8 +1863,7 @@ function skipPhase(s, target) {
     if (now.kind === 'reply') s = answered(s, 'heard');
     else s = TYPED.has(now.kind) ? answered(s, 'skipped') : choose(s, skipChoice(s, target));
   }
-  const told = s.log.slice(before).filter((l) => l.result === 'choice' || l.kind === 'route'
-    || (l.kind === 'reply' && l.who !== 'ip'));
+  const told = toldOf(s.log.slice(before));
   return { ...s, skipped: { phase: from, told } };
 }
 
@@ -1869,6 +1951,18 @@ function reveal(s, all) {
 function answered(s, result) {
   const now = current(s);
   if (now.atis) s = { ...s, atisHeard: true, atisAirborne: s.airborne };
+  // KNGP's ATIS copied on the way home: the landing runway is picked after the call that
+  // gives it ("with information"), or straight away when none follows.
+  if (now.atis && !now.wxField && !s.ep && s.homeAsk && !s.homeRunwayChosen
+    && ![...s.steps, ...s.segments].some((x) => x.choose === 'homeRunway')) {
+    const after = s.steps.findIndex((x, i) => i > s.at && x.kind === 'call' && /with information/i.test(x.text));
+    const put = (after < 0 ? s.at : after) + 1;
+    const ask = { kind: 'choose', choose: 'homeRunway', phase: now.phase, stage: now.stage };
+    s = { ...s, steps: [...s.steps.slice(0, put), ask, ...s.steps.slice(put)] };
+  }
+  // The weather last heard, for the flight card: an outlying field's, or KNGP's ATIS.
+  if (now.wxField) s = { ...s, heardWx: { field: now.wxField, ...windFor(s, now.wxField) } };
+  else if (now.atis) s = { ...s, heardWx: null };
   if (now.kind === 'call' && /^Corpus Approach,.*Shamrock/i.test(now.text)) s = { ...s, shamrockCalled: true };
   if (!s.ep) s = flown(s, now);
   const entry = logOf(now, result, s.cur.typed);
@@ -1895,9 +1989,6 @@ export function practiceAnswer(s) {
   }
   if (now?.choose === 'cua') {
     return options(s).find((o) => o.id === CUA_RIGHT[now.attitude.type][now.part]);
-  }
-  if (now?.choose === 'checkout') {
-    return options(s).find((o) => o.id === (now.goliad ? 'gooftwar' : 'abcdont'));
   }
   return null;
 }
@@ -1926,13 +2017,12 @@ export function readThrough(s) {
 function changeIdentity(s, squadron, side) {
   const card = { ...s.card, squadron, side, callSign: `${squadron} ${side}`,
     squawk: `${side[0] === '7' ? '55' : '56'}${side.slice(1)}` };
-  const identity = new RegExp(`\\b(?:Boomer|Ranger) \\d{3}\\b|\\b(?:${s.card.side}|${s.card.squawk})\\b`, 'g');
-  const replace = (text) => typeof text === 'string' ? text.replace(identity, (match) => {
-    if (match === s.card.callSign) return card.callSign;
-    if (match === s.card.side) return card.side;
-    if (match === s.card.squawk) return card.squawk;
-    return match;
-  }) : text;
+  // A side number inside a longer figure ("1,800'") is not the side number.
+  const bareSide = new RegExp(`(^|[^\\d,.])${s.card.side}(?![\\d']|[,.]\\d)`, 'g');
+  const replace = (text) => (typeof text === 'string' ? text
+    .split(s.card.callSign).join(card.callSign)
+    .replace(new RegExp(`(squawk )${s.card.squawk}\\b`, 'gi'), `$1${card.squawk}`)
+    .replace(bareSide, `$1${card.side}`) : text);
   // Calls already expanded for the current conversation need the new identity too.
   const update = (step) => !['call', 'reply', 'auto'].includes(step.kind) ? step : {
     ...step, text: replace(step.text),
@@ -1946,7 +2036,7 @@ function changeIdentity(s, squadron, side) {
 
 export function reduce(s, action) {
   if (action.type === 'legs') {
-    const legs = withCtafCalls(action.legs, action.fields || s.fields);
+    const legs = withFoxtrotCalls(withCtafCalls(action.legs, action.fields || s.fields));
     return { ...s, legs, baseLegs: legs, fields: action.fields || s.fields };
   }
   if (action.type === 'skipPhase') return s.done || s.ep ? s : skipPhase(s);
@@ -1961,11 +2051,11 @@ function act(s, action) {
   const now = current(s);
   switch (action.type) {
     case 'restart': {
+      // The same squadron, call sign and kind of weather; a runway picked keeps its runway and
+      // draws a new wind on it.
       const rwy = action.rwy === undefined ? s.runwayChoice : action.rwy;
-      const weather = rwy && rwy === s.runwayChoice && s.departureCard
-        ? { windDir: s.departureCard.windDir, windSpeed: s.departureCard.windSpeed } : {};
-      return start(s.baseLegs || s.legs, { fields: s.fields, card: { squadron: s.card.squadron,
-        ...(s.sideChoice ? { side: s.sideChoice } : {}), ...(rwy ? { rwy } : {}), ...weather } });
+      return start(s.baseLegs || s.legs, { fields: s.fields, windMode: s.windMode, windPick: s.windPick, card: { squadron: s.card.squadron,
+        ...(s.sideChoice ? { side: s.sideChoice } : {}), ...(rwy ? { rwy } : {}) } });
     }
     case 'readNext': {
       if (!now || (s.ep && s.ep.done)) return s;
@@ -1987,7 +2077,7 @@ function act(s, action) {
     }
     case 'callsign':
       if (!/^[78]\d{2}$/.test(action.side)) {
-        return { ...s, cur: { ...s.cur, problem: 'Enter a callsign number from 700 to 899.' } };
+        return { ...s, cur: { ...s.cur, problem: 'A callsign number is 700 to 899.' } };
       }
       return { ...changeIdentity(s, s.card.squadron, action.side), sideChoice: action.side };
     case 'type':
@@ -2019,7 +2109,7 @@ function act(s, action) {
       if (!TYPED.has(now.kind)) return s;
       return s.cur.shown ? answered(s, now.typed ? 'shown' : 'said') : reveal(s, false);
     case 'choose':
-      return choose(s, action.id, action.rng, action.windDir);
+      return choose(s, action.id, action.rng, action.windDir, action.windSpeed);
     case 'situation':
       return situation(s, action.rng || Math.random);
     case 'resume':

@@ -10836,20 +10836,14 @@ button.epl-modal-close:hover {
   color: var(--ink);
 }
 
-.pf-callsign {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .pf-callsign-input {
   box-sizing: border-box;
-  width: 64px;
+  width: 96px;
 }
 
-.pf-callsign-error {
-  font-size: 12px;
-  color: var(--ink);
+.pf-weather-field .pf-input::placeholder,
+.pf-callsign-input::placeholder {
+  color: var(--ink-faint);
 }
 
 .pf-numbers-static th { font-weight: 600; color: var(--ink-accent); }

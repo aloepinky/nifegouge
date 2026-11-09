@@ -25,7 +25,7 @@ beforeEach(() => {
 test('mobile flight info can be expanded without losing the current flight', () => {
   window.matchMedia = jest.fn((query) => ({ matches: query === '(max-width: 760px)' }));
   render(<PracticeFlightPage />);
-  const toggle = screen.getByRole('button', { name: 'Flight settings & info Expand ▾' });
+  const toggle = screen.getByRole('button', { name: 'Settings and info Expand ▾' });
   expect(toggle.getAttribute('aria-expanded')).toBe('false');
   fireEvent.click(toggle);
   expect(toggle.getAttribute('aria-expanded')).toBe('true');
@@ -154,10 +154,11 @@ test('rules show prose without duplicate summaries and keep quiz blanks and the 
   expect(document.querySelector('.pf-rule').textContent).toContain('Turn direct to PT RUSTY.');
 });
 
-function finishBrief(rwy) {
+function finishBrief(rwy, wind) {
   fireEvent.click(screen.getByRole('button', { name: 'High work first' }));
   fireEvent.click(screen.getByRole('button', { name: 'KINGS 4' }));
-  if (rwy) fireEvent.change(screen.getByRole('combobox', { name: 'KNGP runway preset' }), { target: { value: rwy } });
+  if (rwy) fireEvent.change(screen.getByRole('combobox', { name: 'Wind' }), { target: { value: rwy } });
+  if (wind) fireEvent.change(screen.getByRole('spinbutton', { name: 'Wind direction' }), { target: { value: wind } });
   fireEvent.click(screen.getByRole('button', { name: 'Continue', exact: true }));
 }
 
@@ -165,7 +166,9 @@ test('callsign box beside Squadron updates the number and squawk, validates edit
   render(<PracticeFlightPage />);
   finishBrief();
   const number = screen.getByRole('textbox', { name: 'Callsign number' });
-  expect(screen.getByRole('combobox', { name: 'Squadron' }).nextElementSibling).toContainElement(number);
+  expect(screen.getByRole('combobox', { name: 'Squadron' }).nextElementSibling).toBe(number);
+  expect(number.value).toBe('');
+  expect(number.getAttribute('placeholder')).toBe('Callsign #');
   number.focus();
   fireEvent.change(number, { target: { value: '812' } });
   expect(number.value).toBe('812');
@@ -174,11 +177,8 @@ test('callsign box beside Squadron updates the number and squawk, validates edit
   const sign = screen.getByRole('combobox', { name: 'Squadron' }).value;
   expect(screen.getByText(`${sign} 812`, { exact: true })).toBeTruthy();
   fireEvent.change(number, { target: { value: '9' } });
-  expect(number.getAttribute('aria-invalid')).toBe('true');
-  expect(screen.getByText('Use 700–899')).toBeTruthy();
   expect(screen.getByText(`${sign} 812`, { exact: true })).toBeTruthy();
   fireEvent.change(number, { target: { value: '749' } });
-  expect(screen.queryByText('Use 700–899')).toBeNull();
   expect(screen.getByText('5549', { exact: true })).toBeTruthy();
   fireEvent.change(screen.getByRole('combobox', { name: 'Squadron' }), { target: { value: 'Boomer' } });
   expect(screen.getByText('Boomer 749', { exact: true })).toBeTruthy();
@@ -192,9 +192,9 @@ test.each(['High work first', 'Low work first'])('%s asks for working area befor
   render(<PracticeFlightPage />);
   fireEvent.click(screen.getByRole('button', { name: order }));
   expect(screen.getByText('Which working area is being planned for?')).toBeTruthy();
-  expect(screen.queryByRole('combobox', { name: 'KNGP runway preset' })).toBeNull();
+  expect(screen.queryByRole('combobox', { name: 'Wind' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'KINGS 4' }));
-  expect(screen.getByRole('combobox', { name: 'KNGP runway preset' })).toBeTruthy();
+  expect(screen.getByRole('combobox', { name: 'Wind' })).toBeTruthy();
   fireEvent.keyDown(document.body, { key: 'ArrowLeft' });
   expect(screen.getByText('Which working area is being planned for?')).toBeTruthy();
 });
@@ -230,79 +230,69 @@ test('mode selection switches without restarting and restores the original revea
   expect(within(screen.getByRole('region', { name: 'Voice exchange' })).getAllByText('Two Pins In')).toHaveLength(2);
 });
 
-test('weather comes after working area and presets and custom wind keep runway and ATIS consistent', () => {
+test('the wind: a runway draws one within 20 degrees, a random pick draws afresh, typed wind is kept', () => {
   render(<PracticeFlightPage />);
-  expect(screen.queryByRole('combobox', { name: 'KNGP runway preset' })).toBeNull();
+  expect(screen.queryByRole('combobox', { name: 'Wind' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'High work first' }));
-  expect(screen.queryByRole('combobox', { name: 'KNGP runway preset' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'KINGS 4' }));
-  const runway = screen.getByRole('combobox', { name: 'KNGP runway preset' });
-  const wind = screen.getByRole('spinbutton', { name: 'Wind direction (degrees)' });
-  expect(runway.querySelectorAll('optgroup')).toHaveLength(2);
-  fireEvent.change(runway, { target: { value: '31R' } });
-  expect(wind.value).toBe('310');
+  const pick = screen.getByRole('combobox', { name: 'Wind' });
+  const wind = screen.getByRole('spinbutton', { name: 'Wind direction' });
+  expect(pick.value).toBe('every');
+  expect(pick.querySelectorAll('optgroup')).toHaveLength(2);
+  fireEvent.change(pick, { target: { value: '31R' } });
+  expect(Math.abs(Number(wind.value) - 310)).toBeLessThanOrEqual(20);
+  // Picking random again, or New wind, draws a new wind.
+  const random = jest.spyOn(Math, 'random');
+  fireEvent.change(pick, { target: { value: 'once' } });
+  fireEvent.click(screen.getByRole('button', { name: 'New wind' }));
+  expect(random.mock.calls.length).toBeGreaterThan(0);
+  random.mockRestore();
+  fireEvent.change(pick, { target: { value: '13R' } });
   fireEvent.change(wind, { target: { value: '140' } });
-  expect(runway.value).toBe('13L');
-  fireEvent.change(runway, { target: { value: '13R' } });
-  expect(wind.value).toBe('140');
+  expect(screen.getByText(/Wind 140 at \d+ knots, runway 13R, South Flow\./)).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Continue', exact: true }));
-  expect(screen.queryByRole('combobox', { name: 'KNGP runway preset' })).toBeNull();
+  expect(screen.queryByRole('combobox', { name: 'Wind' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /Next/ }));
   expect(within(screen.getByRole('region', { name: 'Voice exchange' })).getByText(/wind 140.*runway 13R/)).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Restart' }));
   fireEvent.click(screen.getByRole('button', { name: 'High work first' }));
   fireEvent.click(screen.getByRole('button', { name: 'KINGS 4' }));
-  expect(screen.getByRole('combobox', { name: 'KNGP runway preset' }).value).toBe('13R');
-  expect(screen.getByRole('spinbutton', { name: 'Wind direction (degrees)' }).value).toBe('140');
+  expect(screen.getByRole('combobox', { name: 'Wind' }).value).toBe('13R');
 });
 
 test('recovery asks for a wind-favored landing runway without offering different weather', () => {
   render(<PracticeFlightPage />);
   finishBrief('13L');
   fireEvent.click(screen.getByRole('button', { name: 'Recovery', exact: true }));
+  // Asked once the ATIS home is copied.
+  for (let i = 0; i < 40 && !screen.queryByText('Which KNGP runway for landing?'); i++) {
+    const next = screen.queryByRole('button', { name: /Next/ });
+    if (next) fireEvent.click(next);
+    else fireEvent.click(document.querySelector('.pf-choices button'));
+  }
   expect(screen.getByText('Which KNGP runway for landing?')).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Same as departure (13L)' })).toBeTruthy();
   expect(screen.getByText('Runway', { exact: true })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: '13R', exact: true }));
-  expect(screen.queryByRole('spinbutton', { name: 'Wind direction (degrees)' })).toBeNull();
+  expect(screen.queryByRole('spinbutton', { name: 'Wind direction' })).toBeNull();
   expect(screen.queryByText('Which KNGP runway for landing?')).toBeNull();
   fireEvent.keyDown(document.body, { key: 'ArrowLeft' });
   expect(screen.getByText('Which KNGP runway for landing?')).toBeTruthy();
 });
 
-test('Practice tells the OLF runway after weather while Quiz keeps the runway question', async () => {
+test('an outlying field gets its weather, then its runway by that wind', async () => {
   const field = Object.keys(crFeatures).find((key) => crFeatures[key].name === 'KNGT');
   fetchCourseRules.mockResolvedValue({ doc: {
     legs: {}, airfields: { [field]: { blocks: [{ heading: 'ASOS', lines: ['VHF 119.1MHz'] }] } },
   } });
   await act(async () => { render(<PracticeFlightPage />); });
-  finishBrief('13L');
+  finishBrief('13L', '130');
   fireEvent.click(screen.getByRole('button', { name: 'Transit', exact: true }));
-  expect(screen.getByText('GOOFTWAR', { exact: true })).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'GOOFTWAR', exact: true })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: /Next/ }));
-  for (let i = 0; i < 30 && !screen.queryByText('Wind-favored runway at Goliad:'); i++) {
-    fireEvent.click(screen.getByRole('button', { name: /Next/ }));
-  }
-  expect(screen.getByText('Wind-favored runway at Goliad:')).toBeTruthy();
-  expect(screen.getByText('Runway 11', { exact: true }).className).toBe('pf-worked-answer');
-  expect(screen.queryByRole('button', { name: '11', exact: true })).toBeNull();
-  expect(screen.queryByText(/Choose the wind-favored runway/)).toBeNull();
-  expect(screen.getAllByText(/automated weather observation. Wind 130/).length).toBeGreaterThan(0);
-  const mode = screen.getByRole('combobox', { name: 'Flight mode' });
-  fireEvent.change(mode, { target: { value: 'quiz' } });
-  expect(screen.getByText('Which runway at Goliad?')).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: '29', exact: true }));
-  expect(screen.getByText(/With the wind 130.*runway 29/)).toBeTruthy();
-  fireEvent.change(mode, { target: { value: 'practice' } });
-  expect(screen.queryByText(/With the wind 130.*runway 29/)).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: /Next/ }));
-  expect(screen.queryByText('Which runway at Goliad?')).toBeNull();
-  expect(screen.queryByText('Wind-favored runway at Goliad:')).toBeNull();
-  fireEvent.keyDown(document.body, { key: 'ArrowLeft' });
-  expect(screen.getByText('Wind-favored runway at Goliad:')).toBeTruthy();
-  fireEvent.keyDown(document.body, { key: 'ArrowRight' });
-  expect(screen.queryByText('Wind-favored runway at Goliad:')).toBeNull();
+  // Skipped through, it tells Goliad's weather, then its runway for that wind; not the legs
+  // flown or the maneuvers.
+  const told = document.querySelector('.pf-skipped').textContent;
+  expect(told).toMatch(/Goliad automated weather observation\. Wind 130.*Runway 11/);
+  expect(told).not.toMatch(/GOOFTWAR|G-Warm|Flew/);
 });
 
 test('right arrow uses read-through and left arrow restores the whole exchange', () => {

@@ -33,7 +33,9 @@ export function withHistory(h, action) {
   if (now === h.now) return h;
   // The course rules, arriving after the flight has begun, go into every state kept too, so
   // going back never returns to a flight without them.
-  if (action.type === 'legs') {
+  // So is a new call sign number: going back never brings the old one back, and typing it is
+  // not a step to go back over.
+  if (action.type === 'legs' || action.type === 'callsign') {
     return { past: h.past.map((p) => reduce(p, action)), now, marks: h.marks.map((m) => ({ ...m, state: reduce(m.state, action) })) };
   }
   if (action.type === 'type') return { ...h, now };
