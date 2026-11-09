@@ -1,9 +1,14 @@
 // /primary/practice — a contact flight from the line to the line, said out step by step: every
 // checklist response, intercom and radio call, the course rules legs picked as you fly, and a
 // random emergency when you ask for one. The flight itself is engine.js; this is its page.
+// Read-through shows a whole conversation and worked knowledge checks. Quiz keeps the drill.
+// Preflight, the wind: random at every ATIS and field weather, random once, or a KNGP runway's.
+// The toolbar's callsign number updates future calls and its matching squawk.
+// Mobile keeps flight info folded and returns to the card after navigation, never to the log.
 
-import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { TYPED, canSkipTo, current, isCue, linesOf, options, situationsFor, start, switchesChannel } from './engine';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { TYPED, activeRunway, canSkipTo, current, isCue, linesOf, options, practiceAnswer, readThrough, situationsFor, start, switchesChannel, windFor } from './engine';
+import { NORTH_FLOW, RUNWAYS, drawWind, homeRunwaysForWind, three } from './card';
 import { radioOf } from './figures';
 import { labelOf, nameOf, shortName } from './legs';
 import { firstLetters } from '../briefs/firstLetters';
@@ -21,12 +26,13 @@ function SetupPrompt({ s, step }) {
   const m = MANEUVERS[step.maneuver];
   const last = s.lastManeuver ? MANEUVERS[s.lastManeuver].label : null;
   return (
-    <div className="pf-setup">
+    <div className="pf-setup pf-setup--altitude">
+      <div className="pf-setup-label">Current altitude</div>
       <div className="pf-setup-alt">
         {last ? `The ${last.toLowerCase()} left you at ${ft(s.alt)}.`
           : `Level outside the block at ${ft(s.alt)}.`}
       </div>
-      <div className="pf-when">Next: {m.label}</div>
+      <div className="pf-when">Next maneuver: {m.label}</div>
     </div>
   );
 }
@@ -77,9 +83,9 @@ const whoOf = (w) => WHO[w] || w;
 
 const refText = (ref) => (ref ? [ref.work, ref.loc, ref.pages].filter(Boolean).join(', ') : '');
 
-const RESULT = { said: 'Said', correct: 'Correct', partial: 'Partly right', shown: 'Answer shown' };
+const RESULT = { said: 'Said', read: 'Read', correct: 'Correct', partial: 'Partly right', shown: 'Answer shown' };
 const isReply = (step) => step && step.kind === 'reply';
-const MARK = { said: '', correct: '✓', partial: '≈', shown: '?' };
+const MARK = { said: '', read: '', correct: '✓', partial: '≈', shown: '?' };
 
 // What comes after the step on screen, in a few words.
 function nextOf(s) {
@@ -94,7 +100,9 @@ function nextOf(s) {
   if (seg.checklist) return 'A checklist';
   if (seg.calls) return CALLS[seg.calls] || '';
   if (seg.legCalls) return `Calls for ${labelOf(seg.legCalls)}`;
-  if (seg.choose) return seg.choose === 'plan' ? 'Pick the working area' : 'Pick the next leg';
+  if (seg.choose) return seg.choose === 'weather' ? 'Pick the wind'
+    : seg.choose === 'homeRunway' ? 'Pick the landing runway'
+      : seg.choose === 'plan' ? 'Pick the working area' : 'Pick the next leg';
   if (seg.ask) return 'Climb Checklist?';
   return '';
 }
@@ -113,7 +121,34 @@ function devTools() {
   }
 }
 
-function StatusBar({ s, back, dispatch }) {
+// Empty until a number is typed; a 7XX or 8XX number becomes the call sign as it is typed.
+function CallsignNumber({ chosen, dispatch }) {
+  const [text, setText] = useState(chosen || '');
+  return (
+    <input
+      className="pf-select pf-callsign-input"
+      aria-label="Callsign number"
+      placeholder="Callsign #"
+      inputMode="numeric"
+      maxLength={3}
+      value={text}
+      onChange={(e) => {
+        const value = e.target.value;
+        setText(value);
+        if (/^[78]\d{2}$/.test(value)) dispatch({ type: 'callsign', side: value });
+      }}
+    />
+  );
+}
+
+function StatusBar({ s, back, dispatch, quiz, setQuiz }) {
+  const [expanded, setExpanded] = useState(false);
+  const scrollPosition = useRef(null);
+  useLayoutEffect(() => {
+    if (scrollPosition.current === null) return;
+    window.scrollTo({ top: scrollPosition.current, behavior: 'instant' });
+    scrollPosition.current = null;
+  }, [expanded]);
   const step = current(s);
   const phase = s.ep && !s.ep.situation ? 'Emergency' : step?.phase || 'Shutdown';
   const seen = new Set(s.log.map((l) => l.phase));
@@ -121,7 +156,7 @@ function StatusBar({ s, back, dispatch }) {
   // Until the ATIS is heard the runway isn't known, so neither is the departure.
   const where = s.atisHeard && s.route.length > 1 ? labelOf(s.node) : 'KNGP, on the line';
   const doing = s.ep ? s.ep.title : step?.kind === 'checklist' ? 'Calling for a checklist'
-    : step?.group ? CALLS[step.group] : ['plan', 'area', 'block', 'order', 'olf'].includes(step?.choose) ? 'Briefing'
+    : step?.group ? CALLS[step.group] : ['plan', 'area', 'block', 'order', 'olf', 'weather'].includes(step?.choose) ? 'Briefing'
       : step?.choose === 'entryPlan' ? 'Planning the entry'
       : ['maneuver', 'altitude'].includes(step?.choose) ? 'High work' : step?.choose === 'cua' ? 'Unusual attitude'
         : step?.choose === 'checkout' ? 'Checking out' : step?.kind === 'choose' ? 'Picking a leg' : '';
@@ -130,7 +165,20 @@ function StatusBar({ s, back, dispatch }) {
     : fits.length ? '' : 'Nothing that comes up here fits this moment';
 
   return (
-    <div className="pf-status">
+    <div className={expanded ? 'pf-status pf-status--expanded' : 'pf-status'}>
+      <button type="button" className="pf-status-toggle" aria-expanded={expanded}
+        aria-controls="pf-status-details" onClick={() => {
+          if (window.matchMedia('(max-width: 760px)').matches) scrollPosition.current = window.scrollY;
+          setExpanded(!expanded);
+        }}>
+        <span>Settings and info</span>
+        <span>{expanded ? 'Collapse ▴' : 'Expand ▾'}</span>
+      </button>
+      {!expanded && <div className="pf-status-compact">
+        <div><span className="pf-status-label">Now</span> {doing || phase}</div>
+        {next && <div><span className="pf-status-label">Next</span> {next}</div>}
+      </div>}
+      <div id="pf-status-details" className="pf-status-details">
       <ol className="pf-phases" aria-label="Phases of the flight">
         {phasesFor(s.order).map((p) => {
           // A stage already begun takes the flight back to where it began (everything since is
@@ -181,6 +229,15 @@ function StatusBar({ s, back, dispatch }) {
             Skip stage
           </button>
           <button type="button" className="pf-btn" onClick={() => dispatch({ type: 'restart' })}>Restart</button>
+          <select
+            className="pf-select"
+            aria-label="Flight mode"
+            value={quiz ? 'quiz' : 'practice'}
+            onChange={(e) => setQuiz(e.target.value === 'quiz')}
+          >
+            <option value="practice">Practice Mode</option>
+            <option value="quiz">Quiz Mode</option>
+          </select>
           {/* The squadron is the one picked on Discussion Items (My squadron), and the other way. */}
           <select
             className="pf-select"
@@ -194,10 +251,12 @@ function StatusBar({ s, back, dispatch }) {
             <option value="Boomer">Boomer (VT-27)</option>
             <option value="Ranger">Ranger (VT-28)</option>
           </select>
+          <CallsignNumber chosen={s.sideChoice} dispatch={dispatch} />
         </div>
       </div>
       <Readout fly={s.fly || {}} />
       <FlightCard s={s} />
+      </div>
     </div>
   );
 }
@@ -232,10 +291,18 @@ function FlightCard({ s }) {
     <dl className="pf-flightcard">
       <div><dt>Call sign</dt><dd>{c.callSign}</dd></div>
       <div><dt>Squawk</dt><dd>{c.squawk}</dd></div>
-      <div>
-        <dt>ATIS</dt>
-        <dd>{s.atisHeard ? `${c.atis}: wind ${c.windDir} at ${c.windSpeed}, altimeter ${c.altimeter}, runway ${c.rwy} (${c.north ? 'North' : 'South'} Flow)` : 'not yet copied'}</dd>
-      </div>
+      {/* The weather last heard: KNGP's ATIS, or an outlying field's once it is copied. */}
+      {s.heardWx ? (
+        <div>
+          <dt>{shortName(s.heardWx.field)}</dt>
+          <dd>{`Wind ${s.heardWx.windDir} at ${s.heardWx.windSpeed}, runway ${activeRunway(s, s.heardWx.field)}`}</dd>
+        </div>
+      ) : (
+        <div>
+          <dt>ATIS</dt>
+          <dd>{s.atisHeard ? `${c.atis}: wind ${c.windDir} at ${c.windSpeed}, altimeter ${c.altimeter}, runway ${c.rwy} (${c.north ? 'North' : 'South'} Flow)` : 'not yet copied'}</dd>
+        </div>
+      )}
       {s.plan && <div><dt>Area</dt><dd>{s.path ? nameOf(s.path[s.path.length - 1]) : s.plan}</dd></div>}
       {s.block && <div><dt>{s.block.name}</dt><dd>{ft(s.block.bottom)}-{ft(s.block.top)}</dd></div>}
     </dl>
@@ -251,7 +318,84 @@ function Line({ entry }) {
   );
 }
 
+function Exchange({ lines, context, note, example }) {
+  return (
+    <section className="pf-exchange" aria-label="Voice exchange">
+      <div className="pf-exchange-heading">
+        {context}
+      </div>
+      {note && <p className="pf-when">{note}</p>}
+      {example && <p className="pf-when">The study guide's example call.</p>}
+      <div className="pf-exchange-lines">
+        {lines.map((line, i) => (
+          <div key={i} className={line.who === 'you' ? 'pf-exchange-line pf-exchange-line--pilot' : 'pf-exchange-line'}>
+            <span className="pf-exchange-speaker">{line.who === 'you' ? 'Pilot' : whoOf(line.who)}</span>
+            <div className="pf-exchange-body">
+              <p className="pf-lines">{line.text}</p>
+              {line.note && <span className="pf-when">{line.note}</span>}
+              {line.generated && <span className="pf-when">Generated comms</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// The wind for the flight: random at every ATIS and field weather, random once, or a KNGP
+// runway's (within 20 degrees of it). Each pick, and New wind, draws a wind afresh; the
+// direction can be typed over.
+const WIND_HELP = {
+  every: 'Wind is randomly generated for every ATIS/AWOS.',
+  once: 'Wind is randomly generated once at the start of the flight.',
+};
+function WeatherSetup({ s, dispatch }) {
+  const [pick, setPick] = useState(s.windPick || 'every');
+  const [wind, setWind] = useState({ windDir: s.card.windDir, windSpeed: s.card.windSpeed });
+  const draw = (value) => {
+    const runway = RUNWAYS.find(({ rwy }) => rwy === value);
+    setWind(drawWind(Math.random, runway ? runway.hdg : null));
+  };
+  // Any number is a wind direction, said to the nearest 10 degrees (135 is 140, 370 is 010);
+  // only an empty box is not. The browser's own check is off (noValidate): its message is not
+  // the site's.
+  const valid = /^\d{1,3}$/.test(wind.windDir);
+  const favored = valid ? homeRunwaysForWind(wind.windDir) : [];
+  const runway = favored.find(({ rwy }) => rwy === pick) || favored[0];
+  return (
+    <form className="pf-weather" noValidate onSubmit={(e) => {
+      e.preventDefault();
+      if (valid) dispatch({ type: 'choose', id: pick, windDir: wind.windDir, windSpeed: wind.windSpeed });
+    }}>
+      <label className="pf-weather-field">
+        Wind
+        <select className="pf-select" value={pick} onChange={(e) => { setPick(e.target.value); draw(e.target.value); }}>
+          <option value="every">Random every time</option>
+          <option value="once">Random once</option>
+          {[true, false].map((north) => (
+            <optgroup key={String(north)} label={north ? 'North Flow' : 'South Flow'}>
+              {RUNWAYS.filter(({ rwy }) => NORTH_FLOW.includes(rwy) === north).map(({ rwy }) => (
+                <option key={rwy} value={rwy}>Runway {rwy}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </label>
+      <label className="pf-weather-field">
+        Wind direction
+        <input className="pf-input" type="number" min="0" max="360" step="10" placeholder="001 to 360"
+          value={wind.windDir} onChange={(e) => setWind({ ...wind, windDir: e.target.value })} />
+      </label>
+      <button type="button" className="pf-btn" onClick={() => draw(pick)}>New wind</button>
+      <p className="pf-when">{WIND_HELP[pick] || 'Wind is kept constant for the whole flight.'}</p>
+      {runway && <p className="pf-weather-preview">Wind {three(Math.round(Number(wind.windDir) / 10) * 10)} at {wind.windSpeed} knots, runway {runway.rwy}, {NORTH_FLOW.includes(runway.rwy) ? 'North' : 'South'} Flow.</p>}
+      <button type="submit" className="pf-btn pf-btn--go" disabled={!valid}>Continue</button>
+    </form>
+  );
+}
+
 // Choice buttons, with the runway legs gathered under their route ("Rusty Departures": 04 13L …).
+
 function Choices({ opts, onChoose }) {
   const groups = [];
   opts.forEach((o) => {
@@ -277,12 +421,6 @@ function Choices({ opts, onChoose }) {
   );
 }
 
-// A paragraph's figures, as the readout takes them.
-function FlyLine({ figs }) {
-  const parts = [figs.alt, figs.hdg, figs.kias, figs.ch && [figs.ch, figs.station].filter(Boolean).join(' ')].filter(Boolean);
-  return parts.length ? <div className="pf-rule-fly">{parts.join(' · ')}</div> : null;
-}
-
 // A rule's text with its marked words blanked (a line as long as the word) or filled in.
 function Words({ text, filled }) {
   return text.split(/\[\[([^[\]]+)\]\]/).map((part, j) => (j % 2
@@ -291,8 +429,7 @@ function Words({ text, filled }) {
 }
 
 // A course rule revealed a piece at a time (engine.js piecesOf): each sentence with a blank, so
-// every change of altitude, airspeed, heading or channel is its own stop. A revealed piece shows
-// what it says to fly.
+// every change of altitude, airspeed, heading or channel is its own stop.
 function Rule({ step, upTo, shown }) {
   const pieces = (step.pieces || []).map((x, k) => ({ ...x, k }));
   const open = (k) => shown || k < upTo;
@@ -312,7 +449,6 @@ function Rule({ step, upTo, shown }) {
               )) : <Words text={p.text} filled />}
             </p>
             {p.cite && <span className="pf-rule-cite">{p.cite}</span>}
-            {mine.filter((x) => open(x.k)).map((x) => <FlyLine key={x.k} figs={x.figs} />)}
           </div>
         );
       })}
@@ -473,16 +609,19 @@ const BackButton = ({ canBack, dispatch }) => (
   </button>
 );
 
-function StepCard({ s, canBack, dispatch }) {
+function StepCard({ s: flight, canBack, dispatch, quiz }) {
+  const { state: s, following } = quiz ? { state: flight, following: [] } : readThrough(flight);
   const step = current(s);
   const input = useRef(null);
   const go = useRef(null);
+  const worked = !quiz && practiceAnswer(s);
   const ep = s.ep;
   const typed = step && TYPED.has(step.kind);
   const reply = isReply(step);
 
   // Enter (or Space) reveals, then goes on: the button keeps the focus from step to step.
   useEffect(() => {
+    if (document.activeElement?.classList.contains('pf-callsign-input')) return;
     const el = step?.typed ? input.current : go.current;
     if ((typed || reply) && el) el.focus({ preventScroll: true });
   }, [step, typed, reply]);
@@ -496,8 +635,8 @@ function StepCard({ s, canBack, dispatch }) {
       <div className="pf-card">
         <h2 className="pf-card-title">{s.ended ? `Flight ended: ${s.ended}` : 'Engine shutdown complete'}</h2>
         <p className="pf-done">
-          {said.length} steps said, {s.route.length - 1} legs flown.
-          {said.length !== count('said') && ` Typed: ${count('correct')} right first time, ${count('partial')} partly right, ${count('shown')} looked up.`}
+          {said.length - count('read')} steps said, {count('read')} read, {s.route.length - 1} legs flown.
+          {said.some((l) => ['correct', 'partial', 'shown'].includes(l.result)) && ` Typed: ${count('correct')} right first time, ${count('partial')} partly right, ${count('shown')} looked up.`}
         </p>
         <button type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: 'restart' })}>Fly again</button>
       </div>
@@ -520,6 +659,15 @@ function StepCard({ s, canBack, dispatch }) {
   const answer = Array.isArray(step.answer) ? step.answer[0] : step.answer;
   // A rule or a procedure's numbers is revealed line by line, in place.
   const lined = step.kind === 'rule' || step.kind === 'numbers';
+  const exchangeRadio = step.radio || following.find((line) => line.radio)?.radio;
+  const showExchange = s.cur.shown && !lined && step.kind !== 'checklist';
+  const prompt = (
+    <Prompt
+      step={!quiz && exchangeRadio ? { ...step, radio: exchangeRadio } : step}
+      shown={s.cur.shown || (s.cur.upTo || 0) >= 1 || (step.kind === 'call' && !s.cur.total && !switchesChannel(step, s.fly))}
+      from={s.cur.chFrom}
+    />
+  );
   const onKey = (e) => {
     if (e.key !== 'Enter') return;
     e.preventDefault();
@@ -556,38 +704,53 @@ function StepCard({ s, canBack, dispatch }) {
               : step.choose === 'cua' ? (step.part === 'pcl' ? 'Recover: the PCL?' : 'And the control stick?')
               : step.choose === 'area' ? (step.phase === 'Preflight' ? `Which ${s.plan} area?` : `Which ${s.plan} area are you claiming?`)
               : step.choose === 'block' ? 'High or low block?'
-              : step.choose === 'altitude' ? `Where do you set up for the ${MANEUVERS[step.maneuver].label.toLowerCase()}?`
+              : step.choose === 'altitude' ? (worked ? `Before the ${MANEUVERS[step.maneuver].label.toLowerCase()}:`
+                : `Where do you set up for the ${MANEUVERS[step.maneuver].label.toLowerCase()}?`)
               : step.choose === 'maneuver' ? (s.hwFlown && s.hwFlown.length ? `The ${MANEUVERS[s.lastManeuver].label.toLowerCase()} left you at ${ft(s.alt)}. Which maneuver next?` : 'High work: which maneuver first?')
               : step.choose === 'checkout' ? `Checking out of ${nameOf(s.node).replace(/\s*\d+\s*$/, '')}: which checks?`
               : step.choose === 'order' ? 'High work or low work first?'
+                : step.choose === 'weather' ? 'Wind for this flight'
+                : step.choose === 'homeRunway' ? 'Which KNGP runway for landing?'
                 : step.choose === 'plan' ? 'Which working area is being planned for?'
                   : step.choose === 'olf' ? 'Brief: where is the low work?'
                 : step.choose === 'entry' ? `Entering the field off ${labelOf(step.leg)}: a break or a PEL?`
-                  : step.choose === 'runway' ? `Which runway at ${shortName(step.field)}?`
+                  : step.choose === 'runway' ? (worked ? `Runway in use at ${shortName(step.field)}:`
+                    : `Which runway at ${shortName(step.field)}?`)
                   : step.choose === 'entryPlan' ? `Before you leave the area, will you enter ${shortName(step.field)} through a break or a PEL?`
                   : step.choose === 'lap' ? 'This time round: a normal lap or a pattern PEL?'
                     : step.choose === 'field' ? `At ${nameOf(s.node)}. Pick what you do next.`
                   : `At ${nameOf(s.node)}. Pick the next leg below or on the map.`}
           </div>
-          {step.choose === 'altitude' ? <AltitudeBox s={s} dispatch={dispatch} />
+          {worked ? <p className="pf-worked-answer">{worked.label}</p>
+            : step.choose === 'weather' ? <WeatherSetup s={s} dispatch={dispatch} />
+            : step.choose === 'altitude' ? <AltitudeBox s={s} dispatch={dispatch} />
             : <Choices opts={options(s)} onChoose={(id) => dispatch({ type: 'choose', id })} />}
-          {s.cur.problem && <p className="pf-feedback pf-feedback--wrong">{s.cur.problem}</p>}
+          {['homeRunway', 'runway'].includes(step.choose) && (() => {
+            const w = windFor(s, step.choose === 'runway' ? step.field : null);
+            return <p className="pf-when">Wind {w.windDir} at {w.windSpeed} knots.</p>;
+          })()}
+          {!worked && s.cur.problem && <p className="pf-feedback pf-feedback--wrong">{s.cur.problem}</p>}
           {step.choose === 'cua' && step.ref && <p className="pf-source">Source: {refText(step.ref)}</p>}
-          {canBack && <div className="pf-actions"><BackButton canBack={canBack} dispatch={dispatch} /></div>}
+          {(canBack || worked) && (
+            <div className="pf-actions">
+              <BackButton canBack={canBack} dispatch={dispatch} />
+              {worked && <button type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: 'readNext' })}>Next <Key k="→" /></button>}
+            </div>
+          )}
         </>
       )}
 
       {reply && (
         <>
-          <div className="pf-reply">
-            <span className="pf-reply-who">{step.who === 'ip' ? 'IP' : step.who}{step.radio ? ` · ${step.radio}` : ''}</span>
-            {/* A report (the altitude check) is not something said, so it has no quotes. */}
-            <span className="pf-reply-text">{step.plain ? step.text : `“${step.text}”`}</span>
-          </div>
-          {step.generated && <p className="pf-when">Generated comms</p>}
+          {step.plain ? (
+            <div className="pf-reply">
+              <span className="pf-reply-who">{whoOf(step.who)}</span>
+              <span className="pf-reply-text">{step.text}</span>
+            </div>
+          ) : <Exchange lines={[{ ...step, note: null }, ...following]} context={prompt} note={step.note} example={step.example} />}
           <div className="pf-actions">
             <BackButton canBack={canBack} dispatch={dispatch} />
-            <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: 'next' })}>Next <Key k="→" /></button>
+            <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: quiz ? 'next' : 'readNext' })}>Next <Key k="→" /></button>
           </div>
           {step.ref && <p className="pf-source">Source: {refText(step.ref)}</p>}
         </>
@@ -597,17 +760,19 @@ function StepCard({ s, canBack, dispatch }) {
         <>
           {/* A call's channel is its first line: shown once revealed, the call after. */}
           {/* Switching, the channel is asked first; already on it, it just shows. */}
-          <Prompt
-            step={step}
-            shown={s.cur.shown || (s.cur.upTo || 0) >= 1 || (step.kind === 'call' && !s.cur.total && !switchesChannel(step, s.fly))}
-            from={s.cur.chFrom}
-          />
+          {!showExchange && step.kind !== 'numbers' && prompt}
+          {step.kind === 'checklist' && s.cur.shown && <p className="pf-worked-answer">{answer}</p>}
           {step.kind === 'rule' && <Rule step={step} upTo={s.cur.upTo || 0} shown={s.cur.shown} />}
-          {step.kind === 'numbers' && <Numbers step={step} upTo={s.cur.upTo || 0} shown={s.cur.shown} />}
-          {step.note && <p className="pf-when">{step.note}</p>}
-          {step.example && <p className="pf-when">The study guide's example call.</p>}
-          {step.generated && <p className="pf-when">Generated comms</p>}
-          {step.typed && !s.cur.shown && (
+          {step.kind === 'numbers' && (
+            <section className="pf-procedure" aria-label={step.leg}>
+              {prompt}
+              <Numbers step={step} upTo={s.cur.upTo || 0} shown={s.cur.shown} />
+            </section>
+          )}
+          {!showExchange && step.note && <p className="pf-when">{step.note}</p>}
+          {!showExchange && step.example && <p className="pf-when">The study guide's example call.</p>}
+          {!showExchange && step.generated && <p className="pf-when">Generated comms</p>}
+          {quiz && step.typed && !s.cur.shown && (
           <div className="pf-answer">
             <input
               ref={input}
@@ -626,10 +791,13 @@ function StepCard({ s, canBack, dispatch }) {
           {s.cur.result === 'partial' && !s.cur.shown && <p className="pf-feedback pf-feedback--partial">Close: something is missing or extra.</p>}
           {s.cur.result === 'incorrect' && !s.cur.shown && <p className="pf-feedback pf-feedback--wrong">Not that. Try again, or ask for a hint.</p>}
           {s.cur.hint && !s.cur.shown && !lined && <p className="pf-hint">{firstLetters(answer)}</p>}
-          {s.cur.shown && !lined && <p className="pf-shown pf-lines">“{answer}”</p>}
+          {showExchange && (
+            <Exchange context={prompt} note={step.note} example={step.example}
+              lines={[{ ...step, who: 'you', text: answer, note: null }, ...following]} />
+          )}
           <div className="pf-actions">
             <BackButton canBack={canBack} dispatch={dispatch} />
-            <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: s.cur.shown ? 'next' : 'reveal' })}>
+            <button ref={go} type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: !quiz ? 'readNext' : s.cur.shown ? 'next' : 'reveal' })}>
               {s.cur.shown ? 'Next' : (s.cur.total || linesOf(step, s.fly)) > 1 ? 'Reveal next' : 'Reveal'} <Key k="→" />
             </button>
             {!s.cur.shown && (s.cur.total || linesOf(step, s.fly)) > 1 && (
@@ -670,9 +838,13 @@ function CopyFlight({ s }) {
 }
 
 function FlightLog({ log, s }) {
-  const end = useRef(null);
+  const panel = useRef(null);
   const [open, setOpen] = useState(() => typeof window === 'undefined' || !window.matchMedia || window.matchMedia('(min-width: 761px)').matches);
-  useEffect(() => { if (open && end.current) end.current.scrollIntoView({ block: 'nearest' }); }, [log.length, open]);
+  useEffect(() => {
+    if (open && panel.current && window.matchMedia('(min-width: 761px)').matches) {
+      panel.current.scrollTop = panel.current.scrollHeight;
+    }
+  }, [log.length, open]);
 
   const groups = [];
   log.forEach((l, i) => {
@@ -683,7 +855,7 @@ function FlightLog({ log, s }) {
   const said = log.filter((l) => RESULT[l.result]);
 
   return (
-    <details className="pf-log" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+    <details ref={panel} className="pf-log" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary>Flight log <span className="pf-log-count">{said.length} steps</span><CopyFlight s={s} /></summary>
       <div className="pf-log-body">
         {/* One fold per stage flown: the stage you're in is open, and each one closes when the
@@ -710,41 +882,56 @@ function FlightLog({ log, s }) {
             </details>
           );
         })}
-        <div ref={end} />
       </div>
     </details>
   );
 }
 
 function PracticeFlight() {
-  const [h, dispatch] = useReducer(withHistory, undefined, () => {
+  const [quiz, setQuiz] = useState(false);
+  const main = useRef(null);
+  const navigation = useRef(false);
+  const [h, rawDispatch] = useReducer(withHistory, undefined, () => {
     const squadron = squadronFromStorage();
     return begin(start(null, squadron ? { card: { squadron } } : {}));
   });
+  const dispatch = useCallback((action) => {
+    navigation.current = !['type', 'callsign', 'squadron', 'legs'].includes(action.type);
+    rawDispatch(action);
+  }, []);
   const s = h.now;
+  useEffect(() => {
+    if (!navigation.current) return;
+    navigation.current = false;
+    if (!window.matchMedia('(max-width: 760px)').matches || !main.current) return;
+    const status = main.current.closest('.pf-page').querySelector('.pf-status');
+    const offset = getComputedStyle(status).position === 'sticky'
+      ? Math.max(0, status.getBoundingClientRect().bottom) + 12 : 12;
+    window.scrollBy({ top: main.current.getBoundingClientRect().top - offset, behavior: 'instant' });
+  }, [s]);
 
-  // Right arrow: reveal, then on; left arrow: back a step. Not while typing in a box.
+  // Right arrow follows the selected mode; left arrow goes back. Not while typing in a box.
   useEffect(() => {
     const onKey = (e) => {
       if (e.altKey || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
       if (e.key === 'ArrowLeft') { e.preventDefault(); dispatch({ type: 'back' }); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); dispatch({ type: 'forward' }); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); dispatch({ type: quiz ? 'forward' : 'readNext' }); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [dispatch, quiz]);
   const step = current(s);
   // On the map a field's arrivals are drawn one by one; clicking any picks the field.
   const onChoose = useCallback((id) => {
     const field = options(h.now).find((o) => o.legs && o.legs.includes(id));
     dispatch({ type: 'choose', id: field ? field.id : id });
-  }, [h.now]);
+  }, [h.now, dispatch]);
 
   // The legs' radio calls, from the course rules document. Until it arrives (or if it can't be
   // read) the flight uses the study guide's calls.
   useEffect(() => {
     fetchCourseRules().then((r) => r && r.doc && dispatch({ type: 'legs', legs: r.doc.legs || {}, fields: r.doc.airfields || {} }), () => {});
-  }, []);
+  }, [dispatch]);
 
   // Only the choices that are legs go on the map; worked out once per step so the map does not
   // refit while typing.
@@ -757,10 +944,11 @@ function PracticeFlight() {
   return (
     <div className="pf-page">
       <Notice />
-      <StatusBar s={s} back={backable(h)} dispatch={dispatch} />
+      <StatusBar s={quiz ? s : readThrough(s).state} back={backable(h)} dispatch={dispatch}
+        quiz={quiz} setQuiz={setQuiz} />
       <div className="pf-body">
-        <div className="pf-main">
-          <StepCard s={s} canBack={h.past.length > 0} dispatch={dispatch} />
+        <div ref={main} className="pf-main">
+          <StepCard s={s} canBack={h.past.length > 0} dispatch={dispatch} quiz={quiz} />
           {/* The flight goes on the map once it is flying: until then, only home. */}
           <PracticeMap
             route={s.airborne ? s.route : [s.route[0]]}

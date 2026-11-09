@@ -9887,6 +9887,11 @@ button.epl-modal-close:hover {
   border-color: var(--bad-text);
 }
 
+.pf-status-toggle,
+.pf-status-compact {
+  display: none;
+}
+
 .pf-phases {
   display: flex;
   gap: 4px;
@@ -9960,8 +9965,41 @@ button.epl-modal-close:hover {
 
 .pf-status-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   flex: none;
+}
+
+.pf-weather {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 16px;
+}
+
+.pf-weather-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 180px;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.pf-weather-field .pf-input {
+  flex: none;
+  height: 32px;
+  padding: 0 8px;
+}
+
+.pf-weather p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.pf-weather-preview {
+  font-size: 14px;
+  color: var(--ink-strong);
 }
 
 /* A course rule said from memory: the marked words blank until revealed. */
@@ -10020,6 +10058,76 @@ button.epl-modal-close:hover {
   color: var(--ink-strong);
 }
 
+.pf-exchange,
+.pf-procedure {
+  margin: 12px 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--line-accent);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.pf-exchange-heading {
+  margin-bottom: 8px;
+}
+
+.pf-exchange-heading .pf-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 0;
+}
+
+.pf-exchange-lines {
+  display: grid;
+  gap: 5px;
+}
+
+.pf-exchange-line {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.pf-exchange-line--pilot {
+  margin: 0 -8px;
+  padding: 8px;
+  border-top-color: transparent;
+  border-radius: 6px;
+  background: var(--wash);
+}
+
+.pf-exchange-speaker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  color: var(--ink-muted);
+}
+
+.pf-exchange-line--pilot .pf-exchange-speaker {
+  color: var(--ink-accent);
+}
+
+.pf-exchange-body {
+  min-width: 0;
+}
+
+.pf-exchange-body p {
+  margin: 0;
+  font-size: clamp(15px, 1.6vw, 17px);
+  font-weight: 600;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  color: var(--ink-strong);
+}
+
 /* High work: where the last maneuver left you, and what the next one needs. */
 .pf-setup {
   margin: 0 0 8px;
@@ -10030,6 +10138,30 @@ button.epl-modal-close:hover {
   font-weight: 600;
   color: var(--ink-strong);
   margin-bottom: 4px;
+}
+
+.pf-setup--altitude {
+  margin-bottom: 20px;
+}
+
+.pf-setup-label {
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.pf-setup--altitude .pf-setup-alt {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.pf-worked-answer {
+  margin: 4px 0 20px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink-strong);
 }
 
 .pf-flightcard {
@@ -10469,13 +10601,6 @@ button.epl-modal-close:hover {
   border-left-color: var(--ink-accent);
 }
 
-.pf-rule-fly {
-  margin-top: 2px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink-accent);
-}
-
 /* An FTI procedure's numbers. */
 .pf-numbers {
   border-collapse: collapse;
@@ -10483,10 +10608,17 @@ button.epl-modal-close:hover {
   font-size: 15px;
 }
 
+.pf-procedure .pf-challenge {
+  font-size: 15px;
+  font-weight: 600;
+}
+
 .pf-numbers th,
 .pf-numbers td {
-  padding: 4px 12px 4px 8px;
+  padding: 8px;
+  border: 0;
   border-bottom: 1px solid var(--line);
+  background: transparent;
   text-align: left;
   vertical-align: top;
 }
@@ -10497,8 +10629,8 @@ button.epl-modal-close:hover {
 }
 
 .pf-numbers td {
-  font-weight: 700;
-  color: var(--ink-accent);
+  font-weight: 600;
+  color: var(--ink-strong);
 }
 
 .pf-numbers-next th {
@@ -10535,6 +10667,60 @@ button.epl-modal-close:hover {
 }
 
 @media (max-width: 760px) {
+  .pf-status-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 32px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .pf-status-toggle:hover {
+    background: var(--wash);
+    color: var(--ink-strong);
+  }
+
+  .pf-status-toggle:focus-visible {
+    outline: 2px solid var(--line-accent);
+    outline-offset: 2px;
+  }
+
+  .pf-status {
+    overflow-anchor: none;
+  }
+
+  .pf-status-compact {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .pf-status-details {
+    display: none;
+  }
+
+  .pf-status--expanded .pf-status-details {
+    display: block;
+    margin-top: 8px;
+    max-height: calc(60vh - 58px);
+    max-height: calc(60dvh - 58px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .pf-main {
+    overflow-anchor: none;
+  }
+
   .pf-page {
     padding: 8px 16px 32px;
   }
@@ -10662,6 +10848,8 @@ button.epl-modal-close:hover {
 .pf-rule-piece--next { background: var(--wash); border-radius: 3px; }
 .pf-rule-cite { display: block; font-size: 0.8rem; color: var(--ink-muted); }
 .pf-select {
+  font: inherit;
+  font-size: 14px;
   height: 32px;
   padding: 0 8px;
   border: 1px solid var(--line);
@@ -10669,6 +10857,17 @@ button.epl-modal-close:hover {
   background: var(--surface);
   color: var(--ink);
 }
+
+.pf-callsign-input {
+  box-sizing: border-box;
+  width: 96px;
+}
+
+.pf-weather-field .pf-input::placeholder,
+.pf-callsign-input::placeholder {
+  color: var(--ink-faint);
+}
+
 .pf-numbers-static th { font-weight: 600; color: var(--ink-accent); }
 .pf-callouts { display: flex; flex-direction: column; gap: 4px; margin: 10px 0 0; }
 .pf-callout { padding: 2px 6px; border-radius: 3px; color: var(--ink); }

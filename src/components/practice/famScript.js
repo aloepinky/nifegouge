@@ -174,11 +174,13 @@ export const VOICE_REPORT = {
 };
 
 // The flight's order. `phase` is what the top of the page says you are doing. The working area
-// is picked first, as it is filed and briefed: it decides the departure and the calls to Ground
-// and Departure. The legs flown after it are added by the engine as the student picks them.
+// is picked after the work order and before weather, as it is filed and briefed: it decides the
+// departure and the calls to Ground and Departure. The legs flown after it are added by the
+// engine as the student picks them.
 export const GROUND = [
   { phase: 'Preflight', stage: 'preflight', choose: 'order' },
   { phase: 'Preflight', stage: 'preflight', choose: 'plan' },
+  { phase: 'Preflight', stage: 'preflight', choose: 'weather' },
   { phase: 'Preflight', stage: 'preflight', calls: 'pins' },
   { phase: 'Taxi', stage: 'ground', calls: 'atis' },
   { phase: 'Taxi', stage: 'ground', calls: 'clearanceDelivery' },

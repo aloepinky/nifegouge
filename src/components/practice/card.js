@@ -4,8 +4,9 @@
 // What is invented here is invented to be plausible, never cited:
 // - the call sign and squawk follow the wing's pattern: "Our Call-Sign will be
 //   BOOMER/RANGER/RUFNEK 7XX/8XX and we will squawk 55XX/56XX" (Checklist Study Guide, Encl 2);
-// - the wind is rounded to ten degrees and blows within 30 degrees of the runway in use, at 4 to
-//   15 knots; the runway is the one the ATIS would give for it;
+// - the wind is rounded to ten degrees and blows within 30 degrees of the runway in use (20 of a
+//   runway picked for practice), at 4 to 15 knots; the runway is the one the ATIS would give for
+//   it;
 // - the flow follows the runway: 13L/R, 18 and 22 are South Flow (taxi to the Sierra run-up),
 //   04, 31L/R and 36 North Flow (the Compass Rose, then Ground to the Echo run-up) (Course
 //   Rules Manual 2-1).
@@ -15,7 +16,7 @@ const PHONETIC = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf
   'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu'];
 
 // KNGP's runways, by how often a day's wind favours them; the 13s most of all.
-const RUNWAYS = [
+export const RUNWAYS = [
   { rwy: '13L', hdg: 130, weight: 4 },
   { rwy: '13R', hdg: 130, weight: 2 },
   { rwy: '31R', hdg: 310, weight: 1.5 },
@@ -39,21 +40,49 @@ function pickRunway(rng) {
   return RUNWAYS.find((r) => (at -= r.weight) < 0) || RUNWAYS[0];
 }
 
-const three = (deg) => String(((deg % 360) + 360) % 360 || 360).padStart(3, '0');
+// A wind direction as said: three digits, 360 for north, any number of degrees taken round.
+export const three = (deg) => String(((Number(deg) % 360) + 360) % 360 || 360).padStart(3, '0');
+
+// A wind for practice: within 20 degrees of runway heading `hdg` when one is given, else within
+// 30 of a KNGP runway drawn by how often the wind favours it.
+export function drawWind(rng, hdg = null) {
+  const near = hdg === null ? pickRunway(rng).hdg : hdg;
+  const spread = hdg === null ? 30 : 20;
+  return { windDir: three(Math.round((near + between(rng, -spread, spread)) / 10) * 10), windSpeed: between(rng, 4, 15) };
+}
+
+// The next ATIS letter after `atis`, for a new ATIS.
+export const nextAtis = (atis) => PHONETIC[(PHONETIC.indexOf(atis) + 1) % PHONETIC.length];
+
+// KNGP's runways for a wind: the ones nearest its direction, the most used first.
+export function homeRunwaysForWind(direction) {
+  const angle = (hdg) => Math.abs(((Number(direction) - hdg + 540) % 360) - 180);
+  const best = Math.min(...RUNWAYS.map(({ hdg }) => angle(hdg)));
+  return RUNWAYS.filter(({ hdg }) => angle(hdg) === best);
+}
+
+export function withHomeRunway(card, rwy, direction = card.windDir) {
+  const runway = RUNWAYS.find((r) => r.rwy === rwy);
+  if (!runway) throw new Error(`Unknown home runway: ${rwy}`);
+  return { ...card, rwy, hdg: runway.hdg, north: NORTH_FLOW.includes(rwy), windDir: three(direction) };
+}
 
 export function makeCard(rng = Math.random, given = {}) {
   const runway = given.rwy ? RUNWAYS.find((r) => r.rwy === given.rwy) : pickRunway(rng);
-  const dir = Math.round((runway.hdg + between(rng, -30, 30)) / 10) * 10;
+  if (!runway) throw new Error(`Unknown home runway: ${given.rwy}`);
+  const spread = given.rwy ? 20 : 30;
+  const dir = Math.round((runway.hdg + between(rng, -spread, spread)) / 10) * 10;
   const hundred = pick(rng, ['7', '8']);
   const tail = String(between(rng, 0, 99)).padStart(2, '0');
   const drawn = pick(rng, SQUADRONS);
   const squadron = given.squadron || drawn;
-  const side = `${hundred}${between(rng, 0, 4)}${tail.slice(1)}`;
+  const generatedSide = `${hundred}${between(rng, 0, 4)}${tail.slice(1)}`;
+  const side = given.side || generatedSide;
   return {
     squadron,
     side,
     callSign: `${squadron} ${side}`,
-    squawk: `${hundred === '7' ? '55' : '56'}${side.slice(1)}`,
+    squawk: `${side[0] === '7' ? '55' : '56'}${side.slice(1)}`,
     atis: pick(rng, PHONETIC),
     windDir: three(dir),
     windSpeed: between(rng, 4, 15),

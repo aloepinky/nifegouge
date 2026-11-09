@@ -50,8 +50,8 @@ export const ORDERS = {
 const BUFFER = 500;
 
 // The block a flight works in (Course Rules Manual: KINGS 4 MOA, 2-24; MUSTANG working
-// altitudes), the altitude it arrives at, and the maneuvers' order. Null where there is no
-// high work (FOXTROT's middle block is too low to spin in).
+// altitudes; FOXTROT, 2-21), the altitude it arrives at, and the maneuvers' order. Null where
+// there is no high work.
 export function blockFor(group, which, { fromGoliad } = {}) {
   if (group === 'KINGS 4') {
     // "Maintain 14,500' MSL until within the lateral confines of the MOA. Once within the MOA,
@@ -63,6 +63,12 @@ export function blockFor(group, which, { fromGoliad } = {}) {
     return which === 'low'
       ? { name: 'Low block', bottom: 9000, top: 14000, arrive, order: ORDERS.low }
       : { name: 'High block', bottom: 15000, top: 22000, arrive, order: ORDERS.high };
+  }
+  if (/^FOXTROT/i.test(group || '')) {
+    // "Middle Block (Hellcat Primary) 7,000' - 11,999' MSL" (2-21), arriving at the transition's
+    // 5,500 ("climb to 5500' MSL", 2-4). The block tops out below the spin's 13,500 feet entry
+    // minimum, so there is no spin (the user's, 2026-11-08).
+    return { name: 'Middle block', bottom: 7000, top: 11999, arrive: 5500, order: ORDERS.high.filter((m) => m !== 'spin') };
   }
   if (/^MUSTANG|^Mustang/.test(group || '')) {
     // "Working altitudes are 6500' MSL to 15,000' MSL"; arriving at the transition's 5,500.
