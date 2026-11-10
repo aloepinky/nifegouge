@@ -37,7 +37,7 @@ const KEYS = { NIFEDocuments: 'docId', NIFELinks: 'linkId' };
 
 async function seed() {
   const tables = { NIFEDocuments: {}, NIFELinks: {} };
-  for (const program of ['nife', 'tw4primary']) {
+  for (const program of ['nife', 'tw4primary', 't44c', 't54a']) {
     const docs = await (await fetch(`${LIVE}/get-documents?program=${program}`)).json();
     const links = await (await fetch(`${LIVE}/get-links?program=${program}`)).json();
     for (const d of docs.documents || []) tables.NIFEDocuments[d.docId] = { program, ...d };

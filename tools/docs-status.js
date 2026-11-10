@@ -10,8 +10,11 @@
 //   node tools/docs-status.js --list --find="course rules"  every entry whose title matches
 //   node tools/docs-status.js --kind=link --id=link_... --useful=1 --note="Exam questions changed"
 //   node tools/docs-status.js --kind=link --id=link_... --clear
+//   node tools/docs-status.js --kind=doc --id=doc_... --topic=aero   refile under another topic
 //
-//   --program=<p>   nife | tw4primary (default: both)
+//   --program=<p>   nife | tw4primary | t44c | t54a (default: all)
+//   --topic=<t>     the topic value the entry is filed under (the program's topics in its *Docs.js);
+//                   not a vote, so it leaves the outdated counts and their 45 days alone
 //   --useful=N / --obsolete=N   set that count exactly; either may be given alone
 //   --note=<text>   the reason the page shows beside the badge
 //   --clear         remove the votes and the note: the entry is current again
@@ -105,7 +108,12 @@ async function set() {
       sets.push('outdatedAt = :at');
       values[':at'] = new Date().toISOString();
     }
-    if (!sets.length) throw new Error('nothing to set: give --useful, --obsolete, --note or --clear');
+    if (value('topic') !== null) {
+      if (!/^[a-z0-9]+$/.test(value('topic'))) throw new Error('--topic is a topic value, like aero');
+      sets.push('topic = :topic');
+      values[':topic'] = value('topic');
+    }
+    if (!sets.length) throw new Error('nothing to set: give --useful, --obsolete, --note, --topic or --clear');
     params.UpdateExpression = `SET ${sets.join(', ')}`;
     params.ExpressionAttributeValues = values;
   }
@@ -115,7 +123,7 @@ async function set() {
     return;
   }
   const { Attributes: r } = await db.send(new UpdateCommand({ ...params, ReturnValues: 'ALL_NEW' }));
-  console.log(`${stateOf(r)}  ${id}  ${k.title(r)}  useful ${r.outdatedUseful || 0}, obsolete ${r.outdatedObsolete || 0}` +
+  console.log(`${stateOf(r)}  ${id}  ${k.title(r)}  [${r.topic}]  useful ${r.outdatedUseful || 0}, obsolete ${r.outdatedObsolete || 0}` +
     (r.outdatedAt ? `  last vote ${r.outdatedAt.slice(0, 10)}` : '') +
     (r.outdatedNote ? `  "${r.outdatedNote}"` : ''));
 }
