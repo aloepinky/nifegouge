@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { accelerateStop, singleEngineClimb, stallSpeed } from './t44cCharts';
 
 // The VT-31 / VT-35 TOLD card, laid out as the squadron prints it, blanks staggered in the
-// card's three columns (`col`). Rows marked `calc` are worked out; the rest are typed. What
-// is typed is kept in this browser, so the card is as it was left.
+// card's three columns (`col`). Rows marked `calc` are worked out; the rest are typed. Rows
+// marked `brief` are the three the squadron's sample circles, the ones briefed. What is typed
+// is kept in this browser, so the card is as it was left.
 
 const STORE_KEY = 't44cToldCard';
 
@@ -25,17 +26,17 @@ const WEIGHTS = [
   { gap: 'landing', over: String(LANDING_WEIGHT), col: 2 },
   { id: 'total', n: 4, label: 'Total (1-3)', col: 2, calc: true },
   { id: 'maxFuelLand', n: 5, label: 'Maximum Fuel to land', col: 2, calc: true },
-  { id: 'maxFuelSide', n: 6, label: 'Max Fuel per side (Max fuel to land /2)', col: 3, calc: true },
+  { id: 'maxFuelSide', n: 6, label: 'Max Fuel per side (Max fuel to land /2)', col: 3, calc: true, brief: true },
   { id: 'fuelLoad', n: 7, label: 'Fuel Load', col: 1, calc: true },
   { id: 'gross', n: 8, label: 'Gross Weight (#4 + #7)', col: 1, calc: true },
 ];
 
 const PERFORMANCE = [
   { id: 'accelStop', label: 'Accelerate / Stop Distance', col: 1 },
-  { id: 'noReverse', sub: 'a.', label: 'High Idle, No Reverse +900 feet', col: 2, calc: true },
+  { id: 'noReverse', sub: 'a.', label: 'High Idle, No Reverse +900 feet', col: 2, calc: true, brief: true },
   { id: 'reverse', sub: 'b.', label: 'High Idle, Reverse - 700 feet', col: 2, calc: true },
   { gap: 'above-climb' },
-  { id: 'singleEngineClimb', label: 'One Engine INOP Max Rate of Climb', col: 3 },
+  { id: 'singleEngineClimb', label: 'One Engine INOP Max Rate of Climb', col: 3, brief: true },
   { gap: 'below-climb' },
   { label: 'Stall Speeds' },
   { id: 'stallUp', sub: 'a.', label: 'Flaps Up (0), 0 AOB', col: 3 },
@@ -95,7 +96,7 @@ function worked(card, clearing) {
     stallFull: suggest('stallFull', Math.round(stallSpeed('full', weight))),
     total: shown(total),
     maxFuelLand: shown(maxFuelLand),
-    maxFuelSide: shown(maxFuelLand / 2),
+    maxFuelSide: shown(Math.round(maxFuelLand / 2)),
     fuelLoad: shown(num(card.fuel)),
     gross: shown(total + num(card.fuel)),
     noReverse: shown(num(accelStop) + 900),
@@ -103,9 +104,9 @@ function worked(card, clearing) {
   };
 }
 
-function Blank({ id, label, card, set, numeric = true, readOnly = false, onBlur }) {
+function Blank({ id, label, card, set, numeric = true, readOnly = false, brief = false, onBlur }) {
   return (
-    <td className="t44c-told-blank">
+    <td className={`t44c-told-blank${brief ? ' is-brief' : ''}`}>
       <input
         type="text"
         inputMode={numeric ? 'decimal' : undefined}
@@ -143,7 +144,9 @@ function Row({ row, card, set, onBlur }) {
     <tr>
       <td className={labelClass}>{label}</td>
       {[1, 2, 3].map((col) => {
-        if (col === row.col) return <Blank key={col} id={row.id} label={row.label} card={card} set={set} readOnly={row.calc} onBlur={onBlur} />;
+        if (col === row.col) {
+          return <Blank key={col} id={row.id} label={row.label} card={card} set={set} readOnly={row.calc} brief={row.brief} onBlur={onBlur} />;
+        }
         if (row.note && col === row.col + 1) {
           return <td key={col} colSpan={3 - row.col} className="t44c-told-note told-unit">{row.note}</td>;
         }

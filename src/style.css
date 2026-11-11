@@ -155,6 +155,7 @@
   --btn-2: #003b4f;
   --on-brand: #ffffff;
   --wash: rgba(0, 59, 79, 0.05);
+  --highlighter: rgba(255, 213, 0, 0.22);
   --wash-01202c-a012: rgba(1, 32, 44, 0.12);
   --wash-003b4f-a0025: rgba(0, 59, 79, 0.025);
   --wash-003b4f-a003: rgba(0, 59, 79, 0.03);
@@ -416,6 +417,7 @@
   --btn-2: #0a5068;
   --on-brand: #ffffff;
   --wash: rgba(144, 190, 213, 0.08);
+  --highlighter: rgba(255, 213, 0, 0.13);
   --wash-01202c-a012: rgba(144, 190, 213, 0.192);
   --wash-003b4f-a0025: rgba(144, 190, 213, 0.04);
   --wash-003b4f-a003: rgba(144, 190, 213, 0.048);
@@ -2712,6 +2714,10 @@ textarea.incorrect-answer {
 .t44c-told .told-table td { border: none; padding: 5px 8px; }
 
 .t44c-told .told-table td.t44c-told-blank { padding: 4px 8px; }
+
+/* The lines briefed from the card, circled on the squadron's sample. */
+.t44c-told .told-table td.is-brief input,
+.t44c-told .told-table td.is-brief input:focus { background: var(--highlighter); }
 
 .t44c-told-lines { border-top: 1px solid var(--ink); }
 
