@@ -84,7 +84,9 @@ describe('voice script', () => {
   test('the PM takes time to do its own action before answering', () => {
     const lines = scriptFor(proc('after-start'));
     const set = lines.find((l) => l.step === 'as1' && l.text === 'SET');
-    expect(set).toMatchObject({ seat: 'PM', after: PM_ACTION });
+    expect(set).toMatchObject({ seat: 'PM', after: 0 });
+    const fuel = lines.find((l) => l.step === 'as4' && l.seat === 'PM' && l.kind === 'say' && l.text !== 'Oxygen Mask Mic');
+    expect(fuel).toMatchObject({ after: PM_ACTION });
     // Answering after the PF is no action of its own.
     const flaps = scriptFor(proc('before-start')).filter((l) => l.step === 'bs4');
     expect(flaps.map((l) => l.after)).toEqual([0, 0, 0]);
@@ -148,8 +150,7 @@ describe('voice script', () => {
       'PF: Radar CHECKED/STANDBY', 'PM: Radar CHECKED/STANDBY',
     ]);
     const full = bt6('full');
-    expect(full.slice(0, 2)).toEqual(['PM: Anti-Ice/Deice/Radar', 'PF: Full Anti-Ice/Deice Check']);
-    expect(full).toEqual(expect.arrayContaining(['PF: Propeller deicer, Give 30 second intervals', 'PM: 30 seconds x4']));
+    expect(full.slice(0, 3)).toEqual(['PM: Anti-Ice/Deice/Radar', 'PF: Give 30 second intervals', 'PM: 30 seconds x4']);
     expect(full.filter((l) => /Give 30 second intervals/.test(l))).toHaveLength(1);
     expect(full).not.toContain('PF: Pitot Heat CHECKED');
     expect(full.slice(-2)).toEqual(['PF: Radar CHECKED/STANDBY', 'PM: Radar CHECKED/STANDBY']);
@@ -159,6 +160,7 @@ describe('voice script', () => {
     const bt = scriptFor(proc('before-takeoff'));
     expect(bt.find((l) => l.step === 'bt18' && l.text === 'SET').after).toBe(0);
     expect(bt.find((l) => l.step === 'bt19' && l.text === 'ARMED').after).toBe(0);
+    expect(bt.find((l) => l.step === 'bt8' && l.text === 'CLOSED').after).toBe(0);
     expect(scriptFor(proc('after-start')).find((l) => l.step === 'as10' && l.text === 'STANDBY').after).toBe(0);
   });
 

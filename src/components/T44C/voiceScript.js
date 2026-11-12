@@ -82,7 +82,8 @@ export function doneCall(done) {
 // its own lines, found with `opts.find(id)` (the user, 2026-11-12).
 export function scriptFor(proc, opts = {}) {
   const antiIce = opts.antiIce || 'pitot';
-  const out = [line(proc.id, 'title', 'PF', 'say', titleCall(proc))];
+  // A procedure said inside another (`insert`) has no title call of its own.
+  const out = opts.inserted ? [] : [line(proc.id, 'title', 'PF', 'say', titleCall(proc))];
   proc.rows.forEach((row, i) => {
     if (row.decision) { out.push(line(proc.id, `d${i}`, 'PM', 'act', row.decision)); return; }
     if (!row.challenge) return; // a note
@@ -91,14 +92,14 @@ export function scriptFor(proc, opts = {}) {
       : row.critical ? [] : [{ text: row.reply, who: row.who }];
     let pending = null; // a memory step's challenge, said with the PF's first line
     let afterChallenge = false; // the next line is the first after the PM's challenge
-    if (row.critical) pending = row.challenge;
+    if (row.critical) pending = row.quietChallenge ? null : row.challenge;
     else { out.push(line(proc.id, row.id, 'PM', 'say', row.challenge)); afterChallenge = true; }
     replies.forEach((r) => {
       if (r.branch && r.branch !== antiIce) return;
       if (r.inInsert) return;
       if (r.insert) {
         const inner = opts.find && opts.find(r.insert);
-        if (inner) out.push(...scriptFor(inner, opts));
+        if (inner) out.push(...scriptFor(inner, { ...opts, inserted: true }));
         afterChallenge = false;
         return;
       }

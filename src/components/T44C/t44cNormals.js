@@ -415,7 +415,8 @@ const AFTER_START = {
   rows: [
     item('as1', 'Environmental Controls', 'SET', 'RS', {
       action: ['RS sets environmental controls as desired.'],
-      replies: [ip('SET', 'RS')],
+      // Answered at once (the user, 2026-11-12).
+      replies: [ip('SET', 'RS', { after: 0 })],
     }),
     item('as2', 'Generator Voltages', 'CHECKED', 'LS', {
       // Both PRESS FOR VOLTS buttons, in either order (the user, 2026-11-04).
@@ -768,8 +769,9 @@ const BEFORE_TAKEOFF = {
     }),
     item('bt8', 'Bleed Air Valves', 'OPEN or CLOSED', 'RS', {
       action: ['RS sets bleed air valves as required.'],
-      // CLOSED, as they typically are (the user, 2026-11-12); the card still reads OPEN or CLOSED.
-      replies: [ip('CLOSED', 'RS'), act('(as required)')],
+      // CLOSED, as they typically are, and answered at once (the user, 2026-11-12); the card
+      // still reads OPEN or CLOSED.
+      replies: [ip('CLOSED', 'RS', { after: 0 }), act('(as required)')],
     }),
     abbrev('bt9', 'Trim', 'CHECKED/SET', 'PF, PM', {
       // All three wheels and the control wheel's split switch, which drives the elevator trim
@@ -941,7 +943,10 @@ const ANTI_ICE_CHECK = {
   title: 'Full Anti-Ice/Deice Check',
   normal: true,
   rows: [
+    // `quietChallenge`: the PF's call is the reply alone, "Give 30 second intervals" (the user,
+    // 2026-11-12).
     memory('ai1', 'Propeller deicer', 'ON', undefined, {
+      quietChallenge: true,
       shows: ['Prop Amps'],
       action: [
         'Commence timing. Assure PROP AMPS indicate 14 to 18 during each of the 4 phases. The timer will switch phases approximately every 30 seconds. Momentary needle deflection may be visible as propeller heat cycles between phases. Secure the system after amperage is checked during the fourth phase (2 minutes minimum). Additional anti-ice and deice checks may be performed while the propeller is being checked.',
