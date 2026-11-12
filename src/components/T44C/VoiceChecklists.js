@@ -14,10 +14,13 @@ const CHECKLISTS = T44C_HOLLYWOOD.filter((p) => !p.id.startsWith('start-'));
 // SpeechRecognition (Chrome, Edge, Safari), which may need a signal; without it, or where the
 // browser has none, Next and the space bar move on instead.
 //
-// Safari (every iPhone browser included) stops listening when the phone speaks and won't
-// reliably start again on its own, so there the recogniser is stopped before each spoken line
-// and started for each of the student's (`PER_TURN`); elsewhere it runs the whole time. If a
-// start is refused, a "Tap to listen" button starts it from the student's own tap.
+// The recogniser runs the whole time (stopping it per call made an iPhone ding at every turn).
+// If a start is refused, a "Tap to listen" button starts it from the student's own tap.
+//
+// Bluetooth earbuds: a page using the microphone puts them in headset mode, and an iPhone's
+// recogniser hears nothing through their mic (Powerbeats Pro, 2026-11-12). So "Go on when I"
+// can be the earbud's button instead: the page plays a loop of silence, which is what gives it
+// the earbud's presses (Media Session), and listening stays off.
 //
 // Everything runs off refs (`live`, `at`, `tok`): the speech engine calls back long after the
 // render that started it. `tok` is bumped by every move the student makes, so a callback from a
@@ -27,7 +30,25 @@ const Recognition = typeof window !== 'undefined' && (window.SpeechRecognition |
 const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
 const UA = typeof navigator !== 'undefined' ? navigator.userAgent : '';
 const IOS = /iP(hone|ad|od)/.test(UA) || (typeof navigator !== 'undefined' && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const PER_TURN = IOS || (/Safari/.test(UA) && !/Chrome|Chromium|Edg|OPR/.test(UA));
+const canEarbud = typeof navigator !== 'undefined' && 'mediaSession' in navigator;
+const ADVANCE = [
+  ['voice', 'stop talking'],
+  ['earbud', 'press my earbud'],
+  ['tap', 'tap Next'],
+];
+
+// A second of silence as a WAV, looped while the earbud is the Next button.
+function silentWav() {
+  const rate = 8000;
+  const d = new DataView(new ArrayBuffer(44 + rate));
+  const w = (o, str) => [...str].forEach((c, i) => d.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); d.setUint32(4, 36 + rate, true); w(8, 'WAVE'); w(12, 'fmt ');
+  d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+  d.setUint32(24, rate, true); d.setUint32(28, rate, true); d.setUint16(32, 1, true); d.setUint16(34, 8, true);
+  w(36, 'data'); d.setUint32(40, rate, true);
+  for (let i = 0; i < rate; i += 1) d.setUint8(44 + i, 128);
+  return URL.createObjectURL(new Blob([d.buffer], { type: 'audio/wav' }));
+}
 
 const KEY = 't44cVoice';
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
@@ -83,11 +104,14 @@ export default function VoiceChecklists() {
   const [view, setView] = useState({ proc: 0, pos: 0 });
   const [status, setStatus] = useState('idle'); // idle | speaking | listening | reading | paused | done
   const [heard, setHeard] = useState('');
-  const [deaf, setDeaf] = useState(!Recognition); // no listening: Next moves on
+  const [deafErr, setDeaf] = useState(!Recognition); // can't listen here: Next moves on
+  const [advance, setAdvance] = useState(ADVANCE.some(([k]) => k === saved.advance) ? saved.advance : 'voice');
+  const deaf = deafErr || advance !== 'voice';
   const [message, setMessage] = useState('');
   const [mic, setMic] = useState('off'); // off | on | tap (refused: needs the student's tap)
 
-  useEffect(() => save({ seat, chain, hide, wait, speed, voice: voiceName }), [seat, chain, hide, wait, speed, voiceName]);
+  useEffect(() => save({ seat, chain, hide, wait, speed, advance, voice: voiceName }),
+    [seat, chain, hide, wait, speed, advance, voiceName]);
 
   useEffect(() => {
     if (!canSpeak) return undefined;
@@ -101,7 +125,7 @@ export default function VoiceChecklists() {
   }, []);
 
   const live = useRef({});
-  Object.assign(live.current, { seat, chain, wait, speed, voices, voiceName, deaf });
+  Object.assign(live.current, { seat, chain, wait, speed, voices, voiceName, deaf, advance });
   const at = useRef({ proc: 0, pos: 0 });
   const tok = useRef(0);
   const timer = useRef(null);
@@ -142,7 +166,6 @@ export default function VoiceChecklists() {
 
   const speak = (l, token, then) => {
     setStatus('speaking');
-    if (PER_TURN) abortRec();
     if (!canSpeak) { timer.current = setTimeout(then, 800); return; }
     const u = new SpeechSynthesisUtterance(l.say);
     const v = voiceFor(l.seat);
@@ -166,7 +189,6 @@ export default function VoiceChecklists() {
     setHeard('');
     listening.current = { token, from: resultsLen.current, text: '' };
     restarts.current = 0;
-    if (PER_TURN) startRec();
   };
 
   // Plays the line the position is on, then the next, until a line is the student's.
@@ -238,9 +260,7 @@ export default function VoiceChecklists() {
     else next();
   };
 
-  // Whether the recogniser should be running now: the whole run, or on Safari only while the
-  // student's call is awaited.
-  const wantRec = () => running.current && !live.current.deaf && (!PER_TURN || !!listening.current);
+  const wantRec = () => running.current && !live.current.deaf;
 
   const makeRec = () => {
     const r = new Recognition();
@@ -333,6 +353,33 @@ export default function VoiceChecklists() {
     try { if (navigator.wakeLock) wake.current = await navigator.wakeLock.request('screen'); } catch { /* refused */ }
   };
 
+  const earbud = useRef(null);
+  const startEarbud = () => {
+    if (live.current.advance !== 'earbud' || earbud.current) return;
+    const a = new Audio(silentWav());
+    a.loop = true;
+    a.play().catch(() => {});
+    earbud.current = a;
+    if (!canEarbud) return;
+    const ms = navigator.mediaSession;
+    try { ms.metadata = new window.MediaMetadata({ title: 'T-44C checklists' }); } catch { /* none */ }
+    // One press (play or pause), two (next track) or three (previous track).
+    const go = () => { if (earbud.current && earbud.current.paused) earbud.current.play().catch(() => {}); live.current.tap(); };
+    [['play', go], ['pause', go], ['nexttrack', go], ['previoustrack', () => live.current.back()]]
+      .forEach(([act, fn]) => { try { ms.setActionHandler(act, fn); } catch { /* unsupported */ } });
+  };
+  const stopEarbud = () => {
+    const a = earbud.current;
+    if (!a) return;
+    a.pause();
+    URL.revokeObjectURL(a.src);
+    earbud.current = null;
+    if (canEarbud) {
+      ['play', 'pause', 'nexttrack', 'previoustrack']
+        .forEach((act) => { try { navigator.mediaSession.setActionHandler(act, null); } catch { /* unsupported */ } });
+    }
+  };
+
   const stop = () => {
     running.current = false;
     stopRec();
@@ -343,7 +390,8 @@ export default function VoiceChecklists() {
     running.current = true;
     setMessage('');
     setMic('off');
-    if (!PER_TURN) startRec();
+    startRec();
+    startEarbud();
     lockScreen();
     if (!lineAt()) moveTo(at.current.proc, 0);
     play(); // inside the click, which some browsers need before they will speak
@@ -358,6 +406,7 @@ export default function VoiceChecklists() {
   const reset = (proc) => {
     quiet();
     stop();
+    stopEarbud();
     moveTo(proc, 0);
     setHeard('');
     setStatus('idle');
@@ -392,9 +441,10 @@ export default function VoiceChecklists() {
   }, []);
   live.current.tap = tap;
   live.current.pause = pause;
+  live.current.back = () => (running.current ? back() : null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => () => { quiet(); stop(); }, []);
+  useEffect(() => () => { quiet(); stop(); stopEarbud(); }, []);
 
   const current = useRef(null);
   useEffect(() => {
@@ -415,7 +465,7 @@ export default function VoiceChecklists() {
     paused: 'Paused',
     done: 'Checklist complete',
   }[status];
-  const micText = deaf ? 'Press Next after your call' : mic === 'on' ? 'Listening' : mic === 'tap' ? '' : 'Mic starting';
+  const micText = advance === 'earbud' ? 'Press your earbud' : deaf ? 'Press Next after your call' : mic === 'on' ? 'Listening' : mic === 'tap' ? '' : 'Mic starting';
   const primary = busy
     ? { label: 'Next', onClick: tap }
     : { label: status === 'paused' ? 'Resume' : status === 'done' ? 'Again' : 'Start',
@@ -449,6 +499,19 @@ export default function VoiceChecklists() {
             <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} />
             Hide my calls
           </label>
+          <label>
+            Go on when I
+            <select value={advance} onChange={(e) => { setAdvance(e.target.value); reset(view.proc); }}>
+              {ADVANCE.filter(([k]) => (k !== 'voice' || Recognition) && (k !== 'earbud' || canEarbud))
+                .map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+            </select>
+          </label>
+          {advance === 'earbud' && (
+            <p>
+              Press once or twice for the next call, three times to go back. Bluetooth earbuds
+              can&apos;t be used to talk to this page, so it doesn&apos;t listen in this mode.
+            </p>
+          )}
           {!deaf && (
             <label>
               Wait after I stop talking
@@ -476,8 +539,9 @@ export default function VoiceChecklists() {
           )}
           {IOS && (
             <p>
-              For a better voice on an iPhone, download one under Settings, Accessibility, Spoken
-              Content, Voices, English. Then reload this page.
+              For a better voice on an iPhone, download one under Settings, Accessibility, Read
+              &amp; Speak (Spoken Content on older iPhones), Voices, English. Then close Safari and
+              open this page again. Siri&apos;s own voices can&apos;t be used by a web page.
             </p>
           )}
         </div>

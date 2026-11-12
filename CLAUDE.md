@@ -813,7 +813,10 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   or says the line's last word (Next and the space bar where it can't listen). The PM reads
   challenges; a memory step's challenge is said in the PF's first line; `act` lines and radio
   calls are shown, not spoken. No engine model, no comms. Recognition needs a secure page
-  (https or localhost).
+  (https or localhost). An iPhone's recogniser hears nothing through Bluetooth earbuds (the
+  user's Powerbeats Pro), so "Go on when I" can be the earbud's button: a looped silent WAV
+  gives the page the presses (Media Session), and listening stays off. Voices are known by
+  voiceURI (an iPhone lists "Tom" twice, compact and Enhanced) and Apple's gag voices are cut.
 - A step that only looks at an instrument is `look: true` (t44cNormals.js), and so is, in
   effect, a step whose control is in and which is missing only instruments (`glances`, set from
   `GAUGES` there). Clicking a later step's control with nothing but such steps between does
