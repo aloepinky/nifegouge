@@ -27,6 +27,9 @@ export const seatOf = (who, fallback) => {
 
 const RADIO = /^(Navy |\(Squadron\)|.*\(call-sign\),)/;
 export const PM_ACTION = 2;
+// A crew brief is long and paused in: the voice page waits at least this long after the
+// student stops talking before moving on, whatever the Wait setting (the user, 2026-11-12).
+export const BRIEF_WAIT = 1.2;
 
 // Words the speech engine should read as letters. Everything else in capitals is said as a word.
 const LETTERS = new Set(['ATIS', 'ICS', 'ITT', 'IGN', 'GEN', 'OBS', 'PM', 'PF', 'LS', 'RS', 'FD', 'YD', 'AP',
@@ -109,7 +112,7 @@ export function scriptFor(proc, opts = {}) {
       if (pending && seat === 'PF') { text = `${pending}, ${text}`; pending = null; }
       const after = r.after ?? (afterChallenge && seat === 'PM' ? PM_ACTION : 0);
       afterChallenge = false;
-      out.push(line(proc.id, row.id, seat, 'say', text, after));
+      out.push({ ...line(proc.id, row.id, seat, 'say', text, after), minWait: r.brief ? BRIEF_WAIT : 0 });
     });
     // A memory step with nothing spoken (Fuel Flow - Note): the PF's, shown as done.
     if (pending) out.push(line(proc.id, row.id, owner, 'act', `${row.challenge} - ${row.reply}`));

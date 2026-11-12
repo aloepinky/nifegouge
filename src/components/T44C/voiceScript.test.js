@@ -128,8 +128,8 @@ describe('voice script', () => {
       'PM: Set 30.12, reading 30 feet, RADALT checks', 'PF: CHECKED/SET', 'PM: CHECKED/SET',
     ]);
     expect(said2('bt12')).toEqual([
-      'PM: FMS', 'PF: Hold the checklist. You have the controls.',
-      'PM: I have the controls', 'PF: You have the controls. I will be heads down.', 'PF: Verify', 'PM: Execute',
+      'PM: FMS', 'PF: Hold the checklist. You have the controls. I will be heads down.',
+      'PM: I have the controls', 'PF: You have the controls', 'PF: Verify', 'PM: Execute',
       'PM: You have the controls', 'PF: I have the controls', 'PM: You have the controls',
       'PF: CHECKED/SET', 'PM: CHECKED/SET',
     ]);
@@ -166,5 +166,10 @@ describe('voice script', () => {
     const lines = said(scriptFor(proc('approach')).filter((l) => l.step === 'ap9'));
     expect(lines[1]).toMatch(/^PF: Once safely on the runway, I'll call Reset Flaps, Trim/);
     expect(lines.slice(2)).toEqual(['PF: Any questions?', 'PM: No', 'PF: BRIEFED']);
+    const brief = scriptFor(proc('approach')).find((l) => /^Once safely/.test(l.text));
+    expect(brief.minWait).toBe(1.2);
+    const tko = scriptFor(proc('before-takeoff')).find((l) => /^Back me up/.test(l.text));
+    expect(tko.minWait).toBe(1.2);
+    expect(scriptFor(proc('approach')).find((l) => l.text === 'Any questions?').minWait).toBe(0);
   });
 });

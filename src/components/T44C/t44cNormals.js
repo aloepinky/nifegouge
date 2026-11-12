@@ -15,7 +15,8 @@
 //                      `after`, seconds Voice Checklists waits before saying it (T44C/voiceScript.js;
 //                      0 where the PM answers at once). `branch` ('pitot' | 'full') a reply said
 //                      only on that kind of anti-ice check, `header` its heading, `insert` the
-//                      procedure said in its place, `inInsert` a line that procedure says itself.
+//                      procedure said in its place, `inInsert` a line that procedure says itself,
+//                      `brief` a crew brief, whose pauses the voice page waits out longer.
 //   watch              what else the action has the student operate or check besides the step's
 //                      control (the ice vanes, the elapsed time key, FAULT WARN pressed to
 //                      cancel), as poster wordings (t44cPoster.js). A step that only checks
@@ -824,8 +825,8 @@ const BEFORE_TAKEOFF = {
       // No clearance or route line, the change of controls said in full, the PF verifying and
       // the PM executing (the user, 2026-11-12).
       replies: [
-        say('Hold the checklist. You have the controls.', 'PF'),
-        ip('I have the controls', 'PM'), say('You have the controls. I will be heads down.', 'PF'),
+        say('Hold the checklist. You have the controls. I will be heads down.', 'PF'),
+        ip('I have the controls', 'PM'), say('You have the controls', 'PF'),
         act('Check 120 Map mode, verify correct routing,'), say('Verify', 'PF'), ip('Execute', 'PM'),
         ...TO_PF,
         say('CHECKED/SET', 'PF'), ip('CHECKED/SET', 'PM'),
@@ -874,7 +875,7 @@ const BEFORE_TAKEOFF = {
         'After cleared to line up and wait or for takeoff: Visually clear the downwind, base, final, and the runway for traffic. Then direct the PM to "continue" the Before Takeoff Checklist while crossing the hold short line and taxiing into position for takeoff.',
       ],
       replies: [
-        say('Back me up on the power quadrant and monitor all engine and flight instruments. Call out any malfunctions. All malfunctions will be handled in accordance with NATOPS. Call rotate at 91 knots and note the time of takeoff. This will be a course rules departure to (working area). In the event of an emergency return, I\'ll maintain VMC, and request downwind.'),
+        { ...say('Back me up on the power quadrant and monitor all engine and flight instruments. Call out any malfunctions. All malfunctions will be handled in accordance with NATOPS. Call rotate at 91 knots and note the time of takeoff. This will be a course rules departure to (working area). In the event of an emergency return, I\'ll maintain VMC, and request downwind.'), brief: true },
         act('-Brief TOLD'), say('Any questions?', 'PF'), ip('No', 'PM'), say('Briefed', 'PF'),
         say('Hold the checklist. Check me out of the yellow. Request further taxi.', 'PF'), ip('You\'re out of the yellow.', 'PM'),
         ip('Navy Corpus Ground, (call-sign), request further taxi.', 'PM'),
@@ -1142,7 +1143,7 @@ const APPROACH = {
       ],
       // The touch and go brief (the user, 2026-11-12), then the action's questions and reply.
       replies: [
-        say('Once safely on the runway, I\'ll call Reset Flaps, Trim and advance the power levers to 12 o\'clock. You reset flaps and trim. Call Go with engines spooled up. Call Rotate at VR with takeoff power set.', 'PF'),
+        { ...say('Once safely on the runway, I\'ll call Reset Flaps, Trim and advance the power levers to 12 o\'clock. You reset flaps and trim. Call Go with engines spooled up. Call Rotate at VR with takeoff power set.', 'PF'), brief: true },
         say('Any questions?', 'PF'), ip('No', 'PM'), say('BRIEFED', 'PF'),
       ],
     }),

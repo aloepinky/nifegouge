@@ -183,6 +183,8 @@ export default function VoiceChecklists() {
   const player = useRef(null); // the one audio element the recorded lines play through
 
   const lineAt = (p = at.current) => scripts[p.proc][p.pos];
+  // How long a pause ends the student's call: the Wait setting, or longer for a brief.
+  const waitFor = (l) => Math.max(live.current.wait, (l && l.minWait) || 0);
   const moveTo = (proc, pos) => { at.current = { proc, pos }; setView({ proc, pos }); };
 
   const quiet = () => {
@@ -353,7 +355,7 @@ export default function VoiceChecklists() {
       setHeard(text);
       clearTimeout(silence.current);
       const l = lineAt();
-      const delay = commandOf(text) ? 400 : endsLine(text, l) ? 250 : live.current.wait * 1000;
+      const delay = commandOf(text) ? 400 : endsLine(text, l) && !l.minWait ? 250 : waitFor(l) * 1000;
       silence.current = setTimeout(() => heardDone(L.token), delay);
     };
     r.onerror = (e) => {
@@ -437,7 +439,7 @@ export default function VoiceChecklists() {
       L.lastVoice = now;
       if (L.loud >= STEADY && !L.spoke) { L.spoke = true; setHeard('Hearing you'); }
     }
-    if (L.spoke && now - L.lastVoice > live.current.wait * 1000) heardDone(L.token);
+    if (L.spoke && now - L.lastVoice > waitFor(lineAt()) * 1000) heardDone(L.token);
   };
   function startVad() {
     if (live.current.advance !== 'voice' || vad.current || !canMic) return;
