@@ -823,6 +823,13 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   voices live there); "Show every voice" lifts the filter. The PF opens every checklist by its
   title; the PM answering its own challenge waits 2 s (`PM_ACTION`); a reply's `after`
   (t44cNormals.js) is a wait before it, Runup 8's from the engine model's light timings.
+  **The voice is recorded** (since 2026-11-12, the user: an iPhone's downloaded voices are not
+  offered to web pages): every line in Amazon Polly's generative voices (PM Matthew, PF
+  Stephen, OBS Ruth), one MP3 per seat and words in `public/voice/t44c/`, listed in
+  `T44C/voiceClips.json`. **After changing any checklist line, run `node
+  tools/t44c-voice-record.js --record`** (maintainer, `aws sso login`): it records only the
+  lines it lacks, about $30 a million characters, the whole set about 10¢. A line without a
+  clip falls back to the browser's voice.
 - A step that only looks at an instrument is `look: true` (t44cNormals.js), and so is, in
   effect, a step whose control is in and which is missing only instruments (`glances`, set from
   `GAUGES` there). Clicking a later step's control with nothing but such steps between does

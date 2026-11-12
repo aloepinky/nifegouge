@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { T44C_HOLLYWOOD } from './t44cNormals';
 import { scriptFor, isMine, commandOf, endsLine } from './voiceScript';
+import CLIPS from './voiceClips.json';
 
 // Every Hollywood checklist but the two start procedures (the user, 2026-11-12).
 const CHECKLISTS = T44C_HOLLYWOOD.filter((p) => !p.id.startsWith('start-'));
@@ -32,6 +33,16 @@ const CHECKLISTS = T44C_HOLLYWOOD.filter((p) => !p.id.startsWith('start-'));
 // Everything runs off refs (`live`, `at`, `tok`): the speech engine calls back long after the
 // render that started it. `tok` is bumped by every move the student makes, so a callback from a
 // line that has been left does nothing.
+
+// The lines recorded with Amazon Polly (tools/t44c-voice-record.js), by seat and words: the
+// same natural voice on every device. A line with no clip, or the phone's own voice picked in
+// Settings, is spoken by the browser.
+const RECORDED = '@recorded';
+const HAS_CLIPS = Object.keys(CLIPS.clips).length > 0;
+const clipFor = (l) => {
+  const file = CLIPS.clips[`${l.seat}|${l.say}`];
+  return file ? `${process.env.PUBLIC_URL || ''}/voice/t44c/${file}` : null;
+};
 
 const Recognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
 const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
@@ -118,7 +129,7 @@ export default function VoiceChecklists() {
   const [hide, setHide] = useState(!!saved.hide);
   const [wait, setWait] = useState(WAITS.includes(saved.wait) ? saved.wait : 1);
   const [speed, setSpeed] = useState(SPEEDS.includes(saved.speed) ? saved.speed : 1.25);
-  const [voiceName, setVoiceName] = useState(saved.voice || '');
+  const [voiceName, setVoiceName] = useState(saved.voicePick ?? (HAS_CLIPS ? RECORDED : saved.voice || ''));
   const [allVoices, setAllVoices] = useState(!!saved.allVoices);
   const [voices, setVoices] = useState(() => englishVoices(!!saved.allVoices));
   const [view, setView] = useState({ proc: 0, pos: 0 });
@@ -133,7 +144,7 @@ export default function VoiceChecklists() {
   const [message, setMessage] = useState('');
   const [mic, setMic] = useState('off'); // off | on | tap (refused: needs the student's tap)
 
-  useEffect(() => save({ seat, chain, hide, wait, speed, advance, allVoices, voice: voiceName }),
+  useEffect(() => save({ seat, chain, hide, wait, speed, advance, allVoices, voicePick: voiceName }),
     [seat, chain, hide, wait, speed, advance, allVoices, voiceName]);
   useEffect(() => setVoices(englishVoices(allVoices)), [allVoices]);
 
@@ -164,6 +175,7 @@ export default function VoiceChecklists() {
   const restarts = useRef(0);
   const utterance = useRef(null);
   const wake = useRef(null);
+  const player = useRef(null); // the one audio element the recorded lines play through
 
   const lineAt = (p = at.current) => scripts[p.proc][p.pos];
   const moveTo = (proc, pos) => { at.current = { proc, pos }; setView({ proc, pos }); };
@@ -176,6 +188,7 @@ export default function VoiceChecklists() {
     speaking.current = false;
     // Only when something is speaking: Chrome can drop a line spoken straight after a cancel.
     if (canSpeak && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) window.speechSynthesis.cancel();
+    if (player.current && !player.current.paused) player.current.pause();
   };
 
   const voiceFor = (s) => {
@@ -190,24 +203,42 @@ export default function VoiceChecklists() {
 
   const speak = (l, token, then) => {
     setStatus('speaking');
-    if (!canSpeak) { timer.current = setTimeout(then, 800); return; }
+    const end = () => {
+      speaking.current = false;
+      if (vad.current) vad.current.quietUntil = performance.now() + ECHO;
+      if (tok.current === token) timer.current = setTimeout(then, 40);
+    };
+    const clip = (live.current.voiceName === RECORDED || !canSpeak) && clipFor(l);
+    if (clip && player.current) {
+      const a = player.current;
+      // A clip that won't play is said by the browser instead.
+      const fallback = () => { if (tok.current === token && speaking.current) { a.onended = null; a.onerror = null; sayTts(l, end); } };
+      a.onended = end;
+      a.onerror = fallback;
+      a.src = clip;
+      a.playbackRate = live.current.speed;
+      a.preservesPitch = true;
+      speaking.current = true;
+      a.play().catch(fallback);
+      return;
+    }
+    sayTts(l, end);
+  };
+
+  function sayTts(l, end) {
+    if (!canSpeak) { timer.current = setTimeout(end, 800); return; }
     const u = new SpeechSynthesisUtterance(l.say);
     const v = voiceFor(l.seat);
     if (v) u.voice = v;
     u.lang = (v && v.lang) || 'en-US';
     u.rate = live.current.speed;
     u.pitch = l.seat === 'OBS' ? 0.85 : 1;
-    const end = () => {
-      speaking.current = false;
-      if (vad.current) vad.current.quietUntil = performance.now() + ECHO;
-      if (tok.current === token) timer.current = setTimeout(then, 40);
-    };
     u.onend = end;
     u.onerror = end;
     utterance.current = u; // held, or some browsers drop it before onend
     speaking.current = true;
     window.speechSynthesis.speak(u);
-  };
+  }
 
   const listen = (token) => {
     setStatus('listening');
@@ -488,6 +519,12 @@ export default function VoiceChecklists() {
       unlock.volume = 0;
       window.speechSynthesis.speak(unlock);
     }
+    // The same for the recorded lines: one audio element, first played inside this tap.
+    if (HAS_CLIPS) {
+      if (!player.current) player.current = new Audio();
+      player.current.src = silentWav();
+      player.current.play().catch(() => {});
+    }
     if (!lineAt()) moveTo(at.current.proc, 0);
     play(); // inside the click, which some browsers need before they will speak
   };
@@ -540,6 +577,13 @@ export default function VoiceChecklists() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => () => { quiet(); stop(); stopEarbud(); }, []);
+
+  // The open checklist's clips, fetched ahead so a line plays without waiting on the network.
+  useEffect(() => {
+    if (!HAS_CLIPS || voiceName !== RECORDED) return;
+    const urls = new Set(scripts[view.proc].map(clipFor).filter(Boolean));
+    urls.forEach((u) => { fetch(u).catch(() => {}); });
+  }, [view.proc, voiceName, scripts]);
 
   const current = useRef(null);
   useEffect(() => {
@@ -625,22 +669,23 @@ export default function VoiceChecklists() {
               </select>
             </label>
           )}
-          {voices.length > 0 && (
+          {(voices.length > 0 || HAS_CLIPS) && (
             <label>
               Voice
               <select value={voiceName} onChange={(e) => setVoiceName(e.target.value)}>
-                <option value="">Best available ({voiceLabel(voices[0])})</option>
+                {HAS_CLIPS && <option value={RECORDED}>Natural (recorded)</option>}
+                {voices.length > 0 && <option value="">This device&apos;s best ({voiceLabel(voices[0])})</option>}
                 {voices.map((v) => <option key={idOf(v)} value={idOf(v)}>{voiceLabel(v)}</option>)}
               </select>
             </label>
           )}
-          {canSpeak && (
+          {canSpeak && voiceName !== RECORDED && (
             <label>
               <input type="checkbox" checked={allVoices} onChange={(e) => setAllVoices(e.target.checked)} />
               Show every voice ({voices.length} {allVoices ? 'on this device' : 'shown'})
             </label>
           )}
-          {IOS && (
+          {IOS && voiceName !== RECORDED && (
             <p>
               For a better voice on an iPhone, download one under Settings, Accessibility, Read
               &amp; Speak (Spoken Content on older iPhones), Voices, English. Then close Safari and
