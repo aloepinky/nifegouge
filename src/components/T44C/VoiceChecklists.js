@@ -14,12 +14,20 @@ const CHECKLISTS = T44C_HOLLYWOOD.filter((p) => !p.id.startsWith('start-'));
 // SpeechRecognition (Chrome, Edge, Safari), which may need a signal; without it, or where the
 // browser has none, Next and the space bar move on instead.
 //
+// Safari (every iPhone browser included) stops listening when the phone speaks and won't
+// reliably start again on its own, so there the recogniser is stopped before each spoken line
+// and started for each of the student's (`PER_TURN`); elsewhere it runs the whole time. If a
+// start is refused, a "Tap to listen" button starts it from the student's own tap.
+//
 // Everything runs off refs (`live`, `at`, `tok`): the speech engine calls back long after the
 // render that started it. `tok` is bumped by every move the student makes, so a callback from a
 // line that has been left does nothing.
 
 const Recognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
 const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
+const UA = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+const IOS = /iP(hone|ad|od)/.test(UA) || (typeof navigator !== 'undefined' && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const PER_TURN = IOS || (/Safari/.test(UA) && !/Chrome|Chromium|Edg|OPR/.test(UA));
 
 const KEY = 't44cVoice';
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
@@ -29,18 +37,37 @@ const WAITS = [0.5, 1, 1.5, 2, 2.5, 3];
 const SPEEDS = [1, 1.25, 1.5, 1.75, 2];
 const SEAT_NAME = { PF: 'PF', PM: 'PM', OBS: 'OBS' };
 
-// The best-sounding voices first: the neural ones (Edge, Windows 11), the downloaded Siri,
-// Premium and Enhanced ones (iPhone, Mac), Google's (Chrome), then the rest, US English first.
-// The old local voices (Microsoft David) sound robotic and trail silence after every line.
-const RANK = [/natural|neural/i, /premium|enhanced|siri/i, /^google us english/i, /google/i,
-  /samantha|ava|allison|susan|aria|jenny|guy/i];
+// The best-sounding voices first: the neural ones (Edge, Windows 11), the downloaded Premium,
+// Enhanced and Siri ones (iPhone, Mac), Google's (Chrome), then the rest, US English first. The
+// old local voices (Microsoft David) sound robotic and trail silence after every line. An
+// iPhone lists a downloaded voice under the same name as its compact one ("Tom" twice); only
+// the voiceURI (com.apple.voice.enhanced.en-US.Tom) tells them apart, so a voice is known by it.
+const RANK = [/natural|neural/i, /premium/i, /enhanced/i, /siri/i, /^google us english/i, /google/i,
+  /samantha|ava|allison|susan|aria|jenny|guy|tom|evan|zoe|nathan|joelle/i];
+// The macOS and iOS novelty voices, by name and by family: Apple files the gags under
+// com.apple.speech.synthesis.voice and the Eloquence voices (Rocko, Grandma) under
+// com.apple.eloquence; the real ones are com.apple.voice.* and Siri's.
+const GAG_FAMILY = /speech\.synthesis\.voice\.|eloquence/i;
+// The real voices a Mac keeps in that family.
+const REAL_OLD = /^(alex|samantha|victoria|daniel|karen|moira|tessa|fiona|veena|rishi)\b/i;
+const NOVELTY = /^(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|fred|kathy|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley)\b/i;
+const idOf = (v) => v.voiceURI || v.name;
+const tag = (v) => `${v.name} ${v.voiceURI || ''}`;
 const rank = (v) => {
-  const i = RANK.findIndex((re) => re.test(v.name));
+  const i = RANK.findIndex((re) => re.test(tag(v)));
   return (i < 0 ? RANK.length : i) * 2 + (/en-US/i.test(v.lang) ? 0 : 1);
+};
+const voiceLabel = (v) => {
+  const kind = /premium/i.test(v.voiceURI) ? 'Premium' : /enhanced/i.test(v.voiceURI) ? 'Enhanced' : '';
+  const name = kind && !new RegExp(kind, 'i').test(v.name) ? `${v.name} (${kind})` : v.name;
+  return /en-US/i.test(v.lang) ? name : `${name}, ${v.lang}`;
 };
 function englishVoices() {
   if (!canSpeak) return [];
-  return window.speechSynthesis.getVoices().filter((v) => /^en/i.test(v.lang)).sort((a, b) => rank(a) - rank(b));
+  return window.speechSynthesis.getVoices()
+    .filter((v) => /^en/i.test(v.lang) && !NOVELTY.test(v.name)
+      && (!GAG_FAMILY.test(v.voiceURI || '') || REAL_OLD.test(v.name)))
+    .sort((a, b) => rank(a) - rank(b));
 }
 
 export default function VoiceChecklists() {
@@ -58,6 +85,7 @@ export default function VoiceChecklists() {
   const [heard, setHeard] = useState('');
   const [deaf, setDeaf] = useState(!Recognition); // no listening: Next moves on
   const [message, setMessage] = useState('');
+  const [mic, setMic] = useState('off'); // off | on | tap (refused: needs the student's tap)
 
   useEffect(() => save({ seat, chain, hide, wait, speed, voice: voiceName }), [seat, chain, hide, wait, speed, voiceName]);
 
@@ -66,9 +94,10 @@ export default function VoiceChecklists() {
     const update = () => setVoices(englishVoices());
     window.speechSynthesis.addEventListener('voiceschanged', update);
     // The list may have arrived between the first render and this listener.
+    // Safari doesn't always say when it has its list, so look again a few times.
     update();
-    const again = setTimeout(update, 1000);
-    return () => { clearTimeout(again); window.speechSynthesis.removeEventListener('voiceschanged', update); };
+    const tries = [250, 1000, 3000].map((ms) => setTimeout(update, ms));
+    return () => { tries.forEach(clearTimeout); window.speechSynthesis.removeEventListener('voiceschanged', update); };
   }, []);
 
   const live = useRef({});
@@ -82,6 +111,9 @@ export default function VoiceChecklists() {
   const speaking = useRef(false);
   const listening = useRef(null); // { token, from, text }
   const resultsLen = useRef(0);
+  const recState = useRef('idle'); // idle | starting | on
+  const everOn = useRef(false);
+  const restarts = useRef(0);
   const utterance = useRef(null);
   const wake = useRef(null);
 
@@ -101,14 +133,16 @@ export default function VoiceChecklists() {
   const voiceFor = (s) => {
     const list = live.current.voices;
     if (!list.length) return null;
-    const main = list.find((v) => v.name === live.current.voiceName) || list[0];
+    const want = live.current.voiceName;
+    const main = list.find((v) => idOf(v) === want) || list.find((v) => v.name === want) || list[0];
     // The observer is a second voice where there is one, so the two can be told apart.
-    if (s === 'OBS') return list.find((v) => v !== main && /en-US/i.test(v.lang)) || main;
+    if (s === 'OBS') return list.find((v) => v.name !== main.name && /en-US/i.test(v.lang)) || main;
     return main;
   };
 
   const speak = (l, token, then) => {
     setStatus('speaking');
+    if (PER_TURN) abortRec();
     if (!canSpeak) { timer.current = setTimeout(then, 800); return; }
     const u = new SpeechSynthesisUtterance(l.say);
     const v = voiceFor(l.seat);
@@ -131,6 +165,8 @@ export default function VoiceChecklists() {
     setStatus('listening');
     setHeard('');
     listening.current = { token, from: resultsLen.current, text: '' };
+    restarts.current = 0;
+    if (PER_TURN) startRec();
   };
 
   // Plays the line the position is on, then the next, until a line is the student's.
@@ -202,54 +238,95 @@ export default function VoiceChecklists() {
     else next();
   };
 
-  const startRec = () => {
-    if (!Recognition || live.current.deaf) return;
-    if (!rec.current) {
-      const r = new Recognition();
-      r.lang = 'en-US';
-      r.continuous = true;
-      r.interimResults = true;
-      r.onstart = () => {
-        resultsLen.current = 0;
-        if (listening.current) listening.current.from = 0;
-      };
-      r.onresult = (e) => {
-        resultsLen.current = e.results.length;
-        const L = listening.current;
-        if (!L || speaking.current) return;
-        let text = '';
-        for (let i = L.from; i < e.results.length; i += 1) text += `${e.results[i][0].transcript} `;
-        text = text.trim();
-        if (!text) return;
-        L.text = text;
-        setHeard(text);
-        clearTimeout(silence.current);
-        const l = lineAt();
-        const delay = commandOf(text) ? 400 : endsLine(text, l) ? 250 : live.current.wait * 1000;
-        silence.current = setTimeout(() => heardDone(L.token), delay);
-      };
-      r.onerror = (e) => {
-        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+  // Whether the recogniser should be running now: the whole run, or on Safari only while the
+  // student's call is awaited.
+  const wantRec = () => running.current && !live.current.deaf && (!PER_TURN || !!listening.current);
+
+  const makeRec = () => {
+    const r = new Recognition();
+    r.lang = 'en-US';
+    r.continuous = true;
+    r.interimResults = true;
+    r.onstart = () => {
+      if (rec.current !== r) return; // replaced by Tap to listen
+      recState.current = 'on';
+      everOn.current = true;
+      resultsLen.current = 0;
+      if (listening.current) listening.current.from = 0;
+      setMic('on');
+    };
+    r.onresult = (e) => {
+      if (rec.current !== r) return; // replaced by Tap to listen
+      resultsLen.current = e.results.length;
+      const L = listening.current;
+      if (!L || speaking.current) return;
+      let text = '';
+      for (let i = L.from; i < e.results.length; i += 1) text += `${e.results[i][0].transcript} `;
+      text = text.trim();
+      if (!text) return;
+      L.text = text;
+      setHeard(text);
+      clearTimeout(silence.current);
+      const l = lineAt();
+      const delay = commandOf(text) ? 400 : endsLine(text, l) ? 250 : live.current.wait * 1000;
+      silence.current = setTimeout(() => heardDone(L.token), delay);
+    };
+    r.onerror = (e) => {
+      if (rec.current !== r) return; // replaced by Tap to listen
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        if (everOn.current) {
+          setMic('tap'); // it worked before: the phone wants a tap to start it again
+        } else {
           setDeaf(true);
-          setMessage('The microphone is blocked, so press Next or the space bar after each of your calls.');
-        } else if (e.error === 'network') {
-          setDeaf(true);
-          setMessage('Listening needs a signal here, so press Next or the space bar after each of your calls.');
+          setMessage('The microphone is blocked. Allow it for this site in your browser settings, or press Next after each of your calls.');
         }
-      };
-      // The browser stops listening on its own now and then; start again while running.
-      r.onend = () => {
-        if (running.current && !live.current.deaf) {
-          try { r.start(); } catch { /* already started */ }
-        }
-      };
-      rec.current = r;
-    }
-    try { rec.current.start(); } catch { /* already started */ }
+      } else if (e.error === 'network') {
+        setDeaf(true);
+        setMessage('Listening needs a signal here, so press Next after each of your calls.');
+      } else if (e.error === 'audio-capture') {
+        setMic('tap');
+      }
+    };
+    // The browser stops listening on its own now and then; start again while it's wanted.
+    r.onend = () => {
+      if (rec.current !== r) return; // replaced by Tap to listen
+      recState.current = 'idle';
+      setMic((m) => (m === 'tap' ? m : 'off'));
+      if (wantRec() && restarts.current < 30) {
+        restarts.current += 1;
+        startRec();
+      }
+    };
+    return r;
   };
 
-  const stopRec = () => {
-    if (rec.current) { try { rec.current.stop(); } catch { /* not started */ } }
+  function startRec() {
+    if (!Recognition || live.current.deaf || recState.current !== 'idle') return;
+    if (!rec.current) rec.current = makeRec();
+    recState.current = 'starting';
+    try {
+      rec.current.start();
+    } catch {
+      recState.current = 'idle';
+      setMic('tap');
+    }
+  }
+
+  function abortRec() {
+    if (rec.current && recState.current !== 'idle') { try { rec.current.abort(); } catch { /* not started */ } }
+  }
+
+  const stopRec = () => abortRec();
+
+  // The student's own tap, which a phone accepts where a start on its own was refused.
+  const tapToListen = () => {
+    setMic('off');
+    restarts.current = 0;
+    abortRec();
+    // A fresh recogniser: a refused one can stay refused.
+    rec.current = null;
+    recState.current = 'idle';
+    startRec();
   };
 
   const lockScreen = async () => {
@@ -265,7 +342,8 @@ export default function VoiceChecklists() {
   const start = () => {
     running.current = true;
     setMessage('');
-    startRec();
+    setMic('off');
+    if (!PER_TURN) startRec();
     lockScreen();
     if (!lineAt()) moveTo(at.current.proc, 0);
     play(); // inside the click, which some browsers need before they will speak
@@ -328,105 +406,113 @@ export default function VoiceChecklists() {
   const mineNow = now && isMine(now, seat);
   const showText = (l, i) => !(hide && isMine(l, seat) && i >= view.pos);
   const busy = status === 'speaking' || status === 'listening' || status === 'reading';
+  const listeningNow = status === 'listening';
   const statusText = {
-    idle: 'Press Start',
-    speaking: now ? `${SEAT_NAME[now.seat]} speaking` : '',
-    listening: deaf ? 'Your call, then press Next' : 'Your call',
+    idle: 'Ready',
+    speaking: now ? `${SEAT_NAME[now.seat]}` : '',
+    listening: 'Your call',
     reading: '',
     paused: 'Paused',
     done: 'Checklist complete',
   }[status];
+  const micText = deaf ? 'Press Next after your call' : mic === 'on' ? 'Listening' : mic === 'tap' ? '' : 'Mic starting';
+  const primary = busy
+    ? { label: 'Next', onClick: tap }
+    : { label: status === 'paused' ? 'Resume' : status === 'done' ? 'Again' : 'Start',
+      onClick: status === 'done' ? () => { moveTo(view.proc, 0); start(); } : start };
 
   return (
     <div className="t44c-voice">
-      <div className="t44c-voice-bar">
-        <label>
-          Checklist
-          <select value={view.proc} onChange={(e) => reset(Number(e.target.value))}>
-            {CHECKLISTS.map((p, i) => <option key={p.id} value={i}>{p.title}</option>)}
-          </select>
-        </label>
+      <div className="t44c-voice-top">
+        <select className="t44c-voice-pick" aria-label="Checklist" value={view.proc}
+          onChange={(e) => reset(Number(e.target.value))}>
+          {CHECKLISTS.map((p, i) => <option key={p.id} value={i}>{p.title}</option>)}
+        </select>
         <span className="t44c-voice-seat" role="group" aria-label="Your seat">
-          Your seat
-          {['PF', 'PM'].map((s) => (
-            <button key={s} type="button" aria-pressed={seat === s} className={seat === s ? 'is-on' : ''}
-              onClick={() => { setSeat(s); reset(view.proc); }}>
-              {s}
+          {['PF', 'PM'].map((s2) => (
+            <button key={s2} type="button" aria-pressed={seat === s2} className={seat === s2 ? 'is-on' : ''}
+              onClick={() => { setSeat(s2); reset(view.proc); }}>
+              {s2}
             </button>
           ))}
         </span>
-        <label>
-          <input type="checkbox" checked={chain} onChange={(e) => setChain(e.target.checked)} />
-          Go on to the next checklist
-        </label>
-        <label>
-          <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} />
-          Hide my calls
-        </label>
-        {!deaf && (
-          <label title="How long you stop talking before the next call">
-            Wait
-            <select value={wait} onChange={(e) => setWait(Number(e.target.value))}>
-              {WAITS.map((w) => <option key={w} value={w}>{w} s</option>)}
-            </select>
-          </label>
-        )}
-        {canSpeak && (
-          <label>
-            Speed
-            <select value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
-              {SPEEDS.map((v) => <option key={v} value={v}>{v}×</option>)}
-            </select>
-          </label>
-        )}
-        {voices.length > 1 && (
-          <label>
-            Voice
-            <select value={voiceName} onChange={(e) => setVoiceName(e.target.value)}>
-              <option value="">Best available</option>
-              {voices.map((v) => <option key={v.name} value={v.name}>{v.name}</option>)}
-            </select>
-          </label>
-        )}
       </div>
 
-      <p className="t44c-voice-help">
-        Pick your seat and press Start. The other seat&apos;s calls are read out loud.
-        {deaf
-          ? ' Say your call and press Next or the space bar.'
-          : ' Say your call when it is your turn and the next one follows when you stop talking. Say "say again", "back" or "skip" at any time. Earbuds work best.'}
-      </p>
-      {!Recognition && (
-        <p className="t44c-voice-note">This browser can&apos;t listen. Chrome, Edge and Safari can.</p>
-      )}
+      <details className="t44c-voice-settings">
+        <summary>Settings</summary>
+        <div className="t44c-voice-settings-body">
+          <label>
+            <input type="checkbox" checked={chain} onChange={(e) => setChain(e.target.checked)} />
+            Go on to the next checklist
+          </label>
+          <label>
+            <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} />
+            Hide my calls
+          </label>
+          {!deaf && (
+            <label>
+              Wait after I stop talking
+              <select value={wait} onChange={(e) => setWait(Number(e.target.value))}>
+                {WAITS.map((w) => <option key={w} value={w}>{w} s</option>)}
+              </select>
+            </label>
+          )}
+          {canSpeak && (
+            <label>
+              Speed
+              <select value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
+                {SPEEDS.map((v) => <option key={v} value={v}>{v}×</option>)}
+              </select>
+            </label>
+          )}
+          {voices.length > 1 && (
+            <label>
+              Voice
+              <select value={voiceName} onChange={(e) => setVoiceName(e.target.value)}>
+                <option value="">Best available ({voiceLabel(voices[0])})</option>
+                {voices.map((v) => <option key={idOf(v)} value={idOf(v)}>{voiceLabel(v)}</option>)}
+              </select>
+            </label>
+          )}
+          {IOS && (
+            <p>
+              For a better voice on an iPhone, download one under Settings, Accessibility, Spoken
+              Content, Voices, English. Then reload this page.
+            </p>
+          )}
+        </div>
+      </details>
+
+      {!Recognition && <p className="t44c-voice-note">This browser can&apos;t listen, so press Next after each of your calls.</p>}
       {!canSpeak && <p className="t44c-voice-note">This browser can&apos;t speak, so the calls are shown only.</p>}
       {message && <p className="t44c-voice-note" role="status">{message}</p>}
 
       <div className={`t44c-voice-now${mineNow && busy ? ' is-mine' : ''}`}>
-        <div className="t44c-voice-status" aria-live="polite">{statusText}</div>
+        <div className="t44c-voice-status">
+          <span aria-live="polite">{statusText}</span>
+          {listeningNow && <span className="t44c-voice-mic">{micText}</span>}
+        </div>
         <div className="t44c-voice-line">
           {now ? (
-            <>
-              <span className="t44c-voice-who">{isMine(now, seat) ? 'You' : SEAT_NAME[now.seat]}</span>
-              <span className={now.kind === 'act' ? 't44c-voice-act' : ''}>
-                {showText(now, view.pos) ? now.text : 'Your call'}
-              </span>
-            </>
+            <span className={now.kind === 'act' ? 't44c-voice-act' : ''}>
+              {showText(now, view.pos) ? now.text : 'Your call'}
+            </span>
           ) : (
             <span>{CHECKLISTS[view.proc].title} complete</span>
           )}
         </div>
-        <div className="t44c-voice-heard">{status === 'listening' && heard ? `Heard: ${heard}` : ''}</div>
+        <div className="t44c-voice-heard">
+          {listeningNow && heard ? `Heard: ${heard}` : ''}
+          {status === 'idle' && 'Say your call when it is yours. Say "say again", "back" or "skip" any time.'}
+        </div>
+        {listeningNow && mic === 'tap' && !deaf && (
+          <button type="button" className="t44c-voice-listen" onClick={tapToListen}>Tap to listen</button>
+        )}
+        <button type="button" className="t44c-voice-main" onClick={primary.onClick}>{primary.label}</button>
         <div className="t44c-voice-buttons">
-          {busy
-            ? <button type="button" onClick={pause}>Pause</button>
-            : <button type="button" className="is-main" onClick={status === 'done' ? () => { moveTo(view.proc, 0); start(); } : start}>
-                {status === 'paused' ? 'Resume' : status === 'done' ? 'Again' : 'Start'}
-              </button>}
-          <button type="button" onClick={tap} className={busy ? 'is-main' : ''}>Next</button>
+          <button type="button" onClick={busy ? pause : () => reset(view.proc)}>{busy ? 'Pause' : 'Restart'}</button>
           <button type="button" onClick={() => (running.current ? again() : null)} disabled={!busy}>Say again</button>
           <button type="button" onClick={() => (running.current ? back() : null)} disabled={!busy}>Back</button>
-          <button type="button" onClick={() => reset(view.proc)}>Restart</button>
         </div>
       </div>
 

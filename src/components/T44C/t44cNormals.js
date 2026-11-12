@@ -417,7 +417,12 @@ const AFTER_START = {
         'b. Turn the Avionics Master switch ON, confirm that the AUX/ON light extinguishes. Continue checklist steps 4 through 7 and wait for AHRS #1 and 2 to align before moving the aircraft. (approximately 40-50 seconds)',
         'c. Once Avionics Master and AUX/BATT are on, PF, PM, OBS don headsets and perform ICS checks.',
       ],
-      replies: [say('ICS check', 'PF'), ip('Loud and clear, how me?', 'PM'), say('Loud and clear, CHECKED/ON', 'PF')],
+      // The FTI's "Loud and clear, CHECKED/ON" said as two calls, the PM answering the second
+      // (the user, 2026-11-12).
+      replies: [
+        say('ICS check', 'PF'), ip('Loud and clear, how me?', 'PM'), say('Loud and clear', 'PF'),
+        say('CHECKED/ON', 'PF'), ip('CHECKED/ON', 'PM'),
+      ],
     }),
     // Both seats' MIC switches: the action sets them on all audio control panels.
     item('as4', 'Oxygen Mask Mic', 'CHECKED/OPEN', 'PM, OBS', {

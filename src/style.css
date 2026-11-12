@@ -11251,149 +11251,225 @@ button.epl-modal-close:hover {
 }
 
 /* Voice Checklists (T44C/VoiceChecklists.js): the Hollywood checklists read aloud, one seat
-   the student's. Phone first: one column, the line being said large, the checklist under it. */
+   the student's. Phone first: the checklist and seat on one row, settings folded away, the
+   line being said in a card that stays on screen while the checklist scrolls under it, and
+   one big button for the thumb. */
 .t44c-voice {
-  max-width: 720px;
+  max-width: 640px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 12px 16px 24px;
   color: var(--ink);
 }
 
-.t44c-voice-bar {
+.t44c-voice-top {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  font-size: 14px;
+  gap: 8px;
+  align-items: stretch;
 }
 
-.t44c-voice-bar label,
-.t44c-voice-seat {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 6px;
-  width: auto;
-  margin: 0;
-  white-space: nowrap;
-}
-
-.t44c-voice-bar select {
-  font-size: 14px;
-  padding: 3px 4px;
-  width: auto;
-  max-width: 220px;
-  background-color: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-}
-
-.t44c-voice-seat button {
-  min-width: 44px;
-  padding: 4px 10px;
-  font-size: 14px;
+.t44c-voice-pick {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  padding: 6px 8px;
+  font-size: 16px; /* 16px or iOS zooms the page on focus */
   background-color: var(--surface);
   color: var(--ink);
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
+  border-radius: 6px;
+}
+
+.t44c-voice-seat {
+  display: flex;
+  flex: none;
+}
+
+.t44c-voice-seat button {
+  min-width: 52px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
   cursor: pointer;
+}
+
+.t44c-voice-seat button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.t44c-voice-seat button:last-child {
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
 }
 
 .t44c-voice-seat button.is-on {
   background-color: var(--btn);
   border-color: var(--btn);
   color: var(--on-brand);
-  font-weight: bold;
 }
 
-.t44c-voice-help,
-.t44c-voice-note {
-  margin: 12px 0 0;
+.t44c-voice-settings {
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+.t44c-voice-settings summary {
+  padding: 6px 0;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.t44c-voice-settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 0 4px;
+}
+
+.t44c-voice-settings-body label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.t44c-voice-settings-body input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+.t44c-voice-settings-body select {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 36px;
+  font-size: 16px;
+  background-color: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.t44c-voice-settings-body p {
+  margin: 0;
   font-size: 13px;
   line-height: 1.4;
   color: var(--ink-muted);
 }
 
 .t44c-voice-note {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
   color: var(--ink);
 }
 
 .t44c-voice-now {
-  margin-top: 14px;
-  padding: 14px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin-top: 8px;
+  padding: 12px 14px 14px;
   background-color: var(--surface);
   border: 1px solid var(--line);
-  border-left: 4px solid var(--line-strong);
-  border-radius: 6px;
+  border-top: 4px solid var(--line-strong);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* The student's turn: the teal edge says "you". */
 .t44c-voice-now.is-mine {
-  border-left-color: #26a69a;
+  border-top-color: #26a69a;
 }
 
 .t44c-voice-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
   min-height: 1.3em;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ink-muted);
 }
 
+.t44c-voice-mic {
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .t44c-voice-line {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  min-height: 2.6em;
+  align-items: center;
+  min-height: 2.5em;
   margin-top: 4px;
-  font-size: 22px;
+  font-size: 26px;
   font-weight: bold;
-  line-height: 1.25;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
   color: var(--ink-strong);
 }
 
-.t44c-voice-line .t44c-voice-who {
-  font-size: 13px;
-}
-
 .t44c-voice-act {
+  font-size: 20px;
   font-weight: normal;
   font-style: italic;
   color: var(--ink-muted);
 }
 
 .t44c-voice-heard {
-  min-height: 1.4em;
-  margin-top: 6px;
-  font-size: 13px;
+  min-height: 2.6em;
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.3;
   color: var(--ink-muted);
 }
 
+.t44c-voice-main,
+.t44c-voice-listen {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  margin-top: 8px;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.t44c-voice-main {
+  background-color: var(--btn);
+  color: var(--on-brand);
+  border: 1px solid var(--btn);
+}
+
+.t44c-voice-listen {
+  background-color: var(--surface);
+  color: var(--ink-strong);
+  border: 2px solid #26a69a;
+}
+
 .t44c-voice-buttons {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .t44c-voice-buttons button {
-  min-height: 40px;
-  padding: 6px 14px;
+  min-height: 44px;
+  padding: 4px;
   font-size: 15px;
   background-color: var(--surface);
   color: var(--ink);
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-}
-
-.t44c-voice-buttons button.is-main {
-  background-color: var(--btn);
-  border-color: var(--btn);
-  color: var(--on-brand);
-  font-weight: bold;
 }
 
 .t44c-voice-buttons button:disabled {
@@ -11403,31 +11479,35 @@ button.epl-modal-close:hover {
 
 .t44c-voice-who {
   flex: none;
-  min-width: 3em;
-  font-size: 11px;
+  width: 2.6em;
+  font-size: 12px;
   font-weight: bold;
   color: var(--ink-muted);
 }
 
 .t44c-voice-list {
   list-style: none;
-  margin: 14px 0 0;
+  margin: 12px 0 0;
   padding: 0;
   border-top: 1px solid var(--line);
 }
 
 .t44c-voice-list li {
   border-bottom: 1px solid var(--line);
+  /* Clear of the card above when the open line is scrolled to. */
+  scroll-margin-top: 300px;
+  scroll-margin-bottom: 16px;
 }
 
 .t44c-voice-list button {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 7px 8px;
+  min-height: 40px;
+  padding: 8px;
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
   text-align: left;
   background: none;
   color: var(--ink);
