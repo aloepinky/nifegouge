@@ -822,7 +822,10 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   name and the Eloquence family, never the whole com.apple.speech.synthesis family (real
   voices live there); "Show every voice" lifts the filter. The PF opens every checklist by its
   title; the PM answering its own challenge waits 2 s (`PM_ACTION`); a reply's `after`
-  (t44cNormals.js) is a wait before it, Runup 8's from the engine model's light timings.
+  (t44cNormals.js) is a wait before it (0: the PM answers at once). The Full Anti-Ice/Deice
+  Check is not on the voice page's list: Settings picks pitot heat only or the full check for
+  Before Takeoff 6, and the full one is said there in place of the step's own lines (`branch`,
+  `insert`, `inInsert` on its replies).
   **The voice is recorded** (since 2026-11-12, the user: an iPhone's downloaded voices are not
   offered to web pages): every line in Amazon Polly's generative voices (PM Matthew, PF
   Stephen, OBS Ruth), one MP3 per seat and words in `public/voice/t44c/`, listed in

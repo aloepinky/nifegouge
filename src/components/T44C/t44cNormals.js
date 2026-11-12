@@ -12,7 +12,10 @@
 //   replies            its RESPONSE column, in order: { text, who } for what the student in the
 //                      left seat says (bold in the FTI), `ip: true` for what the instructor says
 //                      (highlighted), `act: true` for a stage direction that is not spoken, and
-//                      `after`, seconds Voice Checklists waits before saying it (T44C/voiceScript.js).
+//                      `after`, seconds Voice Checklists waits before saying it (T44C/voiceScript.js;
+//                      0 where the PM answers at once). `branch` ('pitot' | 'full') a reply said
+//                      only on that kind of anti-ice check, `header` its heading, `insert` the
+//                      procedure said in its place, `inInsert` a line that procedure says itself.
 //   watch              what else the action has the student operate or check besides the step's
 //                      control (the ice vanes, the elapsed time key, FAULT WARN pressed to
 //                      cancel), as poster wordings (t44cPoster.js). A step that only checks
@@ -75,7 +78,7 @@ const memory = (id, challenge, reply, who, extra = {}) => item(id, challenge, re
 
 const say = (text, who) => ({ text, who });
 const ip = (text, who, extra = {}) => ({ text, who, ip: true, ...extra });
-const act = (text, who) => ({ text, who, act: true });
+const act = (text, who, extra = {}) => ({ text, who, act: true, ...extra });
 const note = (text) => ({ note: text });
 const caution = (text) => ({ caution: text });
 const warning = (text) => ({ warning: text });
@@ -531,7 +534,7 @@ const AFTER_START = {
         caution('Minimize use of reverse at slow taxi speeds. Use of reverse range in surface areas containing loose sand or small stones may cause propeller blade erosion.'),
       ],
       replies: [
-        ip('STANDBY', 'RS'), act('(as required)'),
+        ip('STANDBY', 'RS', { after: 0 }), act('(as required)'),
         // After the hold: clearing, the needle, the brake check between two changes of
         // controls, then taxi is requested (the user, 2026-11-12).
         say('Hold the checklist. Keep me clear on the right during all taxi and ground ops. Let base know we are out of the chocks.', 'PF'),
@@ -742,8 +745,13 @@ const BEFORE_TAKEOFF = {
         'j. PF selects STBY using MENU ADVANCE knob.',
       ],
       replies: [
-        act('For pitot only check:'), say('Pitot Heat CHECKED', 'PF'), ip('CHECKED', 'PM'),
-        act('For full check respond:'), say('Give 30 second intervals', 'PF'), ip('30 seconds x4', 'PM'),
+        // Voice Checklists says one or the other, as its Settings pick, and the full check runs
+        // the Full Anti-Ice/Deice Check right here (the user, 2026-11-12).
+        act('For pitot only check:', undefined, { branch: 'pitot', header: true }),
+        { ...say('Pitot Heat CHECKED', 'PF'), branch: 'pitot' }, ip('CHECKED', 'PM', { branch: 'pitot' }),
+        act('For full check respond:', undefined, { branch: 'full', header: true, insert: 'anti-ice-check' }),
+        { ...say('Give 30 second intervals', 'PF'), branch: 'full', inInsert: true },
+        ip('30 seconds x4', 'PM', { branch: 'full', inInsert: true }),
         say('Radar CHECKED/STANDBY', 'PF'), ip('Radar CHECKED/STANDBY', 'PM'),
       ],
     }),
@@ -816,8 +824,8 @@ const BEFORE_TAKEOFF = {
       // No clearance or route line, the change of controls said in full, the PF verifying and
       // the PM executing (the user, 2026-11-12).
       replies: [
-        say('Hold the checklist', 'PF'), say('You have the controls. I will be heads down.', 'PF'),
-        ip('I have the controls', 'PM'), say('You have the controls', 'PF'),
+        say('Hold the checklist. You have the controls.', 'PF'),
+        ip('I have the controls', 'PM'), say('You have the controls. I will be heads down.', 'PF'),
         act('Check 120 Map mode, verify correct routing,'), say('Verify', 'PF'), ip('Execute', 'PM'),
         ...TO_PF,
         say('CHECKED/SET', 'PF'), ip('CHECKED/SET', 'PM'),
@@ -902,11 +910,11 @@ const BEFORE_TAKEOFF = {
     }),
     abbrev('bt18', 'Transponder', 'SET', 'RS', {
       action: ['RS switches XPDR switch below RTU from STBY to ON.'],
-      replies: [ip('SET', 'RS')],
+      replies: [ip('SET', 'RS', { after: 0 })],
     }),
     abbrev('bt19', 'Autoignition', 'ARMED', 'PM', {
       action: ['PM sets both RH and LH ENG AUTO IGN switches to ARM'],
-      replies: [ip('ARMED', 'PM')],
+      replies: [ip('ARMED', 'PM', { after: 0 })],
     }),
     abbrev('bt20', 'Condition Levers', 'HIGH IDLE', 'PF', {
       shows: ['N1'],
@@ -1132,7 +1140,11 @@ const APPROACH = {
         warning('Overriding the landing gear warning horn in the traffic pattern or during final segment of an instrument approach could result in a landing gear-up landing.'),
         note('Cancellation of the wheels warning horn shall be at the direction of the Pilot flying; however, shall not be overridden in the traffic pattern or during the final segment of an instrument approach.'),
       ],
-      replies: [say('BRIEFED', 'PF')],
+      // The touch and go brief (the user, 2026-11-12), then the action's questions and reply.
+      replies: [
+        say('Once safely on the runway, I\'ll call Reset Flaps, Trim and advance the power levers to 12 o\'clock. You reset flaps and trim. Call Go with engines spooled up. Call Rotate at VR with takeoff power set.', 'PF'),
+        say('Any questions?', 'PF'), ip('No', 'PM'), say('BRIEFED', 'PF'),
+      ],
     }),
   ],
 };

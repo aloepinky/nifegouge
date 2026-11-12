@@ -65,7 +65,10 @@ const procs = T44C_HOLLYWOOD.filter((p) => !p.id.startsWith('start-'));
 
 // Every spoken line, by seat and words.
 const wanted = new Map();
-for (const l of procs.flatMap(scriptFor)) {
+// Both kinds of Before Takeoff anti-ice check, the full one saying the full check inside it.
+const find = (id) => T44C_HOLLYWOOD.find((p) => p.id === id);
+const lines = ['pitot', 'full'].flatMap((antiIce) => procs.flatMap((p) => scriptFor(p, { antiIce, find })));
+for (const l of lines) {
   if (l.kind !== 'say' || !l.say) continue;
   const key = `${l.seat}|${l.say}`;
   if (wanted.has(key)) continue;

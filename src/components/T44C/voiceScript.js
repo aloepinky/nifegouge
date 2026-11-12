@@ -74,7 +74,11 @@ export function doneCall(done) {
   return m ? m[1].replace(/\.$/, '') : '';
 }
 
-export function scriptFor(proc) {
+// `opts.antiIce`: which Before Takeoff anti-ice check is said, 'pitot' (the default) or 'full',
+// whose replies carry `branch`; the full check says the procedure named by `insert` in place of
+// its own lines, found with `opts.find(id)` (the user, 2026-11-12).
+export function scriptFor(proc, opts = {}) {
+  const antiIce = opts.antiIce || 'pitot';
   const out = [line(proc.id, 'title', 'PF', 'say', titleCall(proc))];
   proc.rows.forEach((row, i) => {
     if (row.decision) { out.push(line(proc.id, `d${i}`, 'PM', 'act', row.decision)); return; }
@@ -87,6 +91,15 @@ export function scriptFor(proc) {
     if (row.critical) pending = row.challenge;
     else { out.push(line(proc.id, row.id, 'PM', 'say', row.challenge)); afterChallenge = true; }
     replies.forEach((r) => {
+      if (r.branch && r.branch !== antiIce) return;
+      if (r.inInsert) return;
+      if (r.insert) {
+        const inner = opts.find && opts.find(r.insert);
+        if (inner) out.push(...scriptFor(inner, opts));
+        afterChallenge = false;
+        return;
+      }
+      if (r.header) return;
       const seat = seatOf(r.who, r.ip ? 'PM' : 'PF');
       if (r.act || RADIO.test(r.text)) {
         out.push(line(proc.id, row.id, seat, 'act', r.act ? r.text : `${r.text} (radio call)`));

@@ -4,7 +4,11 @@ import { scriptFor, isMine, commandOf, endsLine } from './voiceScript';
 import CLIPS from './voiceClips.json';
 
 // Every Hollywood checklist but the two start procedures (the user, 2026-11-12).
-const CHECKLISTS = T44C_HOLLYWOOD.filter((p) => !p.id.startsWith('start-'));
+// The Full Anti-Ice/Deice Check is not one of them: it is said inside Before Takeoff when the
+// full check is picked (the user, 2026-11-12).
+const CHECKLISTS = T44C_HOLLYWOOD.filter((p) => !p.id.startsWith('start-') && p.id !== 'anti-ice-check');
+const findProc = (id) => T44C_HOLLYWOOD.find((p) => p.id === id);
+const ANTI_ICE = [['pitot', 'Pitot heat only'], ['full', 'Full anti-ice/deice check']];
 
 // Voice Checklists (the user, 2026-11-12): the Hollywood checklists read aloud for one student,
 // to repeat them in the static trainer or a maintenance aircraft. The student takes a seat; the
@@ -123,7 +127,8 @@ function englishVoices(all = false) {
 
 export default function VoiceChecklists() {
   const saved = useMemo(load, []);
-  const scripts = useMemo(() => CHECKLISTS.map(scriptFor), []);
+  const [antiIce, setAntiIce] = useState(saved.antiIce === 'full' ? 'full' : 'pitot');
+  const scripts = useMemo(() => CHECKLISTS.map((p) => scriptFor(p, { antiIce, find: findProc })), [antiIce]);
   const [seat, setSeat] = useState(saved.seat === 'PM' ? 'PM' : 'PF');
   const [chain, setChain] = useState(saved.chain !== false);
   const [hide, setHide] = useState(!!saved.hide);
@@ -144,8 +149,8 @@ export default function VoiceChecklists() {
   const [message, setMessage] = useState('');
   const [mic, setMic] = useState('off'); // off | on | tap (refused: needs the student's tap)
 
-  useEffect(() => save({ seat, chain, hide, wait, speed, advance, allVoices, voicePick: voiceName }),
-    [seat, chain, hide, wait, speed, advance, allVoices, voiceName]);
+  useEffect(() => save({ seat, chain, hide, wait, speed, advance, allVoices, antiIce, voicePick: voiceName }),
+    [seat, chain, hide, wait, speed, advance, allVoices, antiIce, voiceName]);
   useEffect(() => setVoices(englishVoices(allVoices)), [allVoices]);
 
   useEffect(() => {
@@ -636,6 +641,12 @@ export default function VoiceChecklists() {
           <label>
             <input type="checkbox" checked={chain} onChange={(e) => setChain(e.target.checked)} />
             Go on to the next checklist
+          </label>
+          <label>
+            Anti-ice check before takeoff
+            <select value={antiIce} onChange={(e) => { setAntiIce(e.target.value); reset(view.proc); }}>
+              {ANTI_ICE.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+            </select>
           </label>
           <label>
             <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} />

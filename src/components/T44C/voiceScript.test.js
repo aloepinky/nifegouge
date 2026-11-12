@@ -128,8 +128,8 @@ describe('voice script', () => {
       'PM: Set 30.12, reading 30 feet, RADALT checks', 'PF: CHECKED/SET', 'PM: CHECKED/SET',
     ]);
     expect(said2('bt12')).toEqual([
-      'PM: FMS', 'PF: Hold the checklist', 'PF: You have the controls. I will be heads down.',
-      'PM: I have the controls', 'PF: You have the controls', 'PF: Verify', 'PM: Execute',
+      'PM: FMS', 'PF: Hold the checklist. You have the controls.',
+      'PM: I have the controls', 'PF: You have the controls. I will be heads down.', 'PF: Verify', 'PM: Execute',
       'PM: You have the controls', 'PF: I have the controls', 'PM: You have the controls',
       'PF: CHECKED/SET', 'PM: CHECKED/SET',
     ]);
@@ -137,5 +137,34 @@ describe('voice script', () => {
     expect(all[all.indexOf('PF: Any questions?') + 1]).toBe('PM: No');
     expect(all.filter((l) => /BEFORE TAKEOFF CHECKLIST COMPLETE/i.test(l))).toHaveLength(1);
     expect(all.some((l) => /Checked (left|right)/i.test(l))).toBe(false);
+  });
+
+  test('Before Takeoff anti-ice: pitot only, or the full check said in its place', () => {
+    const find = (id) => T44C_HOLLYWOOD.find((p) => p.id === id);
+    const bt6 = (antiIce) => said(scriptFor(proc('before-takeoff'), { antiIce, find })
+      .filter((l) => l.step === 'bt6' || l.proc === 'anti-ice-check'));
+    expect(bt6('pitot')).toEqual([
+      'PM: Anti-Ice/Deice/Radar', 'PF: Pitot Heat CHECKED', 'PM: CHECKED',
+      'PF: Radar CHECKED/STANDBY', 'PM: Radar CHECKED/STANDBY',
+    ]);
+    const full = bt6('full');
+    expect(full.slice(0, 2)).toEqual(['PM: Anti-Ice/Deice/Radar', 'PF: Full Anti-Ice/Deice Check']);
+    expect(full).toEqual(expect.arrayContaining(['PF: Propeller deicer, Give 30 second intervals', 'PM: 30 seconds x4']));
+    expect(full.filter((l) => /Give 30 second intervals/.test(l))).toHaveLength(1);
+    expect(full).not.toContain('PF: Pitot Heat CHECKED');
+    expect(full.slice(-2)).toEqual(['PF: Radar CHECKED/STANDBY', 'PM: Radar CHECKED/STANDBY']);
+  });
+
+  test('the PM answers at once on the transponders and autoignition', () => {
+    const bt = scriptFor(proc('before-takeoff'));
+    expect(bt.find((l) => l.step === 'bt18' && l.text === 'SET').after).toBe(0);
+    expect(bt.find((l) => l.step === 'bt19' && l.text === 'ARMED').after).toBe(0);
+    expect(scriptFor(proc('after-start')).find((l) => l.step === 'as10' && l.text === 'STANDBY').after).toBe(0);
+  });
+
+  test('the approach crew brief has the touch and go', () => {
+    const lines = said(scriptFor(proc('approach')).filter((l) => l.step === 'ap9'));
+    expect(lines[1]).toMatch(/^PF: Once safely on the runway, I'll call Reset Flaps, Trim/);
+    expect(lines.slice(2)).toEqual(['PF: Any questions?', 'PM: No', 'PF: BRIEFED']);
   });
 });
