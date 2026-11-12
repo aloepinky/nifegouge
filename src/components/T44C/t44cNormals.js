@@ -11,7 +11,8 @@
 //                      list of lines (strings) and NWCs ({ note | caution | warning }).
 //   replies            its RESPONSE column, in order: { text, who } for what the student in the
 //                      left seat says (bold in the FTI), `ip: true` for what the instructor says
-//                      (highlighted), `act: true` for a stage direction that is not spoken.
+//                      (highlighted), `act: true` for a stage direction that is not spoken, and
+//                      `after`, seconds Voice Checklists waits before saying it (T44C/voiceScript.js).
 //   watch              what else the action has the student operate or check besides the step's
 //                      control (the ice vanes, the elapsed time key, FAULT WARN pressed to
 //                      cancel), as poster wordings (t44cPoster.js). A step that only checks
@@ -73,13 +74,16 @@ const abbrev = (id, challenge, reply, who, extra = {}) => item(id, challenge, re
 const memory = (id, challenge, reply, who, extra = {}) => item(id, challenge, reply, who, { critical: true, ...extra });
 
 const say = (text, who) => ({ text, who });
-const ip = (text, who) => ({ text, who, ip: true });
+const ip = (text, who, extra = {}) => ({ text, who, ip: true, ...extra });
 const act = (text, who) => ({ text, who, act: true });
 const note = (text) => ({ note: text });
 const caution = (text) => ({ caution: text });
 const warning = (text) => ({ warning: text });
 
-const THREE_WAY = act('Perform 3-way change of controls.');
+// The three-way change of controls, said in full (the user, 2026-11-12): the PF giving them to
+// the PM, and the PM giving them back.
+const TO_PM = [say('You have the controls', 'PF'), ip('I have the controls', 'PM'), say('You have the controls', 'PF')];
+const TO_PF = [ip('You have the controls', 'PM'), say('I have the controls', 'PF'), ip('You have the controls', 'PM')];
 // A step's own control in a `sequence` (epsLimits/EPDrill.js uses the same token).
 const CONTROL = '(control)';
 
@@ -278,7 +282,7 @@ const START_RIGHT = {
         say('Reset, On'), say('Switch, Light, Load'),
         say('Left aileron up', 'PF'), ip('Down.', 'PM'), say('Aileron down.', 'PF'), ip('Up.', 'PM'),
         say('Elevator up.', 'PF'), ip('Up', 'PM'), say('Elevator down', 'PF'), ip('Down', 'PM'),
-        THREE_WAY, act('PM conducts control check.'), THREE_WAY,
+        ...TO_PM, act('PM conducts control check.'), ...TO_PF,
         say('Flaps selected DOWN. Indicate DOWN, checked DOWN.', 'PF'), ip('DOWN', 'PM'),
         say('Flaps selected APPROACH. Indicate APPROACH, checked APPROACH.', 'PF'), ip('APPROACH', 'PM'),
         say('Flaps selected UP. Indicate UP, checked UP.', 'PF'), ip('UP', 'PM'),
@@ -528,7 +532,7 @@ const AFTER_START = {
         ip('Navy Corpus Ground, (call-sign), taxi VFR/IFR from (location) to the runup with (information)', 'PM'),
         act('PM repeats clearance to ATC'), act('PF confirms and announces clearance to the crew'),
         ip('Clear right', 'PM'), say('Clear left', 'PF'), say('Needle left', 'PF'),
-        THREE_WAY, act('RS conducts brake check'), THREE_WAY,
+        ...TO_PM, act('RS conducts brake check'), ...TO_PF,
         say('Continue the checklist', 'PF'),
       ],
     }),
@@ -658,10 +662,15 @@ const ENGINE_RUNUP = {
         'h. ENG AUTO IGN switches (2) – Off. Ensure both IGN IND annunciator lights out.',
         note('After the Engine Runup Checklist is complete, the PF shall reset N1 via the condition levers as appropriate per NATOPS Figure 4.3-1.'),
       ],
+      // `after`: Voice Checklists waits for the lights as the cockpit poster's engine model
+      // times them from the power levers' click (five runs, 2026-11-12): swap at about 11 s,
+      // flashing 14 s later, all four 16 s later, the right swap 9 s later and flashing 15 s
+      // later, less the PF's torque call between (the user, 2026-11-12).
       replies: [
         say('Call my lights.', 'PF'), ip('Four lights', 'PM'),
-        ip('Swap', 'PM'), say('408', 'PF'), act('(call out torque values for each checkpoint)', 'PF'), ip('Flashing', 'PM'), say('213', 'PF'), ip('All four', 'PM'),
-        ip('Swap', 'PM'), say('417', 'PF'), ip('Flashing', 'PM'), say('206', 'PF'),
+        ip('Swap', 'PM', { after: 10 }), say('408', 'PF'), act('(call out torque values for each checkpoint)', 'PF'),
+        ip('Flashing', 'PM', { after: 12 }), say('213', 'PF'), ip('All four', 'PM', { after: 14 }),
+        ip('Swap', 'PM', { after: 8 }), say('417', 'PF'), ip('Flashing', 'PM', { after: 13 }), say('206', 'PF'),
         say('CHECKED/OFF', 'LS'),
       ],
     }),
@@ -778,9 +787,11 @@ const BEFORE_TAKEOFF = {
         'd. Set and select V SPEEDS (VT-102, VR-91, VREF-110. Select VT, VR, and VREF for display.)',
         'A typical response would be: (PF) "PFD set 30.12 reading 30 feet, ESIS set 30.12 reading 30 feet. RADALT checks." (PM) "Set 30.12, reading 30 feet, RADALT checks" and reports any discrepancies.',
       ],
+      // The PM's settings follow the PF's, then each CHECKED/SET (the user, 2026-11-12).
       replies: [
-        say('PFD set 30.12 reading 30 feet, ESIS set 30.12 reading 30 feet. RADALT checks.'), say('CHECKED/SET', 'PF'),
-        ip('Set 30.12, reading 30 feet, RADALT checks'), ip('CHECKED/SET', 'PM'),
+        say('PFD set 30.12 reading 30 feet, ESIS set 30.12 reading 30 feet. RADALT checks.', 'PF'),
+        ip('Set 30.12, reading 30 feet, RADALT checks', 'PM'),
+        say('CHECKED/SET', 'PF'), ip('CHECKED/SET', 'PM'),
       ],
     }),
     abbrev('bt12', 'FMS', 'CHECKED/SET', 'PF, PM', {
@@ -796,11 +807,13 @@ const BEFORE_TAKEOFF = {
         'e. Check RAIM if required – IDX button then GPS CTL. Enter destination airfield, ETA, and verify RAIM availability.',
         'Refer to current CNAF M-3710.7 for predictive RAIM check requirements.',
       ],
+      // No clearance or route line, the change of controls said in full, the PF verifying and
+      // the PM executing (the user, 2026-11-12).
       replies: [
-        say('Hold the checklist', 'PF'), say('You have the controls. I will be heads down.', 'PF'), THREE_WAY,
-        say('For IFR clearance, call clearance delivery. For VFR, deconflict on BTN 19 if using Seagull working areas.'),
-        say('Load Route or flight plan as desired.', 'PM'), say('Verify', 'PM'),
-        act('Check 120 Map mode, verify correct routing,'), ip('Execute', 'PF'), THREE_WAY,
+        say('Hold the checklist', 'PF'), say('You have the controls. I will be heads down.', 'PF'),
+        ip('I have the controls', 'PM'), say('You have the controls', 'PF'),
+        act('Check 120 Map mode, verify correct routing,'), say('Verify', 'PF'), ip('Execute', 'PM'),
+        ...TO_PF,
         say('CHECKED/SET', 'PF'), ip('CHECKED/SET', 'PM'),
       ],
     }),
@@ -848,7 +861,7 @@ const BEFORE_TAKEOFF = {
       ],
       replies: [
         say('Back me up on the power quadrant and monitor all engine and flight instruments. Call out any malfunctions. All malfunctions will be handled in accordance with NATOPS. Call rotate at 91 knots and note the time of takeoff. This will be a course rules departure to (working area). In the event of an emergency return, I\'ll maintain VMC, and request downwind.'),
-        act('-Brief TOLD'), say('Any questions?', 'PF'), say('Briefed', 'PF'),
+        act('-Brief TOLD'), say('Any questions?', 'PF'), ip('No', 'PM'), say('Briefed', 'PF'),
         say('Hold the checklist. Check me out of the yellow. Request further taxi.', 'PF'), ip('You\'re out of the yellow.', 'PM'),
         ip('Navy Corpus Ground, (call-sign), request further taxi.', 'PM'),
         act('Ground delivers clearance, PM repeats clearance to ATC.'), act('PF confirms and announces clearance to the crew'),
@@ -895,7 +908,9 @@ const BEFORE_TAKEOFF = {
         'PF places both condition levers full forward and verifies 70-73% N1 with power levers at idle.',
         'When lined up and ready for takeoff: Check left wing/nacelle for fuel caps in place, panels secure, and no fluid leaks. Check PFD and ESIS headings aligned with the runway, no abnormal flags, and engine instruments/props stabilized. Confirm there are no malfunctions and ready for takeoff, report "checked left." The RS will do the same for the right wing/instruments and report "checked right." Release the brakes and place both feet on the lower portion of the rudder pedals. Commence takeoff roll per NATOPS.',
       ],
-      replies: [say('HIGH IDLE', 'PF'), ip('BEFORE TAKEOFF CHECKLIST COMPLETE.', 'PM'), say('Checked left', 'LS'), ip('Checked right', 'RS')],
+      // The checklist's own closing call is `done`; no checked left or right here (the user,
+      // 2026-11-12).
+      replies: [say('HIGH IDLE', 'PF')],
     }),
   ],
 };

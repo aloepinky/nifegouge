@@ -818,7 +818,11 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   when I stop talking" recognises no words: it opens the mic once per run (getUserMedia) and
   watches its level. "Say my call" is the recogniser, with spoken commands; "press my earbud"
   plays a looped silent WAV to get the button presses (Media Session). Voices are known by
-  voiceURI (an iPhone lists "Tom" twice, compact and Enhanced) and Apple's gag voices are cut.
+  voiceURI (an iPhone lists "Tom" twice, compact and Enhanced); Apple's gag voices are cut by
+  name and the Eloquence family, never the whole com.apple.speech.synthesis family (real
+  voices live there); "Show every voice" lifts the filter. The PF opens every checklist by its
+  title; the PM answering its own challenge waits 2 s (`PM_ACTION`); a reply's `after`
+  (t44cNormals.js) is a wait before it, Runup 8's from the engine model's light timings.
 - A step that only looks at an instrument is `look: true` (t44cNormals.js), and so is, in
   effect, a step whose control is in and which is missing only instruments (`glances`, set from
   `GAUGES` there). Clicking a later step's control with nothing but such steps between does

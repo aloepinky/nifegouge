@@ -9,9 +9,12 @@
 //   * each reply's `who` names its seat (LS counts as PF and RS as PM, the crew boxes' pairing);
 //     a reply with none is the student's (bold in the FTI, the PF) or, if `ip`, the PM's;
 //   * `act` lines and decision rows are shown and not spoken; notes are left out;
-//   * radio calls to ATC or base are shown and not spoken (no comms here, the user, 2026-11-12).
+//   * radio calls to ATC or base are shown and not spoken (no comms here, the user, 2026-11-12);
+//   * the PF opens every checklist by its title ("After Start Checklist", the user, 2026-11-12);
+//   * the PM answering its own challenge waits PM_ACTION seconds first, the time to do the
+//     action (the user, 2026-11-12); a reply's own `after` (Runup 8's lights) overrides it.
 //
-// A line: { proc, step, seat: 'PF'|'PM'|'OBS', kind: 'say'|'act', text, say, last }.
+// A line: { proc, step, seat: 'PF'|'PM'|'OBS', kind: 'say'|'act', text, say, last, after }.
 // `text` is the card's wording, `say` what the speech engine is given, `last` the word that
 // ends the line, which lets a listener move on as soon as it is heard.
 
@@ -23,6 +26,7 @@ export const seatOf = (who, fallback) => {
 };
 
 const RADIO = /^(Navy |\(Squadron\)|.*\(call-sign\),)/;
+export const PM_ACTION = 2;
 
 // Words the speech engine should read as letters. Everything else in capitals is said as a word.
 const LETTERS = new Set(['ATIS', 'ICS', 'ITT', 'IGN', 'GEN', 'OBS', 'PM', 'PF', 'LS', 'RS', 'FD', 'YD', 'AP',
@@ -56,9 +60,12 @@ export function lastWord(text) {
   return words ? words[words.length - 1] : '';
 }
 
-const line = (proc, step, seat, kind, text) => ({
-  proc, step, seat, kind, text, say: kind === 'say' ? spoken(text) : '', last: kind === 'say' ? lastWord(text) : '',
+const line = (proc, step, seat, kind, text, after = 0) => ({
+  proc, step, seat, kind, text, say: kind === 'say' ? spoken(text) : '', last: kind === 'say' ? lastWord(text) : '', after,
 });
+
+// What the PF says to open a checklist.
+export const titleCall = (proc) => (/check$/i.test(proc.title) ? proc.title : `${proc.title} Checklist`);
 
 // The PM's closing call off `done`: its first quoted sentence.
 export function doneCall(done) {
@@ -67,7 +74,7 @@ export function doneCall(done) {
 }
 
 export function scriptFor(proc) {
-  const out = [];
+  const out = [line(proc.id, 'title', 'PF', 'say', titleCall(proc))];
   proc.rows.forEach((row, i) => {
     if (row.decision) { out.push(line(proc.id, `d${i}`, 'PM', 'act', row.decision)); return; }
     if (!row.challenge) return; // a note
@@ -75,8 +82,9 @@ export function scriptFor(proc) {
     const replies = row.replies && row.replies.length ? row.replies
       : row.critical ? [] : [{ text: row.reply, who: row.who }];
     let pending = null; // a memory step's challenge, said with the PF's first line
+    let afterChallenge = false; // the next line is the first after the PM's challenge
     if (row.critical) pending = row.challenge;
-    else out.push(line(proc.id, row.id, 'PM', 'say', row.challenge));
+    else { out.push(line(proc.id, row.id, 'PM', 'say', row.challenge)); afterChallenge = true; }
     replies.forEach((r) => {
       const seat = seatOf(r.who, r.ip ? 'PM' : 'PF');
       if (r.act || RADIO.test(r.text)) {
@@ -85,7 +93,9 @@ export function scriptFor(proc) {
       }
       let text = r.text;
       if (pending && seat === 'PF') { text = `${pending}, ${text}`; pending = null; }
-      out.push(line(proc.id, row.id, seat, 'say', text));
+      const after = r.after ?? (afterChallenge && seat === 'PM' ? PM_ACTION : 0);
+      afterChallenge = false;
+      out.push(line(proc.id, row.id, seat, 'say', text, after));
     });
     // A memory step with nothing spoken (Fuel Flow - Note): the PF's, shown as done.
     if (pending) out.push(line(proc.id, row.id, owner, 'act', `${row.challenge} - ${row.reply}`));

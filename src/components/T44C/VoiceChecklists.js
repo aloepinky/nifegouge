@@ -84,29 +84,30 @@ const SEAT_NAME = { PF: 'PF', PM: 'PM', OBS: 'OBS' };
 // the voiceURI (com.apple.voice.enhanced.en-US.Tom) tells them apart, so a voice is known by it.
 const RANK = [/natural|neural/i, /premium/i, /enhanced/i, /siri/i, /^google us english/i, /google/i,
   /samantha|ava|allison|susan|aria|jenny|guy|tom|evan|zoe|nathan|joelle/i];
-// The macOS and iOS novelty voices, by name and by family: Apple files the gags under
-// com.apple.speech.synthesis.voice and the Eloquence voices (Rocko, Grandma) under
-// com.apple.eloquence; the real ones are com.apple.voice.* and Siri's.
-const GAG_FAMILY = /speech\.synthesis\.voice\.|eloquence/i;
-// The real voices a Mac keeps in that family.
-const REAL_OLD = /^(alex|samantha|victoria|daniel|karen|moira|tessa|fiona|veena|rishi)\b/i;
-const NOVELTY = /^(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|fred|kathy|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley)\b/i;
+// The macOS and iOS novelty voices, by name, and the Eloquence voices (Rocko, Grandma) by
+// family. Not the com.apple.speech.synthesis family as a whole: real voices are filed there
+// too, and cutting it hid them (Tom, the user, 2026-11-12). "Show every voice" shows the lot.
+const GAG_FAMILY = /eloquence/i;
+const NOVELTY = /^(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|pipe organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|fred|kathy|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|deranged|hysterical|princess)\b/i;
 const idOf = (v) => v.voiceURI || v.name;
 const tag = (v) => `${v.name} ${v.voiceURI || ''}`;
 const rank = (v) => {
   const i = RANK.findIndex((re) => re.test(tag(v)));
   return (i < 0 ? RANK.length : i) * 2 + (/en-US/i.test(v.lang) ? 0 : 1);
 };
-const voiceLabel = (v) => {
+const voiceLabel = (v, full) => {
   const kind = /premium/i.test(v.voiceURI) ? 'Premium' : /enhanced/i.test(v.voiceURI) ? 'Enhanced' : '';
   const name = kind && !new RegExp(kind, 'i').test(v.name) ? `${v.name} (${kind})` : v.name;
-  return /en-US/i.test(v.lang) ? name : `${name}, ${v.lang}`;
+  const shown = /en-US/i.test(v.lang) ? name : `${name}, ${v.lang}`;
+  return full && v.voiceURI && v.voiceURI !== v.name ? `${shown} · ${v.voiceURI}` : shown;
 };
-function englishVoices() {
+// English voices, the gags left out; `all`, every voice the browser offers, English first.
+function englishVoices(all = false) {
   if (!canSpeak) return [];
-  return window.speechSynthesis.getVoices()
-    .filter((v) => /^en/i.test(v.lang) && !NOVELTY.test(v.name)
-      && (!GAG_FAMILY.test(v.voiceURI || '') || REAL_OLD.test(v.name)))
+  const list = window.speechSynthesis.getVoices();
+  if (all) return [...list].sort((a, b) => (/^en/i.test(b.lang) - /^en/i.test(a.lang)) || rank(a) - rank(b));
+  return list
+    .filter((v) => /^en/i.test(v.lang) && !NOVELTY.test(v.name) && !GAG_FAMILY.test(v.voiceURI || ''))
     .sort((a, b) => rank(a) - rank(b));
 }
 
@@ -119,7 +120,8 @@ export default function VoiceChecklists() {
   const [wait, setWait] = useState(WAITS.includes(saved.wait) ? saved.wait : 1);
   const [speed, setSpeed] = useState(SPEEDS.includes(saved.speed) ? saved.speed : 1.25);
   const [voiceName, setVoiceName] = useState(saved.voice || '');
-  const [voices, setVoices] = useState(englishVoices);
+  const [allVoices, setAllVoices] = useState(!!saved.allVoices);
+  const [voices, setVoices] = useState(() => englishVoices(!!saved.allVoices));
   const [view, setView] = useState({ proc: 0, pos: 0 });
   const [status, setStatus] = useState('idle'); // idle | speaking | listening | reading | paused | done
   const [heard, setHeard] = useState('');
@@ -132,12 +134,13 @@ export default function VoiceChecklists() {
   const [message, setMessage] = useState('');
   const [mic, setMic] = useState('off'); // off | on | tap (refused: needs the student's tap)
 
-  useEffect(() => save({ seat, chain, hide, wait, speed, advance, voice: voiceName }),
-    [seat, chain, hide, wait, speed, advance, voiceName]);
+  useEffect(() => save({ seat, chain, hide, wait, speed, advance, allVoices, voice: voiceName }),
+    [seat, chain, hide, wait, speed, advance, allVoices, voiceName]);
+  useEffect(() => setVoices(englishVoices(allVoices)), [allVoices]);
 
   useEffect(() => {
     if (!canSpeak) return undefined;
-    const update = () => setVoices(englishVoices());
+    const update = () => setVoices(englishVoices(live.current.allVoices));
     window.speechSynthesis.addEventListener('voiceschanged', update);
     // The list may have arrived between the first render and this listener.
     // Safari doesn't always say when it has its list, so look again a few times.
@@ -147,7 +150,7 @@ export default function VoiceChecklists() {
   }, []);
 
   const live = useRef({});
-  Object.assign(live.current, { seat, chain, wait, speed, voices, voiceName, deaf, advance });
+  Object.assign(live.current, { seat, chain, wait, speed, voices, voiceName, deaf, advance, allVoices });
   const at = useRef({ proc: 0, pos: 0 });
   const tok = useRef(0);
   const timer = useRef(null);
@@ -236,7 +239,11 @@ export default function VoiceChecklists() {
     } else if (isMine(l, live.current.seat)) {
       listen(token);
     } else {
-      speak(l, token, () => { moveTo(proc, pos + 1); play(); });
+      const say = () => speak(l, token, () => { moveTo(proc, pos + 1); play(); });
+      if (l.after) {
+        setStatus('waiting');
+        timer.current = setTimeout(() => { if (tok.current === token) say(); }, l.after * 1000);
+      } else say();
     }
   };
 
@@ -536,13 +543,14 @@ export default function VoiceChecklists() {
   const now = lines[view.pos];
   const mineNow = now && isMine(now, seat);
   const showText = (l, i) => !(hide && isMine(l, seat) && i >= view.pos);
-  const busy = status === 'speaking' || status === 'listening' || status === 'reading';
+  const busy = ['speaking', 'listening', 'reading', 'waiting'].includes(status);
   const listeningNow = status === 'listening';
   const statusText = {
     idle: 'Ready',
     speaking: now ? `${SEAT_NAME[now.seat]}` : '',
     listening: 'Your call',
     reading: '',
+    waiting: now ? `${SEAT_NAME[now.seat]}` : '',
     paused: 'Paused',
     done: 'Checklist complete',
   }[status];
@@ -610,13 +618,19 @@ export default function VoiceChecklists() {
               </select>
             </label>
           )}
-          {voices.length > 1 && (
+          {voices.length > 0 && (
             <label>
               Voice
               <select value={voiceName} onChange={(e) => setVoiceName(e.target.value)}>
                 <option value="">Best available ({voiceLabel(voices[0])})</option>
-                {voices.map((v) => <option key={idOf(v)} value={idOf(v)}>{voiceLabel(v)}</option>)}
+                {voices.map((v) => <option key={idOf(v)} value={idOf(v)}>{voiceLabel(v, allVoices)}</option>)}
               </select>
+            </label>
+          )}
+          {canSpeak && (
+            <label>
+              <input type="checkbox" checked={allVoices} onChange={(e) => setAllVoices(e.target.checked)} />
+              Show every voice ({voices.length} {allVoices ? 'on this device' : 'shown'})
             </label>
           )}
           {IOS && (
@@ -646,7 +660,7 @@ export default function VoiceChecklists() {
         <div className="t44c-voice-line">
           {now ? (
             <span className={now.kind === 'act' ? 't44c-voice-act' : ''}>
-              {showText(now, view.pos) ? now.text : 'Your call'}
+              {status === 'waiting' ? '…' : showText(now, view.pos) ? now.text : 'Your call'}
             </span>
           ) : (
             <span>{CHECKLISTS[view.proc].title} complete</span>
