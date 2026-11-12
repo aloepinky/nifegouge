@@ -480,6 +480,14 @@ export default function VoiceChecklists() {
     startVad();
     startEarbud();
     lockScreen();
+    // An iPhone speaks for a page only once the page has spoken inside a tap. Every checklist
+    // now opens on the student's own call, so the first real line comes later, from the
+    // microphone's side: a silent line said here, in the tap, unlocks the rest.
+    if (canSpeak) {
+      const unlock = new SpeechSynthesisUtterance(' ');
+      unlock.volume = 0;
+      window.speechSynthesis.speak(unlock);
+    }
     if (!lineAt()) moveTo(at.current.proc, 0);
     play(); // inside the click, which some browsers need before they will speak
   };
