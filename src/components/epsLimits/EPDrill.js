@@ -457,7 +457,7 @@ function ActionPanel({ row, label, mark, onClose }) {
 
 function Drill({
   eps, title, footnote, top, above, left, right, sideWidth = 200,
-  aliases = DEFAULT_ALIASES, normal = false, read = false, calls = false, sequential = false, modes = null, extraToggle = null,
+  aliases = DEFAULT_ALIASES, normal = false, read = false, calls = false, crew = false, sequential = false, modes = null, extraToggle = null,
   practice = null, initialFull = null, onFull,
   nwc, nwcHints, isGameActive = false, onGameComplete, engine = null, detours = [],
 }) {
@@ -564,12 +564,12 @@ function Drill({
     const found = engine.discrepancy();
     if (found) {
       const list = Array.isArray(found) ? found : [found];
-      setEngineNote(list.map((f) => say('Discrepancy found:', f)).join(' '));
+      setEngineNote(list.map((f) => say('Malfunction found:', f)).join(' '));
       return;
     }
     const open = nextOpen();
     if (open) setResults((r) => ({ ...r, [open.id]: 'incorrect' }));
-    setEngineNote('No discrepancy: everything is reading as it should.');
+    setEngineNote('No malfunction: everything is reading as it should.');
   };
   // A refused click: marked wrong, and the reason shown.
   const tooEarly = (step, piece) => {
@@ -1225,6 +1225,16 @@ function Drill({
     return () => watch.disconnect();
   }, [sizerCards, eps, full]);
 
+  // `crew` (the T-44C's Hollywood checklists): a box the card's height on its left while the open
+  // step is the left seat's or the pilot flying's, on its right for the right seat's or the pilot
+  // monitoring's, and one under the card for the observer's (the user, 2026-11-11). Drawn outside
+  // the card's own box, so nothing on the page moves.
+  const crewStep = crew && read ? nextOpen() : null;
+  const crewWho = crewStep ? (crewStep.who || '').split(/[,/]/).map((w) => w.trim()) : [];
+  const crewLeft = crewWho.filter((w) => w === 'LS' || w === 'PF');
+  const crewRight = crewWho.filter((w) => w === 'RS' || w === 'PM');
+  const crewObs = crewWho.includes('OBS');
+
   let n = (ep.start || 1) - 1;
   const card = (
     <div className={cardClassFor(ep)}>
@@ -1342,7 +1352,20 @@ function Drill({
                 is the slot around it, which is always as tall as the longest EP, so everything
                 below sits at the same place whichever procedure is showing. */}
             <div className="epl-card-slot" style={cardMin ? { minHeight: cardMin + (calls ? CALL_ROOM : 0) } : undefined}>
-              {card}
+              {crew ? (
+                <div className="epl-crew">
+                  {card}
+                  {crewLeft.length > 0 && (
+                    <span className="epl-crew-box epl-crew-box--left" title="Left seat / pilot flying">{crewLeft.join('/')}</span>
+                  )}
+                  {crewRight.length > 0 && (
+                    <span className="epl-crew-box epl-crew-box--right" title="Right seat / pilot monitoring">{crewRight.join('/')}</span>
+                  )}
+                  {crewObs && (
+                    <span className="epl-crew-box epl-crew-box--obs" title="Observer">OBS</span>
+                  )}
+                </div>
+              ) : card}
               {/* An EP with `practice` names another set that drills it in context (the T-44C's
                   single-engine cases under Engine Failure After Takeoff); the button opens it. */}
               {showTools && practice && ep.practice && (

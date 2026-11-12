@@ -727,7 +727,8 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
 - T-44C starts, the Engine Runup and the Full Anti-Ice/Deice Check run a live engine model
   (starts since 2026-11-03, the other two since 2026-11-04): `T44C/t44cEngine.js` (pure, tested
   in `t44cEngine.test.js`), clocked by `t44cEngineStore.js`, passed to EPDrill as `engine`.
-  After Start (fuel pressure, crossfeed and no-fuel-transfer lights, the avionics load) runs on
+  After Start (fuel pressure, crossfeed and no-fuel-transfer lights, the avionics load, the
+  AUX TEST/AUX ON lamp that the AUX BATT switch lights and the avionics master puts out) runs on
   it too. `STEP_EVENTS[procedure][id]` is what a step's control does, `<id>:<piece>` a watched
   piece, `<id>#<n>` the nth piece of its `sequence` (After Start's ids repeat Abnormal Start's,
   hence the procedure). Since the engines answer the levers, multi-control steps list their
@@ -749,7 +750,8 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   to each light's flash, then Np a second later. Each test draws every engine's switch points
   afresh (truncated normal, 410 ±50 and 200 ±40, the FTI's; `drawAuto`). The battery is owed for every starter-second, assisted or
   not; it is paid back from the generator coming on, on 19 s, so a lone generator is below .5 about 20 s on (the user's figure, over 9716's flat 20 s). Chaos (2026-11-04): a slider above the card sets the odds that a check goes
-  wrong, and a Discrepancy button says it has. `T44C/t44cFaults.js` lists every fault (step,
+  wrong, and a Malfunction button says it has (called Discrepancy until 2026-11-11; the code
+  still says `discrepancy`). `T44C/t44cFaults.js` lists every fault (step,
   when it shows, what it was, its causes with sources; the user chose the steps and struck the
   unsourced ones), the model draws its effects by id (`drawn`, `chaosLights`,
   `chaosReadouts`, `engineFx`), and the store draws one as a step opens (`arm`, once a run),
@@ -758,8 +760,8 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   shows it (RH GEN OUT staying lit as the right generator goes on is missed only when the left
   generator is clicked; the user, 2026-11-05). A standing condition (`early`: door, loads, fuel
   imbalance) is drawn as the card opens, so it shows before its step. Faults never wait on each
-  other (`state.faults`, a list): at 100 percent every step that has faults draws one (the user,
-  2026-11-08). Discrepancy finds the seen faults of the open step and those before it first, so
+  other (`state.faults`, a list): at 100 percent every step that has faults draws all of them (the user,
+  2026-11-08 and 11-11); below that, a step draws one at most. Malfunction finds the seen faults of the open step and those before it first, so
   CABIN DOOR OPEN stays lit while an earlier step's fault is found. The fuel gauge's current
   limiter fails only once the right generator is off after the left start (the start broke it). Before Start and Before Takeoff now run on the model too (Before Start: boost
   pumps 11 A each; the lamp test lights all 30 cells of the panel, blanks included, from the
@@ -784,10 +786,11 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   starter), hot, hung and three no starts (no light-off, no fuel flow, no rotation; the sim's,
   2026-11-08), or Random, drawn per start and never shown, are picked right above the checklist
   card; with no rotation the condition lever, already at cutoff, opens Abnormal Start. The
-  gauges are dark until the battery is on (oxygen excepted). HIGH IDLE to LOW IDLE takes about
+  gauges are dark until the battery is on (oxygen, and the battery volts and amps on the hot
+  battery bus, excepted, so one boost pump drawing nothing shows before the battery). HIGH IDLE to LOW IDLE takes about
   8 s; the feather time constant is 11 s. A poster spot may be `free` (CockpitPoster): it fills
   only a step that names it and is never marked wrong, so the annunciator DIM knob (a click runs its check: the
-  lit lights fade evenly to out and back to full bright, twice, 2.5 s a cycle; `annLevel`) and the FUEL QUANTITY TOTAL-NACELLE switch (nacelle 61 gal at 6.75 lb, NATOPS §2.9) work any time. Runup 8's
+  lit lights fade evenly to out and back to full bright, twice, 1.25 s a cycle; `annLevel`) and the FUEL QUANTITY TOTAL-NACELLE switch (nacelle 61 gal at 6.75 lb, NATOPS §2.9) work any time. Runup 8's
   late switch faults show once torque is below 360 or 160 with the light unchanged, and finding
   one stops the test (`stopTest`). The hot
   start runs on past the clip to 1150 °C (the user's figure). A second condition lever press
@@ -800,6 +803,17 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   generators share one load, split evenly between those on line (9716: 0.75 alone, then
   0.38 and 0.39), the bus's own plus what the battery start is owed.
   Don't add a curve no clip shows.
+- The Hollywood set has `crew` (EPDrill): while the open step is theirs, a box the card's height
+  left of it for LS/PF, right of it for RS/PM, and a small one under the card for OBS (the user,
+  2026-11-11), absolutely placed outside the card so nothing moves.
+- **Voice Checklists** (`/t44c/eps-limits/voice`, `T44C/VoiceChecklists.js`, script in
+  `T44C/voiceScript.js`, tested): the Hollywood checklists read aloud for one student (the user,
+  2026-11-12). Every checklist but the two start procedures. The student picks PF or PM; the browser's speech synthesis says the other seat's
+  and the observer's lines, and its speech recognition moves on when the student stops talking
+  or says the line's last word (Next and the space bar where it can't listen). The PM reads
+  challenges; a memory step's challenge is said in the PF's first line; `act` lines and radio
+  calls are shown, not spoken. No engine model, no comms. Recognition needs a secure page
+  (https or localhost).
 - A step that only looks at an instrument is `look: true` (t44cNormals.js), and so is, in
   effect, a step whose control is in and which is missing only instruments (`glances`, set from
   `GAUGES` there). Clicking a later step's control with nothing but such steps between does

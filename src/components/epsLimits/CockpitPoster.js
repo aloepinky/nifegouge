@@ -155,8 +155,16 @@ function Stopwatch({ box, watch, limit, view }) {
 function EngineLayer({ engine, region, alias, view }) {
   const snap = useEngine(engine);
   if (!snap || !snap.active) return null;
+  // During the lamp test a light already lit (GEN OUT, a CABIN DOOR left on) is drawn once, by
+  // its cell, so it is no brighter than the rest (the user, 2026-11-11).
+  const cells = region.lampTest && snap.lampTest ? region.lampTest : [];
+  const inCell = ([l, t, w, h]) => cells.some(([cl, ct, cw, ch]) => {
+    const x = l + w / 2;
+    const y = t + h / 2;
+    return x >= cl && x <= cl + cw && y >= ct && y <= ct + ch;
+  });
   const lit = (region.spots || []).filter((spot) => spot.box
-    && snap.lights.some((w) => matches(spot, w, alias)));
+    && snap.lights.some((w) => matches(spot, w, alias)) && !inCell(spot.box));
   // The DIM knob's check fades the lit lights (t44cEngine.js annLevel).
   const level = snap.annLevel ?? 1;
   return (

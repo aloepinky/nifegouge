@@ -402,12 +402,27 @@ const pumpsOn = (state) => {
   return SIDES.filter((k) => state.fuelSys.boost[k] && !(nd && nd.side === k)).length;
 };
 
+// A step's control (an event key) went in: the faults waiting on it show now, or, those with a
+// `when`, are tested from now on.
+export function faultsAt(state, key) {
+  const list = faultsOf(state);
+  if (!list.some((f) => !f.seen && !f.armed && f.at === key)) return state;
+  return { ...state, faults: list.map((f) => {
+    if (f.seen || f.armed || f.at !== key) return f;
+    const def = faultById(f.id);
+    return def && def.when ? { ...f, armed: true } : { ...f, seen: true };
+  }) };
+}
+
 // Marks each drawn fault seen once its `when` holds.
 export function faultSeen(state) {
   const list = faultsOf(state);
   let changed = false;
   const next = list.map((f) => {
-    if (f.seen) return f;
+    // A fault with an `at` is not tested until that control has gone in (`faultsAt`): Engine
+    // Runup 5's short HIGH IDLE is otherwise true at LOW IDLE, before the levers move (the user,
+    // 2026-11-10).
+    if (f.seen || (f.at && !f.armed)) return f;
     const def = faultById(f.id);
     if (!(def && def.when && def.when(state, f.params))) return f;
     changed = true;
@@ -419,7 +434,9 @@ export function faultSeen(state) {
 // The engine side of a fault, for stepEngine: its own engine's.
 const engineFx = (state, side) => {
   const fx = {};
-  if (side === 'R' && drawn(state, 'sl-itt-rise')) fx.ittAdd = 290;
+  // Only while the left starter is in: before it, the right generator's own battery payback
+  // would show it before the left start (the user's 640, 2026-11-10).
+  if (side === 'R' && drawn(state, 'sl-itt-rise') && state.engines.L.starter !== 'off') fx.ittAdd = 290;
   const mf = drawn(state, 'er-mf-nofeather');
   if (mf && mf.side === side) fx.noManualFeather = true;
   const slow = drawn(state, 'er-mf-slow');
@@ -569,6 +586,10 @@ export function input(state, event) {
   // The battery switch; the annunciator lamp test held; FAULT WARNING flashing until pressed;
   // the fire detector test switch's zone (0 OFF); an anti-ice heater on or off.
   if (event.battery !== undefined) return { ...state, elec: { ...state.elec, battery: event.battery } };
+  // After Start 3: the AUX BATT switch to TEST, then ON/ARMED (AUX TEST, then AUX ON); the
+  // avionics master ON puts AUX ON out (FTI Appendix F, After Start 3 a and b).
+  if (event.auxBatt) return { ...state, auxBatt: true, auxTestUntil: state.t + AUX_TEST };
+  if (event.avionics !== undefined) return { ...state, avionics: event.avionics };
   if (event.annTest !== undefined) return { ...state, annTest: event.annTest };
   // The annunciator DIM knob checked (annLevel); the FUEL QUANTITY switch.
   if (event.annDim) return { ...state, dimFrom: state.t };
@@ -963,8 +984,13 @@ const whole = (v) => String(Math.round(v));
 const pos = (v) => String(Math.max(0, Math.round(v)));
 export function readouts(state) {
   // Before Start 8: the gauges come on with the battery (the user's sim notes, 2026-11-08). The
-  // oxygen supply gauge is taken as a direct-reading one and shows throughout.
-  if (state.elec.battery === false) return { L: {}, R: {}, B: {}, S: { oxygen: String(BLEED.oxygen) } };
+  // oxygen supply gauge is taken as a direct-reading one and shows throughout. The battery
+  // voltmeter and ammeter are on the hot battery bus and show throughout too, so the boost pumps'
+  // draw is read before the battery is on (the user, 2026-11-10).
+  if (state.elec.battery === false) {
+    return { L: {}, R: {}, S: { oxygen: String(BLEED.oxygen) },
+      B: { volts: state.elec.volts.toFixed(1), amps: whole(state.elec.amps) } };
+  }
   const out = {};
   const loads = loadsOf(state);
   for (const side of SIDES) {
@@ -1067,7 +1093,7 @@ export function lights(state) {
   }
   // Before Start 10: the test lights FAULT WARNING, both FIRE lights and both FIRE EXT lights
   // (NATOPS §2.5).
-  if (state.fireZone) {
+  if (state.fireZone && !drawn(state, 'bs-fire-all')) {
     const fz = drawn(state, 'bs-fire-zone');
     for (const side of SIDES) {
       if (fz && fz.side === side) continue;
@@ -1076,6 +1102,8 @@ export function lights(state) {
     }
   }
   if (state.faultWarn) out.push('FAULT WARNING');
+  if (state.t < (state.auxTestUntil ?? -1)) out.push('AUX TEST');
+  else if (state.auxBatt && !state.avionics) out.push('AUX ON');
   return chaosLights(state, out);
 }
 
@@ -1107,6 +1135,10 @@ function chaosLights(state, lit) {
       case 'bs-xfeed-stuck': if (f.seen) out.push('FUEL CROSSFEED'); break;
       case 'bs-fuelpress': if (state.elec.battery) out.push(`${p.side} FUEL PRESSURE`); break;
       case 'bs-door': out.push('Cabin Door'); break;
+      // The fire detection system unpowered: its test lights nothing, FAULT WARNING included.
+      case 'bs-fire-all': drop('FAULT WARNING'); break;
+      // An erroneous FIRE indication once the test is over (NATOPS §2.5.1).
+      case 'bs-fire-false': if (f.seen) out.push(`${side} FIRE`, `${side} FIRE EXT`); break;
       case 'sl-gen-out-L': case 'sl-gen-out-R': break; // the generator stays off: GEN OUT as usual
       case 'as-boost-failed': case 'as-xfeed-stuck': if (f.seen) out.push('FUEL CROSSFEED'); break;
       case 'er-af-dark': if (state.afTest) drop(`${side} AUTOFEATHER ARMED`); break;
@@ -1127,14 +1159,17 @@ export const MODEL_LIGHTS = ['LH IGN IND', 'RH IGN IND', 'LH GEN OUT', 'RH GEN O
   'LH AUTO IGNITION ARMED', 'RH AUTO IGNITION ARMED', 'LH AUTOFEATHER ARMED', 'RH AUTOFEATHER ARMED',
   'L FUEL PRESSURE', 'R FUEL PRESSURE', 'FUEL CROSSFEED', 'LH NO FUEL TRANSFER', 'RH NO FUEL TRANSFER',
   'PROP REV NOT READY', 'FAULT WARNING', 'LH FIRE', 'RH FIRE', 'LH FIRE EXT', 'RH FIRE EXT',
-  'Cabin Door', 'Annunciator Lights'];
+  'Cabin Door', 'Annunciator Lights', 'AUX ON', 'AUX TEST'];
+
+// The AUX BATT switch held at TEST, seconds ("momentarily", the FTI; the site's figure).
+const AUX_TEST = 1;
 
 // Whether the engines have stopped changing, so the clock can rest. A running engine never has:
 // its fuel quantity goes down.
 // The DIM knob's check (the user, 2026-11-08): from full bright the lights fade evenly to out,
 // come back evenly to full bright, and do it once more, DIM_SWEEP seconds each way. The lit
 // lights' level now, 1 full bright to 0 out.
-const DIM_SWEEP = 1.25; // so one cycle, out and back, is 2.5 s (the user, 2026-11-08)
+const DIM_SWEEP = 0.625; // so one cycle, out and back, is 1.25 s (the user, 2026-11-11; 2.5 s before)
 const DIM_CHECK = 4 * DIM_SWEEP;
 export const annLevel = (state) => {
   const d = state.t - (state.dimFrom ?? -Infinity);
@@ -1145,7 +1180,7 @@ export const annLevel = (state) => {
 
 export function settled(state) {
   const charging = (state.engines.L.gen || state.engines.R.gen) && state.elec.deficit > 0.01;
-  const checking = state.t - (state.dimFrom ?? -Infinity) < DIM_CHECK;
+  const checking = state.t - (state.dimFrom ?? -Infinity) < DIM_CHECK || state.t < (state.auxTestUntil ?? -1);
   return !charging && !checking && !state.clock.running && !state.script && SIDES.every((side) => {
     const e = state.engines[side];
     const still = e.starter === 'off' && e.cond === 'cutoff' && e.n1 < 0.05 && e.itt < AMBIENT + 1;
@@ -1304,7 +1339,8 @@ export const STEP_EVENTS = {
   },
   'after-start': {
     // 3: the avionics master on adds its load (0.36 to 0.46 between the start and runup clips).
-    as3: [{ bus: BUS_RUNNING }],
+    'as3:AUX BATT Switch': [{ auxBatt: true }],
+    as3: [{ bus: BUS_RUNNING }, { avionics: true }],
     // 6: TRANSFER TEST held to L, the left pump to AUTO; then R and the right.
     'as6#2': [{ flicker: 'LH NO FUEL TRANSFER' }],
     'as6#4': [{ flicker: 'RH NO FUEL TRANSFER' }],

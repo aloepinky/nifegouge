@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import T44CLimits from './T44C/T44CLimits';
+import VoiceChecklists from './T44C/VoiceChecklists';
 import { T44C_EPS, T44C_EP_NWC } from './T44C/t44cData';
 import { T44C_HOLLYWOOD, T44C_MEMORY_NORMALS } from './T44C/t44cNormals';
 import { T44C_CASES } from './T44C/t44cCases';
@@ -38,6 +39,8 @@ import EPsLimitsShell from './epsLimits/EPsLimitsShell';
 const TABS = [
   { id: 'eps', label: 'EPs/Cockpit' },
   { id: 'limits', label: 'Limits' },
+  // Reached only by its address, /t44c/eps-limits/voice (the user, 2026-11-12).
+  { id: 'voice', label: 'Voice Checklists', hidden: true },
 ];
 
 const MAIN = t44cRegion('main');
@@ -91,6 +94,14 @@ function Console(api) {
 // never moves.
 // Chaos, on every card the model runs (2026-11-04): the slider sets the odds that a step goes
 // wrong (T44C/t44cFaults.js), and Discrepancy is how the student says it has.
+// What the (i) beside Chaos says, in plain sentences (the user, 2026-11-11).
+const CHAOS_INFO = [
+  'Chaos sets the chance that each check on the checklist goes wrong.',
+  'A light may stay dark or a gauge may read out of limits.',
+  'Press Malfunction when you see one or you\'ll be told what you missed.',
+  'At 100% everything that can go wrong will go wrong.',
+];
+
 function StartControls({ engine, reset, epId, engineNote, discrepancy }) {
   const snap = useSyncExternalStore(engine.subscribe, engine.getSnapshot);
   const starting = snap.active && (epId === 'start-right' || epId === 'start-left');
@@ -100,29 +111,39 @@ function StartControls({ engine, reset, epId, engineNote, discrepancy }) {
   return (
     <div className="t44c-start">
       <div className="t44c-start-row">
-        {starting && (
-        <>
+        {/* Laid out on every card the model runs and hidden off the starts, so the row wraps
+            the same way everywhere and the buttons under the card never move (the user,
+            2026-11-09). */}
+        {snap.active && (
+        <span className={`t44c-start-pick${starting ? '' : ' t44c-start-pick--off'}`} aria-hidden={!starting}>
           <label>
             Start
-            <select value={snap.scenario} onChange={(e) => choose(e.target.value)}>
+            <select value={snap.scenario} onChange={(e) => choose(e.target.value)} tabIndex={starting ? 0 : -1}>
               {SCENARIOS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
               <option value={RANDOM}>Random</option>
             </select>
           </label>
-          <button type="button" onClick={() => choose(RANDOM)} title="A start drawn at random, and not shown">
+          <button type="button" onClick={() => choose(RANDOM)} title="A start drawn at random, and not shown"
+            tabIndex={starting ? 0 : -1}>
             Random start
           </button>
-        </>
+        </span>
         )}
         {snap.active && (
         <>
-          <label className="t44c-chaos" title="The odds that a check goes wrong">
+          <label className="t44c-chaos">
+            <span className="t44c-info" tabIndex={0} aria-describedby="t44c-chaos-info">
+              i
+              <span className="t44c-info-box" id="t44c-chaos-info" role="tooltip">
+                {CHAOS_INFO.map((s) => <span key={s}>{s}</span>)}
+              </span>
+            </span>
             Chaos
             <input type="range" min="0" max="100" step="5" value={odds}
               onChange={(e) => engine.setChaos(Number(e.target.value) / 100)} />
             <span className="t44c-chaos-value">{odds}%</span>
           </label>
-          <button type="button" onClick={discrepancy}>Discrepancy</button>
+          <button type="button" onClick={discrepancy}>Malfunction</button>
         </>
         )}
       </div>
@@ -159,7 +180,8 @@ const SETS = [
     extra: { label: 'All Memory Procedures', eps: T44C_MEMORY_NORMALS },
   },
   {
-    id: 'hollywood', label: 'Hollywood', eps: T44C_HOLLYWOOD, nwc: null, normal: true, read: true, sequential: true,
+    // `crew`: a box beside the card for whoever does the open step (EPDrill).
+    id: 'hollywood', label: 'Hollywood', eps: T44C_HOLLYWOOD, nwc: null, normal: true, read: true, sequential: true, crew: true,
     title: 'T-44C INTERACTIVE COCKPIT', footnote: '* PERFORMED FROM MEMORY · # ABBREVIATED CHECKLIST ITEM',
   },
   // The SSE cases (T44C/t44cCases.js), typed from memory like the EPs, with each
@@ -199,7 +221,8 @@ function T44CEPsLimits() {
       tabs={TABS}
       epsTab="eps"
       limitsTab="limits"
-      renderTab={(tab, game) => (tab === 'limits' ? <T44CLimits {...game} /> : <T44CEPs {...game} />)}
+      renderTab={(tab, game) => (tab === 'limits' ? <T44CLimits {...game} />
+        : tab === 'voice' ? <VoiceChecklists /> : <T44CEPs {...game} />)}
     />
   );
 }

@@ -8978,6 +8978,54 @@ textarea.incorrect-answer {
   margin: 0 auto;
 }
 
+/* The crew boxes (EPDrill `crew`): who does the open step, left of the card for the left seat or
+   pilot flying, right of it for the right seat or pilot monitoring, under it for the observer.
+   Positioned outside the card, so they take no room and move nothing. */
+.epl-crew {
+  position: relative;
+  width: 350px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.epl-crew-box {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: 9px;
+  font-weight: bold;
+  line-height: 1;
+  color: var(--ink);
+  background-color: var(--skipped-bg);
+  border: 1px solid #26a69a;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.epl-crew-box--left {
+  top: 0;
+  bottom: 0;
+  right: calc(100% + 4px);
+  width: 44px;
+}
+
+.epl-crew-box--right {
+  top: 0;
+  bottom: 0;
+  left: calc(100% + 4px);
+  width: 44px;
+}
+
+.epl-crew-box--obs {
+  top: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 18px;
+}
+
 .epl-card-title {
   position: relative;
   background-color: #ef5350;
@@ -9402,6 +9450,16 @@ textarea.incorrect-answer {
   min-height: calc(4 * 1.35em);
 }
 
+.t44c-start-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.t44c-start-pick--off {
+  visibility: hidden;
+}
+
 .t44c-start label {
   display: flex;
   align-items: center;
@@ -9412,6 +9470,54 @@ textarea.incorrect-answer {
 .t44c-chaos input[type="range"] {
   width: 110px;
   accent-color: var(--ink-accent);
+}
+
+/* The (i) beside Chaos: what it is, on hover or focus (its title). */
+.t44c-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: 10px;
+  font-style: italic;
+  font-weight: bold;
+  line-height: 1;
+  color: var(--ink-accent);
+  cursor: help;
+  position: relative;
+}
+
+/* Its explanation, drawn on the page under the (i) while hovered or focused. */
+.t44c-info-box {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: 240px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background-color: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1.35;
+  text-align: left;
+  cursor: default;
+}
+
+.t44c-info:hover .t44c-info-box,
+.t44c-info:focus .t44c-info-box {
+  display: flex;
 }
 
 .t44c-chaos-value {
@@ -11142,4 +11248,208 @@ button.epl-modal-close:hover {
   .pff-both {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Voice Checklists (T44C/VoiceChecklists.js): the Hollywood checklists read aloud, one seat
+   the student's. Phone first: one column, the line being said large, the checklist under it. */
+.t44c-voice {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+  color: var(--ink);
+}
+
+.t44c-voice-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  font-size: 14px;
+}
+
+.t44c-voice-bar label,
+.t44c-voice-seat {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.t44c-voice-bar select {
+  font-size: 14px;
+  padding: 3px 4px;
+  width: auto;
+  max-width: 220px;
+  background-color: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.t44c-voice-seat button {
+  min-width: 44px;
+  padding: 4px 10px;
+  font-size: 14px;
+  background-color: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.t44c-voice-seat button.is-on {
+  background-color: var(--btn);
+  border-color: var(--btn);
+  color: var(--on-brand);
+  font-weight: bold;
+}
+
+.t44c-voice-help,
+.t44c-voice-note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
+
+.t44c-voice-note {
+  color: var(--ink);
+}
+
+.t44c-voice-now {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line-strong);
+  border-radius: 6px;
+}
+
+/* The student's turn: the teal edge says "you". */
+.t44c-voice-now.is-mine {
+  border-left-color: #26a69a;
+}
+
+.t44c-voice-status {
+  min-height: 1.3em;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.t44c-voice-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 2.6em;
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.25;
+  color: var(--ink-strong);
+}
+
+.t44c-voice-line .t44c-voice-who {
+  font-size: 13px;
+}
+
+.t44c-voice-act {
+  font-weight: normal;
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
+.t44c-voice-heard {
+  min-height: 1.4em;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.t44c-voice-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.t44c-voice-buttons button {
+  min-height: 40px;
+  padding: 6px 14px;
+  font-size: 15px;
+  background-color: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.t44c-voice-buttons button.is-main {
+  background-color: var(--btn);
+  border-color: var(--btn);
+  color: var(--on-brand);
+  font-weight: bold;
+}
+
+.t44c-voice-buttons button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.t44c-voice-who {
+  flex: none;
+  min-width: 3em;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--ink-muted);
+}
+
+.t44c-voice-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.t44c-voice-list li {
+  border-bottom: 1px solid var(--line);
+}
+
+.t44c-voice-list button {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  background: none;
+  color: var(--ink);
+  border: 0;
+  cursor: pointer;
+}
+
+.t44c-voice-list .is-mine button {
+  font-weight: bold;
+}
+
+.t44c-voice-list .is-act button {
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
+.t44c-voice-list .is-past button {
+  opacity: 0.55;
+}
+
+.t44c-voice-list .is-now button {
+  background-color: var(--wash);
+  box-shadow: inset 3px 0 0 #26a69a;
+  opacity: 1;
 }

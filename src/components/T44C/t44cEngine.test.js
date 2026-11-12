@@ -507,6 +507,19 @@ describe('the autofeather switch points', () => {
   });
 });
 
+describe('After Start 3', () => {
+  it('lights AUX TEST, then AUX ON, and puts AUX ON out with the avionics master', () => {
+    const fire = (s, key) => STEP_EVENTS['after-start'][key].reduce(input, s);
+    let s = fire(initial('bothRunning'), 'as3:AUX BATT Switch');
+    expect(lights(s)).toContain('AUX TEST');
+    s = step(s, 1.5);
+    expect(lights(s)).toContain('AUX ON');
+    expect(lights(s)).not.toContain('AUX TEST');
+    s = fire(s, 'as3');
+    expect(lights(s)).not.toContain('AUX ON');
+  });
+});
+
 describe('the sim notes of 2026-11-08', () => {
   it('takes about 8 s from HIGH IDLE to LOW IDLE on the condition levers', () => {
     let s = initial('runup');
@@ -520,7 +533,8 @@ describe('the sim notes of 2026-11-08', () => {
   it('keeps the gauges dark until the battery is on', () => {
     const s = initial('beforeStart');
     expect(readouts(s).L.itt).toBeUndefined();
-    expect(readouts(s).B.volts).toBeUndefined();
+    // The battery voltmeter is on the hot battery bus (the user, 2026-11-10).
+    expect(readouts(s).B.volts).toBe('23.7');
     expect(readouts(input(s, { battery: true })).L.itt).toBe('30');
   });
 });
@@ -538,6 +552,6 @@ describe('the DIM knob and the fuel quantity switch', () => {
   it('fades the annunciators evenly to out and back to full bright, twice', () => {
     const s = input(initial('runup'), { annDim: true });
     const at = (t) => Math.round(annLevel(step(s, t)) * 100) / 100;
-    expect([0, 0.625, 1.25, 1.875, 2.5, 3.75, 5.5].map(at)).toEqual([1, 0.5, 0, 0.5, 1, 0, 1]);
+    expect([0, 0.3125, 0.625, 0.9375, 1.25, 1.875, 2.75].map(at)).toEqual([1, 0.5, 0, 0.5, 1, 0, 1]);
   });
 });

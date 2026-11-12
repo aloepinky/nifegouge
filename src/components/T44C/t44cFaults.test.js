@@ -1,11 +1,11 @@
-import { initial, input, lampTest, lights, readouts, step, STEP_EVENTS } from './t44cEngine';
+import { faultsAt, initial, input, lampTest, lights, readouts, step, STEP_EVENTS } from './t44cEngine';
 import { createT44CEngine } from './t44cEngineStore';
 import { drawFault, FAULTS, faultById, faultText } from './t44cFaults';
 
 // Chaos: each fault does what its `what` says to the gauges and lights, shows when it says, and
 // the store finds it, or tells the drill it was gone past.
 
-const fire = (s, procedure, key) => (STEP_EVENTS[procedure][key] || []).reduce(input, s);
+const fire = (s, procedure, key) => (STEP_EVENTS[procedure][key] || []).reduce(input, faultsAt(s, key));
 const withFault = (s, id, params = {}) => {
   const f = drawFault(faultById(id), () => 0);
   return { ...s, faults: [...(s.faults || []), { ...f, params: { ...f.params, ...params } }] };
@@ -38,12 +38,13 @@ describe('Before Start', () => {
 
   it('draws 11 A a boost pump, and nothing from a dead one', () => {
     let s = bs(bs(base, 'bs8:Left Boost Pump'), 'bs8:Right Boost Pump');
-    // The gauges are dark until the battery is on.
-    expect(readouts(step(s, 5)).B.amps).toBeUndefined();
+    // The battery ammeter is on the hot battery bus: it reads before the battery is on.
+    expect(readouts(step(s, 5)).B.amps).toBe('-22');
+    expect(readouts(step(s, 5)).L.n1).toBeUndefined();
     s = bs(s, 'bs8:Battery');
     expect(readouts(step(s, 5)).B.amps).toBe('-22');
     s = withFault(base, 'bs-boost-nodraw', { side: 'L' });
-    s = step(bs(bs(bs(s, 'bs8:Left Boost Pump'), 'bs8:Right Boost Pump'), 'bs8:Battery'), 5);
+    s = step(bs(bs(s, 'bs8:Left Boost Pump'), 'bs8:Right Boost Pump'), 5);
     expect(readouts(s).B.amps).toBe('-11');
     expect(s.faults[0].seen).toBe(true);
   });
@@ -82,6 +83,23 @@ describe('Before Start', () => {
     expect(lights(f)).not.toContain('RH FIRE');
   });
 
+  it('lights nothing with the FIRE DETR breaker out, FAULT WARNING included', () => {
+    const s = step(withFault(bs(base, 'bs10'), 'bs-fire-all'), 1);
+    expect(lights(s)).not.toContain('LH FIRE');
+    expect(lights(s)).not.toContain('RH FIRE');
+    expect(lights(s)).not.toContain('FAULT WARNING');
+    expect(s.faults[0].seen).toBe(true);
+  });
+
+  it('leaves a FIRE light on once the test switch is back at OFF', () => {
+    let s = step(withFault(bs(base, 'bs10'), 'bs-fire-false', { side: 'R' }), 1);
+    expect(s.faults[0].seen).toBe(false);
+    s = step(s, 3);
+    expect(lights(s)).toEqual(expect.arrayContaining(['RH FIRE', 'RH FIRE EXT']));
+    expect(lights(s)).not.toContain('LH FIRE');
+    expect(s.faults[0].seen).toBe(true);
+  });
+
   it('leaves CABIN DOOR OPEN lit', () => {
     expect(lights(withFault(base, 'bs-door'))).toContain('Cabin Door');
     expect(lights(base)).not.toContain('Cabin Door');
@@ -91,7 +109,8 @@ describe('Before Start', () => {
 describe('the left start', () => {
   it('spikes the right ITT past 850 with the generator carrying the start, not before', () => {
     let s = withFault(input(initial('rightRunning'), { side: 'R', gen: true }), 'sl-itt-rise');
-    expect(step(s, 12).engines.R.itt).toBeLessThan(700);
+    expect(step(s, 12).engines.R.itt).toBeLessThan(640);
+    expect(step(s, 12).faults[0].seen).toBe(false);
     s = step(input(s, { side: 'L', starter: 'on' }), 12);
     expect(s.engines.R.itt).toBeGreaterThan(850);
     expect(s.faults[0].seen).toBe(true);
@@ -171,6 +190,8 @@ describe('the engine runup', () => {
   });
 
   it('stops short of HIGH IDLE with the pneumatic pressure low', () => {
+    // Not at LOW IDLE, before the condition levers go up (the user, 2026-11-10).
+    expect(step(withFault(base, 'er-short-idle'), 25).faults[0].seen).toBe(false);
     const s = step(er(withFault(base, 'er-short-idle'), 'er5#1'), 25);
     expect(s.engines.L.n1).toBeLessThan(66);
     expect(Number(readouts(s).S.pneumatic)).toBeLessThan(12);
@@ -336,7 +357,9 @@ describe('the store', () => {
     engine.open('after-start');
     engine.arm('as8');
     engine.fire('as9');
-    expect(told).toEqual([expect.objectContaining({ stepId: 'as8' })]);
+    // At 100 percent every one of the step's faults was drawn, and each is told.
+    expect(told.length).toBeGreaterThan(1);
+    expect(told.every((t) => t.stepId === 'as8')).toBe(true);
     engine.arm('as8');
     expect(engine.discrepancy()).toBeNull();
     engine.dispose();
@@ -392,7 +415,8 @@ describe('Engine Runup 8 faults', () => {
     expect(told).toEqual([]);
     engine.fire('er8:Power Lever');
     jest.advanceTimersByTime(200000);
-    expect(told).toEqual([expect.objectContaining({ stepId: 'er8' })]);
+    expect(told.length).toBeGreaterThan(0);
+    expect(told.every((t) => t.stepId === 'er8')).toBe(true);
     engine.dispose();
     rand.mockRestore();
     jest.useRealTimers();

@@ -1,4 +1,4 @@
-import { annLevel, blinking, bothRunning, faultSeen, gate, gateOf, initial, input, lampTest, lights, MODEL_LIGHTS, outcome, PROCEDURES, readouts, SCENARIOS, settled, startLeftFrom, step, STARTER_LIMIT, STEP_EVENTS, stopwatch } from './t44cEngine';
+import { annLevel, blinking, bothRunning, faultSeen, faultsAt, gate, gateOf, initial, input, lampTest, lights, MODEL_LIGHTS, outcome, PROCEDURES, readouts, SCENARIOS, settled, startLeftFrom, step, STARTER_LIMIT, STEP_EVENTS, stopwatch } from './t44cEngine';
 import { drawFault, faultById, faultsFor, faultText } from './t44cFaults';
 
 // t44cEngine.js run against the clock, for EPDrill: the drill says which procedure is open and
@@ -194,7 +194,9 @@ export function createT44CEngine() {
     // not secure, the loads split or high) is drawn as the card opens instead, so it is there
     // before its step as it would be in the aeroplane. Faults do not wait on each other: a
     // standing one left showing never stops the steps after it drawing theirs, so at 100
-    // percent every step that can go wrong does (the user, 2026-11-08).
+    // percent every step that can go wrong does (the user, 2026-11-08). At 100 percent a step
+    // draws every one of its faults, not one: every single thing that can go wrong does (the
+    // user, 2026-11-11).
     arm(stepId, stepIds) {
       if (!state || !procedure || !stepId) return;
       if (stepIds) order = stepIds;
@@ -205,8 +207,8 @@ export function createT44CEngine() {
         drawnFor.add(key);
         const defs = faultsFor(procedure, step).filter((d) => !!d.early === early);
         if (!defs.length || !(Math.random() < chaos)) return;
-        const def = defs[Math.floor(Math.random() * defs.length)];
-        state = faultSeen({ ...state, faults: [...faults(), drawFault(def)] });
+        const picked = chaos >= 1 ? defs : [defs[Math.floor(Math.random() * defs.length)]];
+        state = faultSeen({ ...state, faults: [...faults(), ...picked.map((def) => drawFault(def))] });
       };
       const before = state.faults;
       if (!drawnFor.has('(card)')) {
@@ -260,10 +262,8 @@ export function createT44CEngine() {
       // as the right generator goes on) is never itself the miss (the user, 2026-11-05).
       state = faultSeen(state);
       missed(faults().filter((f) => f.seen && later(stepOfKey(stepId), faultById(f.id).step)));
-      // A fault's own control: it shows from here.
-      if (faults().some((f) => !f.seen && f.at === stepId)) {
-        state = { ...state, faults: faults().map((f) => (!f.seen && f.at === stepId ? { ...f, seen: true } : f)) };
-      }
+      // A fault's own control: it shows from here, or with a `when`, is watched from here.
+      state = faultsAt(state, stepId);
       // Any click hands the rings back to the click, from a scripted check's.
       const had = state.highlight != null;
       state = { ...state, highlight: null };

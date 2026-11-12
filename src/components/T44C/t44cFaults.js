@@ -11,7 +11,8 @@
 //   at                the event key after which it shows (a step's control, `<step>:<piece>` or
 //                     `<step>#<n>`, as STEP_EVENTS keys them), or a function of the fault's
 //                     drawn `params` giving one; neither, and it shows at once
-//   when              instead, a test of the engine state (and params) for the moment it shows
+//   when              instead, a test of the engine state (and params) for the moment it shows;
+//                     with an `at` too, tested only once that control has gone in
 //   early             a standing condition, drawn as the card opens rather than as its step
 //                     does, so it shows before the step as it would in the aeroplane (with
 //                     `when`, from when it could first be seen); it is still gone past only by
@@ -71,7 +72,9 @@ export const FAULTS = [
     what: () => 'FUEL CROSSFEED stayed lit with the crossfeed CLOSED.',
     causes: () => [`A crossfeed valve malfunction with the light held on: ${CROSSFEED_CIRCUIT}.`] },
   { id: 'bs-boost-nodraw', procedure: 'before-start', step: 'bs8', pick: (r) => ({ side: side(r) }),
-    when: (s, p) => s.fuelSys.boost[p.side] && s.elec.battery,
+    // Seen with its switch on, battery or not: the ammeter is on the hot battery bus (the user,
+    // 2026-11-10).
+    when: (s, p) => s.fuelSys.boost[p.side],
     what: (p) => `The ${name(p.side)} boost pump drew nothing on the battery ammeter.`,
     causes: () => ['A failed boost pump.', 'Its BOOST PUMP circuit breaker on the fuel panel, or its fuse on the hot battery bus.'] },
   { id: 'bs-fuelpress', procedure: 'before-start', step: 'bs8', pick: (r) => ({ side: side(r) }),
@@ -84,24 +87,36 @@ export const FAULTS = [
     what: (p) => `${cellName(p.cell)} did not light in the lamp test.`,
     causes: () => ['A burned-out bulb.'] },
   // Before Start 10, drawn as one turn of the switch, since the poster's knob cannot be turned
-  // through its zones (the user, 2026-11-05). NATOPS §2.5.1: each position tests a detector and
-  // its circuits; a cowling not closed properly or a strong light gives an erroneous indication
-  // on the ground.
+  // through its zones (the user, 2026-11-05). Three cases, each with its own causes (the user,
+  // 2026-11-11), all from NATOPS §2.5 and §2.5.1 (p. 2.5-1): one side dark (each position checks
+  // a detector and its circuits, a control amplifier and three detectors a nacelle); both dark
+  // (the one FIRE DETR circuit breaker protects the system, and must be closed for the test); a
+  // FIRE light on when it should not be (on the ground a cowling not closed properly, or the
+  // aircraft headed toward a strong external light, gives an erroneous indication).
   { id: 'bs-fire-zone', procedure: 'before-start', step: 'bs10', pick: (r) => ({ side: side(r) }),
-    when: (s) => !!s.fireZone,
+    // Not seen under bs-fire-all, which darkens both sides (at 100 percent both are drawn).
+    when: (s) => !!s.fireZone && !(s.faults || []).some((f) => f.id === 'bs-fire-all'),
     what: (p) => `${LH(p.side)} FIRE and its FIRE EXT light did not light in the fire detector test.`,
-    causes: () => ['A detector on that side, or its circuits.', 'The FIRE DETR circuit breaker.',
-      'An engine cowling not closed properly, or the aircraft facing a strong light.'] },
+    causes: () => ['A detector on that side, or its circuits.'] },
+  { id: 'bs-fire-all', procedure: 'before-start', step: 'bs10',
+    when: (s) => !!s.fireZone,
+    what: () => 'No FIRE, FIRE EXT or FAULT WARNING light came on in the fire detector test.',
+    causes: () => ['The FIRE DETR circuit breaker open. It protects the whole system and must be closed for the test.'] },
+  { id: 'bs-fire-false', procedure: 'before-start', step: 'bs10', pick: (r) => ({ side: side(r) }),
+    when: (s) => s.fireZone === 0,
+    what: (p) => `${LH(p.side)} FIRE and its FIRE EXT light stayed lit with the test switch back at OFF.`,
+    causes: () => ['An engine cowling not closed properly, or the aircraft headed toward a strong external light. Close the cowling or change heading for a valid check.'] },
   // Before Start 11. NATOPS Figure 12.2-1.
   { id: 'bs-door', procedure: 'before-start', step: 'bs11', early: true, when: (s) => s.elec.battery,
     what: () => 'CABIN DOOR OPEN stayed lit.',
     causes: () => ['The cabin door open or not secure.'] },
 
   // Left start 14. NATOPS Figure 4-1 notes 6 and 7; ME FTI Start 14.
-  // A little rise is normal (about 45 °C at a load of 1.00, 9715); the fault is a spike past 850
-  // (the user, 2026-11-08).
-  { id: 'sl-itt-rise', procedure: 'start-left', step: 'sl14', when: (s) => s.engines.R.itt > 850,
-    what: () => 'The right ITT spiked past 850 °C with the right generator carrying the left start.',
+  // A little rise is normal (about 45 °C at a load of 1.00, 9715; the model's normal start peaks
+  // near 624); the fault is a spike past 850 (the user, 2026-11-08), a discrepancy from 640 on
+  // (the user, 2026-11-10).
+  { id: 'sl-itt-rise', procedure: 'start-left', step: 'sl14', when: (s) => s.engines.R.itt > 640,
+    what: () => 'The right ITT rose past 640 °C with the right generator carrying the left start.',
     causes: () => [LOAD_AT_LOW_N1] },
   // Left start 21. NATOPS §2.10 and Start step 21's note. The current limiters are taken as good
   // before either start, so the gauge goes to zero only once the right generator is off after the

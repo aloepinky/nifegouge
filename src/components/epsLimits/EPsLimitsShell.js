@@ -14,7 +14,8 @@ import { formatTime, MODES } from '../leaderboard/leaderboardApi';
 //
 //   school    'NIFE' | 'Primary', the leaderboard it posts to
 //   basePath  '/nife/flight'; a tab's URL is basePath/tab
-//   tabs      [{ id, label }], in bar order
+//   tabs      [{ id, label, hidden? }], in bar order; a hidden tab is left off the bar and
+//             reached only by its address
 //   epsTab, limitsTab   which tab ids a game drives
 //   renderTab(id, { isGameActive, onGameComplete })   the tab's content; remounted per game
 
@@ -125,7 +126,7 @@ function EPsLimitsShell({ school, basePath, tabs, epsTab, limitsTab, renderTab }
     <div>
       <div className="sub-navbar sub-navbar--wrappable" style={{ marginBottom: 0 }}>
         <div className="sub-navbar-tabs">
-          {tabs.map((t) => (
+          {tabs.filter((t) => !t.hidden).map((t) => (
             <span
               key={t.id}
               className={activeTab === t.id ? 'active' : ''}

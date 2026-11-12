@@ -542,6 +542,10 @@ export const T44C_POSTER = {
           // is what After Start's Oxygen Mask Mic watches: both switches.
           action: 'Oxygen Mask/MIC Switches (100 Percent)',
           actions: ['Oxygen Mask/MIC Switches (100 Percent)', "Copilot's MIC Switch"], values: ['As Required', 'CHECKED/OPEN'] },
+        // The AUX ON / AUX TEST lamp above it, lit by the engine model (After Start 3). `free`:
+        // no step's control is it. 2026-11-10, placed by eye off the drawing.
+        { id: 'aux-on', box: [0.374, 0.135, 0.047, 0.016], label: 'AUX ON light', action: 'AUX ON', free: true },
+        { id: 'aux-test', box: [0.374, 0.152, 0.047, 0.016], label: 'AUX TEST light', action: 'AUX TEST', free: true },
         { box: [0.376, 0.232, 0.043, 0.036], label: 'Auxiliary battery',
           action: 'AUX BATT Switch', actions: ['AUX BATT Switch', 'Electrical Panel'], values: ['OFF'] },
         { box: [0.0855, 0.32, 0.306, 0.022], label: 'Master switch gang bar',
