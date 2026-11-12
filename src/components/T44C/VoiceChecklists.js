@@ -95,11 +95,10 @@ const rank = (v) => {
   const i = RANK.findIndex((re) => re.test(tag(v)));
   return (i < 0 ? RANK.length : i) * 2 + (/en-US/i.test(v.lang) ? 0 : 1);
 };
-const voiceLabel = (v, full) => {
+const voiceLabel = (v) => {
   const kind = /premium/i.test(v.voiceURI) ? 'Premium' : /enhanced/i.test(v.voiceURI) ? 'Enhanced' : '';
   const name = kind && !new RegExp(kind, 'i').test(v.name) ? `${v.name} (${kind})` : v.name;
-  const shown = /en-US/i.test(v.lang) ? name : `${name}, ${v.lang}`;
-  return full && v.voiceURI && v.voiceURI !== v.name ? `${shown} · ${v.voiceURI}` : shown;
+  return /en-US/i.test(v.lang) ? name : `${name}, ${v.lang}`;
 };
 // English voices, the gags left out; `all`, every voice the browser offers, English first.
 function englishVoices(all = false) {
@@ -623,7 +622,7 @@ export default function VoiceChecklists() {
               Voice
               <select value={voiceName} onChange={(e) => setVoiceName(e.target.value)}>
                 <option value="">Best available ({voiceLabel(voices[0])})</option>
-                {voices.map((v) => <option key={idOf(v)} value={idOf(v)}>{voiceLabel(v, allVoices)}</option>)}
+                {voices.map((v) => <option key={idOf(v)} value={idOf(v)}>{voiceLabel(v)}</option>)}
               </select>
             </label>
           )}
