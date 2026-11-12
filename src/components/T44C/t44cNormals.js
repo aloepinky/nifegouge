@@ -759,7 +759,8 @@ const BEFORE_TAKEOFF = {
     }),
     item('bt8', 'Bleed Air Valves', 'OPEN or CLOSED', 'RS', {
       action: ['RS sets bleed air valves as required.'],
-      replies: [ip('OPEN or CLOSED', 'RS'), act('(as required)')],
+      // CLOSED, as they typically are (the user, 2026-11-12); the card still reads OPEN or CLOSED.
+      replies: [ip('CLOSED', 'RS'), act('(as required)')],
     }),
     abbrev('bt9', 'Trim', 'CHECKED/SET', 'PF, PM', {
       // All three wheels and the control wheel's split switch, which drives the elevator trim
