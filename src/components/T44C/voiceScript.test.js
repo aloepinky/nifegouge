@@ -30,7 +30,7 @@ describe('voice script', () => {
   });
 
   test('radio calls are shown, not spoken', () => {
-    const lines = scriptFor(proc('after-start'));
+    const lines = scriptFor(proc('before-takeoff'));
     const radio = lines.filter((l) => /Navy Corpus|Base, \(call-sign\)/.test(l.text));
     expect(radio.length).toBeGreaterThan(0);
     radio.forEach((l) => expect(l.kind).toBe('act'));
@@ -93,8 +93,31 @@ describe('voice script', () => {
   test('Runup 8 waits for the lights', () => {
     const lines = scriptFor(proc('engine-runup')).filter((l) => l.step === 'er8' && l.seat === 'PM' && l.kind === 'say');
     expect(lines.map((l) => [l.text, l.after])).toEqual([
-      ['Autofeather/Autoignition', 0], ['Four lights', 0], ['Swap', 10], ['Flashing', 12], ['All four', 14],
-      ['Swap', 8], ['Flashing', 13],
+      ['Autofeather/Autoignition', 0], ['Four lights', 0], ['Swap', 3], ['Flashing', 3], ['All four', 3],
+      ['Swap', 3], ['Flashing', 3],
+    ]);
+    const pf = scriptFor(proc('engine-runup')).filter((l) => l.step === 'er8' && l.seat === 'PF' && /±/.test(l.text));
+    expect(pf.map((l) => [l.text, l.say])).toEqual([
+      ['410 ±50', '410'], ['200 ±40', '200'], ['410 ±50', '410'], ['200 ±40', '200'],
+    ]);
+  });
+
+  test('fire detectors: Three and Two at each zone', () => {
+    const lines = scriptFor(proc('before-start')).filter((l) => l.step === 'bs10' && l.kind === 'say');
+    expect(lines.map((l) => `${l.seat} ${l.text} ${l.after}`)).toEqual([
+      'PM Fire Detectors 0', 'PF Three 0', 'PM Two 0', 'PF Three 3', 'PM Two 0', 'PF Three 3', 'PM Two 0',
+      'PF CHECKED 0', 'PM CHECKED 0',
+    ]);
+  });
+
+  test('After Start taxi: clear, needle, brake check, taxi', () => {
+    const lines = said(scriptFor(proc('after-start')).filter((l) => l.step === 'as10'));
+    const from = lines.findIndex((l) => l.startsWith('PF: Hold the checklist'));
+    expect(lines.slice(from + 1)).toEqual([
+      'PF: Clear left', 'PM: Clear right', 'PF: Right needle',
+      'PF: You have the controls', 'PM: I have the controls', 'PF: You have the controls',
+      'PM: You have the controls', 'PF: I have the controls', 'PM: You have the controls',
+      'PF: Switch channel 3, request taxi.', 'PF: Continue the checklist',
     ]);
   });
 

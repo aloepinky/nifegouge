@@ -40,6 +40,7 @@ const AS_WORD = new Set(['ATIS', 'TOLD', 'RAIM', 'TACAN', 'RADALT', 'EMER', 'MIC
 // capitals read as words, so "CHECKED/SET" is "checked, set", not C-H-E-C-K-E-D.
 export function spoken(text) {
   return String(text)
+    .replace(/\s*±\s*\d+/g, '') // a tolerance is shown, not said: "410 ±50" is "410"
     .replace(/_+(\.?_+)*/g, ' ')
     .replace(/\blbs\b\.?/gi, 'pounds')
     .replace(/\bN1\b/g, 'N one')

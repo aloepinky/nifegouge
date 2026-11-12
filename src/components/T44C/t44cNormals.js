@@ -179,7 +179,14 @@ const BEFORE_START = {
       controlApart: true,
       shows: ['FAULT WARNING', 'LH FIRE', 'RH FIRE', 'LH FIRE EXT', 'RH FIRE EXT'],
       action: ['Rotate the Fire Detector Test switch clockwise and ensure illumination of the FAULT WARN, LH and RH FIRE annunciator, and LH and RH FIRE EXT PUSH TO EXT lights. LS first reports "Three" and RS responds "Two" at each selector position. Wait 3 seconds after positioning the switch to each zone to confirm a proper check, then switch to the next zone. Do not cancel the Fault Warning until switch is rotated back to the off position and the FIRE and FIRE EXT lights extinguish.'],
-      replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
+      // "Three" and "Two" at each of the three zones, 3 seconds a zone (the action's own words;
+      // the user, 2026-11-12).
+      replies: [
+        say('Three', 'PF'), ip('Two', 'PM'),
+        { ...say('Three', 'PF'), after: 3 }, ip('Two', 'PM'),
+        { ...say('Three', 'PF'), after: 3 }, ip('Two', 'PM'),
+        say('CHECKED', 'PF'), ip('CHECKED', 'PM'),
+      ],
     }),
     abbrev('bs11', 'Cabin Door', 'LOCKED', 'PF, OBS', {
       action: ['PF and OBS ensure the cabin door is locked and CABIN DOOR OPEN annunciator light is out.'],
@@ -525,14 +532,12 @@ const AFTER_START = {
       ],
       replies: [
         ip('STANDBY', 'RS'), act('(as required)'),
+        // After the hold: clearing, the needle, the brake check between two changes of
+        // controls, then taxi is requested (the user, 2026-11-12).
         say('Hold the checklist. Keep me clear on the right during all taxi and ground ops. Let base know we are out of the chocks.', 'PF'),
-        ip('Roger', 'PM'), act('Perform brake check', 'PF'), act('Salute Lineman', 'PF'),
-        ip('(Squadron) Base, (call-sign) out of the chocks', 'PM'),
-        say('Select channel 3 and request taxi.', 'PF'),
-        ip('Navy Corpus Ground, (call-sign), taxi VFR/IFR from (location) to the runup with (information)', 'PM'),
-        act('PM repeats clearance to ATC'), act('PF confirms and announces clearance to the crew'),
-        ip('Clear right', 'PM'), say('Clear left', 'PF'), say('Needle left', 'PF'),
+        say('Clear left', 'PF'), ip('Clear right', 'PM'), say('Right needle', 'PF'),
         ...TO_PM, act('RS conducts brake check'), ...TO_PF,
+        say('Switch channel 3, request taxi.', 'PF'),
         say('Continue the checklist', 'PF'),
       ],
     }),
@@ -662,15 +667,15 @@ const ENGINE_RUNUP = {
         'h. ENG AUTO IGN switches (2) – Off. Ensure both IGN IND annunciator lights out.',
         note('After the Engine Runup Checklist is complete, the PF shall reset N1 via the condition levers as appropriate per NATOPS Figure 4.3-1.'),
       ],
-      // `after`: Voice Checklists waits for the lights as the cockpit poster's engine model
-      // times them from the power levers' click (five runs, 2026-11-12): swap at about 11 s,
-      // flashing 14 s later, all four 16 s later, the right swap 9 s later and flashing 15 s
-      // later, less the PF's torque call between (the user, 2026-11-12).
+      // `after`: Voice Checklists pauses before each light as the power lever comes back, a
+      // few seconds: the cockpit poster's pace (about 11, 14, 16, 9 and 15 s) was far too slow
+      // read aloud (the user, 2026-11-12). The torque calls are the FTI's bands, not one
+      // figure, so no reading is rehearsed as the answer (the user, 2026-11-12).
       replies: [
         say('Call my lights.', 'PF'), ip('Four lights', 'PM'),
-        ip('Swap', 'PM', { after: 10 }), say('408', 'PF'), act('(call out torque values for each checkpoint)', 'PF'),
-        ip('Flashing', 'PM', { after: 12 }), say('213', 'PF'), ip('All four', 'PM', { after: 14 }),
-        ip('Swap', 'PM', { after: 8 }), say('417', 'PF'), ip('Flashing', 'PM', { after: 13 }), say('206', 'PF'),
+        ip('Swap', 'PM', { after: 3 }), say('410 ±50', 'PF'), act('(call out torque values for each checkpoint)', 'PF'),
+        ip('Flashing', 'PM', { after: 3 }), say('200 ±40', 'PF'), ip('All four', 'PM', { after: 3 }),
+        ip('Swap', 'PM', { after: 3 }), say('410 ±50', 'PF'), ip('Flashing', 'PM', { after: 3 }), say('200 ±40', 'PF'),
         say('CHECKED/OFF', 'LS'),
       ],
     }),
