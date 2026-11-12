@@ -11533,3 +11533,26 @@ button.epl-modal-close:hover {
   box-shadow: inset 3px 0 0 #26a69a;
   opacity: 1;
 }
+/* The voice level beside "Listening" (stop talking mode): a bar the voice fills. */
+.t44c-voice-mic {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.t44c-voice-meter {
+  display: inline-block;
+  width: 48px;
+  height: 6px;
+  overflow: hidden;
+  background-color: var(--line);
+  border-radius: 3px;
+}
+
+.t44c-voice-meter span {
+  display: block;
+  height: 100%;
+  background-color: #26a69a;
+  transform: scaleX(0);
+  transform-origin: left;
+}

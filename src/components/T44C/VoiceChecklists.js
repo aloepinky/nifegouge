@@ -17,10 +17,17 @@ const CHECKLISTS = T44C_HOLLYWOOD.filter((p) => !p.id.startsWith('start-'));
 // The recogniser runs the whole time (stopping it per call made an iPhone ding at every turn).
 // If a start is refused, a "Tap to listen" button starts it from the student's own tap.
 //
-// Bluetooth earbuds: a page using the microphone puts them in headset mode, and an iPhone's
-// recogniser hears nothing through their mic (Powerbeats Pro, 2026-11-12). So "Go on when I"
-// can be the earbud's button instead: the page plays a loop of silence, which is what gives it
-// the earbud's presses (Media Session), and listening stays off.
+// "Go on when I":
+//   * stop talking (the default): the microphone is opened once for the run, as a call opens
+//     it, and its level is watched, moving on once the student has spoken and then been quiet
+//     for the wait. No words are recognised. It works through Bluetooth earbuds, where an
+//     iPhone's recogniser, starting and stopping, dings and hears nothing (the user's
+//     Powerbeats Pro, 2026-11-12; the user wears them for their mic).
+//   * say my call: the browser's speech recogniser, which also hears "say again", "back" and
+//     "skip" and moves on at the line's last word.
+//   * press my earbud: the page plays a loop of silence, which gives it the earbud's presses
+//     (Media Session); nothing listens.
+//   * tap Next.
 //
 // Everything runs off refs (`live`, `at`, `tok`): the speech engine calls back long after the
 // render that started it. `tok` is bumped by every move the student makes, so a callback from a
@@ -31,11 +38,23 @@ const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
 const UA = typeof navigator !== 'undefined' ? navigator.userAgent : '';
 const IOS = /iP(hone|ad|od)/.test(UA) || (typeof navigator !== 'undefined' && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const canEarbud = typeof navigator !== 'undefined' && 'mediaSession' in navigator;
+const canMic = typeof navigator !== 'undefined' && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+  && typeof window !== 'undefined' && !!(window.AudioContext || window.webkitAudioContext);
 const ADVANCE = [
   ['voice', 'stop talking'],
+  ['words', 'say my call (hears "say again", "back", "skip")'],
   ['earbud', 'press my earbud'],
   ['tap', 'tap Next'],
 ];
+const OFFERED = ADVANCE.filter(([k]) => (k !== 'voice' || canMic) && (k !== 'words' || Recognition)
+  && (k !== 'earbud' || canEarbud));
+
+// The voice level watch: what counts as speech is a level well over the room's (tracked while
+// quiet), held for STEADY ms; ECHO ms after the computer stops speaking are ignored, for a
+// phone speaker heard by its own microphone.
+const TICK = 30;
+const STEADY = 120;
+const ECHO = 300;
 
 // A second of silence as a WAV, looped while the earbud is the Next button.
 function silentWav() {
@@ -105,8 +124,11 @@ export default function VoiceChecklists() {
   const [status, setStatus] = useState('idle'); // idle | speaking | listening | reading | paused | done
   const [heard, setHeard] = useState('');
   const [deafErr, setDeaf] = useState(!Recognition); // can't listen here: Next moves on
-  const [advance, setAdvance] = useState(ADVANCE.some(([k]) => k === saved.advance) ? saved.advance : 'voice');
-  const deaf = deafErr || advance !== 'voice';
+  const [advance, setAdvance] = useState(OFFERED.some(([k]) => k === saved.advance) ? saved.advance
+    : OFFERED.length ? OFFERED[0][0] : 'tap');
+  // `deaf`: the speech recogniser is off (every way of going on but "say my call").
+  const deaf = deafErr || advance !== 'words';
+  const hears = advance === 'voice' || (advance === 'words' && !deafErr);
   const [message, setMessage] = useState('');
   const [mic, setMic] = useState('off'); // off | on | tap (refused: needs the student's tap)
 
@@ -175,6 +197,7 @@ export default function VoiceChecklists() {
     u.pitch = l.seat === 'OBS' ? 0.85 : 1;
     const end = () => {
       speaking.current = false;
+      if (vad.current) vad.current.quietUntil = performance.now() + ECHO;
       if (tok.current === token) timer.current = setTimeout(then, 40);
     };
     u.onend = end;
@@ -353,6 +376,62 @@ export default function VoiceChecklists() {
     try { if (navigator.wakeLock) wake.current = await navigator.wakeLock.request('screen'); } catch { /* refused */ }
   };
 
+  // The level watch ("stop talking").
+  const vad = useRef(null);
+  const meter = useRef(null);
+  const watchLevel = (v, an, buf) => {
+    an.getFloatTimeDomainData(buf);
+    let sum = 0;
+    for (let i = 0; i < buf.length; i += 1) sum += buf[i] * buf[i];
+    const rms = Math.sqrt(sum / buf.length);
+    const loud = rms > Math.max(v.noise * 3, 0.006);
+    if (!loud) v.noise = v.noise * 0.97 + rms * 0.03;
+    if (meter.current) meter.current.style.transform = `scaleX(${Math.min(1, rms / 0.08).toFixed(3)})`;
+    const L = listening.current;
+    const now = performance.now();
+    if (!L || speaking.current || now < v.quietUntil) return;
+    if (loud) {
+      L.loud = (L.loud || 0) + TICK;
+      L.lastVoice = now;
+      if (L.loud >= STEADY && !L.spoke) { L.spoke = true; setHeard('Hearing you'); }
+    }
+    if (L.spoke && now - L.lastVoice > live.current.wait * 1000) heardDone(L.token);
+  };
+  function startVad() {
+    if (live.current.advance !== 'voice' || vad.current || !canMic) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AC(); // made inside the tap, or a phone keeps it silent
+    ctx.resume().catch(() => {});
+    const v = { ctx, stream: null, timer: null, noise: 0.003, quietUntil: 0 };
+    vad.current = v;
+    setMic('starting');
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } })
+      .then((stream) => {
+        if (vad.current !== v) { stream.getTracks().forEach((t) => t.stop()); return; }
+        v.stream = stream;
+        const an = ctx.createAnalyser();
+        an.fftSize = 1024;
+        ctx.createMediaStreamSource(stream).connect(an);
+        const buf = new Float32Array(an.fftSize);
+        v.timer = setInterval(() => watchLevel(v, an, buf), TICK);
+        setMic('on');
+      })
+      .catch(() => {
+        if (vad.current === v) stopVad();
+        setMic('blocked');
+        setMessage('The microphone is blocked. Allow it for this site in your browser settings, or press Next after each of your calls.');
+      });
+  }
+  function stopVad() {
+    const v = vad.current;
+    if (!v) return;
+    vad.current = null;
+    clearInterval(v.timer);
+    if (v.stream) v.stream.getTracks().forEach((t) => t.stop());
+    v.ctx.close().catch(() => {});
+    setMic('off');
+  }
+
   const earbud = useRef(null);
   const startEarbud = () => {
     if (live.current.advance !== 'earbud' || earbud.current) return;
@@ -383,6 +462,7 @@ export default function VoiceChecklists() {
   const stop = () => {
     running.current = false;
     stopRec();
+    stopVad();
     if (wake.current) { wake.current.release().catch(() => {}); wake.current = null; }
   };
 
@@ -391,6 +471,7 @@ export default function VoiceChecklists() {
     setMessage('');
     setMic('off');
     startRec();
+    startVad();
     startEarbud();
     lockScreen();
     if (!lineAt()) moveTo(at.current.proc, 0);
@@ -465,7 +546,9 @@ export default function VoiceChecklists() {
     paused: 'Paused',
     done: 'Checklist complete',
   }[status];
-  const micText = advance === 'earbud' ? 'Press your earbud' : deaf ? 'Press Next after your call' : mic === 'on' ? 'Listening' : mic === 'tap' ? '' : 'Mic starting';
+  const micText = advance === 'earbud' ? 'Press your earbud'
+    : !hears ? 'Press Next after your call'
+      : mic === 'on' ? 'Listening' : mic === 'tap' || mic === 'blocked' ? '' : 'Mic starting';
   const primary = busy
     ? { label: 'Next', onClick: tap }
     : { label: status === 'paused' ? 'Resume' : status === 'done' ? 'Again' : 'Start',
@@ -502,17 +585,16 @@ export default function VoiceChecklists() {
           <label>
             Go on when I
             <select value={advance} onChange={(e) => { setAdvance(e.target.value); reset(view.proc); }}>
-              {ADVANCE.filter(([k]) => (k !== 'voice' || Recognition) && (k !== 'earbud' || canEarbud))
-                .map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+              {OFFERED.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
             </select>
           </label>
           {advance === 'earbud' && (
             <p>
-              Press once or twice for the next call, three times to go back. Bluetooth earbuds
-              can&apos;t be used to talk to this page, so it doesn&apos;t listen in this mode.
+              Press once or twice for the next call, three times to go back. Nothing listens in
+              this mode.
             </p>
           )}
-          {!deaf && (
+          {hears && (
             <label>
               Wait after I stop talking
               <select value={wait} onChange={(e) => setWait(Number(e.target.value))}>
@@ -547,14 +629,19 @@ export default function VoiceChecklists() {
         </div>
       </details>
 
-      {!Recognition && <p className="t44c-voice-note">This browser can&apos;t listen, so press Next after each of your calls.</p>}
+      {!canMic && !Recognition && <p className="t44c-voice-note">This browser can&apos;t listen, so press Next after each of your calls.</p>}
       {!canSpeak && <p className="t44c-voice-note">This browser can&apos;t speak, so the calls are shown only.</p>}
       {message && <p className="t44c-voice-note" role="status">{message}</p>}
 
       <div className={`t44c-voice-now${mineNow && busy ? ' is-mine' : ''}`}>
         <div className="t44c-voice-status">
           <span aria-live="polite">{statusText}</span>
-          {listeningNow && <span className="t44c-voice-mic">{micText}</span>}
+          {listeningNow && (
+            <span className="t44c-voice-mic">
+              {advance === 'voice' && mic === 'on' && <span className="t44c-voice-meter"><span ref={meter} /></span>}
+              {micText}
+            </span>
+          )}
         </div>
         <div className="t44c-voice-line">
           {now ? (
@@ -567,9 +654,12 @@ export default function VoiceChecklists() {
         </div>
         <div className="t44c-voice-heard">
           {listeningNow && heard ? `Heard: ${heard}` : ''}
-          {status === 'idle' && 'Say your call when it is yours. Say "say again", "back" or "skip" any time.'}
+          {status === 'idle' && (advance === 'words'
+            ? 'Say your call when it is yours. Say "say again", "back" or "skip" any time.'
+            : advance === 'voice' ? 'Say your call when it is yours. The next one follows when you stop talking.'
+              : advance === 'earbud' ? 'Say your call, then press your earbud.' : 'Say your call, then press Next.')}
         </div>
-        {listeningNow && mic === 'tap' && !deaf && (
+        {listeningNow && mic === 'tap' && advance === 'words' && !deafErr && (
           <button type="button" className="t44c-voice-listen" onClick={tapToListen}>Tap to listen</button>
         )}
         <button type="button" className="t44c-voice-main" onClick={primary.onClick}>{primary.label}</button>
