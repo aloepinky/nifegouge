@@ -68,6 +68,11 @@ const OFFERED = ADVANCE.filter(([k]) => (k !== 'voice' || canMic) && (k !== 'wor
 // quiet), held for STEADY ms; ECHO ms after the computer stops speaking are ignored, for a
 // phone speaker heard by its own microphone.
 const TICK = 30;
+// The level meter's full scale (an RMS level), and the student's "Voice level needed", a percent
+// of it: louder than this, and well over the room's own level, counts as talking (the user,
+// 2026-11-12). The default, 8, is the 0.006 the page used before the slider.
+const METER_FULL = 0.08;
+const LEVELS = [2, 60];
 const STEADY = 120;
 const ECHO = 300;
 
@@ -133,6 +138,7 @@ export default function VoiceChecklists() {
   const [chain, setChain] = useState(saved.chain !== false);
   const [hide, setHide] = useState(!!saved.hide);
   const [wait, setWait] = useState(WAITS.includes(saved.wait) ? saved.wait : 1);
+  const [level, setLevel] = useState(saved.level >= LEVELS[0] && saved.level <= LEVELS[1] ? saved.level : 8);
   const [speed, setSpeed] = useState(SPEEDS.includes(saved.speed) ? saved.speed : 1.25);
   const [voiceName, setVoiceName] = useState(saved.voicePick ?? (HAS_CLIPS ? RECORDED : saved.voice || ''));
   const [allVoices, setAllVoices] = useState(!!saved.allVoices);
@@ -149,8 +155,8 @@ export default function VoiceChecklists() {
   const [message, setMessage] = useState('');
   const [mic, setMic] = useState('off'); // off | on | tap (refused: needs the student's tap)
 
-  useEffect(() => save({ seat, chain, hide, wait, speed, advance, allVoices, antiIce, voicePick: voiceName }),
-    [seat, chain, hide, wait, speed, advance, allVoices, antiIce, voiceName]);
+  useEffect(() => save({ seat, chain, hide, wait, level, speed, advance, allVoices, antiIce, voicePick: voiceName }),
+    [seat, chain, hide, wait, level, speed, advance, allVoices, antiIce, voiceName]);
   useEffect(() => setVoices(englishVoices(allVoices)), [allVoices]);
 
   useEffect(() => {
@@ -165,7 +171,7 @@ export default function VoiceChecklists() {
   }, []);
 
   const live = useRef({});
-  Object.assign(live.current, { seat, chain, wait, speed, voices, voiceName, deaf, advance, allVoices });
+  Object.assign(live.current, { seat, chain, wait, level, speed, voices, voiceName, deaf, advance, allVoices });
   const at = useRef({ proc: 0, pos: 0 });
   const tok = useRef(0);
   const timer = useRef(null);
@@ -423,14 +429,17 @@ export default function VoiceChecklists() {
   // The level watch ("stop talking").
   const vad = useRef(null);
   const meter = useRef(null);
+  const meter2 = useRef(null); // the one under the slider in Settings
   const watchLevel = (v, an, buf) => {
     an.getFloatTimeDomainData(buf);
     let sum = 0;
     for (let i = 0; i < buf.length; i += 1) sum += buf[i] * buf[i];
     const rms = Math.sqrt(sum / buf.length);
-    const loud = rms > Math.max(v.noise * 3, 0.006);
+    const loud = rms > Math.max(v.noise * 3, (live.current.level / 100) * METER_FULL);
     if (!loud) v.noise = v.noise * 0.97 + rms * 0.03;
-    if (meter.current) meter.current.style.transform = `scaleX(${Math.min(1, rms / 0.08).toFixed(3)})`;
+    const fill = `scaleX(${Math.min(1, rms / METER_FULL).toFixed(3)})`;
+    if (meter.current) meter.current.style.transform = fill;
+    if (meter2.current) meter2.current.style.transform = fill;
     const L = listening.current;
     const now = performance.now();
     if (!L || speaking.current || now < v.quietUntil) return;
@@ -597,6 +606,8 @@ export default function VoiceChecklists() {
     if (current.current) current.current.scrollIntoView({ block: 'nearest' });
   }, [view]);
 
+  const placeTick = (el) => { if (el) el.style.left = `${level}%`; };
+
   const lines = scripts[view.proc];
   const now = lines[view.pos];
   const mineNow = now && isMine(now, seat);
@@ -666,6 +677,24 @@ export default function VoiceChecklists() {
               this mode.
             </p>
           )}
+          {advance === 'voice' && canMic && (
+            <div className="t44c-voice-level">
+              <label>
+                Voice level needed
+                <input type="range" min={LEVELS[0]} max={LEVELS[1]} value={level}
+                  onChange={(e) => setLevel(Number(e.target.value))} />
+              </label>
+              <span className="t44c-voice-meter t44c-voice-meter--wide">
+                <span ref={meter2} />
+                <i className="t44c-voice-meter-tick" ref={placeTick} />
+              </span>
+              <p>
+                Your voice has to pass the line to count. {mic === 'on'
+                  ? 'Talk and watch the bar.' : 'Press Start and talk to see the bar.'} Raise the
+                line if noise moves the checklist on.
+              </p>
+            </div>
+          )}
           {hears && (
             <label>
               Wait after I stop talking
@@ -717,7 +746,9 @@ export default function VoiceChecklists() {
           <span aria-live="polite">{statusText}</span>
           {listeningNow && (
             <span className="t44c-voice-mic">
-              {advance === 'voice' && mic === 'on' && <span className="t44c-voice-meter"><span ref={meter} /></span>}
+              {advance === 'voice' && mic === 'on' && (
+                <span className="t44c-voice-meter"><span ref={meter} /><i className="t44c-voice-meter-tick" ref={placeTick} /></span>
+              )}
               {micText}
             </span>
           )}

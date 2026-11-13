@@ -11556,3 +11556,40 @@ button.epl-modal-close:hover {
   transform: scaleX(0);
   transform-origin: left;
 }
+
+/* Voice level needed (Voice Checklists): the slider, a meter as wide as the settings, and the
+   line a voice has to pass, drawn on both meters. */
+.t44c-voice-level {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.t44c-voice-level label {
+  white-space: nowrap;
+}
+
+.t44c-voice-level input[type="range"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  accent-color: #26a69a;
+}
+
+.t44c-voice-meter {
+  position: relative;
+}
+
+.t44c-voice-meter--wide {
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+}
+
+.t44c-voice-meter .t44c-voice-meter-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background-color: var(--ink-strong);
+}
