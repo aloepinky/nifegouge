@@ -156,6 +156,16 @@ describe('voice script', () => {
     expect(full.slice(-2)).toEqual(['PF: Radar CHECKED/STANDBY', 'PM: Radar CHECKED/STANDBY']);
   });
 
+  test('full check: the de-ice cycle called SINGLE then MANUAL, no N1 call at the end', () => {
+    const lines = said(scriptFor(proc('anti-ice-check')));
+    const boots = ['PF: Inflate', 'PM: Inflate', 'PF: Pressure', 'PF: Inflate', 'PM: Inflate', 'PF: Deflate',
+      'PM: Deflate', 'PF: Suction', 'PF: Deflate', 'PM: Deflate'];
+    const ai5 = said(scriptFor(proc('anti-ice-check')).filter((l) => l.step === 'ai5'));
+    expect(ai5).toEqual(['PF: DE-ICE CYCLE SINGLE', ...boots, 'PF: DE-ICE CYCLE MANUAL', ...boots]);
+    expect(scriptFor(proc('anti-ice-check')).some((l) => l.step === 'ai7')).toBe(false);
+    expect(lines.some((l) => /^PF: N1/.test(l))).toBe(false);
+  });
+
   test('the PM answers at once on the transponders and autoignition', () => {
     const bt = scriptFor(proc('before-takeoff'));
     expect(bt.find((l) => l.step === 'bt18' && l.text === 'SET').after).toBe(0);

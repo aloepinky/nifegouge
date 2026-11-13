@@ -938,6 +938,15 @@ const BEFORE_TAKEOFF = {
 // swapped). The responses are the FTI's, which NATOPS does not give. Required when icing is
 // forecast (NATOPS) and on the first leg of a cross-country (FTI); otherwise the reply to Before
 // Takeoff item 6 is "Pitot heat checked". Neither publication gives a crewmember for these steps.
+// The boot calls, said for SINGLE and again for MANUAL.
+const DEICE_CALLS = [
+  act('Wing de-ice boots:'), say('Inflate', 'PF'), ip('Inflate', 'PM'),
+  act('Pneumatic pressure indicator:'), say('Pressure', 'PF'),
+  act('Tail de-ice boots:'), say('Inflate', 'PF'), ip('Inflate', 'PM'), say('Deflate', 'PF'), ip('Deflate', 'PM'),
+  act('Gyro suction indicator:'), say('Suction', 'PF'),
+  act('Wing de-ice boots:'), say('Deflate', 'PF'), ip('Deflate', 'PM'),
+];
+
 const ANTI_ICE_CHECK = {
   id: 'anti-ice-check',
   title: 'Full Anti-Ice/Deice Check',
@@ -972,25 +981,28 @@ const ANTI_ICE_CHECK = {
     memory('ai4', 'N1', '70 percent (both engines)', undefined, {
       num: 4, watch: ['Condition Lever'], watchOnly: true, shows: { 'Condition Lever': ['N1'] },
     }),
+    // The PF calls the switch position, SINGLE then MANUAL, each its own call, and the FTI's
+    // calls are said through again for MANUAL (the user, 2026-11-13).
     memory('ai5', 'DE-ICE CYCLE', 'SINGLE, Then MANUAL', undefined, {
+      quietChallenge: true,
       shows: ['Pneumatic Pressure', 'Gyro Suction'],
       num: 5,
       action: [
         'Check wing and tail boot automatically inflate, then deflate in 7 to 8 seconds when SINGLE is selected. Check pneumatic pressure is 12 to 20 psi. Repeat the same check in MANUAL, disregarding cycle time.',
       ],
       replies: [
-        act('(At DE-ICE CYCLE– SINGLE)'),
-        act('Wing de-ice boots:'), say('Inflate', 'PF'), ip('Inflate', 'PM'),
-        act('Pneumatic pressure indicator:'), say('Pressure', 'PF'),
-        act('Tail de-ice boots:'), say('Inflate', 'PF'), ip('Inflate', 'PM'), say('Deflate', 'PF'), ip('Deflate', 'PM'),
-        act('Gyro suction indicator:'), say('Suction', 'PF'),
-        act('Wing de-ice boots:'), say('Deflate', 'PF'), ip('Deflate', 'PM'),
-        act('(Repeat for MANUAL, releasing switch to deflate)'),
+        say('DE-ICE CYCLE SINGLE', 'PF'),
+        ...DEICE_CALLS,
+        say('DE-ICE CYCLE MANUAL', 'PF'),
+        act('(Releasing switch to deflate)'),
+        ...DEICE_CALLS,
       ],
     }),
     { note: 'Boots inflate, then deflate in 7 to 8 seconds in SINGLE. Pneumatic pressure 12 to 20 psi.' },
     memory('ai6', 'Propeller deice', 'OFF (if not previously secured)', undefined, { num: 6 }),
+    // `unsaid`: Voice Checklists leaves the step out (the user, 2026-11-13).
     memory('ai7', 'N1', 'IDLE (both engines)', undefined, {
+      unsaid: true,
       num: 7, watch: ['Condition Lever'], watchOnly: true, shows: { 'Condition Lever': ['N1'] },
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
     }),

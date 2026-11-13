@@ -86,7 +86,7 @@ export function scriptFor(proc, opts = {}) {
   const out = opts.inserted ? [] : [line(proc.id, 'title', 'PF', 'say', titleCall(proc))];
   proc.rows.forEach((row, i) => {
     if (row.decision) { out.push(line(proc.id, `d${i}`, 'PM', 'act', row.decision)); return; }
-    if (!row.challenge) return; // a note
+    if (!row.challenge || row.unsaid) return; // a note, or a step left out of the voice
     const owner = seatOf(row.who, 'PF');
     const replies = row.replies && row.replies.length ? row.replies
       : row.critical ? [] : [{ text: row.reply, who: row.who }];
