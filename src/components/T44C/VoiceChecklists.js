@@ -70,9 +70,15 @@ const OFFERED = ADVANCE.filter(([k]) => (k !== 'voice' || canMic) && (k !== 'wor
 const TICK = 30;
 // The level meter's full scale (an RMS level), and the student's "Voice level needed", a percent
 // of it: louder than this, and well over the room's own level, counts as talking (the user,
-// 2026-11-12). The default, 8, is the 0.006 the page used before the slider.
-const METER_FULL = 0.08;
-const LEVELS = [2, 60];
+// 2026-11-12). The scale was doubled and the slider let run to the top the same day (the user
+// wanted it higher); a setting saved on the old scale (`level`) is halved into the new
+// (`voiceLevel`), so it keeps its loudness. The default, 4, is the 0.006 used before the slider.
+const METER_FULL = 0.16;
+const LEVELS = [1, 100];
+const savedLevel = (sv) => {
+  const v = sv.voiceLevel ?? (typeof sv.level === 'number' ? sv.level / 2 : 4);
+  return Math.min(LEVELS[1], Math.max(LEVELS[0], Math.round(v)));
+};
 const STEADY = 120;
 const ECHO = 300;
 
@@ -138,7 +144,7 @@ export default function VoiceChecklists() {
   const [chain, setChain] = useState(saved.chain !== false);
   const [hide, setHide] = useState(!!saved.hide);
   const [wait, setWait] = useState(WAITS.includes(saved.wait) ? saved.wait : 1);
-  const [level, setLevel] = useState(saved.level >= LEVELS[0] && saved.level <= LEVELS[1] ? saved.level : 8);
+  const [level, setLevel] = useState(() => savedLevel(saved));
   const [speed, setSpeed] = useState(SPEEDS.includes(saved.speed) ? saved.speed : 1.25);
   const [voiceName, setVoiceName] = useState(saved.voicePick ?? (HAS_CLIPS ? RECORDED : saved.voice || ''));
   const [allVoices, setAllVoices] = useState(!!saved.allVoices);
@@ -155,7 +161,7 @@ export default function VoiceChecklists() {
   const [message, setMessage] = useState('');
   const [mic, setMic] = useState('off'); // off | on | tap (refused: needs the student's tap)
 
-  useEffect(() => save({ seat, chain, hide, wait, level, speed, advance, allVoices, antiIce, voicePick: voiceName }),
+  useEffect(() => save({ seat, chain, hide, wait, voiceLevel: level, speed, advance, allVoices, antiIce, voicePick: voiceName }),
     [seat, chain, hide, wait, level, speed, advance, allVoices, antiIce, voiceName]);
   useEffect(() => setVoices(englishVoices(allVoices)), [allVoices]);
 
