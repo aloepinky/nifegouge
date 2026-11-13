@@ -65,8 +65,11 @@ const OFFERED = ADVANCE.filter(([k]) => (k !== 'voice' || canMic) && (k !== 'wor
   && (k !== 'earbud' || canEarbud));
 
 // The voice level watch: what counts as speech is a level well over the room's (tracked while
-// quiet), held for STEADY ms; ECHO ms after the computer stops speaking are ignored, for a
-// phone speaker heard by its own microphone.
+// quiet), held for STEADY ms. When it starts hearing the student is the "Start hearing me"
+// setting, seconds from the end of the computer's line (LISTEN_FROM): a reply that comes fast
+// was being lost in the 0.3 s once ignored after every line (the user, 2026-11-13). Before the
+// end works only with the recorded voice, whose clip says how much is left; on a phone speaker
+// the microphone hears the computer, so there it wants a little after.
 const TICK = 30;
 // The level meter's full scale (an RMS level), and the student's "Voice level needed", a percent
 // of it: louder than this, and well over the room's own level, counts as talking (the user,
@@ -80,7 +83,8 @@ const savedLevel = (sv) => {
   return Math.min(LEVELS[1], Math.max(LEVELS[0], Math.round(v)));
 };
 const STEADY = 120;
-const ECHO = 300;
+const LISTEN_FROM = [-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3];
+const listenName = (v) => (v < 0 ? `${-v} s before it stops` : v > 0 ? `${v} s after it stops` : 'as it stops');
 
 // A second of silence as a WAV, looped while the earbud is the Next button.
 function silentWav() {
@@ -146,6 +150,7 @@ export default function VoiceChecklists() {
   const [wait, setWait] = useState(WAITS.includes(saved.wait) ? saved.wait : 1);
   const [level, setLevel] = useState(() => savedLevel(saved));
   const [speed, setSpeed] = useState(SPEEDS.includes(saved.speed) ? saved.speed : 1.25);
+  const [listenFrom, setListenFrom] = useState(LISTEN_FROM.includes(saved.listenFrom) ? saved.listenFrom : -0.1);
   const [voiceName, setVoiceName] = useState(saved.voicePick ?? (HAS_CLIPS ? RECORDED : saved.voice || ''));
   const [allVoices, setAllVoices] = useState(!!saved.allVoices);
   const [voices, setVoices] = useState(() => englishVoices(!!saved.allVoices));
@@ -161,8 +166,8 @@ export default function VoiceChecklists() {
   const [message, setMessage] = useState('');
   const [mic, setMic] = useState('off'); // off | on | tap (refused: needs the student's tap)
 
-  useEffect(() => save({ seat, chain, hide, wait, voiceLevel: level, speed, advance, allVoices, antiIce, voicePick: voiceName }),
-    [seat, chain, hide, wait, level, speed, advance, allVoices, antiIce, voiceName]);
+  useEffect(() => save({ seat, chain, hide, wait, voiceLevel: level, speed, listenFrom, advance, allVoices, antiIce, voicePick: voiceName }),
+    [seat, chain, hide, wait, level, speed, listenFrom, advance, allVoices, antiIce, voiceName]);
   useEffect(() => setVoices(englishVoices(allVoices)), [allVoices]);
 
   useEffect(() => {
@@ -177,7 +182,7 @@ export default function VoiceChecklists() {
   }, []);
 
   const live = useRef({});
-  Object.assign(live.current, { seat, chain, wait, level, speed, voices, voiceName, deaf, advance, allVoices });
+  Object.assign(live.current, { seat, chain, wait, level, speed, listenFrom, voices, voiceName, deaf, advance, allVoices });
   const at = useRef({ proc: 0, pos: 0 });
   const tok = useRef(0);
   const timer = useRef(null);
@@ -222,9 +227,15 @@ export default function VoiceChecklists() {
 
   const speak = (l, token, then) => {
     setStatus('speaking');
+    // What the student says at the end of this line, kept for their turn if it is next.
+    if (vad.current) vad.current.pre = { loud: 0 };
     const end = () => {
       speaking.current = false;
-      if (vad.current) vad.current.quietUntil = performance.now() + ECHO;
+      const v = vad.current;
+      if (v) {
+        v.quietUntil = performance.now() + Math.max(0, live.current.listenFrom) * 1000;
+        if (v.pre) v.pre.endedAt = performance.now();
+      }
       if (tok.current === token) timer.current = setTimeout(then, 40);
     };
     const clip = (live.current.voiceName === RECORDED || !canSpeak) && clipFor(l);
@@ -264,6 +275,14 @@ export default function VoiceChecklists() {
     setHeard('');
     listening.current = { token, from: resultsLen.current, text: '' };
     restarts.current = 0;
+    // Talking that started as the computer finished counts toward this call.
+    const v = vad.current;
+    const pre = v && v.pre;
+    if (v) v.pre = null;
+    if (pre && pre.endedAt && performance.now() - pre.endedAt < 500 && pre.loud) {
+      Object.assign(listening.current, { loud: pre.loud, lastVoice: pre.lastVoice, spoke: pre.spoke });
+      if (pre.spoke) setHeard('Hearing you');
+    }
   };
 
   // Plays the line the position is on, then the next, until a line is the student's.
@@ -448,13 +467,32 @@ export default function VoiceChecklists() {
     if (meter2.current) meter2.current.style.transform = fill;
     const L = listening.current;
     const now = performance.now();
-    if (!L || speaking.current || now < v.quietUntil) return;
+    // Before the student's turn opens: the end of the computer's line, if the setting reaches
+    // into it, and the moment between that line and the turn.
+    if (!L || speaking.current) {
+      const P = v.pre;
+      if (!P) return;
+      if (speaking.current ? clipLeft() > -live.current.listenFrom : now < v.quietUntil) return;
+      if (loud) {
+        P.loud += TICK;
+        P.lastVoice = now;
+        if (P.loud >= STEADY) P.spoke = true;
+      }
+      return;
+    }
+    if (now < v.quietUntil) return;
     if (loud) {
       L.loud = (L.loud || 0) + TICK;
       L.lastVoice = now;
       if (L.loud >= STEADY && !L.spoke) { L.spoke = true; setHeard('Hearing you'); }
     }
     if (L.spoke && now - L.lastVoice > waitFor(lineAt()) * 1000) heardDone(L.token);
+  };
+  // Seconds of the recorded clip still to play (none known for the browser's voice).
+  const clipLeft = () => {
+    const a = player.current;
+    if (!a || a.paused || !Number.isFinite(a.duration)) return Infinity;
+    return (a.duration - a.currentTime) / (a.playbackRate || 1);
   };
   function startVad() {
     if (live.current.advance !== 'voice' || vad.current || !canMic) return;
@@ -706,6 +744,14 @@ export default function VoiceChecklists() {
               Wait after I stop talking
               <select value={wait} onChange={(e) => setWait(Number(e.target.value))}>
                 {WAITS.map((w) => <option key={w} value={w}>{w} s</option>)}
+              </select>
+            </label>
+          )}
+          {advance === 'voice' && (
+            <label>
+              Start hearing me
+              <select value={listenFrom} onChange={(e) => setListenFrom(Number(e.target.value))}>
+                {LISTEN_FROM.map((v) => <option key={v} value={v}>{listenName(v)}</option>)}
               </select>
             </label>
           )}
