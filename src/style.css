@@ -11496,6 +11496,33 @@ button.epl-modal-close:hover {
   border: 1px solid var(--btn);
 }
 
+/* Paused, the big button restarts the checklist (the user, 2026-11-14). */
+.t44c-voice-main.is-restart {
+  background-color: #8b1c1c;
+  border-color: #8b1c1c;
+  color: #fff;
+}
+
+/* A setting as a slider: its name and value on a line, the slider under them. */
+.t44c-voice-settings-body .t44c-voice-slider {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+}
+
+.t44c-voice-slider input[type="range"] {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  margin: 0;
+  accent-color: #26a69a;
+}
+
+.t44c-voice-slider output {
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
 .t44c-voice-listen {
   background-color: var(--surface);
   color: var(--ink-strong);

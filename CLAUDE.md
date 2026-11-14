@@ -815,9 +815,10 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   challenges; a memory step's challenge is said in the PF's first line; `act` lines and radio
   calls are shown, not spoken. No engine model, no comms. Recognition needs a secure page
   (https or localhost). An iPhone's recogniser dings at every start and hears nothing through
-  Bluetooth earbuds (the user's Powerbeats Pro, worn for their mic), so the default "Go on
-  when I stop talking" recognises no words: it opens the mic once per run (getUserMedia) and
-  watches its level. "Say my call" is the recogniser, with spoken commands; "press my earbud"
+  Bluetooth earbuds (the user's Powerbeats Pro, worn for their mic), so the default "AI
+  continues when you stop talking" recognises no words: it opens the mic once per run
+  (getUserMedia) and watches its level, from the "Mic activation time" before or after the
+  computer's line ends. "Say your call" is the recogniser, with spoken commands; "press your earbud"
   plays a looped silent WAV to get the button presses (Media Session). Voices are known by
   voiceURI (an iPhone lists "Tom" twice, compact and Enhanced); Apple's gag voices are cut by
   name and the Eloquence family, never the whole com.apple.speech.synthesis family (real

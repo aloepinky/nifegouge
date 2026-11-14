@@ -8,7 +8,6 @@ import CLIPS from './voiceClips.json';
 // full check is picked (the user, 2026-11-12).
 const CHECKLISTS = T44C_HOLLYWOOD.filter((p) => !p.id.startsWith('start-') && p.id !== 'anti-ice-check');
 const findProc = (id) => T44C_HOLLYWOOD.find((p) => p.id === id);
-const ANTI_ICE = [['pitot', 'Pitot heat only'], ['full', 'Full anti-ice/deice check']];
 
 // Voice Checklists (the user, 2026-11-12): the Hollywood checklists read aloud for one student,
 // to repeat them in the static trainer or a maintenance aircraft. The student takes a seat; the
@@ -22,7 +21,7 @@ const ANTI_ICE = [['pitot', 'Pitot heat only'], ['full', 'Full anti-ice/deice ch
 // The recogniser runs the whole time (stopping it per call made an iPhone ding at every turn).
 // If a start is refused, a "Tap to listen" button starts it from the student's own tap.
 //
-// "Go on when I":
+// "AI continues when you" (was "Go on when I"):
 //   * stop talking (the default): the microphone is opened once for the run, as a call opens
 //     it, and its level is watched, moving on once the student has spoken and then been quiet
 //     for the wait. No words are recognised. It works through Bluetooth earbuds, where an
@@ -57,8 +56,8 @@ const canMic = typeof navigator !== 'undefined' && !!(navigator.mediaDevices && 
   && typeof window !== 'undefined' && !!(window.AudioContext || window.webkitAudioContext);
 const ADVANCE = [
   ['voice', 'stop talking'],
-  ['words', 'say my call (hears "say again", "back", "skip")'],
-  ['earbud', 'press my earbud'],
+  ['words', 'say your call (hears "repeat", "back", "skip")'],
+  ['earbud', 'press your earbud'],
   ['tap', 'tap Next'],
 ];
 const OFFERED = ADVANCE.filter(([k]) => (k !== 'voice' || canMic) && (k !== 'words' || Recognition)
@@ -84,7 +83,7 @@ const savedLevel = (sv) => {
 };
 const STEADY = 120;
 const LISTEN_FROM = [-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3];
-const listenName = (v) => (v < 0 ? `${-v} s before it stops` : v > 0 ? `${v} s after it stops` : 'as it stops');
+const listenName = (v) => (v < 0 ? `${-v} s before AI finishes` : v > 0 ? `${v} s after AI finishes` : 'as AI finishes');
 
 // A second of silence as a WAV, looped while the earbud is the Next button.
 function silentWav() {
@@ -105,6 +104,9 @@ const save = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catc
 
 const WAITS = [0.5, 1, 1.5, 2, 2.5, 3];
 const SPEEDS = [1, 1.25, 1.5, 1.75, 2];
+// Settings saved before these defaults (the user, 2026-11-14: PF, the full anti-ice check, 1.5x,
+// 0.5 s) take them once; `v` marks a setting saved since.
+const SETTINGS_V = 2;
 const SEAT_NAME = { PF: 'PF', PM: 'PM', OBS: 'OBS' };
 
 // The best-sounding voices first: the neural ones (Edge, Windows 11), the downloaded Premium,
@@ -140,16 +142,34 @@ function englishVoices(all = false) {
     .sort((a, b) => rank(a) - rank(b));
 }
 
+// A setting as a slider over its list of values, the value said beside it.
+function Slider({ label, list, value, onChange, show }) {
+  const i = Math.max(0, list.indexOf(value));
+  return (
+    <label className="t44c-voice-slider">
+      <span>{label}</span>
+      <input type="range" min={0} max={list.length - 1} step={1} value={i}
+        onChange={(e) => onChange(list[Number(e.target.value)])} aria-valuetext={show(value)} />
+      <output>{show(value)}</output>
+    </label>
+  );
+}
+
 export default function VoiceChecklists() {
-  const saved = useMemo(load, []);
-  const [antiIce, setAntiIce] = useState(saved.antiIce === 'full' ? 'full' : 'pitot');
+  const saved = useMemo(() => {
+    const sv = load();
+    if (sv.v === SETTINGS_V) return sv;
+    const { seat: _s, antiIce: _a, speed: _p, wait: _w, ...rest } = sv;
+    return rest;
+  }, []);
+  const [antiIce, setAntiIce] = useState(saved.antiIce === 'pitot' ? 'pitot' : 'full');
   const scripts = useMemo(() => CHECKLISTS.map((p) => scriptFor(p, { antiIce, find: findProc })), [antiIce]);
   const [seat, setSeat] = useState(saved.seat === 'PM' ? 'PM' : 'PF');
   const [chain, setChain] = useState(saved.chain !== false);
   const [hide, setHide] = useState(!!saved.hide);
-  const [wait, setWait] = useState(WAITS.includes(saved.wait) ? saved.wait : 1);
+  const [wait, setWait] = useState(WAITS.includes(saved.wait) ? saved.wait : 0.5);
   const [level, setLevel] = useState(() => savedLevel(saved));
-  const [speed, setSpeed] = useState(SPEEDS.includes(saved.speed) ? saved.speed : 1.25);
+  const [speed, setSpeed] = useState(SPEEDS.includes(saved.speed) ? saved.speed : 1.5);
   const [listenFrom, setListenFrom] = useState(LISTEN_FROM.includes(saved.listenFrom) ? saved.listenFrom : -0.1);
   const [voiceName, setVoiceName] = useState(saved.voicePick ?? (HAS_CLIPS ? RECORDED : saved.voice || ''));
   const [allVoices, setAllVoices] = useState(!!saved.allVoices);
@@ -166,7 +186,7 @@ export default function VoiceChecklists() {
   const [message, setMessage] = useState('');
   const [mic, setMic] = useState('off'); // off | on | tap (refused: needs the student's tap)
 
-  useEffect(() => save({ seat, chain, hide, wait, voiceLevel: level, speed, listenFrom, advance, allVoices, antiIce, voicePick: voiceName }),
+  useEffect(() => save({ v: SETTINGS_V, seat, chain, hide, wait, voiceLevel: level, speed, listenFrom, advance, allVoices, antiIce, voicePick: voiceName }),
     [seat, chain, hide, wait, level, speed, listenFrom, advance, allVoices, antiIce, voiceName]);
   useEffect(() => setVoices(englishVoices(allVoices)), [allVoices]);
 
@@ -670,10 +690,12 @@ export default function VoiceChecklists() {
   const micText = advance === 'earbud' ? 'Press your earbud'
     : !hears ? 'Press Next after your call'
       : mic === 'on' ? 'Listening' : mic === 'tap' || mic === 'blocked' ? '' : 'Mic starting';
-  const primary = busy
-    ? { label: 'Next', onClick: tap }
-    : { label: status === 'paused' ? 'Resume' : status === 'done' ? 'Again' : 'Start',
-      onClick: status === 'done' ? () => { moveTo(view.proc, 0); start(); } : start };
+  // The big button: Next while running; paused, Restart (in red), since Resume is the small
+  // button that paused it (the user, 2026-11-14).
+  const restart = () => { reset(view.proc); start(); };
+  const primary = busy ? { label: 'Next', onClick: tap }
+    : status === 'paused' ? { label: 'Restart', onClick: restart, cls: ' is-restart' }
+      : { label: status === 'done' ? 'Again' : 'Start', onClick: status === 'done' ? restart : start };
 
   return (
     <div className="t44c-voice">
@@ -700,17 +722,16 @@ export default function VoiceChecklists() {
             Go on to the next checklist
           </label>
           <label>
-            Anti-ice check before takeoff
-            <select value={antiIce} onChange={(e) => { setAntiIce(e.target.value); reset(view.proc); }}>
-              {ANTI_ICE.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-            </select>
-          </label>
-          <label>
             <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} />
             Hide my calls
           </label>
           <label>
-            Go on when I
+            <input type="checkbox" checked={antiIce === 'full'}
+              onChange={(e) => { setAntiIce(e.target.checked ? 'full' : 'pitot'); reset(view.proc); }} />
+            Full anti-ice/deice check before takeoff
+          </label>
+          <label>
+            AI continues when you
             <select value={advance} onChange={(e) => { setAdvance(e.target.value); reset(view.proc); }}>
               {OFFERED.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
             </select>
@@ -740,28 +761,10 @@ export default function VoiceChecklists() {
             </div>
           )}
           {hears && (
-            <label>
-              Wait after I stop talking
-              <select value={wait} onChange={(e) => setWait(Number(e.target.value))}>
-                {WAITS.map((w) => <option key={w} value={w}>{w} s</option>)}
-              </select>
-            </label>
+            <Slider label="AI response time" list={WAITS} value={wait} onChange={setWait} show={(w) => `${w} s`} />
           )}
           {advance === 'voice' && (
-            <label>
-              Start hearing me
-              <select value={listenFrom} onChange={(e) => setListenFrom(Number(e.target.value))}>
-                {LISTEN_FROM.map((v) => <option key={v} value={v}>{listenName(v)}</option>)}
-              </select>
-            </label>
-          )}
-          {canSpeak && (
-            <label>
-              Speed
-              <select value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
-                {SPEEDS.map((v) => <option key={v} value={v}>{v}×</option>)}
-              </select>
-            </label>
+            <Slider label="Mic activation time" list={LISTEN_FROM} value={listenFrom} onChange={setListenFrom} show={listenName} />
           )}
           {(voices.length > 0 || HAS_CLIPS) && (
             <label>
@@ -772,6 +775,9 @@ export default function VoiceChecklists() {
                 {voices.map((v) => <option key={idOf(v)} value={idOf(v)}>{voiceLabel(v)}</option>)}
               </select>
             </label>
+          )}
+          {(canSpeak || HAS_CLIPS) && (
+            <Slider label="Voice speed" list={SPEEDS} value={speed} onChange={setSpeed} show={(v) => `${v}×`} />
           )}
           {canSpeak && voiceName !== RECORDED && (
             <label>
@@ -817,17 +823,19 @@ export default function VoiceChecklists() {
         <div className="t44c-voice-heard">
           {listeningNow && heard ? `Heard: ${heard}` : ''}
           {status === 'idle' && (advance === 'words'
-            ? 'Say your call when it is yours. Say "say again", "back" or "skip" any time.'
+            ? 'Say your call when it is yours. Say "repeat", "back" or "skip" any time.'
             : advance === 'voice' ? 'Say your call when it is yours. The next one follows when you stop talking.'
               : advance === 'earbud' ? 'Say your call, then press your earbud.' : 'Say your call, then press Next.')}
         </div>
         {listeningNow && mic === 'tap' && advance === 'words' && !deafErr && (
           <button type="button" className="t44c-voice-listen" onClick={tapToListen}>Tap to listen</button>
         )}
-        <button type="button" className="t44c-voice-main" onClick={primary.onClick}>{primary.label}</button>
+        <button type="button" className={`t44c-voice-main${primary.cls || ''}`} onClick={primary.onClick}>{primary.label}</button>
         <div className="t44c-voice-buttons">
-          <button type="button" onClick={busy ? pause : () => reset(view.proc)}>{busy ? 'Pause' : 'Restart'}</button>
-          <button type="button" onClick={() => (running.current ? again() : null)} disabled={!busy}>Say again</button>
+          <button type="button" onClick={status === 'paused' ? start : pause} disabled={!busy && status !== 'paused'}>
+            {status === 'paused' ? 'Resume' : 'Pause'}
+          </button>
+          <button type="button" onClick={() => (running.current ? again() : null)} disabled={!busy}>Repeat</button>
           <button type="button" onClick={() => (running.current ? back() : null)} disabled={!busy}>Back</button>
         </div>
       </div>
