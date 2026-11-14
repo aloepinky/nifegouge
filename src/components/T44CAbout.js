@@ -44,6 +44,14 @@ const CONTENT = {
       'The Briefs page holds the T-44C briefs for quick reference.',
     ],
   },
+  '/t44c/practice': {
+    icon: 'flight',
+    blurb: 'Fly a whole contact FAM step by step: course rules, comms, checklists and maneuvers.',
+    more: [
+      'The Practice Flight page chair flies an entire T-44C contact FAM to Seagull, Foxtrot or Cheetah and back to Navy Corpus or Cabaniss. Emphasis is placed on course rules, proper comms, checklist timing and maneuver flow.',
+      'It is new and needs testing by the community. If something is wrong, say where in the flight it happened in the feedback form at the bottom of the page.',
+    ],
+  },
 };
 
 function T44CAbout() {
@@ -58,7 +66,7 @@ function T44CAbout() {
         <>
           <p>
             This section is for the T-44C: the EPs and limits you are held to from memory, the
-            discussion items for every syllabus event, and the briefs.
+            discussion items for every syllabus event, the briefs, and a practice FAM flight.
           </p>
           <p>
             Everything here is built by students, so it is only as good as what gets contributed. If you
