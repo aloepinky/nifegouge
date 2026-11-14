@@ -72,6 +72,7 @@ const T44CAbout = page(() => import('./components/T44CAbout.js'));
 const T44CDiscuss = page(() => import('./components/T44CDiscuss.js'));
 const T44CBriefs = page(() => import('./components/T44CBriefs.js'));
 const T44CDocs = page(() => import('./components/T44CDocs.js'));
+const T44CPractice = page(() => import('./components/practice/t44c/T44CPractice.js'));
 const T54ADiscuss = page(() => import('./components/T54ADiscuss.js'));
 const T54AAbout = page(() => import('./components/T54AAbout.js'));
 const T54AEPsLimits = page(() => import('./components/T54AEPsLimits.js'));
@@ -85,6 +86,7 @@ const BriefsPage = page(() => import('./components/briefs/BriefsPage'));
 const NIFEAbout = page(() => import('./components/NIFEAbout.js'));
 const CourseRules = page(() => import('./components/TW4CourseRules.js'));
 const PracticeFlight = page(() => import('./components/practice/PracticeFlight.js'));
+const FormsPreview = page(() => import('./components/practice/forms/FormsPreview.js'));
 const Systems = page(() => import('./components/systems/Systems.js'));
 const Discuss = page(() => import('./components/discuss/Discuss.js'));
 const TW4JetLog = page(() => import('./components/TW4JetLog.js'));
@@ -179,6 +181,7 @@ function App() {
         <Route path="/primary/docs" element={<TW4Docs />} />
         <Route path="/primary/briefs/*" element={<BriefsPage />} />
         <Route path="/primary/courserules" element={<CourseRules />} />
+        <Route path="/primary/practice/forms" element={<FormsPreview />} />
         <Route path="/primary/practice/*" element={<PracticeFlight />} />
         <Route path="/primary/systems" element={<Systems />} />
         <Route path="/primary/systems/:tab" element={<Systems />} />
@@ -191,6 +194,7 @@ function App() {
         <Route path="/t44c/docs" element={<T44CDocs />} />
         <Route path="/t44c/discuss/*" element={<T44CDiscuss />} />
         <Route path="/t44c/briefs/*" element={<T44CBriefs />} />
+        <Route path="/t44c/practice" element={<T44CPractice />} />
         <Route path="/t54a" element={<Navigate to="/t54a/about" replace />} />
         <Route path="/t54a/about" element={<T54AAbout />} />
         <Route path="/t54a/eps-limits" element={<T54AEPsLimits />} />

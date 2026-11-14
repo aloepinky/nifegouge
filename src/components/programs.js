@@ -96,6 +96,7 @@ export const PROGRAM_TABS = {
     { to: '/t44c/docs', label: 'Docs' },
     { to: '/t44c/discuss', label: 'Discussion Items' },
     { to: '/t44c/briefs', label: 'Briefs' },
+    { to: '/t44c/practice', label: 'Practice Flight' },
   ],
   t54a: [
     { to: '/t54a/about', label: 'About' },

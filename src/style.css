@@ -10323,6 +10323,31 @@ button.epl-modal-close:hover {
   background: var(--wash);
 }
 
+/* The T-44C's two seats: the PM sits between the PF and the voices outside the cockpit. */
+.pf-exchange-line--pf,
+.pf-exchange-line--pm {
+  margin: 0 -8px;
+  padding: 8px;
+  border-top-color: transparent;
+  border-radius: 6px;
+}
+
+.pf-exchange-line--pf {
+  background: color-mix(in srgb, var(--ink-accent) 24%, transparent);
+}
+
+.pf-exchange-line--pm {
+  background: color-mix(in srgb, var(--ink-accent) 10%, transparent);
+}
+
+.pf-exchange-line--pf .pf-exchange-speaker {
+  color: var(--ink-accent);
+}
+
+.pf-exchange-line--pm .pf-exchange-speaker {
+  color: color-mix(in srgb, var(--ink-accent) 50%, var(--ink-muted));
+}
+
 .pf-exchange-speaker {
   font-size: 11px;
   font-weight: 700;
@@ -10551,6 +10576,23 @@ button.epl-modal-close:hover {
   margin: 0 0 8px;
   font-size: 13px;
   color: var(--ink-muted);
+}
+
+/* A checklist mnemonic over its steps (T-44C A-C-A-S-A): the step on now is bold and larger. */
+.pf-mnemonic {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+}
+
+.pf-mnemonic-now {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .pf-answer {
@@ -10852,6 +10894,12 @@ button.epl-modal-close:hover {
 .pf-numbers td {
   font-weight: 600;
   color: var(--ink-strong);
+}
+
+.pf-numbers-prop th,
+.pf-numbers-prop td {
+  color: var(--ink-accent);
+  font-weight: 700;
 }
 
 .pf-numbers-next th {
