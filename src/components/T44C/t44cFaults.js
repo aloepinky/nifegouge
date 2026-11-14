@@ -93,16 +93,17 @@ export const FAULTS = [
   // (the one FIRE DETR circuit breaker protects the system, and must be closed for the test); a
   // FIRE light on when it should not be (on the ground a cowling not closed properly, or the
   // aircraft headed toward a strong external light, gives an erroneous indication).
-  { id: 'bs-fire-zone', procedure: 'before-start', step: 'bs10', pick: (r) => ({ side: side(r) }),
-    // Not seen under bs-fire-all, which darkens both sides (at 100 percent both are drawn).
+  // `single`: one fault of the group at a time, even at 100 percent (the user, 2026-11-14).
+  { id: 'bs-fire-zone', procedure: 'before-start', step: 'bs10', single: 'fire', pick: (r) => ({ side: side(r) }),
+    // Not seen under bs-fire-all, which darkens both sides.
     when: (s) => !!s.fireZone && !(s.faults || []).some((f) => f.id === 'bs-fire-all'),
     what: (p) => `${LH(p.side)} FIRE and its FIRE EXT light did not light in the fire detector test.`,
     causes: () => ['A detector on that side, or its circuits.'] },
-  { id: 'bs-fire-all', procedure: 'before-start', step: 'bs10',
+  { id: 'bs-fire-all', procedure: 'before-start', step: 'bs10', single: 'fire',
     when: (s) => !!s.fireZone,
     what: () => 'No FIRE, FIRE EXT or FAULT WARNING light came on in the fire detector test.',
     causes: () => ['The FIRE DETR circuit breaker open. It protects the whole system and must be closed for the test.'] },
-  { id: 'bs-fire-false', procedure: 'before-start', step: 'bs10', pick: (r) => ({ side: side(r) }),
+  { id: 'bs-fire-false', procedure: 'before-start', step: 'bs10', single: 'fire', pick: (r) => ({ side: side(r) }),
     when: (s) => s.fireZone === 0,
     what: (p) => `${LH(p.side)} FIRE and its FIRE EXT light stayed lit with the test switch back at OFF.`,
     causes: () => ['An engine cowling not closed properly, or the aircraft headed toward a strong external light. Close the cowling or change heading for a valid check.'] },

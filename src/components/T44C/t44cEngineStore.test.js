@@ -1,4 +1,5 @@
-import { createT44CEngine, RANDOM } from './t44cEngineStore';
+import { createT44CEngine, oneOfEachGroup, RANDOM } from './t44cEngineStore';
+import { faultsFor } from './t44cFaults';
 
 // The store against the clock is the browser's business; these are its decisions.
 
@@ -50,4 +51,14 @@ it('skips the overspeed governor check to 1900 rpm with the switch released', ()
   engine.skip(['er6:Prop Lever', 'er6#1', 'er6', 'er6#2', 'er6:Power Lever', 'er6#3'], 'er7');
   expect(Math.abs(Number(engine.getSnapshot().readouts.R.np) - 1900)).toBeLessThan(25);
   engine.dispose();
+});
+
+it('draws one fire detector fault at a time, even at 100 percent', () => {
+  const defs = faultsFor('before-start', 'bs10');
+  expect(defs.filter((d) => d.single === 'fire')).toHaveLength(3);
+  [0, 0.5, 0.99].forEach((r) => {
+    const picked = oneOfEachGroup(defs, () => r);
+    expect(picked.filter((d) => d.single === 'fire')).toHaveLength(1);
+    expect(picked.filter((d) => !d.single)).toEqual(defs.filter((d) => !d.single));
+  });
 });

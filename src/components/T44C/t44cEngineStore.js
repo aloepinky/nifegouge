@@ -41,6 +41,14 @@ const readScenario = () => {
   }
 };
 
+// Every fault, but one drawn at random from each `single` group.
+export const oneOfEachGroup = (defs, rand = Math.random) => {
+  const groups = {};
+  defs.forEach((d) => { if (d.single) (groups[d.single] = groups[d.single] || []).push(d); });
+  const keep = new Set(Object.values(groups).map((g) => g[Math.floor(rand() * g.length)]));
+  return defs.filter((d) => !d.single || keep.has(d));
+};
+
 export function createT44CEngine() {
   let scenario = readScenario();
   let chaos = readChaos();
@@ -199,7 +207,8 @@ export function createT44CEngine() {
     // standing one left showing never stops the steps after it drawing theirs, so at 100
     // percent every step that can go wrong does (the user, 2026-11-08). At 100 percent a step
     // draws every one of its faults, not one: every single thing that can go wrong does (the
-    // user, 2026-11-11).
+    // user, 2026-11-11), but only one of a `single` group (the fire detector test's three; the
+    // user, 2026-11-14).
     arm(stepId, stepIds) {
       if (!state || !procedure || !stepId) return;
       if (stepIds) order = stepIds;
@@ -210,7 +219,7 @@ export function createT44CEngine() {
         drawnFor.add(key);
         const defs = faultsFor(procedure, step).filter((d) => !!d.early === early);
         if (!defs.length || !(Math.random() < chaos)) return;
-        const picked = chaos >= 1 ? defs : [defs[Math.floor(Math.random() * defs.length)]];
+        const picked = chaos >= 1 ? oneOfEachGroup(defs) : [defs[Math.floor(Math.random() * defs.length)]];
         state = faultSeen({ ...state, faults: [...faults(), ...picked.map((def) => drawFault(def))] });
       };
       const before = state.faults;

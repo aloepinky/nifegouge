@@ -762,7 +762,7 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   generator is clicked; the user, 2026-11-05). A standing condition (`early`: door, loads, fuel
   imbalance) is drawn as the card opens, so it shows before its step. Faults never wait on each
   other (`state.faults`, a list): at 100 percent every step that has faults draws all of them (the user,
-  2026-11-08 and 11-11); below that, a step draws one at most. Malfunction finds the seen faults of the open step and those before it first, so
+  2026-11-08 and 11-11), but one of a `single` group (the fire detector test's three, 11-14); below that, a step draws one at most. Malfunction finds the seen faults of the open step and those before it first, so
   CABIN DOOR OPEN stays lit while an earlier step's fault is found. The fuel gauge's current
   limiter fails only once the right generator is off after the left start (the start broke it). Before Start and Before Takeoff now run on the model too (Before Start: boost
   pumps 11 A each; the lamp test lights all 30 cells of the panel, blanks included, from the
