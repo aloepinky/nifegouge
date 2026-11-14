@@ -740,7 +740,8 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   on until the next step's gate passes or the engines settle (store `skip`), so a skipped step
   leaves the gauges where the next step expects them. ESIS ON/OFF is the button above the
   display; PROP REV NOT READY lights with a prop lever out of full forward. An Abnormal Start
-  opened as a detour is drawn red, as an EP. Light-off is passed the moment ITT reads above 30 °C;
+  opened as a detour is drawn red, as an EP. Opened from the EP list it runs no model (EPDrill `viaAbort`,
+  store `follows`; the user, 2026-11-14): live only when a start leads into it. Light-off is passed the moment ITT reads above 30 °C;
   Abnormal Start 3 is refused until the starter itself has run 40 s (gates take the procedure,
   since After Start repeats its ids). After Start 2 is both PRESS FOR VOLTS buttons (spots with an
   `engineInput`, poked into the model whatever step is open); each shows 28.25 on its meter for

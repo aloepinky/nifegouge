@@ -135,6 +135,9 @@ export function createT44CEngine() {
       return () => listeners.delete(l);
     },
     getSnapshot: () => snapshot,
+    // A procedure that keeps the engines as they are (Abnormal Start): live only when a start
+    // leads into it (EPDrill).
+    follows: (epId) => PROCEDURES[epId] === null,
 
     // The open procedure. A start procedure finds the engines as it says (cold, or the right
     // engine running); the Abnormal Start EP keeps them as they are; anything else switches the

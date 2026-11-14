@@ -537,12 +537,18 @@ function Drill({
   // the gauges say it is too early (`engineNote` says why), and is told each control that goes
   // in. Everything else about a step is as without it.
   const [engineNote, setEngineNote] = useState(null);
+  // A procedure that only carries on from another (`engine.follows`: the T-44C's Abnormal
+  // Start) runs the model only when that one sent the student to it, as a detour or by an
+  // abort (`viaAbort`). Opened from the EP list it is an EP like the rest, no live cockpit
+  // (the user, 2026-11-14).
+  const viaAbort = useRef(null);
   useEffect(() => {
     if (!engine) return;
     // The note first: leaving a card with a fault in sight is a miss, said on the next card.
     setEngineNote(null);
-    engine.open(isGameActive ? null : ep.id);
-  }, [engine, ep.id, isGameActive]);
+    const solo = engine.follows && engine.follows(ep.id) && !detour && viaAbort.current !== ep.id;
+    engine.open(isGameActive || solo ? null : ep.id);
+  }, [engine, ep.id, isGameActive, detour]);
   // Chaos (T44C/t44cFaults.js): a fault the student went past is marked wrong on its step, and
   // what it was and what could cause it are said. `missedRef` holds those steps, so a look step
   // passed by the same click that went past it is not then marked right.
@@ -655,6 +661,7 @@ function Drill({
   // A read checklist starts clean each time it is opened: what was skipped or clicked on one is
   // not carried to the next (the user, 2026-10-30). A typed EP keeps its boxes, as Primary's do.
   const go = (nextPos, detourId = null) => {
+    viaAbort.current = null;
     if (read) setData({});
     setPos(nextPos);
     setDetour(detourId);
@@ -754,6 +761,7 @@ function Drill({
       return true;
     }
     openEp(hit.epId);
+    viaAbort.current = hit.epId;
     setData((d) => ({ ...d, [row.id]: row.text }));
     setResults({ [row.id]: 'correct' });
     return true;
@@ -1028,7 +1036,9 @@ function Drill({
     watched.current = {};
     missedRef.current = new Set();
     setResetKey((k) => k + 1);
-    if (engine && !isGameActive) engine.open(ep.id, true);
+    // Abnormal Start from the EP list stays an EP (see `viaAbort`).
+    const solo = engine && engine.follows && engine.follows(ep.id) && !detour && viaAbort.current !== ep.id;
+    if (engine && !isGameActive && !solo) engine.open(ep.id, true);
     setEngineNote(null);
   };
 
