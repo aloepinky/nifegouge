@@ -755,8 +755,7 @@ export default function VoiceChecklists() {
               </span>
               <p>
                 Your voice has to pass the line to count. {mic === 'on'
-                  ? 'Talk and watch the bar.' : 'Press Start and talk to see the bar.'} Raise the
-                line if noise moves the checklist on.
+                  ? 'Talk and watch the bar.' : 'Press Start and talk to see the bar.'}
               </p>
             </div>
           )}
