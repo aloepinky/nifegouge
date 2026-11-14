@@ -130,6 +130,27 @@ export const T44C_POSTER = {
         // lights. Rough, 2026-10-27: tune with ?spots.
         { id: 'emer-121', box: [0.630, 0.615, 0.014, 0.029], label: 'EMER FREQ 121.5 button',
           action: 'EMER 121.5' },
+        // The rest of that dark reversionary panel (the user, 2026-11-14), measured off the sheet
+        // at 400 dpi: TUNE and RMT TUNE beside the 121.5 button, and the row under them, DG FREE
+        // and SLEW for each pilot either side of XPDR (the Transponder spot), ADC and AHRS. No
+        // step names them, so they are `free`: named on hover, never marked wrong. NATOPS
+        // §20.3.7.3.2 and .3 (TUNE, RMT TUNE), §20.3.5.3.1 (AHRS).
+        { id: 'rev-tune', box: [0.585, 0.610, 0.012, 0.030], label: 'TUNE reversion switch (RTU / NORM / CDU)',
+          action: 'TUNE Reversion Switch', free: true },
+        { id: 'rev-rmt', box: [0.606, 0.610, 0.012, 0.030], label: 'RMT TUNE switch (NORM / DISABLE)',
+          action: 'RMT TUNE Switch', free: true },
+        { id: 'rev-dg-l', box: [0.532, 0.669, 0.012, 0.030], label: "Pilot's DG FREE / NORM switch",
+          action: "Pilot's DG Switch", free: true },
+        { id: 'rev-slew-l', box: [0.550, 0.672, 0.011, 0.022], label: "Pilot's SLEW switch (− / +)",
+          action: "Pilot's Slew Switch", free: true },
+        { id: 'rev-adc', box: [0.606, 0.667, 0.012, 0.030], label: 'ADC reversion switch (1 / NORM / 2)',
+          action: 'ADC Reversion Switch', free: true },
+        { id: 'rev-ahrs', box: [0.629, 0.667, 0.012, 0.030], label: 'AHRS reversion switch (1 / NORM / 2)',
+          action: 'AHRS Reversion Switch', free: true },
+        { id: 'rev-slew-r', box: [0.662, 0.671, 0.011, 0.022], label: "Copilot's SLEW switch (− / +)",
+          action: "Copilot's Slew Switch", free: true },
+        { id: 'rev-dg-r', box: [0.679, 0.668, 0.012, 0.030], label: "Copilot's DG FREE / NORM switch",
+          action: "Copilot's DG Switch", free: true },
 
         { box: [0.276, 0.826, 0.012, 0.024], label: 'Windshield anti-ice',
           action: 'Windshield Heat', actions: ['Windshield Heat', 'Anti-Ice/Deice', 'Anti-Ice/Deice/Radar'], also: ['WSHLD ANTI-ICE'], values: ['As Required', 'BOTH, Then PILOT'] },
