@@ -104,9 +104,9 @@ const save = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catc
 
 const WAITS = [0.5, 1, 1.5, 2, 2.5, 3];
 const SPEEDS = [1, 1.25, 1.5, 1.75, 2];
-// Settings saved before these defaults (the user, 2026-11-14: PF, the full anti-ice check, 1.5x,
-// 0.5 s) take them once; `v` marks a setting saved since.
-const SETTINGS_V = 2;
+// Settings saved before a default changed take the new one once; `v` is the version saved. 2: PF,
+// the full anti-ice check, 1.5x, 0.5 s; 3: on to the next checklist (the user, 2026-11-14).
+const SETTINGS_V = 3;
 const SEAT_NAME = { PF: 'PF', PM: 'PM', OBS: 'OBS' };
 
 // The best-sounding voices first: the neural ones (Edge, Windows 11), the downloaded Premium,
@@ -159,7 +159,9 @@ export default function VoiceChecklists() {
   const saved = useMemo(() => {
     const sv = load();
     if (sv.v === SETTINGS_V) return sv;
-    const { seat: _s, antiIce: _a, speed: _p, wait: _w, ...rest } = sv;
+    const { chain: _c, ...out } = sv;
+    if (sv.v === 2) return out;
+    const { seat: _s, antiIce: _a, speed: _p, wait: _w, ...rest } = out;
     return rest;
   }, []);
   const [antiIce, setAntiIce] = useState(saved.antiIce === 'pitot' ? 'pitot' : 'full');
@@ -719,7 +721,7 @@ export default function VoiceChecklists() {
         <div className="t44c-voice-settings-body">
           <label>
             <input type="checkbox" checked={chain} onChange={(e) => setChain(e.target.checked)} />
-            Go on to the next checklist
+            Automatically proceed to next checklist
           </label>
           <label>
             <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} />
