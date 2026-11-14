@@ -542,6 +542,7 @@ function Drill({
   // abort (`viaAbort`). Opened from the EP list it is an EP like the rest, no live cockpit
   // (the user, 2026-11-14).
   const viaAbort = useRef(null);
+  const abortFrom = useRef(null); // the list position the abort was made from
   useEffect(() => {
     if (!engine) return;
     // The note first: leaving a card with a fault in sight is a miss, said on the next card.
@@ -662,6 +663,7 @@ function Drill({
   // not carried to the next (the user, 2026-10-30). A typed EP keeps its boxes, as Primary's do.
   const go = (nextPos, detourId = null) => {
     viaAbort.current = null;
+    abortFrom.current = null;
     if (read) setData({});
     setPos(nextPos);
     setDetour(detourId);
@@ -760,8 +762,10 @@ function Drill({
       setEngineNote('Condition lever to FUEL CUTOFF: the start is aborted.');
       return true;
     }
+    const from = pos;
     openEp(hit.epId);
     viaAbort.current = hit.epId;
+    abortFrom.current = from;
     setData((d) => ({ ...d, [row.id]: row.text }));
     setResults({ [row.id]: 'correct' });
     return true;
@@ -1022,6 +1026,20 @@ function Drill({
   };
 
   const reset = () => {
+    // Reset on a procedure a start sent the student to (Abnormal Start) goes back to that
+    // start, from its beginning, and the detour is gone (the user, 2026-11-14).
+    const back = isGameActive ? null : detour ? pos : viaAbort.current === ep.id ? abortFrom.current : null;
+    if (back !== null) {
+      const start = eps[order[back]];
+      setData((d) => {
+        const n = { ...d };
+        start.rows.forEach((r) => { if (r.id) delete n[r.id]; });
+        return n;
+      });
+      setEngineNote(null);
+      go(back);
+      return;
+    }
     const next = { ...data };
     for (const f of fields) delete next[f];
     setData(next);
