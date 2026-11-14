@@ -88,9 +88,13 @@ if (args.has('--record') && todo.length) {
   const textFile = path.join(tmp, 'line.txt');
   todo.forEach((c, i) => {
     fs.writeFileSync(textFile, c.text, 'utf8');
+    // Into a temporary file, moved into place only once whole: a call that times out leaves an
+    // empty file, which would count as recorded on the next run (2026-11-14).
+    const part = path.join(tmp, c.file);
     aws(['polly', 'synthesize-speech', '--engine', ENGINE, '--voice-id', c.voice, '--output-format', 'mp3',
-      '--sample-rate', '24000', '--text-type', 'text', '--text', `file://${textFile}`, '--region', REGION,
-      path.join(OUT, c.file)]);
+      '--sample-rate', '24000', '--text-type', 'text', '--text', `file://${textFile}`, '--region', REGION, part]);
+    if (!fs.statSync(part).size) throw new Error(`Polly returned nothing for ${c.seat} "${c.text}"`);
+    fs.copyFileSync(part, path.join(OUT, c.file));
     process.stdout.write(`\r${i + 1}/${todo.length} ${c.seat} ${c.text.slice(0, 50).padEnd(50)}`);
   });
   process.stdout.write('\n');
