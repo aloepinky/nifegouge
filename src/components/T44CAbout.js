@@ -49,7 +49,6 @@ const CONTENT = {
     blurb: 'Fly a whole contact FAM step by step: course rules, comms, checklists and maneuvers.',
     more: [
       'The Practice Flight page chair flies an entire T-44C contact FAM to Seagull, Foxtrot or Cheetah and back to Navy Corpus or Cabaniss. Emphasis is placed on course rules, proper comms, checklist timing and maneuver flow.',
-      'It is new and needs testing by the community. If something is wrong, say where in the flight it happened in the feedback form at the bottom of the page.',
     ],
   },
 };
