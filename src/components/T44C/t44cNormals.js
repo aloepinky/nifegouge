@@ -1039,6 +1039,10 @@ const CLIMB = {
       replies: [say('CHECKED', 'PF'), ip('CHECKED', 'PM')],
     }),
     abbrev('cl4', 'Lights', 'SET', 'LS', {
+      // Done by clicking both landing lights and the taxi light (the user, 2026-11-14); ICE is
+      // on only at night, so it is not required.
+      watch: ['Left Landing Light', 'Right Landing Light', 'Taxi Light'],
+      watchOnly: true,
       action: ['LS turns landing, taxi, and ice lights OFF.', '(PM reports "Abbreviated Climb Checklist complete" or continues with full checklist.)'],
       replies: [say('SET', 'LS')],
     }),
