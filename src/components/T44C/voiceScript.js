@@ -47,6 +47,9 @@ export function spoken(text) {
     .replace(/_+(\.?_+)*/g, ' ')
     .replace(/\blbs\b\.?/gi, 'pounds')
     .replace(/\bN1\b/g, 'N one')
+    // AUX is said "ox": the recorded voice read "aux" as the French word, "oh" (the user,
+    // 2026-11-14).
+    .replace(/\bAUX\b/gi, 'ox')
     .replace(/\bNp\b/g, 'N P')
     .replace(/(^|[^\d])\.(\d)/g, '$1point $2')
     .replace(/\bx4\b/g, 'times four')

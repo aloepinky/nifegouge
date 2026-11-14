@@ -60,6 +60,7 @@ describe('voice script', () => {
     expect(spoken('__lbs, __lbs required')).toBe('pounds, pounds required');
     expect(spoken('ICS check')).toBe('ICS check');
     expect(spoken('Radar CHECKED/STANDBY')).toBe('Radar checked, standby');
+    expect(spoken('AUX BATT/Avionics Master')).toBe('ox batt, Avionics Master');
   });
 
   test('the last word, the closing call and the commands', () => {
