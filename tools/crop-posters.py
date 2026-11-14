@@ -92,6 +92,12 @@ QUALITY = 90
 # number. These are vector line art, so the file stays small either way.
 LONG_EDGE = 1800
 
+# Except these, served bigger. The T-44C main panel is cut 5200 px wide at 200 dpi, so at 1800 it
+# kept a third of its detail where the side panels keep three quarters, and its small print (the
+# reversionary panel's switch labels) went soft on a phone (the user, 2026-11-14). At 3600 it
+# keeps 70 percent.
+LONG_EDGES = {"t44c-main.webp": 3600}
+
 # Fractions of the source page: (left, top, right, bottom). Tuned by rendering the area over a
 # grid and reading the panel's edges off it, not by eye - the sheet floats its panels on white
 # with leader lines between them, so a box guessed generously carries a neighbour's corner into
@@ -169,10 +175,10 @@ TH73A_REGIONS = {
 C172_BOX = None
 
 
-def fit(im):
-    """Downscale so the long edge is LONG_EDGE. Never upscale."""
+def fit(im, name=None):
+    """Downscale so the long edge is LONG_EDGE (or the image's own, LONG_EDGES). Never upscale."""
     w, h = im.size
-    scale = LONG_EDGE / max(w, h)
+    scale = LONG_EDGES.get(name, LONG_EDGE) / max(w, h)
     if scale >= 1:
         return im
     return im.resize((round(w * scale), round(h * scale)), Image.LANCZOS)
@@ -180,7 +186,7 @@ def fit(im):
 
 def save(im, name, dry, out=OUT):
     path = os.path.join(out, name)
-    im = fit(im)
+    im = fit(im, name)
     if dry:
         print(f"  would write {name:<24} {im.size[0]}x{im.size[1]}")
         return
