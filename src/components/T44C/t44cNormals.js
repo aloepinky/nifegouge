@@ -522,7 +522,9 @@ const AFTER_START = {
       replies: [say('Switch Channel 1, copy ATIS.'), say('CHECKED/SET', 'PF')],
     }),
     // The FTI hangs the brake check and the taxi out of the line on this step.
+    // Taxi light on as the parking brake is released (the user's read-and-initial, 2026-11-17).
     item('as10', 'Transponder', 'STANDBY', 'RS', {
+      watch: ['Taxi Light'],
       action: [
         'Position transponder switch on reversionary panel as required. At most airfields the transponder will be in STBY.',
         'Brief the PM to "Hold the checklist. Keep me clear on the right during all taxi and ground ops. Let base know we are out of the chocks." Signal "brake check" to the lineman.',
@@ -540,6 +542,7 @@ const AFTER_START = {
         // After the hold: clearing, the needle, the brake check between two changes of
         // controls, then taxi is requested (the user, 2026-11-12).
         say('Hold the checklist. Keep me clear on the right during all taxi and ground ops. Let base know we are out of the chocks.', 'PF'),
+        act('Parking brake released, taxi light – ON', 'LS'),
         say('Clear left', 'PF'), ip('Clear right', 'PM'), say('Right needle', 'PF'),
         ...TO_PM, act('RS conducts brake check'), ...TO_PF,
         say('Switch channel 3, request taxi.', 'PF'),
@@ -571,10 +574,12 @@ const ENGINE_RUNUP = {
   title: 'Engine Runup',
   done: '"ENGINE RUNUP CHECKLIST COMPLETE." (PM)',
   rows: [
+    // The taxi light goes off whenever the parking brake is set and on whenever it is released (a
+    // new read-and-initial; the user, 2026-11-17): a click of the taxi light, shown not spoken.
     item('er1', 'Parking Brake', 'SET', 'LS', {
-      watch: ['Brakes'],
+      watch: ['Brakes', 'Taxi Light'],
       action: ['LS ensures brake handle pulled out fully and brakes pumped firm. PF will keep both feet on the brakes for the entire Runup Checklist. PM will notify the PF if movement is detected and will immediately depress the brakes if any movement is noted.'],
-      replies: [say('SET', 'LS'), say('Monitor for movement during runup.', 'PF')],
+      replies: [say('SET', 'LS'), act('Taxi light – OFF', 'LS'), say('Monitor for movement during runup.', 'PF')],
     }),
     abbrev('er2', 'ESIS', 'ON', 'PF', {
       action: [
@@ -859,7 +864,10 @@ const BEFORE_TAKEOFF = {
       replies: [say('__lbs, __lbs required', 'PF')],
     }),
     // The FTI hangs the crew brief and the taxi to the hold short on this step.
+    // Taxi light on as the parking brake is released for the hold short (the user's
+    // read-and-initial, 2026-11-17).
     abbrev('bt15', 'Crew', 'BRIEFED', 'PF', {
+      watch: ['Taxi Light'],
       action: [
         'Brief the PM in accordance with the Typical Briefs and Voice Procedures Appendix, as appropriate. At a minimum, brief the PM On the takeoff, instrument departure procedures, and intended type of recovery if an emergency is encountered after takeoff.',
         'May include any other information deemed helpful for the flight, particularly TOLD data. Other items may include:',
@@ -882,6 +890,7 @@ const BEFORE_TAKEOFF = {
         say('Hold the checklist. Check me out of the yellow. Request further taxi.', 'PF'), ip('You\'re out of the yellow.', 'PM'),
         ip('Navy Corpus Ground, (call-sign), request further taxi.', 'PM'),
         act('Ground delivers clearance, PM repeats clearance to ATC.'), act('PF confirms and announces clearance to the crew'),
+        act('Parking brake released, taxi light – ON', 'LS'),
         say('Clear left.', 'PF'), ip('Clear right.', 'PM'),
         ip('Navy Corpus Tower, (call-sign), runway ##, #1(or #2), holding short, VFR to (location). Ready for departure', 'PM'),
         act('Tower gives takeoff clearance.'), ip('(call-sign), cleared for takeoff, runway ##', 'PM'),
@@ -1276,7 +1285,8 @@ const SECURE = {
       ],
       replies: [ip('OFF', 'PM'), say('Hold the checklist.', 'PF'), say('Continue the checklist.', 'PF')],
     }),
-    abbrev('se7', 'Parking Brake', 'SET', 'LS', { watch: ['Brakes'], action: ['LS pulls brake handle and pumps brake pedals until firm.'], replies: [say('SET', 'LS')] }),
+    // Taxi light off with the parking brake set (the user's read-and-initial, 2026-11-17).
+    abbrev('se7', 'Parking Brake', 'SET', 'LS', { watch: ['Brakes', 'Taxi Light'], action: ['LS pulls brake handle and pumps brake pedals until firm.'], replies: [say('SET', 'LS'), act('Taxi light – OFF', 'LS')] }),
     item('se8', 'AUX BATT/Avionics Master', 'OFF', 'PF', {
       action: ['PF selects AUX BATT and AVIONICS MASTER switches to OFF.'],
       replies: [say('OFF', 'PF')],
