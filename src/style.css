@@ -11738,44 +11738,44 @@ button.epl-modal-close:hover {
   color: var(--ink-muted);
 }
 
-/* The flight's numbers, one line. */
-.ptw-nums {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 2px 16px;
+/* The flight's numbers, a box each, above the pattern. */
+.ptw-gauges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 6px;
   margin: 0 0 8px;
-  padding: 7px 12px;
+}
+
+.ptw-gauge {
+  padding: 5px 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
+  border-radius: 6px;
+  background: var(--surface-2);
+  min-width: 0;
 }
 
-.ptw-num {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  white-space: nowrap;
-}
-
-.ptw-num dt {
-  order: 2;
+.ptw-gauge dt {
   font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: var(--ink-faint);
 }
 
-.ptw-num dd {
-  order: 1;
+.ptw-gauge dd {
   margin: 0;
-  font-weight: 600;
-  color: var(--ink-strong);
+  overflow-wrap: anywhere;
 }
 
-.ptw-num--phase dd {
-  min-width: 7.5em;
-  color: var(--ink-accent);
+.ptw-gauge-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.ptw-gauge-unit {
+  font-size: 12px;
+  color: var(--ink-muted);
 }
 
 /* The PF, PM and radio boxes: the radio across the top, the crew below it, left and right. */

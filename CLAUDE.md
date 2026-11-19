@@ -855,16 +855,18 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
 
 `/t44c/pattern` (`practice/t44c/pattern/`, since 2026-11-19): a model T-44C flying the VFR pattern
 round a 5,000 ft runway (Cabaniss 13, left traffic, no wind), its calls and procedures popping up
-in a PF box (left), a PM box (right) and a radio box (across the top), the numbers in one line
-above them. No sound (the user, 2026-11-19). Pattern types: approach flap, no flap, full flap,
-SSE (looped from the SSE wave-off at 200 ft) and Cases 1 to 5 (a touch-and-go, the simulated
-failure, an SSE full stop). `patternModel.js` is pure and tested: a pass is a chain of legs,
-each with its airspeed and altitude, timed by flying it; the legs off the runway keep the user's
-stopwatch times, the rest is the ME FTI's (§106 Pattern Work, Figures 1-3, 1-4, 1-6): downwind
-1 nm abeam (the user: the student timed was tight), crosswind at 30° AOB, the approach turn from
-3 s past abeam the numbers to centerline 1,200 ft short at 250 ft. Bank is worked out from speed
-and radius. `technique` lines are the user's pattern sketch; the cases' crew lines are
-`T44C/t44cCases.js`'s Figure F-1 wording. The aircraft is drawn in SVG, white and orange.
+in a PF box (left), a PM box (right) and a radio box (across the top), above the pattern box,
+which holds a box per flight parameter over the drawing. No sound (the user, 2026-11-19).
+**A racetrack** (the user's ruling): two half circles 1 nm across (1 nm over the sketch's bank
+angles, so about 23°), the crosswind turn 1,000 ft past the departure end at exactly 500 ft
+(level there if reached early), the 180 abeam the groove and the start of the approach turn,
+the groove 1,200 ft from the threshold at 250 ft. Pattern types: approach flap, no flap, full
+flap, SSE (looped from the SSE wave-off at 200 ft) and Cases 1 to 5 (a touch-and-go, the
+simulated failure, an SSE full stop). `patternModel.js` is pure and tested: a pass is a chain
+of legs, each with its airspeed and altitude, timed by flying it; touchdown to rotate and rotate
+to 300 ft keep the user's stopwatch times, airspeed builds slowly to 120 at the turn.
+`technique` lines are the user's sketch (PPTTT is power, pitch, trim, turn, talk); the cases'
+crew lines are `T44C/t44cCases.js`'s Figure F-1 wording.
 
 ## Page views
 

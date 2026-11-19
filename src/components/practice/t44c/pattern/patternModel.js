@@ -1,14 +1,18 @@
 // The T-44C VFR landing pattern, flown by a model on a 5,000 ft runway (Cabaniss 13, left
 // traffic, no wind), with the calls and the FTI's procedures at their places. Pure: no JSX.
 //
-// A pass is a chain of legs (lines and left turns), each with its airspeed and altitude along
-// it; time comes from flying each foot at its airspeed. The legs off the runway keep the
-// student's stopwatch times (the user, 2026-11-19: touchdown to rotate about 6 s, rotate to
-// 300 ft about 13 s, 300 ft to the crosswind turn about 7 s). The rest is the FTI's (ME FTI
-// §106 Pattern Work, pp. 1-30 to 1-42): downwind about a mile abeam (the user: 1 nm), 30° AOB
-// in the crosswind turn, the approach turn begun just past abeam the numbers and rolled out on
-// centerline 1,200 ft from the threshold at 250 ft, and the airspeeds and altitudes of
-// Figures 1-3, 1-4 and 1-6. "3 big potatoes" past the 180 is the user's.
+// A racetrack (the user, 2026-11-19): two half circles a mile across (ME FTI §106 p. 1-31,
+// "approximately one mile abeam"), joined by the downwind and the runway centerline. The
+// crosswind turn begins about 1,000 ft past the departure end at exactly 500 ft, levelling
+// there if the climb gets to 500 first (p. 1-36); it rolls out on downwind abeam the same
+// point. The 180 is abeam the groove: the approach turn begins there and rolls out on
+// centerline 1,200 ft from the threshold at 250 ft (p. 1-32). Bank is whatever that radius
+// takes at the airspeed, about 23° at 120 KIAS.
+//
+// A pass is a chain of legs, each with its airspeed and altitude along it; time comes from
+// flying each foot at its airspeed. Touchdown to rotate (about 6 s) and rotate to 300 ft
+// (about 13 s) are the student's stopwatch times; airspeed builds from 91 at rotation to 120
+// at the crosswind turn.
 //
 // x runs down the runway in the landing direction from the threshold, y to the left of it
 // (the pattern side), in feet. Altitudes are AGL.
@@ -20,17 +24,11 @@ const NM = 6076;
 export const RUNWAY = { length: 5000, width: 150, number: '13', reciprocal: '31', heading: 130, field: 'Cabaniss' };
 export const CALL_SIGN = 'MNTNA 12';
 export const ABEAM = NM;
+const R = NM / 2; // both turns
 const TOUCHDOWN_X = 500;
-const TURN_X = TOUCHDOWN_X + 870 + 2425 + 1372; // the crosswind turn, at 500 ft on the upwind
-const XW_R = 2207; // 30° AOB at 120 KIAS
-const THE_180_X = 0; // abeam the numbers
-const APPROACH_X = THE_180_X - 3 * 120 * KT; // three seconds on
-const ROLLOUT_X = -1200; // on final, 1,000-1,200 ft from the threshold
-// The approach turn's two quarters, wide then tighter, so that it begins just past the numbers,
-// ends 1,200 ft short of the threshold, and is a mile across.
-const APP_R1 = (ABEAM + (APPROACH_X - ROLLOUT_X)) / 2;
-const APP_R2 = ABEAM - APP_R1;
-const WAVEOFF_X = ROLLOUT_X + (50 / 250) * (TOUCHDOWN_X - ROLLOUT_X); // 200 ft on the SSE final
+const TURN_X = RUNWAY.length + 1000; // the crosswind turn
+const GROOVE_X = -1200; // the groove, and abeam it the 180
+const WAVEOFF_X = GROOVE_X + (50 / 250) * (TOUCHDOWN_X - GROOVE_X); // 200 ft on the SSE final
 
 export const SCENARIOS = [
   { id: 'approach', label: 'Approach flap' },
@@ -73,42 +71,37 @@ function legs(id) {
   if (sse) {
     // From the SSE wave-off at 200 ft on the last pass's final.
     L({ id: 'waveoff', phase: 'SSE wave-off', line: 2600, kias: flat(110), alt: [[0, 200], [0.12, 192], [1, 300]] });
-    L({ id: 'up2', phase: 'Upwind', toX: TURN_X, kias: flat(110), alt: [[0, 300], [1, 400]] });
+    L({ id: 'up2', phase: 'Upwind', toX: TURN_X, kias: flat(110), alt: [[0, 300], [1, 500]] });
   } else {
     L({ id: 'roll', phase: 'Touch-and-go', line: 870, kias: [[0, 90], [0.35, 82], [1, 91]], alt: flat(0) });
-    L({ id: 'climb', phase: 'Upwind', line: 2425, kias: [[0, 91], [0.6, 120], [1, 120]], alt: [[0, 0], [0.1, 0], [1, 300]] });
+    // Rotate to 300 ft in 13 s, gathering speed slowly.
+    L({ id: 'climb', phase: 'Upwind', line: 2150, kias: [[0, 91], [1, 105]], alt: [[0, 0], [0.1, 0], [1, 300]] });
     L({
       id: 'up2', phase: 'Upwind', toX: TURN_X,
-      kias: caseN === 1 ? [[0, 120], [0.35, 104], [1, 110]] : flat(120),
-      alt: caseN === 1 ? [[0, 300], [1, 380]] : [[0, 300], [1, 500]],
+      kias: caseN === 1 ? [[0, 105], [0.3, 103], [1, 110]] : [[0, 105], [1, 120]],
+      // 500 ft about 1,700 ft on, then level until the turn.
+      alt: caseN === 1 ? [[0, 300], [1, 420]] : [[0, 300], [0.66, 500], [1, 500]],
     });
   }
-  // Climbing on one engine in the crosswind: 110 KIAS, slower.
+  // Climbing on one engine in the crosswind: 110 KIAS.
   const lost = sse || caseN === 1 || caseN === 2;
-  const xwFrom = sse ? 400 : caseN === 1 ? 380 : 500;
-  let xwMid;
+  const xwFrom = caseN === 1 ? 420 : 500;
   if (caseN === 2) {
-    // Roll wings level to analyse, then continue the turn.
-    L({ id: 'xw1', phase: 'Crosswind', arc: XW_R, angle: Math.PI / 4, kias: [[0, 120], [1, 116]], alt: [[0, 500], [1, 560]] });
-    L({ id: 'xwLevel', phase: 'Crosswind', line: 1100, kias: [[0, 116], [1, 110]], alt: [[0, 560], [1, 580]] });
-    L({ id: 'xw1b', phase: 'Crosswind', arc: XW_R, angle: Math.PI / 4, kias: flat(110), alt: [[0, 580], [1, 620]] });
-    xwMid = 620;
+    // Roll wings level to analyse, then continue the turn, a little tighter, to a mile abeam.
+    L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI / 4, kias: [[0, 120], [1, 116]], alt: [[0, 500], [1, 560]] });
+    L({ id: 'xwLevel', phase: 'Crosswind', line: 1100, kias: [[0, 116], [1, 110]], alt: [[0, 560], [1, 590]] });
+    L({ id: 'xw1b', phase: 'Crosswind', arcToY: ABEAM, kias: flat(110), alt: [[0, 590], [0.85, 800], [1, 800]] });
   } else {
-    xwMid = xwFrom + (800 - xwFrom) * 0.4;
-    L({ id: 'xw1', phase: 'Crosswind', arc: XW_R, angle: Math.PI / 2, kias: flat(lost ? 110 : 120), alt: [[0, xwFrom], [1, xwMid]] });
+    L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI, kias: flat(lost ? 110 : 120), alt: [[0, xwFrom], [0.85, 800], [1, 800]] });
   }
-  const xwHigh = xwMid + (800 - xwMid) * 0.45;
-  L({ id: 'xwLeg', phase: 'Crosswind', toY: ABEAM - XW_R, kias: flat(lost ? 110 : 120), alt: [[0, xwMid], [1, xwHigh]] });
-  L({ id: 'xw2', phase: 'Crosswind', arc: XW_R, angle: Math.PI / 2, kias: flat(lost ? 110 : 120), alt: [[0, xwHigh], [0.8, 800], [1, 800]] });
-  L({ id: 'dw', phase: 'Downwind', toX: APPROACH_X, kias: lost ? [[0, 110], [0.25, 120], [1, 120]] : flat(120), alt: flat(800) });
-  // The approach turn: the 90 at 500 ft and 110 KIAS, final at 250 ft. On one engine 110
+  L({ id: 'dw', phase: 'Downwind', toX: GROOVE_X, kias: lost ? [[0, 110], [0.25, 120], [1, 120]] : flat(120), alt: flat(800) });
+  // The approach turn: the 90 at 500 ft and 110 KIAS, the groove at 250 ft. On one engine 110
   // minimum to the threshold; without flaps, final at 110 and the threshold at 105.
   const single = sse || caseN >= 1;
   const finalK = single || id === 'noflap' ? 110 : 105;
   const crossK = single ? 110 : id === 'noflap' ? 105 : 95;
-  L({ id: 'app1', phase: 'Approach turn', arc: APP_R1, angle: Math.PI / 2, kias: caseN === 4 ? [[0, 120], [0.3, 113], [1, 110]] : [[0, 120], [1, 110]], alt: [[0, 800], [1, 500]] });
-  L({ id: 'app2', phase: 'Approach turn', arc: APP_R2, angle: Math.PI / 2, kias: [[0, 110], [1, finalK]], alt: [[0, 500], [1, 250]] });
-  const toThreshold = (0 - ROLLOUT_X) / (TOUCHDOWN_X - ROLLOUT_X);
+  L({ id: 'app', phase: 'Approach turn', arc: R, angle: Math.PI, kias: [[0, 120], [0.5, 110], [1, finalK]], alt: [[0, 800], [0.5, 500], [1, 250]] });
+  const toThreshold = (0 - GROOVE_X) / (TOUCHDOWN_X - GROOVE_X);
   if (sse) L({ id: 'final', phase: 'Final', toX: WAVEOFF_X, kias: flat(110), alt: [[0, 250], [1, 200]] });
   else L({ id: 'final', phase: 'Final', toX: TOUCHDOWN_X, kias: [[0, finalK], [toThreshold, crossK], [1, crossK - 5]], alt: [[0, 250], [toThreshold, 20], [1, 0]] });
   if (caseN) L({ id: 'rollout', phase: 'SSE full stop', line: 2600, kias: [[0, 105], [1, 12]], alt: flat(0) });
@@ -127,6 +120,11 @@ function fly(id) {
   const seg = {};
   for (const leg of spec) {
     let len;
+    if (leg.arcToY !== undefined) {
+      // A left turn on to the downwind heading, its radius set so it rolls out at that y.
+      leg.angle = Math.PI - psi;
+      leg.arc = (leg.arcToY - y) / (1 + Math.cos(psi));
+    }
     if (leg.line) len = leg.line;
     else if (leg.arc) len = leg.arc * leg.angle;
     else if (leg.toX !== undefined) len = Math.abs(leg.toX - x);
@@ -301,11 +299,12 @@ export function buildPass(id, engine = 'left') {
       const t400 = atAlt('up2', 400);
       add(t400, 'PF', 'say', 'Clear left, going left', { technique: true });
       add(t400 + 1.4, 'PM', 'say', 'Clear right', { ref: FTI('p. 1-31') });
+      add(atAlt('up2', 500), 'PF', 'do', 'Level at 500 ft until the crosswind turn, power as required', { ref: FTI('p. 1-36'), set: { power: 'As required' } });
     }
   }
   const txw = start('xw1');
   mark(txw, 'Crosswind', 'crosswind');
-  if (!single || caseN >= 2) add(txw, 'PF', 'do', 'Crosswind turn: 30° AOB maximum, 120 KIAS', { ref: FTI('p. 1-31'), set: { power: 'As required' } });
+  if (!single || caseN >= 2) add(txw, 'PF', 'do', 'Crosswind turn at 500 ft, 1,000 ft past the departure end: 120 KIAS, 30° AOB maximum', { ref: FTI('p. 1-31'), set: { power: 'As required' } });
   else add(txw, 'PF', 'do', 'Crosswind turn, 110 KIAS climbing', { ref: FTI('p. 1-41') });
 
   // ---- Passing 600 ft: flaps approach and the Landing Checklist (gear already down).
@@ -338,7 +337,7 @@ export function buildPass(id, engine = 'left') {
     if (!caseN) add(tdw + 2.5, 'PF', 'do', 'Landing Checklist, spacing, trim', { technique: true });
     add(tdw + 7, 'PF', 'do', 'Rudder trim centered by the 180', { ref: FTI('p. 1-30') });
   }
-  const t180 = atX('dw', THE_180_X);
+  const t180 = start('app'); // abeam the groove
   quiet = [t180 - 0.4, t180 + 7];
   let busyUntil = 0;
   if (caseN === 3) {
@@ -368,22 +367,21 @@ export function buildPass(id, engine = 'left') {
   add(t180 - 0.4, 'PF', 'do', 'Three green lights', { ref: FTI('p. 1-31') });
   add(t180, 'PM', 'say', `${RUNWAY.field} Tower, ${CALL_SIGN}, left 180, three down and locked, ${intent}.`, { radio: true, ref: APPB('p. B-4') });
   add(t180 + 4.8, 'Tower', 'say', `${CALL_SIGN}, runway ${RUNWAY.number}, ${tower}.`, { radio: true, generated: true });
-  const tTurn = start('app1');
-  mark(tTurn, 'Approach turn', 'approach');
+  const tTurn = t180 + 0.3;
   const oneEngineTurn = sse || (caseN >= 1 && caseN <= 3);
   if (oneEngineTurn) add(tTurn, 'PF', 'do', 'Approach turn: 110 KIAS minimum to the 90', { ref: FTI('p. 1-40'), set: { power: `${caseN >= 4 ? 'Both' : Good} as required` } });
   else {
     add(tTurn, 'PF', 'do', 'Approach turn: reduce power, continuous descending, decelerating turn, 30° AOB maximum', { ref: FTI('p. 1-32'), set: { power: '~250 ft-lbs' } });
-    add(tTurn + 1.2, 'PF', 'do', 'PPTTT, 4 seconds up trim, stare at the PFD, about 250 ft-lbs', { technique: true });
+    add(tTurn + 1.2, 'PF', 'do', 'Power, pitch, trim, turn, talk. 4 seconds up trim, stare at the PFD, about 250 ft-lbs', { technique: true });
   }
   if (caseN === 4) {
-    const t0 = atF('app1', 0.25);
+    const t0 = atF('app', 0.12);
     failure(t0);
     add(t0 + 0.8, 'PF', 'do', 'Power on the good engine, 110 KIAS minimum, nearly center the ball, continue the turn. Gear stays down', { ref: FTI('p. 1-40'), set: { power: `${Good} as required` } });
     shutdown(t0 + 3);
   }
 
-  const t90 = start('app2');
+  const t90 = atF('app', 0.5);
   mark(t90, 'The 90', 'the90');
   add(t90, 'PF', 'say', 'Down and locked', { technique: true, note: 'Look at the runway now' });
   if (id === 'full') add(t90 + 1.6, 'PF', 'do', 'Flaps down, after the 90 and before rolling onto final', { ref: FTI('p. 1-34'), set: { flaps: 'Down' } });
@@ -393,16 +391,16 @@ export function buildPass(id, engine = 'left') {
     add(t0 + 0.8, 'PF', 'do', 'Slight power on the good engine, 110 KIAS to the threshold, aircraft control first', { ref: FTI('p. 1-40'), set: { power: `${Good} as required` } });
     busyUntil = shutdown(t0 + 2.6) + 1.4;
   }
-  const tReview = Math.max(atAlt('app2', 300), busyUntil);
+  const tReview = Math.max(atAlt('app', 300), busyUntil);
   add(tReview, 'PF', 'say', 'Props full forward, down and locked, review me complete.', { ref: FTI('p. 1-32'), set: { props: 'Full forward' } });
   add(tReview + 3.4, 'PM', 'say', `Reviewed complete, cleared ${cleared}.`, { ref: FTI('p. 1-32') });
 
   // ---- Final.
   const tFinal = start('final');
-  mark(tFinal, 'Final', 'final');
+  mark(tFinal, 'The groove', 'groove');
   const finalK = single || id === 'noflap' ? 110 : 105;
   const crossK = single ? 110 : id === 'noflap' ? 105 : 95;
-  add(tFinal, 'PF', 'do', `Final: 250 ft, ${finalK} KIAS, aim at the numbers`, { ref: FTI(single ? 'p. 1-41' : id === 'noflap' ? 'p. 1-33' : 'p. 1-32'), set: { power: 'As required' } });
+  add(tFinal, 'PF', 'do', `The groove: 250 ft, ${finalK} KIAS, 1,200 ft from the threshold, aim at the numbers`, { ref: FTI(single ? 'p. 1-41' : id === 'noflap' ? 'p. 1-33' : 'p. 1-32'), set: { power: 'As required' } });
   if (sse) mark(duration, 'SSE wave-off (200 ft AGL)', 'waveoffEnd');
   else add(atX('final', 0), 'PF', 'do', `Cross the threshold at ${crossK} KIAS, slowly close the power levers, flare`, { ref: FTI(single ? 'p. 1-41' : 'p. 1-33'), set: { power: 'Closing to idle' } });
   if (caseN) {
@@ -443,4 +441,4 @@ export function buildPass(id, engine = 'left') {
   return { id, engine, duration, events, marks: placed, track, stateAt };
 }
 
-export const GEOMETRY = { TOUCHDOWN_X, TURN_X, XW_R, APPROACH_X, ROLLOUT_X, APP_R1, APP_R2, WAVEOFF_X };
+export const GEOMETRY = { TOUCHDOWN_X, TURN_X, GROOVE_X, R, WAVEOFF_X };

@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ABEAM, CALL_SIGN, GEOMETRY, RUNWAY, SCENARIOS, buildPass } from './patternModel';
 
 const SPEEDS = [1, 2, 4];
-const { APPROACH_X, APP_R1, TURN_X, XW_R } = GEOMETRY;
+const { GROOVE_X, R, TURN_X } = GEOMETRY;
 
 // ---- The T-44C from above, in feet, nose to the right: white, with the international orange
 // of the Navy trainer on the nose, wingtips and tail.
@@ -53,8 +53,9 @@ function T44C({ aob, dead }) {
 
 // ---- The pattern from above. Feet, landing direction to the right, the pattern above.
 const PAD = 800;
-const LEFT = APPROACH_X - APP_R1 - PAD;
-const VIEW = { x: LEFT, y: -(ABEAM + PAD), w: TURN_X + XW_R + 1600 - LEFT, h: ABEAM + 2 * PAD + 200 };
+const LEFT = GROOVE_X - R - PAD;
+// Case 2's wings-level pause carries the crosswind turn out a little further.
+const VIEW = { x: LEFT, y: -(ABEAM + PAD), w: TURN_X + R + 1500 - LEFT, h: ABEAM + 2 * PAD + 200 };
 const AC_SCALE = 26;
 const LABEL_AT = {
   touchdown: [-120, 380, 'end'],
@@ -63,9 +64,8 @@ const LABEL_AT = {
   crosswind: [300, 0, 'start'],
   downwind: [0, -300, 'middle'],
   the180: [0, -300, 'middle'],
-  approach: [-200, -300, 'end'],
   the90: [260, 90, 'start'],
-  final: [0, 380, 'middle'],
+  groove: [0, -300, 'middle'],
   fail: [0, -300, 'middle'],
   fullstop: [0, -300, 'middle'],
   waveoff: [0, 380, 'middle'],
@@ -110,28 +110,28 @@ function PatternMap({ pass, s }) {
   );
 }
 
-// ---- The flight's numbers, in one line.
-function Numbers({ s, single }) {
+// ---- The flight's numbers, a box each.
+function Gauges({ s, single }) {
   const vsi = Math.round(s.vsi / 50) * 50;
   const cells = [
-    ['', s.phase, 'ptw-num--phase'],
-    ['KIAS', Math.round(s.kias)],
-    ['ft AGL', Math.max(0, Math.round(s.alt / 10) * 10)],
-    ['ft/min', `${vsi > 0 ? '+' : ''}${vsi}`],
-    ['AOB', `${Math.round(s.aob)}°`],
-    ['HDG', String(Math.round(s.hdg) || 360).padStart(3, '0')],
-    ['Flaps', s.flaps],
-    ['Gear', s.gear],
-    ['Props', s.props],
-    ['Power', s.power],
-    ...(single ? [['Engines', s.engines]] : []),
+    ['Leg', s.phase, ''],
+    ['Airspeed', Math.round(s.kias), 'KIAS'],
+    ['Altitude', Math.max(0, Math.round(s.alt / 10) * 10), 'ft AGL'],
+    ['Vertical speed', `${vsi > 0 ? '+' : ''}${vsi}`, 'ft/min'],
+    ['Bank', `${Math.round(s.aob)}°`, s.aob >= 1 ? 'left' : ''],
+    ['Heading', String(Math.round(s.hdg) || 360).padStart(3, '0'), ''],
+    ['Flaps', s.flaps, ''],
+    ['Gear', s.gear, ''],
+    ['Prop levers', s.props, ''],
+    ['Power', s.power, ''],
+    ...(single ? [['Engines', s.engines, '']] : []),
   ];
   return (
-    <dl className="ptw-nums">
-      {cells.map(([k, v, cls]) => (
-        <div key={k || 'phase'} className={`ptw-num ${cls || ''}`}>
-          {k && <dt>{k}</dt>}
-          <dd>{v}</dd>
+    <dl className="ptw-gauges">
+      {cells.map(([k, v, unit]) => (
+        <div key={k} className="ptw-gauge">
+          <dt>{k}</dt>
+          <dd><span className="ptw-gauge-value">{v}</span>{unit && <span className="ptw-gauge-unit"> {unit}</span>}</dd>
         </div>
       ))}
     </dl>
@@ -254,9 +254,9 @@ export default function PatternWork() {
         </label>
         <span className="ptw-pass">Pass {pass}</span>
       </div>
-      <Numbers s={s} single={single} />
       <Comms pass={model} now={t} speed={speed} />
       <div className="ptw-card">
+        <Gauges s={s} single={single} />
         <PatternMap pass={model} s={s} />
       </div>
       <p className="ptw-foot">
