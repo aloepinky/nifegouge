@@ -851,6 +851,18 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   PF/PM), `num` that column's number. The T-54A poster has no target covering a whole panel:
   each control answers for its panel (`Engine Instruments`, `Fuel Panel`, `Lights`…).
 
+## T-44C Pattern Work
+
+`/t44c/pattern` (`practice/t44c/pattern/`, since 2026-11-19): a model flying touch-and-goes round a
+5,000 ft runway (Cabaniss 13, left traffic, no wind), saying the calls as it goes. `patternModel.js`
+is pure and tested: each leg lasts the mean of the user's two stopwatch passes (`LAPS`, a lap
+named for the mark that starts it), shapes and numbers are the ME FTI's (Ch. 1 Pattern Work,
+App. B, App. F Landing Checklist), and `technique` lines are the user's pattern sketch. The
+approach turn is a half circle in its lap's time at 120 to 105 KIAS, which sets the distance
+abeam; bank is worked out from speed and radius. Its spoken lines are recorded with the Voice
+Checklists' (`tools/t44c-voice-record.js`, Tower as Danielle); a line without a clip uses the
+browser's voice.
+
 ## Page views
 
 The site counts its own views; Netlify sees only a visit's first page. `src/components/pageviews.js`

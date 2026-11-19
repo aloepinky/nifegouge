@@ -73,6 +73,7 @@ const T44CDiscuss = page(() => import('./components/T44CDiscuss.js'));
 const T44CBriefs = page(() => import('./components/T44CBriefs.js'));
 const T44CDocs = page(() => import('./components/T44CDocs.js'));
 const T44CPractice = page(() => import('./components/practice/t44c/T44CPractice.js'));
+const T44CPattern = page(() => import('./components/practice/t44c/pattern/PatternWork.js'));
 const T54ADiscuss = page(() => import('./components/T54ADiscuss.js'));
 const T54AAbout = page(() => import('./components/T54AAbout.js'));
 const T54AEPsLimits = page(() => import('./components/T54AEPsLimits.js'));
@@ -195,6 +196,7 @@ function App() {
         <Route path="/t44c/discuss/*" element={<T44CDiscuss />} />
         <Route path="/t44c/briefs/*" element={<T44CBriefs />} />
         <Route path="/t44c/practice" element={<T44CPractice />} />
+        <Route path="/t44c/pattern" element={<T44CPattern />} />
         <Route path="/t54a" element={<Navigate to="/t54a/about" replace />} />
         <Route path="/t54a/about" element={<T54AAbout />} />
         <Route path="/t54a/eps-limits" element={<T54AEPsLimits />} />

@@ -29,7 +29,8 @@ const OUT = path.join(ROOT, 'public', 'voice', 't44c');
 const MANIFEST = path.join(T44C, 'voiceClips.json');
 
 // One voice a seat, so the PM, the PF and the observer can be told apart.
-const VOICES = { PM: 'Matthew', PF: 'Stephen', OBS: 'Ruth' };
+// Tower speaks only on the Pattern Work page (practice/t44c/pattern/patternModel.js).
+const VOICES = { PM: 'Matthew', PF: 'Stephen', OBS: 'Ruth', Tower: 'Danielle' };
 const ENGINE = 'generative';
 const REGION = 'us-east-1';
 const PRICE_PER_MILLION = 30; // generative, aws.amazon.com/polly/pricing (2026-11-12)
@@ -70,6 +71,14 @@ const find = (id) => T44C_HOLLYWOOD.find((p) => p.id === id);
 const lines = ['pitot', 'full'].flatMap((antiIce) => procs.flatMap((p) => scriptFor(p, { antiIce, find })));
 for (const l of lines) {
   if (l.kind !== 'say' || !l.say) continue;
+  const key = `${l.seat}|${l.say}`;
+  if (wanted.has(key)) continue;
+  const voice = VOICES[l.seat];
+  wanted.set(key, { seat: l.seat, text: l.say, voice, file: `${hash(`${voice}|${ENGINE}|${l.say}`)}.mp3` });
+}
+// The Pattern Work page's calls, Tower's included.
+const { voiceLines } = loadSrc(path.join(ROOT, 'src', 'components', 'practice', 't44c', 'pattern', 'patternModel.js'));
+for (const l of voiceLines()) {
   const key = `${l.seat}|${l.say}`;
   if (wanted.has(key)) continue;
   const voice = VOICES[l.seat];

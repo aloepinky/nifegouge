@@ -11668,3 +11668,430 @@ button.epl-modal-close:hover {
   margin-left: -1px;
   background-color: var(--ink-strong);
 }
+
+/* ===================================================================
+   T-44C Pattern Work (/t44c/pattern, practice/t44c/pattern/)
+   =================================================================== */
+.ptw-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 16px 40px;
+  color: var(--ink);
+}
+
+.ptw-title {
+  margin: 4px 0 4px;
+  font-size: 22px;
+  color: var(--ink-strong);
+}
+
+.ptw-intro {
+  margin: 0 0 10px;
+  max-width: 70ch;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.ptw-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-bottom: 12px;
+}
+
+.ptw-btn {
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ptw-btn:hover {
+  background: var(--wash);
+}
+
+.ptw-btn--go {
+  min-width: 6em;
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--on-brand);
+}
+
+.ptw-btn--go:hover {
+  background: var(--btn-2);
+}
+
+.ptw-field,
+.ptw-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.ptw-select {
+  font: inherit;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.ptw-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.ptw-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ptw-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.ptw-now {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+}
+
+.ptw-now-lap {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.ptw-now-next {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ptw-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.ptw-ground {
+  fill: var(--surface-2);
+}
+
+.ptw-track {
+  fill: none;
+  stroke: var(--line-accent);
+  stroke-width: 40;
+  stroke-dasharray: 160 120;
+}
+
+.ptw-runway {
+  fill: #3d464c;
+}
+
+.ptw-centerline {
+  stroke: #ffffff;
+  stroke-width: 10;
+  stroke-dasharray: 120 80;
+}
+
+.ptw-rwy-number {
+  fill: #ffffff;
+  font-size: 110px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.ptw-map-note,
+.ptw-dim text {
+  fill: var(--ink-faint);
+  font-size: 200px;
+  text-anchor: middle;
+}
+
+.ptw-dim text {
+  text-anchor: start;
+}
+
+.ptw-dim line {
+  stroke: var(--line-strong);
+  stroke-width: 14;
+  stroke-dasharray: 60 60;
+}
+
+.ptw-mark circle {
+  fill: var(--surface);
+  stroke: var(--ink-faint);
+  stroke-width: 24;
+}
+
+.ptw-mark text {
+  fill: var(--ink-muted);
+  font-size: 230px;
+}
+
+.ptw-mark--passed circle {
+  fill: var(--ink-accent);
+  stroke: var(--ink-accent);
+}
+
+.ptw-mark--passed text {
+  fill: var(--ink-strong);
+}
+
+.ptw-plane {
+  fill: var(--ink-strong);
+  stroke: var(--surface);
+  stroke-width: 14;
+}
+
+.ptw-plane-shadow {
+  fill: var(--ink);
+  opacity: 0.15;
+}
+
+.ptw-gauges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 6px;
+  margin: 10px 0 0;
+}
+
+.ptw-gauge {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-2);
+  min-width: 0;
+}
+
+.ptw-gauge dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+}
+
+.ptw-gauge dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.ptw-gauge-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.ptw-gauge-unit {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.ptw-watch {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.ptw-watch-time {
+  font-size: 30px;
+  font-weight: 300;
+  color: var(--ink-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.ptw-watch-pass {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.ptw-laps {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ptw-laps th,
+.ptw-laps td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+}
+
+.ptw-laps th:first-child {
+  text-align: left;
+  font-weight: normal;
+}
+
+.ptw-laps thead th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+  font-weight: normal;
+}
+
+.ptw-laps tfoot th,
+.ptw-laps tfoot td {
+  border-bottom: none;
+  color: var(--ink-muted);
+}
+
+.ptw-lap--now {
+  background: var(--wash);
+}
+
+.ptw-lap--now th,
+.ptw-lap--now td {
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.ptw-link {
+  font: inherit;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink-accent);
+  cursor: pointer;
+  text-align: left;
+}
+
+.ptw-link:hover {
+  text-decoration: underline;
+}
+
+.ptw-script {
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  position: sticky;
+  top: 12px;
+  padding-top: 4px;
+}
+
+.ptw-script-head {
+  margin: 10px 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+}
+
+.ptw-script ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ptw-line {
+  display: grid;
+  grid-template-columns: 3.2em 3.6em minmax(0, 1fr);
+  gap: 6px;
+  padding: 4px 4px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.ptw-line--ahead {
+  opacity: 0.55;
+}
+
+.ptw-line--now {
+  background: var(--wash);
+  opacity: 1;
+}
+
+.ptw-line-time {
+  font: inherit;
+  font-size: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.ptw-line-time:hover {
+  color: var(--ink-accent);
+  text-decoration: underline;
+}
+
+.ptw-who {
+  font-size: 11px;
+  line-height: 1.9;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+}
+
+.ptw-said {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ptw-line--pf .ptw-said {
+  color: var(--ink-strong);
+}
+
+.ptw-line--pm .ptw-said {
+  color: var(--ink-accent);
+}
+
+.ptw-line--tower .ptw-said,
+.ptw-line--obs .ptw-said {
+  color: var(--ink-muted);
+}
+
+.ptw-line--do .ptw-said {
+  font-style: italic;
+}
+
+.ptw-note,
+.ptw-ref {
+  display: block;
+  font-style: normal;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.ptw-ref {
+  color: var(--ink-faint);
+}
+
+@media (max-width: 860px) {
+  .ptw-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ptw-script {
+    position: static;
+    max-height: 60vh;
+  }
+}
