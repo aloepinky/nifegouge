@@ -20,7 +20,13 @@ const KT = 1.68781; // ft/s per knot
 const G = 32.174;
 const NM = 6076;
 
-export const RUNWAY = { length: 5000, width: 150, number: '13', reciprocal: '31', heading: 130, field: 'Cabaniss' };
+export const RUNWAY = { length: 5000, width: 150, heading: 130 };
+// The two fields, both a 5,000 ft runway 13 with left traffic (Navy Corpus 13L is the
+// north-east one of the pair, so its pattern is outboard). Runway ends from OpenStreetMap.
+export const FIELDS = {
+  kngw: { id: 'kngw', label: 'Cabaniss 13', name: 'Cabaniss', number: '13', reciprocal: '31', ends: [[27.70632, -97.44268], [27.69676, -97.43199]] },
+  kngp: { id: 'kngp', label: 'Navy Corpus 13L', name: 'Navy Corpus', number: '13L', reciprocal: '31R', ends: [[27.695234, -97.2921179], [27.6856223, -97.2813226]] },
+};
 export const CALL_SIGN = 'MNTNA 12';
 export const ABEAM = NM;
 const R = NM / 2; // both turns
@@ -71,8 +77,10 @@ function legs(id) {
 
   if (sse) {
     // From the SSE wave-off at 200 ft on the last pass's final.
-    L({ id: 'waveoff', phase: 'SSE wave-off', line: 2600, kias: flat(110), alt: [[0, 200], [0.12, 192], [1, 300]] });
-    L({ id: 'up2', phase: 'Upwind', toX: TURN_X, kias: flat(110), alt: [[0, 300], [1, 500]] });
+    // Climbing at 110 to 500 ft over the runway, then level there to the crosswind turn at
+    // 120 KIAS (the user: 102 and 110 are climb speeds; level is 120, power as required).
+    L({ id: 'waveoff', phase: 'SSE wave-off', line: 2600, kias: flat(110), alt: [[0, 200], [0.12, 192], [1, 350]] });
+    L({ id: 'up2', phase: 'Upwind', toX: TURN_X, kias: [[0, 110], [0.55, 110], [0.85, 120], [1, 120]], alt: [[0, 350], [0.55, 500], [1, 500]] });
   } else {
     L({ id: 'roll', phase: 'Touch-and-go', line: 870, kias: [[0, 90], [0.35, 82], [1, 91]], alt: flat(0) });
     // Rotate to 300 ft in 13 s, at 120 KIAS within a few seconds of rotating (the user: the
@@ -89,18 +97,21 @@ function legs(id) {
   const lost = sse || caseN === 1 || caseN === 2;
   const xwFrom = caseN === 1 ? 420 : 500;
   if (caseN === 2) {
-    // Roll wings level to analyse, then continue the turn, a little tighter, to a mile abeam.
+    // Roll wings level to analyse, then continue the turn, a little tighter, to a mile abeam,
+    // climbing at 110 to 800 ft, then level at 120.
     L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI / 4, kias: [[0, 120], [1, 116]], alt: [[0, 500], [1, 560]] });
     L({ id: 'xwLevel', phase: 'Crosswind', line: 1100, kias: [[0, 116], [1, 110]], alt: [[0, 560], [1, 590]] });
-    L({ id: 'xw1b', phase: 'Crosswind', arcToY: ABEAM, kias: flat(110), alt: [[0, 590], [0.85, 800], [1, 800]] });
+    L({ id: 'xw1b', phase: 'Crosswind', arcToY: ABEAM, kias: [[0, 110], [0.6, 110], [1, 120]], alt: [[0, 590], [0.6, 800], [1, 800]] });
   } else {
     // Two engines: 1000 ft-lbs climbs a steady 1400 ft/min (the user's figures; NATOPS has no
     // gear-down, approach-flap climb chart), level at 800 ft well before the downwind. One
     // engine climbs slower.
     const level = (((800 - xwFrom) / CLIMB_FPM) * 60 * 120 * KT) / (R * Math.PI);
-    L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI, kias: flat(lost ? 110 : 120), alt: lost ? [[0, xwFrom], [0.85, 800], [1, 800]] : [[0, xwFrom], [level, 800], [1, 800]] });
+    // On one engine: 110 climbing, then level at 800 and back to 120.
+    const xwKias = sse ? [[0, 120], [0.08, 110], [0.7, 110], [0.95, 120], [1, 120]] : lost ? [[0, 110], [0.7, 110], [0.95, 120], [1, 120]] : flat(120);
+    L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI, kias: xwKias, alt: lost ? [[0, xwFrom], [0.7, 800], [1, 800]] : [[0, xwFrom], [level, 800], [1, 800]] });
   }
-  L({ id: 'dw', phase: 'Downwind', toX: GROOVE_X, kias: lost ? [[0, 110], [0.25, 120], [1, 120]] : flat(120), alt: flat(800) });
+  L({ id: 'dw', phase: 'Downwind', toX: GROOVE_X, kias: flat(120), alt: flat(800) });
   // The approach turn: the 90 at 500 ft and 110 KIAS, the groove at 250 ft. On one engine 110
   // minimum to the threshold; without flaps, final at 110 and the threshold at 105.
   const single = sse || caseN >= 1;
@@ -173,18 +184,29 @@ function fly(id) {
   return { pts, seg, duration: t };
 }
 
-// Pitch: the flight path angle plus an angle of attack. The attack angle is an estimate (no
-// NATOPS figure gives it): about 2.5° at 120 KIAS clean, growing as the square of the slowing,
-// less with flaps, more with bank. It puts the 1400 ft/min climb at about 9° nose up, inside
-// the FTI's 7-10° (p. 1-35).
+// Pitch: the flight path angle plus an angle of attack. The attack angle is 2° at 150 KIAS
+// clean, from the user's BI pattern gouge (straight and level at 650 ft-lbs +2°, climbing 500
+// ft/min +3°, descending 800 ft/min -1°: each about 2° above the flight path), growing as the
+// square of the slowing and with bank. The flaps' share is an estimate (no source gives it):
+// 1° less with approach flaps, 2° with full. It puts the 1400 ft/min climb at about 9° nose
+// up, inside the FTI's 7-10° (p. 1-35).
+const FLARE_PITCH = 7;
+const FLARE_FROM = 60;
 function pitchOf({ leg, f, alt, kias, vsi, aob, flaps }) {
-  if (leg === 'roll' || leg === 'rollout') return 0;
+  // Touchdown in a takeoff attitude, 7° nose up (the user), then the nose lowered to the runway.
+  if (leg === 'roll' || leg === 'rollout') return Math.max(0, 1 - f / 0.2) * FLARE_PITCH;
   if (leg === 'climb' && alt <= 0) return Math.min(1, f / 0.08) * 7; // rotating
   const v = kias * KT;
   const gamma = (Math.atan2(vsi / 60, v) * 180) / Math.PI;
   const flapsOff = flaps === 'Down' ? 2 : flaps === 'Approach' ? 1 : 0;
-  const alpha = 2.5 * (120 / kias) ** 2 / Math.cos((aob * Math.PI) / 180) - flapsOff;
-  return gamma + alpha;
+  const alpha = 2 * (150 / kias) ** 2 / Math.cos((aob * Math.PI) / 180) - flapsOff;
+  const pitch = gamma + alpha;
+  // The flare: from 60 ft the nose comes up to the takeoff attitude by touchdown.
+  if (leg === 'final' && alt < FLARE_FROM) {
+    const k = 1 - alt / FLARE_FROM;
+    return pitch + (FLARE_PITCH - pitch) * k;
+  }
+  return pitch;
 }
 
 function find(pts, t) {
@@ -198,7 +220,8 @@ function find(pts, t) {
 
 // ---- A pass: where the aircraft is, and what is said and done, by time.
 
-export function buildPass(id, engine = 'left') {
+export function buildPass(id, engine = 'left', fieldId = 'kngw') {
+  const field = FIELDS[fieldId];
   const { pts, seg, duration } = fly(id);
   const sse = id === 'sse';
   const caseN = id.startsWith('case') ? Number(id.slice(4)) : 0;
@@ -206,7 +229,6 @@ export function buildPass(id, engine = 'left') {
   const e = engine;
   const E = cap(e);
   const good = e === 'left' ? 'right' : 'left';
-  const Good = cap(good);
 
   // A leg's own samples (its first point is the last leg's end).
   const leg = (legId) => pts.slice(seg[legId].start, seg[legId].end + 1).filter((p, i) => i > 0 || p.leg === legId);
@@ -223,6 +245,11 @@ export function buildPass(id, engine = 'left') {
     return (ps.find((p) => (p.x - x) * dir >= 0) || ps[ps.length - 1]).t;
   };
 
+  // The user's torques are for the approach-flap pattern; with no flaps or full flaps the
+  // power is different, so those patterns show none (the user, 2026-11-19).
+  const torques = !(id === 'noflap' || id === 'full');
+  const tq = (v) => (torques ? v : 'As required');
+  const back = torques ? 'power back to 600 ft-lbs for 120 KIAS' : 'power back for 120 KIAS';
   const events = [];
   const add = (t, who, kind, text, extra = {}) => events.push({ t, who, kind, text, ...extra });
   const marks = [];
@@ -307,7 +334,7 @@ export function buildPass(id, engine = 'left') {
     mark(t300, 'Props 1900 (300 ft AGL)', 'p300');
     if (caseN === 1) {
       failure(t300);
-      add(t300 + 0.8, 'PF', 'do', 'Power up, rudder up, clean up', { ref: APPF('Emergency Procedures', 'p. F-28'), set: { power: `${Good} max` } });
+      add(t300 + 0.8, 'PF', 'do', 'Power up, rudder up, clean up', { ref: APPF('Emergency Procedures', 'p. F-28'), set: { power: 'Max' } });
       add(t300 + 2.2, 'PF', 'do', 'Landing gear up', { ref: FTI('p. 1-37'), set: { gear: 'Up' } });
       add(t300 + 3.4, 'PF', 'do', 'At 102 KIAS raise the nose, accelerate to 110, 5° bank into the good engine', { ref: FTI('p. 1-38') });
       const t = shutdown(t300 + 5.5);
@@ -319,17 +346,23 @@ export function buildPass(id, engine = 'left') {
       const t400 = atAlt('up2', 400);
       add(t400, 'PF', 'say', 'Clear left, going left', { technique: true });
       add(t400 + 1.4, 'PM', 'say', 'Clear right', { ref: FTI('p. 1-31') });
-      add(atAlt('up2', 500), 'PF', 'do', 'Level at 500 ft until the crosswind turn: power back to 600 ft-lbs for 120 KIAS', { ref: FTI('p. 1-36'), set: { power: '600 ft-lbs' } });
+      add(atAlt('up2', 500), 'PF', 'do', `Level at 500 ft until the crosswind turn: ${back}`, { ref: FTI('p. 1-36'), set: { power: tq('600 ft-lbs') } });
     }
   }
   const txw = start('xw1');
   mark(txw, 'Crosswind', 'crosswind');
-  if (!single || caseN >= 2) add(txw, 'PF', 'do', 'Crosswind turn at 500 ft, 1,000 ft past the departure end, 120 KIAS', { ref: FTI('p. 1-31'), set: { power: '1000 ft-lbs' } });
-  else add(txw, 'PF', 'do', 'Crosswind turn, 110 KIAS climbing', { ref: FTI('p. 1-41') });
+  if (!single || caseN >= 2) add(txw, 'PF', 'do', 'Crosswind turn at 500 ft, 1,000 ft past the departure end, 120 KIAS', { ref: FTI('p. 1-31'), set: { power: tq('1000 ft-lbs') } });
+  else add(txw, 'PF', 'do', 'Crosswind turn, climbing at 110 KIAS', { ref: FTI('p. 1-41'), set: { power: 'Max continuous' } });
+  // On one engine: climb to pattern altitude, then accelerate to 120 KIAS and reduce power.
+  if (sse || caseN === 1 || caseN === 2) {
+    const climbLeg = caseN === 2 ? 'xw1b' : 'xw1';
+    add(atAlt(climbLeg, 800), 'PF', 'do', 'Pattern altitude, then accelerate to 120 KIAS, power as required', { ref: FTI('p. 1-38'), set: { power: 'As required' } });
+  }
+  if (sse) add(atAlt('up2', 500), 'PF', 'do', 'Level at 500 ft until the crosswind turn: 120 KIAS, power as required', { ref: FTI('p. 1-36'), set: { power: 'As required' } });
 
   // Level at 800 ft in the crosswind turn, power back for 120 KIAS.
   if (!(sse || caseN === 1 || caseN === 2)) {
-    add(atAlt('xw1', 800), 'PF', 'do', 'Level at 800 ft: power back to 600 ft-lbs for 120 KIAS', { ref: FTI('p. 1-31'), set: { power: '600 ft-lbs' } });
+    add(atAlt('xw1', 800), 'PF', 'do', `Level at 800 ft: ${back}`, { ref: FTI('p. 1-31'), set: { power: tq('600 ft-lbs') } });
   }
 
   // ---- Passing 600 ft: flaps approach and the Landing Checklist (gear already down).
@@ -347,7 +380,7 @@ export function buildPass(id, engine = 'left') {
     const t0 = start('xwLevel');
     failure(t0 - 0.6);
     add(t0, 'PF', 'do', 'Roll wings level to analyse', { ref: FTI('p. 1-39') });
-    add(t0 + 1.2, 'PF', 'do', 'Power up, rudder up, clean up', { ref: APPF('Emergency Procedures', 'p. F-28'), set: { power: `${Good} max`, gear: 'Up' } });
+    add(t0 + 1.2, 'PF', 'do', 'Power up, rudder up, clean up', { ref: APPF('Emergency Procedures', 'p. F-28'), set: { power: 'Max', gear: 'Up' } });
     add(t0 + 3, 'PF', 'do', 'Nearly center the ball (¼ to ½ out toward the good engine), 102 KIAS minimum, 110 VYSE. Continue the turn', { ref: FTI('p. 1-39') });
     const t = shutdown(start('xw1b') + 1, { check: true });
     add(t + 2, 'PF', 'do', 'Declare an emergency. Climb to pattern altitude, then 120 KIAS', { ref: FTI('p. 1-39') });
@@ -356,7 +389,7 @@ export function buildPass(id, engine = 'left') {
   // ---- Downwind.
   const tdw = start('dw');
   mark(tdw, 'Downwind', 'downwind');
-  if (sse || caseN === 1 || caseN === 2) add(tdw, 'PF', 'do', 'Pattern altitude, then accelerate to 120 KIAS', { ref: FTI('p. 1-38'), set: { power: `${Good} as required` } });
+  if (sse || caseN === 1 || caseN === 2) add(tdw, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, about a mile abeam', { ref: FTI('p. 1-31') });
   else {
     add(tdw, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, trimmed, about a mile abeam', { ref: FTI('p. 1-31') });
     add(tdw + 7, 'PF', 'do', 'Rudder trim centered by the 180', { ref: FTI('p. 1-30') });
@@ -367,7 +400,7 @@ export function buildPass(id, engine = 'left') {
   if (caseN === 3) {
     const t0 = tdw + 1.5;
     failure(t0);
-    add(t0 + 0.8, 'PF', 'do', 'Power on the good engine, nearly center the ball, 120 KIAS and pattern altitude', { ref: FTI('p. 1-39'), set: { power: `${Good} as required` } });
+    add(t0 + 0.8, 'PF', 'do', 'Power on the good engine, nearly center the ball, 120 KIAS and pattern altitude', { ref: FTI('p. 1-39'), set: { power: 'As required' } });
     add(t0 + 2.4, 'PF', 'do', 'Short of midfield: clean up, gear and flaps up', { ref: FTI('p. 1-39'), set: { gear: 'Up', flaps: 'Up' } });
     busyUntil = shutdown(t0 + 4) + 1.6;
     add(busyUntil - 0.8, 'PF', 'do', 'Landing Checklist complete no later than the 90, 110 KIAS minimum to the 90', { ref: FTI('p. 1-40') });
@@ -389,22 +422,22 @@ export function buildPass(id, engine = 'left') {
   const tower = sse ? 'cleared low approach' : caseN ? 'cleared to land' : 'cleared for the option';
   mark(t180, 'The 180', 'the180');
   add(t180 - 0.4, 'PF', 'do', 'Three green lights', { ref: FTI('p. 1-31') });
-  add(t180, 'PM', 'say', `${RUNWAY.field} Tower, ${CALL_SIGN}, left 180, three down and locked, ${intent}.`, { radio: true, ref: APPB('p. B-4') });
-  add(t180 + 4.8, 'Tower', 'say', `${CALL_SIGN}, runway ${RUNWAY.number}, ${tower}.`, { radio: true, generated: true });
+  add(t180, 'PM', 'say', `${field.name} Tower, ${CALL_SIGN}, left 180, three down and locked, ${intent}.`, { radio: true, ref: APPB('p. B-4') });
+  add(t180 + 4.8, 'Tower', 'say', `${CALL_SIGN}, runway ${field.number}, ${tower}.`, { radio: true, generated: true });
   // Every clearance is read back by the PM and confirmed by the PF (NATOPS: ATC clearance).
   const readback = sse ? 'Cleared low approach' : caseN ? 'Cleared to land' : 'Cleared for the option';
-  add(t180 + 8.4, 'PM', 'say', `${readback}, runway ${RUNWAY.number}, ${CALL_SIGN}.`, { radio: true, generated: true, ref: CALLOUTS });
+  add(t180 + 8.4, 'PM', 'say', `${readback}, runway ${field.number}, ${CALL_SIGN}.`, { radio: true, generated: true, ref: CALLOUTS });
   add(t180 + 11.4, 'PF', 'say', `${readback}.`, { generated: true, ref: CALLOUTS });
   const tTurn = t180 + 0.3;
   const oneEngineTurn = sse || (caseN >= 1 && caseN <= 3);
-  if (oneEngineTurn) add(tTurn, 'PF', 'do', 'Approach turn: 110 KIAS minimum to the 90', { ref: FTI('p. 1-40'), set: { power: `${caseN >= 4 ? 'Both' : Good} as required` } });
+  if (oneEngineTurn) add(tTurn, 'PF', 'do', 'Approach turn: 110 KIAS minimum to the 90', { ref: FTI('p. 1-40'), set: { power: 'As required' } });
   else {
-    add(tTurn, 'PF', 'do', 'Approach turn: reduce power, continuous descending, decelerating turn to the groove', { ref: FTI('p. 1-32'), set: { power: '~250 ft-lbs' } });
+    add(tTurn, 'PF', 'do', 'Approach turn: reduce power, continuous descending, decelerating turn to the groove', { ref: FTI('p. 1-32'), set: { power: tq('~250 ft-lbs') } });
   }
   if (caseN === 4) {
     const t0 = Math.max(atF('app', 0.12), t180 + 12.6); // after the clearance is read back
     failure(t0);
-    add(t0 + 0.8, 'PF', 'do', 'Power on the good engine, 110 KIAS minimum, nearly center the ball, continue the turn. Gear stays down', { ref: FTI('p. 1-40'), set: { power: `${Good} as required` } });
+    add(t0 + 0.8, 'PF', 'do', 'Power on the good engine, 110 KIAS minimum, nearly center the ball, continue the turn. Gear stays down', { ref: FTI('p. 1-40'), set: { power: 'As required' } });
     shutdown(t0 + 3);
   }
 
@@ -413,11 +446,11 @@ export function buildPass(id, engine = 'left') {
   // The 500 ft aural tone (radar altimeter minimums set to 500 ft for pattern work).
   add(t90, 'PF', 'say', 'Down and locked', { ref: CALLOUTS, note: '500 ft tone' });
   add(t90 + 1.4, 'PM', 'say', 'Down and locked', { ref: CALLOUTS });
-  if (id === 'full') add(t90 + 1.6, 'PF', 'do', 'Flaps down, after the 90 and before rolling onto final', { ref: FTI('p. 1-34'), set: { flaps: 'Down' } });
+  if (id === 'full') add(t90 + 1.6, 'PF', 'do', 'Select flaps down after the 90, but before rolling onto final', { ref: FTI('p. 1-34'), set: { flaps: 'Down' } });
   if (caseN === 5) {
     const t0 = t90 + 2;
     failure(t0);
-    add(t0 + 0.8, 'PF', 'do', 'Slight power on the good engine, 110 KIAS to the threshold, aircraft control first', { ref: FTI('p. 1-40'), set: { power: `${Good} as required` } });
+    add(t0 + 0.8, 'PF', 'do', 'Slight power on the good engine, 110 KIAS to the threshold, aircraft control first', { ref: FTI('p. 1-40'), set: { power: 'As required' } });
     busyUntil = shutdown(t0 + 2.6) + 1.4;
   }
   const tReview = Math.max(atAlt('app', 300), busyUntil);
@@ -430,13 +463,13 @@ export function buildPass(id, engine = 'left') {
   const finalK = single || id === 'noflap' ? 110 : 105;
   const crossK = single ? 110 : id === 'noflap' ? 105 : 95;
   add(tFinal, 'PF', 'do', `The groove: 250 ft, ${finalK} KIAS, 1,200 ft from the threshold, aim at the numbers`, { ref: FTI(single ? 'p. 1-41' : id === 'noflap' ? 'p. 1-33' : 'p. 1-32'), set: { power: 'As required' } });
-  if (sse) mark(duration, 'SSE wave-off (200 ft AGL)', 'waveoffEnd');
-  else add(atX('final', 0), 'PF', 'do', `Cross the threshold at ${crossK} KIAS, slowly close the power levers, flare`, { ref: FTI(single ? 'p. 1-41' : 'p. 1-33'), set: { power: 'Closing to idle' } });
+  if (!sse) mark(atX('final', 0), 'Threshold', 'threshold');
+  if (!sse) add(atX('final', 0), 'PF', 'do', `Cross the threshold at ${crossK} KIAS, slowly close the power levers, flare`, { ref: FTI(single ? 'p. 1-41' : 'p. 1-33'), set: { power: 'Closing to idle' } });
   if (caseN) {
     const tr = start('rollout');
     mark(duration, 'SSE full stop', 'fullstop');
     add(tr, 'PF', 'do', 'Power levers idle, both over the detent', { ref: FTI('p. 1-41'), set: { power: 'Idle' } });
-    add(tr + 1.5, 'PF', 'do', `Slowly ease the ${good} engine into reverse. Rudder for yaw, brakes and power for centerline`, { ref: FTI('p. 1-41'), set: { power: `${Good} reverse` } });
+    add(tr + 1.5, 'PF', 'do', `Slowly ease the ${good} engine into reverse. Rudder for yaw, brakes and power for centerline`, { ref: FTI('p. 1-41'), set: { power: 'Reverse' } });
     add(tr + 4.5, 'PF', 'do', `Yoke full forward, aileron into the ${e} engine, to a slow taxi`, { ref: FTI('p. 1-41') });
   }
 
@@ -472,7 +505,33 @@ export function buildPass(id, engine = 'left') {
 
   const placed = marks.map((m) => { const s = stateAt(m.t); return { ...m, x: s.x, y: s.y }; });
   const track = pts.filter((_, i) => i % 6 === 0 || i === pts.length - 1).map((p) => [p.x, p.y]);
-  return { id, engine, duration, events, marks: placed, track, stateAt };
+  // The speeds to remember at each mark, and which differ from the approach-flap pattern's.
+  const speeds = {
+    rotate: { kias: 91 },
+    crosswind: { kias: single ? 110 : 120, differs: single },
+    downwind: { kias: 120 },
+    the90: { kias: 110, note: id === 'full' ? 'Flaps - Down' : null, differs: id === 'full' },
+    groove: { kias: finalK, differs: finalK !== 105 },
+    threshold: { kias: crossK, differs: crossK !== 95 },
+  };
+  return { id, engine, field, duration, events, marks: placed, track, stateAt, speeds, torques };
+}
+
+// ---- On the ground: a field's runway ends, for the satellite view. x runs down the runway
+// on its true bearing from the approach end, y to its left.
+const FT_PER_DEG = 111320 * 3.28084;
+export function siteOf(fieldId) {
+  const [a, b] = FIELDS[fieldId].ends;
+  const cosLat = Math.cos((a[0] * Math.PI) / 180);
+  const bearing = Math.atan2((b[1] - a[1]) * cosLat, b[0] - a[0]); // radians, true
+  // A point of the drawing, in feet, as [lat, lon].
+  const toLatLng = (x, y) => {
+    const left = bearing - Math.PI / 2;
+    const north = x * Math.cos(bearing) + y * Math.cos(left);
+    const east = x * Math.sin(bearing) + y * Math.sin(left);
+    return [a[0] + north / FT_PER_DEG, a[1] + east / (FT_PER_DEG * cosLat)];
+  };
+  return { bearingDeg: (bearing * 180) / Math.PI, lat: a[0], toLatLng };
 }
 
 export const GEOMETRY = { TOUCHDOWN_X, TURN_X, GROOVE_X, R, WAVEOFF_X };

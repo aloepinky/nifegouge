@@ -12047,6 +12047,20 @@ button.epl-modal-close:hover {
   stroke: var(--ink-accent);
 }
 
+.ptw-mark .ptw-mark-tag {
+  font-size: 220px;
+}
+
+.ptw-mark .ptw-mark-speed {
+  font-weight: 600;
+  fill: var(--ink-strong);
+}
+
+/* A speed that differs from the approach-flap pattern's. */
+.ptw-mark .ptw-mark-speed--differs {
+  fill: #d97706;
+}
+
 .ptw-mark .ptw-mark-torque {
   font-style: italic;
   fill: var(--ink-accent);
@@ -12064,6 +12078,118 @@ button.epl-modal-close:hover {
   fill: #d97706;
 }
 
+/* Satellite view: the picture under the drawing, turned to the runway, never filtered (the
+   dark theme inverts every other map's tiles). Text and the track are outlined to read on it. */
+.ptw-mapwrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.ptw-mapwrap .ptw-map {
+  position: relative;
+  z-index: 1;
+}
+
+.ptw-sat {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #1d2a22;
+}
+
+.ptw-sat-turn {
+  position: absolute;
+}
+
+.ptw-sat .leaflet-container {
+  background: #1d2a22;
+}
+
+:root[data-theme="dark"] .ptw-sat .leaflet-tile-pane,
+.ptw-sat .leaflet-tile-pane {
+  filter: none;
+}
+
+.ptw-sat-credit {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.ptw-map--sat text {
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.7);
+  stroke-width: 55px;
+  stroke-linejoin: round;
+}
+
+.ptw-map--sat .ptw-mark text,
+.ptw-map--sat .ptw-notes text,
+.ptw-map--sat .ptw-dim text {
+  fill: #ffffff;
+}
+
+.ptw-map--sat .ptw-notes .ptw-note-head,
+.ptw-map--sat .ptw-mark .ptw-mark-torque {
+  fill: #9fd6ea;
+}
+
+.ptw-map--sat .ptw-mark .ptw-mark-speed {
+  fill: #ffffff;
+}
+
+.ptw-map--sat .ptw-mark .ptw-mark-speed--differs {
+  fill: #ffb54d;
+}
+
+.ptw-map--sat .ptw-track {
+  stroke: #ffffff;
+  stroke-width: 55;
+  opacity: 1;
+}
+
+.ptw-track-under {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 120;
+  stroke-linejoin: round;
+}
+
+.ptw-map--sat .ptw-dim line {
+  stroke: #ffffff;
+  stroke-width: 34;
+  stroke-dasharray: 90 70;
+}
+
+.ptw-map--sat .ptw-dim .ptw-dim-under {
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 90;
+  stroke-dasharray: none;
+}
+
+.ptw-view-switch {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: #ffffff;
+  color: #1d2327;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.ptw-view-switch:hover {
+  background: #eef2f4;
+}
+
 /* The aircraft: paint, so literal colours in both themes. */
 .ptw-ac-white {
   fill: #f4f6f7;
@@ -12075,6 +12201,46 @@ button.epl-modal-close:hover {
   fill: #e5481c;
   stroke: #26343c;
   stroke-width: 0.22;
+}
+
+.ptw-ac-flat {
+  stroke: none;
+}
+
+.ptw-ac-boot {
+  fill: none;
+  stroke: #1d2327;
+  stroke-width: 0.5;
+  stroke-linecap: round;
+}
+
+.ptw-ac-spinner {
+  fill: #c9d0d4;
+  stroke: #26343c;
+  stroke-width: 0.15;
+}
+
+.ptw-ac-post {
+  fill: none;
+  stroke: #f4f6f7;
+  stroke-width: 0.18;
+}
+
+.ptw-ac-insignia-blue {
+  fill: #1f3f7a;
+}
+
+.ptw-ac-insignia-star,
+.ptw-ac-insignia-bar {
+  fill: #ffffff;
+}
+
+.ptw-ac-insignia-red {
+  fill: #c8102e;
+}
+
+.ptw-ac-black {
+  fill: #1d2327;
 }
 
 .ptw-ac-glass {

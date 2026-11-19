@@ -871,7 +871,9 @@ flap, SSE (looped from the SSE wave-off at 200 ft) and Cases 1 to 5 (a touch-and
 simulated failure, an SSE full stop). `patternModel.js` is pure and tested: a pass is a chain
 of legs, each with its airspeed and altitude, timed by flying it; touchdown to rotate and rotate
 to 300 ft keep the user's stopwatch times; 120 KIAS comes a few seconds after rotate.
-`technique` lines are the user's sketch (PPTTT is power, pitch, trim, turn, talk); the cases'
+Two fields, Cabaniss 13 and Navy Corpus 13L (`FIELDS`, runway ends from OpenStreetMap); a
+Satellite view lays the drawing over USGS National Map aerial tiles (Esri's had cloud over
+NGP), turned and scaled to the runway (`siteOf`). `technique` lines are the user's sketch (PPTTT is power, pitch, trim, turn, talk); the cases'
 crew lines are `T44C/t44cCases.js`'s Figure F-1 wording.
 
 ## Page views
