@@ -11732,12 +11732,6 @@ button.epl-modal-close:hover {
   max-width: 100%;
 }
 
-.ptw-pass {
-  margin-left: auto;
-  font-size: 13px;
-  color: var(--ink-muted);
-}
-
 /* The flight's numbers, a box each, above the pattern. */
 .ptw-gauges {
   display: grid;

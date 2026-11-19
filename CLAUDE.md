@@ -863,7 +863,8 @@ pass to that point. No sound (the user, 2026-11-19). Torque 1000 ft-lbs crosswin
 downwind are the user's.
 **A racetrack** (the user's ruling): two half circles 1 nm across (1 nm over the sketch's bank
 angles, so about 23°), the crosswind turn 1,000 ft past the departure end at exactly 500 ft
-(level there if reached early), the 180 abeam the groove and the start of the approach turn,
+(level there if reached early), 800 ft by halfway round it (the user; NATOPS Ch. 27 has no
+gear-down, approach-flap climb chart), the 180 abeam the groove and the start of the approach turn,
 the groove 1,200 ft from the threshold at 250 ft. Pattern types: approach flap, no flap, full
 flap, SSE (looped from the SSE wave-off at 200 ft) and Cases 1 to 5 (a touch-and-go, the
 simulated failure, an SSE full stop). `patternModel.js` is pure and tested: a pass is a chain

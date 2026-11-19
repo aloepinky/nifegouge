@@ -92,7 +92,10 @@ function legs(id) {
     L({ id: 'xwLevel', phase: 'Crosswind', line: 1100, kias: [[0, 116], [1, 110]], alt: [[0, 560], [1, 590]] });
     L({ id: 'xw1b', phase: 'Crosswind', arcToY: ABEAM, kias: flat(110), alt: [[0, 590], [0.85, 800], [1, 800]] });
   } else {
-    L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI, kias: flat(lost ? 110 : 120), alt: [[0, xwFrom], [0.85, 800], [1, 800]] });
+    // Two engines: 800 ft by halfway round, the crosswind turn's 90 (the user: well before the
+    // downwind; NATOPS has no gear-down, approach-flap climb chart to work it from). One
+    // engine climbs slower.
+    L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI, kias: flat(lost ? 110 : 120), alt: lost ? [[0, xwFrom], [0.85, 800], [1, 800]] : [[0, xwFrom], [0.5, 800], [1, 800]] });
   }
   L({ id: 'dw', phase: 'Downwind', toX: GROOVE_X, kias: lost ? [[0, 110], [0.25, 120], [1, 120]] : flat(120), alt: flat(800) });
   // The approach turn: the 90 at 500 ft and 110 KIAS, the groove at 250 ft. On one engine 110

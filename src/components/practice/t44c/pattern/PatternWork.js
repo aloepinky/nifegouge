@@ -237,11 +237,10 @@ export default function PatternWork() {
   const [scenario, setScenario] = useState('approach');
   const [engine, setEngine] = useState('left');
   const [t, setT] = useState(0);
-  const [pass, setPass] = useState(1);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const model = useMemo(() => buildPass(scenario, engine), [scenario, engine]);
-  const live = useRef({ t: 0, pass: 1 });
+  const live = useRef({ t: 0 });
   live.current.speed = speed;
   live.current.duration = model.duration;
 
@@ -253,7 +252,7 @@ export default function PatternWork() {
       const v = live.current;
       v.t += (Math.min(250, now - last) / 1000) * v.speed;
       last = now;
-      if (v.t >= v.duration) { v.t = 0; v.pass += 1; setPass(v.pass); }
+      if (v.t >= v.duration) v.t = 0; // round again
       setT(v.t);
       raf = requestAnimationFrame(tick);
     };
@@ -263,9 +262,8 @@ export default function PatternWork() {
 
   // A circle on the drawing puts the aircraft there; the pass carries on if it was flying.
   const jump = (to) => { live.current.t = Math.min(to, model.duration - 0.01); setT(live.current.t); };
-  const restart = () => { live.current.t = 0; live.current.pass = 1; setT(0); setPass(1); };
   // A new pattern starts from its beginning.
-  useEffect(() => { live.current.t = 0; live.current.pass = 1; setT(0); setPass(1); }, [scenario, engine]);
+  useEffect(() => { live.current.t = 0; setT(0); }, [scenario, engine]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -299,14 +297,12 @@ export default function PatternWork() {
           </label>
         )}
         <button type="button" className="ptw-btn ptw-btn--go" onClick={() => setPlaying(!playing)}>{playing ? 'Pause' : t > 0 ? 'Resume' : 'Fly'}</button>
-        <button type="button" className="ptw-btn" onClick={restart}>Restart</button>
         <label className="ptw-field">
           <span>Speed</span>
           <select className="ptw-select" value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
             {SPEEDS.map((x) => <option key={x} value={x}>{x}×</option>)}
           </select>
         </label>
-        <span className="ptw-pass">Pass {pass}</span>
       </div>
       <Comms pass={model} now={t} speed={speed} />
       <Procedures pass={model} now={t} />
