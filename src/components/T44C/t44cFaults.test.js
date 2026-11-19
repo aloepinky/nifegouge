@@ -30,10 +30,10 @@ describe('Before Start', () => {
   const base = initial('beforeStart');
 
   it('lights FUEL CROSSFEED with the crossfeed OPEN, unless the valve does not open', () => {
-    expect(lights(bs(base, 'bs8#3'))).toContain('FUEL CROSSFEED');
-    expect(lights(bs(base, 'bs8#4'))).not.toContain('FUEL CROSSFEED');
-    expect(lights(bs(withFault(base, 'bs-xfeed-dark'), 'bs8#3'))).not.toContain('FUEL CROSSFEED');
-    expect(lights(seenNow(bs(withFault(base, 'bs-xfeed-stuck'), 'bs8#4')))).toContain('FUEL CROSSFEED');
+    expect(lights(bs(base, 'bs8#4'))).toContain('FUEL CROSSFEED');
+    expect(lights(bs(base, 'bs8#5'))).not.toContain('FUEL CROSSFEED');
+    expect(lights(bs(withFault(base, 'bs-xfeed-dark'), 'bs8#4'))).not.toContain('FUEL CROSSFEED');
+    expect(lights(seenNow(bs(withFault(base, 'bs-xfeed-stuck'), 'bs8#5')))).toContain('FUEL CROSSFEED');
   });
 
   it('draws 11 A a boost pump, and nothing from a dead one', () => {
@@ -392,7 +392,7 @@ describe('the store', () => {
     engine.setChaos(1);
     engine.arm('bs8'); // the first of its faults: FUEL CROSSFEED dark, shown at the crossfeed OPEN
     expect(engine.discrepancy()).toBeNull();
-    engine.fire('bs8#3');
+    engine.fire('bs8#4');
     expect(engine.discrepancy()[0].what).toMatch(/FUEL CROSSFEED/);
     engine.dispose();
   });

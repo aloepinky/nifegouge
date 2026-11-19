@@ -1307,8 +1307,8 @@ const AUTOFEATHER_TEST = [
 export const STEP_EVENTS = {
   'before-start': {
     // 8: c, the crossfeed OPEN then CLOSED; d, the boost pumps; e, the battery.
-    'bs8#3': [{ xfeed: 'open' }],
-    'bs8#4': [{ xfeed: 'closed' }],
+    'bs8#4': [{ xfeed: 'open' }],
+    'bs8#5': [{ xfeed: 'closed' }],
     'bs8:Left Boost Pump': [{ boost: { L: true } }],
     'bs8:Right Boost Pump': [{ boost: { R: true } }],
     'bs8:Battery': [{ battery: true }],

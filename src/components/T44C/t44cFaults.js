@@ -65,10 +65,10 @@ const BLEED_SUPPLY = 'The bleed air supply to the pneumatic system: its check va
 
 export const FAULTS = [
   // Before Start 8. NATOPS §2.9.6.2 (and its note), §2.9.5, §10.4 g and h.
-  { id: 'bs-xfeed-dark', procedure: 'before-start', step: 'bs8', at: 'bs8#3',
+  { id: 'bs-xfeed-dark', procedure: 'before-start', step: 'bs8', at: 'bs8#4',
     what: () => 'FUEL CROSSFEED did not light with the crossfeed OPEN.',
     causes: () => [`The crossfeed valve not opening: ${CROSSFEED_CIRCUIT}.`] },
-  { id: 'bs-xfeed-stuck', procedure: 'before-start', step: 'bs8', at: 'bs8#4',
+  { id: 'bs-xfeed-stuck', procedure: 'before-start', step: 'bs8', at: 'bs8#5',
     what: () => 'FUEL CROSSFEED stayed lit with the crossfeed CLOSED.',
     causes: () => [`A crossfeed valve malfunction with the light held on: ${CROSSFEED_CIRCUIT}.`] },
   { id: 'bs-boost-nodraw', procedure: 'before-start', step: 'bs8', pick: (r) => ({ side: side(r) }),

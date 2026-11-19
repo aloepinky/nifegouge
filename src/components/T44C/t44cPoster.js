@@ -595,6 +595,10 @@ export const T44C_POSTER = {
           values: ['Reset, On. Switch, Light, Load', 'Load below .5, OFF', 'Reset, On', 'OFF', 'RESET, ON. Switch, light, load'] },
         { box: [0.477, 0.01, 0.494, 0.403], label: 'FMS',
           action: 'FMS', values: ['CHECKED/SET', 'SET'] },
+        // The L and R FUEL PANEL breakers (20 A) under the TACAN, one box over both: Before
+        // Start 8's fuel panel circuit breakers (the user, 2026-11-19). Placed by eye.
+        { id: 'fuel-panel-cbs', box: [0.251, 0.742, 0.045, 0.107], label: 'Fuel panel circuit breakers',
+          action: 'Fuel Panel Circuit Breakers', actions: ['Fuel Panel Circuit Breakers', 'Fuel Panel'] },
         { id: 'tacan', box: [0, 0.53, 0.486, 0.121], label: 'TACAN',
           action: 'Radios/NAVAIDs', actions: ['Radios/NAVAIDs', 'TACAN'], values: ['SET'] },
         { id: 'cabin-controller', box: [0.145, 0.915, 0.052, 0.039], label: 'Cabin pressure controller',

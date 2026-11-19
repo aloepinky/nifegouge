@@ -147,10 +147,12 @@ const BEFORE_START = {
       replies: [say('OFF', 'LS')],
     }),
     item('bs8', 'Fuel Panel', 'CHECKED/SET', 'LS', {
-      watch: ['Fuel Circuit Breakers', 'Firewall Valve', 'Crossfeed', 'Left Boost Pump', 'Right Boost Pump', 'Battery'],
+      watch: ['Fuel Circuit Breakers', 'Fuel Panel Circuit Breakers', 'Firewall Valve', 'Crossfeed', 'Left Boost Pump', 'Right Boost Pump', 'Battery'],
       watchOnly: true,
-      // c. the crossfeed open, then closed.
-      sequence: ['Fuel Circuit Breakers', 'Firewall Valve', 'Crossfeed', 'Crossfeed',
+      // a. both sets of fuel panel breakers: the FUEL SYSTEM strip on the fuel panel and the
+      // L and R FUEL PANEL pair under the TACAN (the user, 2026-11-19). c. the crossfeed open,
+      // then closed.
+      sequence: ['Fuel Circuit Breakers', 'Fuel Panel Circuit Breakers', 'Firewall Valve', 'Crossfeed', 'Crossfeed',
         ['Left Boost Pump', 'Right Boost Pump'], 'Battery'],
       shows: {
         Crossfeed: ['FUEL CROSSFEED'],
