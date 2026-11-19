@@ -31,10 +31,10 @@ import { actionFor, fillsFor, matches, settingsFor, wordingsOf } from './control
 // "Fire Extinguisher".
 
 export default function ActionButtons({
-  title = null, actions, columns = 1, fill, hint, next, aliases,
+  title = null, actions, columns = 1, fill, hint, next, nextAlt, aliases,
 }) {
   const press = (rec) => {
-    const action = actionFor(rec, next, aliases);
+    const action = actionFor(rec, next, aliases, nextAlt);
     // `wordingsOf` as the poster's targets pass it, so a step can `watch` a button (the parking
     // brake steps' Rudder Pedals, by its `Brakes`).
     fill(action, fillsFor(rec, action, aliases), settingsFor(rec, action, aliases), wordingsOf(rec));

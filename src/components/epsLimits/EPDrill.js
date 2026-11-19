@@ -316,7 +316,7 @@ function Instructions({ hasPanel, hasBand, hasLeft, hasNWC, hasModes, hasWatch, 
         <h3>Buttons &amp; Controls</h3>
         <ul>
           {hasPanel && <li><strong>Simple/Full Mode:</strong> Toggle to remove/add the controls either side of the EP</li>}
-          {hasPanel && <li><strong>Hint:</strong> Highlights the control for the next step. Found {hasLeft ? 'under the left panel' : 'in the button row'}</li>}
+          {hasPanel && <li><strong>Hint:</strong> Highlights the control for the next step. Found {hasLeft ? 'under the left panel' : 'in the button row'}. Two wrong clicks in a row do the same</li>}
           <li><strong>Skip:</strong> Fills the next unanswered step. Found under the right panel (bottom row in Simple Mode)</li>
           <li><strong>All Answers:</strong> Completes all remaining steps</li>
           {!read && <li><strong>Check:</strong> Validates your answers. Enter in any box does the same</li>}
@@ -460,6 +460,7 @@ function Drill({
   aliases = DEFAULT_ALIASES, normal = false, read = false, calls = false, crew = false, sequential = false, modes = null, extraToggle = null,
   practice = null, initialFull = null, onFull,
   nwc, nwcHints, isGameActive = false, onGameComplete, engine = null, detours = [],
+  hopPartial = false,
 }) {
   // One number sets both columns; a pair sets them separately, which a bespoke layout needs —
   // Advanced hangs a column of buttons on the left and a stack of three panels on the right.
@@ -514,6 +515,20 @@ function Drill({
   const parts = useRef({});
   // The pieces of a `watch` step clicked so far, by step id; see watchClick.
   const watched = useRef({});
+  // Wrong clicks in a row; the second rings the control as Hint does (every school, the user,
+  // 2026-11-19). Any click that is taken starts the count again.
+  const misses = useRef(0);
+  // With `hopPartial` (the T-44C, to try it; the user, 2026-11-19), a click for the step after a
+  // yellow one leaves that step yellow and goes on: these are the steps left so, which the open
+  // step no longer comes back to.
+  const leftOpen = useRef(new Set());
+  // The yellow step a click would leave, committed only once the click is taken (`taken`).
+  const hopFrom = useRef(null);
+  const taken = () => {
+    misses.current = 0;
+    if (hopFrom.current) leftOpen.current.add(hopFrom.current);
+    hopFrom.current = null;
+  };
   const rulerRef = useRef(null);
   const [cardMin, setCardMin] = useState(0);
   const [fit, setFit] = useState({});
@@ -677,12 +692,15 @@ function Drill({
     wasCorrect.current = {};
     parts.current = {};
     watched.current = {};
+    misses.current = 0;
+    leftOpen.current = new Set();
     missedRef.current = new Set();
     setResetKey((k) => k + 1);
   };
 
   const change = (field, value) => {
     delete watched.current[field];
+    leftOpen.current.delete(field);
     setData((d) => ({ ...d, [field]: value }));
     setResults((r) => ({ ...r, [field]: '' }));
     setHint(null);
@@ -692,6 +710,8 @@ function Drill({
   const check = (current = data) => {
     const out = {};
     for (const f of fields) out[f] = gradeAnswer(current[f], answers[f]);
+    // A step left yellow is still only part done, whatever its box holds.
+    for (const f of leftOpen.current) if (out[f] !== 'correct') out[f] = 'partial';
     setResults(out);
     setHint(null);
     if (isGameActive && steps.every((s) => out[s.id] === 'correct')) {
@@ -728,9 +748,10 @@ function Drill({
   // IDLE straight to Starter - OFF does Fuel Flow and ITT and N1. Returns the step the click
   // answers and the look steps it passes, or null. A look step the click itself belongs to (its
   // own gauge, a watched piece) is not passed.
+  const belongsTo = (s, action, values, said) => (sameControl(answers[s.id], action, aliases) && settingOk(values, answers[s.id]))
+    || !!(s.watch && s.watch.some((w) => said.includes(canon(w, aliases))));
   const lookAhead = (open, action, values, said) => {
-    const belongs = (s) => (sameControl(answers[s.id], action, aliases) && settingOk(values, answers[s.id]))
-      || (s.watch && s.watch.some((w) => said.includes(canon(w, aliases))));
+    const belongs = (s) => belongsTo(s, action, values, said);
     if (!passable(open) || belongs(open)) return null;
     const passed = [];
     for (let i = steps.indexOf(open); i < steps.length; i += 1) {
@@ -778,13 +799,27 @@ function Drill({
     let step = nextOpen();
     if (!step) return;
     setEngineNote(null);
+    const said = (wordings || [action]).map((w) => canon(w, aliases));
+    hopFrom.current = null;
+
+    // hopPartial: the open step is yellow, the click is not one of its own, and it is for the
+    // step after it (or one past the look steps after that). The yellow step stays yellow and is
+    // left; the click goes on to the next one.
+    if (hopPartial && isPartial(step) && !belongsTo(step, action, values, said)
+      && !lookAhead(step, action, values, said)) {
+      const after = steps.slice(steps.indexOf(step) + 1).find((s) => answers[s.id]);
+      if (after && (belongsTo(after, action, values, said) || lookAhead(after, action, values, said))) {
+        hopFrom.current = step.id;
+        step = after;
+      }
+    }
 
     // The click may be for a step past the look steps in front of it (lookAhead). If the gauges
     // say that step is too early, nothing is passed; otherwise the passed steps are done as the
     // checklist prints them, and the click goes on as though that step were the open one.
     let base = data;
     let passed = {};
-    const ahead = lookAhead(step, action, values, (wordings || [action]).map((w) => canon(w, aliases)));
+    const ahead = lookAhead(step, action, values, said);
     if (ahead) {
       const control = sameControl(answers[ahead.step.id], action, aliases);
       if (control && tooEarly(ahead.step, fragment)) return;
@@ -816,10 +851,11 @@ function Drill({
       return;
     }
     if (clickOutcome(names ? 1 : 0, 1) !== FILL) {
-      setResults((r) => ({ ...r, [target]: 'incorrect' }));
+      missed(target);
       return;
     }
     if (tooEarly(step, fragment)) return;
+    taken();
     pass();
     fire(step);
     setShown(showsOf(step, (wordings || [action]).map((w) => canon(w, aliases)), true));
@@ -917,13 +953,14 @@ function Drill({
       && missing.some((p) => p !== step.last && !got.includes(p));
     const outOfOrder = step.inOrder && got.some((p, i) => p !== missing[i]);
     if (!got.length || early || outOfOrder || outOfTurn) {
-      setResults((r) => ({ ...r, [target]: 'incorrect' }));
+      missed(target);
       return;
     }
     if (got.includes(CONTROL)) {
       if (tooEarly(step, null)) return;
       fire(step);
     }
+    taken();
     got.filter((p) => p !== CONTROL).forEach((p) => fire(step, `:${p}`));
     // The sequence's place too, for a piece that does something different each time it is moved.
     if (hit.length) fire(step, `#${turn + 1}`);
@@ -944,12 +981,24 @@ function Drill({
   // instrument, or holding only some of its pieces (ITT and N1), stays open even after a wrong
   // click has marked it red: a red step is not done, and the next click must come back to it.
   const nextOpen = () => {
-    const id = openStep(fields, {
+    const id = openStep(fields.filter((f) => !leftOpen.current.has(f)), {
       value: (f) => data[f],
       result: (f) => (watched.current[f] || (parts.current[f] && data[f] !== answers[f]) ? 'partial' : results[f]),
       answer: (f) => answers[f],
     });
     return steps.find((s) => s.id === id);
+  };
+
+  // Holds only part of its answer: pieces of a watch step, or fragments of a multi-control one.
+  const isPartial = (s) => results[s.id] === 'partial' || !!watched.current[s.id]
+    || !!(parts.current[s.id] && data[s.id] && data[s.id] !== answers[s.id]);
+
+  // A wrong click marks its step red and writes nothing; the second in a row also presses Hint.
+  // Not in a game, which offers no Hint.
+  const missed = (id) => {
+    setResults((r) => ({ ...r, [id]: 'incorrect' }));
+    misses.current += 1;
+    if (misses.current >= 2 && !isGameActive) pressHint();
   };
 
   // What Hint points at: the step itself, or for a step with a `watch` list the first piece not
@@ -993,6 +1042,7 @@ function Drill({
       engine.skip(skipKeys(open), after ? after.id : null);
     }
     delete watched.current[open.id];
+    misses.current = 0;
     setEngineNote(null);
     const next = { ...data, [open.id]: open.text };
     setData(next);
@@ -1020,6 +1070,7 @@ function Drill({
 
   const allAnswers = () => {
     watched.current = {};
+    misses.current = 0;
     const next = { ...data, ...answers };
     setData(next);
     check(next);
@@ -1052,6 +1103,8 @@ function Drill({
     wasCorrect.current = {};
     parts.current = {};
     watched.current = {};
+    misses.current = 0;
+    leftOpen.current = new Set();
     missedRef.current = new Set();
     setResetKey((k) => k + 1);
     // Abnormal Start from the EP list stays an EP (see `viaAbort`).
@@ -1110,7 +1163,11 @@ function Drill({
   // `normalProcedure` says the card is a normal checklist rather than an EP, so a poster can
   // show the buttons only normal checklists use (T-44C's `normal` actions) and keep them off the
   // EPs, which never name them.
-  const api = { fill, hint, shown, reveal, next: controlOf((nextOpen() || {}).text), resetKey, normalProcedure: normal || !!ep.normal,
+  const openNow = nextOpen();
+  const hopTo = hopPartial && openNow && isPartial(openNow)
+    ? steps.slice(steps.indexOf(openNow) + 1).find((s) => answers[s.id]) : null;
+  const api = { fill, hint, shown, reveal, next: controlOf((openNow || {}).text),
+    nextAlt: hopTo ? controlOf(hopTo.text) : null, resetKey, normalProcedure: normal || !!ep.normal,
     // Chaos: the Discrepancy button, for a page that draws one beside its engine controls.
     discrepancy,
     // With the set's `extra` procedures added, a page can show both kinds of button on every card,

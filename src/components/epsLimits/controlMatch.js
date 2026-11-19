@@ -89,10 +89,13 @@ export const matches = (record, step, aliases) => {
 // Which of a multi-action record's actions to write. A yoke carries two steps, so it fills
 // whichever one the checklist is asking for next, and falls back to the first when it is asking
 // for neither. A record with one action always answers with it.
-export const actionFor = (record, next, aliases) => {
+// `alt` is a second choice, asked only when `next` is not one of the record's: the step after a
+// yellow one, which EPDrill's `hopPartial` lets a click go on to.
+export const actionFor = (record, next, aliases, alt = null) => {
   const list = record.actions || [];
   if (!list.length) return record.action;
-  return list.find((a) => canon(a, aliases) === canon(next, aliases)) || list[0];
+  const find = (want) => (want ? list.find((a) => canon(a, aliases) === canon(want, aliases)) : null);
+  return find(next) || find(alt) || list[0];
 };
 
 // The settings a record can write for one of its controls, clicked through in order.

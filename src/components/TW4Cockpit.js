@@ -84,6 +84,9 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   const prevCheckResultsRef = useRef({});
   const cockpitRef = useRef(null);
   const scrollToHintRef = useRef(false);
+  // Wrong clicks in a row on one step; the second rings the control as Hint does (every school,
+  // the user, 2026-11-19). A click that is taken, or a different step, starts the count again.
+  const missRef = useRef({ field: null, n: 0 });
 
   useEffect(() => {
     if(isRandom) {
@@ -436,8 +439,17 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
       results[nextEmptyField] = 'incorrect';
       setCheckResults(results);
     }
-    if(Object.keys(activeHints).length > 0){
-      removeDataHints((inputData[nextEmptyField] || '').toLowerCase(), nextEmptyField);
+    const miss = missRef.current;
+    missRef.current = outcome === FILL || outcome === PARTIAL ? { field: null, n: 0 }
+      : { field: nextEmptyField, n: miss.field === nextEmptyField ? miss.n + 1 : 1 };
+    const held = (inputData[nextEmptyField] || '').toLowerCase();
+    if (missRef.current.n >= 2 && !isGameActive) {
+      // The pieces already in are not rung again, as after any click on a part-done step.
+      scrollToHintRef.current = true;
+      if (held) removeDataHints(held, nextEmptyField);
+      else giveHint();
+    } else if(Object.keys(activeHints).length > 0){
+      removeDataHints(held, nextEmptyField);
     }
   };
   

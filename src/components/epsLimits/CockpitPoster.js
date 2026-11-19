@@ -41,7 +41,7 @@ const SpotEditor = React.lazy(() => import('./SpotEditor'));
 // Everything a poster does that is not markup. A page calls this once with EPDrill's slot api and
 // hands the result to every PosterRegion it draws, so a click behaves the same however the page
 // is laid out.
-export function usePoster({ poster, aliases, fill, hint, shown, next, engine }) {
+export function usePoster({ poster, aliases, fill, hint, shown, next, nextAlt, engine }) {
   const alias = useMemo(() => aliases || aliasesFrom(poster), [aliases, poster]);
 
   // `actionFor` is what a target standing for two controls needs: it answers with whichever of
@@ -52,7 +52,7 @@ export function usePoster({ poster, aliases, fill, hint, shown, next, engine }) 
   // `wordingsOf` is everything the target answers for, which a step's `watch` list of gauges and
   // lights is matched against: the left fuel gauge is `Fuel Quantity` and `Left Fuel Quantity`.
   const press = (spot) => {
-    const action = actionFor(spot, next, alias);
+    const action = actionFor(spot, next, alias, nextAlt);
     // An elapsed time key runs the engine model's clock whatever step it answers, as the real one
     // starts and stops whenever it is pressed.
     if (engine && wordingsOf(spot).some((w) => /elapsed time clock/i.test(w))) engine.toggleClock();

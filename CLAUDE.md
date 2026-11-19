@@ -694,6 +694,10 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   row under Previous/Next: Order, Skip, All Answers, Check, Reset, (Auto NWC). Game mode shows only
   Check. Skip/Hint take the first empty or partial box. Enter checks. Markings persist until
   retyped/rechecked. Card hugs its steps; its slot is sized to the tallest EP by measuring.
+- Two wrong clicks in a row on the poster press Hint (every school, Primary included; not in
+  a game). With `hopPartial` (T-44C only, on trial since 2026-11-19), a click for the step after
+  a yellow one leaves that step yellow and goes on (EPDrill `leftOpen`; the poster's `nextAlt`
+  lets a shared target answer for that next step).
 - **NWCs**: `nwc` map keyed by step id (EP id = before the procedure); only critical-action NWCs,
   deliberately. Modal shows the whole procedure's numbered, closed chips; `nwcHints` optional.
   Modal is portalled — CSS hangs off `.epl-nwc-modal`. Three copies of the NWC box styles
