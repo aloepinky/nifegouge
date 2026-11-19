@@ -24,6 +24,7 @@ export const RUNWAY = { length: 5000, width: 150, number: '13', reciprocal: '31'
 export const CALL_SIGN = 'MNTNA 12';
 export const ABEAM = NM;
 const R = NM / 2; // both turns
+const CLIMB_FPM = 1400; // at 1000 ft-lbs, 120 KIAS, gear down, approach flaps (the user)
 const TOUCHDOWN_X = 500;
 const TURN_X = RUNWAY.length + 1000; // the crosswind turn
 const GROOVE_X = -1200; // the groove, and abeam it the 180
@@ -92,10 +93,11 @@ function legs(id) {
     L({ id: 'xwLevel', phase: 'Crosswind', line: 1100, kias: [[0, 116], [1, 110]], alt: [[0, 560], [1, 590]] });
     L({ id: 'xw1b', phase: 'Crosswind', arcToY: ABEAM, kias: flat(110), alt: [[0, 590], [0.85, 800], [1, 800]] });
   } else {
-    // Two engines: 800 ft by halfway round, the crosswind turn's 90 (the user: well before the
-    // downwind; NATOPS has no gear-down, approach-flap climb chart to work it from). One
+    // Two engines: 1000 ft-lbs climbs a steady 1400 ft/min (the user's figures; NATOPS has no
+    // gear-down, approach-flap climb chart), level at 800 ft well before the downwind. One
     // engine climbs slower.
-    L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI, kias: flat(lost ? 110 : 120), alt: lost ? [[0, xwFrom], [0.85, 800], [1, 800]] : [[0, xwFrom], [0.5, 800], [1, 800]] });
+    const level = (((800 - xwFrom) / CLIMB_FPM) * 60 * 120 * KT) / (R * Math.PI);
+    L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI, kias: flat(lost ? 110 : 120), alt: lost ? [[0, xwFrom], [0.85, 800], [1, 800]] : [[0, xwFrom], [level, 800], [1, 800]] });
   }
   L({ id: 'dw', phase: 'Downwind', toX: GROOVE_X, kias: lost ? [[0, 110], [0.25, 120], [1, 120]] : flat(120), alt: flat(800) });
   // The approach turn: the 90 at 500 ft and 110 KIAS, the groove at 250 ft. On one engine 110
@@ -168,6 +170,20 @@ function fly(id) {
     p.aob = sum / (hi - lo);
   });
   return { pts, seg, duration: t };
+}
+
+// Pitch: the flight path angle plus an angle of attack. The attack angle is an estimate (no
+// NATOPS figure gives it): about 2.5° at 120 KIAS clean, growing as the square of the slowing,
+// less with flaps, more with bank. It puts the 1400 ft/min climb at about 9° nose up, inside
+// the FTI's 7-10° (p. 1-35).
+function pitchOf({ leg, f, alt, kias, vsi, aob, flaps }) {
+  if (leg === 'roll' || leg === 'rollout') return 0;
+  if (leg === 'climb' && alt <= 0) return Math.min(1, f / 0.08) * 7; // rotating
+  const v = kias * KT;
+  const gamma = (Math.atan2(vsi / 60, v) * 180) / Math.PI;
+  const flapsOff = flaps === 'Down' ? 2 : flaps === 'Approach' ? 1 : 0;
+  const alpha = 2.5 * (120 / kias) ** 2 / Math.cos((aob * Math.PI) / 180) - flapsOff;
+  return gamma + alpha;
 }
 
 function find(pts, t) {
@@ -302,13 +318,18 @@ export function buildPass(id, engine = 'left') {
       const t400 = atAlt('up2', 400);
       add(t400, 'PF', 'say', 'Clear left, going left', { technique: true });
       add(t400 + 1.4, 'PM', 'say', 'Clear right', { ref: FTI('p. 1-31') });
-      add(atAlt('up2', 500), 'PF', 'do', 'Level at 500 ft until the crosswind turn, power as required', { ref: FTI('p. 1-36'), set: { power: 'As required' } });
+      add(atAlt('up2', 500), 'PF', 'do', 'Level at 500 ft until the crosswind turn: power back to 600 ft-lbs for 120 KIAS', { ref: FTI('p. 1-36'), set: { power: '600 ft-lbs' } });
     }
   }
   const txw = start('xw1');
   mark(txw, 'Crosswind', 'crosswind');
   if (!single || caseN >= 2) add(txw, 'PF', 'do', 'Crosswind turn at 500 ft, 1,000 ft past the departure end, 120 KIAS', { ref: FTI('p. 1-31'), set: { power: '1000 ft-lbs' } });
   else add(txw, 'PF', 'do', 'Crosswind turn, 110 KIAS climbing', { ref: FTI('p. 1-41') });
+
+  // Level at 800 ft in the crosswind turn, power back for 120 KIAS.
+  if (!(sse || caseN === 1 || caseN === 2)) {
+    add(atAlt('xw1', 800), 'PF', 'do', 'Level at 800 ft: power back to 600 ft-lbs for 120 KIAS', { ref: FTI('p. 1-31'), set: { power: '600 ft-lbs' } });
+  }
 
   // ---- Passing 600 ft: flaps approach and the Landing Checklist (gear already down).
   if (!sse && caseN !== 1 && caseN !== 2) {
@@ -336,7 +357,7 @@ export function buildPass(id, engine = 'left') {
   mark(tdw, 'Downwind', 'downwind');
   if (sse || caseN === 1 || caseN === 2) add(tdw, 'PF', 'do', 'Pattern altitude, then accelerate to 120 KIAS', { ref: FTI('p. 1-38'), set: { power: `${Good} as required` } });
   else {
-    add(tdw, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, trimmed, about a mile abeam', { ref: FTI('p. 1-31'), set: { power: '600 ft-lbs' } });
+    add(tdw, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, trimmed, about a mile abeam', { ref: FTI('p. 1-31') });
     add(tdw + 7, 'PF', 'do', 'Rudder trim centered by the 180', { ref: FTI('p. 1-30') });
   }
   const t180 = start('app'); // abeam the groove
@@ -428,12 +449,17 @@ export function buildPass(id, engine = 'left') {
     const psi = mix('psi');
     const t0 = Math.max(0, t - 0.3);
     const t1 = Math.min(duration, t + 0.3);
+    const vsi = t1 > t0 ? ((altAt(t1) - altAt(t0)) / (t1 - t0)) * 60 : 0;
+    const config = configAt(t);
+    const kias = mix('kias');
+    const aob = mix('aob');
     return {
-      t, x: mix('x'), y: mix('y'), psi, alt: mix('alt'), kias: mix('kias'), aob: mix('aob'),
+      t, x: mix('x'), y: mix('y'), psi, alt: mix('alt'), kias, aob,
       hdg: ((RUNWAY.heading - (psi * 180) / Math.PI) % 360 + 360) % 360,
-      vsi: t1 > t0 ? ((altAt(t1) - altAt(t0)) / (t1 - t0)) * 60 : 0,
+      vsi,
+      pitch: pitchOf({ leg: a.leg, f: a.f, alt: mix('alt'), kias, vsi, aob, flaps: config.flaps }),
       phase: a.phase,
-      ...configAt(t),
+      ...config,
     };
   };
 

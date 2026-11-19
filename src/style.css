@@ -11733,15 +11733,18 @@ button.epl-modal-close:hover {
 }
 
 /* The flight's numbers, a box each, above the pattern. */
+/* One line of boxes; on a narrow screen the line scrolls inside its own container. */
 .ptw-gauges {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  gap: 6px;
+  display: flex;
+  gap: 5px;
   margin: 0 0 8px;
+  overflow-x: auto;
 }
 
 .ptw-gauge {
-  padding: 5px 8px;
+  flex: 1 1 0;
+  min-width: 64px;
+  padding: 4px 6px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--surface-2);
@@ -11749,7 +11752,8 @@ button.epl-modal-close:hover {
 }
 
 .ptw-gauge dt {
-  font-size: 11px;
+  font-size: 10px;
+  white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--ink-faint);
@@ -11761,7 +11765,7 @@ button.epl-modal-close:hover {
 }
 
 .ptw-gauge-value {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--ink-strong);
   font-variant-numeric: tabular-nums;

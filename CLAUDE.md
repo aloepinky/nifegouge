@@ -857,14 +857,15 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
 round a 5,000 ft runway (Cabaniss 13, left traffic, no wind). Comms (every spoken line) pop in
 and out: PF box left, PM box right, and the radio box laid over both while Tower or the PM
 transmits. Below them an FTI procedures box, always on, holds the newest two `do` steps. Then
-the pattern box: a box per flight parameter (no bank shown while the angles are in dispute),
+the pattern box: one line of boxes, a flight parameter each (bank and an estimated pitch included; no bank
+in the sketch notes while the angles are in dispute),
 over the drawing, which carries the user's sketch notes (`NOTES`) and whose circles jump the
 pass to that point. No sound (the user, 2026-11-19). Torque 1000 ft-lbs crosswind and 600
 downwind are the user's.
 **A racetrack** (the user's ruling): two half circles 1 nm across (1 nm over the sketch's bank
 angles, so about 23°), the crosswind turn 1,000 ft past the departure end at exactly 500 ft
-(level there if reached early), 800 ft by halfway round it (the user; NATOPS Ch. 27 has no
-gear-down, approach-flap climb chart), the 180 abeam the groove and the start of the approach turn,
+(level there if reached early), climbing a steady 1400 ft/min at 1000 ft-lbs to 800 ft, then
+600 ft-lbs level (the user's figures; NATOPS Ch. 27 has no gear-down, approach-flap climb chart), the 180 abeam the groove and the start of the approach turn,
 the groove 1,200 ft from the threshold at 250 ft. Pattern types: approach flap, no flap, full
 flap, SSE (looped from the SSE wave-off at 200 ft) and Cases 1 to 5 (a touch-and-go, the
 simulated failure, an SSE full stop). `patternModel.js` is pure and tested: a pass is a chain

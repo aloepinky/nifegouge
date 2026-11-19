@@ -76,7 +76,7 @@ const LABEL_AT = {
 // off while they are in dispute).
 const NOTE_LINE = 300;
 const NOTES = [
-  { x: 4300, y: 2300, anchor: 'start', lines: ['Upwind and crosswind', '300 ft: props 1900', '400 ft: “Clear left, going left”', '500 ft: turn', '600 ft: “Speed check, flaps approach,', '     Landing Checklist”', 'Crosswind 1000 ft-lbs'] },
+  { x: 4300, y: 2300, anchor: 'start', lines: ['Upwind and crosswind', '300 ft: props 1900', '400 ft: “Clear left, going left”', '500 ft: turn', '600 ft: “Speed check, flaps approach,', '     Landing Checklist”', 'Crosswind 1000 ft-lbs', 'Level at 800: 600 ft-lbs'] },
   { x: 2400, y: 5500, anchor: 'middle', lines: ['Downwind: happy time', 'Landing Checklist, spacing, trim. 600 ft-lbs'] },
   { x: -3300, y: 4300, anchor: 'start', lines: ['The 180', 'Power, pitch, trim, turn, talk', '4 sec up trim, stare at the PFD', '~250 ft-lbs'] },
   { x: -3300, y: 2300, anchor: 'start', lines: ['The 90, 500 ft', '“Down and locked”', 'Look at the runway now'] },
@@ -146,10 +146,11 @@ function PatternMap({ pass, s, onJump }) {
 function Gauges({ s, single }) {
   const vsi = Math.round(s.vsi / 50) * 50;
   const cells = [
-    ['Leg', s.phase, ''],
     ['Airspeed', Math.round(s.kias), 'KIAS'],
     ['Altitude', Math.max(0, Math.round(s.alt / 10) * 10), 'ft AGL'],
     ['Vertical speed', `${vsi > 0 ? '+' : ''}${vsi}`, 'ft/min'],
+    ['Bank', `${Math.round(s.aob)}°`, ''],
+    ['Pitch', `${s.pitch >= 0.5 ? '+' : ''}${Math.round(s.pitch)}°`, ''],
     ['Heading', String(Math.round(s.hdg) || 360).padStart(3, '0'), ''],
     ['Flaps', s.flaps, ''],
     ['Gear', s.gear, ''],

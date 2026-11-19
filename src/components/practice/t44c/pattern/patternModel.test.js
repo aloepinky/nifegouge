@@ -85,3 +85,16 @@ test('one seat never says two things at once', () => {
     expect(Math.min(...gaps)).toBeGreaterThanOrEqual(1.1);
   });
 });
+
+test('1400 ft/min at 1000 ft-lbs in the crosswind turn, then 600 ft-lbs level at 800', () => {
+  const p = buildPass('approach');
+  const t0 = markT(p, 'crosswind');
+  const climbing = p.stateAt(t0 + 5);
+  expect(climbing.power).toBe('1000 ft-lbs');
+  expect(near(climbing.vsi, 1400, 20)).toBe(true);
+  const level = p.stateAt(t0 + 20);
+  expect(level.alt).toBe(800);
+  expect(level.power).toBe('600 ft-lbs');
+  expect(climbing.pitch).toBeGreaterThan(7);
+  expect(climbing.pitch).toBeLessThan(10.5);
+});
