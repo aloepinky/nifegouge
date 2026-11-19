@@ -58,21 +58,47 @@ const LEFT = GROOVE_X - R - PAD;
 const VIEW = { x: LEFT, y: -(ABEAM + PAD), w: TURN_X + R + 1500 - LEFT, h: ABEAM + 2 * PAD + 200 };
 const AC_SCALE = 26;
 const LABEL_AT = {
-  touchdown: [-120, 380, 'end'],
-  rotate: [0, 380, 'middle'],
+  touchdown: [-40, 380, 'start'],
+  rotate: [0, -300, 'middle'],
   p300: [0, 380, 'middle'],
   crosswind: [300, 0, 'start'],
   downwind: [0, -300, 'middle'],
   the180: [0, -300, 'middle'],
   the90: [260, 90, 'start'],
-  groove: [0, -300, 'middle'],
+  groove: [-150, -300, 'end'],
   fail: [0, -300, 'middle'],
   fullstop: [0, -300, 'middle'],
   waveoff: [0, 380, 'middle'],
   waveoffEnd: [0, 380, 'middle'],
 };
 
-function PatternMap({ pass, s }) {
+// The notes from the user's pattern sketch, where the sketch puts them (its bank angles left
+// off while they are in dispute).
+const NOTE_LINE = 300;
+const NOTES = [
+  { x: 4300, y: 2300, anchor: 'start', lines: ['Upwind and crosswind', '300 ft: props 1900', '400 ft: “Clear left, going left”', '500 ft: turn', '600 ft: “Speed check, flaps approach,', '     Landing Checklist”', 'Crosswind 1000 ft-lbs'] },
+  { x: 2400, y: 5500, anchor: 'middle', lines: ['Downwind: happy time', 'Landing Checklist, spacing, trim. 600 ft-lbs'] },
+  { x: -3300, y: 4300, anchor: 'start', lines: ['The 180', 'Power, pitch, trim, turn, talk', '4 sec up trim, stare at the PFD', '~250 ft-lbs'] },
+  { x: -3300, y: 2300, anchor: 'start', lines: ['The 90, 500 ft', '“Down and locked”', 'Look at the runway now'] },
+  { x: -3300, y: 900, anchor: 'start', lines: ['300-200 ft', '“Props full forward…”'] },
+  { x: -800, y: -380, anchor: 'middle', lines: ['~2 football fields'] },
+];
+
+function Notes() {
+  return (
+    <g className="ptw-notes">
+      {NOTES.map((n) => (
+        <text key={n.lines[0]} x={n.x} y={-n.y} textAnchor={n.anchor}>
+          {n.lines.map((l, i) => (
+            <tspan key={l} x={n.x} dy={i ? NOTE_LINE : 0} className={i === 0 ? 'ptw-note-head' : undefined}>{l}</tspan>
+          ))}
+        </text>
+      ))}
+    </g>
+  );
+}
+
+function PatternMap({ pass, s, onJump }) {
   const path = useMemo(() => pass.track.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(0)} ${(-y).toFixed(0)}`).join(' '), [pass]);
   const rot = -(s.psi * 180) / Math.PI;
   const lift = Math.min(1, s.alt / 800);
@@ -88,14 +114,20 @@ function PatternMap({ pass, s }) {
       <text className="ptw-rwy-number" x={150} y={0} transform="rotate(90 150 0)">{RUNWAY.number}</text>
       <text className="ptw-rwy-number" x={RUNWAY.length - 150} y={0} transform={`rotate(-90 ${RUNWAY.length - 150} 0)`}>{RUNWAY.reciprocal}</text>
       <g className="ptw-dim">
-        <line x1={2600} y1={-RUNWAY.width} x2={2600} y2={-ABEAM + 150} />
-        <text x={2760} y={-ABEAM / 2}>1 nm</text>
+        <line x1={1600} y1={-RUNWAY.width} x2={1600} y2={-ABEAM + 150} />
+        <text x={1760} y={-ABEAM / 2}>1 nm</text>
       </g>
+      <Notes />
       {pass.marks.map((m) => {
         const [dx, dy, anchor] = LABEL_AT[m.key] || [0, -300, 'middle'];
         return (
-          <g key={`${m.key}-${m.t}`} className={`ptw-mark${s.t >= m.t ? ' ptw-mark--passed' : ''}${m.key === 'fail' ? ' ptw-mark--fail' : ''}`}>
-            <circle cx={m.x} cy={-m.y} r={80} />
+          <g key={`${m.key}-${m.t}`} className={`ptw-mark${s.t >= m.t ? ' ptw-mark--passed' : ''}${m.key === 'fail' ? ' ptw-mark--fail' : ''}`}
+            role="button" tabIndex={0} aria-label={`Go to ${m.label}`}
+            onClick={() => onJump(m.t)}
+            onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onJump(m.t); } }}>
+            <title>{`Go to ${m.label}`}</title>
+            <circle className="ptw-mark-hit" cx={m.x} cy={-m.y} r={320} />
+            <circle className="ptw-mark-dot" cx={m.x} cy={-m.y} r={80} />
             <text x={m.x + dx} y={-m.y + dy} textAnchor={anchor}>{m.label}</text>
           </g>
         );
@@ -118,7 +150,6 @@ function Gauges({ s, single }) {
     ['Airspeed', Math.round(s.kias), 'KIAS'],
     ['Altitude', Math.max(0, Math.round(s.alt / 10) * 10), 'ft AGL'],
     ['Vertical speed', `${vsi > 0 ? '+' : ''}${vsi}`, 'ft/min'],
-    ['Bank', `${Math.round(s.aob)}°`, s.aob >= 1 ? 'left' : ''],
     ['Heading', String(Math.round(s.hdg) || 360).padStart(3, '0'), ''],
     ['Flaps', s.flaps, ''],
     ['Gear', s.gear, ''],
@@ -165,18 +196,39 @@ function Box({ lines, now, cls, label, speed }) {
   );
 }
 
+// The crew's words and the radio. Tower's box sits over the crew's: no one in the cockpit
+// talks while the radio does.
 function Comms({ pass, now, speed }) {
   // A line's time on screen is in wall seconds, so it reads as long at 4×.
-  const live = pass.events.filter((e) => now >= e.t && now < e.t + holdOf(e) * speed);
+  const live = pass.events.filter((e) => e.kind === 'say' && now >= e.t && now < e.t + holdOf(e) * speed);
   const last2 = (xs) => xs.slice(-2);
   const radio = last2(live.filter((e) => e.radio).map((e) => ({ ...e, from: e.who === 'Tower' ? `${RUNWAY.field} Tower` : CALL_SIGN })));
   const pf = last2(live.filter((e) => !e.radio && e.who === 'PF'));
   const pm = last2(live.filter((e) => !e.radio && e.who === 'PM'));
   return (
     <div className="ptw-comms" aria-live="polite">
-      <div className="ptw-comms-radio"><Box lines={radio} now={now} cls="ptw-box--radio" label="Tower" speed={speed} /></div>
       <div className="ptw-comms-pf"><Box lines={pf} now={now} cls="ptw-box--pf" label="PF" speed={speed} /></div>
       <div className="ptw-comms-pm"><Box lines={pm} now={now} cls="ptw-box--pm" label="PM" speed={speed} /></div>
+      {radio.length > 0 && <div className="ptw-comms-radio"><Box lines={radio} now={now} cls="ptw-box--radio" label="Tower" speed={speed} /></div>}
+    </div>
+  );
+}
+
+// The FTI's procedure being flown, always on: the newest step and the one before it.
+const refText = (r) => [r.work, r.loc, r.pages].filter(Boolean).join(', ');
+function Procedures({ pass, now }) {
+  const done = pass.events.filter((e) => e.kind === 'do' && e.t <= now);
+  const shown = done.length ? done.slice(-2) : pass.events.filter((e) => e.kind === 'do').slice(0, 1);
+  return (
+    <div className="ptw-fti" aria-live="polite">
+      <span className="ptw-box-who">FTI procedures</span>
+      {shown.map((e, i) => (
+        <p key={`${e.t}-${e.text}`} className={i === shown.length - 1 ? 'ptw-fti-line ptw-fti-line--now' : 'ptw-fti-line'}>
+          <span className="ptw-fti-who">{e.who}</span>
+          <span className="ptw-fti-text">{e.text}</span>
+          {e.ref && <span className="ptw-fti-ref">{refText(e.ref)}</span>}
+        </p>
+      ))}
     </div>
   );
 }
@@ -209,6 +261,8 @@ export default function PatternWork() {
     return () => cancelAnimationFrame(raf);
   }, [playing]);
 
+  // A circle on the drawing puts the aircraft there; the pass carries on if it was flying.
+  const jump = (to) => { live.current.t = Math.min(to, model.duration - 0.01); setT(live.current.t); };
   const restart = () => { live.current.t = 0; live.current.pass = 1; setT(0); setPass(1); };
   // A new pattern starts from its beginning.
   useEffect(() => { live.current.t = 0; live.current.pass = 1; setT(0); setPass(1); }, [scenario, engine]);
@@ -255,9 +309,10 @@ export default function PatternWork() {
         <span className="ptw-pass">Pass {pass}</span>
       </div>
       <Comms pass={model} now={t} speed={speed} />
+      <Procedures pass={model} now={t} />
       <div className="ptw-card">
         <Gauges s={s} single={single} />
-        <PatternMap pass={model} s={s} />
+        <PatternMap pass={model} s={s} onJump={jump} />
       </div>
       <p className="ptw-foot">
         Runway {RUNWAY.number} at {RUNWAY.field}, 5,000 ft, left traffic, no wind. ME FTI §106 Pattern Work, Figures 1-3, 1-4 and 1-6.

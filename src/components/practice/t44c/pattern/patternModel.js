@@ -11,8 +11,7 @@
 //
 // A pass is a chain of legs, each with its airspeed and altitude along it; time comes from
 // flying each foot at its airspeed. Touchdown to rotate (about 6 s) and rotate to 300 ft
-// (about 13 s) are the student's stopwatch times; airspeed builds from 91 at rotation to 120
-// at the crosswind turn.
+// (about 13 s) are the student's stopwatch times; 120 KIAS comes a few seconds after rotation.
 //
 // x runs down the runway in the landing direction from the threshold, y to the left of it
 // (the pattern side), in feet. Altitudes are AGL.
@@ -74,13 +73,14 @@ function legs(id) {
     L({ id: 'up2', phase: 'Upwind', toX: TURN_X, kias: flat(110), alt: [[0, 300], [1, 500]] });
   } else {
     L({ id: 'roll', phase: 'Touch-and-go', line: 870, kias: [[0, 90], [0.35, 82], [1, 91]], alt: flat(0) });
-    // Rotate to 300 ft in 13 s, gathering speed slowly.
-    L({ id: 'climb', phase: 'Upwind', line: 2150, kias: [[0, 91], [1, 105]], alt: [[0, 0], [0.1, 0], [1, 300]] });
+    // Rotate to 300 ft in 13 s, at 120 KIAS within a few seconds of rotating (the user: the
+    // airplane gets there fast).
+    L({ id: 'climb', phase: 'Upwind', line: 2480, kias: [[0, 91], [0.3, 120], [1, 120]], alt: [[0, 0], [0.08, 0], [1, 300]] });
     L({
       id: 'up2', phase: 'Upwind', toX: TURN_X,
-      kias: caseN === 1 ? [[0, 105], [0.3, 103], [1, 110]] : [[0, 105], [1, 120]],
+      kias: caseN === 1 ? [[0, 120], [0.3, 104], [1, 110]] : flat(120),
       // 500 ft about 1,700 ft on, then level until the turn.
-      alt: caseN === 1 ? [[0, 300], [1, 420]] : [[0, 300], [0.66, 500], [1, 500]],
+      alt: caseN === 1 ? [[0, 300], [1, 420]] : [[0, 300], [0.8, 500], [1, 500]],
     });
   }
   // Climbing on one engine in the crosswind: 110 KIAS.
@@ -304,7 +304,7 @@ export function buildPass(id, engine = 'left') {
   }
   const txw = start('xw1');
   mark(txw, 'Crosswind', 'crosswind');
-  if (!single || caseN >= 2) add(txw, 'PF', 'do', 'Crosswind turn at 500 ft, 1,000 ft past the departure end: 120 KIAS, 30° AOB maximum', { ref: FTI('p. 1-31'), set: { power: 'As required' } });
+  if (!single || caseN >= 2) add(txw, 'PF', 'do', 'Crosswind turn at 500 ft, 1,000 ft past the departure end, 120 KIAS', { ref: FTI('p. 1-31'), set: { power: '1000 ft-lbs' } });
   else add(txw, 'PF', 'do', 'Crosswind turn, 110 KIAS climbing', { ref: FTI('p. 1-41') });
 
   // ---- Passing 600 ft: flaps approach and the Landing Checklist (gear already down).
@@ -333,8 +333,7 @@ export function buildPass(id, engine = 'left') {
   mark(tdw, 'Downwind', 'downwind');
   if (sse || caseN === 1 || caseN === 2) add(tdw, 'PF', 'do', 'Pattern altitude, then accelerate to 120 KIAS', { ref: FTI('p. 1-38'), set: { power: `${Good} as required` } });
   else {
-    add(tdw, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, trimmed, about a mile abeam', { ref: FTI('p. 1-31') });
-    if (!caseN) add(tdw + 2.5, 'PF', 'do', 'Landing Checklist, spacing, trim', { technique: true });
+    add(tdw, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, trimmed, about a mile abeam', { ref: FTI('p. 1-31'), set: { power: '600 ft-lbs' } });
     add(tdw + 7, 'PF', 'do', 'Rudder trim centered by the 180', { ref: FTI('p. 1-30') });
   }
   const t180 = start('app'); // abeam the groove
@@ -371,8 +370,7 @@ export function buildPass(id, engine = 'left') {
   const oneEngineTurn = sse || (caseN >= 1 && caseN <= 3);
   if (oneEngineTurn) add(tTurn, 'PF', 'do', 'Approach turn: 110 KIAS minimum to the 90', { ref: FTI('p. 1-40'), set: { power: `${caseN >= 4 ? 'Both' : Good} as required` } });
   else {
-    add(tTurn, 'PF', 'do', 'Approach turn: reduce power, continuous descending, decelerating turn, 30° AOB maximum', { ref: FTI('p. 1-32'), set: { power: '~250 ft-lbs' } });
-    add(tTurn + 1.2, 'PF', 'do', 'Power, pitch, trim, turn, talk. 4 seconds up trim, stare at the PFD, about 250 ft-lbs', { technique: true });
+    add(tTurn, 'PF', 'do', 'Approach turn: reduce power, continuous descending, decelerating turn to the groove', { ref: FTI('p. 1-32'), set: { power: '~250 ft-lbs' } });
   }
   if (caseN === 4) {
     const t0 = atF('app', 0.12);
@@ -383,7 +381,7 @@ export function buildPass(id, engine = 'left') {
 
   const t90 = atF('app', 0.5);
   mark(t90, 'The 90', 'the90');
-  add(t90, 'PF', 'say', 'Down and locked', { technique: true, note: 'Look at the runway now' });
+  add(t90, 'PF', 'say', 'Down and locked', { technique: true });
   if (id === 'full') add(t90 + 1.6, 'PF', 'do', 'Flaps down, after the 90 and before rolling onto final', { ref: FTI('p. 1-34'), set: { flaps: 'Down' } });
   if (caseN === 5) {
     const t0 = t90 + 2;

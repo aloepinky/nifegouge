@@ -11778,17 +11778,77 @@ button.epl-modal-close:hover {
   color: var(--ink-muted);
 }
 
-/* The PF, PM and radio boxes: the radio across the top, the crew below it, left and right. */
+/* The comms: PF left, PM right, and Tower over both while it talks. A fixed height, so the
+   page below never moves as the boxes come and go. */
 .ptw-comms {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: minmax(54px, auto) minmax(88px, auto);
-  gap: 8px 12px;
-  margin-bottom: 10px;
+  gap: 12px;
+  height: 104px;
+  margin-bottom: 8px;
 }
 
 .ptw-comms-radio {
-  grid-column: 1 / -1;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.ptw-comms-radio .ptw-box {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.ptw-comms-pf .ptw-box,
+.ptw-comms-pm .ptw-box {
+  max-height: 104px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* The FTI's procedure, always on. */
+.ptw-fti {
+  margin-bottom: 10px;
+  padding: 7px 12px;
+  min-height: 74px;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.ptw-fti-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.ptw-fti-line--now {
+  font-size: 15px;
+  color: var(--ink-strong);
+}
+
+.ptw-fti-who {
+  flex: none;
+  min-width: 2.4em;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+}
+
+.ptw-fti-text {
+  min-width: 0;
+}
+
+.ptw-fti-ref {
+  font-size: 11px;
+  color: var(--ink-faint);
 }
 
 .ptw-box {
@@ -11809,7 +11869,8 @@ button.epl-modal-close:hover {
 }
 
 .ptw-box--radio {
-  background: var(--wash);
+  background: var(--surface);
+  border-left: 4px solid var(--ink-muted);
 }
 
 .ptw-box-who {
@@ -11934,13 +11995,25 @@ button.epl-modal-close:hover {
   font-size: 230px;
 }
 
+.ptw-notes text {
+  fill: var(--ink-muted);
+  font-size: 215px;
+  font-style: italic;
+}
+
+.ptw-notes .ptw-note-head {
+  font-style: normal;
+  font-weight: 600;
+  fill: var(--ink-accent);
+}
+
 .ptw-dim line {
   stroke: var(--line-strong);
   stroke-width: 14;
   stroke-dasharray: 60 60;
 }
 
-.ptw-mark circle {
+.ptw-mark-dot {
   fill: var(--surface);
   stroke: var(--ink-faint);
   stroke-width: 24;
@@ -11951,7 +12024,27 @@ button.epl-modal-close:hover {
   font-size: 250px;
 }
 
-.ptw-mark--passed circle {
+.ptw-mark {
+  cursor: pointer;
+}
+
+/* A bigger target than the dot, invisible. */
+.ptw-mark-hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.ptw-mark:hover .ptw-mark-dot,
+.ptw-mark:focus-visible .ptw-mark-dot {
+  stroke: var(--ink-accent);
+  stroke-width: 40;
+}
+
+.ptw-mark:focus {
+  outline: none;
+}
+
+.ptw-mark--passed .ptw-mark-dot {
   fill: var(--ink-accent);
   stroke: var(--ink-accent);
 }
@@ -11960,11 +12053,11 @@ button.epl-modal-close:hover {
   fill: var(--ink-strong);
 }
 
-.ptw-mark--fail circle {
+.ptw-mark--fail .ptw-mark-dot {
   stroke: #d97706;
 }
 
-.ptw-mark--fail.ptw-mark--passed circle {
+.ptw-mark--fail.ptw-mark--passed .ptw-mark-dot {
   fill: #d97706;
 }
 
@@ -12007,5 +12100,11 @@ button.epl-modal-close:hover {
 
   .ptw-comms {
     gap: 6px;
+    height: 128px;
+  }
+
+  .ptw-comms-pf .ptw-box,
+  .ptw-comms-pm .ptw-box {
+    max-height: 128px;
   }
 }
