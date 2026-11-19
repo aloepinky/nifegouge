@@ -76,8 +76,8 @@ const LABEL_AT = {
 // off while they are in dispute).
 const NOTE_LINE = 300;
 const NOTES = [
-  { x: 4300, y: 2300, anchor: 'start', lines: ['Upwind and crosswind', '300 ft: props 1900', '400 ft: “Clear left, going left”', '500 ft: turn', '600 ft: “Speed check, flaps approach,', '     Landing Checklist”', 'Crosswind 1000 ft-lbs', 'Level at 800: 600 ft-lbs'] },
-  { x: 2400, y: 5500, anchor: 'middle', lines: ['Downwind: happy time', 'Landing Checklist, spacing, trim. 600 ft-lbs'] },
+  { x: 4300, y: 2300, anchor: 'start', lines: ['Upwind and crosswind', '300 ft: props 1900', '400 ft: “Clear left, going left”', '500 ft: turn', '600 ft: “Speed check, flaps approach,', '     Landing Checklist”', 'Level at 800: 600 ft-lbs'] },
+  { x: 2400, y: 5500, anchor: 'middle', lines: ['Downwind: happy time', 'Landing Checklist, spacing, trim'] },
   { x: -3300, y: 4300, anchor: 'start', lines: ['The 180', 'Power, pitch, trim, turn, talk', '4 sec up trim, stare at the PFD', '~250 ft-lbs'] },
   { x: -3300, y: 2300, anchor: 'start', lines: ['The 90, 500 ft', '“Down and locked”', 'Look at the runway now'] },
   { x: -3300, y: 900, anchor: 'start', lines: ['300-200 ft', '“Props full forward…”'] },
@@ -98,7 +98,10 @@ function Notes() {
   );
 }
 
-function PatternMap({ pass, s, onJump }) {
+// The torque the user sets at those marks, two engines only, beside their names.
+const TORQUE = { crosswind: '1000 ft-lbs', downwind: '600 ft-lbs' };
+
+function PatternMap({ pass, s, onJump, single }) {
   const path = useMemo(() => pass.track.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(0)} ${(-y).toFixed(0)}`).join(' '), [pass]);
   const rot = -(s.psi * 180) / Math.PI;
   const lift = Math.min(1, s.alt / 800);
@@ -128,7 +131,10 @@ function PatternMap({ pass, s, onJump }) {
             <title>{`Go to ${m.label}`}</title>
             <circle className="ptw-mark-hit" cx={m.x} cy={-m.y} r={320} />
             <circle className="ptw-mark-dot" cx={m.x} cy={-m.y} r={80} />
-            <text x={m.x + dx} y={-m.y + dy} textAnchor={anchor}>{m.label}</text>
+            <text x={m.x + dx} y={-m.y + dy} textAnchor={anchor}>
+              {m.label}
+              {!single && TORQUE[m.key] && <tspan className="ptw-mark-torque"> {TORQUE[m.key]}</tspan>}
+            </text>
           </g>
         );
       })}
@@ -308,7 +314,7 @@ export default function PatternWork() {
       <Procedures pass={model} now={t} />
       <div className="ptw-card">
         <Gauges s={s} single={single} />
-        <PatternMap pass={model} s={s} onJump={jump} />
+        <PatternMap pass={model} s={s} onJump={jump} single={single} />
       </div>
       <p className="ptw-foot">
         Runway {RUNWAY.number} at {RUNWAY.field}, 5,000 ft, left traffic, no wind. ME FTI §106 Pattern Work, Figures 1-3, 1-4 and 1-6.

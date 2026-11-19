@@ -12047,6 +12047,11 @@ button.epl-modal-close:hover {
   stroke: var(--ink-accent);
 }
 
+.ptw-mark .ptw-mark-torque {
+  font-style: italic;
+  fill: var(--ink-accent);
+}
+
 .ptw-mark--passed text {
   fill: var(--ink-strong);
 }
