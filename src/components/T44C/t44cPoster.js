@@ -663,14 +663,17 @@ export const T44C_POSTER = {
     // (NATOPS §2.12.1) and the control lock pinned through its column. One button for the wheel,
     // the user's ruling 2026-10-12, rather than one per thing on it. "Wings - Level" is a second
     // control on the same button (the user, 2026-10-13): you level them with the wheel and read
-    // them off the attitude indicator, so both answer it.
+    // them off the attitude indicator, so both answer it. "Yaw damp - Off" too (the pre-stall
+    // checks), by the AP/YD disconnect on its grip, as well as the FGP's YD button (the user,
+    // 2026-11-19).
     { label: 'Control Wheel', action: 'Control Wheel',
-      actions: ['Control Wheel', 'Wings'],
+      actions: ['Control Wheel', 'Wings', 'Yaw damp'],
       also: ['Controls', 'A/P/Trim Disconnect (control wheel)', 'Control Lock'],
       values: {
         'Control Wheel': ['Rapidly Forward', 'Pull Out Of Dive By Exerting Smooth, Steady Back Pressure', 'CHECKED',
           'Depress Fully and Hold.', 'INSTALLED'],
         Wings: ['Level'],
+        'Yaw damp': ['Off'],
       } },
     { label: 'Descend', action: 'Descend', values: ['As Required'], ep: true },
     { label: 'Evacuate Aircraft', action: 'Evacuate Aircraft', ep: true },
