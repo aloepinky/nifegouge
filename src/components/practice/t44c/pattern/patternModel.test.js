@@ -1,53 +1,72 @@
-import { ABEAM, CYCLE, EVENTS, FINAL_X, LAPS, stateAt, voiceLines } from './patternModel';
+import { ABEAM, SCENARIOS, buildPass } from './patternModel';
 
 const near = (a, b, tol) => Math.abs(a - b) <= tol;
+const sample = (pass, fn, dt = 0.25) => { for (let t = 0; t <= pass.duration; t += dt) fn(pass.stateAt(t), t); };
+const markT = (pass, key) => pass.marks.find((m) => m.key === key).t;
 
-test('each lap lasts the mean of the two passes timed, from touchdown', () => {
-  expect(LAPS.map((l) => l.id)).toEqual(['touchdown', 'rotate', 'p300', 'crosswind', 'downwind', 'approach', 'final']);
-  expect(LAPS[0].start).toBe(0);
-  expect(CYCLE).toBeCloseTo((305.58 - 0.06) / 2, 1);
-  LAPS.forEach((l) => expect(l.dur).toBeCloseTo((l.times[0] + l.times[1]) / 2, 6));
+test('the legs off the runway keep the stopwatch times', () => {
+  const p = buildPass('approach');
+  expect(near(markT(p, 'rotate'), 5.98, 0.4)).toBe(true);
+  expect(near(markT(p, 'p300') - markT(p, 'rotate'), 13.08, 0.8)).toBe(true);
+  expect(near(markT(p, 'crosswind') - markT(p, 'p300'), 6.78, 0.4)).toBe(true);
 });
 
-test('the marks fall where the FTI puts them', () => {
-  const at = (id) => stateAt(LAPS.find((l) => l.id === id).start);
-  expect(at('touchdown').alt).toBe(0);
-  expect(near(at('rotate').kias, 91, 0.5)).toBe(true);
-  expect(near(at('p300').alt, 300, 1)).toBe(true);
-  expect(near(at('crosswind').alt, 500, 1)).toBe(true);
-  expect(at('downwind').alt).toBe(800);
-  expect(near(at('approach').y, ABEAM, 1)).toBe(true);
-  expect(near(at('final').alt, 250, 1)).toBe(true);
-  expect(near(at('final').x, FINAL_X, 1)).toBe(true);
-  expect(near(at('final').y, 0, 1)).toBe(true);
-  // The 90: halfway round the approach turn at 500 ft and 110 KIAS.
-  const the90 = EVENTS.find((e) => e.id === 'the90');
-  const s = stateAt(the90.t);
-  expect(near(s.alt, 500, 2)).toBe(true);
-  expect(near(s.kias, 110, 1)).toBe(true);
-  expect(near(s.hdg, 220, 3)).toBe(true);
-});
-
-test('the ground track is continuous and closes on the touchdown point', () => {
-  let prev = stateAt(0);
-  for (let t = 0.1; t < CYCLE; t += 0.1) {
-    const s = stateAt(t);
-    expect(Math.hypot(s.x - prev.x, s.y - prev.y)).toBeLessThan(0.1 * 260);
+test.each(SCENARIOS.map((s) => s.id))('%s: a mile abeam, 30° AOB at most, continuous', (id) => {
+  const p = buildPass(id, 'right');
+  let prev = p.stateAt(0);
+  let maxAob = 0;
+  let downwindY = null;
+  sample(p, (s) => {
+    expect(Math.hypot(s.x - prev.x, s.y - prev.y)).toBeLessThan(0.25 * 125 * 1.69 + 1);
+    maxAob = Math.max(maxAob, s.aob);
+    if (s.phase === 'Downwind') downwindY = s.y;
     prev = s;
-  }
-  const end = stateAt(CYCLE - 1e-6);
-  const start = stateAt(0);
-  expect(Math.hypot(end.x - start.x, end.y - start.y)).toBeLessThan(5);
+  });
+  expect(maxAob).toBeLessThanOrEqual(30.05);
+  expect(near(downwindY, ABEAM, 1)).toBe(true);
+  // Final on centerline.
+  expect(near(p.stateAt(p.marks.find((m) => m.key === 'final').t).y, 0, 2)).toBe(true);
 });
 
-test('no bank over 30 degrees, and the approach turn near the 26 of the notes', () => {
-  let max = 0;
-  for (let t = 0; t < CYCLE; t += 0.2) max = Math.max(max, stateAt(t).aob);
-  expect(max).toBeLessThanOrEqual(30);
-  const mid = stateAt(LAPS[5].start + LAPS[5].dur / 2);
-  expect(near(mid.aob, 26, 2.5)).toBe(true);
+test('the FTI numbers at the 90 and on final', () => {
+  const p = buildPass('approach');
+  const at90 = p.stateAt(markT(p, 'the90'));
+  expect(near(at90.alt, 500, 2)).toBe(true);
+  expect(near(at90.kias, 110, 1)).toBe(true);
+  expect(near(at90.hdg, 220, 1)).toBe(true);
+  const fin = p.stateAt(markT(p, 'final'));
+  expect(near(fin.alt, 250, 2)).toBe(true);
+  expect(near(fin.kias, 105, 1)).toBe(true);
+  expect(near(fin.x, -1200, 10)).toBe(true);
+  expect(buildPass('noflap').stateAt(markT(buildPass('noflap'), 'final')).kias).toBeCloseTo(110, 0);
 });
 
-test('every spoken line has a seat the recorder knows', () => {
-  voiceLines().forEach((l) => expect(['PF', 'PM', 'OBS', 'Tower']).toContain(l.seat));
+test('configuration follows the calls', () => {
+  const p = buildPass('approach');
+  expect(p.stateAt(5).flaps).toBe('Up');
+  expect(p.stateAt(markT(p, 'downwind')).flaps).toBe('Approach');
+  expect(p.stateAt(markT(p, 'downwind')).props).toBe('1900 RPM');
+  expect(p.stateAt(markT(p, 'final')).props).toBe('Full forward');
+  const f = buildPass('full');
+  expect(f.stateAt(markT(f, 'final')).flaps).toBe('Down');
+  const n = buildPass('noflap');
+  expect(n.stateAt(markT(n, 'final')).flaps).toBe('Up');
+  const c1 = buildPass('case1', 'left');
+  expect(c1.stateAt(markT(c1, 'crosswind')).gear).toBe('Up');
+  expect(c1.stateAt(markT(c1, 'the90')).gear).toBe('Down');
+  expect(c1.events.some((e) => e.text === 'Left Propeller – Feather, concur?')).toBe(true);
+});
+
+test('one seat never says two things at once', () => {
+  SCENARIOS.forEach(({ id }) => {
+    const said = buildPass(id).events.filter((e) => e.kind === 'say');
+    const last = {};
+    const gaps = [];
+    said.forEach((e) => {
+      const k = e.radio ? 'radio' : e.who;
+      gaps.push(last[k] === undefined ? Infinity : e.t - last[k]);
+      last[k] = e.t;
+    });
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(1.1);
+  });
 });

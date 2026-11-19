@@ -1,41 +1,55 @@
-// The T-44C touch-and-go pattern, flown by a model on a 5,000 ft runway (Cabaniss 13, left
-// traffic), in the time a student took to fly it. Pure: no JSX, so a tool can load it
-// (tools/t44c-voice-record.js records its spoken lines).
+// The T-44C VFR landing pattern, flown by a model on a 5,000 ft runway (Cabaniss 13, left
+// traffic, no wind), with the calls and the FTI's procedures at their places. Pure: no JSX.
 //
-// Time: each of the seven legs lasts what the user's stopwatch read, the mean of the two
-// passes timed (the user, 2026-11-19), from touchdown. Shape: the FTI's numbers. The
-// approach turn is a half circle flown in its lap's time at its speeds (120 to 105 KIAS), and
-// that radius sets the downwind's distance abeam; the crosswind turn uses the same radius.
-// The aircraft moves along each leg at its airspeed's shape, scaled to the lap's time.
+// A pass is a chain of legs (lines and left turns), each with its airspeed and altitude along
+// it; time comes from flying each foot at its airspeed. The legs off the runway keep the
+// student's stopwatch times (the user, 2026-11-19: touchdown to rotate about 6 s, rotate to
+// 300 ft about 13 s, 300 ft to the crosswind turn about 7 s). The rest is the FTI's (ME FTI
+// §106 Pattern Work, pp. 1-30 to 1-42): downwind about a mile abeam (the user: 1 nm), 30° AOB
+// in the crosswind turn, the approach turn begun just past abeam the numbers and rolled out on
+// centerline 1,200 ft from the threshold at 250 ft, and the airspeeds and altitudes of
+// Figures 1-3, 1-4 and 1-6. "3 big potatoes" past the 180 is the user's.
 //
 // x runs down the runway in the landing direction from the threshold, y to the left of it
 // (the pattern side), in feet. Altitudes are AGL.
 
 const KT = 1.68781; // ft/s per knot
 const G = 32.174;
+const NM = 6076;
 
 export const RUNWAY = { length: 5000, width: 150, number: '13', reciprocal: '31', heading: 130, field: 'Cabaniss' };
 export const CALL_SIGN = 'MNTNA 12';
+export const ABEAM = NM;
 const TOUCHDOWN_X = 500;
+const TURN_X = TOUCHDOWN_X + 870 + 2425 + 1372; // the crosswind turn, at 500 ft on the upwind
+const XW_R = 2207; // 30° AOB at 120 KIAS
+const THE_180_X = 0; // abeam the numbers
+const APPROACH_X = THE_180_X - 3 * 120 * KT; // three seconds on
+const ROLLOUT_X = -1200; // on final, 1,000-1,200 ft from the threshold
+// The approach turn's two quarters, wide then tighter, so that it begins just past the numbers,
+// ends 1,200 ft short of the threshold, and is a mile across.
+const APP_R1 = (ABEAM + (APPROACH_X - ROLLOUT_X)) / 2;
+const APP_R2 = ABEAM - APP_R1;
+const WAVEOFF_X = ROLLOUT_X + (50 / 250) * (TOUCHDOWN_X - ROLLOUT_X); // 200 ft on the SSE final
 
-// The user's stopwatch, two passes (lap 1 to 7, then 8 to 14). A lap is named for the mark
-// that starts it.
-export const LAPS = [
-  { id: 'touchdown', name: 'Touchdown', ends: 'Rotate', times: [6.31, 5.65] },
-  { id: 'rotate', name: 'Rotate', ends: '300 ft', times: [13.25, 12.91] },
-  { id: 'p300', name: '300 ft', ends: 'Crosswind turn', times: [7.30, 6.25] },
-  { id: 'crosswind', name: 'Crosswind', ends: 'Downwind', times: [42.11, 40.44] },
-  { id: 'downwind', name: 'Downwind', ends: 'Approach turn', times: [34.90, 32.89] },
-  { id: 'approach', name: 'Approach turn', ends: 'Final', times: [38.04, 39.14] },
-  { id: 'final', name: 'Final', ends: 'Touchdown', times: [11.25, 15.08] },
-].map((l) => ({ ...l, dur: (l.times[0] + l.times[1]) / 2 }));
+export const SCENARIOS = [
+  { id: 'approach', label: 'Approach flap' },
+  { id: 'noflap', label: 'No flap' },
+  { id: 'full', label: 'Full flap' },
+  { id: 'sse', label: 'Single engine (SSE)' },
+  { id: 'case1', label: 'Case 1. Takeoff to crosswind' },
+  { id: 'case2', label: 'Case 2. Crosswind turn' },
+  { id: 'case3', label: 'Case 3. Downwind' },
+  { id: 'case4', label: 'Case 4. Approach turn' },
+  { id: 'case5', label: 'Case 5. After the 90' },
+];
 
-let acc = 0;
-for (const l of LAPS) { l.start = acc; acc += l.dur; l.end = acc; }
-export const CYCLE = acc;
-const lap = (id) => LAPS.find((l) => l.id === id);
+const FTI = (pages) => ({ work: 'ME FTI', loc: '§106 — Pattern Work', pages });
+const APPB = (pages) => ({ work: 'ME FTI', loc: 'App. B — Typical Briefs and Voice Procedures', pages });
+const APPF = (loc, pages) => ({ work: 'ME FTI', loc: `App. F — ${loc}`, pages });
+const NATOPS_SEWO = { work: 'T-44C NATOPS', loc: 'Single-Engine Waveoff/Missed Approach' };
 
-// Piecewise-linear profile over a lap: [[fraction, value], ...].
+// Piecewise-linear over a fraction: [[fraction, value], ...].
 function lerp(points, u) {
   if (u <= points[0][0]) return points[0][1];
   for (let i = 1; i < points.length; i += 1) {
@@ -45,244 +59,388 @@ function lerp(points, u) {
   }
   return points[points.length - 1][1];
 }
-// Smooth 0..1.
-const ease = (u) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u));
+const flat = (v) => [[0, v], [1, v]];
+const cap = (s) => s[0].toUpperCase() + s.slice(1);
 
-// Airspeed and altitude through each lap, from the FTI (Ch. 1, Pattern Work): touch down near
-// idle and slow, 91 KIAS rotate, 120 KIAS upwind at 300-500 ft, 120 KIAS crosswind and downwind
-// at 800 ft, the 90 at 500 ft and 110 KIAS, final at 250 ft and 105 KIAS, threshold at 95.
-const KIAS = {
-  touchdown: [[0, 90], [0.4, 82], [1, 91]],
-  rotate: [[0, 91], [0.7, 120], [1, 120]],
-  p300: [[0, 120], [1, 120]],
-  crosswind: [[0, 120], [1, 120]],
-  downwind: [[0, 120], [1, 120]],
-  approach: [[0, 120], [0.5, 110], [1, 105]],
-  final: [[0, 105], [0.85, 95], [1, 90]],
-};
+// ---- The legs of each pass.
 
-// Distance covered over a lap at its airspeed shape: ∫v dt, sampled.
-function lapDistance(id) {
-  const l = lap(id);
-  const n = 400;
-  let d = 0;
-  for (let i = 0; i < n; i += 1) d += lerp(KIAS[id], (i + 0.5) / n) * KT * (l.dur / n);
-  return d;
-}
-// Fraction of a lap's distance covered at fraction u of its time: a cumulative table per lap,
-// read between its points so the motion is smooth.
-const CUM = {};
-function distFraction(id, u) {
-  if (u <= 0) return 0;
-  if (u >= 1) return 1;
-  const n = 400;
-  if (!CUM[id]) {
-    const c = [0];
-    for (let i = 0; i < n; i += 1) c.push(c[i] + lerp(KIAS[id], (i + 0.5) / n));
-    CUM[id] = c.map((v) => v / c[n]);
-  }
-  const c = CUM[id];
-  const k = Math.min(n - 1, Math.floor(u * n));
-  return c[k] + (c[k + 1] - c[k]) * (u * n - k);
-}
+function legs(id) {
+  const sse = id === 'sse';
+  const caseN = id.startsWith('case') ? Number(id.slice(4)) : 0;
+  const out = [];
+  const L = (leg) => out.push(leg);
 
-// The approach turn's altitude by how far round it is: the 90 at 500 ft, final at 250.
-const APP_ALT = [[0, 800], [0.5, 500], [1, 250]];
-
-// The geometry.
-const ROLL = lapDistance('touchdown');
-const CLIMB = lapDistance('rotate');
-const UPWIND = lapDistance('p300');
-const FINAL = lapDistance('final');
-export const ROTATE_X = TOUCHDOWN_X + ROLL;
-export const X300 = ROTATE_X + CLIMB;
-export const TURN_X = X300 + UPWIND; // crosswind turn begins
-export const R = lapDistance('approach') / Math.PI; // approach turn radius
-export const FINAL_X = TOUCHDOWN_X - FINAL; // rollout on final, where the approach turn begins and ends
-export const ABEAM = 2 * R; // downwind, distance abeam
-// The 180: three seconds before the approach turn ("3 big potatoes", the user's notes).
-const POTATOES = 3;
-
-const deg = (r) => (r * 180) / Math.PI;
-
-// Where the aircraft is and what it shows, t seconds after touchdown.
-export function stateAt(time) {
-  const t = ((time % CYCLE) + CYCLE) % CYCLE;
-  const l = LAPS.find((x) => t < x.end) || LAPS[LAPS.length - 1];
-  const u = (t - l.start) / l.dur;
-  const kias = lerp(KIAS[l.id], u);
-  const f = distFraction(l.id, u);
-  let x;
-  let y;
-  let psi; // track, radians, counterclockwise from the landing direction
-  let alt;
-  let turnR = 0;
-  if (l.id === 'touchdown') {
-    x = TOUCHDOWN_X + ROLL * f; y = 0; psi = 0; alt = 0;
-  } else if (l.id === 'rotate') {
-    x = ROTATE_X + CLIMB * f; y = 0; psi = 0;
-    // Off the ground a second and a half after rotation, 300 ft at the lap's end.
-    const lift = 1.5 / l.dur;
-    alt = u < lift ? 0 : 300 * Math.pow((u - lift) / (1 - lift), 1.15);
-  } else if (l.id === 'p300') {
-    x = X300 + UPWIND * f; y = 0; psi = 0; alt = 300 + 200 * u;
-  } else if (l.id === 'crosswind') {
-    const th = Math.PI * f;
-    x = TURN_X + R * Math.sin(th); y = R - R * Math.cos(th); psi = th; turnR = R;
-    // 500 to 800 ft, level a quarter of the leg before the downwind mark.
-    alt = 500 + 300 * ease(Math.min(1, u / 0.75));
-  } else if (l.id === 'downwind') {
-    x = TURN_X - (TURN_X - FINAL_X) * f; y = ABEAM; psi = Math.PI; alt = 800;
-  } else if (l.id === 'approach') {
-    const th = Math.PI * f;
-    x = FINAL_X - R * Math.sin(th); y = R + R * Math.cos(th); psi = Math.PI + th; turnR = R;
-    // By how far round the turn, so the 90 is 500 ft.
-    alt = lerp(APP_ALT, f);
+  if (sse) {
+    // From the SSE wave-off at 200 ft on the last pass's final.
+    L({ id: 'waveoff', phase: 'SSE wave-off', line: 2600, kias: flat(110), alt: [[0, 200], [0.12, 192], [1, 300]] });
+    L({ id: 'up2', phase: 'Upwind', toX: TURN_X, kias: flat(110), alt: [[0, 300], [1, 400]] });
   } else {
-    x = FINAL_X + FINAL * f; y = 0; psi = 0;
-    // A steady descent to the numbers, then the flare.
-    alt = lerp([[0, 250], [0.82, 30], [1, 0]], u);
+    L({ id: 'roll', phase: 'Touch-and-go', line: 870, kias: [[0, 90], [0.35, 82], [1, 91]], alt: flat(0) });
+    L({ id: 'climb', phase: 'Upwind', line: 2425, kias: [[0, 91], [0.6, 120], [1, 120]], alt: [[0, 0], [0.1, 0], [1, 300]] });
+    L({
+      id: 'up2', phase: 'Upwind', toX: TURN_X,
+      kias: caseN === 1 ? [[0, 120], [0.35, 104], [1, 110]] : flat(120),
+      alt: caseN === 1 ? [[0, 300], [1, 380]] : [[0, 300], [1, 500]],
+    });
   }
-  // Bank for that radius at that speed, rolled in and out over two seconds.
-  let aob = 0;
-  if (turnR) {
-    const v = kias * KT;
-    const ramp = Math.min(1, (t - l.start) / 2, (l.end - t) / 2);
-    aob = deg(Math.atan((v * v) / (G * turnR))) * Math.max(0, ramp);
+  // Climbing on one engine in the crosswind: 110 KIAS, slower.
+  const lost = sse || caseN === 1 || caseN === 2;
+  const xwFrom = sse ? 400 : caseN === 1 ? 380 : 500;
+  let xwMid;
+  if (caseN === 2) {
+    // Roll wings level to analyse, then continue the turn.
+    L({ id: 'xw1', phase: 'Crosswind', arc: XW_R, angle: Math.PI / 4, kias: [[0, 120], [1, 116]], alt: [[0, 500], [1, 560]] });
+    L({ id: 'xwLevel', phase: 'Crosswind', line: 1100, kias: [[0, 116], [1, 110]], alt: [[0, 560], [1, 580]] });
+    L({ id: 'xw1b', phase: 'Crosswind', arc: XW_R, angle: Math.PI / 4, kias: flat(110), alt: [[0, 580], [1, 620]] });
+    xwMid = 620;
+  } else {
+    xwMid = xwFrom + (800 - xwFrom) * 0.4;
+    L({ id: 'xw1', phase: 'Crosswind', arc: XW_R, angle: Math.PI / 2, kias: flat(lost ? 110 : 120), alt: [[0, xwFrom], [1, xwMid]] });
   }
-  const hdg = ((RUNWAY.heading - deg(psi)) % 360 + 360) % 360;
-  return { t, lap: l, u, x, y, psi, alt, kias, aob, hdg, ...configAt(t) };
+  const xwHigh = xwMid + (800 - xwMid) * 0.45;
+  L({ id: 'xwLeg', phase: 'Crosswind', toY: ABEAM - XW_R, kias: flat(lost ? 110 : 120), alt: [[0, xwMid], [1, xwHigh]] });
+  L({ id: 'xw2', phase: 'Crosswind', arc: XW_R, angle: Math.PI / 2, kias: flat(lost ? 110 : 120), alt: [[0, xwHigh], [0.8, 800], [1, 800]] });
+  L({ id: 'dw', phase: 'Downwind', toX: APPROACH_X, kias: lost ? [[0, 110], [0.25, 120], [1, 120]] : flat(120), alt: flat(800) });
+  // The approach turn: the 90 at 500 ft and 110 KIAS, final at 250 ft. On one engine 110
+  // minimum to the threshold; without flaps, final at 110 and the threshold at 105.
+  const single = sse || caseN >= 1;
+  const finalK = single || id === 'noflap' ? 110 : 105;
+  const crossK = single ? 110 : id === 'noflap' ? 105 : 95;
+  L({ id: 'app1', phase: 'Approach turn', arc: APP_R1, angle: Math.PI / 2, kias: caseN === 4 ? [[0, 120], [0.3, 113], [1, 110]] : [[0, 120], [1, 110]], alt: [[0, 800], [1, 500]] });
+  L({ id: 'app2', phase: 'Approach turn', arc: APP_R2, angle: Math.PI / 2, kias: [[0, 110], [1, finalK]], alt: [[0, 500], [1, 250]] });
+  const toThreshold = (0 - ROLLOUT_X) / (TOUCHDOWN_X - ROLLOUT_X);
+  if (sse) L({ id: 'final', phase: 'Final', toX: WAVEOFF_X, kias: flat(110), alt: [[0, 250], [1, 200]] });
+  else L({ id: 'final', phase: 'Final', toX: TOUCHDOWN_X, kias: [[0, finalK], [toThreshold, crossK], [1, crossK - 5]], alt: [[0, 250], [toThreshold, 20], [1, 0]] });
+  if (caseN) L({ id: 'rollout', phase: 'SSE full stop', line: 2600, kias: [[0, 105], [1, 12]], alt: flat(0) });
+  return out;
 }
 
-// Vertical speed, feet per minute, from the altitude a moment either side.
-export function vsiAt(t) {
-  const d = 0.25;
-  const from = Math.max(0, t - d); // not back round into the last pass's flare
-  return ((stateAt(t + d).alt - stateAt(from).alt) / (t + d - from)) * 60;
-}
-
-// The airplane's configuration, by the time of the call that changes it.
-export function configAt(t) {
-  const at = (id) => EVENTS.find((e) => e.id === id).t;
-  const flaps = t >= at('flapsApproach') + 1.5 ? 'Approach' : t >= at('reset') + 1 ? 'Up' : 'Approach';
-  let props = 'Full forward';
-  if (t >= at('props1900') && t < at('review')) props = '1900 RPM';
-  let power;
-  if (t < at('reset')) power = 'Idle';
-  else if (t < at('go')) power = "12 o'clock";
-  else if (t < at('props1900')) power = 'Takeoff (1000 ft-lbs min)';
-  else if (t < at('crosswind')) power = 'Takeoff';
-  else if (t < at('approachTurn')) power = 'As required, 120 KIAS';
-  else if (t < at('final')) power = '~250 ft-lbs';
-  else if (t < at('threshold')) power = 'As required';
-  else power = 'Closing to idle';
-  return { flaps, props, power, gear: 'Down' };
-}
-
-// What is said and done, by time. `who` is a seat (PF, PM, OBS) or Tower; `say` lines are
-// spoken, `do` lines shown. `ref` is the publication; `technique` is the user's notes
-// (the pattern sketch), shown as technique.
-const CH1 = (pages) => ({ work: 'ME FTI', loc: 'Ch. 1 — Pattern Work', pages });
-const APPB = { work: 'ME FTI', loc: 'App. B — Radio Procedures', pages: 'p. B-4' };
-const APPF = { work: 'ME FTI', loc: 'App. F — Landing Checklist', pages: 'p. F-24' };
-
-const T = {
-  td: lap('touchdown').start,
-  rotate: lap('rotate').start,
-  p300: lap('p300').start,
-  xw: lap('crosswind').start,
-  dw: lap('downwind').start,
-  app: lap('approach').start,
-  fin: lap('final').start,
-};
-// The moment an altitude is passed in the crosswind turn.
-const xwAlt = (a) => T.xw + lap('crosswind').dur * 0.75 * inverseEase((a - 500) / 300);
-function inverseEase(v) {
-  let lo = 0;
-  let hi = 1;
-  for (let i = 0; i < 40; i += 1) { const m = (lo + hi) / 2; if (ease(m) < v) lo = m; else hi = m; }
-  return (lo + hi) / 2;
-}
-// The moment the approach turn passes an altitude (800 → 500 → 250 ft).
-function appAlt(a) {
-  let lo = 0;
-  let hi = 1;
-  for (let i = 0; i < 40; i += 1) { const m = (lo + hi) / 2; if (lerp(APP_ALT, distFraction('approach', m)) > a) lo = m; else hi = m; }
-  return T.app + lap('approach').dur * (lo + hi) / 2;
-}
-// The moment the final crosses the threshold (x = 0).
-const thresholdT = (() => {
-  const l = lap('final');
-  let lo = 0;
-  let hi = 1;
-  for (let i = 0; i < 40; i += 1) { const m = (lo + hi) / 2; if (FINAL_X + FINAL * distFraction('final', m) < 0) lo = m; else hi = m; }
-  return l.start + l.dur * (lo + hi) / 2;
-})();
-
-const ev = (id, t, who, kind, text, extra = {}) => ({ id, t, who, kind, text, ...extra });
-
-const LANDING = (t0) => {
-  const lines = [
-    ['PF', 'Landing Checklist'],
-    ['PM', 'Flaps'], ['PF', 'Approach'], ['PM', 'Approach'],
-    ['PM', 'Landing Gear'], ['PF', 'Down, locked'], ['PM', 'Down, locked'],
-    ['PM', 'Lights'], ['PF', 'Set'],
-    ['PM', 'Landing Checklist complete'],
-  ];
-  return lines.map(([who, text], i) => ev(`landing${i}`, t0 + 1.6 * (i + 1), who, 'say', text, { ref: APPF }));
-};
-
-export const EVENTS = [
-  ev('touchdown', T.td, 'PF', 'do', 'Touchdown, main mounts first, power levers at idle', { mark: 'Touchdown', ref: CH1('p. 1-34') }),
-  ev('reset', T.td + 0.7, 'PF', 'say', 'Reset Flaps and Trim', { ref: CH1('p. 1-35') }),
-  ev('twelve', T.td + 1.0, 'PF', 'do', "Power levers to 12 o'clock", { ref: CH1('p. 1-35') }),
-  ev('flaps', T.td + 1.6, 'PM', 'say', 'Flaps', { ref: CH1('p. 1-35') }),
-  ev('flapsUp', T.td + 1.9, 'PM', 'do', 'Flaps up for takeoff', { ref: CH1('p. 1-35') }),
-  ev('trim', T.td + 2.4, 'PM', 'say', 'Trim', { ref: CH1('p. 1-35') }),
-  ev('obsFlaps', T.td + 2.7, 'OBS', 'do', 'Checks flaps up', { ref: CH1('p. 1-30') }),
-  ev('go', T.td + 3.4, 'PM', 'say', 'Go', { note: 'Flaps set, trim set, props 2000 RPM minimum, engines spooled up', ref: CH1('p. 1-35') }),
-  ev('takeoffPower', T.td + 3.7, 'PF', 'do', 'Takeoff power, 1000 ft-lbs minimum', { ref: CH1('p. 1-35') }),
-  ev('rotate', T.rotate, 'PM', 'say', 'Rotate', { mark: 'Rotate', note: '91 KIAS, takeoff power set', ref: CH1('p. 1-35') }),
-  ev('climb', T.rotate + 2, 'PF', 'do', '7-10° nose up for 120 KIAS, hand on the power levers until well clear of the ground', { ref: CH1('p. 1-35') }),
-  ev('props1900', T.p300, 'PF', 'do', 'Takeoff power still set, props 1900 RPM', { mark: '300 ft', ref: CH1('p. 1-35') }),
-  ev('clearLeft', T.p300 + 3.2, 'PF', 'say', 'Clear left, going left', { note: '400 ft', technique: true }),
-  ev('clearRight', T.p300 + 4.6, 'PM', 'say', 'Clear right', { ref: CH1('p. 1-31') }),
-  ev('crosswind', T.xw, 'PF', 'do', 'Crosswind turn at 500 ft: 30° AOB maximum, 120 KIAS', { mark: 'Crosswind', ref: CH1('p. 1-31') }),
-  ev('flapsApproach', xwAlt(600), 'PF', 'say', 'Speed checks, flaps approach', { note: 'Passing 600 ft, 174 KIAS or less', ref: CH1('p. 1-31') }),
-  ev('flapsSet', xwAlt(600) + 0.9, 'PM', 'do', 'Flap handle to APPROACH', { ref: APPF }),
-  ...LANDING(xwAlt(600) + 0.6),
-  ev('downwind', T.dw, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, trimmed, about a mile abeam with the lift detector on the runway edge', { mark: 'Downwind', ref: CH1('p. 1-31') }),
-  ev('happy', T.dw + 2, 'PF', 'do', 'Landing Checklist, spacing, trim', { technique: true }),
-  ev('rudderTrim', T.dw + 8, 'PF', 'do', 'Rudder trim centered by the 180', { ref: CH1('p. 1-30') }),
-  ev('greens', T.app - POTATOES - 0.6, 'PF', 'do', 'Three green lights', { mark: 'The 180', ref: CH1('p. 1-31') }),
-  ev('abeam', T.app - POTATOES, 'PM', 'say', `${RUNWAY.field} Tower, ${CALL_SIGN}, left 180, three down and locked, touch-and-go.`, { radio: true, ref: APPB }),
-  ev('tower', T.app - POTATOES + 4.4, 'Tower', 'say', `${CALL_SIGN}, runway ${RUNWAY.number}, cleared for the option.`, { radio: true, generated: true }),
-  ev('approachTurn', T.app, 'PF', 'do', 'Approach turn: reduce power, continuous descending, decelerating turn to final, 30° AOB maximum', { mark: 'Approach turn', ref: CH1('p. 1-32') }),
-  ev('pptt', T.app + 0.5, 'PF', 'do', 'PPTTT, 26° AOB, 4 seconds up trim, stare at the PFD, about 250 ft-lbs', { technique: true }),
-  ev('the90', appAlt(500), 'PF', 'say', 'Down and locked', { mark: 'The 90', note: '500 ft, 110 KIAS. Look at the runway now', technique: true }),
-  ev('review', appAlt(300), 'PF', 'say', 'Props full forward, down and locked, review me complete.', { note: 'Props full forward at the same point each pass', ref: CH1('p. 1-32') }),
-  ev('obsGreens', appAlt(300) + 2.4, 'OBS', 'do', 'Checks three green lights and props full forward', { ref: CH1('p. 1-30') }),
-  ev('reviewed', appAlt(300) + 3.0, 'PM', 'say', 'Reviewed complete, cleared option.', { ref: CH1('p. 1-32') }),
-  ev('final', T.fin, 'PF', 'do', 'Final: 250 ft, 105 KIAS, aim at the numbers, centerline between your legs', { mark: 'Final', ref: CH1('p. 1-32') }),
-  ev('threshold', thresholdT, 'PF', 'do', 'Cross the threshold at 95 KIAS, slowly close the power levers, flare', { ref: CH1('p. 1-33') }),
-].sort((a, b) => a.t - b.t);
-
-// Map labels: where each mark falls.
-export const MARKS = EVENTS.filter((e) => e.mark).map((e) => {
-  const s = stateAt(e.t);
-  return { id: e.id, label: e.mark, x: s.x, y: s.y };
-});
-
-// The whole ground track, for drawing.
-export function track(step = 0.5) {
+// Fly the legs: a sample every few feet with its time, place, track and figures.
+function fly(id) {
+  const spec = legs(id);
+  const step = 6;
   const pts = [];
-  for (let t = 0; t <= CYCLE; t += step) { const s = stateAt(Math.min(t, CYCLE - 1e-6)); pts.push([s.x, s.y]); }
-  return pts;
+  let x = id === 'sse' ? WAVEOFF_X : TOUCHDOWN_X;
+  let y = 0;
+  let psi = 0;
+  let t = 0;
+  const seg = {};
+  for (const leg of spec) {
+    let len;
+    if (leg.line) len = leg.line;
+    else if (leg.arc) len = leg.arc * leg.angle;
+    else if (leg.toX !== undefined) len = Math.abs(leg.toX - x);
+    else len = Math.abs(leg.toY - y);
+    const n = Math.max(1, Math.round(len / step));
+    const ds = len / n;
+    seg[leg.id] = { start: Math.max(0, pts.length - 1) };
+    for (let i = 0; i <= n; i += 1) {
+      const f = i / n;
+      const kias = lerp(leg.kias, f);
+      if (i > 0) {
+        const vPrev = lerp(leg.kias, (i - 1) / n);
+        t += ds / (((kias + vPrev) / 2) * KT);
+        if (leg.arc) {
+          const dpsi = ds / leg.arc;
+          const mid = psi + dpsi / 2;
+          x += Math.cos(mid) * ds;
+          y += Math.sin(mid) * ds;
+          psi += dpsi;
+        } else {
+          x += Math.cos(psi) * ds;
+          y += Math.sin(psi) * ds;
+        }
+      }
+      if (i === 0 && pts.length) continue; // the joint is the last leg's end
+      pts.push({ t, x, y, psi, kias, alt: lerp(leg.alt, f), leg: leg.id, phase: leg.phase, f, r: leg.arc || 0 });
+    }
+    seg[leg.id].end = pts.length - 1;
+  }
+  // Bank for each turn's radius at its speed, eased in and out over two seconds.
+  const raw = pts.map((p) => (p.r ? (Math.atan(((p.kias * KT) ** 2) / (G * p.r)) * 180) / Math.PI : 0));
+  let lo = 0;
+  let hi = 0;
+  let sum = 0;
+  pts.forEach((p) => {
+    while (hi < pts.length && pts[hi].t <= p.t + 1) { sum += raw[hi]; hi += 1; }
+    while (pts[lo].t < p.t - 1) { sum -= raw[lo]; lo += 1; }
+    p.aob = sum / (hi - lo);
+  });
+  return { pts, seg, duration: t };
 }
 
-// Every line spoken, by seat, for the voice recorder.
-export function voiceLines() {
-  return EVENTS.filter((e) => e.kind === 'say').map((e) => ({ seat: e.who, say: e.text }));
+function find(pts, t) {
+  let lo = 0;
+  let hi = pts.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (pts[m].t <= t) lo = m; else hi = m; }
+  const a = pts[lo];
+  const b = pts[hi];
+  return [a, b, b.t > a.t ? Math.min(1, Math.max(0, (t - a.t) / (b.t - a.t))) : 0];
 }
 
-export const THRESHOLD_T = thresholdT;
+// ---- A pass: where the aircraft is, and what is said and done, by time.
+
+export function buildPass(id, engine = 'left') {
+  const { pts, seg, duration } = fly(id);
+  const sse = id === 'sse';
+  const caseN = id.startsWith('case') ? Number(id.slice(4)) : 0;
+  const single = sse || caseN > 0;
+  const e = engine;
+  const E = cap(e);
+  const good = e === 'left' ? 'right' : 'left';
+  const Good = cap(good);
+
+  // A leg's own samples (its first point is the last leg's end).
+  const leg = (legId) => pts.slice(seg[legId].start, seg[legId].end + 1).filter((p, i) => i > 0 || p.leg === legId);
+  const start = (legId) => pts[seg[legId].start].t;
+  const atF = (legId, f) => (leg(legId).find((p) => p.f >= f) || pts[seg[legId].end]).t;
+  const atAlt = (legId, a) => {
+    const ps = leg(legId);
+    const up = ps[ps.length - 1].alt >= ps[0].alt;
+    return (ps.find((p) => (up ? p.alt >= a : p.alt <= a)) || ps[ps.length - 1]).t;
+  };
+  const atX = (legId, x) => {
+    const ps = leg(legId);
+    const dir = Math.sign(ps[ps.length - 1].x - ps[0].x);
+    return (ps.find((p) => (p.x - x) * dir >= 0) || ps[ps.length - 1]).t;
+  };
+
+  const events = [];
+  const add = (t, who, kind, text, extra = {}) => events.push({ t, who, kind, text, ...extra });
+  const marks = [];
+  const mark = (t, label, key) => marks.push({ t, label, key });
+
+  const init = {
+    flaps: id === 'noflap' ? 'Up' : id === 'full' ? 'Down' : 'Approach',
+    gear: 'Down',
+    props: 'Full forward',
+    power: sse ? 'Max continuous' : 'Idle',
+    engines: sse ? `${E}: zero thrust (simulated feather)` : 'Both',
+  };
+
+  // The 180 call and Tower's answer, kept clear of any checklist running past it.
+  let quiet = null;
+  const checklist = (t0, flapsWord, gearDown) => {
+    const lines = [
+      ['PF', gearDown ? 'Speed checks, landing gear down, Landing Checklist' : 'Landing Checklist'],
+      ...(gearDown ? [['PM', 'Speed checks, landing gear down']] : []),
+      ['PM', 'Flaps'], ['PF', flapsWord], ['PM', flapsWord],
+      ['PM', 'Landing Gear'], ['PF', 'Down, locked'], ['PM', 'Down, locked'],
+      ['PM', 'Lights'], ['PF', 'Set'],
+      ['PM', 'Landing Checklist complete'],
+    ];
+    let t = t0;
+    lines.forEach(([who, text], i) => {
+      if (quiet && t > quiet[0] - 1 && t < quiet[1]) t = quiet[1];
+      add(t, who, 'say', text, {
+        ref: APPF('Landing Checklist', 'p. F-24'),
+        ...(gearDown && i === 1 ? { set: { gear: 'Down' } } : {}),
+      });
+      t += 1.7;
+    });
+    return t;
+  };
+  const shutdown = (t0, { check } = {}) => {
+    let t = t0;
+    const say = (dt, who, text, set) => {
+      t += dt;
+      add(t, who, 'say', text, { ref: APPF('Emergency Engine Shutdown Checklist', 'p. F-29'), ...(set ? { set } : {}) });
+    };
+    say(0, 'PF', `This will be an emergency shutdown of the ${e} engine.`);
+    say(3.2, 'PF', `${E} Power lever – Idle, concur?`);
+    say(2.2, 'PM', 'Concur');
+    say(1.2, 'PF', `${E} Propeller – Feather, concur?`);
+    say(2.4, 'PM', 'Simulate', { engines: `${E}: zero thrust (simulated feather)` });
+    say(1.2, 'PF', `${E} Condition lever – Fuel Cutoff concur?`);
+    say(2.6, 'PM', 'Simulate');
+    if (check) {
+      add(t + 1.4, 'PF', 'do', 'Prop feathered: props 1900 RPM. No fire or fuel leak', { ref: APPF('Emergency Engine Shutdown Checklist', 'p. F-29'), set: { props: '1900 RPM' } });
+      t += 3.6;
+      add(t, 'PF', 'say', 'Continue the checklist.', { ref: APPF('Emergency Engine Shutdown Checklist', 'p. F-30') });
+    }
+    return t;
+  };
+  const failure = (t0) => {
+    mark(t0, 'Engine failure', 'fail');
+    add(t0, 'PM', 'do', `Simulates a ${e} engine failure`, { set: { engines: `${E}: failed (simulated)` } });
+  };
+
+  // ---- Off the runway, or off the last final.
+  if (sse) {
+    mark(0, 'SSE wave-off (200 ft AGL)', 'waveoff');
+    add(0, 'PF', 'do', 'Power max continuous, positive rate of climb, VXSE minimum', { ref: NATOPS_SEWO });
+    add(1.2, 'PF', 'do', 'Flaps approach (unless already up)', { ref: NATOPS_SEWO });
+    add(2.6, 'PM', 'say', 'Landing gear up', { ref: FTI('p. 1-42'), set: { gear: 'Up' } });
+    add(4.4, 'PF', 'do', 'Flaps up', { ref: NATOPS_SEWO, set: { flaps: 'Up' } });
+    add(5.6, 'PF', 'do', 'Props 1900 RPM', { ref: NATOPS_SEWO, set: { props: '1900 RPM' } });
+    add(7.2, 'PF', 'do', 'Offset slightly to the pattern side, 102-110 KIAS', { ref: FTI('p. 1-42') });
+  } else {
+    mark(0, 'Touchdown', 'touchdown');
+    add(0, 'PF', 'do', 'Touchdown, main mounts first, power levers at idle', { ref: FTI('p. 1-34') });
+    add(0.7, 'PF', 'say', 'Reset Flaps and Trim', { ref: FTI('p. 1-35') });
+    add(1.0, 'PF', 'do', "Power levers to 12 o'clock", { ref: FTI('p. 1-35'), set: { power: "12 o'clock" } });
+    add(1.6, 'PM', 'say', 'Flaps', { ref: FTI('p. 1-35'), set: { flaps: 'Up' } });
+    add(2.7, 'PM', 'say', 'Trim', { ref: FTI('p. 1-35') });
+    add(3.9, 'PM', 'say', 'Go', { ref: FTI('p. 1-35') });
+    add(4.2, 'PF', 'do', 'Takeoff power, 1000 ft-lbs minimum', { ref: FTI('p. 1-35'), set: { power: 'Takeoff' } });
+    mark(start('climb'), 'Rotate', 'rotate');
+    add(start('climb'), 'PM', 'say', 'Rotate', { ref: FTI('p. 1-35') });
+    const t300 = start('up2');
+    mark(t300, 'Props 1900 (300 ft AGL)', 'p300');
+    if (caseN === 1) {
+      failure(t300);
+      add(t300 + 0.8, 'PF', 'do', 'Power up, rudder up, clean up', { ref: APPF('Emergency Procedures', 'p. F-28'), set: { power: `${Good} max` } });
+      add(t300 + 2.2, 'PF', 'do', 'Landing gear up', { ref: FTI('p. 1-37'), set: { gear: 'Up' } });
+      add(t300 + 3.4, 'PF', 'do', 'At 102 KIAS raise the nose, accelerate to 110, 5° bank into the good engine', { ref: FTI('p. 1-38') });
+      const t = shutdown(t300 + 5.5);
+      add(t + 1.4, 'PF', 'do', 'Hold the checklist: props 1900 RPM, reset maximum power, check the prop feathered', { ref: FTI('p. 1-38'), set: { props: '1900 RPM' } });
+      add(t + 4.6, 'PF', 'say', 'Continue the checklist.', { ref: FTI('p. 1-38') });
+      add(t + 7, 'PF', 'do', 'Crosswind turn at 300 ft or above with downwind interval. Declare an emergency', { ref: FTI('p. 1-38') });
+    } else {
+      add(t300, 'PF', 'do', 'Takeoff power still set, props 1900 RPM', { ref: FTI('p. 1-35'), set: { props: '1900 RPM' } });
+      const t400 = atAlt('up2', 400);
+      add(t400, 'PF', 'say', 'Clear left, going left', { technique: true });
+      add(t400 + 1.4, 'PM', 'say', 'Clear right', { ref: FTI('p. 1-31') });
+    }
+  }
+  const txw = start('xw1');
+  mark(txw, 'Crosswind', 'crosswind');
+  if (!single || caseN >= 2) add(txw, 'PF', 'do', 'Crosswind turn: 30° AOB maximum, 120 KIAS', { ref: FTI('p. 1-31'), set: { power: 'As required' } });
+  else add(txw, 'PF', 'do', 'Crosswind turn, 110 KIAS climbing', { ref: FTI('p. 1-41') });
+
+  // ---- Passing 600 ft: flaps approach and the Landing Checklist (gear already down).
+  if (!sse && caseN !== 1 && caseN !== 2) {
+    const t600 = atAlt('xw1', 600);
+    if (id === 'noflap') {
+      add(t600, 'PF', 'do', 'Passing 600 ft: flaps stay up', { ref: FTI('p. 1-31') });
+      checklist(t600 + 1, 'Up');
+    } else {
+      add(t600, 'PF', 'say', 'Speed checks, flaps approach', { ref: APPF('Landing Checklist', 'p. F-24'), set: { flaps: 'Approach' } });
+      checklist(t600 + 1.4, 'Approach');
+    }
+  }
+  if (caseN === 2) {
+    const t0 = start('xwLevel');
+    failure(t0 - 0.6);
+    add(t0, 'PF', 'do', 'Roll wings level to analyse', { ref: FTI('p. 1-39') });
+    add(t0 + 1.2, 'PF', 'do', 'Power up, rudder up, clean up', { ref: APPF('Emergency Procedures', 'p. F-28'), set: { power: `${Good} max`, gear: 'Up' } });
+    add(t0 + 3, 'PF', 'do', 'Nearly center the ball (¼ to ½ out toward the good engine), 102 KIAS minimum, 110 VYSE. Continue the turn', { ref: FTI('p. 1-39') });
+    const t = shutdown(start('xw1b') + 1, { check: true });
+    add(t + 2, 'PF', 'do', 'Declare an emergency. Climb to pattern altitude, then 120 KIAS', { ref: FTI('p. 1-39') });
+  }
+
+  // ---- Downwind.
+  const tdw = start('dw');
+  mark(tdw, 'Downwind', 'downwind');
+  if (sse || caseN === 1 || caseN === 2) add(tdw, 'PF', 'do', 'Pattern altitude, then accelerate to 120 KIAS', { ref: FTI('p. 1-38'), set: { power: `${Good} as required` } });
+  else {
+    add(tdw, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, trimmed, about a mile abeam', { ref: FTI('p. 1-31') });
+    if (!caseN) add(tdw + 2.5, 'PF', 'do', 'Landing Checklist, spacing, trim', { technique: true });
+    add(tdw + 7, 'PF', 'do', 'Rudder trim centered by the 180', { ref: FTI('p. 1-30') });
+  }
+  const t180 = atX('dw', THE_180_X);
+  quiet = [t180 - 0.4, t180 + 7];
+  let busyUntil = 0;
+  if (caseN === 3) {
+    const t0 = tdw + 1.5;
+    failure(t0);
+    add(t0 + 0.8, 'PF', 'do', 'Power on the good engine, nearly center the ball, 120 KIAS and pattern altitude', { ref: FTI('p. 1-39'), set: { power: `${Good} as required` } });
+    add(t0 + 2.4, 'PF', 'do', 'Short of midfield: clean up, gear and flaps up', { ref: FTI('p. 1-39'), set: { gear: 'Up', flaps: 'Up' } });
+    busyUntil = shutdown(t0 + 4) + 1.6;
+    add(busyUntil - 0.8, 'PF', 'do', 'Landing Checklist complete no later than the 90, 110 KIAS minimum to the 90', { ref: FTI('p. 1-40') });
+  }
+  // On one engine, approaching the 180: flaps approach, gear down, Landing Checklist; and
+  // before it, the SSE full-stop brief.
+  if (sse || caseN === 1 || caseN === 2 || caseN === 3) {
+    if (caseN === 1 || caseN === 2) {
+      add(t180 - 38, 'PF', 'say', `Once safely on the deck, I will bring both power levers over the detent, reversing with the ${good} engine, maintaining centerline with opposite rudder and aileron and forward yoke pressure. If rudder effectiveness is lost, I will bring both power levers toward flight idle.`, { ref: APPB('p. B-10'), hold: 13 });
+    }
+    const tc = Math.max(t180 - 22, busyUntil);
+    add(tc, 'PF', 'say', 'Speed checks, flaps approach', { ref: FTI('p. 1-41'), set: { flaps: 'Approach' } });
+    checklist(tc + 1.6, 'Approach', true);
+  }
+
+  // ---- The 180 and the approach turn.
+  const intent = sse ? 'low approach' : caseN ? 'full-stop' : 'touch-and-go';
+  const cleared = sse ? 'low approach' : caseN ? 'full-stop' : 'option';
+  const tower = sse ? 'cleared low approach' : caseN ? 'cleared to land' : 'cleared for the option';
+  mark(t180, 'The 180', 'the180');
+  add(t180 - 0.4, 'PF', 'do', 'Three green lights', { ref: FTI('p. 1-31') });
+  add(t180, 'PM', 'say', `${RUNWAY.field} Tower, ${CALL_SIGN}, left 180, three down and locked, ${intent}.`, { radio: true, ref: APPB('p. B-4') });
+  add(t180 + 4.8, 'Tower', 'say', `${CALL_SIGN}, runway ${RUNWAY.number}, ${tower}.`, { radio: true, generated: true });
+  const tTurn = start('app1');
+  mark(tTurn, 'Approach turn', 'approach');
+  const oneEngineTurn = sse || (caseN >= 1 && caseN <= 3);
+  if (oneEngineTurn) add(tTurn, 'PF', 'do', 'Approach turn: 110 KIAS minimum to the 90', { ref: FTI('p. 1-40'), set: { power: `${caseN >= 4 ? 'Both' : Good} as required` } });
+  else {
+    add(tTurn, 'PF', 'do', 'Approach turn: reduce power, continuous descending, decelerating turn, 30° AOB maximum', { ref: FTI('p. 1-32'), set: { power: '~250 ft-lbs' } });
+    add(tTurn + 1.2, 'PF', 'do', 'PPTTT, 4 seconds up trim, stare at the PFD, about 250 ft-lbs', { technique: true });
+  }
+  if (caseN === 4) {
+    const t0 = atF('app1', 0.25);
+    failure(t0);
+    add(t0 + 0.8, 'PF', 'do', 'Power on the good engine, 110 KIAS minimum, nearly center the ball, continue the turn. Gear stays down', { ref: FTI('p. 1-40'), set: { power: `${Good} as required` } });
+    shutdown(t0 + 3);
+  }
+
+  const t90 = start('app2');
+  mark(t90, 'The 90', 'the90');
+  add(t90, 'PF', 'say', 'Down and locked', { technique: true, note: 'Look at the runway now' });
+  if (id === 'full') add(t90 + 1.6, 'PF', 'do', 'Flaps down, after the 90 and before rolling onto final', { ref: FTI('p. 1-34'), set: { flaps: 'Down' } });
+  if (caseN === 5) {
+    const t0 = t90 + 2;
+    failure(t0);
+    add(t0 + 0.8, 'PF', 'do', 'Slight power on the good engine, 110 KIAS to the threshold, aircraft control first', { ref: FTI('p. 1-40'), set: { power: `${Good} as required` } });
+    busyUntil = shutdown(t0 + 2.6) + 1.4;
+  }
+  const tReview = Math.max(atAlt('app2', 300), busyUntil);
+  add(tReview, 'PF', 'say', 'Props full forward, down and locked, review me complete.', { ref: FTI('p. 1-32'), set: { props: 'Full forward' } });
+  add(tReview + 3.4, 'PM', 'say', `Reviewed complete, cleared ${cleared}.`, { ref: FTI('p. 1-32') });
+
+  // ---- Final.
+  const tFinal = start('final');
+  mark(tFinal, 'Final', 'final');
+  const finalK = single || id === 'noflap' ? 110 : 105;
+  const crossK = single ? 110 : id === 'noflap' ? 105 : 95;
+  add(tFinal, 'PF', 'do', `Final: 250 ft, ${finalK} KIAS, aim at the numbers`, { ref: FTI(single ? 'p. 1-41' : id === 'noflap' ? 'p. 1-33' : 'p. 1-32'), set: { power: 'As required' } });
+  if (sse) mark(duration, 'SSE wave-off (200 ft AGL)', 'waveoffEnd');
+  else add(atX('final', 0), 'PF', 'do', `Cross the threshold at ${crossK} KIAS, slowly close the power levers, flare`, { ref: FTI(single ? 'p. 1-41' : 'p. 1-33'), set: { power: 'Closing to idle' } });
+  if (caseN) {
+    const tr = start('rollout');
+    mark(duration, 'SSE full stop', 'fullstop');
+    add(tr, 'PF', 'do', 'Power levers idle, both over the detent', { ref: FTI('p. 1-41'), set: { power: 'Idle' } });
+    add(tr + 1.5, 'PF', 'do', `Slowly ease the ${good} engine into reverse. Rudder for yaw, brakes and power for centerline`, { ref: FTI('p. 1-41'), set: { power: `${Good} reverse` } });
+    add(tr + 4.5, 'PF', 'do', `Yoke full forward, aileron into the ${e} engine, to a slow taxi`, { ref: FTI('p. 1-41') });
+  }
+
+  events.sort((a, b) => a.t - b.t);
+  const changes = events.filter((x) => x.set);
+  const configAt = (t) => {
+    const c = { ...init };
+    for (const x of changes) { if (x.t > t) break; Object.assign(c, x.set); }
+    return c;
+  };
+  const altAt = (t) => { const [a, b, k] = find(pts, t); return a.alt + (b.alt - a.alt) * k; };
+
+  const stateAt = (time) => {
+    const t = Math.max(0, Math.min(duration, time));
+    const [a, b, k] = find(pts, t);
+    const mix = (p) => a[p] + (b[p] - a[p]) * k;
+    const psi = mix('psi');
+    const t0 = Math.max(0, t - 0.3);
+    const t1 = Math.min(duration, t + 0.3);
+    return {
+      t, x: mix('x'), y: mix('y'), psi, alt: mix('alt'), kias: mix('kias'), aob: mix('aob'),
+      hdg: ((RUNWAY.heading - (psi * 180) / Math.PI) % 360 + 360) % 360,
+      vsi: t1 > t0 ? ((altAt(t1) - altAt(t0)) / (t1 - t0)) * 60 : 0,
+      phase: a.phase,
+      ...configAt(t),
+    };
+  };
+
+  const placed = marks.map((m) => { const s = stateAt(m.t); return { ...m, x: s.x, y: s.y }; });
+  const track = pts.filter((_, i) => i % 6 === 0 || i === pts.length - 1).map((p) => [p.x, p.y]);
+  return { id, engine, duration, events, marks: placed, track, stateAt };
+}
+
+export const GEOMETRY = { TOUCHDOWN_X, TURN_X, XW_R, APPROACH_X, ROLLOUT_X, APP_R1, APP_R2, WAVEOFF_X };

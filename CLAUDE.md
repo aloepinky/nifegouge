@@ -853,15 +853,18 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
 
 ## T-44C Pattern Work
 
-`/t44c/pattern` (`practice/t44c/pattern/`, since 2026-11-19): a model flying touch-and-goes round a
-5,000 ft runway (Cabaniss 13, left traffic, no wind), saying the calls as it goes. `patternModel.js`
-is pure and tested: each leg lasts the mean of the user's two stopwatch passes (`LAPS`, a lap
-named for the mark that starts it), shapes and numbers are the ME FTI's (Ch. 1 Pattern Work,
-App. B, App. F Landing Checklist), and `technique` lines are the user's pattern sketch. The
-approach turn is a half circle in its lap's time at 120 to 105 KIAS, which sets the distance
-abeam; bank is worked out from speed and radius. Its spoken lines are recorded with the Voice
-Checklists' (`tools/t44c-voice-record.js`, Tower as Danielle); a line without a clip uses the
-browser's voice.
+`/t44c/pattern` (`practice/t44c/pattern/`, since 2026-11-19): a model T-44C flying the VFR pattern
+round a 5,000 ft runway (Cabaniss 13, left traffic, no wind), its calls and procedures popping up
+in a PF box (left), a PM box (right) and a radio box (across the top), the numbers in one line
+above them. No sound (the user, 2026-11-19). Pattern types: approach flap, no flap, full flap,
+SSE (looped from the SSE wave-off at 200 ft) and Cases 1 to 5 (a touch-and-go, the simulated
+failure, an SSE full stop). `patternModel.js` is pure and tested: a pass is a chain of legs,
+each with its airspeed and altitude, timed by flying it; the legs off the runway keep the user's
+stopwatch times, the rest is the ME FTI's (§106 Pattern Work, Figures 1-3, 1-4, 1-6): downwind
+1 nm abeam (the user: the student timed was tight), crosswind at 30° AOB, the approach turn from
+3 s past abeam the numbers to centerline 1,200 ft short at 250 ft. Bank is worked out from speed
+and radius. `technique` lines are the user's pattern sketch; the cases' crew lines are
+`T44C/t44cCases.js`'s Figure F-1 wording. The aircraft is drawn in SVG, white and orange.
 
 ## Page views
 

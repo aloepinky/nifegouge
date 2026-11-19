@@ -11679,25 +11679,12 @@ button.epl-modal-close:hover {
   color: var(--ink);
 }
 
-.ptw-title {
-  margin: 4px 0 4px;
-  font-size: 22px;
-  color: var(--ink-strong);
-}
-
-.ptw-intro {
-  margin: 0 0 10px;
-  max-width: 70ch;
-  font-size: 14px;
-  color: var(--ink-muted);
-}
-
 .ptw-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 14px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .ptw-btn {
@@ -11726,8 +11713,7 @@ button.epl-modal-close:hover {
   background: var(--btn-2);
 }
 
-.ptw-field,
-.ptw-check {
+.ptw-field {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -11743,49 +11729,170 @@ button.epl-modal-close:hover {
   border: 1px solid var(--line-strong);
   background: var(--surface);
   color: var(--ink);
+  max-width: 100%;
 }
 
-.ptw-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 16px;
-  align-items: start;
+.ptw-pass {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--ink-muted);
 }
 
-.ptw-main {
+/* The flight's numbers, one line. */
+.ptw-nums {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 16px;
+  margin: 0 0 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ptw-num {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.ptw-num dt {
+  order: 2;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.ptw-num dd {
+  order: 1;
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.ptw-num--phase dd {
+  min-width: 7.5em;
+  color: var(--ink-accent);
+}
+
+/* The PF, PM and radio boxes: the radio across the top, the crew below it, left and right. */
+.ptw-comms {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(54px, auto) minmax(88px, auto);
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+
+.ptw-comms-radio {
+  grid-column: 1 / -1;
+}
+
+.ptw-box {
+  position: relative;
+  padding: 7px 12px 7px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  animation: ptw-pop 0.18s ease-out;
+}
+
+.ptw-box--pf {
+  border-left: 4px solid var(--ink-strong);
+}
+
+.ptw-box--pm {
+  border-left: 4px solid var(--line-accent);
+}
+
+.ptw-box--radio {
+  background: var(--wash);
+}
+
+.ptw-box-who {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+}
+
+.ptw-box-line {
+  margin: 2px 0 0;
+  font-size: 16px;
+  color: var(--ink-strong);
+  transition: opacity 0.3s;
+  animation: ptw-pop 0.18s ease-out;
+}
+
+.ptw-box--pm .ptw-box-line {
+  color: var(--ink-accent);
+}
+
+.ptw-box-line--do {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ink);
+}
+
+.ptw-box--pm .ptw-box-line--do {
+  color: var(--ink);
+}
+
+.ptw-box-line--leaving {
+  opacity: 0;
+}
+
+.ptw-box-from {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.ptw-box-note {
+  font-size: 13px;
+  font-style: normal;
+  color: var(--ink-muted);
+}
+
+.ptw-box-tag {
+  margin-left: 8px;
+  font-size: 11px;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+}
+
+@keyframes ptw-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptw-box,
+  .ptw-box-line {
+    animation: none;
+  }
 }
 
 .ptw-card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 8px;
 }
 
-.ptw-now {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 12px;
-  margin-bottom: 8px;
+.ptw-foot {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--ink-faint);
 }
 
-.ptw-now-lap {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--ink-strong);
-}
-
-.ptw-now-next {
-  font-size: 13px;
-  color: var(--ink-muted);
-  font-variant-numeric: tabular-nums;
-}
-
+/* The pattern from above, in feet. */
 .ptw-map {
   display: block;
   width: 100%;
@@ -11800,7 +11907,7 @@ button.epl-modal-close:hover {
 .ptw-track {
   fill: none;
   stroke: var(--line-accent);
-  stroke-width: 40;
+  stroke-width: 36;
   stroke-dasharray: 160 120;
 }
 
@@ -11822,15 +11929,9 @@ button.epl-modal-close:hover {
   dominant-baseline: central;
 }
 
-.ptw-map-note,
 .ptw-dim text {
   fill: var(--ink-faint);
-  font-size: 200px;
-  text-anchor: middle;
-}
-
-.ptw-dim text {
-  text-anchor: start;
+  font-size: 230px;
 }
 
 .ptw-dim line {
@@ -11847,7 +11948,7 @@ button.epl-modal-close:hover {
 
 .ptw-mark text {
   fill: var(--ink-muted);
-  font-size: 230px;
+  font-size: 250px;
 }
 
 .ptw-mark--passed circle {
@@ -11859,239 +11960,52 @@ button.epl-modal-close:hover {
   fill: var(--ink-strong);
 }
 
-.ptw-plane {
-  fill: var(--ink-strong);
-  stroke: var(--surface);
-  stroke-width: 14;
+.ptw-mark--fail circle {
+  stroke: #d97706;
 }
 
-.ptw-plane-shadow {
-  fill: var(--ink);
-  opacity: 0.15;
+.ptw-mark--fail.ptw-mark--passed circle {
+  fill: #d97706;
 }
 
-.ptw-gauges {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
-  gap: 6px;
-  margin: 10px 0 0;
+/* The aircraft: paint, so literal colours in both themes. */
+.ptw-ac-white {
+  fill: #f4f6f7;
+  stroke: #26343c;
+  stroke-width: 0.22;
 }
 
-.ptw-gauge {
-  padding: 5px 8px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface-2);
-  min-width: 0;
+.ptw-ac-orange {
+  fill: #e5481c;
+  stroke: #26343c;
+  stroke-width: 0.22;
 }
 
-.ptw-gauge dt {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--ink-faint);
+.ptw-ac-glass {
+  fill: #2b3a44;
 }
 
-.ptw-gauge dd {
-  margin: 0;
-  overflow-wrap: anywhere;
+.ptw-ac-disc {
+  fill: #6b7a83;
+  opacity: 0.45;
 }
 
-.ptw-gauge-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--ink-strong);
-  font-variant-numeric: tabular-nums;
+.ptw-ac-blade {
+  stroke: #26343c;
+  stroke-width: 0.35;
 }
 
-.ptw-gauge-unit {
-  font-size: 12px;
-  color: var(--ink-muted);
+.ptw-ac-shadow path {
+  fill: #000000;
+  opacity: 0.16;
 }
 
-.ptw-watch {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 6px;
-}
-
-.ptw-watch-time {
-  font-size: 30px;
-  font-weight: 300;
-  color: var(--ink-strong);
-  font-variant-numeric: tabular-nums;
-}
-
-.ptw-watch-pass {
-  font-size: 13px;
-  color: var(--ink-muted);
-}
-
-.ptw-laps {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-}
-
-.ptw-laps th,
-.ptw-laps td {
-  padding: 4px 6px;
-  border-bottom: 1px solid var(--line);
-  text-align: right;
-}
-
-.ptw-laps th:first-child {
-  text-align: left;
-  font-weight: normal;
-}
-
-.ptw-laps thead th {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--ink-faint);
-  font-weight: normal;
-}
-
-.ptw-laps tfoot th,
-.ptw-laps tfoot td {
-  border-bottom: none;
-  color: var(--ink-muted);
-}
-
-.ptw-lap--now {
-  background: var(--wash);
-}
-
-.ptw-lap--now th,
-.ptw-lap--now td {
-  font-weight: 600;
-  color: var(--ink-strong);
-}
-
-.ptw-link {
-  font: inherit;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--ink-accent);
-  cursor: pointer;
-  text-align: left;
-}
-
-.ptw-link:hover {
-  text-decoration: underline;
-}
-
-.ptw-script {
-  max-height: calc(100vh - 140px);
-  overflow-y: auto;
-  position: sticky;
-  top: 12px;
-  padding-top: 4px;
-}
-
-.ptw-script-head {
-  margin: 10px 0 4px;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--ink-faint);
-}
-
-.ptw-script ol {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.ptw-line {
-  display: grid;
-  grid-template-columns: 3.2em 3.6em minmax(0, 1fr);
-  gap: 6px;
-  padding: 4px 4px;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.ptw-line--ahead {
-  opacity: 0.55;
-}
-
-.ptw-line--now {
-  background: var(--wash);
-  opacity: 1;
-}
-
-.ptw-line-time {
-  font: inherit;
-  font-size: 12px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--ink-faint);
-  cursor: pointer;
-  text-align: left;
-  font-variant-numeric: tabular-nums;
-}
-
-.ptw-line-time:hover {
-  color: var(--ink-accent);
-  text-decoration: underline;
-}
-
-.ptw-who {
-  font-size: 11px;
-  line-height: 1.9;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--ink-faint);
-}
-
-.ptw-said {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.ptw-line--pf .ptw-said {
-  color: var(--ink-strong);
-}
-
-.ptw-line--pm .ptw-said {
-  color: var(--ink-accent);
-}
-
-.ptw-line--tower .ptw-said,
-.ptw-line--obs .ptw-said {
-  color: var(--ink-muted);
-}
-
-.ptw-line--do .ptw-said {
-  font-style: italic;
-}
-
-.ptw-note,
-.ptw-ref {
-  display: block;
-  font-style: normal;
-  font-size: 12px;
-  color: var(--ink-muted);
-}
-
-.ptw-ref {
-  color: var(--ink-faint);
-}
-
-@media (max-width: 860px) {
-  .ptw-body {
-    grid-template-columns: minmax(0, 1fr);
+@media (max-width: 640px) {
+  .ptw-box-line {
+    font-size: 14px;
   }
 
-  .ptw-script {
-    position: static;
-    max-height: 60vh;
+  .ptw-comms {
+    gap: 6px;
   }
 }
