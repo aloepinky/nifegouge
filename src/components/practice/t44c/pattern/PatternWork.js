@@ -144,18 +144,17 @@ function PatternMap({ pass, s, onJump }) {
 
 // ---- The flight's numbers, a box each.
 function Gauges({ s, single }) {
-  const vsi = Math.round(s.vsi / 50) * 50;
+  // In scan order: power, attitude, then airspeed and altitude.
   const cells = [
+    ['Power', s.power, ''],
+    ['AOB', `${Math.round(s.aob)}°`, ''],
+    ['Nose', `${s.pitch >= 0.5 ? '+' : ''}${Math.round(s.pitch)}°`, ''],
     ['Airspeed', Math.round(s.kias), 'KIAS'],
     ['Altitude', Math.max(0, Math.round(s.alt / 10) * 10), 'ft AGL'],
-    ['Vertical speed', `${vsi > 0 ? '+' : ''}${vsi}`, 'ft/min'],
-    ['Bank', `${Math.round(s.aob)}°`, ''],
-    ['Pitch', `${s.pitch >= 0.5 ? '+' : ''}${Math.round(s.pitch)}°`, ''],
     ['Heading', String(Math.round(s.hdg) || 360).padStart(3, '0'), ''],
     ['Flaps', s.flaps, ''],
     ['Gear', s.gear, ''],
     ['Prop levers', s.props, ''],
-    ['Power', s.power, ''],
     ...(single ? [['Engines', s.engines, '']] : []),
   ];
   return (
