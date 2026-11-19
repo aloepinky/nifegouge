@@ -150,10 +150,11 @@ const BEFORE_START = {
       watch: ['Fuel Circuit Breakers', 'Fuel Panel Circuit Breakers', 'Firewall Valve', 'Crossfeed', 'Left Boost Pump', 'Right Boost Pump', 'Battery'],
       watchOnly: true,
       // a. both sets of fuel panel breakers: the FUEL SYSTEM strip on the fuel panel and the
-      // L and R FUEL PANEL pair under the TACAN (the user, 2026-11-19). c. the crossfeed open,
-      // then closed.
-      sequence: ['Fuel Circuit Breakers', 'Fuel Panel Circuit Breakers', 'Firewall Valve', 'Crossfeed', 'Crossfeed',
-        ['Left Boost Pump', 'Right Boost Pump'], 'Battery'],
+      // L and R FUEL PANEL pair under the TACAN (the user, 2026-11-19). The breakers and the
+      // firewall guards (a, b) are looks and come any time; in order only what the aeroplane
+      // needs (the user, 2026-11-19): c, the crossfeed open then closed, and d before e, the
+      // pumps' draw read on the battery ammeter before the battery goes on.
+      sequence: ['Crossfeed', 'Crossfeed', ['Left Boost Pump', 'Right Boost Pump'], 'Battery'],
       shows: {
         Crossfeed: ['FUEL CROSSFEED'],
         'Left Boost Pump': ['Battery Ammeter'],
@@ -660,9 +661,10 @@ const ENGINE_RUNUP = {
       replies: [say('CHECKED', 'LS')],
     }),
     item('er8', 'Autofeather/Autoignition', 'CHECKED/OFF', 'LS', {
-      watch: ['Condition Lever', 'Autoignition', 'Power Lever'],
-      // a, c, d, then e: the power levers run the test.
-      sequence: ['Condition Lever', 'Autoignition', CONTROL, 'Power Lever'],
+      watch: ['Condition Lever', 'Autoignition', 'Power Lever', 'Generator Load'],
+      // a, c, d, then e: the power levers run the test. Then the generator load, once the test
+      // is over, for the note's N1 reset per NATOPS Figure 4.3-1 (the user, 2026-11-19).
+      sequence: ['Condition Lever', 'Autoignition', CONTROL, 'Power Lever', 'Generator Load'],
       shows: {
         Autoignition: ARMED_IGN,
         Autofeather: [...ARMED_IGN, ...ARMED_FEATHER],

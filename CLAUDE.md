@@ -737,7 +737,7 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
   piece, `<id>#<n>` the nth piece of its `sequence` (After Start's ids repeat Abnormal Start's,
   hence the procedure). Since the engines answer the levers, multi-control steps list their
   `sequence` (t44cNormals.js; the user, 2026-11-04 and 11-08): Runup 6 is prop, test switch,
-  power (HIGH IDLE leaves the props under 1900 rpm); Runup 8 the condition levers first and the power levers last;
+  power (HIGH IDLE leaves the props under 1900 rpm); Runup 8 the condition levers first, the power levers, then the generator load once the test is over (a gate on the watched piece, `:Generator Load`; 2026-11-19); Before Start 8 orders only the crossfeed and the pumps before the battery;
   After Start 7 seven clicks (CLOSED then AUTO is one). The power lever is a position whose
   N1 HIGH IDLE raises only near the idle stop, so LOW IDLE at the 1900 rpm setting leaves
   about 524 lb-ft (the user's figure). Skip fires a step's remaining events and runs the model

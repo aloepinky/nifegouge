@@ -1307,8 +1307,8 @@ const AUTOFEATHER_TEST = [
 export const STEP_EVENTS = {
   'before-start': {
     // 8: c, the crossfeed OPEN then CLOSED; d, the boost pumps; e, the battery.
-    'bs8#4': [{ xfeed: 'open' }],
-    'bs8#5': [{ xfeed: 'closed' }],
+    'bs8#1': [{ xfeed: 'open' }],
+    'bs8#2': [{ xfeed: 'closed' }],
     'bs8:Left Boost Pump': [{ boost: { L: true } }],
     'bs8:Right Boost Pump': [{ boost: { R: true } }],
     'bs8:Battery': [{ battery: true }],
@@ -1401,6 +1401,12 @@ export const gateOf = (stepId, procedure) => GATED.has(stepId)
   || (procedure === 'abnormal-start' && stepId === 'as3');
 
 export function gate(state, stepId, piece, procedure) {
+  // A watched piece (`:<piece>`): only Engine Runup 8's generator load is held, until the
+  // autofeather test is over (the user, 2026-11-19).
+  if (piece && piece.startsWith(':')) {
+    return stepId === 'er8' && piece === ':Generator Load' && state.script
+      ? 'The autofeather test is still running.' : null;
+  }
   // Abnormal Start 3, "Starter - Off (at 40 seconds)": by the starter's own time, not the
   // student's clock (the user, 2026-11-04).
   if (procedure === 'abnormal-start') {

@@ -955,6 +955,8 @@ function Drill({
       missed(target);
       return;
     }
+    // A watched piece the engine holds back (Engine Runup 8's generator load during the test).
+    if (got.some((p) => p !== CONTROL && tooEarly(step, `:${p}`))) return;
     if (got.includes(CONTROL)) {
       if (tooEarly(step, null)) return;
       fire(step);
