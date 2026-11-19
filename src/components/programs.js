@@ -97,7 +97,7 @@ export const PROGRAM_TABS = {
     { to: '/t44c/discuss', label: 'Discussion Items' },
     { to: '/t44c/briefs', label: 'Briefs/TOLD' },
     { to: '/t44c/practice', label: 'Practice Flight' },
-    { to: '/t44c/pattern', label: 'Pattern Work' },
+    { to: '/t44c/pattern', label: 'Pattern Work', draft: true }, // dev server only for now (the user, 2026-11-19)
   ],
   t54a: [
     { to: '/t54a/about', label: 'About' },

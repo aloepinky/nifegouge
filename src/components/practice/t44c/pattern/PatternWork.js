@@ -76,7 +76,7 @@ const LABEL_AT = {
 // off while they are in dispute).
 const NOTE_LINE = 300;
 const NOTES = [
-  { x: 4300, y: 2300, anchor: 'start', lines: ['Upwind and crosswind', '300 ft: props 1900', '400 ft: “Clear left, going left”', '500 ft: turn', '600 ft: “Speed check, flaps approach,', '     Landing Checklist”', 'Level at 800: 600 ft-lbs'] },
+  { x: 4300, y: 2300, anchor: 'start', lines: ['Upwind and crosswind', '300 ft: props 1900', '400 ft: “Clear left, going left”', '500 ft: turn', '600 ft: “Speed check, flaps approach,', '     Landing Checklist”'] },
   { x: 2400, y: 5500, anchor: 'middle', lines: ['Downwind: happy time', 'Landing Checklist, spacing, trim'] },
   { x: -3300, y: 4300, anchor: 'start', lines: ['The 180', 'Power, pitch, trim, turn, talk', '4 sec up trim, stare at the PFD', '~250 ft-lbs'] },
   { x: -3300, y: 2300, anchor: 'start', lines: ['The 90, 500 ft', '“Down and locked”', 'Look at the runway now'] },

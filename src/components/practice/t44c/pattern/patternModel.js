@@ -46,6 +46,7 @@ const FTI = (pages) => ({ work: 'ME FTI', loc: '§106 — Pattern Work', pages }
 const APPB = (pages) => ({ work: 'ME FTI', loc: 'App. B — Typical Briefs and Voice Procedures', pages });
 const APPF = (loc, pages) => ({ work: 'ME FTI', loc: `App. F — ${loc}`, pages });
 const NATOPS_SEWO = { work: 'T-44C NATOPS', loc: 'Single-Engine Waveoff/Missed Approach' };
+const CALLOUTS = { work: 'T-44C NATOPS', loc: 'Figure 22.4-4 — General Callouts', pages: 'p. 22.4-9' };
 
 // Piecewise-linear over a fraction: [[fraction, value], ...].
 function lerp(points, u) {
@@ -361,7 +362,7 @@ export function buildPass(id, engine = 'left') {
     add(tdw + 7, 'PF', 'do', 'Rudder trim centered by the 180', { ref: FTI('p. 1-30') });
   }
   const t180 = start('app'); // abeam the groove
-  quiet = [t180 - 0.4, t180 + 7];
+  quiet = [t180 - 0.4, t180 + 12];
   let busyUntil = 0;
   if (caseN === 3) {
     const t0 = tdw + 1.5;
@@ -390,6 +391,10 @@ export function buildPass(id, engine = 'left') {
   add(t180 - 0.4, 'PF', 'do', 'Three green lights', { ref: FTI('p. 1-31') });
   add(t180, 'PM', 'say', `${RUNWAY.field} Tower, ${CALL_SIGN}, left 180, three down and locked, ${intent}.`, { radio: true, ref: APPB('p. B-4') });
   add(t180 + 4.8, 'Tower', 'say', `${CALL_SIGN}, runway ${RUNWAY.number}, ${tower}.`, { radio: true, generated: true });
+  // Every clearance is read back by the PM and confirmed by the PF (NATOPS: ATC clearance).
+  const readback = sse ? 'Cleared low approach' : caseN ? 'Cleared to land' : 'Cleared for the option';
+  add(t180 + 8.4, 'PM', 'say', `${readback}, runway ${RUNWAY.number}, ${CALL_SIGN}.`, { radio: true, generated: true, ref: CALLOUTS });
+  add(t180 + 11.4, 'PF', 'say', `${readback}.`, { generated: true, ref: CALLOUTS });
   const tTurn = t180 + 0.3;
   const oneEngineTurn = sse || (caseN >= 1 && caseN <= 3);
   if (oneEngineTurn) add(tTurn, 'PF', 'do', 'Approach turn: 110 KIAS minimum to the 90', { ref: FTI('p. 1-40'), set: { power: `${caseN >= 4 ? 'Both' : Good} as required` } });
@@ -397,7 +402,7 @@ export function buildPass(id, engine = 'left') {
     add(tTurn, 'PF', 'do', 'Approach turn: reduce power, continuous descending, decelerating turn to the groove', { ref: FTI('p. 1-32'), set: { power: '~250 ft-lbs' } });
   }
   if (caseN === 4) {
-    const t0 = atF('app', 0.12);
+    const t0 = Math.max(atF('app', 0.12), t180 + 12.6); // after the clearance is read back
     failure(t0);
     add(t0 + 0.8, 'PF', 'do', 'Power on the good engine, 110 KIAS minimum, nearly center the ball, continue the turn. Gear stays down', { ref: FTI('p. 1-40'), set: { power: `${Good} as required` } });
     shutdown(t0 + 3);
@@ -405,7 +410,9 @@ export function buildPass(id, engine = 'left') {
 
   const t90 = atF('app', 0.5);
   mark(t90, 'The 90', 'the90');
-  add(t90, 'PF', 'say', 'Down and locked', { technique: true });
+  // The 500 ft aural tone (radar altimeter minimums set to 500 ft for pattern work).
+  add(t90, 'PF', 'say', 'Down and locked', { ref: CALLOUTS, note: '500 ft tone' });
+  add(t90 + 1.4, 'PM', 'say', 'Down and locked', { ref: CALLOUTS });
   if (id === 'full') add(t90 + 1.6, 'PF', 'do', 'Flaps down, after the 90 and before rolling onto final', { ref: FTI('p. 1-34'), set: { flaps: 'Down' } });
   if (caseN === 5) {
     const t0 = t90 + 2;
