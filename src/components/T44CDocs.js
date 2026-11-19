@@ -10,6 +10,7 @@ const T44C = {
     { value: 'metro', label: 'Metro' },
     { value: 'aero', label: 'Aero' },
     { value: 'frr', label: 'FRR' },
+    { value: 'inav1', label: 'INAV 1' },
     { value: 'fams', label: 'Fams' },
     { value: 'instruments', label: 'Instruments' },
   ],
