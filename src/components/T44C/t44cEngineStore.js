@@ -14,15 +14,9 @@ import { drawFault, faultById, faultsFor, faultText } from './t44cFaults';
 
 const KEY = 't44cStartScenario';
 // Chaos: the odds, 0 to 1, that a step with faults draws one as it comes up (t44cFaults.js).
-const CHAOS_KEY = 't44cChaos';
-const readChaos = () => {
-  try {
-    const v = Number(window.localStorage.getItem(CHAOS_KEY));
-    return Number.isFinite(v) && v >= 0 && v <= 1 ? v : 0;
-  } catch {
-    return 0;
-  }
-};
+// Every visit starts at 0 and the slider is not remembered (the user, 2026-11-19); the key it
+// was saved under is cleared so an old setting cannot linger.
+try { window.localStorage.removeItem('t44cChaos'); } catch { /* private window */ }
 // The step an event key belongs to: `er6#4` and `er8:Power Lever` are Engine Runup 6 and 8's.
 const stepOfKey = (key) => key.split(/[:#]/)[0];
 export const RANDOM = 'random';
@@ -51,7 +45,7 @@ export const oneOfEachGroup = (defs, rand = Math.random) => {
 
 export function createT44CEngine() {
   let scenario = readScenario();
-  let chaos = readChaos();
+  let chaos = 0;
   // Each step draws once a run (the procedure's steps already drawn for), and a fault the student
   // goes past is told to the drill through `onMiss`.
   let drawnFor = new Set();
@@ -262,7 +256,6 @@ export function createT44CEngine() {
     chaos: () => chaos,
     setChaos(v) {
       chaos = Math.min(1, Math.max(0, v));
-      try { window.localStorage.setItem(CHAOS_KEY, String(chaos)); } catch { /* private window */ }
       publish();
     },
 
