@@ -90,7 +90,7 @@ export const matches = (record, step, aliases) => {
 // whichever one the checklist is asking for next, and falls back to the first when it is asking
 // for neither. A record with one action always answers with it.
 // `alt` is a second choice, asked only when `next` is not one of the record's: the step after a
-// yellow one, which EPDrill's `hopPartial` lets a click go on to.
+// yellow one, which EPDrill lets a click go on to.
 export const actionFor = (record, next, aliases, alt = null) => {
   const list = record.actions || [];
   if (!list.length) return record.action;

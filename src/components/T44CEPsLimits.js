@@ -201,7 +201,6 @@ function T44CEPs(game) {
     <EPDrill
       {...game}
       engine={engine}
-      hopPartial
       detours={DETOURS}
       sets={SETS}
       aliases={T44C_ALIASES}

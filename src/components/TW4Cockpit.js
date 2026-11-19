@@ -87,6 +87,9 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   // Wrong clicks in a row on one step; the second rings the control as Hint does (every school,
   // the user, 2026-11-19). A click that is taken, or a different step, starts the count again.
   const missRef = useRef({ field: null, n: 0 });
+  // Steps left yellow: a click for the step after a yellow one leaves it so and goes on (every
+  // cockpit, the user, 2026-11-19). The open step no longer comes back to them.
+  const leftRef = useRef(new Set());
 
   useEffect(() => {
     if(isRandom) {
@@ -301,6 +304,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   };
 
   const handleInputsChange = (field, value) => {
+    leftRef.current.delete(field);
     setInputData(prev => ({ ...prev, [field]: value }));
     setCheckResults(prev => ({ ...prev, [field]: '' }));
   };
@@ -324,6 +328,8 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
     Object.keys(answers).forEach(key => {
       const rawCorrect = Array.isArray(answers[key]) ? answers[key].join('') : answers[key];
       results[key] = gradeAnswer(data[key], rawCorrect);
+      // A step left yellow is still only part done, whatever its box holds.
+      if (leftRef.current.has(key) && results[key] !== 'correct') results[key] = 'partial';
     });
 
     setCheckResults(results);
@@ -352,6 +358,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   };
 
   const resetAnswers = () => {
+    leftRef.current = new Set();
     setInputData({});
     setCheckResults({});
     setActiveHints({});
@@ -391,7 +398,7 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
     const allFields = Object.keys(inputAnswers).filter(key => key.startsWith(currentKey));
     // The open step, from stepFlow.js. `emptyNum` is its position in this EP, which is only used
     // to tell whether the step just filled was the last one.
-    const nextEmptyField = openStep(allFields, {
+    const nextEmptyField = openStep(allFields.filter((f) => !leftRef.current.has(f)), {
       value: (f) => inputData[f],
       result: (f) => checkResults[f],
       answer: (f) => inputAnswers[f],
@@ -402,24 +409,40 @@ function TW4Cockpit({ isGameActive = false, onGameComplete }) {
   // Find next appropriate input and try it
   const tryNextStep = (controls) => {
     const results = checkResults;
-    const {nextEmptyField, emptyNum} = findNextEmpty();
+    let {nextEmptyField, emptyNum} = findNextEmpty();
     if(!nextEmptyField){return}
+    const hits = (field, list) => inputAnswers[field].filter(answer =>
+      list.some(control =>
+        answer.toLowerCase().includes(control.toLowerCase()) ||
+        control.toLowerCase().includes(answer.toLowerCase())
+      )
+    );
+    // A yellow step, and a click that is none of its own but is the next step's: the yellow step
+    // is left yellow and the click goes on to the next one.
+    let hopFrom = null;
+    if(results[nextEmptyField] === 'partial' && !hits(nextEmptyField, controls).length){
+      const currentKey = divMap[currentDivKey][0][currentIndexArray[currentIndex]].key;
+      const allFields = Object.keys(inputAnswers).filter(key => key.startsWith(currentKey));
+      const after = allFields.slice(allFields.indexOf(nextEmptyField) + 1)
+        .find((f) => String(inputAnswers[f] ?? '') !== '');
+      if(after && hits(after, controls).length){
+        hopFrom = nextEmptyField;
+        nextEmptyField = after;
+        emptyNum = allFields.indexOf(after);
+      }
+    }
     if(results[nextEmptyField] === 'partial'){controls = [...controls, inputData[nextEmptyField]]}
 
     let correctAnswers = inputAnswers[nextEmptyField]
 
     // Find all matching answers in order
-    const matchingAnswers = correctAnswers.filter(answer =>
-      controls.some(control =>
-        answer.toLowerCase().includes(control.toLowerCase()) ||
-        control.toLowerCase().includes(answer.toLowerCase())
-      )
-    );
+    const matchingAnswers = hits(nextEmptyField, controls);
 
     // A click marks the step it filled and leaves every other step's marking alone, so what
     // Check told you stays on the page until you retype the box or check again. Every school's
     // EPs and limits work this way.
     const outcome = clickOutcome(matchingAnswers.length, correctAnswers.length);
+    if(hopFrom) leftRef.current.add(hopFrom);
     if(outcome === FILL){
       inputData[nextEmptyField] = matchingAnswers.join('');
       const results = {...checkResults};

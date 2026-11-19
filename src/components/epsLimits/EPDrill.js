@@ -460,7 +460,6 @@ function Drill({
   aliases = DEFAULT_ALIASES, normal = false, read = false, calls = false, crew = false, sequential = false, modes = null, extraToggle = null,
   practice = null, initialFull = null, onFull,
   nwc, nwcHints, isGameActive = false, onGameComplete, engine = null, detours = [],
-  hopPartial = false,
 }) {
   // One number sets both columns; a pair sets them separately, which a bespoke layout needs —
   // Advanced hangs a column of buttons on the left and a stack of three panels on the right.
@@ -518,9 +517,9 @@ function Drill({
   // Wrong clicks in a row; the second rings the control as Hint does (every school, the user,
   // 2026-11-19). Any click that is taken starts the count again.
   const misses = useRef(0);
-  // With `hopPartial` (the T-44C, to try it; the user, 2026-11-19), a click for the step after a
-  // yellow one leaves that step yellow and goes on: these are the steps left so, which the open
-  // step no longer comes back to.
+  // A click for the step after a yellow one leaves that step yellow and goes on (every cockpit;
+  // the user, 2026-11-19): these are the steps left so, which the open step no longer comes back
+  // to. Primary does the same in TW4Cockpit.js.
   const leftOpen = useRef(new Set());
   // The yellow step a click would leave, committed only once the click is taken (`taken`).
   const hopFrom = useRef(null);
@@ -802,10 +801,10 @@ function Drill({
     const said = (wordings || [action]).map((w) => canon(w, aliases));
     hopFrom.current = null;
 
-    // hopPartial: the open step is yellow, the click is not one of its own, and it is for the
+    // The open step is yellow, the click is not one of its own, and it is for the
     // step after it (or one past the look steps after that). The yellow step stays yellow and is
     // left; the click goes on to the next one.
-    if (hopPartial && isPartial(step) && !belongsTo(step, action, values, said)
+    if (isPartial(step) && !belongsTo(step, action, values, said)
       && !lookAhead(step, action, values, said)) {
       const after = steps.slice(steps.indexOf(step) + 1).find((s) => answers[s.id]);
       if (after && (belongsTo(after, action, values, said) || lookAhead(after, action, values, said))) {
@@ -1164,7 +1163,7 @@ function Drill({
   // show the buttons only normal checklists use (T-44C's `normal` actions) and keep them off the
   // EPs, which never name them.
   const openNow = nextOpen();
-  const hopTo = hopPartial && openNow && isPartial(openNow)
+  const hopTo = openNow && isPartial(openNow)
     ? steps.slice(steps.indexOf(openNow) + 1).find((s) => answers[s.id]) : null;
   const api = { fill, hint, shown, reveal, next: controlOf((openNow || {}).text),
     nextAlt: hopTo ? controlOf(hopTo.text) : null, resetKey, normalProcedure: normal || !!ep.normal,
