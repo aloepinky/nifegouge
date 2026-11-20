@@ -317,10 +317,17 @@ test.each(ON_FINAL)('%s, waved off at %i ft: the memory items, then round the pa
   expect(near(q.stateAt(markT(q, 'crosswind')).y, 0, 5)).toBe(true);
   expect(q.marks[0].key).toBe('waveoff');
   const said = sayings(q);
-  expect(said.slice(0, 2)).toEqual(['Landing gear up', 'Landing gear up']);
-  expect(q.stateAt(8).gear).toBe('Up');
-  expect(q.stateAt(8).flaps).toBe('Up');
-  expect(q.stateAt(8).props).toBe('1900 RPM');
+  // Every memory item said aloud, the PM answering the gear and the flaps.
+  const flapsSaid = s.flaps === 'Down' ? ['Flaps approach', 'Approach'] : [s.flaps === 'Up' ? 'Flaps are up' : 'Flaps are approach'];
+  const items = [sse ? 'Power max continuous' : 'Power set', ...flapsSaid, 'Landing gear up', 'Landing gear selected up', 'Landing gear up', ...(s.flaps === 'Up' ? [] : ['Flaps up', 'Up']), 'Props 1900'];
+  expect(said.slice(0, items.length)).toEqual(items);
+  const tProps = q.events.find((x) => x.text === 'Props 1900').t + 0.1;
+  expect(q.stateAt(tProps).gear).toBe('Up');
+  expect(q.stateAt(tProps).flaps).toBe('Up');
+  expect(q.stateAt(tProps).props).toBe('1900 RPM');
+  // "Clear left, going left" just before the crosswind turn, not as the climb passes 400 ft.
+  const clear = q.events.find((x) => /^Clear \w+, going/.test(x.text));
+  if (!sse) expect(markT(q, 'crosswind') - clear.t).toBeLessThan(4);
   // Gear down again and the Landing Checklist done by the 90.
   expect(q.stateAt(markT(q, 'the90')).gear).toBe('Down');
   const done = q.events.filter((x) => x.text === 'Landing Checklist complete').pop().t;

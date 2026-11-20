@@ -144,7 +144,7 @@ describe('T-44C practice flight', () => {
         const first = (lapLog(x)[0] || {}).text;
         if (x.lap === 'break') expect(first).toMatch(x.cleared ? /flaps approach|Landing Checklist/ : /numbers for the break/);
         if (['approach', 'noflap', 'full'].includes(x.lap)) expect(first).toBe('Reset Flaps and Trim');
-        if (x.lap === 'sse') expect(first).toBe('Landing gear up');
+        if (x.lap === 'sse') expect(first).toBe('Power max continuous');
       });
       const said = s.log.filter((l) => l.phase === 'Pattern').map((l) => l.text);
       expect(said.some((t) => /180, three down and locked/.test(t))).toBe(true);
@@ -189,7 +189,7 @@ describe('T-44C practice flight', () => {
       if (end === 'ssewaveoff') expect(after.engine).toBe(lap.engine);
       const first = buildLap(after).stateAt(0);
       expect(Math.abs(first.alt - lapPass.stateAt(t).alt)).toBeLessThan(3);
-      expect(lapLog(after)[0].text).toBe('Landing gear up');
+      expect(lapLog(after)[0].text).toBe(after.from.single ? 'Power max continuous' : 'Power set');
       if (kind === 'case4') expect(lapLog(after).some((l) => l.text === 'Did the prop feather?')).toBe(true);
     });
   });

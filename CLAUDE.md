@@ -881,7 +881,11 @@ call it; one called in the approach turn finishes the turn onto the runway headi
 begins, `buildPass(id, …, from)`, flown from where the aircraft was. On one engine at 200 ft or
 above an SSE wave-off into the SSE pattern (SSE full stop again off that pattern); below 200 ft,
 and on two engines, a wave-off on both (NATOPS §12.1.1), into the same two-engine pattern. Memory
-items NATOPS §16.2/§7.18, "Landing gear up" by both pilots. A Case 4 or 5 waved off on one
+items NATOPS §16.2/§7.18, every one said aloud (the user, 2026-11-20): PF "Power max continuous"
+(two engines "Power set", R&I Whiskey: say what is set), "Flaps are approach" when they already
+are (R&I Whiskey; "Flaps are up", or "Flaps approach" : "Approach" from full flaps), "Landing
+gear up" : "Landing gear selected up", "Landing gear up", "Flaps up" : "Up", "Props 1900".
+"Clear left, going left" only just before the crosswind turn. A Case 4 or 5 waved off on one
 engine then calls for the rest of the shutdown checklist (FTI p. 1-40 note 2; `rest`). Every
 touch-and-go takes off on both engines (NATOPS §12.1.1). The IFG's 4,490 × 75 ft serves an SSE
 touch-and-go, so only the SSE full stop needs 4,900 × 100 (`sseFullStop`).

@@ -124,6 +124,7 @@ const APPB = (pages) => ({ work: 'ME FTI', loc: 'App. B — Typical Briefs and V
 const APPF = (loc, pages) => ({ work: 'ME FTI', loc: `App. F — ${loc}`, pages });
 const NATOPS_SEWO = { work: 'T-44C NATOPS', loc: 'Single-Engine Waveoff/Missed Approach' };
 const NATOPS_WO = { work: 'T-44C NATOPS', loc: 'Ch. 7 — Waveoff/Missed Approach', pages: 'p. 7.18-1' };
+const RIW = { work: 'R&I Whiskey', loc: 'Read and Initial Whiskey' };
 // Gear and flaps are called before they move (NATOPS §22.4.5), "Landing gear up" by both pilots
 // (ME FTI p. 1-11).
 const NATOPS_ALT = { work: 'T-44C NATOPS', loc: 'Ch. 15 — Alternate Prop Feathering', pages: 'p. 15.14-2' };
@@ -587,37 +588,51 @@ function passCore(id, engine, runwayId, draw, opts) {
   };
 
   // ---- Off the runway, or off the last final: the wave-off's memory items (NATOPS §16.2 on
-  // one engine, §7.18 on two), "Landing gear up" said by both pilots before the props come back
-  // (ME FTI pp. 1-11 and 1-42). A Case 4 or 5 waved off on one engine then calls for the rest of
-  // the Emergency Shutdown Checklist (p. 1-40, Case 4 note 2; the on-wing packet: "If you
-  // waveoff, do not forget the shutdown after the waveoff").
+  // one engine, §7.18 on two), each said aloud as it is done (the user, 2026-11-20): the power as
+  // set, never "as required" ("Power set" on two engines, R&I Whiskey), "Flaps are approach"
+  // when they already are (R&I Whiskey: so the PM does not move the lever), the PM answering
+  // the gear and the flaps, "Landing gear up" before the props come back (ME FTI p. 1-42). A
+  // Case 4 or 5 waved off on one engine then calls for the rest of the Emergency Shutdown
+  // Checklist (p. 1-40, Case 4 note 2; the on-wing packet: "If you waveoff, do not forget the
+  // shutdown after the waveoff").
   if (from) {
     const ref = from.single ? NATOPS_SEWO : NATOPS_WO;
     const ft = Math.round(from.alt / 10) * 10;
     mark(0, from.single ? `SSE wave-off (${ft} ft AGL)` : `Wave-off (${ft} ft AGL)`, 'waveoff');
-    if (from.single) add(0, 'PF', 'do', 'Power max continuous, positive rate of climb, VXSE minimum', { ref, set: { power: 'Max continuous' } });
-    else add(0, 'PF', 'do', 'Power as required, positive rate of climb, VX minimum', { ref, set: { power: 'As required' } });
-    add(1.2, 'PF', 'do', 'Flaps approach (unless already up)', { ref, ...(from.flaps === 'Down' ? { set: { flaps: 'Approach' } } : {}) });
-    add(2.4, 'PF', 'say', 'Landing gear up', { ref: GEAR_UP });
-    add(3.6, 'PM', 'say', 'Landing gear up', { ref: FTI('p. 1-42'), set: { gear: 'Up' } });
-    add(4.8, 'PF', 'do', 'Flaps up', { ref, set: { flaps: 'Up' } });
-    add(6.0, 'PF', 'do', 'Props 1900 RPM', { ref, set: { props: '1900 RPM' } });
-    if (from.single) add(7.2, 'PF', 'do', 'Offset slightly to the pattern side, 102-110 KIAS', { ref: FTI('p. 1-42') });
-    else add(7.2, 'PF', 'do', 'Offset slightly to the pattern side to see traffic over the runway', { ref: FTI('p. 1-36') });
+    add(0, 'PF', 'do', from.single ? 'Positive rate of climb, VXSE minimum' : 'Positive rate of climb, VX minimum', { ref });
+    add(0, 'PF', 'say', from.single ? 'Power max continuous' : 'Power set', { ref: from.single ? ref : RIW, set: { power: from.single ? 'Max continuous' : 'Set' } });
+    let t = 1.6;
+    if (from.flaps === 'Down') {
+      add(t, 'PF', 'say', 'Flaps approach', { ref });
+      add(t + 1.3, 'PM', 'say', 'Approach', { set: { flaps: 'Approach' } });
+      t += 2.8;
+    } else {
+      add(t, 'PF', 'say', from.flaps === 'Up' ? 'Flaps are up' : 'Flaps are approach', { ref: RIW });
+      t += 1.6;
+    }
+    add(t, 'PF', 'say', 'Landing gear up', { ref });
+    add(t + 1.3, 'PM', 'say', 'Landing gear selected up', { set: { gear: 'In transit' } });
+    add(t + 4.3, 'PM', 'say', 'Landing gear up', { ref: FTI('p. 1-42'), set: { gear: 'Up' } });
+    t += 5.6;
+    if (from.flaps !== 'Up') {
+      add(t, 'PF', 'say', 'Flaps up', { ref });
+      add(t + 1.3, 'PM', 'say', 'Up', { set: { flaps: 'Up' } });
+      t += 1.4;
+    }
+    add(t, 'PF', 'say', 'Props 1900', { ref, set: { props: '1900 RPM' } });
+    t += 1.2;
+    if (from.single) add(t, 'PF', 'do', 'Offset slightly to the pattern side, 102-110 KIAS', { ref: FTI('p. 1-42') });
+    else add(t, 'PF', 'do', 'Offset slightly to the pattern side to see traffic over the runway', { ref: FTI('p. 1-36') });
+    t += 1.2;
     // Waved off before its first three items were done, the whole checklist.
     if (from.rest === 'all') {
-      add(8.4, 'PF', 'do', 'Call for the Emergency Shutdown Checklist', { ref: FTI('p. 1-40') });
-      busyUntil = shutdown(9, { after: 'rest' }) + 1.4;
+      add(t, 'PF', 'do', 'Call for the Emergency Shutdown Checklist', { ref: FTI('p. 1-40') });
+      busyUntil = shutdown(t + 0.6, { after: 'rest' }) + 1.4;
     } else if (from.rest) {
-      add(8.4, 'PF', 'do', 'Call for the remainder of the Emergency Shutdown Checklist', { ref: FTI('p. 1-40') });
-      busyUntil = remainder(8.4) + 1.4;
+      add(t, 'PF', 'do', 'Call for the remainder of the Emergency Shutdown Checklist', { ref: FTI('p. 1-40') });
+      busyUntil = remainder(t) + 1.4;
     }
-    if (!from.single) {
-      const t400 = Math.max(atAlt('up2', 400), 9);
-      add(t400, 'PF', 'say', `Clear ${side}, going ${side}`, { technique: true });
-      add(t400 + 1.4, 'PM', 'say', `Clear ${other}`, { ref: FTI('p. 1-31') });
-      add(Math.max(atAlt('up2', 500), t400 + 2), 'PF', 'do', `Level at 500 ft until the crosswind turn: ${back}`, { ref: FTI('p. 1-36'), set: { power: tq('600 ft-lbs') } });
-    }
+    if (!from.single) add(Math.max(atAlt('up2', 500), t), 'PF', 'do', `Level at 500 ft until the crosswind turn: ${back}`, { ref: FTI('p. 1-36'), set: { power: tq('600 ft-lbs') } });
   } else {
     mark(0, 'Touchdown', 'touchdown');
     add(0, 'PF', 'do', 'Touchdown, main mounts first, power levers at idle', { ref: FTI('p. 1-34') });
@@ -649,6 +664,11 @@ function passCore(id, engine, runwayId, draw, opts) {
     }
   }
   const txw = start('xw1');
+  // Off a wave-off on two engines, "Clear left, going left" just before the turn it announces.
+  if (from && !from.single) {
+    add(txw - 3, 'PF', 'say', `Clear ${side}, going ${side}`, { technique: true });
+    add(txw - 1.6, 'PM', 'say', `Clear ${other}`, { ref: FTI('p. 1-31') });
+  }
   // Case 1 turns once the prop is feathered: the upwind held until then.
   if (caseN === 1 && featherT > txw - 0.5) {
     const at = pts[seg.xw1.start];
