@@ -898,11 +898,21 @@ NGP), turned and scaled to the runway (`siteOf`). The sketch notes are the user'
 crew lines are `T44C/t44cCases.js`'s Figure F-1 wording.
 **The cases' spoken lines** (the user, 2026-11-19): crews say what they set, never NATOPS's "As
 required" (Case 1: "Power max allowable, landing gear up, airspeed 102."), in the on-wing gouge's
-words with no tag (the user), the PM's answers that nothing prints as Generated comms. After the first three shutdown items nothing says "hold" or
-"continue the checklist" (the FTI's momentary hold is a step in the FTI box only); the PF asks
-"Did the prop feather?" and "Is it a fire or fuel leak?". Their answers are drawn per pass
-(`drawCase`: no feather 25%, fire 25%, fuel leak 25%): a no runs NATOPS §15.14.3 Alternate Prop
-Feathering, a yes the F-1 firewall, extinguisher and bleed air items. **Keep to the normal pattern**
+words with no tag (the user), the PM's answers that nothing prints as Generated comms. The FTI's
+momentary hold after the first three items is a step in the FTI box only; the PF asks "Did the
+prop feather?" and "Is it a fire or fuel leak?". Their answers are drawn per pass (`drawCase`:
+no feather 25%, fire 25%, fuel leak 25%). A no runs NATOPS §15.14.3 Alternate Prop Feathering
+step by step, the PM reading and the PF answering (generated), unless it would hold the
+crosswind turn, delay the 180 or run the talk past the 90: then the instructor says it feathered
+(`buildPass`; the user, 2026-11-20). A yes runs the F-1 firewall, extinguisher and bleed air
+items, every simulated one answered "Simulate" (the PF too, for the right extinguisher and the
+bleed air). Then "Declare an emergency.", "Continue the checklist." and steps 7 to 18 of NATOPS
+§15.2 (PM reads, the left seat answers its own; failed-engine switches "Simulate"; generated),
+"Hold the checklist." where the Landing Checklist needs the time (`holdAt`). The Landing
+Checklist is never interrupted (FTI Case 3 note 2): it runs whole before the 180 call or after
+Tower's answer, and the crew is quiet while the radio is (`hush`). Case 3 comes in two (the
+user, 2026-11-20): before midfield (clean up, gear and flaps up, Landing Checklist again before
+the 180) and past midfield (`case3b`: no clean-up, the checklist already done). **Keep to the normal pattern**
 (the user: it is shared with other traffic; a change is the exception). `buildPass` flies a pass
 again only where the calls cannot fit: Case 1 holds the crosswind turn until the prop is
 feathered (FTI p. 1-38, about 1,300 ft on, 2,300 with the alternate checklist), and the Landing

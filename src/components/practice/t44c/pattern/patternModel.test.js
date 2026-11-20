@@ -152,7 +152,7 @@ test.each(RUNWAYS.map((r) => r.id))('%s: its traffic side in the calls and headi
 });
 
 const DRAWS = [true, false].flatMap((feather) => ['none', 'fire', 'fuel'].map((leak) => ({ feather, leak })));
-test.each(['case1', 'case2', 'case3'].flatMap((id) => ['left', 'right'].flatMap((eng) => DRAWS.map((d) => [id, eng, d.feather, d.leak]))))(
+test.each(['case1', 'case2', 'case3', 'case3b'].flatMap((id) => ['left', 'right'].flatMap((eng) => DRAWS.map((d) => [id, eng, d.feather, d.leak]))))(
   '%s, %s engine, feathers %s, %s: continuous, one call at a time, Landing Checklist done by the 90',
   (id, eng, feather, leak) => {
     const p = buildPass(id, eng, 'kngw-13', { feather, leak });
@@ -175,12 +175,36 @@ test.each(['case1', 'case2', 'case3'].flatMap((id) => ['left', 'right'].flatMap(
     expect(Math.min(...gaps)).toBeGreaterThanOrEqual(1.1);
     const done = said.filter((x) => x.text === 'Landing Checklist complete').pop().t;
     expect(done).toBeLessThan(markT(p, 'the90'));
-    expect(said.some((x) => /checklist\.$/i.test(x.text) && /^(Hold|Continue)/.test(x.text))).toBe(false);
+    // The last Landing Checklist runs whole, nothing said inside it but its own lines.
+    const lcEnd = said.findIndex((x) => x.t === done && x.text === 'Landing Checklist complete');
+    let lcStart = lcEnd;
+    while (lcStart > 0 && !/Landing Checklist$/.test(said[lcStart].text)) lcStart -= 1;
+    said.slice(lcStart, lcEnd + 1).forEach((x) => expect(x.ref && x.ref.loc).toMatch(/Landing Checklist|Configuration Change/));
     expect(said.some((x) => x.text === (leak === 'none' ? 'No.' : leak === 'fire' ? 'Yes, fire.' : 'Yes, fuel leak.'))).toBe(true);
-    expect(said.some((x) => x.text === 'Alternate prop feathering checklist.')).toBe(!feather);
+    // A prop that will not feather is worked with the alternate checklist, step by step, unless
+    // the instructor says it feathered to keep the pattern.
+    const worked = !p.draw.feather;
+    expect(feather || worked || id === 'case1' || id === 'case3' || id === 'case3b').toBe(true);
+    expect(said.some((x) => x.text === 'Alternate prop feathering checklist.')).toBe(worked);
+    expect(said.some((x) => x.text === 'Holding in test.')).toBe(worked);
     // In Case 1 the crosswind turn waits for the prop.
-    const feathered = said.find((x) => x.text === (feather ? 'Yes.' : 'Prop feathered.')).t;
+    const feathered = said.find((x) => x.text === (worked ? 'Prop feathered.' : 'Yes.')).t;
     expect(id !== 'case1' || markT(p, 'crosswind') >= feathered).toBe(true);
+    // In a case every simulated item is answered "Simulate".
+    if (leak === 'fire' && eng === 'right') expect(said[said.findIndex((x) => x.text === 'Right fire extinguisher discharge, concur?') + 1].text).toBe('Simulate');
+    if (leak !== 'none') expect(said[said.findIndex((x) => /bleed air valve closed, concur\?$/.test(x.text)) + 1].text).toBe('Simulate');
+    // After "Declare an emergency" the checklist is continued, and either finished or held.
+    const i = said.findIndex((x) => x.text === 'Declare an emergency.');
+    const cont = said.findIndex((x) => x.text === 'Continue the checklist.');
+    if (cont >= 0) {
+      expect(cont).toBe(i + 1);
+      expect(said.some((x) => x.text === 'Emergency Shutdown Checklist complete.' || x.text === 'Hold the checklist.')).toBe(true);
+    }
+    // Cases 1 and 2 always have the time; Case 3's downwind may not.
+    expect(cont >= 0 || id.startsWith('case3')).toBe(true);
+    // Case 3 cleans up before midfield, not past it.
+    const tf = markT(p, 'fail');
+    expect(p.stateAt(tf + 6).gear).toBe(id === 'case3' ? 'Up' : id === 'case3b' ? 'Down' : p.stateAt(tf + 6).gear);
   },
 );
 
@@ -359,4 +383,18 @@ test('a wave-off off the break goes round its pattern', () => {
   const w = waveoffOf(e, (a + b) / 2);
   expect(w.id).toBe('noflap');
   expect(w.from.single).toBe(false);
+});
+
+// The Landing Checklist is never interrupted (ME FTI p. 1-40, Case 3 note 2): from its call to
+// "Landing Checklist complete" nothing else is said, on the radio or in the cockpit.
+const CHECKED = PATTERNS.flatMap((id) => ['kngw-13', 'kali-13'].flatMap((rid) => [true, false].map((feather) => [id, rid, feather])));
+test.each(CHECKED)('%s at %s (prop feathers: %s): every Landing Checklist runs whole', (id, rid, feather) => {
+  const p = buildPass(id, 'right', rid, { feather, leak: 'fire' });
+  const said = p.events.filter((x) => x.kind === 'say');
+  said.forEach((x, i) => {
+    if (x.text !== 'Landing Checklist complete') return;
+    let j = i;
+    while (j > 0 && !/Landing Checklist$/.test(said[j].text)) j -= 1;
+    said.slice(j, i + 1).forEach((y) => expect(`${y.text} (${y.ref && y.ref.loc})`).toMatch(/Landing Checklist|Configuration Change/));
+  });
 });

@@ -11,7 +11,7 @@ export const runwayIdOf = (field, rwy) => `${field === 'KNGW' ? 'kngw' : 'kngp'}
 const LABEL = Object.fromEntries(SCENARIOS.map((x) => [x.id, x.label]));
 LABEL.break = 'Overhead break';
 const TWO_ENGINE = ['approach', 'noflap', 'full'];
-const CASES = ['case1', 'case2', 'case3', 'case4', 'case5'];
+const CASES = ['case1', 'case2', 'case3', 'case3b', 'case4', 'case5'];
 
 export const lapLabel = (kind) => LABEL[kind] || kind;
 export { singleEngine };

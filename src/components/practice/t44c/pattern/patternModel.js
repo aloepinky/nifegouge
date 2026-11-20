@@ -114,7 +114,8 @@ export const SCENARIOS = [
   { id: 'ssefs', label: 'SSE full stop' },
   { id: 'case1', label: 'Case 1. Takeoff to crosswind' },
   { id: 'case2', label: 'Case 2. Crosswind turn' },
-  { id: 'case3', label: 'Case 3. Downwind' },
+  { id: 'case3', label: 'Case 3. Downwind, before midfield' },
+  { id: 'case3b', label: 'Case 3. Downwind, past midfield' },
   { id: 'case4', label: 'Case 4. Approach turn' },
   { id: 'case5', label: 'Case 5. After the 90' },
 ];
@@ -128,6 +129,7 @@ const RIW = { work: 'R&I Whiskey', loc: 'Read and Initial Whiskey' };
 // Gear and flaps are called before they move (NATOPS §22.4.5), "Landing gear up" by both pilots
 // (ME FTI p. 1-11).
 const NATOPS_ALT = { work: 'T-44C NATOPS', loc: 'Ch. 15 — Alternate Prop Feathering', pages: 'p. 15.14-2' };
+const NATOPS_SHUTDOWN = { work: 'T-44C NATOPS', loc: 'Ch. 15 — Emergency Shutdown Checklist', pages: 'p. 15.2-1' };
 const GEAR_UP = { work: 'ME FTI', loc: '§103 — Departure and Arrival Transitions', pages: 'p. 1-11' };
 const CONFIG = { work: 'T-44C NATOPS', loc: 'Ch. 22 — Configuration Change', pages: 'p. 22.4-2' };
 const CALLOUTS = { work: 'T-44C NATOPS', loc: 'Figure 22.4-4 — General Callouts', pages: 'p. 22.4-9' };
@@ -173,7 +175,7 @@ function legs(id, length, opts = {}, pa = 800) {
   const xwAt = turnX(length);
   const ext = opts.dwExt || 0;
   const sse = SSE_IDS.includes(id);
-  const caseN = id.startsWith('case') ? Number(id.slice(4)) : 0;
+  const caseN = id.startsWith('case') ? parseInt(id.slice(4), 10) : 0;
   const out = [];
   const L = (leg) => out.push(leg);
   const from = opts.from || (sse ? SSE_START : null);
@@ -439,6 +441,19 @@ export const drawCase = (rand = Math.random) => {
 // crosswind turn held until the prop is feathered, the 180 delayed for the Landing Checklist.
 // `from`: it begins with the student's wave-off there (`waveoffOf`), not a touch and go.
 export function buildPass(id, engine = 'left', runwayId = DEFAULT_RUNWAY, draw = PLAIN, from = null) {
+  const p = buildOne(id, engine, runwayId, draw, from);
+  // A prop that will not feather is worked with the Alternate Prop Feathering Checklist, unless
+  // that would hold the crosswind turn, delay the 180 or run the talk past the 90 (the user,
+  // 2026-11-20): then the instructor says it feathered, and the pass is flown as if it had.
+  if (draw.feather === false && /^case/.test(id) && !from) {
+    const q = buildOne(id, engine, runwayId, { ...draw, feather: true }, from);
+    const xw = (r) => r.marks.find((m) => m.key === 'crosswind').x;
+    if (p.dwExt > q.dwExt || xw(p) > xw(q) + 300 || p.pastThe90 > q.pastThe90 + 0.5) return q;
+  }
+  return p;
+}
+
+function buildOne(id, engine, runwayId, draw, from) {
   let opts = from ? { from } : {};
   let p = passCore(id, engine, runwayId, draw, opts);
   for (let i = 0; i < 4 && p.needs; i += 1) {
@@ -458,7 +473,8 @@ function passCore(id, engine, runwayId, draw, opts) {
   const fullStop = id === 'ssefs';
   const from = opts.from || (sse ? SSE_START : null);
   const { pts, seg, duration } = fly(legs(id, field.length, opts, field.pa), from ? from.x : TOUCHDOWN_X, from ? from.y || 0 : 0, from ? -turnLeft(from.psi) : 0);
-  const caseN = id.startsWith('case') ? Number(id.slice(4)) : 0;
+  const caseN = id.startsWith('case') ? parseInt(id.slice(4), 10) : 0;
+  const past = id === 'case3b'; // Case 3 past midfield: no clean-up
   const single = sse || caseN > 0;
   const e = engine;
   const E = cap(e);
@@ -499,10 +515,15 @@ function passCore(id, engine, runwayId, draw, opts) {
 
   // The 180 call and Tower's answer, kept clear of any checklist running past it.
   let quiet = null;
+  // The Landing Checklist is never interrupted (ME FTI p. 1-40, Case 3 note 2: an interrupted
+  // one is started again from the beginning; the user, 2026-11-20): it runs whole before the 180
+  // call, or whole after Tower's answer, and if that leaves it short of done by the 90 the 180 is
+  // delayed (`late`).
   const checklist = (t0, flapsWord, gearDown, called) => {
+    const lines = landingChecklist(flapsWord, gearDown, called);
     let t = t0;
-    landingChecklist(flapsWord, gearDown, called).forEach(([who, text, set]) => {
-      if (quiet && t > quiet[0] - 1 && t < quiet[1]) t = quiet[1];
+    if (quiet && t < quiet[1] && t + (lines.length - 1) * 1.7 > quiet[0] - 1) t = quiet[1];
+    lines.forEach(([who, text, set]) => {
       add(t, who, 'say', text, { ref: APPF('Landing Checklist', 'p. F-24'), ...(set ? { set } : {}) });
       t += 1.7;
     });
@@ -512,10 +533,12 @@ function passCore(id, engine, runwayId, draw, opts) {
   // questions (ME FTI pp. 1-26 and 1-38; the questions as crews ask them), then on; `hold`, the
   // rest left for later (Cases 4 and 5: on deck or after a wave-off).
   let featherT = 0; // when the prop is known feathered
+  // The crew is quiet while the 180 call and Tower's answer are on the radio.
+  const hush = (t) => (quiet && t > quiet[0] - 1.2 && t < quiet[1] ? quiet[1] : t);
   const shutdown = (t0, { after } = {}) => {
     let t = t0;
     const say = (dt, who, text, set) => {
-      t += dt;
+      t = hush(t + dt);
       add(t, who, 'say', text, { ref: APPF('Emergency Engine Shutdown Checklist', 'p. F-29'), ...(set ? { set } : {}) });
     };
     say(0, 'PF', `This will be an emergency shutdown of the ${e} engine.`);
@@ -534,18 +557,32 @@ function passCore(id, engine, runwayId, draw, opts) {
   };
   // The checklist past its first three items: the PF's questions and calls in the on-wing
   // gouge's words (no tag: the user, 2026-11-19); the PM's answers, which no publication prints,
-  // are generated. What is done, from the FTI and NATOPS.
+  // are generated. What is done, from the FTI and NATOPS. After "Declare an emergency" the PF
+  // continues the checklist and the PM reads steps 7 to 18 (NATOPS §15.2; Figure F-1: "Continue
+  // the checklist", PM continues as directed), held for the Landing Checklist when it needs the
+  // time (ME FTI p. 1-37: "hold the checklist" or "continue the checklist" as time permits).
   function remainder(t0) {
     let t = t0;
     {
-      const tq2 = (dt, who, text, extra = {}) => { t += dt; add(t, who, 'say', text, { ...(who === 'PM' ? { generated: true } : {}), ...extra }); };
+      const tq2 = (dt, who, text, extra = {}) => { t = hush(t + dt); add(t, who, 'say', text, { ...(who === 'PM' ? { generated: true } : {}), ...extra }); };
       tq2(1.2, 'PF', 'Did the prop feather?');
       if (draw.feather) tq2(1.2, 'PM', 'Yes.');
       else {
         tq2(1.2, 'PM', 'No.', { set: { engines: `${E}: failed, prop windmilling (simulated)` } });
         tq2(1.2, 'PF', 'Alternate prop feathering checklist.');
-        add(t + 0.2, 'PF', 'do', `Alternate Prop Feathering: condition lever (${e}) FUEL CUTOFF, at least 500 ft-lbs on the ${good} engine, autofeather switch held in TEST until the prop feathers (LS)`, { ref: NATOPS_ALT });
-        tq2(4.5, 'PM', 'Prop feathered.', { set: { engines: `${E}: zero thrust (simulated feather)` } });
+        // NATOPS §15.14.3, read by the PM, the PF answering with what is set.
+        const alt = (dt, who, text, extra = {}) => tq2(dt, who, text, { ref: NATOPS_ALT, generated: true, ...extra });
+        alt(1.3, 'PM', `${E} condition lever.`);
+        alt(1.2, 'PF', 'Fuel cutoff.');
+        alt(1.2, 'PM', `${cap(good)} power lever.`);
+        alt(1.2, 'PF', '500 ft-lbs minimum.');
+        alt(1.2, 'PM', 'Autofeather switch.');
+        alt(1.2, 'PF', 'Holding in test.');
+        add(t + 0.2, 'PF', 'do', 'Autofeather switch held in TEST until the prop feathers (LS)', { ref: NATOPS_ALT });
+        alt(4, 'PM', 'Prop feathered.', { set: { engines: `${E}: zero thrust (simulated feather)` } });
+        alt(1.2, 'PF', 'Released.');
+        alt(1.2, 'PM', 'Emergency Shutdown Checklist.');
+        alt(1.2, 'PF', 'Continue.');
       }
       featherT = t;
       tq2(1.2, 'PF', 'Is it a fire or fuel leak?');
@@ -555,7 +592,7 @@ function passCore(id, engine, runwayId, draw, opts) {
       } else {
         tq2(1.2, 'PM', draw.leak === 'fire' ? 'Yes, fire.' : 'Yes, fuel leak.');
         add(t + 0.2, 'PF', 'do', 'Fire or fuel leak: continue the Emergency Shutdown Checklist with steps 4-6', { ref: FTI('p. 1-26') });
-        const f1 = (dt, who, text) => { t += dt; add(t, who, 'say', text, { ref: APPF('Emergency Engine Shutdown Checklist', 'p. F-29') }); };
+        const f1 = (dt, who, text) => { t = hush(t + dt); add(t, who, 'say', text, { ref: APPF('Emergency Engine Shutdown Checklist', 'p. F-29') }); };
         f1(1.2, 'PF', `${E} firewall valve closed, concur?`);
         f1(1.8, 'PM', 'Simulate');
         // The PF in the left seat runs the left extinguisher; the right one is the PM's.
@@ -566,20 +603,54 @@ function passCore(id, engine, runwayId, draw, opts) {
         } else if (fire) {
           f1(1.2, 'PF', 'Discharge right fire extinguisher.');
           f1(1.4, 'PM', 'Right fire extinguisher discharge, concur?');
-          f1(1.6, 'PF', 'Concur');
+          f1(1.6, 'PF', 'Simulate');
         } else {
           f1(1.2, 'PF', 'Right fire extinguisher not required, concur?');
           f1(1.8, 'PM', 'Concur');
         }
         f1(1.2, 'PF', `Close ${e} bleed air valve`);
         f1(1.4, 'PM', `${E} bleed air valve closed, concur?`);
-        f1(1.6, 'PF', 'Concur');
+        f1(1.6, 'PF', 'Simulate');
       }
       tq2(1.2, 'PF', 'Declare an emergency.');
+      // Steps 7 to 18 (NATOPS §15.2), the PM reading, the left seat (the PF) answering its own
+      // items; the failed engine's switches simulated, as the memory items were. None of these
+      // words is printed anywhere, so all are generated.
+      const STEPS = [
+        ['Cabin temperature mode, off.'],
+        ['Vent blower, auto.'],
+        ['Crossfeed.', 'Closed.'],
+        [`${E} boost pump.`, 'Simulate.'],
+        [`${E} transfer pump.`, 'Simulate.'],
+        [`${E} fuel control heat.`, 'Simulate.'],
+        ['Autofeather.', 'Off.'],
+        ['Prop sync, off.'],
+        [`${E} autoignition, simulate.`],
+        [`${E} generator, simulate.`],
+        ['Electrical load.', 'Monitored.'],
+        ['Current limiters.', 'Checked.'],
+      ];
+      const ref = NATOPS_SHUTDOWN;
+      if (t + 1.2 + 4 <= holdAt) {
+        tq2(1.2, 'PF', 'Continue the checklist.', { ref: APPF('Emergency Engine Shutdown Checklist', 'p. F-30') });
+        let i = 0;
+        for (; i < STEPS.length; i += 1) {
+          const [ask, answer] = STEPS[i];
+          if (t + (answer ? 2.6 : 1.4) + 1.2 > holdAt) break;
+          tq2(i ? 1.2 : 1.2, 'PM', ask, { ref, generated: true });
+          if (answer) tq2(1.2, 'PF', answer, { ref, generated: true });
+        }
+        if (i < STEPS.length) tq2(1.2, 'PF', 'Hold the checklist.', { ref: FTI('p. 1-37') });
+        else tq2(1.2, 'PM', 'Emergency Shutdown Checklist complete.', { ref, generated: true });
+      }
     }
     return t;
   }
   let busyUntil = 0;
+  // When the rest of the shutdown checklist must stop for the Landing Checklist: a little before
+  // the call for the flaps at the 180, or, past midfield in Case 3 (checklist already done),
+  // short of the 90.
+  const holdAt = past ? atF('app', 0.5) - 2 : start('app') - 23;
   const needs = { ...opts };
   let late = false; // the Landing Checklist not done by the 90
   const failure = (t0) => {
@@ -737,7 +808,15 @@ function passCore(id, engine, runwayId, draw, opts) {
   const t180 = start('app'); // abeam the groove
   const ctaf = !field.tower;
   quiet = [t180 - 0.4, t180 + (ctaf ? 6 : 12.6)];
-  if (caseN === 3) {
+  if (caseN === 3 && past) {
+    // Past midfield (FTI p. 1-39 note: "Midfield and beyond is a good rule of thumb"): no
+    // clean-up; gear down and approach flaps stay, the Landing Checklist already done.
+    const t0 = atX('dw', field.length / 2 - 500);
+    failure(t0);
+    add(t0 + 0.8, 'PF', 'do', 'Power on the good engine, nearly center the ball, 120 KIAS and pattern altitude', { ref: FTI('p. 1-39'), set: { power: 'As required' } });
+    add(t0 + 2.4, 'PF', 'do', 'Past midfield: no clean-up, gear stays down, flaps approach', { ref: FTI('p. 1-39') });
+    busyUntil = shutdown(t0 + 3, { after: 'check' }) + 1.4;
+  } else if (caseN === 3) {
     const t0 = tdw + 0.5;
     failure(t0);
     add(t0 + 0.8, 'PF', 'do', 'Power on the good engine, nearly center the ball, 120 KIAS and pattern altitude', { ref: FTI('p. 1-39'), set: { power: 'As required' } });
@@ -750,7 +829,7 @@ function passCore(id, engine, runwayId, draw, opts) {
   // On one engine, approaching the 180: flaps approach, gear down, Landing Checklist; and
   // before it, on the SSE full stop only, its brief (ME FTI p. 1-42: no SSE full stop without
   // it). Every other single-engine pass ends in a touch and go.
-  if (sse || caseN === 1 || caseN === 2 || caseN === 3) {
+  if (sse || caseN === 1 || caseN === 2 || (caseN === 3 && !past)) {
     let briefEnd = 0;
     if (fullStop) {
       // Gone from the screen at the next call (the user: the boxes have no room for both).
@@ -805,7 +884,7 @@ function passCore(id, engine, runwayId, draw, opts) {
   mark(t90, 'The 90', 'the90');
   // The 500 ft aural tone (radar altimeter minimums set to 500 ft for pattern work).
   // Answered once the shutdown items in progress are said (Case 4).
-  const tDL = Math.max(t90, case4End);
+  const tDL = Math.max(t90, case4End, past ? busyUntil - 1.4 + 1.2 : 0);
   add(tDL, 'PF', 'say', 'Down and locked', { ref: CALLOUTS, note: '500 ft tone' });
   add(tDL + 1.4, 'PM', 'say', 'Down and locked', { ref: CALLOUTS });
   if (id === 'full') add(t90 + 1.6, 'PF', 'do', 'Select flaps down after the 90, but before rolling onto final', { ref: FTI('p. 1-34'), set: { flaps: 'Down' } });
@@ -880,6 +959,7 @@ function passCore(id, engine, runwayId, draw, opts) {
     needs: needs.upwindX !== opts.upwindX ? needs : null,
     late,
     draw,
+    pastThe90: tDL - t90, // how long the talk held "Down and locked" past the 90
     // The wave-off button is live from 375 ft on the approach to the touchdown.
     waveoffWindow: [tOpen, tTouch],
   };
