@@ -874,8 +874,10 @@ a touch-and-go, the gouge's "simulated full stop" (no SSE full-stop brief, clear
 option, the rest of a Case's shutdown checklist treated as done on deck). The SSE full stop is
 its own pattern (`ssefs`): the brief before the 180 (FTI p. 1-42: none without it), cleared to
 land, the rollout. The MCG grades it once in FAM42; the FTI's Case 5 "SSE full-stop procedures"
-text is for a real failure. A **Wave off** button (`WaveoffButton`, dimmed but from the groove to
-the touchdown, `waveoffWindow`) lets the student call it: `waveoffOf(pass, t)` gives the pass it
+text is for a real failure. A **Wave off** button, drawn on the pattern under the final between
+the runway and the "~2 football fields" note, over the aircraft (`WaveoffOnMap`; dimmed but from
+375 ft on the approach to the touchdown, `waveoffWindow`; the user, 2026-11-20) lets the student
+call it; one called in the approach turn finishes the turn onto the runway heading as it climbs: `waveoffOf(pass, t)` gives the pass it
 begins, `buildPass(id, …, from)`, flown from where the aircraft was. On one engine at 200 ft or
 above an SSE wave-off into the SSE pattern (SSE full stop again off that pattern); below 200 ft,
 and on two engines, a wave-off on both (NATOPS §12.1.1), into the same two-engine pattern. Memory
@@ -928,8 +930,8 @@ and locked"); the course rules' "180, gear down" is another field's.
 **In the Practice Flight** (`/t44c/practice`, since 2026-11-19, the user): from the initial call
 (Navy Corpus's, Cabaniss's, or Tower's "report the numbers" after Sunrise) the pattern is flown on
 this model in place of the step card and map (`practice/t44c/PatternFlight.js`, which imports
-PatternWork's exported `Comms`, `Gauges`, `PatternView`, `Procedures`, `WaveoffButton`,
-`frameOf`; keep those exports). The break first (approach flap; no numbers call where Cabaniss cleared the break at the
+PatternWork's exported `Comms`, `Gauges`, `PatternView`, `Procedures`, `frameOf`,
+`waveoffOpen`; keep those exports). The break first (approach flap; no numbers call where Cabaniss cleared the break at the
 initial), then at every touchdown the flight pauses and asks the next lap (`patternLaps.js`: a
 lap is a `fly` step, `lap` the pattern id, its spoken lines go into the flight log as said). The
 Wave off button ends a lap where it is pressed (reducer `waveoff`: `waveT` on the lap, `from` on

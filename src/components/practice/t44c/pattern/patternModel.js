@@ -102,6 +102,7 @@ const TOUCHDOWN_X = 500;
 const turnX = (length) => length + 1000; // the crosswind turn, 1,000 ft past the departure end
 const TURN_X = turnX(RUNWAY.length);
 const GROOVE_X = -1200; // the groove, and abeam it the 180
+const WAVEOFF_OPEN = 375; // ft AGL on the approach, where the wave-off button comes on
 const WAVEOFF_X = GROOVE_X + (50 / 250) * (TOUCHDOWN_X - GROOVE_X); // 200 ft on the SSE final
 
 export const SCENARIOS = [
@@ -157,6 +158,11 @@ export const singleEngine = (id) => SSE_IDS.includes(id) || /^case/.test(id);
 // Where the SSE pattern and the SSE full stop begin when no wave-off of the student's leads into
 // them: the practice SSE wave-off's lowest point, 200 ft on the last final (NATOPS §12.1.1).
 const SSE_START = { x: WAVEOFF_X, alt: 200, kias: 110, flaps: 'Approach', single: true };
+// How much of the approach turn is left at a heading `psi` (0 on final or off the runway).
+const turnLeft = (psi = 0) => {
+  const r = (((2 * Math.PI - (psi % (2 * Math.PI))) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  return r > Math.PI ? 0 : r;
+};
 
 // `opts.upwindX`: Case 1 holds its crosswind turn there, the prop not yet feathered (ME FTI
 // p. 1-38); `opts.dwExt`: the 180 delayed that many feet down the downwind, to finish the
@@ -171,19 +177,37 @@ function legs(id, length, opts = {}, pa = 800) {
   const L = (leg) => out.push(leg);
   const from = opts.from || (sse ? SSE_START : null);
 
-  if (from && from.single) {
-    // An SSE wave-off: the descent stopped, then climbing at 110 over the runway to 500 ft and
-    // level there to the crosswind turn at 120 KIAS (the user: 102 and 110 are climb speeds;
-    // level is 120, power as required).
+  if (from) {
+    // A wave-off: the descent stopped, then climbing over the runway to 500 ft and level there to
+    // the crosswind turn at 120 KIAS. On one engine the climb is at 110 (the user: 102 and 110
+    // are climb speeds; level is 120, power as required), on two at 120. Waved off in the
+    // approach turn, it finishes the turn onto the runway heading as it climbs.
+    const one = from.single;
+    const phase = one ? 'SSE wave-off' : 'Wave-off';
+    const climbK = one ? 110 : 120;
+    const rate = one ? 150 / 2600 : 200 / 2000; // feet gained per foot flown
     const a = from.alt;
-    L({ id: 'waveoff', phase: 'SSE wave-off', line: 2600, kias: [[0, from.kias], [0.15, 110], [1, 110]], alt: [[0, a], [0.12, a - Math.min(8, a * 0.3)], [1, a + 150]] });
-    L({ id: 'up2', phase: 'Upwind', toX: xwAt, kias: [[0, 110], [0.55, 110], [0.85, 120], [1, 120]], alt: [[0, a + 150], [0.55, 500], [1, 500]] });
-  } else if (from) {
-    // A wave-off on both engines: the descent stopped, climbing at 120 KIAS to 500 ft, then
-    // level to the crosswind turn.
-    const a = from.alt;
-    L({ id: 'waveoff', phase: 'Wave-off', line: 2000, kias: [[0, from.kias], [0.4, 120], [1, 120]], alt: [[0, a], [0.12, a - Math.min(5, a * 0.3)], [1, a + 200]] });
-    L({ id: 'up2', phase: 'Upwind', toX: xwAt, kias: flat(120), alt: [[0, a + 200], [0.4, 500], [1, 500]] });
+    const dip = Math.min(one ? 8 : 5, a * 0.3);
+    const rem = turnLeft(from.psi);
+    let alt = a;
+    if (rem > 0.01) {
+      const len = R * rem;
+      const top = Math.min(500, a + len * rate);
+      L({ id: 'waveoffTurn', phase, arc: R, angle: rem, kias: [[0, from.kias], [Math.min(0.5, 600 / len), climbK], [1, climbK]], alt: [[0, a], [Math.min(0.3, 300 / len), a - dip], [1, top]] });
+      alt = top;
+    }
+    const line = one ? 2600 : 2000;
+    const top = Math.min(500, alt + line * rate);
+    L({
+      id: 'waveoff', phase, line,
+      kias: rem > 0.01 ? flat(climbK) : [[0, from.kias], [one ? 0.15 : 0.4, climbK], [1, climbK]],
+      alt: rem > 0.01 ? [[0, alt], [1, top]] : [[0, a], [0.12, a - dip], [1, top]],
+    });
+    L({
+      id: 'up2', phase: 'Upwind', toX: xwAt,
+      kias: one ? [[0, 110], [0.55, 110], [0.85, 120], [1, 120]] : flat(120),
+      alt: [[0, top], [one ? 0.55 : 0.4, 500], [1, 500]],
+    });
   } else {
     L({ id: 'roll', phase: 'Touch-and-go', line: 870, kias: [[0, 90], [0.35, 82], [1, 91]], alt: flat(0) });
     // Rotate to 300 ft in 13 s, at 120 KIAS within a few seconds of rotating (the user: the
@@ -234,12 +258,12 @@ function legs(id, length, opts = {}, pa = 800) {
 }
 
 // Fly the legs: a sample every few feet with its time, place, track and figures.
-function fly(spec, x0, y0 = 0) {
+function fly(spec, x0, y0 = 0, psi0 = 0) {
   const step = 6;
   const pts = [];
   let x = x0;
   let y = y0;
-  let psi = 0;
+  let psi = psi0;
   let t = 0;
   const seg = {};
   for (const leg of spec) {
@@ -432,7 +456,7 @@ function passCore(id, engine, runwayId, draw, opts) {
   const sse = SSE_IDS.includes(id);
   const fullStop = id === 'ssefs';
   const from = opts.from || (sse ? SSE_START : null);
-  const { pts, seg, duration } = fly(legs(id, field.length, opts, field.pa), from ? from.x : TOUCHDOWN_X);
+  const { pts, seg, duration } = fly(legs(id, field.length, opts, field.pa), from ? from.x : TOUCHDOWN_X, from ? from.y || 0 : 0, from ? -turnLeft(from.psi) : 0);
   const caseN = id.startsWith('case') ? Number(id.slice(4)) : 0;
   const single = sse || caseN > 0;
   const e = engine;
@@ -497,9 +521,10 @@ function passCore(id, engine, runwayId, draw, opts) {
     say(2.6, 'PF', `${E} Power lever – Idle, concur?`);
     say(1.6, 'PM', 'Concur');
     say(1.1, 'PF', `${E} Propeller – Feather, concur?`);
-    say(1.8, 'PM', 'Simulate', { engines: after === 'check' && !draw.feather ? `${E}: failed, prop windmilling (simulated)` : `${E}: zero thrust (simulated feather)` });
+    say(1.8, 'PM', 'Simulate', { engines: after && !draw.feather ? `${E}: failed, prop windmilling (simulated)` : `${E}: zero thrust (simulated feather)` });
     say(1.1, 'PF', `${E} Condition lever – Fuel Cutoff concur?`);
     say(1.8, 'PM', 'Simulate');
+    if (after === 'rest') t = remainder(t);
     if (after === 'check') {
       add(t + 0.4, 'PF', 'do', 'Hold the checklist momentarily: props 1900 RPM, reset maximum power, check to see if the prop feathered', { ref: FTI('p. 1-38'), set: { props: '1900 RPM' } });
       t = remainder(t);
@@ -579,7 +604,11 @@ function passCore(id, engine, runwayId, draw, opts) {
     add(6.0, 'PF', 'do', 'Props 1900 RPM', { ref, set: { props: '1900 RPM' } });
     if (from.single) add(7.2, 'PF', 'do', 'Offset slightly to the pattern side, 102-110 KIAS', { ref: FTI('p. 1-42') });
     else add(7.2, 'PF', 'do', 'Offset slightly to the pattern side to see traffic over the runway', { ref: FTI('p. 1-36') });
-    if (from.rest) {
+    // Waved off before its first three items were done, the whole checklist.
+    if (from.rest === 'all') {
+      add(8.4, 'PF', 'do', 'Call for the Emergency Shutdown Checklist', { ref: FTI('p. 1-40') });
+      busyUntil = shutdown(9, { after: 'rest' }) + 1.4;
+    } else if (from.rest) {
       add(8.4, 'PF', 'do', 'Call for the remainder of the Emergency Shutdown Checklist', { ref: FTI('p. 1-40') });
       busyUntil = remainder(8.4) + 1.4;
     }
@@ -794,6 +823,8 @@ function passCore(id, engine, runwayId, draw, opts) {
   }
   add(atX('final', 0), 'PF', 'do', `Cross the threshold at ${crossK} KIAS, slowly close the power levers, flare`, { ref: FTI(single ? 'p. 1-41' : 'p. 1-33'), set: { power: 'Closing to idle' } });
   const tTouch = atX('final', TOUCHDOWN_X);
+  // The wave-off opens at 375 ft in the approach turn (the user, 2026-11-20).
+  const tOpen = seg.final0 && pts[seg.app.end].alt > WAVEOFF_OPEN ? atAlt('final0', WAVEOFF_OPEN) : atAlt('app', WAVEOFF_OPEN);
   if (fullStop) {
     const tr = start('rollout');
     mark(duration, 'SSE full stop', 'fullstop');
@@ -829,8 +860,8 @@ function passCore(id, engine, runwayId, draw, opts) {
     needs: needs.upwindX !== opts.upwindX ? needs : null,
     late,
     draw,
-    // The wave-off button is live from the groove to the touchdown.
-    waveoffWindow: [tFinal, tTouch],
+    // The wave-off button is live from 375 ft on the approach to the touchdown.
+    waveoffWindow: [tOpen, tTouch],
   };
 }
 
@@ -839,6 +870,13 @@ function passCore(id, engine, runwayId, draw, opts) {
 // if that was the pass); below 200 ft a practice SSE wave-off is flown on both engines (NATOPS
 // §12.1.1), and so is every wave-off on two, into the same two-engine pattern (the approach-flap
 // one off a single-engine pass). A Case 4 or 5 owes the rest of its shutdown checklist (`rest`).
+// Whether the first three items of the shutdown were done by `t` (the condition lever's
+// "Simulate" said).
+function threeDone(pass, t) {
+  const lever = pass.events.find((e) => /Condition lever – Fuel Cutoff/.test(e.text));
+  const said = lever && pass.events.find((e) => e.who === 'PM' && e.text === 'Simulate' && e.t > lever.t);
+  return !!said && said.t <= t;
+}
 export function waveoffOf(pass, t) {
   const s = pass.stateAt(t);
   const id = pass.id === 'break' ? pass.base : pass.id;
@@ -846,9 +884,9 @@ export function waveoffOf(pass, t) {
   const single = dead && s.alt >= 200;
   const next = single ? (id === 'ssefs' ? 'ssefs' : 'sse') : ['noflap', 'full'].includes(id) ? id : 'approach';
   const from = {
-    x: Math.round(s.x), alt: Math.round(s.alt), kias: Math.round(s.kias), flaps: s.flaps, single,
+    x: Math.round(s.x), y: Math.round(s.y), psi: Number(s.psi.toFixed(4)), alt: Math.round(s.alt), kias: Math.round(s.kias), flaps: s.flaps, single,
     ...(single ? { engines: s.engines } : {}),
-    ...(single && (id === 'case4' || id === 'case5') ? { rest: true } : {}),
+    ...(single && (id === 'case4' || id === 'case5') ? { rest: threeDone(pass, t) ? true : 'all' } : {}),
   };
   return { id: next, from };
 }

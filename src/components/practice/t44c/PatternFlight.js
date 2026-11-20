@@ -1,12 +1,12 @@
 // The Practice Flight's pattern, flown in place of its step card and map: Pattern Work's comms,
 // FTI procedures, numbers and drawing, one lap at a time. A lap flies itself; at its end (the
-// touchdown, a full stop, or the wave-off the student calls between the groove and the
+// touchdown, a full stop, or the wave-off the student calls from 375 ft on the approach to the
 // touchdown) the page stops and the flight asks for the next lap.
 // What is said goes into the flight log as it is said.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { RUNWAYS } from './pattern/patternModel';
-import { Comms, Gauges, PatternView, Procedures, WaveoffButton, frameOf } from './pattern/PatternWork';
+import { Comms, Gauges, PatternView, Procedures, frameOf, waveoffOpen } from './pattern/PatternWork';
 import { buildLap, lapLog } from './patternLaps';
 
 const SPEEDS = [1, 2, 4];
@@ -79,7 +79,6 @@ export default function PatternFlight({ step, ended, onDone, onWaveoff, onSaid, 
         <div className="pf-pattern">
           <div className="ptw-controls">
             <button type="button" className="ptw-btn ptw-btn--go" onClick={() => setPlaying(!playing)}>{playing ? 'Pause' : 'Resume'}</button>
-            <WaveoffButton pass={lap} t={t} onWaveoff={onWaveoff} />
             <span className="pf-pattern-lap">{step.title}{single ? `, ${step.engine} engine` : ''}</span>
             <label className="ptw-field">
               <span>Speed</span>
@@ -99,6 +98,7 @@ export default function PatternFlight({ step, ended, onDone, onWaveoff, onSaid, 
           pass={under} entry={inBreak ? lap : null} inBreak={inBreak} s={s}
           onJump={inBreak ? () => {} : jump} onBreak={jump}
           fr={fr} single={single} satellite={view === 'satellite'} setView={setView} following={playing && !ended}
+          waveoff={ended ? null : { open: waveoffOpen(lap, t), onWaveoff: () => onWaveoff(t) }}
         />
       </div>
     </>

@@ -285,17 +285,18 @@ test.each(['left', 'right'])('the SSE full stop, %s engine: the brief before the
   expect(minGap(p)).toBeGreaterThanOrEqual(1.1);
 });
 
-test.each(PATTERNS)('%s: the wave-off is open from the groove to the touchdown', (id) => {
+test.each(PATTERNS)('%s: the wave-off is open from 375 ft on the approach to the touchdown', (id) => {
   const p = buildPass(id);
   const [a, b] = p.waveoffWindow;
-  expect(a).toBe(markT(p, 'groove'));
-  expect(near(p.stateAt(a).alt, 250, 2)).toBe(true);
+  expect(a).toBeGreaterThan(markT(p, 'the90'));
+  expect(a).toBeLessThan(markT(p, 'groove'));
+  expect(near(p.stateAt(a).alt, 375, 3)).toBe(true);
   expect(p.stateAt(b).alt).toBe(0);
   expect(near(p.stateAt(b).x, GEOMETRY.TOUCHDOWN_X, 10)).toBe(true);
 });
 
-// A wave-off at each of three places on final: the groove, 200 ft and 100 ft.
-const ON_FINAL = PATTERNS.flatMap((id) => [250, 200, 100].map((alt) => [id, alt]));
+// A wave-off at four places: 370 ft in the approach turn, the groove, 200 ft and 100 ft.
+const ON_FINAL = PATTERNS.flatMap((id) => [370, 250, 200, 100].map((alt) => [id, alt]));
 test.each(ON_FINAL)('%s, waved off at %i ft: the memory items, then round the pattern, continuous', (id, alt) => {
   const p = buildPass(id, 'right', 'kngw-13', { feather: false, leak: 'fuel' });
   const [a, b] = p.waveoffWindow;
@@ -308,10 +309,12 @@ test.each(ON_FINAL)('%s, waved off at %i ft: the memory items, then round the pa
   expect(w.from.single).toBe(sse);
   expect(w.id).toBe(sse ? (id === 'ssefs' ? 'ssefs' : 'sse') : ['noflap', 'full'].includes(id) ? id : 'approach');
   const q = buildPass(w.id, 'right', 'kngw-13', p.draw, w.from);
-  // It picks up where the aircraft was.
+  // It picks up where the aircraft was, heading as it was, and finishes the turn onto the runway.
   const q0 = q.stateAt(0);
   expect(near(q0.x, s.x, 3)).toBe(true);
-  expect(near(q0.alt, s.alt, 3)).toBe(true);
+  expect(near(q0.y, s.y, 3)).toBe(true);
+  expect(nearHdg(q0.hdg, s.hdg, 1)).toBe(true);
+  expect(near(q.stateAt(markT(q, 'crosswind')).y, 0, 5)).toBe(true);
   expect(q.marks[0].key).toBe('waveoff');
   const said = sayings(q);
   expect(said.slice(0, 2)).toEqual(['Landing gear up', 'Landing gear up']);

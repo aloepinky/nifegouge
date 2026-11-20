@@ -149,6 +149,25 @@ function frameOf(runway, { reach = 0, reachBack = 0, dwExt = 0 } = {}) {
   };
 }
 const AC_SCALE = 26;
+// The wave-off button on the drawing: under the final, between the runway and the "~2 football
+// fields" note, in feet.
+const WAVEOFF_BOX = { x: -950, y: -450, w: 1300, h: 400 };
+
+function WaveoffOnMap({ open, onWaveoff, Y }) {
+  const { x, y, w, h } = WAVEOFF_BOX;
+  const cy = Y(y);
+  const go = () => { if (open) onWaveoff(); };
+  return (
+    <g className={open ? 'ptw-waveoff' : 'ptw-waveoff ptw-waveoff--off'} role="button" tabIndex={open ? 0 : -1}
+      aria-disabled={!open} aria-label="Wave off"
+      onClick={go}
+      onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.stopPropagation(); go(); } }}>
+      <title>{open ? 'Wave off now' : 'Wave off: open from 375 ft on the approach to the touchdown'}</title>
+      <rect x={x - w / 2} y={cy - h / 2} width={w} height={h} rx={70} />
+      <text x={x} y={cy} textAnchor="middle" dominantBaseline="central">Wave off</text>
+    </g>
+  );
+}
 const LABEL_AT = {
   touchdown: [0, 380, 'middle'],
   rotate: [130, 380, 'start'],
@@ -169,6 +188,9 @@ const LABEL_AT = {
 // side: above the runway, inside the downwind, outside the approach turn,
 // else to the right.
 function labelAt(m) {
+  // A wave-off's name: outside the approach turn when it was called there, else under the
+  // runway right of the wave-off button.
+  if (m.key === 'waveoff') return m.y > 100 ? [-200, 90, 'end'] : [Math.max(200, 100 - m.x), 380, 'start'];
   if (m.key !== 'fail') return LABEL_AT[m.key] || [0, -300, 'middle'];
   if (m.y < 100) return [0, -300, 'middle'];
   if (m.y > ABEAM - 100) return [250, 420, 'start']; // inside the turn, clear of Downwind and its note
@@ -186,7 +208,7 @@ const NOTES = [
   { x: -1100, y: 5450, anchor: 'start', moves: true, lines: ['The 180', 'Power, pitch, trim, turn, talk', '4 sec up trim, stare at the PFD', { text: '~250 ft-lbs', torque: true }] },
   { x: -2300, y: 2600, anchor: 'start', moves: true, lines: ['The 90, 500 ft', '“Down and locked”', 'Look at the runway now'] },
   { x: -2300, y: 1450, anchor: 'start', moves: true, lines: ['300-200 ft', '“Props full forward…”'] },
-  { x: -800, y: -720, anchor: 'middle', lines: ['~2 football fields'] },
+  { x: -800, y: -880, anchor: 'middle', lines: ['~2 football fields'] },
 ];
 
 // The break's notes (ME FTI §106 p. 1-29), shown in place of the pattern's while it is flown.
@@ -256,7 +278,7 @@ function lineFrom(track, cum, from) {
 const ERASE = 6;
 
 // `entry`: the break, when Break is the pattern chosen; `inBreak`, while it is being flown.
-function PatternMap({ pass, entry, inBreak, s, onJump, onBreak, single, satellite, fr }) {
+function PatternMap({ pass, entry, inBreak, s, onJump, onBreak, single, satellite, fr, waveoff }) {
   const VIEW = fr.view;
   const { Y } = fr;
   const path = useMemo(() => toPath(pass.track, fr), [pass, fr]);
@@ -319,9 +341,11 @@ function PatternMap({ pass, entry, inBreak, s, onJump, onBreak, single, satellit
       <g className="ptw-ac-shadow" transform={`translate(${s.x + lift * 220} ${Y(s.y) + lift * 380}) rotate(${rot}) scale(${AC_SCALE})`}>
         <path d={SILHOUETTE} transform={`scale(1 ${squash})`} />
       </g>
-      <g transform={`translate(${s.x} ${Y(s.y)}) rotate(${rot}) scale(${AC_SCALE * (1 + lift * 0.18)})`}>
+      <g className="ptw-ac" transform={`translate(${s.x} ${Y(s.y)}) rotate(${rot}) scale(${AC_SCALE * (1 + lift * 0.18)})`}>
         <T44C aob={s.aob} dead={dead} />
       </g>
+      {/* Over the aircraft, which crosses it on final, so it can always be pressed. */}
+      {waveoff && <WaveoffOnMap {...waveoff} Y={Y} />}
     </svg>
   );
 }
@@ -510,17 +534,8 @@ function Procedures({ pass, now }) {
 
 const dims = ({ length, width }) => `${length.toLocaleString('en-US')} × ${width} ft`;
 
-// The student calls the wave-off: dimmed but for the groove to the touchdown, every pattern.
+// The student calls the wave-off: dimmed but from 375 ft on the approach to the touchdown.
 const waveoffOpen = (pass, t) => !!pass.waveoffWindow && t >= pass.waveoffWindow[0] && t < pass.waveoffWindow[1];
-function WaveoffButton({ pass, t, onWaveoff }) {
-  const open = waveoffOpen(pass, t);
-  return (
-    <button type="button" className="ptw-btn ptw-btn--waveoff" disabled={!open} onClick={() => onWaveoff(t)}
-      title={open ? 'Wave off now' : 'Open from the groove to the touchdown'}>
-      Wave off
-    </button>
-  );
-}
 
 // ---- The runway picker: a field each, its runways folded under it. Every field opens folded,
 // the one flown marked; choosing a runway closes the list.
@@ -692,7 +707,6 @@ export default function PatternWork() {
     <div className="ptw-page">
       <div className="ptw-controls">
         <button type="button" className="ptw-btn ptw-btn--go" onClick={() => setPlaying(!playing)}>{playing ? 'Pause' : 'Play'}</button>
-        <WaveoffButton pass={pass} t={t} onWaveoff={waveoff} />
         <div className="ptw-field">
           <span id="ptw-runway-label">Runway</span>
           <RunwayMenu value={runwayId} onChange={pickRunway} />
@@ -726,7 +740,8 @@ export default function PatternWork() {
       <Procedures pass={pass} now={t} />
       <div className="ptw-card">
         <Gauges s={s} />
-        <PatternView pass={model} entry={entry} inBreak={inBreak && !!entry} s={s} onJump={jump} onBreak={jumpBreak} fr={fr} single={singleEngine(model.id)} satellite={view === 'satellite'} setView={setView} following={playing} />
+        <PatternView pass={model} entry={entry} inBreak={inBreak && !!entry} s={s} onJump={jump} onBreak={jumpBreak} fr={fr} single={singleEngine(model.id)} satellite={view === 'satellite'} setView={setView} following={playing}
+          waveoff={{ open: waveoffOpen(pass, t), onWaveoff: () => waveoff(t) }} />
       </div>
       <p className="ptw-foot">
         Runway {runway.number} at {runway.name}, drawn {runway.length.toLocaleString('en-US')} ft, {runway.side} traffic, pattern {feet(runway.pa)} AGL, {runway.tower || 'no tower (CTAF calls)'}, no wind. ME FTI §106 Pattern Work, Figures 1-3, 1-4 and 1-6. AOB and nose attitude are estimated.
@@ -736,4 +751,4 @@ export default function PatternWork() {
 }
 
 // Shared with the Practice Flight's pattern (practice/t44c/PatternFlight.js).
-export { Comms, Gauges, PatternView, Procedures, WaveoffButton, frameOf };
+export { Comms, Gauges, PatternView, Procedures, frameOf, waveoffOpen };

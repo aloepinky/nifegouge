@@ -11713,29 +11713,6 @@ button.epl-modal-close:hover {
   background: var(--btn-2);
 }
 
-/* The wave-off: dimmed until the groove, bright from there to the touchdown, the red of the
-   runway's wave-off lights. */
-.ptw-btn--waveoff {
-  min-width: 7em;
-  background: #b42525;
-  border-color: #b42525;
-  color: #fff;
-  font-weight: 600;
-}
-
-.ptw-btn--waveoff:hover {
-  background: #951d1d;
-}
-
-.ptw-btn--waveoff:disabled {
-  background: var(--surface);
-  border-color: var(--line-strong);
-  color: var(--ink);
-  font-weight: 400;
-  opacity: 0.4;
-  cursor: default;
-}
-
 .ptw-field {
   display: inline-flex;
   align-items: center;
@@ -12139,6 +12116,55 @@ button.epl-modal-close:hover {
   cursor: pointer;
 }
 
+/* The wave-off button, drawn under the final: dimmed until 375 ft on the approach, then the red
+   of the runway's wave-off lights to the touchdown. */
+.ptw-waveoff {
+  cursor: pointer;
+}
+
+.ptw-waveoff rect {
+  fill: #b42525;
+  stroke: #fff;
+  stroke-width: 20;
+}
+
+.ptw-waveoff text {
+  fill: #fff;
+  font-size: 250px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.ptw-waveoff:hover rect {
+  fill: #951d1d;
+}
+
+.ptw-waveoff:focus-visible {
+  outline: none;
+}
+
+.ptw-waveoff:focus-visible rect {
+  stroke: var(--ink-accent);
+  stroke-width: 40;
+}
+
+.ptw-waveoff--off {
+  cursor: default;
+}
+
+.ptw-waveoff--off rect,
+.ptw-waveoff--off:hover rect {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  opacity: 0.6;
+}
+
+.ptw-waveoff--off text {
+  fill: var(--ink);
+  font-weight: 600;
+  opacity: 0.45;
+}
+
 /* A bigger target than the dot, invisible. */
 .ptw-mark-hit {
   fill: transparent;
@@ -12379,6 +12405,12 @@ button.epl-modal-close:hover {
   stroke-width: 0.35;
 }
 
+/* The aircraft and its shadow take no clicks: the circles and the wave-off under them do. */
+.ptw-ac,
+.ptw-ac-shadow {
+  pointer-events: none;
+}
+
 .ptw-ac-shadow path {
   fill: #000000;
   opacity: 0.16;
@@ -12402,8 +12434,7 @@ button.epl-modal-close:hover {
     display: contents;
   }
 
-  .ptw-controls .ptw-btn--go,
-  .ptw-controls .ptw-btn--waveoff {
+  .ptw-controls .ptw-btn--go {
     grid-column: 1 / -1;
     justify-self: start;
   }
