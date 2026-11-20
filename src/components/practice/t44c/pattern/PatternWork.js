@@ -6,10 +6,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ABEAM, CALL_SIGN, FIELDS, GEOMETRY, RUNWAY, SCENARIOS, buildPass, siteOf } from './patternModel';
+import { ABEAM, CALL_SIGN, DEFAULT_RUNWAY, GEOMETRY, RUNWAY, RUNWAYS, SCENARIOS, buildBreak, buildPass, drawCase, geometryOf, siteOf } from './patternModel';
 
 const SPEEDS = [1, 2, 4];
-const { GROOVE_X, R, TURN_X } = GEOMETRY;
+const { GROOVE_X, R } = GEOMETRY;
 
 // ---- The T-44C from above, in feet, nose to the right, after the Navy trainer's paint (the
 // user's pictures, 2026-11-19, the last a satellite photo from straight above): white, the
@@ -125,11 +125,29 @@ function T44C({ aob, dead }) {
   );
 }
 
-// ---- The pattern from above. Feet, landing direction to the right, the pattern above.
+// ---- The pattern from above. Feet, landing direction to the right, the pattern above for
+// left traffic and below for right: a right-hand pattern is the left-hand one in a mirror, so
+// its lines and circles are mirrored, and its words placed where the mirror puts them but read
+// the right way round.
 const PAD = 800;
 const LEFT = GROOVE_X - R - PAD - 1300; // room for a name left of the approach turn
-// Case 2's wings-level pause carries the crosswind turn out a little further.
-const VIEW = { x: LEFT, y: -(ABEAM + PAD), w: TURN_X + R + 1500 - LEFT, h: ABEAM + 2 * PAD + 200 };
+const MARK_TEXT = 200; // about the height of a circle's name, and of a note's line
+// `reach` and `back`: how far the pass goes past the departure end and short of the
+// threshold; `ext`, how far its 180 was delayed, which the approach notes follow.
+function frameOf(runway, { reach = 0, reachBack = 0, dwExt = 0 } = {}) {
+  const left = Math.min(LEFT, reachBack - PAD - 1300);
+  const k = runway.side === 'left' ? 1 : -1;
+  const turnAt = geometryOf(runway.length).TURN_X;
+  // Case 2's wings-level pause, and Case 1's turn held for the prop, carry the crosswind out.
+  const w = Math.max(turnAt + R, reach) + 1500 - left;
+  const h = ABEAM + 2 * PAD + 200;
+  return {
+    k, length: runway.length, side: runway.side, ext: dwExt,
+    view: { x: left, y: k === 1 ? -(ABEAM + PAD) : -(PAD + 200), w, h },
+    Y: (y) => -k * y, // a point's y on the page
+    dy: (d) => (k === 1 ? d : MARK_TEXT - d), // a name's offset from its circle
+  };
+}
 const AC_SCALE = 26;
 const LABEL_AT = {
   touchdown: [0, 380, 'middle'],
@@ -144,15 +162,16 @@ const LABEL_AT = {
   fail: [0, -300, 'middle'],
   fullstop: [-150, -300, 'end'],
   waveoff: [0, 380, 'middle'],
+  entry: [0, 380, 'middle'],
 };
 
 // Where a mark's name goes. An engine failure falls anywhere, so its name goes to the open
-// side: above the runway, above and short of the downwind mark, outside the approach turn,
+// side: above the runway, inside the downwind, outside the approach turn,
 // else to the right.
 function labelAt(m) {
   if (m.key !== 'fail') return LABEL_AT[m.key] || [0, -300, 'middle'];
   if (m.y < 100) return [0, -300, 'middle'];
-  if (m.y > ABEAM - 100) return [-400, -300, 'end'];
+  if (m.y > ABEAM - 100) return [250, 420, 'start']; // inside the turn, clear of Downwind and its note
   if (m.x < 0) return [-200, 90, 'end'];
   return [200, 90, 'start'];
 }
@@ -161,28 +180,42 @@ function labelAt(m) {
 // off while they are in dispute).
 const NOTE_LINE = 300;
 const NOTES = [
-  { x: 4300, y: 2300, anchor: 'start', lines: ['Upwind and crosswind', '300 ft: props 1900', '400 ft: “Clear left, going left”', '500 ft: turn', { text: '600 ft: “Speed check, flaps approach,', noflap: '600 ft: “Landing Checklist”' }, { text: '     Landing Checklist”', noflap: 'Flaps stay up' }] },
+  { x: 4300, fromEnd: true, y: 2300, anchor: 'start', lines: ['Upwind and crosswind', '300 ft: props 1900', '400 ft: “Clear {side}, going {side}”', '500 ft: turn', { text: '600 ft: “Speed check, flaps approach,', noflap: '600 ft: “Landing Checklist”' }, { text: '     Landing Checklist”', noflap: 'Flaps stay up' }] },
   { x: 4000, y: 5500, anchor: 'middle', lines: ['Downwind: happy time', 'Landing Checklist, spacing, trim'] },
-  { x: 300, y: 6380, anchor: 'middle', lines: ['3 BIG potatoes'] },
-  { x: -1100, y: 5450, anchor: 'start', lines: ['The 180', 'Power, pitch, trim, turn, talk', '4 sec up trim, stare at the PFD', { text: '~250 ft-lbs', torque: true }] },
-  { x: -2300, y: 2600, anchor: 'start', lines: ['The 90, 500 ft', '“Down and locked”', 'Look at the runway now'] },
-  { x: -2300, y: 1450, anchor: 'start', lines: ['300-200 ft', '“Props full forward…”'] },
+  { x: 300, y: 6380, anchor: 'middle', moves: true, lines: ['3 BIG potatoes'] },
+  { x: -1100, y: 5450, anchor: 'start', moves: true, lines: ['The 180', 'Power, pitch, trim, turn, talk', '4 sec up trim, stare at the PFD', { text: '~250 ft-lbs', torque: true }] },
+  { x: -2300, y: 2600, anchor: 'start', moves: true, lines: ['The 90, 500 ft', '“Down and locked”', 'Look at the runway now'] },
+  { x: -2300, y: 1450, anchor: 'start', moves: true, lines: ['300-200 ft', '“Props full forward…”'] },
   { x: -800, y: -720, anchor: 'middle', lines: ['~2 football fields'] },
 ];
 
+// The break's notes (ME FTI §106 p. 1-29), shown in place of the pattern's while it is flown.
+const BREAK_NOTES = [
+  { x: -5800, y: 1500, anchor: 'start', lines: ['Break entry', '1,000 ft, 200 KIAS, wings level', '“Numbers for the break”'] },
+  { x: 2500, y: 4100, anchor: 'start', lines: ['The break', 'Power idle', { text: 'Below 174 KIAS: flaps approach', noflap: null }, 'Below 155 KIAS: gear down', 'Landing Checklist'] },
+  { x: 2000, y: 5500, anchor: 'start', lines: ['Roll out about a mile abeam', 'Slow to 120 KIAS, then descend to 800 ft'] },
+];
+
 // A line `{ text, torque: true }` is shown only where the torques apply; `noflap` is its
-// wording on the no-flap pattern.
-function Notes({ torques, noflap }) {
+// wording on the no-flap pattern (null: none).
+function Notes({ notes, torques, noflap, fr }) {
   return (
     <g className="ptw-notes">
-      {NOTES.map((n) => (
-        <text key={n.lines[0]} x={n.x} y={-n.y} textAnchor={n.anchor}>
-          {n.lines.filter((l) => torques || !l.torque).map((l, i) => {
-            const text = (noflap && l.noflap) || l.text || l;
-            return <tspan key={text} x={n.x} dy={i ? NOTE_LINE : 0} className={i === 0 ? 'ptw-note-head' : undefined}>{text}</tspan>;
-          })}
-        </text>
-      ))}
+      {notes.map((n) => {
+        const lines = n.lines.filter((l) => (torques || !l.torque) && !(noflap && l.noflap === null));
+        // The approach turn's notes go with a delayed 180.
+        const x = (n.fromEnd ? n.x + fr.length - RUNWAY.length : n.x) - (n.moves ? fr.ext : 0);
+        // Mirrored, the block keeps its lines in order, its top where its bottom was.
+        const y = fr.k === 1 ? -n.y : n.y - (lines.length - 1) * NOTE_LINE + MARK_TEXT * 0.85;
+        return (
+          <text key={n.lines[0]} x={x} y={y} textAnchor={n.anchor}>
+            {lines.map((l, i) => {
+              const text = ((noflap && l.noflap) || l.text || l).replace(/\{side\}/g, fr.side);
+              return <tspan key={text} x={x} dy={i ? NOTE_LINE : 0} className={i === 0 ? 'ptw-note-head' : undefined}>{text}</tspan>;
+            })}
+          </text>
+        );
+      })}
     </g>
   );
 }
@@ -206,9 +239,34 @@ function Tag({ m, pass, single, x, y, anchor, away }) {
   );
 }
 
-function PatternMap({ pass, s, onJump, single, satellite }) {
-  const path = useMemo(() => pass.track.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(0)} ${(-y).toFixed(0)}`).join(' '), [pass]);
-  const rot = -(s.psi * 180) / Math.PI;
+const toPath = (pts, fr) => pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(0)} ${fr.Y(y).toFixed(0)}`).join(' ');
+// The break's line, from `from` feet along it to its end.
+const lengths = (track) => track.reduce((acc, p, i) => [...acc, i ? acc[i - 1] + Math.hypot(p[0] - track[i - 1][0], p[1] - track[i - 1][1]) : 0], []);
+function lineFrom(track, cum, from) {
+  const i = cum.findIndex((d) => d > from);
+  if (i < 1) return i === 0 ? track : [];
+  const k = (from - cum[i - 1]) / (cum[i] - cum[i - 1]);
+  const a = track[i - 1];
+  const b = track[i];
+  return [[a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k], ...track.slice(i)];
+}
+// Once on the downwind the break's line goes, rubbed out from its start after the aircraft,
+// over this many seconds; then the pattern's notes come up.
+const ERASE = 6;
+
+// `entry`: the break, when Break is the pattern chosen; `inBreak`, while it is being flown.
+function PatternMap({ pass, entry, inBreak, s, onJump, onBreak, single, satellite, fr }) {
+  const VIEW = fr.view;
+  const { Y } = fr;
+  const path = useMemo(() => toPath(pass.track, fr), [pass, fr]);
+  const cum = useMemo(() => (entry ? lengths(entry.track) : [0]), [entry]);
+  const erased = entry && inBreak ? Math.min(1, Math.max(0, (s.t - entry.rolloutT) / ERASE)) : 1;
+  const left = erased < 1 ? lineFrom(entry.track, cum, erased * cum[cum.length - 1]) : [];
+  const breakPath = left.length > 1 ? toPath(left, fr) : '';
+  // While the break is flown, a pattern circle it passes is reached in it.
+  const inEntry = (key) => (inBreak ? entry.marks.find((m) => m.key === key) : null);
+  const marks = entry ? [...pass.marks, { ...entry.marks.find((m) => m.key === 'entry'), entry: true }] : pass.marks;
+  const rot = -(fr.k * s.psi * 180) / Math.PI;
   const lift = Math.min(1, s.alt / 800);
   const dead = /simulated feather|failed/.test(s.engines) ? pass.engine : null;
   const squash = Math.cos((s.aob * Math.PI) / 180).toFixed(3);
@@ -219,40 +277,48 @@ function PatternMap({ pass, s, onJump, single, satellite }) {
       {!satellite && (
         <>
           <rect className="ptw-ground" x={VIEW.x} y={VIEW.y} width={VIEW.w} height={VIEW.h} />
-          <rect className="ptw-runway" x={0} y={-RUNWAY.width / 2} width={RUNWAY.length} height={RUNWAY.width} />
-          <line className="ptw-centerline" x1={300} y1={0} x2={RUNWAY.length - 300} y2={0} />
+          <rect className="ptw-runway" x={0} y={-RUNWAY.width / 2} width={fr.length} height={RUNWAY.width} />
+          <line className="ptw-centerline" x1={300} y1={0} x2={fr.length - 300} y2={0} />
           <text className="ptw-rwy-number" x={150} y={0} transform="rotate(90 150 0)">{pass.field.number}</text>
-          <text className="ptw-rwy-number" x={RUNWAY.length - 150} y={0} transform={`rotate(-90 ${RUNWAY.length - 150} 0)`}>{pass.field.reciprocal}</text>
+          <text className="ptw-rwy-number" x={fr.length - 150} y={0} transform={`rotate(-90 ${fr.length - 150} 0)`}>{pass.field.reciprocal}</text>
         </>
       )}
       {/* On the picture a dark band under the dashes keeps them readable. */}
       {satellite && <path className="ptw-track-under" d={path} />}
       <path className="ptw-track" d={path} />
+      {breakPath && satellite && <path className="ptw-track-under" d={breakPath} />}
+      {breakPath && <path className="ptw-track" d={breakPath} />}
       <g className="ptw-dim">
-        {satellite && <line className="ptw-dim-under" x1={1600} y1={-RUNWAY.width} x2={1600} y2={-ABEAM + 150} />}
-        <line x1={1600} y1={-RUNWAY.width} x2={1600} y2={-ABEAM + 150} />
-        <text x={1760} y={-ABEAM / 2}>1 nm</text>
+        {satellite && <line className="ptw-dim-under" x1={1600} y1={Y(RUNWAY.width)} x2={1600} y2={Y(ABEAM - 150)} />}
+        <line x1={1600} y1={Y(RUNWAY.width)} x2={1600} y2={Y(ABEAM - 150)} />
+        <text x={1760} y={Y(ABEAM / 2)}>1 nm</text>
       </g>
-      <Notes torques={pass.torques} noflap={pass.id === 'noflap'} />
-      {pass.marks.map((m) => {
-        const [dx, dy, anchor] = labelAt(m);
+      <Notes notes={erased < 1 ? BREAK_NOTES : NOTES} torques={pass.torques} noflap={pass.id === 'noflap'} fr={fr} />
+      {marks.map((m) => {
+        const [dx, dy0, anchor] = labelAt(m);
+        const dy = fr.dy(dy0);
+        const there = m.entry ? null : entry && inEntry(m.key);
+        const passed = m.entry ? inBreak && s.t >= m.t : there ? s.t >= there.t : !inBreak && s.t >= m.t;
+        // The break entry's circle flies the break again.
+        const go = () => (m.entry ? onBreak(0) : there ? onBreak(there.t) : onJump(m.t));
+        const name = m.entry ? 'Fly the break' : `Go to ${m.label}`;
         return (
-          <g key={`${m.key}-${m.t}`} className={`ptw-mark${s.t >= m.t ? ' ptw-mark--passed' : ''}${m.key === 'fail' ? ' ptw-mark--fail' : ''}`}
-            role="button" tabIndex={0} aria-label={`Go to ${m.label}`}
-            onClick={() => onJump(m.t)}
-            onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onJump(m.t); } }}>
-            <title>{`Go to ${m.label}`}</title>
-            <circle className="ptw-mark-hit" cx={m.x} cy={-m.y} r={320} />
-            <circle className="ptw-mark-dot" cx={m.x} cy={-m.y} r={80} />
-            <text x={m.x + dx} y={-m.y + dy} textAnchor={anchor}>{m.label}</text>
-            <Tag m={m} pass={pass} single={single} x={m.x + dx} y={-m.y + dy} anchor={anchor} away={dy < 0 ? -260 : 260} />
+          <g key={`${m.key}-${m.t}`} className={`ptw-mark${passed ? ' ptw-mark--passed' : ''}${m.key === 'fail' ? ' ptw-mark--fail' : ''}`}
+            role="button" tabIndex={0} aria-label={name}
+            onClick={go}
+            onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } }}>
+            <title>{name}</title>
+            <circle className="ptw-mark-hit" cx={m.x} cy={Y(m.y)} r={320} />
+            <circle className="ptw-mark-dot" cx={m.x} cy={Y(m.y)} r={80} />
+            <text x={m.x + dx} y={Y(m.y) + dy} textAnchor={anchor}>{m.label}</text>
+            <Tag m={m} pass={m.entry ? entry : pass} single={single} x={m.x + dx} y={Y(m.y) + dy} anchor={anchor} away={dy < 0 ? -260 : 260} />
           </g>
         );
       })}
-      <g className="ptw-ac-shadow" transform={`translate(${s.x + lift * 220} ${-s.y + lift * 380}) rotate(${rot}) scale(${AC_SCALE})`}>
+      <g className="ptw-ac-shadow" transform={`translate(${s.x + lift * 220} ${Y(s.y) + lift * 380}) rotate(${rot}) scale(${AC_SCALE})`}>
         <path d={SILHOUETTE} transform={`scale(1 ${squash})`} />
       </g>
-      <g transform={`translate(${s.x} ${-s.y}) rotate(${rot}) scale(${AC_SCALE * (1 + lift * 0.18)})`}>
+      <g transform={`translate(${s.x} ${Y(s.y)}) rotate(${rot}) scale(${AC_SCALE * (1 + lift * 0.18)})`}>
         <T44C aob={s.aob} dead={dead} />
       </g>
     </svg>
@@ -260,15 +326,17 @@ function PatternMap({ pass, s, onJump, single, satellite }) {
 }
 
 // ---- Satellite: the USGS National Map's aerial imagery under the drawing (Esri's World
-// Imagery had cloud over Navy Corpus), turned so runway 13 runs left to right
+// Imagery had cloud over Navy Corpus), turned so the runway runs left to right
 // as it does in the drawing, and scaled so a foot on the picture is a foot of the drawing. The
 // map is a still picture: no dragging or zooming, the drawing on top takes the clicks.
 const SAT_URL = 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}';
 const SAT_CREDIT = 'Imagery: USGS The National Map';
-const placeOf = (fieldId) => {
-  const site = siteOf(fieldId);
+const placeOf = (runwayId, fr) => {
+  const site = siteOf(runwayId);
+  const { view } = fr;
   return {
-    center: site.toLatLng(VIEW.x + VIEW.w / 2, -(VIEW.y + VIEW.h / 2)),
+    view,
+    center: site.toLatLng(view.x + view.w / 2, -fr.k * (view.y + view.h / 2)),
     turn: -(site.bearingDeg - 90), // the runway's true bearing to the right of the page
     mPerPxZ0: 156543.03392 * Math.cos((site.lat * Math.PI) / 180),
   };
@@ -279,14 +347,14 @@ function Fit({ width, place }) {
   useEffect(() => {
     if (!width) return;
     map.invalidateSize();
-    const metresPerPx = (VIEW.w * 0.3048) / width;
+    const metresPerPx = (place.view.w * 0.3048) / width;
     map.setView(place.center, Math.log2(place.mPerPxZ0 / metresPerPx), { animate: false });
   }, [map, width, place]);
   return null;
 }
 
-function Satellite({ width, height, fieldId }) {
-  const place = useMemo(() => placeOf(fieldId), [fieldId]);
+function Satellite({ width, height, runwayId, fr }) {
+  const place = useMemo(() => placeOf(runwayId, fr), [runwayId, fr]);
   // A square as wide as the box's diagonal, so the turned picture still fills the corners.
   const side = Math.ceil(Math.hypot(width, height));
   return (
@@ -307,9 +375,19 @@ function Satellite({ width, height, fieldId }) {
 }
 
 // The drawing, and under it the satellite picture when that view is on.
-function PatternView({ satellite, setView, ...props }) {
+// On a phone the drawing keeps a readable size and scrolls sideways in its own box, following
+// the aircraft while it flies; paused, it can be dragged to look around.
+function PatternView({ satellite, setView, following, ...props }) {
   const box = useRef(null);
+  const scroller = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const { s, fr } = props;
+  useEffect(() => {
+    const el = scroller.current;
+    if (!following || !el || el.scrollWidth <= el.clientWidth + 1) return;
+    const px = ((s.x - fr.view.x) / fr.view.w) * el.scrollWidth;
+    el.scrollLeft = px - el.clientWidth / 2;
+  }, [following, s.x, fr]);
   useEffect(() => {
     const el = box.current;
     if (!el || typeof ResizeObserver === 'undefined') return undefined;
@@ -319,9 +397,13 @@ function PatternView({ satellite, setView, ...props }) {
   }, []);
   return (
     <>
-      <div className="ptw-mapwrap" ref={box}>
-        {satellite && size.width > 0 && <Satellite width={size.width} height={size.height} fieldId={props.pass.field.id} />}
-        <PatternMap {...props} satellite={satellite} />
+      <div className="ptw-mapwrap">
+        <div className="ptw-mapscroll" ref={scroller}>
+          <div className="ptw-mapinner" ref={box}>
+            {satellite && size.width > 0 && <Satellite width={size.width} height={size.height} runwayId={props.pass.field.id} fr={fr} />}
+            <PatternMap {...props} satellite={satellite} />
+          </div>
+        </div>
         {/* The map's own switch, in its corner, as on a web map. */}
         <button type="button" className="ptw-view-switch" aria-pressed={satellite}
           onClick={() => setView(satellite ? 'drawing' : 'satellite')}>
@@ -390,7 +472,9 @@ function Box({ lines, now, cls, label, speed }) {
 // talks while the radio does.
 function Comms({ pass, now, speed }) {
   // A line's time on screen is in wall seconds, so it reads as long at 4×.
-  const live = pass.events.filter((e) => e.kind === 'say' && now >= e.t && now < e.t + holdOf(e) * speed);
+  // A line that `yields` goes as soon as anyone speaks after it.
+  const nextSay = (e) => (pass.events.find((x) => x.kind === 'say' && x.t > e.t) || { t: Infinity }).t;
+  const live = pass.events.filter((e) => e.kind === 'say' && now >= e.t && now < e.t + holdOf(e) * speed && !(e.yields && now >= nextSay(e)));
   const last2 = (xs) => xs.slice(-2);
   const radio = last2(live.filter((e) => e.radio).map((e) => ({ ...e, from: e.who === 'Tower' ? `${pass.field.name} Tower` : CALL_SIGN })));
   const pf = last2(live.filter((e) => !e.radio && e.who === 'PF'));
@@ -428,13 +512,24 @@ export default function PatternWork() {
   const [engine, setEngine] = useState('left');
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
-  const [view, setView] = useState('drawing');
-  const [fieldId, setFieldId] = useState('kngw');
-  const model = useMemo(() => buildPass(scenario, engine, fieldId), [scenario, engine, fieldId]);
+  const [speed, setSpeed] = useState(2);
+  const [view, setView] = useState('satellite');
+  const [runwayId, setRunwayId] = useState(DEFAULT_RUNWAY);
+  const runway = RUNWAYS.find((r) => r.id === runwayId);
+  // Every pattern starts at the touchdown; Break opens on the break, then goes round the
+  // approach-flap pattern. On every pattern the break entry's circle flies a break into it. A
+  // case's prop and fire questions are answered afresh each pass.
+  const [draw, setDraw] = useState(() => drawCase());
+  const isBreak = scenario === 'break';
+  const model = useMemo(() => buildPass(isBreak ? 'approach' : scenario, engine, runwayId, draw), [isBreak, scenario, engine, runwayId, draw]);
+  const entry = useMemo(() => buildBreak(isBreak ? 'approach' : scenario, engine, runwayId), [isBreak, scenario, engine, runwayId]);
+  const [inBreak, setInBreak] = useState(false);
+  const pass = inBreak && entry ? entry : model;
+  const fr = useMemo(() => frameOf(runway, model), [runway, model]);
   const live = useRef({ t: 0 });
   live.current.speed = speed;
-  live.current.duration = model.duration;
+  live.current.duration = pass.duration;
+  live.current.inBreak = inBreak && !!entry;
 
   useEffect(() => {
     if (!playing) return undefined;
@@ -444,7 +539,11 @@ export default function PatternWork() {
       const v = live.current;
       v.t += (Math.min(250, now - last) / 1000) * v.speed;
       last = now;
-      if (v.t >= v.duration) v.t = 0; // round again
+      if (v.t >= v.duration) {
+        // Off the break into the pattern, or round the pattern again.
+        v.t = 0;
+        if (v.inBreak) { v.inBreak = false; setInBreak(false); } else setDraw(drawCase());
+      }
       setT(v.t);
       raf = requestAnimationFrame(tick);
     };
@@ -453,9 +552,26 @@ export default function PatternWork() {
   }, [playing]);
 
   // A circle on the drawing puts the aircraft there; the pass carries on if it was flying.
-  const jump = (to) => { live.current.t = Math.min(to, model.duration - 0.01); setT(live.current.t); };
-  // A new pattern starts from its beginning.
-  useEffect(() => { live.current.t = 0; setT(0); }, [scenario, engine, fieldId]);
+  const jump = (to) => {
+    live.current.inBreak = false;
+    setInBreak(false);
+    live.current.t = Math.min(to, model.duration - 0.01);
+    setT(live.current.t);
+  };
+  const jumpBreak = (to) => {
+    live.current.inBreak = true;
+    setInBreak(true);
+    live.current.t = Math.min(to, entry.duration - 0.01);
+    setT(live.current.t);
+  };
+  // A new pattern starts from its beginning: the break's, or the touchdown.
+  useEffect(() => {
+    live.current.t = 0;
+    live.current.inBreak = scenario === 'break';
+    setInBreak(scenario === 'break');
+    setT(0);
+    setDraw(drawCase());
+  }, [scenario, engine, runwayId]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -467,12 +583,23 @@ export default function PatternWork() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const s = model.stateAt(t);
+  const s = pass.stateAt(t);
   const single = scenario === 'sse' || scenario.startsWith('case');
 
   return (
     <div className="ptw-page">
       <div className="ptw-controls">
+        <button type="button" className="ptw-btn ptw-btn--go" onClick={() => setPlaying(!playing)}>{playing ? 'Pause' : 'Play'}</button>
+        <label className="ptw-field">
+          <span>Runway</span>
+          <select className="ptw-select" value={runwayId} onChange={(e) => setRunwayId(e.target.value)}>
+            {['Cabaniss', 'Navy Corpus'].map((name) => (
+              <optgroup key={name} label={name}>
+                {RUNWAYS.filter((r) => r.name === name).map((r) => <option key={r.id} value={r.id}>{`${r.label} (${r.side})`}</option>)}
+              </optgroup>
+            ))}
+          </select>
+        </label>
         <label className="ptw-field">
           <span>Pattern</span>
           <select className="ptw-select" value={scenario} onChange={(e) => setScenario(e.target.value)}>
@@ -488,13 +615,6 @@ export default function PatternWork() {
             </select>
           </label>
         )}
-        <button type="button" className="ptw-btn ptw-btn--go" onClick={() => setPlaying(!playing)}>{playing ? 'Pause' : t > 0 ? 'Resume' : 'Fly'}</button>
-        <label className="ptw-field">
-          <span>Field</span>
-          <select className="ptw-select" value={fieldId} onChange={(e) => setFieldId(e.target.value)}>
-            {Object.values(FIELDS).map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-          </select>
-        </label>
         <label className="ptw-field">
           <span>Speed</span>
           <select className="ptw-select" value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
@@ -502,14 +622,14 @@ export default function PatternWork() {
           </select>
         </label>
       </div>
-      <Comms pass={model} now={t} speed={speed} />
-      <Procedures pass={model} now={t} />
+      <Comms pass={pass} now={t} speed={speed} />
+      <Procedures pass={pass} now={t} />
       <div className="ptw-card">
         <Gauges s={s} />
-        <PatternView pass={model} s={s} onJump={jump} single={single} satellite={view === 'satellite'} setView={setView} />
+        <PatternView pass={model} entry={entry} inBreak={inBreak && !!entry} s={s} onJump={jump} onBreak={jumpBreak} fr={fr} single={single} satellite={view === 'satellite'} setView={setView} following={playing} />
       </div>
       <p className="ptw-foot">
-        Runway {model.field.number} at {model.field.name}, 5,000 ft, left traffic, no wind. ME FTI §106 Pattern Work, Figures 1-3, 1-4 and 1-6. AOB and nose attitude are estimated.
+        Runway {runway.number} at {runway.name}, drawn {runway.length.toLocaleString('en-US')} ft, {runway.side} traffic, no wind. ME FTI §106 Pattern Work, Figures 1-3, 1-4 and 1-6. AOB and nose attitude are estimated.
       </p>
     </div>
   );

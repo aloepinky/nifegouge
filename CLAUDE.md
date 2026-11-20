@@ -854,7 +854,7 @@ run after any poster/EP edit; fails on NO CONTROL, NO SETTING, CANNOT FINISH).
 ## T-44C Pattern Work
 
 `/t44c/pattern` (`practice/t44c/pattern/`, since 2026-11-19): a model T-44C flying the VFR pattern
-round a 5,000 ft runway (Cabaniss 13, left traffic, no wind). Comms (every spoken line) pop in
+round the runways at Cabaniss and Navy Corpus (no wind). Comms (every spoken line) pop in
 and out: PF box left, PM box right, and the radio box laid over both while Tower or the PM
 transmits. Below them an FTI procedures box, always on, holds the newest two `do` steps. Then
 the pattern box: one line of boxes, a flight parameter each (bank and an estimated pitch included; no bank
@@ -875,6 +875,41 @@ Two fields, Cabaniss 13 and Navy Corpus 13L (`FIELDS`, runway ends from OpenStre
 Satellite view lays the drawing over USGS National Map aerial tiles (Esri's had cloud over
 NGP), turned and scaled to the runway (`siteOf`). `technique` lines are the user's sketch (PPTTT is power, pitch, trim, turn, talk); the cases'
 crew lines are `T44C/t44cCases.js`'s Figure F-1 wording.
+**The cases' spoken lines** (the user, 2026-11-19): crews say what they set, never NATOPS's "As
+required" (Case 1: "Power max allowable, landing gear up, airspeed 102."), in the on-wing gouge's
+words with no tag (the user), the PM's answers that nothing prints as Generated comms. After the first three shutdown items nothing says "hold" or
+"continue the checklist" (the FTI's momentary hold is a step in the FTI box only); the PF asks
+"Did the prop feather?" and "Is it a fire or fuel leak?". Their answers are drawn per pass
+(`drawCase`: no feather 25%, fire 25%, fuel leak 25%): a no runs NATOPS §15.14.3 Alternate Prop
+Feathering, a yes the F-1 firewall, extinguisher and bleed air items. **Keep to the normal pattern**
+(the user: it is shared with other traffic; a change is the exception). `buildPass` flies a pass
+again only where the calls cannot fit: Case 1 holds the crosswind turn until the prop is
+feathered (FTI p. 1-38, about 1,300 ft on, 2,300 with the alternate checklist), and the Landing
+Checklist may run into the approach turn but must be done by the 90 (p. 1-40); only when it
+cannot is the 180 delayed (p. 1-36), in 400 ft steps to the least that works (only Case 3 with a
+fire, a fuel leak or an unfeathered prop, 800 to 2,800 ft), the approach notes moving with it.
+Calls are spaced about as fast as a crew talks; the 90's "Down and locked" waits for a Case 4
+shutdown item in progress. The SSE full-stop
+brief `yields`: gone at the next spoken line. The PM answers "Speed checks, flaps approach".
+**Break** is a choice in the dropdown (`buildBreak`; the user, 2026-11-19): the page opens on
+Approach flap at the touchdown and every other pattern starts there, no break; Break flies the
+break and then goes round the approach-flap pattern from the touchdown. On every pattern a
+circle at the break entry flies a break into that pattern (`buildBreak(id)`): no flap keeps
+the flaps up, the engine-out patterns come in as the approach-flap one does and the
+single-engine one takes over at its wave-off. FTI p. 1-29: 1,000 ft, 200 KIAS on the overhead offset
+150 ft to the pattern side; "numbers for the break" at the approach end, Tower clears the left or
+right break (generated), and it breaks at the departure end (the user); one constant-bank idle turn
+(about 41°) to a mile abeam, flaps below 174, gear below 155, then slow to 120 and descend to 800
+on the downwind, from where it flies the approach-flap pass to the touchdown. While it is flown
+the break's notes replace the pattern's; once on the downwind its line is rubbed out after the
+aircraft and the pattern's notes come up. Its circle at the break entry is on every pattern.
+**Every runway at both fields** (`RUNWAYS`): Cabaniss 13, 18 left and 31, 36 right; Navy Corpus 13L,
+31L, 36, 4 left and 13R, 31R, 18, 22 right (course rules). All drawn 5,000 ft but 13R/31L at 8,000
+(the crosswind turn and the break follow the length). The model works in a frame with y toward
+the pattern side; a right-hand pattern is drawn mirrored (`frameOf` in PatternWork.js: lines and
+circles mirrored, words placed where the mirror puts them but not flipped), and `siteOf` puts y
+on the runway's right. The 180 call stays the ME FTI App. B wording ("left/right 180, three down
+and locked"); the course rules' "180, gear down" is another field's.
 
 ## Page views
 

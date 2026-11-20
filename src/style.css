@@ -11703,7 +11703,7 @@ button.epl-modal-close:hover {
 }
 
 .ptw-btn--go {
-  min-width: 6em;
+  min-width: 7em;
   background: var(--btn);
   border-color: var(--btn);
   color: var(--on-brand);
@@ -12091,6 +12091,15 @@ button.epl-modal-close:hover {
   z-index: 1;
 }
 
+.ptw-mapscroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.ptw-mapinner {
+  position: relative;
+}
+
 .ptw-sat {
   position: absolute;
   inset: 0;
@@ -12262,7 +12271,37 @@ button.epl-modal-close:hover {
   opacity: 0.16;
 }
 
+/* A phone: the parameters in a three-by-three grid (power, AOB, nose; airspeed, altitude,
+   heading; flaps, gear, props), each value on one line; the FTI box shows only the step now
+   flown, its source under it; the controls in two tidy rows. */
 @media (max-width: 640px) {
+  .ptw-page {
+    padding: 8px 10px 32px;
+  }
+
+  .ptw-controls {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px 10px;
+  }
+
+  .ptw-controls .ptw-field {
+    display: contents;
+  }
+
+  .ptw-controls .ptw-btn--go {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .ptw-select {
+    width: 100%;
+  }
+
+  .ptw-box {
+    padding: 6px 9px;
+  }
+
   .ptw-box-line {
     font-size: 14px;
   }
@@ -12275,5 +12314,67 @@ button.epl-modal-close:hover {
   .ptw-comms-pf .ptw-box,
   .ptw-comms-pm .ptw-box {
     max-height: 128px;
+  }
+
+  .ptw-fti {
+    min-height: 0;
+    padding: 6px 10px;
+  }
+
+  .ptw-fti-line:not(.ptw-fti-line--now) {
+    display: none;
+  }
+
+  .ptw-fti-line--now {
+    display: grid;
+    grid-template-columns: 2.2em minmax(0, 1fr);
+    gap: 0 6px;
+    font-size: 14px;
+  }
+
+  .ptw-fti-ref {
+    grid-column: 2;
+  }
+
+  .ptw-card {
+    padding: 6px;
+  }
+
+  .ptw-gauges {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    overflow: visible;
+  }
+
+  .ptw-gauge {
+    min-width: 0;
+    padding: 3px 6px;
+  }
+
+  .ptw-gauge dd {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ptw-gauge-value {
+    font-size: 14px;
+  }
+
+  .ptw-gauge-unit {
+    font-size: 11px;
+  }
+
+  .ptw-view-switch {
+    top: 6px;
+    right: 6px;
+    padding: 4px 9px;
+    font-size: 12px;
+  }
+
+  /* The drawing at a size its words can be read, scrolled within its box. */
+  .ptw-mapinner {
+    width: 860px;
   }
 }
