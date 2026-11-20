@@ -21,24 +21,76 @@ const G = 32.174;
 const NM = 6076;
 
 export const RUNWAY = { length: 5000, width: 150 };
-// Every runway at Cabaniss and Navy Corpus, its traffic direction from the TW-4 course rules
-// (Navy Corpus Ch. 1 §c(1), Cabaniss Ch. 3 §(b)). Ends from OpenStreetMap (Cabaniss 13/31,
-// Navy Corpus 13L/31R) and OurAirports (the rest); every runway is drawn 5,000 ft, but 13R/31L
-// at 8,000.
-const STRIPS = [
-  // field, name, two runway numbers, their traffic, their ends, length
-  ['kngw', 'Cabaniss', ['13', '31'], ['left', 'right'], [[27.70632, -97.44268], [27.69676, -97.43199]], 5000],
-  ['kngw', 'Cabaniss', ['18', '36'], ['left', 'right'], [[27.7106, -97.4403], [27.6972, -97.44]], 5000],
-  ['kngp', 'Navy Corpus', ['13L', '31R'], ['left', 'right'], [[27.695234, -97.2921179], [27.6856223, -97.2813226]], 5000],
-  ['kngp', 'Navy Corpus', ['13R', '31L'], ['right', 'left'], [[27.7007008, -97.3015976], [27.6851997, -97.2841034]], 8000],
-  ['kngp', 'Navy Corpus', ['18', '36'], ['right', 'left'], [[27.6992, -97.2885], [27.6855, -97.2885]], 5000],
-  ['kngp', 'Navy Corpus', ['4', '22'], ['left', 'right'], [[27.6900997, -97.2974014], [27.6998005, -97.286499]], 5000],
+// The fields, in the order the menu lists them: Navy Corpus and the seven fields of the TW-4 ME
+// IFG's OLF list (pp. 19-30), then Cameron County (Port Isabel). `tower` is the station a
+// towered field's calls go to; a field without one takes self-announced CTAF calls (AIM §4-1-9),
+// `said` the name it goes by on the radio (McCampbell-Porter is Ingleside). `pa` and `ba` are the
+// pattern and break altitudes, AGL: 800 and 1,000 ft (ME FTI p. 1-29 and App. E: uncontrolled
+// fields entered at 1,000 ft, 800 after entering the downwind; McCampbell-Porter's 800/1,000 ft
+// MSL at 18 ft elevation, IFG p. 23). Victoria flies its turboprop pattern of 1,100 ft AGL (IFG
+// p. 26); there and at Corpus Christi Intl the break is at 1,500 ft AGL (the user), where the AIM
+// enters turbine-powered aircraft into the pattern (§4-3-3: not less than 1,500 ft AGL).
+export const FIELDS = [
+  { id: 'kngw', name: 'Cabaniss', ident: 'KNGW', tower: 'Cabaniss Tower', pa: 800, ba: 1000 },
+  { id: 'kngp', name: 'Navy Corpus', ident: 'KNGP', tower: 'Navy Corpus Tower', pa: 800, ba: 1000 },
+  { id: 'ktfp', name: 'McCampbell-Porter', said: 'Ingleside', ident: 'KTFP', pa: 800, ba: 1000 },
+  { id: 'kpkv', name: 'Calhoun County', ident: 'KPKV', pa: 800, ba: 1000 },
+  { id: 'kvct', name: 'Victoria', ident: 'KVCT', tower: 'Victoria Tower', pa: 1100, ba: 1500 },
+  { id: 'kpsx', name: 'Palacios', ident: 'KPSX', pa: 800, ba: 1000 },
+  { id: 'kali', name: 'Alice', ident: 'KALI', pa: 800, ba: 1000 },
+  { id: 'kcrp', name: 'Corpus Christi Intl', ident: 'KCRP', tower: 'Corpus Tower', pa: 800, ba: 1500 },
+  { id: 'kpil', name: 'Cameron County', ident: 'KPIL', pa: 800, ba: 1000 },
 ];
-export const RUNWAYS = STRIPS.flatMap(([field, name, nums, sides, ends, length]) => [0, 1].map((i) => ({
-  id: `${field}-${nums[i]}`, field, name, number: nums[i], reciprocal: nums[1 - i], side: sides[i],
-  label: `${name} ${nums[i]}`, length, heading: parseInt(nums[i], 10) * 10,
-  ends: i ? [ends[1], ends[0]] : ends,
-})));
+const FIELD_BY_ID = Object.fromEntries(FIELDS.map((f) => [f.id, f]));
+// Every runway, its traffic direction from the TW-4 course rules (Navy Corpus Ch. 1 §c(1),
+// Cabaniss Ch. 3 §(b)), the IFG's airfield pages (Calhoun County 14 left, 32 right; Victoria
+// 31 right; Palacios and Alice all left; McCampbell-Porter left) and, where those say nothing,
+// the FAA's airport data (Corpus Christi 13 right, 31 left, 18 left, 36 right; Victoria 13 and
+// 18/36 left; Cameron County all left). Ends from OpenStreetMap (Cabaniss 13/31, Navy Corpus
+// 13L/31R) and OurAirports (the rest). Cabaniss and Navy Corpus runways are drawn 5,000 ft but
+// 13R/31L at 8,000; the others at their published lengths. Closed runways are left out, and so
+// is any runway short of the IFG's runway limits for a touch and go, 4,490 by 75 ft (p. 57; so
+// not Calhoun County's turf 5/23 or Cameron County's 17/35). The Cases end in an SSE full stop,
+// which needs 4,900 by 100 ft (`sseFullStop`). McCampbell-Porter's runway is the IFG's 13/31 (the FAA now
+// numbers it 14/32).
+const STRIPS = [
+  // field, two runway numbers, their traffic, their ends, length and width
+  ['kngw', ['13', '31'], ['left', 'right'], [[27.70632, -97.44268], [27.69676, -97.43199]], 5000, 150],
+  ['kngw', ['18', '36'], ['left', 'right'], [[27.7106, -97.4403], [27.6972, -97.44]], 5000, 150],
+  ['kngp', ['13L', '31R'], ['left', 'right'], [[27.695234, -97.2921179], [27.6856223, -97.2813226]], 5000, 220],
+  ['kngp', ['13R', '31L'], ['right', 'left'], [[27.7007008, -97.3015976], [27.6851997, -97.2841034]], 8000, 200],
+  ['kngp', ['18', '36'], ['right', 'left'], [[27.6992, -97.2885], [27.6855, -97.2885]], 5000, 200],
+  ['kngp', ['4', '22'], ['left', 'right'], [[27.6900997, -97.2974014], [27.6998005, -97.286499]], 5000, 200],
+  ['ktfp', ['13', '31'], ['left', 'left'], [[27.91830063, -97.21649933], [27.90780067, -97.20649719]], 5000, 75],
+  ['kpkv', ['14', '32'], ['left', 'right'], [[28.6595993, -96.6858978], [28.6483994, -96.6768036]], 5000, 75],
+  ['kvct', ['13', '31'], ['left', 'right'], [[28.8638, -96.934097], [28.846901, -96.913101]], 9110, 150],
+  ['kvct', ['18', '36'], ['left', 'left'], [[28.8589, -96.909798], [28.845501, -96.909698]], 4910, 75],
+  ['kpsx', ['8', '26'], ['left', 'left'], [[28.7304001, -96.2621002], [28.7303009, -96.2464981]], 5000, 150],
+  ['kpsx', ['13', '31'], ['left', 'left'], [[28.7306995, -96.2573013], [28.7210007, -96.2463989]], 5000, 150],
+  ['kpsx', ['18', '36'], ['left', 'left'], [[28.7332, -96.246696], [28.7194, -96.246803]], 5000, 75],
+  ['kali', ['13', '31'], ['left', 'left'], [[27.7453003, -98.0338974], [27.7338009, -98.0206985]], 6000, 100],
+  ['kali', ['17', '35'], ['left', 'left'], [[27.7451, -98.0268021], [27.7327995, -98.0267029]], 4490, 100],
+  ['kcrp', ['13', '31'], ['right', 'left'], [[27.77700043, -97.51339722], [27.7621994, -97.49720001]], 7510, 150],
+  ['kcrp', ['18', '36'], ['left', 'right'], [[27.7796001, -97.4962997], [27.7628994, -97.4960022]], 6080, 150],
+  ['kpil', ['13', '31'], ['left', 'left'], [[26.17300034, -97.34989929], [26.15749931, -97.33260345]], 8000, 200],
+  ['kpil', ['3', '21'], ['left', 'left'], [[26.16200066, -97.35500336], [26.17329979, -97.34629822]], 5000, 150],
+  ['kpil', ['8', '26'], ['left', 'left'], [[26.16360092, -97.35410309], [26.16360092, -97.33789825]], 5320, 150],
+  ['kpil', ['17', '35'], ['left', 'left'], [[26.17539978, -97.34899902], [26.16390038, -97.34889984]], 4200, 75],
+];
+// TW-4 ME IFG p. 57, Runway Length/Width Requirement, dry and day.
+export const RUNWAY_LIMITS = { touchAndGo: { length: 4490, width: 75 }, sseFullStop: { length: 4900, width: 100 } };
+const meets = (length, width, lim) => length >= lim.length && width >= lim.width;
+export const RUNWAYS = STRIPS.filter((x) => meets(x[4], x[5], RUNWAY_LIMITS.touchAndGo)).flatMap(([fieldId, nums, sides, ends, length, width]) => [0, 1].map((i) => {
+  const f = FIELD_BY_ID[fieldId];
+  return {
+    id: `${fieldId}-${nums[i]}`, field: fieldId, name: f.name, said: f.said || f.name, tower: f.tower || null, pa: f.pa, ba: f.ba,
+    number: nums[i], reciprocal: nums[1 - i], side: sides[i],
+    label: `${f.name} ${nums[i]}`, length, width, sseFullStop: meets(length, width, RUNWAY_LIMITS.sseFullStop), heading: parseInt(nums[i], 10) * 10,
+    ends: i ? [ends[1], ends[0]] : ends,
+  };
+}));
+// Feet as said: 1,100 ft.
+export const feet = (n) => `${n.toLocaleString('en-US')} ft`;
 const RUNWAY_BY_ID = Object.fromEntries(RUNWAYS.map((r) => [r.id, r]));
 export const DEFAULT_RUNWAY = 'kngw-13';
 export const CALL_SIGN = 'MNTNA 12';
@@ -74,6 +126,7 @@ const NATOPS_ALT = { work: 'T-44C NATOPS', loc: 'Ch. 15 — Alternate Prop Feath
 const GEAR_UP = { work: 'ME FTI', loc: '§103 — Departure and Arrival Transitions', pages: 'p. 1-11' };
 const CONFIG = { work: 'T-44C NATOPS', loc: 'Ch. 22 — Configuration Change', pages: 'p. 22.4-2' };
 const CALLOUTS = { work: 'T-44C NATOPS', loc: 'Figure 22.4-4 — General Callouts', pages: 'p. 22.4-9' };
+const SELF_ANNOUNCE = { work: 'AIM', loc: '§4-1-9 — Traffic Advisory Practices at Airports Without Operating Control Towers' };
 
 // Piecewise-linear over a fraction: [[fraction, value], ...].
 function lerp(points, u) {
@@ -97,7 +150,7 @@ const up2Top = (caseN, xwAt, opts) => Math.min(700, 300 + (120 * ((opts.upwindX 
 // `opts.upwindX`: Case 1 holds its crosswind turn there, the prop not yet feathered (ME FTI
 // p. 1-38); `opts.dwExt`: the 180 delayed that many feet down the downwind, to finish the
 // Landing Checklist (p. 1-36), the approach turn rolling out short of the groove.
-function legs(id, length, opts = {}) {
+function legs(id, length, opts = {}, pa = 800) {
   const xwAt = turnX(length);
   const ext = opts.dwExt || 0;
   const sse = id === 'sse';
@@ -132,17 +185,17 @@ function legs(id, length, opts = {}) {
     // climbing at 110 to 800 ft, then level at 120.
     L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI / 4, kias: [[0, 120], [1, 116]], alt: [[0, 500], [1, 560]] });
     L({ id: 'xwLevel', phase: 'Crosswind', line: 1100, kias: [[0, 116], [1, 110]], alt: [[0, 560], [1, 590]] });
-    L({ id: 'xw1b', phase: 'Crosswind', arcToY: ABEAM, kias: [[0, 110], [0.6, 110], [1, 120]], alt: [[0, 590], [0.6, 800], [1, 800]] });
+    L({ id: 'xw1b', phase: 'Crosswind', arcToY: ABEAM, kias: [[0, 110], [0.6, 110], [1, 120]], alt: [[0, 590], [0.6, pa], [1, pa]] });
   } else {
     // Two engines: 1000 ft-lbs climbs a steady 1400 ft/min (the user's figures; NATOPS has no
     // gear-down, approach-flap climb chart), level at 800 ft well before the downwind. One
     // engine climbs slower.
-    const level = (((800 - xwFrom) / CLIMB_FPM) * 60 * 120 * KT) / (R * Math.PI);
+    const level = Math.min(0.95, ((pa - xwFrom) / CLIMB_FPM) * 60 * 120 * KT / (R * Math.PI));
     // On one engine: 110 climbing, then level at 800 and back to 120.
     const xwKias = sse ? [[0, 120], [0.08, 110], [0.7, 110], [0.95, 120], [1, 120]] : lost ? [[0, 110], [0.7, 110], [0.95, 120], [1, 120]] : flat(120);
-    L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI, kias: xwKias, alt: lost ? [[0, xwFrom], [0.7, 800], [1, 800]] : [[0, xwFrom], [level, 800], [1, 800]] });
+    L({ id: 'xw1', phase: 'Crosswind', arc: R, angle: Math.PI, kias: xwKias, alt: lost ? [[0, xwFrom], [0.7, pa], [1, pa]] : [[0, xwFrom], [level, pa], [1, pa]] });
   }
-  L({ id: 'dw', phase: 'Downwind', toX: GROOVE_X - ext, kias: flat(120), alt: flat(800) });
+  L({ id: 'dw', phase: 'Downwind', toX: GROOVE_X - ext, kias: flat(120), alt: flat(pa) });
   // The approach turn: the 90 at 500 ft and 110 KIAS, the groove at 250 ft. On one engine 110
   // minimum to the threshold; without flaps, final at 110 and the threshold at 105.
   const single = sse || caseN >= 1;
@@ -150,7 +203,7 @@ function legs(id, length, opts = {}) {
   const crossK = single ? 110 : id === 'noflap' ? 105 : 95;
   // Rolled out short of the groove, it descends along the final at the final's slope.
   const rolled = ext ? Math.min(400, 250 + ext * (230 / 1200)) : 250;
-  L({ id: 'app', phase: 'Approach turn', arc: R, angle: Math.PI, kias: [[0, 120], [0.5, 110], [1, finalK]], alt: [[0, 800], [0.5, 500], [1, rolled]] });
+  L({ id: 'app', phase: 'Approach turn', arc: R, angle: Math.PI, kias: [[0, 120], [0.5, 110], [1, finalK]], alt: [[0, pa], [0.5, 500], [1, rolled]] });
   if (ext) L({ id: 'final0', phase: 'Final', toX: GROOVE_X, kias: flat(finalK), alt: [[0, rolled], [1, 250]] });
   const toThreshold = (0 - GROOVE_X) / (TOUCHDOWN_X - GROOVE_X);
   if (sse) L({ id: 'final', phase: 'Final', toX: WAVEOFF_X, kias: flat(110), alt: [[0, 250], [1, 200]] });
@@ -313,10 +366,11 @@ function stateFn(pts, duration, init, events, runway) {
 }
 
 // The Landing Checklist as the crew says it (ME FTI App. F), with the gear lowered first when
-// it is still up.
-function landingChecklist(flapsWord, gearDown) {
+// it is still up. `called`: the PF has already called for it with the flaps (off a touch and go,
+// "Speed checks, flaps approach, Landing Checklist"; the user, 2026-11-20).
+function landingChecklist(flapsWord, gearDown, called = false) {
   return [
-    ['PF', gearDown ? 'Speed checks, landing gear down, Landing Checklist' : 'Landing Checklist'],
+    ...(called ? [] : [['PF', gearDown ? 'Speed checks, landing gear down, Landing Checklist' : 'Landing Checklist']]),
     ...(gearDown ? [['PM', 'Speed checks, landing gear down', { gear: 'Down' }]] : []),
     ['PM', 'Flaps'], ['PF', flapsWord], ['PM', flapsWord],
     ['PM', 'Landing Gear'], ['PF', 'Down, locked'], ['PM', 'Down, locked'],
@@ -353,7 +407,7 @@ function passCore(id, engine, runwayId, draw, opts) {
   const field = RUNWAY_BY_ID[runwayId];
   const side = field.side;
   const other = side === 'left' ? 'right' : 'left';
-  const { pts, seg, duration } = fly(legs(id, field.length, opts), id === 'sse' ? WAVEOFF_X : TOUCHDOWN_X);
+  const { pts, seg, duration } = fly(legs(id, field.length, opts, field.pa), id === 'sse' ? WAVEOFF_X : TOUCHDOWN_X);
   const sse = id === 'sse';
   const caseN = id.startsWith('case') ? Number(id.slice(4)) : 0;
   const single = sse || caseN > 0;
@@ -396,9 +450,9 @@ function passCore(id, engine, runwayId, draw, opts) {
 
   // The 180 call and Tower's answer, kept clear of any checklist running past it.
   let quiet = null;
-  const checklist = (t0, flapsWord, gearDown) => {
+  const checklist = (t0, flapsWord, gearDown, called) => {
     let t = t0;
-    landingChecklist(flapsWord, gearDown).forEach(([who, text, set]) => {
+    landingChecklist(flapsWord, gearDown, called).forEach(([who, text, set]) => {
       if (quiet && t > quiet[0] - 1 && t < quiet[1]) t = quiet[1];
       add(t, who, 'say', text, { ref: APPF('Landing Checklist', 'p. F-24'), ...(set ? { set } : {}) });
       t += 1.7;
@@ -527,25 +581,33 @@ function passCore(id, engine, runwayId, draw, opts) {
   // On one engine: climb to pattern altitude, then accelerate to 120 KIAS and reduce power.
   if (sse || caseN === 1 || caseN === 2) {
     const climbLeg = caseN === 2 ? 'xw1b' : 'xw1';
-    add(atAlt(climbLeg, 800), 'PF', 'do', 'Pattern altitude, then accelerate to 120 KIAS, power as required', { ref: FTI('p. 1-38'), set: { power: 'As required' } });
+    add(atAlt(climbLeg, field.pa), 'PF', 'do', 'Pattern altitude, then accelerate to 120 KIAS, power as required', { ref: FTI('p. 1-38'), set: { power: 'As required' } });
   }
   if (sse) add(atAlt('up2', 500), 'PF', 'do', 'Level at 500 ft until the crosswind turn: 120 KIAS, power as required', { ref: FTI('p. 1-36'), set: { power: 'As required' } });
 
-  // Level at 800 ft in the crosswind turn, power back for 120 KIAS.
+  // Level at pattern altitude in the crosswind turn, power back for 120 KIAS.
   if (!(sse || caseN === 1 || caseN === 2)) {
-    add(atAlt('xw1', 800), 'PF', 'do', `Level at 800 ft: ${back}`, { ref: FTI('p. 1-31'), set: { power: tq('600 ft-lbs') } });
+    add(atAlt('xw1', field.pa), 'PF', 'do', `Level at ${feet(field.pa)}: ${back}`, { ref: FTI('p. 1-31'), set: { power: tq('600 ft-lbs') } });
   }
 
   // ---- Passing 600 ft: flaps approach and the Landing Checklist (gear already down).
+  // At a field without a tower the crosswind call goes out as the turn starts, and the crew's
+  // calls passing 600 ft wait for it to end.
+  let xwCallEnd = 0;
+  if (!field.tower && !sse && caseN !== 1 && caseN !== 2) {
+    const text = `${field.said} traffic, ${CALL_SIGN}, ${side} crosswind runway ${field.number}, ${field.said}.`;
+    add(txw, 'PM', 'say', text, { radio: true, ref: SELF_ANNOUNCE });
+    xwCallEnd = txw + text.length * 0.06 + 0.6;
+  }
   if (!sse && caseN !== 1 && caseN !== 2) {
-    const t600 = atAlt('xw1', 600);
+    const t600 = Math.max(atAlt('xw1', 600), xwCallEnd);
     if (id === 'noflap') {
       add(t600, 'PF', 'do', 'Passing 600 ft: flaps stay up', { ref: FTI('p. 1-31') });
       checklist(t600 + 1, 'Up');
     } else {
-      add(t600, 'PF', 'say', 'Speed checks, flaps approach', { ref: APPF('Landing Checklist', 'p. F-24') });
-      add(t600 + 1.4, 'PM', 'say', 'Speed checks, flaps approach', { ref: CONFIG, set: { flaps: 'Approach' } });
-      checklist(t600 + 2.8, 'Approach');
+      add(t600, 'PF', 'say', 'Speed checks, flaps approach, Landing Checklist', { ref: APPF('Landing Checklist', 'p. F-24') });
+      add(t600 + 2, 'PM', 'say', 'Speed checks, flaps approach', { ref: CONFIG, set: { flaps: 'Approach' } });
+      checklist(t600 + 3.4, 'Approach', false, true);
     }
   }
   if (caseN === 2) {
@@ -563,13 +625,14 @@ function passCore(id, engine, runwayId, draw, opts) {
   // ---- Downwind.
   const tdw = start('dw');
   mark(tdw, 'Downwind', 'downwind');
-  if (sse || caseN === 1 || caseN === 2) add(tdw, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, about a mile abeam', { ref: FTI('p. 1-31') });
+  if (sse || caseN === 1 || caseN === 2) add(tdw, 'PF', 'do', `Downwind: ${feet(field.pa)}, 120 KIAS, about a mile abeam`, { ref: FTI('p. 1-31') });
   else {
-    add(tdw, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, trimmed, about a mile abeam', { ref: FTI('p. 1-31') });
+    add(tdw, 'PF', 'do', `Downwind: ${feet(field.pa)}, 120 KIAS, trimmed, about a mile abeam`, { ref: FTI('p. 1-31') });
     add(tdw + 7, 'PF', 'do', 'Rudder trim centered by the 180', { ref: FTI('p. 1-30') });
   }
   const t180 = start('app'); // abeam the groove
-  quiet = [t180 - 0.4, t180 + 12.6];
+  const ctaf = !field.tower;
+  quiet = [t180 - 0.4, t180 + (ctaf ? 6 : 12.6)];
   if (caseN === 3) {
     const t0 = tdw + 0.5;
     failure(t0);
@@ -606,12 +669,19 @@ function passCore(id, engine, runwayId, draw, opts) {
   const tower = sse ? 'cleared low approach' : caseN ? 'cleared to land' : 'cleared for the option';
   mark(t180, 'The 180', 'the180');
   add(t180 - 0.4, 'PF', 'do', 'Three green lights', { ref: FTI('p. 1-31') });
-  add(t180, 'PM', 'say', `${field.name} Tower, ${CALL_SIGN}, ${side} 180, three down and locked, ${intent}.`, { radio: true, ref: APPB('p. B-4') });
-  add(t180 + 4.8, 'Tower', 'say', `${CALL_SIGN}, runway ${field.number}, ${tower}.`, { radio: true, generated: true });
-  // Every clearance is read back by the PM and confirmed by the PF (NATOPS: ATC clearance).
-  const readback = sse ? 'Cleared low approach' : caseN ? 'Cleared to land' : 'Cleared for the option';
-  add(t180 + 8.4, 'PM', 'say', `${readback}, runway ${field.number}, ${CALL_SIGN}.`, { radio: true, generated: true, ref: CALLOUTS });
-  add(t180 + 11.4, 'PF', 'say', `${readback}.`, { generated: true, ref: CALLOUTS });
+  // Without a tower: self-announced on the CTAF at the two turns, as civilian traffic hears it
+  // (the user, 2026-11-20): crosswind as the crosswind turn starts (below) and base at the 180,
+  // where the approach turn starts; nothing on downwind, at the 90 or on final.
+  const announce = (leg) => `${field.said} traffic, ${CALL_SIGN}, ${leg} runway ${field.number}, ${field.said}.`;
+  if (ctaf) add(t180, 'PM', 'say', announce(`${side} base`), { radio: true, ref: SELF_ANNOUNCE });
+  else {
+    add(t180, 'PM', 'say', `${field.tower}, ${CALL_SIGN}, ${side} 180, three down and locked, ${intent}.`, { radio: true, ref: APPB('p. B-4') });
+    add(t180 + 4.8, 'Tower', 'say', `${CALL_SIGN}, runway ${field.number}, ${tower}.`, { radio: true, generated: true });
+    // Every clearance is read back by the PM and confirmed by the PF (NATOPS: ATC clearance).
+    const readback = sse ? 'Cleared low approach' : caseN ? 'Cleared to land' : 'Cleared for the option';
+    add(t180 + 8.4, 'PM', 'say', `${readback}, runway ${field.number}, ${CALL_SIGN}.`, { radio: true, generated: true, ref: CALLOUTS });
+    add(t180 + 11.4, 'PF', 'say', `${readback}.`, { generated: true, ref: CALLOUTS });
+  }
   const tTurn = t180 + 0.3;
   const oneEngineTurn = sse || (caseN >= 1 && caseN <= 3);
   if (oneEngineTurn) add(tTurn, 'PF', 'do', 'Approach turn: 110 KIAS minimum to the 90', { ref: FTI('p. 1-40'), set: { power: 'As required' } });
@@ -651,6 +721,21 @@ function passCore(id, engine, runwayId, draw, opts) {
   const crossK = single ? 110 : id === 'noflap' ? 105 : 95;
   add(tFinal, 'PF', 'do', `The groove: 250 ft, ${finalK} KIAS, 1,200 ft from the threshold, aim at the numbers`, { ref: FTI(single ? 'p. 1-41' : id === 'noflap' ? 'p. 1-33' : 'p. 1-32'), set: { power: 'As required' } });
   if (!sse) mark(atX('final', 0), 'Threshold', 'threshold');
+  // The CTAF's crosswind call, in the first gap in the crew's talk long enough for it from the
+  // start of the crosswind turn.
+  if (ctaf && !events.some((x) => x.radio && x.t === txw)) {
+    const says = events.filter((x) => x.kind === 'say').map((x) => [x.t, x.t + Math.max(1.6, x.text.length * 0.06)]);
+    const gap = (from, to, len) => {
+      for (let t = from; t + len <= to; t += 0.2) {
+        if (!says.some(([a, b]) => a < t + len + 0.3 && b > t - 0.3)) return t;
+      }
+      return null;
+    };
+    const text = announce(`${side} crosswind`);
+    const len = text.length * 0.06;
+    const t = gap(txw - 0.5, tdw, len);
+    add(t === null ? txw : t, 'PM', 'say', text, { radio: true, ref: SELF_ANNOUNCE });
+  }
   if (!sse) add(atX('final', 0), 'PF', 'do', `Cross the threshold at ${crossK} KIAS, slowly close the power levers, flare`, { ref: FTI(single ? 'p. 1-41' : 'p. 1-33'), set: { power: 'Closing to idle' } });
   if (caseN) {
     const tr = start('rollout');
@@ -699,10 +784,10 @@ function passCore(id, engine, runwayId, draw, opts) {
 // the departure end (the user), left or right with the runway's traffic.
 const BREAK_FROM = -4500; // where the drawing picks it up, inbound
 const OVERHEAD_Y = 150; // the offset to the pattern side (Cabaniss course rules: 100-200 ft)
-const BREAK_LEGS = (length) => [
-  { id: 'overhead', phase: 'Break entry', toX: length, kias: flat(200), alt: flat(1000) },
-  { id: 'break', phase: 'The break', spiral: ABEAM, kias: [[0, 200], [1, 140]], alt: flat(1000) },
-  { id: 'bdw', phase: 'Downwind', line: 5000, kias: [[0, 140], [0.3, 120], [1, 120]], alt: [[0, 1000], [0.3, 1000], [1, 800]] },
+const BREAK_LEGS = (length, ba = 1000, pa = 800) => [
+  { id: 'overhead', phase: 'Break entry', toX: length, kias: flat(200), alt: flat(ba) },
+  { id: 'break', phase: 'The break', spiral: ABEAM, kias: [[0, 200], [1, 140]], alt: flat(ba) },
+  { id: 'bdw', phase: 'Downwind', line: 5000, kias: [[0, 140], [0.3, 120], [1, 120]], alt: [[0, ba], [0.3, ba], [1, pa]] },
 ];
 
 export function buildBreak(id = 'approach', engine = 'left', runwayId = DEFAULT_RUNWAY) {
@@ -711,7 +796,7 @@ export function buildBreak(id = 'approach', engine = 'left', runwayId = DEFAULT_
   const baseId = ['approach', 'noflap', 'full'].includes(id) ? id : 'approach';
   const base = buildPass(baseId, engine, runwayId);
   const noflap = baseId === 'noflap';
-  const { pts, seg, duration } = fly(BREAK_LEGS(field.length), BREAK_FROM, OVERHEAD_Y);
+  const { pts, seg, duration } = fly(BREAK_LEGS(field.length, field.ba, field.pa), BREAK_FROM, OVERHEAD_Y);
   const inLeg = (legId) => pts.slice(seg[legId].start, seg[legId].end + 1);
   const when = (legId, test) => (inLeg(legId).find(test) || pts[seg[legId].end]).t;
 
@@ -721,10 +806,17 @@ export function buildBreak(id = 'approach', engine = 'left', runwayId = DEFAULT_
   const tb = pts[seg.break.start].t;
   const tr = pts[seg.bdw.start].t;
   add(0, 'PF', 'do', 'Enter the break following course rules, wings level at 200 KIAS', { ref: FTI('p. 1-29') });
-  add(tn, 'PM', 'say', `${field.name} Tower, ${CALL_SIGN}, numbers for the break.`, { radio: true, ref: APPB('p. B-4') });
-  add(tn + 3.6, 'Tower', 'say', `${CALL_SIGN}, cleared for the ${side} break.`, { radio: true, generated: true });
-  add(tn + 6.6, 'PM', 'say', `Cleared for the ${side} break, ${CALL_SIGN}.`, { radio: true, generated: true, ref: CALLOUTS });
-  add(tn + 9.4, 'PF', 'say', `Cleared for the ${side} break.`, { generated: true, ref: CALLOUTS });
+  if (field.tower) {
+    add(tn, 'PM', 'say', `${field.tower}, ${CALL_SIGN}, numbers for the break.`, { radio: true, ref: APPB('p. B-4') });
+    add(tn + 3.6, 'Tower', 'say', `${CALL_SIGN}, cleared for the ${side} break.`, { radio: true, generated: true });
+    add(tn + 6.6, 'PM', 'say', `Cleared for the ${side} break, ${CALL_SIGN}.`, { radio: true, generated: true, ref: CALLOUTS });
+    add(tn + 9.4, 'PF', 'say', `Cleared for the ${side} break.`, { generated: true, ref: CALLOUTS });
+  } else {
+    // No one to clear it: "numbers" at the approach end, then the break announced as it is
+    // flown, in civilian words, "overhead" ("break" is military; the user, 2026-11-20).
+    add(tn, 'PM', 'say', `${field.said} traffic, ${CALL_SIGN}, numbers runway ${field.number}.`, { radio: true, ref: SELF_ANNOUNCE });
+    add(tb, 'PM', 'say', `${field.said} traffic, ${CALL_SIGN}, ${side} overhead runway ${field.number}.`, { radio: true, ref: SELF_ANNOUNCE });
+  }
   add(tb, 'PF', 'do', `At the departure end, smoothly roll into a level ${side} bank, not to exceed 45°, power to idle`, { ref: FTI('p. 1-29'), set: { power: 'Idle' } });
   if (!noflap) {
     const t174 = when('break', (p) => p.kias <= 174);
@@ -741,7 +833,7 @@ export function buildBreak(id = 'approach', engine = 'left', runwayId = DEFAULT_
   });
   add(tr, 'PF', 'do', 'Roll out on downwind with the runway on the lift detector, about 1 mile abeam', { ref: FTI('p. 1-29') });
   add(when('bdw', (p) => p.kias <= 120), 'PF', 'do', 'Slow to 120 KIAS on downwind, then descend to pattern altitude', { ref: FTI('p. 1-29'), set: { power: 'As required' } });
-  add(duration, 'PF', 'do', 'Downwind: 800 ft, 120 KIAS, trimmed, about a mile abeam', { ref: FTI('p. 1-31'), set: { power: base.torques ? '600 ft-lbs' : 'As required' } });
+  add(duration, 'PF', 'do', `Downwind: ${feet(field.pa)}, 120 KIAS, trimmed, about a mile abeam`, { ref: FTI('p. 1-31'), set: { power: base.torques ? '600 ft-lbs' : 'As required' } });
   events.sort((a, b) => a.t - b.t);
 
   const init = { flaps: 'Up', gear: 'Up', props: '1900 RPM', power: 'As required', engines: 'Both' };

@@ -6,7 +6,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ABEAM, CALL_SIGN, DEFAULT_RUNWAY, GEOMETRY, RUNWAY, RUNWAYS, SCENARIOS, buildBreak, buildPass, drawCase, geometryOf, siteOf } from './patternModel';
+import { ABEAM, CALL_SIGN, DEFAULT_RUNWAY, FIELDS, GEOMETRY, RUNWAY, RUNWAYS, RUNWAY_LIMITS, SCENARIOS, buildBreak, buildPass, drawCase, feet, geometryOf, siteOf } from './patternModel';
 
 const SPEEDS = [1, 2, 4];
 const { GROOVE_X, R } = GEOMETRY;
@@ -142,7 +142,7 @@ function frameOf(runway, { reach = 0, reachBack = 0, dwExt = 0 } = {}) {
   const w = Math.max(turnAt + R, reach) + 1500 - left;
   const h = ABEAM + 2 * PAD + 200;
   return {
-    k, length: runway.length, side: runway.side, ext: dwExt,
+    k, length: runway.length, side: runway.side, ext: dwExt, pa: runway.pa, ba: runway.ba, tower: runway.tower,
     view: { x: left, y: k === 1 ? -(ABEAM + PAD) : -(PAD + 200), w, h },
     Y: (y) => -k * y, // a point's y on the page
     dy: (d) => (k === 1 ? d : MARK_TEXT - d), // a name's offset from its circle
@@ -191,9 +191,9 @@ const NOTES = [
 
 // The break's notes (ME FTI §106 p. 1-29), shown in place of the pattern's while it is flown.
 const BREAK_NOTES = [
-  { x: -5800, y: 1500, anchor: 'start', lines: ['Break entry', '1,000 ft, 200 KIAS, wings level', '“Numbers for the break”'] },
+  { x: -5800, y: 1500, anchor: 'start', lines: ['Break entry', '{ba}, 200 KIAS, wings level', { text: '“Numbers for the break”', ctaf: 'CTAF: “Numbers”, then “{side} overhead”' }] },
   { x: 2500, y: 4100, anchor: 'start', lines: ['The break', 'Power idle', { text: 'Below 174 KIAS: flaps approach', noflap: null }, 'Below 155 KIAS: gear down', 'Landing Checklist'] },
-  { x: 2000, y: 5500, anchor: 'start', lines: ['Roll out about a mile abeam', 'Slow to 120 KIAS, then descend to 800 ft'] },
+  { x: 2000, y: 5500, anchor: 'start', lines: ['Roll out about a mile abeam', 'Slow to 120 KIAS, then descend to {pa}'] },
 ];
 
 // A line `{ text, torque: true }` is shown only where the torques apply; `noflap` is its
@@ -210,7 +210,8 @@ function Notes({ notes, torques, noflap, fr }) {
         return (
           <text key={n.lines[0]} x={x} y={y} textAnchor={n.anchor}>
             {lines.map((l, i) => {
-              const text = ((noflap && l.noflap) || l.text || l).replace(/\{side\}/g, fr.side);
+              const text = ((!fr.tower && l.ctaf) || (noflap && l.noflap) || l.text || l)
+                .replace(/\{side\}/g, fr.side).replace('{pa}', feet(fr.pa)).replace('{ba}', feet(fr.ba));
               return <tspan key={text} x={x} dy={i ? NOTE_LINE : 0} className={i === 0 ? 'ptw-note-head' : undefined}>{text}</tspan>;
             })}
           </text>
@@ -476,14 +477,14 @@ function Comms({ pass, now, speed }) {
   const nextSay = (e) => (pass.events.find((x) => x.kind === 'say' && x.t > e.t) || { t: Infinity }).t;
   const live = pass.events.filter((e) => e.kind === 'say' && now >= e.t && now < e.t + holdOf(e) * speed && !(e.yields && now >= nextSay(e)));
   const last2 = (xs) => xs.slice(-2);
-  const radio = last2(live.filter((e) => e.radio).map((e) => ({ ...e, from: e.who === 'Tower' ? `${pass.field.name} Tower` : pass.callSign || CALL_SIGN })));
+  const radio = last2(live.filter((e) => e.radio).map((e) => ({ ...e, from: e.who === 'Tower' ? pass.field.tower : pass.callSign || CALL_SIGN })));
   const pf = last2(live.filter((e) => !e.radio && e.who === 'PF'));
   const pm = last2(live.filter((e) => !e.radio && e.who === 'PM'));
   return (
     <div className="ptw-comms" aria-live="polite">
       <div className="ptw-comms-pf"><Box lines={pf} now={now} cls="ptw-box--pf" label="PF" speed={speed} /></div>
       <div className="ptw-comms-pm"><Box lines={pm} now={now} cls="ptw-box--pm" label="PM" speed={speed} /></div>
-      {radio.length > 0 && <div className="ptw-comms-radio"><Box lines={radio} now={now} cls="ptw-box--radio" label="Tower" speed={speed} /></div>}
+      {radio.length > 0 && <div className="ptw-comms-radio"><Box lines={radio} now={now} cls="ptw-box--radio" label={pass.field.tower ? 'Tower' : 'CTAF'} speed={speed} /></div>}
     </div>
   );
 }
@@ -507,6 +508,69 @@ function Procedures({ pass, now }) {
   );
 }
 
+const dims = ({ length, width }) => `${length.toLocaleString('en-US')} × ${width} ft`;
+
+// ---- The runway picker: a field each, its runways folded under it. Every field opens folded,
+// the one flown marked; choosing a runway closes the list.
+function RunwayMenu({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [unfolded, setUnfolded] = useState(() => new Set());
+  const box = useRef(null);
+  const current = RUNWAYS.find((r) => r.id === value);
+  useEffect(() => {
+    if (!open) return undefined;
+    const away = (e) => { if (box.current && !box.current.contains(e.target)) setOpen(false); };
+    const esc = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('pointerdown', away); document.removeEventListener('keydown', esc); };
+  }, [open]);
+  const toggle = () => {
+    if (!open) setUnfolded(new Set());
+    setOpen(!open);
+  };
+  const fold = (id) => setUnfolded((s) => {
+    const next = new Set(s);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  return (
+    <div className="ptw-menu" ref={box}>
+      <button type="button" className="ptw-select ptw-menu-button" aria-haspopup="true" aria-expanded={open} aria-labelledby="ptw-runway-label ptw-runway-now" onClick={toggle}>
+        <span id="ptw-runway-now">{`${current.label} (${current.side})`}</span>
+      </button>
+      {open && (
+        <div className="ptw-menu-list">
+          {FIELDS.map((f) => {
+            const shown = unfolded.has(f.id);
+            const here = current.field === f.id;
+            return (
+              <div key={f.id} className="ptw-menu-field">
+                <button type="button" className={here ? 'ptw-menu-head ptw-menu-head--here' : 'ptw-menu-head'} aria-expanded={shown} onClick={() => fold(f.id)}>
+                  <span className="ptw-menu-caret" aria-hidden="true">{shown ? '▾' : '▸'}</span>
+                  {f.name}
+                  <span className="ptw-menu-ident">{f.ident}</span>
+                </button>
+                {shown && RUNWAYS.filter((r) => r.field === f.id).map((r) => (
+                  <button key={r.id} type="button" className={r.id === value ? 'ptw-menu-runway ptw-menu-runway--here' : 'ptw-menu-runway'}
+                    onClick={() => { onChange(r.id); setOpen(false); }}>
+                    {`Runway ${r.number} (${r.side})`}
+                    <span className="ptw-menu-ident">{`${r.length.toLocaleString('en-US')} × ${r.width} ft${r.sseFullStop ? '' : ', no cases'}`}</span>
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+          <p className="ptw-menu-note">
+            {`Touch and go: ${dims(RUNWAY_LIMITS.touchAndGo)} or larger.`}<br />
+            {`Cases (SSE full stop): ${dims(RUNWAY_LIMITS.sseFullStop)} or larger.`}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PatternWork() {
   const [scenario, setScenario] = useState('approach');
   const [engine, setEngine] = useState('left');
@@ -516,6 +580,12 @@ export default function PatternWork() {
   const [view, setView] = useState('satellite');
   const [runwayId, setRunwayId] = useState(DEFAULT_RUNWAY);
   const runway = RUNWAYS.find((r) => r.id === runwayId);
+  // A case ends in an SSE full stop: on a runway too small for one, back to the approach-flap
+  // pattern (IFG p. 57).
+  const pickRunway = (id) => {
+    setRunwayId(id);
+    if (scenario.startsWith('case') && !RUNWAYS.find((r) => r.id === id).sseFullStop) setScenario('approach');
+  };
   // Every pattern starts at the touchdown; Break opens on the break, then goes round the
   // approach-flap pattern. On every pattern the break entry's circle flies a break into it. A
   // case's prop and fire questions are answered afresh each pass.
@@ -590,20 +660,17 @@ export default function PatternWork() {
     <div className="ptw-page">
       <div className="ptw-controls">
         <button type="button" className="ptw-btn ptw-btn--go" onClick={() => setPlaying(!playing)}>{playing ? 'Pause' : 'Play'}</button>
-        <label className="ptw-field">
-          <span>Runway</span>
-          <select className="ptw-select" value={runwayId} onChange={(e) => setRunwayId(e.target.value)}>
-            {['Cabaniss', 'Navy Corpus'].map((name) => (
-              <optgroup key={name} label={name}>
-                {RUNWAYS.filter((r) => r.name === name).map((r) => <option key={r.id} value={r.id}>{`${r.label} (${r.side})`}</option>)}
-              </optgroup>
-            ))}
-          </select>
-        </label>
+        <div className="ptw-field">
+          <span id="ptw-runway-label">Runway</span>
+          <RunwayMenu value={runwayId} onChange={pickRunway} />
+        </div>
         <label className="ptw-field">
           <span>Pattern</span>
           <select className="ptw-select" value={scenario} onChange={(e) => setScenario(e.target.value)}>
-            {SCENARIOS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+            {SCENARIOS.map((x) => {
+              const shut = x.id.startsWith('case') && !runway.sseFullStop;
+              return <option key={x.id} value={x.id} disabled={shut} title={shut ? `Ends in an SSE full stop, which needs ${dims(RUNWAY_LIMITS.sseFullStop)}` : undefined}>{x.label}</option>;
+            })}
           </select>
         </label>
         {single && (
@@ -629,7 +696,7 @@ export default function PatternWork() {
         <PatternView pass={model} entry={entry} inBreak={inBreak && !!entry} s={s} onJump={jump} onBreak={jumpBreak} fr={fr} single={single} satellite={view === 'satellite'} setView={setView} following={playing} />
       </div>
       <p className="ptw-foot">
-        Runway {runway.number} at {runway.name}, drawn {runway.length.toLocaleString('en-US')} ft, {runway.side} traffic, no wind. ME FTI §106 Pattern Work, Figures 1-3, 1-4 and 1-6. AOB and nose attitude are estimated.
+        Runway {runway.number} at {runway.name}, drawn {runway.length.toLocaleString('en-US')} ft, {runway.side} traffic, pattern {feet(runway.pa)} AGL, {runway.tower || 'no tower (CTAF calls)'}, no wind. ME FTI §106 Pattern Work, Figures 1-3, 1-4 and 1-6. AOB and nose attitude are estimated.
       </p>
     </div>
   );

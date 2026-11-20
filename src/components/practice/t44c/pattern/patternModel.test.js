@@ -1,4 +1,4 @@
-import { ABEAM, GEOMETRY, RUNWAY, RUNWAYS, SCENARIOS, buildBreak, buildPass, drawCase } from './patternModel';
+import { ABEAM, FIELDS, GEOMETRY, RUNWAY, RUNWAYS, SCENARIOS, buildBreak, buildPass, drawCase } from './patternModel';
 
 const near = (a, b, tol) => Math.abs(a - b) <= tol;
 const nearHdg = (a, b, tol) => Math.abs((((a - b) % 360) + 540) % 360 - 180) <= tol;
@@ -138,8 +138,10 @@ test.each(RUNWAYS.map((r) => r.id))('%s: its traffic side in the calls and headi
   const rw = RUNWAYS.find((r) => r.id === rid);
   const p = buildPass('approach', 'left', rid);
   const e = buildBreak('approach', 'left', rid);
-  expect(p.events.some((x) => x.text.includes(`, ${rw.side} 180, three down and locked`))).toBe(true);
-  expect(e.events.some((x) => x.text === `MNTNA 12, cleared for the ${rw.side} break.`)).toBe(true);
+  const call180 = rw.tower ? `, ${rw.side} 180, three down and locked` : `, ${rw.side} base runway ${rw.number}, ${rw.said}.`;
+  const callBreak = rw.tower ? `MNTNA 12, cleared for the ${rw.side} break.` : `, ${rw.side} overhead runway ${rw.number}.`;
+  expect(p.events.some((x) => x.text.includes(call180))).toBe(true);
+  expect(e.events.some((x) => x.text.endsWith(callBreak))).toBe(true);
   expect(near(p.stateAt(markT(p, 'crosswind')).x, rw.length + 1000, 10)).toBe(true);
   expect(nearHdg(p.stateAt(0).hdg, rw.heading, 0.5)).toBe(true);
   expect(nearHdg(p.stateAt(markT(p, 'downwind') + 5).hdg, rw.heading + 180, 0.5)).toBe(true);
@@ -188,4 +190,60 @@ test('a draw is one of the outcomes', () => {
   expect(drawCase(rand)).toEqual({ feather: true, leak: 'fire' });
   expect(drawCase(rand)).toEqual({ feather: false, leak: 'fuel' });
   expect(drawCase(rand)).toEqual({ feather: true, leak: 'none' });
+});
+
+// Every runway with every pattern it offers: the cases only where an SSE full stop fits.
+const PAIRS = (keep) => RUNWAYS.filter(keep).flatMap((r) => PATTERNS.filter((id) => r.sseFullStop || !id.startsWith('case')).map((id) => [r.id, id]));
+test.each(PAIRS(() => true))('%s, %s: the field pattern and break altitudes', (rid, id) => {
+  const rw = RUNWAYS.find((r) => r.id === rid);
+  const p = buildPass(id, 'left', rid);
+  expect(p.stateAt(markT(p, 'the180')).alt).toBe(rw.pa);
+  let maxAlt = 0;
+  sample(p, (s) => { expect(Number.isFinite(s.x + s.y + s.alt + s.kias)).toBe(true); maxAlt = Math.max(maxAlt, s.alt); });
+  expect(maxAlt).toBe(rw.pa);
+  expect(buildBreak(id, 'left', rid).stateAt(1).alt).toBe(rw.ba);
+});
+
+test.each(PAIRS((r) => r.tower))('%s, %s: calls to the tower, none on a CTAF', (rid, id) => {
+  const radio = buildPass(id, 'left', rid).events.filter((x) => x.radio);
+  expect(radio.some((x) => x.who === 'Tower')).toBe(true);
+  expect(radio.some((x) => / traffic, /.test(x.text))).toBe(false);
+});
+
+test.each(PAIRS((r) => !r.tower))('%s, %s: crosswind in the crosswind turn and base at the 180 on the CTAF, nothing more, the crew quiet', (rid, id) => {
+  const rw = RUNWAYS.find((r) => r.id === rid);
+  const p = buildPass(id, 'left', rid);
+  const radio = p.events.filter((x) => x.radio);
+  expect(radio.some((x) => x.who === 'Tower')).toBe(false);
+  expect(radio.map((x) => x.text)).toEqual([
+    `${rw.said} traffic, MNTNA 12, ${rw.side} crosswind runway ${rw.number}, ${rw.said}.`,
+    `${rw.said} traffic, MNTNA 12, ${rw.side} base runway ${rw.number}, ${rw.said}.`,
+  ]);
+  const [xw, base] = radio;
+  expect(base.t).toBe(markT(p, 'the180'));
+  expect(xw.t).toBeGreaterThanOrEqual(markT(p, 'crosswind') - 0.5);
+  expect(xw.t).toBeLessThan(markT(p, 'downwind'));
+  const crew = p.events.filter((x) => x.kind === 'say' && !x.radio);
+  const clash = radio.filter((x) => crew.some((c) => c.t > x.t - 1.5 && c.t < x.t + x.text.length * 0.06));
+  expect(clash).toHaveLength(0);
+  // The overhead: numbers at the approach end, overhead as it breaks, no altitude, no "break".
+  const said = buildBreak(id, 'left', rid).events.filter((x) => x.radio && x.t < 60).map((x) => x.text);
+  expect(said).toEqual([`${rw.said} traffic, MNTNA 12, numbers runway ${rw.number}.`, `${rw.said} traffic, MNTNA 12, ${rw.side} overhead runway ${rw.number}.`]);
+});
+
+test('off a touch and go the flaps and the Landing Checklist are called together', () => {
+  const said = buildPass('approach').events.filter((x) => x.kind === 'say' && !x.radio && x.t < 70).map((x) => `${x.who}: ${x.text}`);
+  const i = said.indexOf('PF: Speed checks, flaps approach, Landing Checklist');
+  expect(said.slice(i, i + 3)).toEqual(['PF: Speed checks, flaps approach, Landing Checklist', 'PM: Speed checks, flaps approach', 'PM: Flaps']);
+});
+
+test('runway limits (IFG p. 57): 4,490 by 75 ft for a touch and go, 4,900 by 100 for the cases', () => {
+  expect(RUNWAYS.every((r) => r.length >= 4490 && r.width >= 75)).toBe(true);
+  expect(RUNWAYS.some((r) => r.id === 'kpil-17')).toBe(false);
+  expect(RUNWAYS.filter((r) => !r.sseFullStop).map((r) => r.id)).toEqual(['ktfp-13', 'ktfp-31', 'kpkv-14', 'kpkv-32', 'kvct-18', 'kvct-36', 'kpsx-18', 'kpsx-36', 'kali-17', 'kali-35']);
+});
+
+test('Victoria flies its 1,100 ft turboprop pattern, every other field 800 ft; Victoria and Corpus Christi break at 1,500', () => {
+  expect(FIELDS.filter((f) => f.pa !== 800).map((f) => f.id)).toEqual(['kvct']);
+  expect(FIELDS.filter((f) => f.ba !== 1000).map((f) => [f.id, f.ba])).toEqual([['kvct', 1500], ['kcrp', 1500]]);
 });
