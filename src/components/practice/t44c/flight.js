@@ -12,19 +12,23 @@ import { hasMarks, markFigures, unmark } from './marks';
 import { T44C_EPS } from '../../T44C/t44cData';
 import { CALLS, CHECKLISTS, EMERGENCY_BRIEFS, GENERATED } from './script';
 import {
-  AREAS, BEACHLINE_FIRST, BEACHLINE_LAST, BEACHLINE_REF, BEACHLINE_RUNWAY, CAB_BREAK, CAB_INITIAL, CAB_PATTERN, CAB_PATTERN_ALT,
-  CHEETAH_BLOCKS, ENTRY, EXIT, FOXTROT_LOW, KNGP_SIDE, KNGW_RUNWAYS, KNGW_SIDE, SEAGULL_BLOCKS, SHAMROCK_FIRST, SHAMROCK_LAST,
+  AREAS, BEACHLINE_FIRST, BEACHLINE_LAST, BEACHLINE_REF, BEACHLINE_RUNWAY, CAB_INITIAL,
+  CHEETAH_BLOCKS, ENTRY, EXIT, FOXTROT_LOW, KNGP_SIDE, KNGW_RUNWAYS, KNGW_SIDE, SEAGULL_BLOCKS, SHAMROCK_FIRST,
   SHAMROCK_REF, SHAMROCK_RUNWAY, SOUTHERN_ENTRY, SOUTHERN_OUT, SOUTHERN_PATTERN, SOUTHERN_PATTERN_REF, SUNRISE_ARRIVAL,
   SUNRISE_ENTRY, SUNRISE_OUT, TO_SUNRISE,
 } from './routes';
 import {
-  BREAK, CLEAN_STALL_RECOVERY, CLIMB_OUT,EMERGENCY_DESCENT, FULL_STOP, LAPS, LINE_UP, MANEUVERS, MIN_ALT, PRE_STALL, PROFILES, SHUTDOWN,
-  SSE_WAVEOFF, STALL_RECOVERY, TAKEOFF_ROLL, TOUCH_AND_GO, WAVEOFF, sseAltitudes,
+  CLEAN_STALL_RECOVERY, CLIMB_OUT,EMERGENCY_DESCENT, FULL_STOP, LINE_UP, MANEUVERS, MIN_ALT, PRE_STALL, PROFILES, SHUTDOWN,
+  STALL_RECOVERY, TAKEOFF_ROLL, sseAltitudes,
 } from './numbers';
+import { drawCase } from './pattern/patternModel';
+import { endOf, lapLabel, lapLog, nextLaps, runwayIdOf } from './patternLaps';
 
 export { PROFILES };
 
-export const PHASES = ['Preflight', 'Ground Ops', 'Takeoff', 'Departure', 'Area Entry', 'High Work', 'Area Exit', 'Arrival', 'Pattern', 'Taxi'];
+// Pattern is every lap at either field, so a flight that works Cabaniss is in Pattern again after its
+// Recovery to Navy Corpus. Landing is the full stop.
+export const PHASES = ['Preflight', 'Ground Ops', 'Takeoff', 'Departure', 'Area Entry', 'High Work', 'Area Exit', 'Transit', 'Pattern', 'Recovery', 'Landing', 'Taxi back'];
 
 const PHONETIC = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India',
   'Juliet', 'Kilo', 'Lima', 'Mike', 'November', 'Oscar', 'Papa', 'Quebec', 'Romeo', 'Sierra', 'Tango',
@@ -349,8 +353,8 @@ const STAGES = {
           { id: 'no', label: 'No' },
         ]));
       }
-      if (s.area === 'seagull-s' && !cab) steps.push(rule(s, 'Arrival', 'Southern Arrival', EXIT.southernArrival));
-      if (s.area !== 'seagull-s') steps.push(rule(s, 'Arrival', 'Eastern Arrival', EXIT.easternArrival));
+      if (s.area === 'seagull-s' && !cab) steps.push(rule(s, 'Transit', 'Southern Arrival', EXIT.southernArrival));
+      if (s.area !== 'seagull-s') steps.push(rule(s, 'Transit', 'Eastern Arrival', EXIT.easternArrival));
     } else if (a.family === 'foxtrot') {
       // The first piece is said in the block; the route out is drawn with the second.
       steps.push(rule(s, P, 'Foxtrot exit', { ...EXIT.foxtrot, leg: null }, EXIT.foxtrot.pieces.slice(0, 1)));
@@ -358,19 +362,19 @@ const STAGES = {
       steps.push(rule(s, P, 'Foxtrot exit', EXIT.foxtrot, EXIT.foxtrot.pieces.slice(1)));
       steps.push(other);
       if (s.profile) steps.push(numbers(s, P, EMERGENCY_DESCENT.title, EMERGENCY_DESCENT));
-      steps.push(rule(s, 'Arrival', 'Northern Arrival', EXIT.northern));
+      steps.push(rule(s, 'Transit', 'Northern Arrival', EXIT.northern));
     } else {
       steps.push(call(s, P, GENERATED.cheetahLeaving));
       steps.push(rule(s, P, 'Cheetah exit', EXIT.cheetah), ...descent(s, P));
       steps.push(other);
       if (s.profile) steps.push(numbers(s, P, EMERGENCY_DESCENT.title, EMERGENCY_DESCENT));
-      steps.push(rule(s, 'Arrival', 'Southern Arrival', EXIT.southernArrival));
+      steps.push(rule(s, 'Transit', 'Southern Arrival', EXIT.southernArrival));
     }
     return steps;
   },
 
   arrival: (s) => {
-    const P = 'Arrival';
+    const P = 'Transit';
     const cab = s.dest === 'KNGW';
     const rwy = s.card.cabRwy;
     const initial = call(s, P, GENERATED.cabanissInitial, { replies: [reply(s, GENERATED.cabanissBreak)] });
@@ -401,26 +405,12 @@ const STAGES = {
     return shamrockHome(s);
   },
 
-  pattern: (s) => {
-    const P = 'Pattern';
-    const steps = [];
-    if (s.field === 'KNGW') {
-      const rwy = s.card.cabRwy;
-      steps.push(rule(s, P, 'Overhead', { ...CAB_BREAK, leg: `Cabaniss pattern ${rwy}`, pieces: [...CAB_BREAK.pieces, CAB_PATTERN[group(rwy)], CAB_PATTERN_ALT] }));
-    }
-    steps.push(numbers(s, P, 'Break', BREAK));
-    steps.push(checklist(P, CHECKLISTS.landing));
-    return steps;
-  },
-
-  lap: (s) => {
-    const options = Object.entries(LAPS).map(([id, l]) => ({ id, label: `${l.label} pattern` }));
-    if (s.field === 'KNGW' && s.laps > 0) options.push({ id: 'leave', label: 'Depart Cabaniss' });
-    return [choose('Pattern', 'lap', s.laps ? 'Next pass: which pattern?' : 'Which pattern is this pass?', options)];
-  },
+  // From the initial call on, the pattern is flown on Pattern Work's model: the break, then a lap
+  // at a time, the student choosing the next at each touchdown.
+  pattern: (s, rng) => flyLap(s, 'break', rng),
 
   fromCabaniss: (s) => {
-    const P = 'Arrival';
+    const P = 'Recovery';
     const rwy = s.card.cabRwy;
     if (s.leave === 'southern') {
       return [
@@ -437,29 +427,27 @@ const STAGES = {
       rule(s, P, 'To PT Sunrise', { ...(rwy === '31' ? SUNRISE_OUT[31] : SUNRISE_OUT.high), leg: `Cabaniss to PT Sunrise ${rwy}` }),
       rule(s, P, 'PT Sunrise', { ref: SUNRISE_ARRIVAL.ref, leg: `${SUNRISE_ARRIVAL.leg} ${s.card.rwy}`, pieces: [...SUNRISE_ARRIVAL.first, ...SUNRISE_ARRIVAL.runway[s.card.rwy]] }),
       call(s, P, CALLS.towerSunrise, { lead: [reply(s, GENERATED.cabanissToTower)], replies: [reply({ ...s, field: 'KNGP' }, GENERATED.towerSunriseReply)] }),
-      call(s, P, CALLS.numbers, { replies: [reply({ ...s, field: 'KNGP' }, GENERATED.towerBreak)] }),
     ];
   },
 
   taxi: (s) => [
-    call(s, 'Taxi', CALLS.clearLeft, { replies: [reply(s, CALLS.clearRight)] }),
-    call(s, 'Taxi', CALLS.taxiIn, { replies: [reply(s, GENERATED.groundIn), reply(s, GENERATED.groundInRead)] }),
-    checklist('Taxi', CHECKLISTS.afterLanding),
-    checklist('Taxi', CHECKLISTS.secure),
+    call(s, 'Taxi back', CALLS.clearLeft, { replies: [reply(s, CALLS.clearRight)] }),
+    checklist('Taxi back', CHECKLISTS.afterLanding),
+    call(s, 'Taxi back', CALLS.taxiIn, { replies: [reply(s, GENERATED.groundIn), reply(s, GENERATED.groundInRead)] }),
+    checklist('Taxi back', CHECKLISTS.secureFirst),
+    call(s, 'Taxi back', CALLS.continueChecklist),
   ],
 };
 
 // Navy Corpus from PT Shamrock: the course rule for the runway, the calls, and the break.
 function shamrockHome(s) {
-  const P = 'Arrival';
+  const P = s.leave ? 'Recovery' : 'Transit';
   const steps = [];
   if (!s.leave) steps.push(terminate(s, P));
   steps.push(rule(s, P, 'PT Shamrock', { ref: SHAMROCK_REF, leg: 'To PT Shamrock', pieces: SHAMROCK_FIRST }));
   steps.push(call(s, P, CALLS.towerShamrock, { replies: [reply({ ...s, field: 'KNGP' }, GENERATED.towerShamrockReply)] }));
   steps.push(rule(s, P, `To the initial, runway ${s.card.rwy}`, { ref: SHAMROCK_REF, leg: `Shamrock to KNGP ${s.card.rwy}`, pieces: SHAMROCK_RUNWAY[s.card.rwy] }));
   steps.push(call(s, P, CALLS.initial));
-  steps.push(rule(s, P, 'The overhead', { ref: SHAMROCK_REF, pieces: SHAMROCK_LAST }));
-  steps.push(call(s, P, CALLS.numbers, { replies: [reply({ ...s, field: 'KNGP' }, GENERATED.towerBreak)] }));
   return steps;
 }
 
@@ -471,37 +459,41 @@ const NEXT = {
   highWork: (s) => (s.hwDone || s.profile ? 'exit' : 'highWork'),
   exit: () => 'arrival',
   arrival: () => 'pattern',
-  pattern: () => 'lap',
-  lap: (s) => (s.finished ? 'taxi' : s.leave && s.field === 'KNGW' ? 'fromCabaniss' : 'lap'),
+  pattern: () => 'taxi',
   fromCabaniss: () => 'pattern',
   taxi: () => null,
 };
 
 // ---- What a choice does.
 
-function lapSteps(s, id) {
-  const P = 'Pattern';
-  const l = LAPS[id];
-  const steps = [];
-  if (s.laps > 0) steps.push(numbers(s, P, 'Upwind and crosswind', { ref: l.ref, rows: l.around }));
-  if (l.sse) steps.push(numbers(s, P, SHUTDOWN.title, SHUTDOWN));
-  steps.push(numbers(s, P, `${l.label} pattern`, l));
-  steps.push(call(s, P, CALLS.abeam, { replies: [reply(s, GENERATED.towerOption)] }));
-  steps.push(call(s, P, CALLS.review, { replies: [reply(s, CALLS.reviewed)] }));
-  const options = [];
-  if (!l.sse) options.push({ id: 'tg', label: 'Touch and go' });
-  options.push({ id: 'waveoff', label: 'Wave-off' });
-  if (s.field !== 'KNGW') options.push({ id: 'full', label: 'Full stop' });
-  steps.push(choose(P, 'outcome', 'What happens at the end of this pass?', options));
-  return steps;
+// A lap flown on the pattern model, then the choice at its end. A single-engine lap that follows
+// an SSE wave-off keeps that lap's engine; any other draws its engine, and a Case what its checks
+// turn out to be.
+function flyLap(s, kind, rng = Math.random) {
+  const fly = flyStep(s, kind, 'Pattern', rng);
+  const end = endOf(kind);
+  const { prompt, options } = nextLaps(end, s.field);
+  return [fly, { ...choose('Pattern', 'lap', prompt, options), end, engine: fly.engine }];
 }
 
-const outcomeSteps = (s, id) => {
-  const P = 'Pattern';
-  if (id === 'tg') return [numbers(s, P, TOUCH_AND_GO.title, TOUCH_AND_GO), call(s, P, CALLS.resetFlapsTrim, { replies: ['flaps', 'trim', 'go', 'rotateTg'].map((k) => reply(s, CALLS[k])) })];
-  if (id === 'waveoff') return [numbers(s, P, s.lapKind === 'sse' ? 'SSE wave-off' : 'Wave-off', s.lapKind === 'sse' ? SSE_WAVEOFF : WAVEOFF)];
-  return [...(s.lapKind === 'sse' ? [call(s, P, CALLS.sseFullStopBrief)] : []), numbers(s, P, FULL_STOP.title, FULL_STOP)];
-};
+function flyStep(s, kind, P, rng = Math.random) {
+  const home = s.field !== 'KNGW';
+  const rwy = home ? s.card.rwy : s.card.cabRwy;
+  const keep = kind === 'sseLand' || (kind === 'sse' && s.lapEnd === 'waveoff');
+  const engine = keep && s.patEngine ? s.patEngine : rng() < 0.5 ? 'left' : 'right';
+  const fly = {
+    kind: 'fly', phase: P, lap: kind, title: lapLabel(kind), engine,
+    runwayId: runwayIdOf(s.field, rwy), callSign: s.card.callSign,
+    // Cabaniss clears the break at the initial; from the south to runway 36 there is no initial.
+    cleared: kind === 'break' && !home && rwy !== '36',
+    draw: kind.startsWith('case') ? drawCase(rng) : null,
+    tower: home ? 'Tower' : 'Cabaniss', channel: home ? 'CH 4' : 'CH 15',
+    ref: { work: 'ME FTI', loc: '§106 — Pattern Work', pages: 'p. 1-29' },
+    // The Cabaniss circuit on the map, so a departure from it joins on.
+    ...(kind === 'break' && !home ? { leg: `Cabaniss pattern ${rwy}` } : {}),
+  };
+  return fly;
+}
 
 // One maneuver's tables. The pre-stall checks come once, before the first stall.
 function maneuverSteps(s, id, preStallDone) {
@@ -535,14 +527,16 @@ const CHOSEN = {
     steps.splice(s.at + 1, 0, numbers(s, 'Area Exit', EMERGENCY_DESCENT.title, EMERGENCY_DESCENT));
     return { ...s, steps };
   },
-  lap: (s, id) => {
-    if (id === 'leave') return { ...s, leave: 'pending', steps: [...s.steps, choose('Arrival', 'leave', 'Which way out of Cabaniss?', [
+  lap: (s, id, rng) => {
+    if (id === 'leave') return { ...s, leave: 'pending', steps: [...s.steps, choose('Recovery', 'leave', 'Which way out of Cabaniss?', [
       { id: 'sunrise', label: 'Sunrise' },
       { id: 'southern', label: 'Southern Departure' },
     ])] };
-    return { ...s, lapKind: id, laps: s.laps + 1, steps: [...s.steps, ...lapSteps(s, id)] };
+    const ended = s.steps[s.at];
+    const n = { ...s, lapEnd: ended.end, patEngine: ended.engine };
+    if (id === 'stop') return { ...n, finished: true, steps: [...s.steps, numbers(s, 'Landing', FULL_STOP.title, FULL_STOP)] };
+    return { ...n, lapKind: id, laps: s.laps + 1, steps: [...s.steps, ...flyLap(n, id, rng)] };
   },
-  outcome: (s, id) => ({ ...s, finished: id === 'full', steps: [...s.steps, ...outcomeSteps(s, id)] }),
   leave: (s, id) => ({ ...s, leave: id }),
 };
 
@@ -554,7 +548,7 @@ export const current = (s) => (s.done ? null : s.steps[s.at]);
 export function describe(step) {
   if (!step) return '';
   if (step.kind === 'checklist') return `${step.name} Checklist`;
-  if (step.kind === 'rule' || step.kind === 'numbers' || step.kind === 'ep') return step.title;
+  if (step.kind === 'rule' || step.kind === 'numbers' || step.kind === 'ep' || step.kind === 'fly') return step.title;
   if (step.kind === 'choose') return step.prompt;
   if (step.kind === 'auto') return step.who;
   if (step.kind === 'call') return step.radio ? `Call ${step.text.split(',')[0]}` : `"${step.text.length > 40 ? `${step.text.slice(0, 40)}…` : step.text}"`;
@@ -591,7 +585,7 @@ function enter(given, stage, rng = Math.random) {
   // perhaps a new runway at either field.
   if (stage === 'exit' && s.windPick === 'every') s = { ...s, card: { ...withWind(s.card, rng, 'every'), atis: PHONETIC[(PHONETIC.indexOf(s.card.atis) + 1) % PHONETIC.length] } };
   const flown = stage === 'highWork' && s.profile ? PROFILES[s.profile] : s.flown;
-  return landOn({ ...s, flown, stage, steps: STAGES[stage](s), at: 0, cur: fresh });
+  return landOn({ ...s, flown, stage, steps: STAGES[stage](s, rng), at: 0, cur: fresh });
 }
 
 // The ATIS as last copied, for the flight card: nothing until the ATIS is heard (Primary's "not
@@ -617,6 +611,7 @@ function logged(s, step) {
   else if (step.kind === 'rule') step.rule.forEach((p) => add.push({ ...base, who: 'Rule', text: unmark(p.text), plain: true }));
   else if (step.kind === 'numbers') add.push({ ...base, who: 'Numbers', text: step.title, plain: true });
   else if (step.kind === 'ep') add.push({ ...base, who: 'EP', text: step.title, plain: true });
+  else if (step.kind === 'fly') add.push(...lapLog(step));
   return add;
 }
 
@@ -666,7 +661,7 @@ const EPS_BY_PHASE = {
 };
 const AIRBORNE = ['emer-shutdown-checklist', 'windmilling-airstart', 'smoke-fire-unknown-origin', 'smoke-fume-elimination', 'fuel-leaks',
   'primary-governor-failure', 'explosive-decompression', 'unscheduled-electric-trim', 'emergency-descent', 'spin-ocf-recovery'];
-const EP_PHASES = ['Ground Ops', 'Takeoff', 'Departure', 'Area Entry', 'High Work', 'Area Exit', 'Arrival', 'Pattern'];
+const EP_PHASES = ['Ground Ops', 'Takeoff', 'Departure', 'Area Entry', 'High Work', 'Area Exit', 'Transit', 'Pattern', 'Recovery'];
 
 export const epsFor = (phase) => {
   if (!EP_PHASES.includes(phase)) return [];
@@ -713,7 +708,7 @@ export function reduce(s, action, rng = Math.random) {
       if (!step || step.kind !== 'choose' || !step.options.some((o) => o.id === action.id)) return s;
       const chosen = step.options.find((o) => o.id === action.id);
       const log = [...s.log, { phase: step.phase, who: 'Choice', text: chosen.label, plain: true }];
-      const n = CHOSEN[step.on]({ ...s, log }, action.id);
+      const n = CHOSEN[step.on]({ ...s, log }, action.id, rng);
       if (step.on === 'dest') return enter(n, 'exit', rng);
       if (step.on === 'leave') return enter({ ...n, laps: 0 }, 'fromCabaniss', rng);
       if (n.at + 1 < n.steps.length) return landOn({ ...n, at: n.at + 1, cur: fresh });

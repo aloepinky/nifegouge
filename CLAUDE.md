@@ -911,6 +911,17 @@ circles mirrored, words placed where the mirror puts them but not flipped), and 
 on the runway's right. The 180 call stays the ME FTI App. B wording ("left/right 180, three down
 and locked"); the course rules' "180, gear down" is another field's.
 
+**In the Practice Flight** (`/t44c/practice`, since 2026-11-19, the user): from the initial call
+(Navy Corpus's, Cabaniss's, or Tower's "report the numbers" after Sunrise) the pattern is flown on
+this model in place of the step card and map (`practice/t44c/PatternFlight.js`, which imports
+PatternWork's exported `Comms`, `Gauges`, `PatternView`, `Procedures`, `frameOf`; keep those
+exports). The break first (approach flap; no numbers call where Cabaniss cleared the break at the
+initial), then at every touchdown the flight pauses and asks the next lap (`patternLaps.js`: a
+lap is a `fly` step, `lap` the pattern id, its spoken lines go into the flight log as said). An
+SSE pass ends at its wave-off, offering SSE again or the SSE full stop (Case 5's last 200 ft);
+Full stop (Navy Corpus) ends the flight, Depart Cabaniss leaves. A lap after a full stop, or an
+SSE pass after a touchdown, starts from its own start point: the aircraft jumps there.
+
 ## Page views
 
 The site counts its own views; Netlify sees only a visit's first page. `src/components/pageviews.js`

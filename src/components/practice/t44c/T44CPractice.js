@@ -8,6 +8,8 @@ import { NORTH_FLOW, RUNWAYS } from '../card';
 import T44CMap from './T44CMap';
 import { AREAS, ENTRY } from './routes';
 import { Rule } from '../RuleText';
+import PatternFlight from './PatternFlight';
+import { lapLog } from './patternLaps';
 
 const FIG = String.fromCharCode(0x2007);
 const blank = (n) => <span className="pf-rule-blank">{FIG.repeat(Math.max(4, Math.min(30, n)))}</span>;
@@ -21,7 +23,7 @@ const READOUT = [['alt', 'Altitude'], ['kias', 'Airspeed'], ['hdg', 'Heading'], 
 
 function StatusBar({ s, h, canBack, dispatch, quiz, setQuiz }) {
   const step = current(s);
-  const phase = step ? step.phase : 'Taxi';
+  const phase = step ? step.phase : 'Taxi back';
   const seen = new Set(s.log.map((l) => l.phase));
   const c = s.card;
   const at = PHASES.indexOf(phase);
@@ -161,7 +163,7 @@ function Step({ s, dispatch, quiz }) {
     return (
       <div className="pf-card">
         <h2 className="pf-card-title">Flight complete</h2>
-        <p className="pf-done">Back on the line. {s.flown.length} {s.flown.length === 1 ? 'maneuver' : 'maneuvers'} flown.</p>
+        <p className="pf-done">Back on the line.</p>
         <button type="button" className="pf-btn pf-btn--go" onClick={() => dispatch({ type: 'restart' })}>Fly again</button>
       </div>
     );
@@ -363,16 +365,28 @@ export default function T44CPractice() {
   const [quiz, setQuiz] = useState(false);
   const s = h.now;
   const step = current(s);
+  // The pattern, flown: a lap in place of the step card and the map, and once it has ended, its
+  // last moment held under the choice of the next lap.
+  const flying = step?.kind === 'fly';
+  const prev = s.steps[s.at - 1];
+  const lapEnded = !flying && step?.kind === 'choose' && step.on === 'lap' && prev?.kind === 'fly' ? prev : null;
+  const [said, setSaid] = useState({ at: -1, n: 0 });
+  const onSaid = useCallback((n) => setSaid({ at: s.at, n }), [s.at]);
+  const [patternView, setPatternView] = useState('satellite');
+  const [patternSpeed, setPatternSpeed] = useState(2);
+  const lapDone = useCallback(() => dispatch({ type: 'next' }), []);
+  const log = useMemo(() => (flying ? [...s.log, ...lapLog(step).slice(0, said.at === s.at ? said.n : 0)] : s.log), [flying, s.log, step, said, s.at]);
 
   useEffect(() => {
     const onKey = (e) => {
       if (e.altKey || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
       if (e.key === 'ArrowLeft') { e.preventDefault(); dispatch({ type: 'back' }); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); dispatch({ type: quiz ? 'next' : 'readNext' }); }
+      // A lap flies itself: Skip lap moves it on.
+      if (e.key === 'ArrowRight' && !flying) { e.preventDefault(); dispatch({ type: quiz ? 'next' : 'readNext' }); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [quiz]);
+  }, [quiz, flying]);
 
   const options = useMemo(() => (step?.kind === 'choose' ? step.options.filter((o) => o.legs) : []), [step]);
   const onChoose = useCallback((id) => dispatch({ type: 'choose', id }), []);
@@ -382,10 +396,17 @@ export default function T44CPractice() {
       <StatusBar s={quiz ? s : reduce(s, { type: 'revealAll' })} h={h} canBack={h.past.length > 0} dispatch={dispatch} quiz={quiz} setQuiz={setQuiz} />
       <div className="pf-body">
         <div className="pf-main">
-          <Step s={s} dispatch={dispatch} quiz={quiz} />
-          <T44CMap route={s.route} options={options} onChoose={onChoose} frame={frameOf(s)} />
+          {!flying && <Step s={s} dispatch={dispatch} quiz={quiz} />}
+          {flying || lapEnded
+            ? (
+              <PatternFlight
+                key={s.at} step={flying ? step : lapEnded} ended={!flying} onDone={lapDone} onSaid={onSaid}
+                view={patternView} setView={setPatternView} speed={patternSpeed} setSpeed={setPatternSpeed}
+              />
+            )
+            : <T44CMap route={s.route} options={options} onChoose={onChoose} frame={frameOf(s)} />}
         </div>
-        <FlightLog log={s.log} />
+        <FlightLog log={log} />
       </div>
     </div>
   );

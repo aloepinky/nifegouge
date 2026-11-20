@@ -476,7 +476,7 @@ function Comms({ pass, now, speed }) {
   const nextSay = (e) => (pass.events.find((x) => x.kind === 'say' && x.t > e.t) || { t: Infinity }).t;
   const live = pass.events.filter((e) => e.kind === 'say' && now >= e.t && now < e.t + holdOf(e) * speed && !(e.yields && now >= nextSay(e)));
   const last2 = (xs) => xs.slice(-2);
-  const radio = last2(live.filter((e) => e.radio).map((e) => ({ ...e, from: e.who === 'Tower' ? `${pass.field.name} Tower` : CALL_SIGN })));
+  const radio = last2(live.filter((e) => e.radio).map((e) => ({ ...e, from: e.who === 'Tower' ? `${pass.field.name} Tower` : pass.callSign || CALL_SIGN })));
   const pf = last2(live.filter((e) => !e.radio && e.who === 'PF'));
   const pm = last2(live.filter((e) => !e.radio && e.who === 'PM'));
   return (
@@ -634,3 +634,6 @@ export default function PatternWork() {
     </div>
   );
 }
+
+// Shared with the Practice Flight's pattern (practice/t44c/PatternFlight.js).
+export { Comms, Gauges, PatternView, Procedures, frameOf };

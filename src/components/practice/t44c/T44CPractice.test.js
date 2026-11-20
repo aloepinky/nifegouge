@@ -3,6 +3,8 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import T44CPractice from './T44CPractice';
 
 jest.mock('./T44CMap', () => () => <div aria-label="Practice map" />);
+// The pattern's drawing needs Leaflet; a lap here is only its Skip lap button.
+jest.mock('./PatternFlight', () => ({ ended, onDone }) => (ended ? <div aria-label="Lap flown" /> : <button type="button" onClick={onDone}>Skip lap</button>));
 
 const pick = (name) => fireEvent.click(screen.getByRole('button', { name }));
 const right = () => act(() => { fireEvent.keyDown(window, { key: 'ArrowRight' }); });
@@ -11,7 +13,9 @@ function flyWithArrows(choose) {
   for (let i = 0; i < 600; i++) {
     if (screen.queryByRole('heading', { name: 'Flight complete' })) return true;
     const options = Array.from(document.querySelectorAll('.pf-card .pf-choice'));
+    const lap = screen.queryByRole('button', { name: 'Skip lap' });
     if (options.length) fireEvent.click(choose(options));
+    else if (lap) fireEvent.click(lap);
     else right();
   }
   return false;
@@ -31,7 +35,7 @@ test('a high work profile is picked in Preflight and flown without asking', () =
   fireEvent.change(screen.getByLabelText('High work profile'), { target: { value: 'FAM4201' } });
   pick('Foxtrot 1');
   expect(flyWithArrows(lastChoice)).toBe(true);
-  expect(screen.getByText(/13 maneuvers flown/)).toBeTruthy();
+  expect(screen.getByText('Back on the line.')).toBeTruthy();
 });
 
 test('Quiz Mode draws every step too', () => {

@@ -2,6 +2,7 @@ import { AREAS, KNGW_SIDE } from './routes';
 import { markFigures } from './marks';
 import { PROFILES } from './numbers';
 import { PHASES, canBackTo, current, epsFor, reduce, start, totalOf, withHistory } from './flight';
+import { lapLog } from './patternLaps';
 
 function seeded(seed) {
   let a = seed >>> 0;
@@ -42,7 +43,7 @@ function fly(card, rng, pick) {
 const random = (rng) => (step) => {
   // Prefer to finish: a pass ends in a full stop and high work in leaving, sooner or later.
   const o = step.options;
-  const done = o.find((x) => ['done', 'full', 'leave'].includes(x.id));
+  const done = o.find((x) => ['done', 'stop', 'leave'].includes(x.id));
   if (done && rng() < 0.4) return done.id;
   return o[Math.floor(rng() * o.length)].id;
 };
@@ -56,7 +57,10 @@ describe('T-44C practice flight', () => {
       const { s, seen } = fly({}, rng, random(rng));
       areas.add(s.area);
       fields.add(s.dest);
-      expect(seen.at(-1).name).toBe('Secure');
+      // Taxi back: After Landing, then Ground, then Secure 1 to 6 and the PF's continue in the spot.
+      const back = [...new Set(seen.filter((x) => x.phase === 'Taxi back'))].map((x) => x.name || x.text);
+      expect(back.slice(1)).toEqual(['After Landing', back[2], 'Secure, steps 1 to 6', 'Continue the checklist.']);
+      expect(back[2]).toMatch(/Ground, .*taxi to my line/);
       expect(seen.some((x) => x.kind === 'call' && /taxi to my line/.test(x.text))).toBe(true);
     }
     expect(areas.size).toBe(Object.keys(AREAS).length);
@@ -68,6 +72,20 @@ describe('T-44C practice flight', () => {
     const rng = seeded(7);
     const { seen } = fly({}, rng, random(rng));
     seen.forEach((step) => expect(PHASES).toContain(step.phase));
+  });
+
+  test('the stages run in order, Pattern again only after a Recovery from Cabaniss, and Landing is the full stop', () => {
+    for (let seed = 1; seed <= 120; seed++) {
+      const rng = seeded(seed);
+      const { seen } = fly({}, rng, random(rng));
+      const order = seen.map((x) => x.phase).filter((p, i, all) => p !== all[i - 1]);
+      order.slice(1).forEach((p, i) => {
+        const back = PHASES.indexOf(p) < PHASES.indexOf(order[i]);
+        expect(back ? `${order[i]}>${p}` : 'forward').toBe(back ? 'Recovery>Pattern' : 'forward');
+      });
+      expect(order.slice(-2)).toEqual(['Landing', 'Taxi back']);
+      expect([...new Set(seen.filter((x) => x.phase === 'Landing'))].map((x) => x.title)).toEqual(['Full stop']);
+    }
   });
 
   test('Foxtrot and Cheetah recover to Navy Corpus: the manual gives them no Cabaniss arrival', () => {
@@ -99,8 +117,38 @@ describe('T-44C practice flight', () => {
       if (step.on === 'dest') return 'KNGW';
       return random(rng)(step);
     });
-    const abeam = seen.find((x) => x.kind === 'call' && /Cabaniss Tower.*180/.test(x.text));
+    const abeam = seen.filter((x) => x.kind === 'fly').flatMap((x) => lapLog(x)).find((l) => /Cabaniss Tower.*180/.test(l.text));
     expect(abeam.text).toContain(`${KNGW_SIDE[s.card.cabRwy]} 180`);
+  });
+
+  test('from the initial call the pattern is flown: the break, then a lap at each touchdown, all of it in the log', () => {
+    for (let seed = 1; seed <= 60; seed++) {
+      const rng = seeded(seed);
+      const { seen, s } = fly({}, rng, random(rng));
+      const flown = seen.filter((x) => x.kind === 'fly');
+      expect(flown[0].lap).toBe('break');
+      // Right after the initial call or the Tower's report-the-numbers (from Cabaniss by Sunrise).
+      const i = seen.indexOf(flown[0]);
+      const before = seen[i - 1];
+      if (!(before.kind === 'rule' && /^Pattern entry/.test(before.title))) expect(before.kind).toBe('call');
+      expect(seen.some((x) => x.kind === 'rule' && x.title === 'The overhead')).toBe(false);
+      flown.filter((x) => x.phase === 'Pattern').forEach((x) => {
+        const next = seen[seen.indexOf(x) + 1];
+        expect(next.kind === 'choose' && next.on === 'lap').toBe(true);
+        // The flight's own call sign, never Pattern Work's.
+        lapLog(x).forEach((l) => expect(l.text).not.toMatch(/MNTNA 12(?!\d)/));
+        if (x.lap === 'break' && x.cleared) expect(lapLog(x).some((l) => /numbers for the break/.test(l.text))).toBe(false);
+      });
+      // Each lap is the one chosen: the break opens on the overhead, an SSE pass on its wave-off.
+      flown.forEach((x) => {
+        const first = (lapLog(x)[0] || {}).text;
+        if (x.lap === 'break') expect(first).toMatch(x.cleared ? /flaps approach|Landing Checklist/ : /numbers for the break/);
+        if (['approach', 'noflap', 'full'].includes(x.lap)) expect(first).toBe('Reset Flaps and Trim');
+        if (x.lap === 'sse') expect(first).toBe('Landing gear up');
+      });
+      const said = s.log.filter((l) => l.phase === 'Pattern').map((l) => l.text);
+      expect(said.some((t) => /180, three down and locked/.test(t))).toBe(true);
+    }
   });
 
   test('a call is one reveal, then Next moves on; a rule reveals piece by piece', () => {

@@ -57,6 +57,8 @@ export const CALLS = {
 
   outOfYellow: { who: 'PM', text: "You're out of the yellow.", ref: f('Before Takeoff Checklist', 'p. F-19') },
   clearLeft: { who: 'PF', text: 'Clear left.', ref: f('Before Takeoff Checklist', 'p. F-19') },
+  // Secure steps 7 on are done in the parking spot, when the PF says this (App. F p. F-27).
+  continueChecklist: { who: 'PF', text: 'Continue the checklist.', ref: f('Secure Checklist', 'p. F-27') },
   clearRight: { who: 'PM', text: 'Clear right.', ref: f('Before Takeoff Checklist', 'p. F-19') },
   clearLeftAbove: { who: 'PF', text: 'Clear left and above', ref: f('Before Takeoff Checklist', 'p. F-19') },
   clearRightAbove: { who: 'PM', text: 'Clear right and above', ref: f('Before Takeoff Checklist', 'p. F-19') },
@@ -151,6 +153,8 @@ export const CHECKLISTS = {
   landing: { title: 'Landing', ref: app('Landing Checklist', 'p. F-24') },
   afterLanding: { title: 'After Landing', ref: app('After Landing Checklist', 'p. F-25') },
   secure: { title: 'Secure', ref: app('Secure Checklist', 'p. F-26') },
+  // Steps 1 through 6, done as time permits after clearing the runway (p. F-26).
+  secureFirst: { title: 'Secure, steps 1 to 6', find: 'Secure Checklist', ref: app('Secure Checklist', 'p. F-26') },
 };
 
 // FTI §105's area departure mnemonics, kept here for the verifier; flight.js lays each letter

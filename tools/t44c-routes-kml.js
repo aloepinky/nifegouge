@@ -78,11 +78,18 @@ function round(pts, passes = 3) {
 const PRIMARY = kmlPlacemarks(path.resolve(__dirname, '..', 'public', 'kml', 'course-rules.kml'));
 const KNGP_RUNWAYS = ['04', '13L', '13R', '18', '22', '31L', '31R', '36'];
 const near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
-function primaryLine(folder, rwy, from) {
+// `fromNearest`: Primary's line comes in from beyond `from` (the South Arrivals reach PT Sunrise
+// from the south), so it starts at its point nearest `from`; else it would leave the point by
+// doubling back on itself.
+function primaryLine(folder, rwy, from, { fromNearest = false } = {}) {
   const f = PRIMARY.find((p) => p.path.includes('(KNGP) Corpus Christi NAS') && p.path[p.path.length - 1] === folder && p.name === rwy);
   if (!f) throw new Error(`Primary's map has no ${folder} ${rwy}`);
   // Some are drawn from the runway out; every one here is flown from `from`.
-  const c = near(f.coords[0], from) <= near(f.coords[f.coords.length - 1], from) ? f.coords : [...f.coords].reverse();
+  let c = near(f.coords[0], from) <= near(f.coords[f.coords.length - 1], from) ? f.coords : [...f.coords].reverse();
+  if (fromNearest) {
+    const at = c.reduce((best, p, i) => (near(p, from) < near(c[best], from) ? i : best), 0);
+    c = c.slice(at);
+  }
   return near(c[0], from) > 1e-4 ? [from, ...c] : c;
 }
 
@@ -241,7 +248,7 @@ KNGP_RUNWAYS.forEach((rwy) => {
 });
 KNGP_RUNWAYS.forEach((rwy) => {
   LINES[`Shamrock to KNGP ${rwy}`] = primaryLine('PT Shamrock', rwy, P.shamrock);
-  LINES[`PT Sunrise to KNGP ${rwy}`] = primaryLine('Sunrise Transition / South Arrivals', rwy, P.sunrise);
+  LINES[`PT Sunrise to KNGP ${rwy}`] = primaryLine('Sunrise Transition / South Arrivals', rwy, P.sunrise, { fromNearest: true });
 });
 ['13', '18', '31', '36'].forEach((rwy) => {
   const wheel = ['13', '18'].includes(rwy); // only 13 and 18 fly the Wagon Wheel
