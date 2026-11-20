@@ -894,7 +894,7 @@ of legs, each with its airspeed and altitude, timed by flying it; touchdown to r
 to 300 ft keep the user's stopwatch times; 120 KIAS comes a few seconds after rotate.
 Two fields, Cabaniss 13 and Navy Corpus 13L (`FIELDS`, runway ends from OpenStreetMap); a
 Satellite view lays the drawing over USGS National Map aerial tiles (Esri's had cloud over
-NGP), turned and scaled to the runway (`siteOf`). `technique` lines are the user's sketch (PPTTT is power, pitch, trim, turn, talk); the cases'
+NGP), turned and scaled to the runway (`siteOf`). The sketch notes are the user's (PPTTT is power, pitch, trim, turn, talk); no line is tagged Technique (the user, 2026-11-20); the cases'
 crew lines are `T44C/t44cCases.js`'s Figure F-1 wording.
 **The cases' spoken lines** (the user, 2026-11-19): crews say what they set, never NATOPS's "As
 required" (Case 1: "Power max allowable, landing gear up, airspeed 102."), in the on-wing gouge's

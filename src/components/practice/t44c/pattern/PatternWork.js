@@ -484,7 +484,6 @@ function Box({ lines, now, cls, label, speed }) {
             {e.from && <span className="ptw-box-from">{e.from}: </span>}
             {e.kind === 'say' ? `“${e.text}”` : e.text}
             {e.note && <span className="ptw-box-note"> {e.note}</span>}
-            {e.technique && <span className="ptw-box-tag">Technique</span>}
             {e.generated && <span className="ptw-box-tag">Generated comms</span>}
           </p>
         );

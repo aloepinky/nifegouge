@@ -658,7 +658,7 @@ function passCore(id, engine, runwayId, draw, opts) {
     } else {
       add(t300, 'PF', 'do', 'Takeoff power still set, props 1900 RPM', { ref: FTI('p. 1-35'), set: { props: '1900 RPM' } });
       const t400 = atAlt('up2', 400);
-      add(t400, 'PF', 'say', `Clear ${side}, going ${side}`, { technique: true });
+      add(t400, 'PF', 'say', `Clear ${side}, going ${side}`);
       add(t400 + 1.4, 'PM', 'say', `Clear ${other}`, { ref: FTI('p. 1-31') });
       add(atAlt('up2', 500), 'PF', 'do', `Level at 500 ft until the crosswind turn: ${back}`, { ref: FTI('p. 1-36'), set: { power: tq('600 ft-lbs') } });
     }
@@ -666,7 +666,7 @@ function passCore(id, engine, runwayId, draw, opts) {
   const txw = start('xw1');
   // Off a wave-off on two engines, "Clear left, going left" just before the turn it announces.
   if (from && !from.single) {
-    add(txw - 3, 'PF', 'say', `Clear ${side}, going ${side}`, { technique: true });
+    add(txw - 3, 'PF', 'say', `Clear ${side}, going ${side}`);
     add(txw - 1.6, 'PM', 'say', `Clear ${other}`, { ref: FTI('p. 1-31') });
   }
   // Case 1 turns once the prop is feathered: the upwind held until then.
