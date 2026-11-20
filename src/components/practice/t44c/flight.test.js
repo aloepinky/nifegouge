@@ -2,7 +2,7 @@ import { AREAS, KNGW_SIDE } from './routes';
 import { markFigures } from './marks';
 import { PROFILES } from './numbers';
 import { PHASES, canBackTo, current, epsFor, reduce, start, totalOf, withHistory } from './flight';
-import { lapLog } from './patternLaps';
+import { buildLap, lapLog } from './patternLaps';
 
 function seeded(seed) {
   let a = seed >>> 0;
@@ -149,6 +149,49 @@ describe('T-44C practice flight', () => {
       const said = s.log.filter((l) => l.phase === 'Pattern').map((l) => l.text);
       expect(said.some((t) => /180, three down and locked/.test(t))).toBe(true);
     }
+  });
+
+  test('a wave-off ends the lap where it is called, and the next lap flies on from it', () => {
+    // To the first lap after the break, then the chosen lap.
+    const toLap = (kind, seed) => {
+      let s = start({ rng: seeded(seed) });
+      for (let i = 0; i < 4000 && !(current(s).kind === 'fly' && current(s).lap !== 'break'); i++) {
+        const step = current(s);
+        if (step.kind !== 'choose') s = reduce(s, { type: 'next' });
+        else s = reduce(s, { type: 'choose', id: step.on === 'lap' ? kind : step.options[0].id });
+      }
+      return s;
+    };
+    [['case4', 'sse', 'ssewaveoff'], ['approach', 'noflap', 'waveoff'], ['ssefs', 'ssefs', 'ssewaveoff']].forEach(([kind, next, end], seed) => {
+      let s = toLap(kind, seed + 3);
+      const lap = current(s);
+      expect(lap.lap).toBe(kind);
+      const lapPass = buildLap(lap);
+      const [a, b] = lapPass.waveoffWindow;
+      // 230 ft on final: an SSE wave-off on one engine, a wave-off on both.
+      let t = a;
+      while (lapPass.stateAt(t).alt > 230) t += 0.1;
+      expect(t).toBeLessThan(b);
+      s = reduce(s, { type: 'waveoff', t });
+      const choice = current(s);
+      expect(choice.kind === 'choose' && choice.on === 'lap').toBe(true);
+      expect(choice.end).toBe(end);
+      expect(choice.options.some((o) => o.id === 'stop')).toBe(false);
+      if (end === 'ssewaveoff') expect(choice.options.map((o) => o.id)).toEqual(['sse', 'ssefs']);
+      // The log stops at the wave-off.
+      const cut = lapLog({ ...lap, waveT: t });
+      const tail = s.log.filter((l) => l.phase === 'Pattern' && l.who !== 'Choice').slice(-cut.length);
+      expect(tail.map((l) => l.text)).toEqual(cut.map((l) => l.text));
+      s = reduce(s, { type: 'choose', id: next });
+      const after = current(s);
+      expect(after.from).toBeTruthy();
+      expect(after.from.single).toBe(end === 'ssewaveoff');
+      if (end === 'ssewaveoff') expect(after.engine).toBe(lap.engine);
+      const first = buildLap(after).stateAt(0);
+      expect(Math.abs(first.alt - lapPass.stateAt(t).alt)).toBeLessThan(3);
+      expect(lapLog(after)[0].text).toBe('Landing gear up');
+      if (kind === 'case4') expect(lapLog(after).some((l) => l.text === 'Did the prop feather?')).toBe(true);
+    });
   });
 
   test('a call is one reveal, then Next moves on; a rule reveals piece by piece', () => {

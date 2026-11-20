@@ -375,6 +375,7 @@ export default function T44CPractice() {
   const [patternView, setPatternView] = useState('satellite');
   const [patternSpeed, setPatternSpeed] = useState(2);
   const lapDone = useCallback(() => dispatch({ type: 'next' }), []);
+  const lapWaveoff = useCallback((t) => dispatch({ type: 'waveoff', t }), []);
   const log = useMemo(() => (flying ? [...s.log, ...lapLog(step).slice(0, said.at === s.at ? said.n : 0)] : s.log), [flying, s.log, step, said, s.at]);
 
   useEffect(() => {
@@ -400,7 +401,7 @@ export default function T44CPractice() {
           {flying || lapEnded
             ? (
               <PatternFlight
-                key={s.at} step={flying ? step : lapEnded} ended={!flying} onDone={lapDone} onSaid={onSaid}
+                key={s.at} step={flying ? step : lapEnded} ended={!flying} onDone={lapDone} onWaveoff={lapWaveoff} onSaid={onSaid}
                 view={patternView} setView={setPatternView} speed={patternSpeed} setSpeed={setPatternSpeed}
               />
             )

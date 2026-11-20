@@ -6,7 +6,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ABEAM, CALL_SIGN, DEFAULT_RUNWAY, FIELDS, GEOMETRY, RUNWAY, RUNWAYS, RUNWAY_LIMITS, SCENARIOS, buildBreak, buildPass, drawCase, feet, geometryOf, siteOf } from './patternModel';
+import { ABEAM, CALL_SIGN, DEFAULT_RUNWAY, FIELDS, GEOMETRY, RUNWAY, RUNWAYS, RUNWAY_LIMITS, SCENARIOS, buildBreak, buildPass, drawCase, feet, geometryOf, siteOf, singleEngine, waveoffOf } from './patternModel';
 
 const SPEEDS = [1, 2, 4];
 const { GROOVE_X, R } = GEOMETRY;
@@ -510,6 +510,18 @@ function Procedures({ pass, now }) {
 
 const dims = ({ length, width }) => `${length.toLocaleString('en-US')} × ${width} ft`;
 
+// The student calls the wave-off: dimmed but for the groove to the touchdown, every pattern.
+const waveoffOpen = (pass, t) => !!pass.waveoffWindow && t >= pass.waveoffWindow[0] && t < pass.waveoffWindow[1];
+function WaveoffButton({ pass, t, onWaveoff }) {
+  const open = waveoffOpen(pass, t);
+  return (
+    <button type="button" className="ptw-btn ptw-btn--waveoff" disabled={!open} onClick={() => onWaveoff(t)}
+      title={open ? 'Wave off now' : 'Open from the groove to the touchdown'}>
+      Wave off
+    </button>
+  );
+}
+
 // ---- The runway picker: a field each, its runways folded under it. Every field opens folded,
 // the one flown marked; choosing a runway closes the list.
 function RunwayMenu({ value, onChange }) {
@@ -555,7 +567,7 @@ function RunwayMenu({ value, onChange }) {
                   <button key={r.id} type="button" className={r.id === value ? 'ptw-menu-runway ptw-menu-runway--here' : 'ptw-menu-runway'}
                     onClick={() => { onChange(r.id); setOpen(false); }}>
                     {`Runway ${r.number} (${r.side})`}
-                    <span className="ptw-menu-ident">{`${r.length.toLocaleString('en-US')} × ${r.width} ft${r.sseFullStop ? '' : ', no cases'}`}</span>
+                    <span className="ptw-menu-ident">{`${r.length.toLocaleString('en-US')} × ${r.width} ft${r.sseFullStop ? '' : ', no SSE full stop'}`}</span>
                   </button>
                 ))}
               </div>
@@ -563,7 +575,7 @@ function RunwayMenu({ value, onChange }) {
           })}
           <p className="ptw-menu-note">
             {`Touch and go: ${dims(RUNWAY_LIMITS.touchAndGo)} or larger.`}<br />
-            {`Cases (SSE full stop): ${dims(RUNWAY_LIMITS.sseFullStop)} or larger.`}
+            {`SSE full stop: ${dims(RUNWAY_LIMITS.sseFullStop)} or larger.`}
           </p>
         </div>
       )}
@@ -580,18 +592,23 @@ export default function PatternWork() {
   const [view, setView] = useState('satellite');
   const [runwayId, setRunwayId] = useState(DEFAULT_RUNWAY);
   const runway = RUNWAYS.find((r) => r.id === runwayId);
-  // A case ends in an SSE full stop: on a runway too small for one, back to the approach-flap
-  // pattern (IFG p. 57).
+  // On a runway too small for an SSE full stop, that pattern goes back to the approach-flap one
+  // (IFG p. 57).
   const pickRunway = (id) => {
     setRunwayId(id);
-    if (scenario.startsWith('case') && !RUNWAYS.find((r) => r.id === id).sseFullStop) setScenario('approach');
+    if (scenario === 'ssefs' && !RUNWAYS.find((r) => r.id === id).sseFullStop) setScenario('approach');
   };
   // Every pattern starts at the touchdown; Break opens on the break, then goes round the
   // approach-flap pattern. On every pattern the break entry's circle flies a break into it. A
   // case's prop and fire questions are answered afresh each pass.
   const [draw, setDraw] = useState(() => drawCase());
   const isBreak = scenario === 'break';
-  const model = useMemo(() => buildPass(isBreak ? 'approach' : scenario, engine, runwayId, draw), [isBreak, scenario, engine, runwayId, draw]);
+  // After the student's wave-off, the pass it begins, flown to its touchdown; then the chosen
+  // pattern again.
+  const [wave, setWave] = useState(null);
+  const model = useMemo(() => (wave
+    ? buildPass(wave.id, engine, runwayId, draw, wave.from)
+    : buildPass(isBreak ? 'approach' : scenario, engine, runwayId, draw)), [wave, isBreak, scenario, engine, runwayId, draw]);
   const entry = useMemo(() => buildBreak(isBreak ? 'approach' : scenario, engine, runwayId), [isBreak, scenario, engine, runwayId]);
   const [inBreak, setInBreak] = useState(false);
   const pass = inBreak && entry ? entry : model;
@@ -600,6 +617,7 @@ export default function PatternWork() {
   live.current.speed = speed;
   live.current.duration = pass.duration;
   live.current.inBreak = inBreak && !!entry;
+  live.current.wave = !!wave;
 
   useEffect(() => {
     if (!playing) return undefined;
@@ -610,9 +628,13 @@ export default function PatternWork() {
       v.t += (Math.min(250, now - last) / 1000) * v.speed;
       last = now;
       if (v.t >= v.duration) {
-        // Off the break into the pattern, or round the pattern again.
+        // Off the break into the pattern, or round the pattern again (from its own start after a
+        // wave-off's pass).
         v.t = 0;
-        if (v.inBreak) { v.inBreak = false; setInBreak(false); } else setDraw(drawCase());
+        if (v.inBreak) { v.inBreak = false; setInBreak(false); } else {
+          if (v.wave) { v.wave = false; setWave(null); }
+          setDraw(drawCase());
+        }
       }
       setT(v.t);
       raf = requestAnimationFrame(tick);
@@ -634,8 +656,18 @@ export default function PatternWork() {
     live.current.t = Math.min(to, entry.duration - 0.01);
     setT(live.current.t);
   };
+  // The wave-off: the pass it begins takes over from where the aircraft is, flying on.
+  const waveoff = (at) => {
+    setWave(waveoffOf(pass, at));
+    live.current.inBreak = false;
+    live.current.wave = true;
+    setInBreak(false);
+    live.current.t = 0;
+    setT(0);
+  };
   // A new pattern starts from its beginning: the break's, or the touchdown.
   useEffect(() => {
+    setWave(null);
     live.current.t = 0;
     live.current.inBreak = scenario === 'break';
     setInBreak(scenario === 'break');
@@ -654,12 +686,13 @@ export default function PatternWork() {
   }, []);
 
   const s = pass.stateAt(t);
-  const single = scenario === 'sse' || scenario.startsWith('case');
+  const single = singleEngine(scenario);
 
   return (
     <div className="ptw-page">
       <div className="ptw-controls">
         <button type="button" className="ptw-btn ptw-btn--go" onClick={() => setPlaying(!playing)}>{playing ? 'Pause' : 'Play'}</button>
+        <WaveoffButton pass={pass} t={t} onWaveoff={waveoff} />
         <div className="ptw-field">
           <span id="ptw-runway-label">Runway</span>
           <RunwayMenu value={runwayId} onChange={pickRunway} />
@@ -668,8 +701,8 @@ export default function PatternWork() {
           <span>Pattern</span>
           <select className="ptw-select" value={scenario} onChange={(e) => setScenario(e.target.value)}>
             {SCENARIOS.map((x) => {
-              const shut = x.id.startsWith('case') && !runway.sseFullStop;
-              return <option key={x.id} value={x.id} disabled={shut} title={shut ? `Ends in an SSE full stop, which needs ${dims(RUNWAY_LIMITS.sseFullStop)}` : undefined}>{x.label}</option>;
+              const shut = x.id === 'ssefs' && !runway.sseFullStop;
+              return <option key={x.id} value={x.id} disabled={shut} title={shut ? `An SSE full stop needs ${dims(RUNWAY_LIMITS.sseFullStop)}` : undefined}>{x.label}</option>;
             })}
           </select>
         </label>
@@ -693,7 +726,7 @@ export default function PatternWork() {
       <Procedures pass={pass} now={t} />
       <div className="ptw-card">
         <Gauges s={s} />
-        <PatternView pass={model} entry={entry} inBreak={inBreak && !!entry} s={s} onJump={jump} onBreak={jumpBreak} fr={fr} single={single} satellite={view === 'satellite'} setView={setView} following={playing} />
+        <PatternView pass={model} entry={entry} inBreak={inBreak && !!entry} s={s} onJump={jump} onBreak={jumpBreak} fr={fr} single={singleEngine(model.id)} satellite={view === 'satellite'} setView={setView} following={playing} />
       </div>
       <p className="ptw-foot">
         Runway {runway.number} at {runway.name}, drawn {runway.length.toLocaleString('en-US')} ft, {runway.side} traffic, pattern {feet(runway.pa)} AGL, {runway.tower || 'no tower (CTAF calls)'}, no wind. ME FTI §106 Pattern Work, Figures 1-3, 1-4 and 1-6. AOB and nose attitude are estimated.
@@ -703,4 +736,4 @@ export default function PatternWork() {
 }
 
 // Shared with the Practice Flight's pattern (practice/t44c/PatternFlight.js).
-export { Comms, Gauges, PatternView, Procedures, frameOf };
+export { Comms, Gauges, PatternView, Procedures, WaveoffButton, frameOf };

@@ -50,8 +50,9 @@ const FIELD_BY_ID = Object.fromEntries(FIELDS.map((f) => [f.id, f]));
 // 13L/31R) and OurAirports (the rest). Cabaniss and Navy Corpus runways are drawn 5,000 ft but
 // 13R/31L at 8,000; the others at their published lengths. Closed runways are left out, and so
 // is any runway short of the IFG's runway limits for a touch and go, 4,490 by 75 ft (p. 57; so
-// not Calhoun County's turf 5/23 or Cameron County's 17/35). The Cases end in an SSE full stop,
-// which needs 4,900 by 100 ft (`sseFullStop`). McCampbell-Porter's runway is the IFG's 13/31 (the FAA now
+// not Calhoun County's turf 5/23 or Cameron County's 17/35); the same 4,490 by 75 ft serves a
+// single-engine touch and go, so the Cases fly everywhere. The SSE full stop needs 4,900 by 100
+// ft (`sseFullStop`). McCampbell-Porter's runway is the IFG's 13/31 (the FAA now
 // numbers it 14/32).
 const STRIPS = [
   // field, two runway numbers, their traffic, their ends, length and width
@@ -109,6 +110,7 @@ export const SCENARIOS = [
   { id: 'noflap', label: 'No flap' },
   { id: 'full', label: 'Full flap' },
   { id: 'sse', label: 'Single engine (SSE)' },
+  { id: 'ssefs', label: 'SSE full stop' },
   { id: 'case1', label: 'Case 1. Takeoff to crosswind' },
   { id: 'case2', label: 'Case 2. Crosswind turn' },
   { id: 'case3', label: 'Case 3. Downwind' },
@@ -120,6 +122,7 @@ const FTI = (pages) => ({ work: 'ME FTI', loc: '§106 — Pattern Work', pages }
 const APPB = (pages) => ({ work: 'ME FTI', loc: 'App. B — Typical Briefs and Voice Procedures', pages });
 const APPF = (loc, pages) => ({ work: 'ME FTI', loc: `App. F — ${loc}`, pages });
 const NATOPS_SEWO = { work: 'T-44C NATOPS', loc: 'Single-Engine Waveoff/Missed Approach' };
+const NATOPS_WO = { work: 'T-44C NATOPS', loc: 'Ch. 7 — Waveoff/Missed Approach', pages: 'p. 7.18-1' };
 // Gear and flaps are called before they move (NATOPS §22.4.5), "Landing gear up" by both pilots
 // (ME FTI p. 1-11).
 const NATOPS_ALT = { work: 'T-44C NATOPS', loc: 'Ch. 15 — Alternate Prop Feathering', pages: 'p. 15.14-2' };
@@ -147,23 +150,40 @@ const UP2_FROM = TOUCHDOWN_X + 870 + 2480; // where 300 ft comes
 // Case 1's height at the crosswind turn: 420 ft at the usual place, climbing on as it is held.
 const up2Top = (caseN, xwAt, opts) => Math.min(700, 300 + (120 * ((opts.upwindX || xwAt) - UP2_FROM)) / (xwAt - UP2_FROM));
 
+// The single-engine patterns: the SSE pattern and the SSE full stop fly the whole pass on one
+// engine, a Case from its failure on.
+const SSE_IDS = ['sse', 'ssefs'];
+export const singleEngine = (id) => SSE_IDS.includes(id) || /^case/.test(id);
+// Where the SSE pattern and the SSE full stop begin when no wave-off of the student's leads into
+// them: the practice SSE wave-off's lowest point, 200 ft on the last final (NATOPS §12.1.1).
+const SSE_START = { x: WAVEOFF_X, alt: 200, kias: 110, flaps: 'Approach', single: true };
+
 // `opts.upwindX`: Case 1 holds its crosswind turn there, the prop not yet feathered (ME FTI
 // p. 1-38); `opts.dwExt`: the 180 delayed that many feet down the downwind, to finish the
-// Landing Checklist (p. 1-36), the approach turn rolling out short of the groove.
+// Landing Checklist (p. 1-36), the approach turn rolling out short of the groove; `opts.from`:
+// the pass begins with a wave-off there (`{ x, alt, kias, single }`), not a touch and go.
 function legs(id, length, opts = {}, pa = 800) {
   const xwAt = turnX(length);
   const ext = opts.dwExt || 0;
-  const sse = id === 'sse';
+  const sse = SSE_IDS.includes(id);
   const caseN = id.startsWith('case') ? Number(id.slice(4)) : 0;
   const out = [];
   const L = (leg) => out.push(leg);
+  const from = opts.from || (sse ? SSE_START : null);
 
-  if (sse) {
-    // From the SSE wave-off at 200 ft on the last pass's final.
-    // Climbing at 110 to 500 ft over the runway, then level there to the crosswind turn at
-    // 120 KIAS (the user: 102 and 110 are climb speeds; level is 120, power as required).
-    L({ id: 'waveoff', phase: 'SSE wave-off', line: 2600, kias: flat(110), alt: [[0, 200], [0.12, 192], [1, 350]] });
-    L({ id: 'up2', phase: 'Upwind', toX: xwAt, kias: [[0, 110], [0.55, 110], [0.85, 120], [1, 120]], alt: [[0, 350], [0.55, 500], [1, 500]] });
+  if (from && from.single) {
+    // An SSE wave-off: the descent stopped, then climbing at 110 over the runway to 500 ft and
+    // level there to the crosswind turn at 120 KIAS (the user: 102 and 110 are climb speeds;
+    // level is 120, power as required).
+    const a = from.alt;
+    L({ id: 'waveoff', phase: 'SSE wave-off', line: 2600, kias: [[0, from.kias], [0.15, 110], [1, 110]], alt: [[0, a], [0.12, a - Math.min(8, a * 0.3)], [1, a + 150]] });
+    L({ id: 'up2', phase: 'Upwind', toX: xwAt, kias: [[0, 110], [0.55, 110], [0.85, 120], [1, 120]], alt: [[0, a + 150], [0.55, 500], [1, 500]] });
+  } else if (from) {
+    // A wave-off on both engines: the descent stopped, climbing at 120 KIAS to 500 ft, then
+    // level to the crosswind turn.
+    const a = from.alt;
+    L({ id: 'waveoff', phase: 'Wave-off', line: 2000, kias: [[0, from.kias], [0.4, 120], [1, 120]], alt: [[0, a], [0.12, a - Math.min(5, a * 0.3)], [1, a + 200]] });
+    L({ id: 'up2', phase: 'Upwind', toX: xwAt, kias: flat(120), alt: [[0, a + 200], [0.4, 500], [1, 500]] });
   } else {
     L({ id: 'roll', phase: 'Touch-and-go', line: 870, kias: [[0, 90], [0.35, 82], [1, 91]], alt: flat(0) });
     // Rotate to 300 ft in 13 s, at 120 KIAS within a few seconds of rotating (the user: the
@@ -206,9 +226,10 @@ function legs(id, length, opts = {}, pa = 800) {
   L({ id: 'app', phase: 'Approach turn', arc: R, angle: Math.PI, kias: [[0, 120], [0.5, 110], [1, finalK]], alt: [[0, pa], [0.5, 500], [1, rolled]] });
   if (ext) L({ id: 'final0', phase: 'Final', toX: GROOVE_X, kias: flat(finalK), alt: [[0, rolled], [1, 250]] });
   const toThreshold = (0 - GROOVE_X) / (TOUCHDOWN_X - GROOVE_X);
-  if (sse) L({ id: 'final', phase: 'Final', toX: WAVEOFF_X, kias: flat(110), alt: [[0, 250], [1, 200]] });
-  else L({ id: 'final', phase: 'Final', toX: TOUCHDOWN_X, kias: [[0, finalK], [toThreshold, crossK], [1, crossK - 5]], alt: [[0, 250], [toThreshold, 20], [1, 0]] });
-  if (caseN) L({ id: 'rollout', phase: 'SSE full stop', line: 2600, kias: [[0, 105], [1, 12]], alt: flat(0) });
+  // To the touchdown, a touch and go unless the student waves off; only the SSE full stop rolls
+  // out (a Case's touch and go stands in for its full stop: the gouge's "simulated full stop").
+  L({ id: 'final', phase: 'Final', toX: TOUCHDOWN_X, kias: [[0, finalK], [toThreshold, crossK], [1, crossK - 5]], alt: [[0, 250], [toThreshold, 20], [1, 0]] });
+  if (id === 'ssefs') L({ id: 'rollout', phase: 'SSE full stop', line: 2600, kias: [[0, 105], [1, 12]], alt: flat(0) });
   return out;
 }
 
@@ -391,8 +412,9 @@ export const drawCase = (rand = Math.random) => {
 
 // A pass is flown, its calls laid on it, and flown again where they need more room: the
 // crosswind turn held until the prop is feathered, the 180 delayed for the Landing Checklist.
-export function buildPass(id, engine = 'left', runwayId = DEFAULT_RUNWAY, draw = PLAIN) {
-  let opts = {};
+// `from`: it begins with the student's wave-off there (`waveoffOf`), not a touch and go.
+export function buildPass(id, engine = 'left', runwayId = DEFAULT_RUNWAY, draw = PLAIN, from = null) {
+  let opts = from ? { from } : {};
   let p = passCore(id, engine, runwayId, draw, opts);
   for (let i = 0; i < 4 && p.needs; i += 1) {
     opts = p.needs;
@@ -407,8 +429,10 @@ function passCore(id, engine, runwayId, draw, opts) {
   const field = RUNWAY_BY_ID[runwayId];
   const side = field.side;
   const other = side === 'left' ? 'right' : 'left';
-  const { pts, seg, duration } = fly(legs(id, field.length, opts, field.pa), id === 'sse' ? WAVEOFF_X : TOUCHDOWN_X);
-  const sse = id === 'sse';
+  const sse = SSE_IDS.includes(id);
+  const fullStop = id === 'ssefs';
+  const from = opts.from || (sse ? SSE_START : null);
+  const { pts, seg, duration } = fly(legs(id, field.length, opts, field.pa), from ? from.x : TOUCHDOWN_X);
   const caseN = id.startsWith('case') ? Number(id.slice(4)) : 0;
   const single = sse || caseN > 0;
   const e = engine;
@@ -441,11 +465,11 @@ function passCore(id, engine, runwayId, draw, opts) {
   const mark = (t, label, key) => marks.push({ t, label, key });
 
   const init = {
-    flaps: id === 'noflap' ? 'Up' : id === 'full' ? 'Down' : 'Approach',
+    flaps: from ? from.flaps : id === 'noflap' ? 'Up' : id === 'full' ? 'Down' : 'Approach',
     gear: 'Down',
     props: 'Full forward',
-    power: sse ? 'Max continuous' : 'Idle',
-    engines: sse ? `${E}: zero thrust (simulated feather)` : 'Both',
+    power: from ? 'As required' : 'Idle',
+    engines: from && from.single ? from.engines || `${E}: zero thrust (simulated feather)` : 'Both',
   };
 
   // The 180 call and Tower's answer, kept clear of any checklist running past it.
@@ -477,15 +501,22 @@ function passCore(id, engine, runwayId, draw, opts) {
     say(1.1, 'PF', `${E} Condition lever – Fuel Cutoff concur?`);
     say(1.8, 'PM', 'Simulate');
     if (after === 'check') {
-      // The PF's questions and calls in the on-wing gouge's words (no tag: the user, 2026-11-19);
-      // the PM's answers, which no publication prints, are generated. What is done, from the FTI
-      // and NATOPS.
-      const tq2 = (dt, who, text, extra = {}) => { t += dt; add(t, who, 'say', text, { ...(who === 'PM' ? { generated: true } : {}), ...extra }); };
       add(t + 0.4, 'PF', 'do', 'Hold the checklist momentarily: props 1900 RPM, reset maximum power, check to see if the prop feathered', { ref: FTI('p. 1-38'), set: { props: '1900 RPM' } });
+      t = remainder(t);
+    }
+    return t;
+  };
+  // The checklist past its first three items: the PF's questions and calls in the on-wing
+  // gouge's words (no tag: the user, 2026-11-19); the PM's answers, which no publication prints,
+  // are generated. What is done, from the FTI and NATOPS.
+  function remainder(t0) {
+    let t = t0;
+    {
+      const tq2 = (dt, who, text, extra = {}) => { t += dt; add(t, who, 'say', text, { ...(who === 'PM' ? { generated: true } : {}), ...extra }); };
       tq2(1.2, 'PF', 'Did the prop feather?');
       if (draw.feather) tq2(1.2, 'PM', 'Yes.');
       else {
-        tq2(1.2, 'PM', 'No.');
+        tq2(1.2, 'PM', 'No.', { set: { engines: `${E}: failed, prop windmilling (simulated)` } });
         tq2(1.2, 'PF', 'Alternate prop feathering checklist.');
         add(t + 0.2, 'PF', 'do', `Alternate Prop Feathering: condition lever (${e}) FUEL CUTOFF, at least 500 ft-lbs on the ${good} engine, autofeather switch held in TEST until the prop feathers (LS)`, { ref: NATOPS_ALT });
         tq2(4.5, 'PM', 'Prop feathered.', { set: { engines: `${E}: zero thrust (simulated feather)` } });
@@ -521,7 +552,7 @@ function passCore(id, engine, runwayId, draw, opts) {
       tq2(1.2, 'PF', 'Declare an emergency.');
     }
     return t;
-  };
+  }
   let busyUntil = 0;
   const needs = { ...opts };
   let late = false; // the Landing Checklist not done by the 90
@@ -530,15 +561,34 @@ function passCore(id, engine, runwayId, draw, opts) {
     add(t0, 'PM', 'do', `Simulates a ${e} engine failure`, { set: { engines: `${E}: failed (simulated)` } });
   };
 
-  // ---- Off the runway, or off the last final.
-  if (sse) {
-    mark(0, 'SSE wave-off (200 ft AGL)', 'waveoff');
-    add(0, 'PF', 'do', 'Power max continuous, positive rate of climb, VXSE minimum', { ref: NATOPS_SEWO });
-    add(1.2, 'PF', 'do', 'Flaps approach (unless already up)', { ref: NATOPS_SEWO });
-    add(2.6, 'PM', 'say', 'Landing gear up', { ref: FTI('p. 1-42'), set: { gear: 'Up' } });
-    add(4.4, 'PF', 'do', 'Flaps up', { ref: NATOPS_SEWO, set: { flaps: 'Up' } });
-    add(5.6, 'PF', 'do', 'Props 1900 RPM', { ref: NATOPS_SEWO, set: { props: '1900 RPM' } });
-    add(7.2, 'PF', 'do', 'Offset slightly to the pattern side, 102-110 KIAS', { ref: FTI('p. 1-42') });
+  // ---- Off the runway, or off the last final: the wave-off's memory items (NATOPS §16.2 on
+  // one engine, §7.18 on two), "Landing gear up" said by both pilots before the props come back
+  // (ME FTI pp. 1-11 and 1-42). A Case 4 or 5 waved off on one engine then calls for the rest of
+  // the Emergency Shutdown Checklist (p. 1-40, Case 4 note 2; the on-wing packet: "If you
+  // waveoff, do not forget the shutdown after the waveoff").
+  if (from) {
+    const ref = from.single ? NATOPS_SEWO : NATOPS_WO;
+    const ft = Math.round(from.alt / 10) * 10;
+    mark(0, from.single ? `SSE wave-off (${ft} ft AGL)` : `Wave-off (${ft} ft AGL)`, 'waveoff');
+    if (from.single) add(0, 'PF', 'do', 'Power max continuous, positive rate of climb, VXSE minimum', { ref, set: { power: 'Max continuous' } });
+    else add(0, 'PF', 'do', 'Power as required, positive rate of climb, VX minimum', { ref, set: { power: 'As required' } });
+    add(1.2, 'PF', 'do', 'Flaps approach (unless already up)', { ref, ...(from.flaps === 'Down' ? { set: { flaps: 'Approach' } } : {}) });
+    add(2.4, 'PF', 'say', 'Landing gear up', { ref: GEAR_UP });
+    add(3.6, 'PM', 'say', 'Landing gear up', { ref: FTI('p. 1-42'), set: { gear: 'Up' } });
+    add(4.8, 'PF', 'do', 'Flaps up', { ref, set: { flaps: 'Up' } });
+    add(6.0, 'PF', 'do', 'Props 1900 RPM', { ref, set: { props: '1900 RPM' } });
+    if (from.single) add(7.2, 'PF', 'do', 'Offset slightly to the pattern side, 102-110 KIAS', { ref: FTI('p. 1-42') });
+    else add(7.2, 'PF', 'do', 'Offset slightly to the pattern side to see traffic over the runway', { ref: FTI('p. 1-36') });
+    if (from.rest) {
+      add(8.4, 'PF', 'do', 'Call for the remainder of the Emergency Shutdown Checklist', { ref: FTI('p. 1-40') });
+      busyUntil = remainder(8.4) + 1.4;
+    }
+    if (!from.single) {
+      const t400 = Math.max(atAlt('up2', 400), 9);
+      add(t400, 'PF', 'say', `Clear ${side}, going ${side}`, { technique: true });
+      add(t400 + 1.4, 'PM', 'say', `Clear ${other}`, { ref: FTI('p. 1-31') });
+      add(Math.max(atAlt('up2', 500), t400 + 2), 'PF', 'do', `Level at 500 ft until the crosswind turn: ${back}`, { ref: FTI('p. 1-36'), set: { power: tq('600 ft-lbs') } });
+    }
   } else {
     mark(0, 'Touchdown', 'touchdown');
     add(0, 'PF', 'do', 'Touchdown, main mounts first, power levers at idle', { ref: FTI('p. 1-34') });
@@ -603,7 +653,12 @@ function passCore(id, engine, runwayId, draw, opts) {
     const t600 = Math.max(atAlt('xw1', 600), xwCallEnd);
     if (id === 'noflap') {
       add(t600, 'PF', 'do', 'Passing 600 ft: flaps stay up', { ref: FTI('p. 1-31') });
-      checklist(t600 + 1, 'Up');
+      checklist(t600 + 1, 'Up', !!from);
+    } else if (from) {
+      // Off a wave-off the gear is up too: the flaps called, then the gear with the checklist.
+      add(t600, 'PF', 'say', 'Speed checks, flaps approach', { ref: APPF('Landing Checklist', 'p. F-24') });
+      add(t600 + 1.4, 'PM', 'say', 'Speed checks, flaps approach', { ref: CONFIG, set: { flaps: 'Approach' } });
+      checklist(t600 + 2.8, 'Approach', true);
     } else {
       add(t600, 'PF', 'say', 'Speed checks, flaps approach, Landing Checklist', { ref: APPF('Landing Checklist', 'p. F-24') });
       add(t600 + 2, 'PM', 'say', 'Speed checks, flaps approach', { ref: CONFIG, set: { flaps: 'Approach' } });
@@ -644,10 +699,11 @@ function passCore(id, engine, runwayId, draw, opts) {
     add(busyUntil - 0.8, 'PF', 'do', 'Landing Checklist complete no later than the 90, 110 KIAS minimum to the 90', { ref: FTI('p. 1-40') });
   }
   // On one engine, approaching the 180: flaps approach, gear down, Landing Checklist; and
-  // before it, the SSE full-stop brief.
+  // before it, on the SSE full stop only, its brief (ME FTI p. 1-42: no SSE full stop without
+  // it). Every other single-engine pass ends in a touch and go.
   if (sse || caseN === 1 || caseN === 2 || caseN === 3) {
     let briefEnd = 0;
-    if (caseN === 1 || caseN === 2) {
+    if (fullStop) {
       // Gone from the screen at the next call (the user: the boxes have no room for both).
       const tb = Math.max(t180 - 38, busyUntil);
       add(tb, 'PF', 'say', `Once safely on the deck, I will bring both power levers over the detent, reversing with the ${good} engine, maintaining centerline with opposite rudder and aileron and forward yoke pressure. If rudder effectiveness is lost, I will bring both power levers toward flight idle.`, { ref: APPB('p. B-10'), hold: 13, yields: true });
@@ -664,9 +720,9 @@ function passCore(id, engine, runwayId, draw, opts) {
   }
 
   // ---- The 180 and the approach turn.
-  const intent = sse ? 'low approach' : caseN ? 'full-stop' : 'touch-and-go';
-  const cleared = sse ? 'low approach' : caseN ? 'full-stop' : 'option';
-  const tower = sse ? 'cleared low approach' : caseN ? 'cleared to land' : 'cleared for the option';
+  const intent = fullStop ? 'full-stop' : 'touch-and-go';
+  const cleared = fullStop ? 'full-stop' : 'option';
+  const tower = fullStop ? 'cleared to land' : 'cleared for the option';
   mark(t180, 'The 180', 'the180');
   add(t180 - 0.4, 'PF', 'do', 'Three green lights', { ref: FTI('p. 1-31') });
   // Without a tower: self-announced on the CTAF at the two turns, as civilian traffic hears it
@@ -678,7 +734,7 @@ function passCore(id, engine, runwayId, draw, opts) {
     add(t180, 'PM', 'say', `${field.tower}, ${CALL_SIGN}, ${side} 180, three down and locked, ${intent}.`, { radio: true, ref: APPB('p. B-4') });
     add(t180 + 4.8, 'Tower', 'say', `${CALL_SIGN}, runway ${field.number}, ${tower}.`, { radio: true, generated: true });
     // Every clearance is read back by the PM and confirmed by the PF (NATOPS: ATC clearance).
-    const readback = sse ? 'Cleared low approach' : caseN ? 'Cleared to land' : 'Cleared for the option';
+    const readback = fullStop ? 'Cleared to land' : 'Cleared for the option';
     add(t180 + 8.4, 'PM', 'say', `${readback}, runway ${field.number}, ${CALL_SIGN}.`, { radio: true, generated: true, ref: CALLOUTS });
     add(t180 + 11.4, 'PF', 'say', `${readback}.`, { generated: true, ref: CALLOUTS });
   }
@@ -720,7 +776,7 @@ function passCore(id, engine, runwayId, draw, opts) {
   const finalK = single || id === 'noflap' ? 110 : 105;
   const crossK = single ? 110 : id === 'noflap' ? 105 : 95;
   add(tFinal, 'PF', 'do', `The groove: 250 ft, ${finalK} KIAS, 1,200 ft from the threshold, aim at the numbers`, { ref: FTI(single ? 'p. 1-41' : id === 'noflap' ? 'p. 1-33' : 'p. 1-32'), set: { power: 'As required' } });
-  if (!sse) mark(atX('final', 0), 'Threshold', 'threshold');
+  mark(atX('final', 0), 'Threshold', 'threshold');
   // The CTAF's crosswind call, in the first gap in the crew's talk long enough for it from the
   // start of the crosswind turn.
   if (ctaf && !events.some((x) => x.radio && x.t === txw)) {
@@ -736,8 +792,9 @@ function passCore(id, engine, runwayId, draw, opts) {
     const t = gap(txw - 0.5, tdw, len);
     add(t === null ? txw : t, 'PM', 'say', text, { radio: true, ref: SELF_ANNOUNCE });
   }
-  if (!sse) add(atX('final', 0), 'PF', 'do', `Cross the threshold at ${crossK} KIAS, slowly close the power levers, flare`, { ref: FTI(single ? 'p. 1-41' : 'p. 1-33'), set: { power: 'Closing to idle' } });
-  if (caseN) {
+  add(atX('final', 0), 'PF', 'do', `Cross the threshold at ${crossK} KIAS, slowly close the power levers, flare`, { ref: FTI(single ? 'p. 1-41' : 'p. 1-33'), set: { power: 'Closing to idle' } });
+  const tTouch = atX('final', TOUCHDOWN_X);
+  if (fullStop) {
     const tr = start('rollout');
     mark(duration, 'SSE full stop', 'fullstop');
     add(tr, 'PF', 'do', 'Power levers idle, both over the detent', { ref: FTI('p. 1-41'), set: { power: 'Idle' } });
@@ -771,7 +828,29 @@ function passCore(id, engine, runwayId, draw, opts) {
     // More room its calls need, if any.
     needs: needs.upwindX !== opts.upwindX ? needs : null,
     late,
+    draw,
+    // The wave-off button is live from the groove to the touchdown.
+    waveoffWindow: [tFinal, tTouch],
   };
+}
+
+// The student's wave-off at time `t` of a pass (or a break): the pass it begins, `{ id, from }`.
+// On one engine it is an SSE wave-off, the next pass the SSE pattern (the SSE full stop again,
+// if that was the pass); below 200 ft a practice SSE wave-off is flown on both engines (NATOPS
+// §12.1.1), and so is every wave-off on two, into the same two-engine pattern (the approach-flap
+// one off a single-engine pass). A Case 4 or 5 owes the rest of its shutdown checklist (`rest`).
+export function waveoffOf(pass, t) {
+  const s = pass.stateAt(t);
+  const id = pass.id === 'break' ? pass.base : pass.id;
+  const dead = /zero thrust|failed/.test(s.engines);
+  const single = dead && s.alt >= 200;
+  const next = single ? (id === 'ssefs' ? 'ssefs' : 'sse') : ['noflap', 'full'].includes(id) ? id : 'approach';
+  const from = {
+    x: Math.round(s.x), alt: Math.round(s.alt), kias: Math.round(s.kias), flaps: s.flaps, single,
+    ...(single ? { engines: s.engines } : {}),
+    ...(single && (id === 'case4' || id === 'case5') ? { rest: true } : {}),
+  };
+  return { id: next, from };
 }
 
 // ---- The break, into a chosen pattern (ME FTI §106 p. 1-29): wings level at 200 KIAS over
@@ -780,8 +859,8 @@ function passCore(id, engine, runwayId, draw, opts) {
 // approach flaps below 174 KIAS and the gear below 155 on the way round. On the downwind it
 // slows to 120 KIAS, descends to 800 ft and from there flies that pattern's downwind, approach
 // and landing; the patterns that start with an engine out come in as the approach-flap pattern
-// does, the single-engine one taking over at its wave-off at 200 ft. Cleared for the break at the numbers, it waits and breaks at
-// the departure end (the user), left or right with the runway's traffic.
+// does. Cleared for the break at the numbers, it waits and breaks at the departure end (the
+// user), left or right with the runway's traffic.
 const BREAK_FROM = -4500; // where the drawing picks it up, inbound
 const OVERHEAD_Y = 150; // the offset to the pattern side (Cabaniss course rules: 100-200 ft)
 const BREAK_LEGS = (length, ba = 1000, pa = 800) => [
@@ -839,10 +918,9 @@ export function buildBreak(id = 'approach', engine = 'left', runwayId = DEFAULT_
   const init = { flaps: 'Up', gear: 'Up', props: '1900 RPM', power: 'As required', engines: 'Both' };
   const own = stateFn(pts, duration, init, events, field);
 
-  // From here that pass, on its downwind at the same place, to the touchdown; for the single-
-  // engine pattern, to its wave-off.
+  // From here that pass, on its downwind at the same place, to the touchdown.
   const tj = base.downwindAt(pts[pts.length - 1].x);
-  const end = id === 'sse' ? base.finalAt(WAVEOFF_X) : base.duration;
+  const end = base.duration;
   const shift = duration - tj;
   const later = base.events.filter((e) => e.t >= tj && e.t < end).map((e) => ({ ...e, t: e.t + shift }));
   const stateAt = (time) => (time <= duration ? own(time) : { ...base.stateAt(time - shift), t: time });
@@ -857,6 +935,7 @@ export function buildBreak(id = 'approach', engine = 'left', runwayId = DEFAULT_
   return {
     id: 'break', engine, field, duration: total, events: [...events, ...later], marks, track, stateAt,
     speeds: { ...base.speeds, entry: { kias: 200 } }, torques: base.torques, rolloutT: tr,
+    base: baseId, waveoffWindow: base.waveoffWindow.map((x) => x + shift),
   };
 }
 

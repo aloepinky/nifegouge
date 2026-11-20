@@ -1,11 +1,12 @@
 // The Practice Flight's pattern, flown in place of its step card and map: Pattern Work's comms,
 // FTI procedures, numbers and drawing, one lap at a time. A lap flies itself; at its end (the
-// touchdown, a full stop or an SSE wave-off) the page stops and the flight asks for the next lap.
+// touchdown, a full stop, or the wave-off the student calls between the groove and the
+// touchdown) the page stops and the flight asks for the next lap.
 // What is said goes into the flight log as it is said.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { RUNWAYS } from './pattern/patternModel';
-import { Comms, Gauges, PatternView, Procedures, frameOf } from './pattern/PatternWork';
+import { Comms, Gauges, PatternView, Procedures, WaveoffButton, frameOf } from './pattern/PatternWork';
 import { buildLap, lapLog } from './patternLaps';
 
 const SPEEDS = [1, 2, 4];
@@ -19,12 +20,14 @@ function useLap(step) {
   return { lap, under, fr, inBreak: step.lap === 'break' };
 }
 
-// `step` is the lap: flying, or (`ended`) stopped at its end while the next is chosen.
-export default function PatternFlight({ step, ended, onDone, onSaid, view, setView, speed, setSpeed }) {
+// `step` is the lap: flying, or (`ended`) stopped at its end while the next is chosen, at its
+// wave-off if it was waved off.
+export default function PatternFlight({ step, ended, onDone, onWaveoff, onSaid, view, setView, speed, setSpeed }) {
   const { lap, under, fr, inBreak } = useLap(step);
-  const [t, setT] = useState(ended ? lap.duration : 0);
+  const endT = step.waveT === undefined ? lap.duration : step.waveT;
+  const [t, setT] = useState(ended ? endT : 0);
   const [playing, setPlaying] = useState(!ended);
-  const live = useRef({ t: ended ? lap.duration : 0 });
+  const live = useRef({ t: ended ? endT : 0 });
   live.current.speed = speed;
   live.current.duration = lap.duration;
   live.current.onDone = onDone;
@@ -76,6 +79,7 @@ export default function PatternFlight({ step, ended, onDone, onSaid, view, setVi
         <div className="pf-pattern">
           <div className="ptw-controls">
             <button type="button" className="ptw-btn ptw-btn--go" onClick={() => setPlaying(!playing)}>{playing ? 'Pause' : 'Resume'}</button>
+            <WaveoffButton pass={lap} t={t} onWaveoff={onWaveoff} />
             <span className="pf-pattern-lap">{step.title}{single ? `, ${step.engine} engine` : ''}</span>
             <label className="ptw-field">
               <span>Speed</span>

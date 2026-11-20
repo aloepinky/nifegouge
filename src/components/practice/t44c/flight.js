@@ -22,7 +22,7 @@ import {
   STALL_RECOVERY, TAKEOFF_ROLL, sseAltitudes,
 } from './numbers';
 import { drawCase } from './pattern/patternModel';
-import { endOf, lapLabel, lapLog, nextLaps, runwayIdOf } from './patternLaps';
+import { continues, endOf, lapLabel, lapLog, nextLaps, runwayIdOf, waveoffAt } from './patternLaps';
 
 export { PROFILES };
 
@@ -466,9 +466,9 @@ const NEXT = {
 
 // ---- What a choice does.
 
-// A lap flown on the pattern model, then the choice at its end. A single-engine lap that follows
-// an SSE wave-off keeps that lap's engine; any other draws its engine, and a Case what its checks
-// turn out to be.
+// A lap flown on the pattern model, then the choice at its end. A lap that flies on from the last
+// one's wave-off begins there, an SSE pattern keeping that lap's engine; any other draws its
+// engine, and a Case what its checks turn out to be.
 function flyLap(s, kind, rng = Math.random) {
   const fly = flyStep(s, kind, 'Pattern', rng);
   const end = endOf(kind);
@@ -479,10 +479,11 @@ function flyLap(s, kind, rng = Math.random) {
 function flyStep(s, kind, P, rng = Math.random) {
   const home = s.field !== 'KNGW';
   const rwy = home ? s.card.rwy : s.card.cabRwy;
-  const keep = kind === 'sseLand' || (kind === 'sse' && s.lapEnd === 'waveoff');
-  const engine = keep && s.patEngine ? s.patEngine : rng() < 0.5 ? 'left' : 'right';
+  const from = continues(kind, s.lapFrom) ? s.lapFrom : null;
+  const engine = from && from.single && s.patEngine ? s.patEngine : rng() < 0.5 ? 'left' : 'right';
   const fly = {
     kind: 'fly', phase: P, lap: kind, title: lapLabel(kind), engine,
+    ...(from ? { from } : {}),
     runwayId: runwayIdOf(s.field, rwy), callSign: s.card.callSign,
     // Cabaniss clears the break at the initial; from the south to runway 36 there is no initial.
     cleared: kind === 'break' && !home && rwy !== '36',
@@ -533,7 +534,7 @@ const CHOSEN = {
       { id: 'southern', label: 'Southern Departure' },
     ])] };
     const ended = s.steps[s.at];
-    const n = { ...s, lapEnd: ended.end, patEngine: ended.engine };
+    const n = { ...s, lapEnd: ended.end, patEngine: ended.engine, lapFrom: ended.from || null };
     if (id === 'stop') return { ...n, finished: true, steps: [...s.steps, numbers(s, 'Landing', FULL_STOP.title, FULL_STOP)] };
     return { ...n, lapKind: id, laps: s.laps + 1, steps: [...s.steps, ...flyLap(n, id, rng)] };
   },
@@ -715,6 +716,19 @@ export function reduce(s, action, rng = Math.random) {
       const nextStage = NEXT[n.stage](n);
       if (!nextStage) return { ...n, done: true, cur: fresh };
       return enter(n, nextStage, rng);
+    }
+    // The student waves off, `t` seconds into the lap: the lap ends there, and the choice after it
+    // is the one a wave-off offers.
+    case 'waveoff': {
+      if (!step || step.kind !== 'fly' || step.lap === undefined) return s;
+      const after = s.steps[s.at + 1];
+      if (!after || after.kind !== 'choose' || after.on !== 'lap') return s;
+      const { end, from } = waveoffAt(step, action.t);
+      const { prompt, options } = nextLaps(end, s.field);
+      const steps = [...s.steps];
+      steps[s.at] = { ...step, waveT: action.t };
+      steps[s.at + 1] = { ...choose(after.phase, 'lap', prompt, options), end, engine: step.engine, from };
+      return forward({ ...s, steps }, rng);
     }
     case 'ep': {
       if (!step || step.kind === 'ep') return s;

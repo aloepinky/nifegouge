@@ -867,8 +867,23 @@ angles, so about 23°), the crosswind turn 1,000 ft past the departure end at ex
 (level there if reached early), climbing a steady 1400 ft/min at 1000 ft-lbs to 800 ft, then
 600 ft-lbs level (the user's figures; NATOPS Ch. 27 has no gear-down, approach-flap climb chart), the 180 abeam the groove and the start of the approach turn,
 the groove 1,200 ft from the threshold at 250 ft. Pattern types: approach flap, no flap, full
-flap, SSE (looped from the SSE wave-off at 200 ft) and Cases 1 to 5 (a touch-and-go, the
-simulated failure, an SSE full stop). `patternModel.js` is pure and tested: a pass is a chain
+flap, SSE (from an SSE wave-off at 200 ft), SSE full stop, and Cases 1 to 5 (a touch-and-go, the
+simulated failure, a touch-and-go).
+**How a pass ends** (the user, 2026-11-20): every pass, single-engine and Cases included, ends in
+a touch-and-go, the gouge's "simulated full stop" (no SSE full-stop brief, cleared for the
+option, the rest of a Case's shutdown checklist treated as done on deck). The SSE full stop is
+its own pattern (`ssefs`): the brief before the 180 (FTI p. 1-42: none without it), cleared to
+land, the rollout. The MCG grades it once in FAM42; the FTI's Case 5 "SSE full-stop procedures"
+text is for a real failure. A **Wave off** button (`WaveoffButton`, dimmed but from the groove to
+the touchdown, `waveoffWindow`) lets the student call it: `waveoffOf(pass, t)` gives the pass it
+begins, `buildPass(id, …, from)`, flown from where the aircraft was. On one engine at 200 ft or
+above an SSE wave-off into the SSE pattern (SSE full stop again off that pattern); below 200 ft,
+and on two engines, a wave-off on both (NATOPS §12.1.1), into the same two-engine pattern. Memory
+items NATOPS §16.2/§7.18, "Landing gear up" by both pilots. A Case 4 or 5 waved off on one
+engine then calls for the rest of the shutdown checklist (FTI p. 1-40 note 2; `rest`). Every
+touch-and-go takes off on both engines (NATOPS §12.1.1). The IFG's 4,490 × 75 ft serves an SSE
+touch-and-go, so only the SSE full stop needs 4,900 × 100 (`sseFullStop`).
+`patternModel.js` is pure and tested: a pass is a chain
 of legs, each with its airspeed and altitude, timed by flying it; touchdown to rotate and rotate
 to 300 ft keep the user's stopwatch times; 120 KIAS comes a few seconds after rotate.
 Two fields, Cabaniss 13 and Navy Corpus 13L (`FIELDS`, runway ends from OpenStreetMap); a
@@ -895,8 +910,7 @@ brief `yields`: gone at the next spoken line. The PM answers "Speed checks, flap
 Approach flap at the touchdown and every other pattern starts there, no break; Break flies the
 break and then goes round the approach-flap pattern from the touchdown. On every pattern a
 circle at the break entry flies a break into that pattern (`buildBreak(id)`): no flap keeps
-the flaps up, the engine-out patterns come in as the approach-flap one does and the
-single-engine one takes over at its wave-off. FTI p. 1-29: 1,000 ft, 200 KIAS on the overhead offset
+the flaps up, the engine-out patterns come in as the approach-flap one does. FTI p. 1-29: 1,000 ft, 200 KIAS on the overhead offset
 150 ft to the pattern side; "numbers for the break" at the approach end, Tower clears the left or
 right break (generated), and it breaks at the departure end (the user); one constant-bank idle turn
 (about 41°) to a mile abeam, flaps below 174, gear below 155, then slow to 120 and descend to 800
@@ -914,13 +928,15 @@ and locked"); the course rules' "180, gear down" is another field's.
 **In the Practice Flight** (`/t44c/practice`, since 2026-11-19, the user): from the initial call
 (Navy Corpus's, Cabaniss's, or Tower's "report the numbers" after Sunrise) the pattern is flown on
 this model in place of the step card and map (`practice/t44c/PatternFlight.js`, which imports
-PatternWork's exported `Comms`, `Gauges`, `PatternView`, `Procedures`, `frameOf`; keep those
-exports). The break first (approach flap; no numbers call where Cabaniss cleared the break at the
+PatternWork's exported `Comms`, `Gauges`, `PatternView`, `Procedures`, `WaveoffButton`,
+`frameOf`; keep those exports). The break first (approach flap; no numbers call where Cabaniss cleared the break at the
 initial), then at every touchdown the flight pauses and asks the next lap (`patternLaps.js`: a
-lap is a `fly` step, `lap` the pattern id, its spoken lines go into the flight log as said). An
-SSE pass ends at its wave-off, offering SSE again or the SSE full stop (Case 5's last 200 ft);
-Full stop (Navy Corpus) ends the flight, Depart Cabaniss leaves. A lap after a full stop, or an
-SSE pass after a touchdown, starts from its own start point: the aircraft jumps there.
+lap is a `fly` step, `lap` the pattern id, its spoken lines go into the flight log as said). The
+Wave off button ends a lap where it is pressed (reducer `waveoff`: `waveT` on the lap, `from` on
+the choice after it): after an SSE wave-off the choice is SSE or SSE full stop, flown on from it
+with the same engine; after one on both engines any pattern, a two-engine one flown on from it,
+and no Full stop. Full stop (Navy Corpus) ends the flight, Depart Cabaniss leaves. Any other lap
+starts from its own start point: the aircraft jumps there.
 
 ## Page views
 
