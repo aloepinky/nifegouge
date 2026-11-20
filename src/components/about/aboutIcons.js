@@ -1,5 +1,8 @@
 import React from 'react';
 
+// The right half of the Pattern Work racetrack: 20 wide, 13 tall, centred on (12, 12).
+const RACETRACK_HALF = 'M12 5.5h3.5a6.5 6.5 0 0 1 0 13H12';
+
 // One line icon per About page tab. Keys are what an About page's tab passes as `icon`.
 const PATHS = {
   eps: <><path d="M12 3 2 20h20Z" /><path d="M12 10v4M12 17h.01" /></>,
@@ -14,6 +17,16 @@ const PATHS = {
   discuss: <><path d="M5 4h11l3 3v13H5Z" /><path d="M8 10h8M8 14h8M8 18h5" /></>,
   jetlog: <><rect x="3" y="4" width="18" height="16" rx="1" /><path d="M3 9h18M3 14h18M9 4v16M15 4v16" /></>,
   flight: <><circle cx="5" cy="18" r="2" /><circle cx="19" cy="6" r="2" /><path d="M7 17c4-1 3-6 6-7s3-2 4-3" strokeDasharray="2 2.5" /></>,
+  // A racetrack centred on the icon, and the runway on its bottom straight. Its right half runs
+  // from the top centre to the bottom centre in four even dashes, a half dash at each end; the
+  // left half is the same path mirrored, so the two sides match exactly.
+  pattern: (
+    <>
+      <path d={RACETRACK_HALF} strokeDasharray="3.4275" strokeDashoffset="1.7138" />
+      <path d={RACETRACK_HALF} strokeDasharray="3.4275" strokeDashoffset="1.7138" transform="matrix(-1 0 0 1 24 0)" />
+      <path d="M8.5 18.5h7" strokeWidth="2.6" />
+    </>
+  ),
   docs: <><path d="M3 7h6l2 2h10v10H3Z" /><path d="M3 7V5h6l2 2" /></>,
   questions: <><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.2 2.4c-.6.2-.7.7-.7 1.3M12 17h.01" /></>,
   whiz: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="2" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M18 18l-2-2" /></>,

@@ -51,6 +51,14 @@ const CONTENT = {
       'The Practice Flight page chair flies an entire T-44C contact FAM to Seagull, Foxtrot or Cheetah and back to Navy Corpus or Cabaniss. Emphasis is placed on course rules, proper comms, checklist timing and maneuver flow.',
     ],
   },
+  '/t44c/pattern': {
+    icon: 'pattern',
+    blurb: 'Watch a T-44C fly the VFR landing pattern in real time, with every call and FTI procedure.',
+    more: [
+      'Pattern Work chair flies around the landing pattern at Cabaniss or Navy Corpus over a drawing or satellite imagery. The PF, PM and Tower calls pop up, and the FTI procedures being flown are displayed.',
+      'Pick the flap setting, single-engine pattern, the break, or one of the SSE Cases 1 to 5 with random prop and fire checks. Click any point on the pattern to target that section.',
+    ],
+  },
 };
 
 function T44CAbout() {
@@ -65,7 +73,8 @@ function T44CAbout() {
         <>
           <p>
             This section is for the T-44C: the EPs and limits you are held to from memory, the
-            discussion items for every syllabus event, the briefs, and a practice FAM flight.
+            discussion items for every syllabus event, the briefs, a practice FAM flight and the landing
+            pattern.
           </p>
           <p>
             Everything here is built by students, so it is only as good as what gets contributed. If you
