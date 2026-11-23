@@ -21,7 +21,7 @@ import { isSchool } from '../programs';
 import { SelectedSyllabusContext, recalledSyllabus, rememberSyllabus } from './RandomPage';
 import { OutdatedPubs } from './OutdatedMarks';
 import { ConfirmButton } from './edit/fields';
-import { useProgress, useTracking, trackable, progressId } from './progress';
+import { useProgress, useTracking } from './progress';
 
 // The upload page and the flow editor carry the PDF parser and pdf.js, so they load only when
 // someone opens them.
@@ -212,17 +212,12 @@ function PostFlowChart({ current }) {
   );
 }
 
-// Track progress: the switch over the chart, how many boxes are ticked, and while it is on,
-// where that is kept. Counts the course flow and the community chart on screen.
-function TrackProgress({ community }) {
+// Track progress: the switch over the chart, and while it is on, where that is kept. No count:
+// a ground lesson and a check flight are one box each, so a tally of boxes would mislead.
+function TrackProgress() {
   const s = useSyllabus();
   const [on, setOn] = useTracking();
   const { done, clear } = useProgress(s.id);
-  const ids = [
-    ...trackable(s.flow).map((n) => progressId('core', n)),
-    ...(community ? trackable(community).map((n) => progressId(community.id, n)) : []),
-  ];
-  const ticked = ids.filter((id) => done[id]).length;
   const any = Object.keys(done).length > 0;
   return (
     <div className={`discuss-track${on ? ' discuss-track--on' : ''}`}>
@@ -241,12 +236,9 @@ function TrackProgress({ community }) {
       )}
       {on && (
         <p className="discuss-track-note">
-          Click a box to check it off ({ticked} of {ids.length} done). Your progress is saved in
-          this browser’s local storage, so clearing your browser data deletes it.
+          Click a box to check it off. Your progress is saved in this browser’s local storage, so
+          clearing your browser data deletes it.
         </p>
-      )}
-      {!on && ticked > 0 && (
-        <span className="discuss-track-count">{ticked} of {ids.length} done</span>
       )}
     </div>
   );
@@ -285,7 +277,7 @@ function Index() {
 
         <CourseSummary platform={platform.current} />
 
-        {hasChart && <TrackProgress community={platform.current} />}
+        {hasChart && <TrackProgress />}
 
         <CourseFlow chart="core" />
 

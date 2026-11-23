@@ -6453,8 +6453,6 @@ textarea.incorrect-answer {
   cursor: pointer;
 }
 
-.discuss-track-count { font-size: 13px; color: var(--ink-4a6674); }
-
 .discuss-track-note {
   flex-basis: 100%;
   margin: 0;
