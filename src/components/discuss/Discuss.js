@@ -20,6 +20,8 @@ import { programLabel, DEFAULT_PROGRAM } from './program';
 import { isSchool } from '../programs';
 import { SelectedSyllabusContext, recalledSyllabus, rememberSyllabus } from './RandomPage';
 import { OutdatedPubs } from './OutdatedMarks';
+import { ConfirmButton } from './edit/fields';
+import { useProgress, useTracking, trackable, progressId } from './progress';
 
 // The upload page and the flow editor carry the PDF parser and pdf.js, so they load only when
 // someone opens them.
@@ -205,8 +207,49 @@ function PostFlowChart({ current }) {
       <p className="discuss-flow-caption">
         After the course splits: <strong>{current.label}</strong>
       </p>
-      <CourseFlow flow={current} label={current.label} titleId="discuss-postflow-title" />
+      <CourseFlow flow={current} label={current.label} titleId="discuss-postflow-title" chart={current.id} />
     </>
+  );
+}
+
+// Track progress: the switch over the chart, how many boxes are ticked, and while it is on,
+// where that is kept. Counts the course flow and the community chart on screen.
+function TrackProgress({ community }) {
+  const s = useSyllabus();
+  const [on, setOn] = useTracking();
+  const { done, clear } = useProgress(s.id);
+  const ids = [
+    ...trackable(s.flow).map((n) => progressId('core', n)),
+    ...(community ? trackable(community).map((n) => progressId(community.id, n)) : []),
+  ];
+  const ticked = ids.filter((id) => done[id]).length;
+  const any = Object.keys(done).length > 0;
+  return (
+    <div className={`discuss-track${on ? ' discuss-track--on' : ''}`}>
+      <button type="button" className="discuss-track-button" aria-pressed={on} onClick={() => setOn(!on)}>
+        {on ? 'Stop tracking' : 'Track progress'}
+      </button>
+      {/* Beside the button, so its appearing never moves the chart under the pointer. */}
+      {on && any && (
+        <ConfirmButton
+          className="discuss-track-clear"
+          label="Clear progress"
+          question="Uncheck every box on this syllabus?"
+          confirmLabel="Clear"
+          onConfirm={clear}
+        />
+      )}
+      {on && (
+        <p className="discuss-track-note">
+          Click a box to check it off ({ticked} of {ids.length} done). While tracking is on, boxes
+          don’t open their pages. Your progress is saved in this browser’s cookies, so clearing
+          your browser data deletes it.
+        </p>
+      )}
+      {!on && ticked > 0 && (
+        <span className="discuss-track-count">{ticked} of {ids.length} done</span>
+      )}
+    </div>
   );
 }
 
@@ -243,7 +286,9 @@ function Index() {
 
         <CourseSummary platform={platform.current} />
 
-        <CourseFlow />
+        {hasChart && <TrackProgress community={platform.current} />}
+
+        <CourseFlow chart="core" />
 
         <PostFlowChart current={platform.current} />
 

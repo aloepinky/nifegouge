@@ -6418,6 +6418,87 @@ textarea.incorrect-answer {
   margin-top: 4px;
 }
 
+/* Track progress: a quiet switch over the chart. While on, a click checks a box: tinted green,
+   outlined green, a check on its corner. */
+.discuss-track {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 12px;
+  margin: 0 0 12px;
+}
+
+.discuss-track .discuss-track-button {
+  background: var(--surface);
+  border: 1px solid var(--line-accent);
+  border-radius: 3px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--ink-accent);
+  cursor: pointer;
+}
+
+.discuss-track .discuss-track-button:hover,
+.discuss-track--on .discuss-track-button { background: var(--btn-2); color: var(--on-brand); }
+
+.discuss-track .discuss-track-clear {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--ink-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.discuss-track-count { font-size: 13px; color: var(--ink-4a6674); }
+
+.discuss-track-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-4a6674);
+  text-align: center;
+}
+
+.discuss-flow-tick { cursor: pointer; }
+.discuss-flow-ticks--shown { pointer-events: none; }
+.discuss-flow-tick:focus { outline: none; }
+
+.discuss-flow-tick-area {
+  fill: transparent;
+  stroke: none;
+}
+
+.discuss-flow-tick:hover .discuss-flow-tick-area,
+.discuss-flow-tick:focus-visible .discuss-flow-tick-area {
+  stroke: var(--line-accent);
+  stroke-width: 1.4;
+}
+
+.discuss-flow-tick--on .discuss-flow-tick-area {
+  fill: #2e7d4f;
+  fill-opacity: 0.2;
+  stroke: #2e7d4f;
+  stroke-width: 1.4;
+}
+
+.discuss-flow-tick-box {
+  fill: #2e7d4f;
+  stroke: var(--surface);
+  stroke-width: 0.6;
+}
+
+.discuss-flow-tick-mark {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .discuss-flow-caption {
   margin: 18px 0 6px;
   font-size: 13px;

@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSyllabus } from './SyllabusContext';
 import { fitLines } from './flowText';
+import { useProgress, useTracking, trackable, progressId } from './progress';
 
 // The JPPT course-flow chart, clickable. Geometry comes from the syllabus being shown —
 // FLOW.js for Delta, traced from the publication, or a generated syllabus's own flow; this
@@ -327,8 +328,13 @@ export function ArrowDefs() {
 // render through the same component because they are the same figure, differing only in which
 // part of the course they cover. `titleId` keeps the accessible title unique when a page shows
 // both.
-function CourseFlow({ flow: flowProp = null, label = null, titleId = 'discuss-flow-title' }) {
+// `chart` turns on Track progress for this chart (All Events passes it; the flow editor's
+// preview does not): 'core' for the course flow, the community's id after the split.
+function CourseFlow({ flow: flowProp = null, label = null, titleId = 'discuss-flow-title', chart = null }) {
   const s = useSyllabus();
+  const [tracking] = useTracking();
+  const progress = useProgress(s.id);
+  const track = !!chart && tracking;
   const whole = flowProp || s.flow;
   const [letter, setLetter] = useState(null);
   // A chart the publication prints over several sheets is shown one sheet at a time, in the
@@ -407,6 +413,8 @@ function CourseFlow({ flow: flowProp = null, label = null, titleId = 'discuss-fl
         })}
 
         {chrome.legendEls}
+
+        {chart && <Ticks nodes={trackable(flow)} chart={chart} progress={progress} live={track} />}
       </svg>
   );
 
@@ -439,6 +447,61 @@ function CourseFlow({ flow: flowProp = null, label = null, titleId = 'discuss-fl
           shown them. A community chart is captioned by its own picker, so it carries none. */}
       {!label && s.source && <p className="discuss-flow-source">{s.source}.</p>}
     </div>
+  );
+}
+
+// Track progress: laid over every box while it is on, so a click ticks the box instead of
+// opening it. With it off, the ticked boxes still show but take no clicks (pointer-events:
+// none), so every box opens its page as it always did. A ticked box is tinted green, with a
+// green outline and a check on its corner.
+function Ticks({ nodes, chart, progress, live }) {
+  return (
+    <g className={`discuss-flow-ticks${live ? '' : ' discuss-flow-ticks--shown'}`}>
+      {nodes.map((n) => {
+        const id = progressId(chart, n);
+        const on = !!progress.done[id];
+        if (!live && !on) return null;
+        // The check sits on the box's top right corner, over the border, so it never covers
+        // the label; boxes are too small to hold one inside beside their words.
+        const r = round(Math.min(3.4, n.h * 0.3));
+        const cx = round(n.x + n.w - r * 0.4);
+        const cy = round(n.y + r * 0.4);
+        const text = `${n.label}: ${on ? 'done' : 'not done'}`;
+        const flip = () => progress.toggle(id);
+        if (!live) {
+          return (
+            <g key={n.id} className="discuss-flow-tick discuss-flow-tick--on" aria-hidden="true">
+              <Shape kind={n.kind} x={n.x} y={n.y} w={n.w} h={n.h} className="discuss-flow-tick-area" />
+              <circle className="discuss-flow-tick-box" cx={cx} cy={cy} r={r} />
+              <polyline className="discuss-flow-tick-mark"
+                        points={poly([[cx - r * 0.5, cy], [cx - r * 0.12, cy + r * 0.42], [cx + r * 0.55, cy - r * 0.45]])} />
+            </g>
+          );
+        }
+        return (
+          <g
+            key={n.id}
+            className={`discuss-flow-tick${on ? ' discuss-flow-tick--on' : ''}`}
+            role="checkbox"
+            tabIndex={0}
+            aria-checked={on}
+            aria-label={text}
+            onClick={flip}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
+            }}
+          >
+            <title>{text}</title>
+            <Shape kind={n.kind} x={n.x} y={n.y} w={n.w} h={n.h} className="discuss-flow-tick-area" />
+            {on && <circle className="discuss-flow-tick-box" cx={cx} cy={cy} r={r} />}
+            {on && (
+              <polyline className="discuss-flow-tick-mark"
+                        points={poly([[cx - r * 0.5, cy], [cx - r * 0.12, cy + r * 0.42], [cx + r * 0.55, cy - r * 0.45]])} />
+            )}
+          </g>
+        );
+      })}
+    </g>
   );
 }
 
