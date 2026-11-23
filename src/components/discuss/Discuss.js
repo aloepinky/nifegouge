@@ -241,9 +241,8 @@ function TrackProgress({ community }) {
       )}
       {on && (
         <p className="discuss-track-note">
-          Click a box to check it off ({ticked} of {ids.length} done). While tracking is on, boxes
-          don’t open their pages. Your progress is saved in this browser’s cookies, so clearing
-          your browser data deletes it.
+          Click a box to check it off ({ticked} of {ids.length} done). Your progress is saved in
+          this browser’s local storage, so clearing your browser data deletes it.
         </p>
       )}
       {!on && ticked > 0 && (
