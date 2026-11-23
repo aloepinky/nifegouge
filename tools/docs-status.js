@@ -18,6 +18,7 @@
 //   --useful=N / --obsolete=N   set that count exactly; either may be given alone
 //   --note=<text>   the reason the page shows beside the badge
 //   --clear         remove the votes and the note: the entry is current again
+//   --reset-score   set the good/bad gouge votes back to 0 (undoes a removal at a score of -5)
 //   --dry-run       print what would be written, and write nothing
 //
 // Talks to DynamoDB directly with your local AWS credentials, the way the site cannot.
@@ -26,6 +27,7 @@ const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const { DynamoDBDocumentClient, ScanCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
 
 const REMOVE_AT = 3;
+const SCORE_REMOVE_AT = -5;
 
 const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(`--${name}`);
@@ -56,6 +58,7 @@ const stateOf = (r) => {
   const useful = r.outdatedUseful || 0;
   const obsolete = r.outdatedObsolete || 0;
   if (obsolete - useful >= REMOVE_AT) return 'REMOVED';
+  if ((r.upvotes || 0) - (r.downvotes || 0) <= SCORE_REMOVE_AT) return 'REMOVED (score)';
   if (!(useful > 0 || obsolete > 0)) return 'current';
   if (useful + obsolete >= 3) return 'OUTDATED';
   // Potentially Outdated drops off 45 days after the last vote (OUTDATED_FOR_DAYS in docs/Outdated.js).
@@ -74,7 +77,7 @@ async function list() {
     console.log(`\n${kind}s (${rows.length})`);
     for (const r of rows) {
       console.log(`  ${stateOf(r).padEnd(8)} ${r[k.key]}  [${r.program || 'nife'}] ${k.title(r)}`);
-      console.log(`           ${(k.date(r) || '').slice(0, 10)}  useful ${r.outdatedUseful || 0}, obsolete ${r.outdatedObsolete || 0}` +
+      console.log(`           ${(k.date(r) || '').slice(0, 10)}  score ${(r.upvotes || 0) - (r.downvotes || 0)}, useful ${r.outdatedUseful || 0}, obsolete ${r.outdatedObsolete || 0}` +
         (r.outdatedAt ? `  last vote ${r.outdatedAt.slice(0, 10)}` : '') +
     (r.outdatedNote ? `  "${r.outdatedNote}"` : ''));
     }
@@ -87,7 +90,10 @@ async function set() {
   if (!k || !id) throw new Error('--kind=doc|link and --id=<id> are required');
 
   const params = { TableName: k.table, Key: { [k.key]: id }, ConditionExpression: `attribute_exists(${k.key})` };
-  if (flag('clear')) {
+  if (flag('reset-score')) {
+    params.UpdateExpression = 'SET upvotes = :zero, downvotes = :zero';
+    params.ExpressionAttributeValues = { ':zero': 0 };
+  } else if (flag('clear')) {
     params.UpdateExpression = 'REMOVE outdatedUseful, outdatedObsolete, outdatedNote, outdatedAt';
   } else {
     const sets = [];
@@ -113,7 +119,7 @@ async function set() {
       sets.push('topic = :topic');
       values[':topic'] = value('topic');
     }
-    if (!sets.length) throw new Error('nothing to set: give --useful, --obsolete, --note, --topic or --clear');
+    if (!sets.length) throw new Error('nothing to set: give --useful, --obsolete, --note, --topic, --clear or --reset-score');
     params.UpdateExpression = `SET ${sets.join(', ')}`;
     params.ExpressionAttributeValues = values;
   }
@@ -123,7 +129,7 @@ async function set() {
     return;
   }
   const { Attributes: r } = await db.send(new UpdateCommand({ ...params, ReturnValues: 'ALL_NEW' }));
-  console.log(`${stateOf(r)}  ${id}  ${k.title(r)}  [${r.topic}]  useful ${r.outdatedUseful || 0}, obsolete ${r.outdatedObsolete || 0}` +
+  console.log(`${stateOf(r)}  ${id}  ${k.title(r)}  [${r.topic}]  score ${(r.upvotes || 0) - (r.downvotes || 0)}, useful ${r.outdatedUseful || 0}, obsolete ${r.outdatedObsolete || 0}` +
     (r.outdatedAt ? `  last vote ${r.outdatedAt.slice(0, 10)}` : '') +
     (r.outdatedNote ? `  "${r.outdatedNote}"` : ''));
 }

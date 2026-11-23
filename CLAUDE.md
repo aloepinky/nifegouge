@@ -296,6 +296,11 @@ regenerate, don't hand-edit fixtures; the live flow is edited in the flow editor
 - A box is a block; a lone event with a row links straight to it, else the block page. `kind`
   decides shape and stroke weight; colour carries only coverage. A–F connectors navigate nowhere —
   clicking lights same-letter circles.
+- **Track progress** (All Events, since 2026-11-22): a button over the chart; while on, a click
+  checks a box (green tint, outline, corner check) instead of opening it. Purely cosmetic, kept
+  in this browser only (`discuss/progress.js`, localStorage `discussProgress:<syllabus id>`,
+  keys `<chart>:<node id>`, `core` or the community's id); checked boxes still show with it off
+  but take no clicks. The flow editor's preview passes no `chart`, so it never tracks.
 - Static chrome memoized per syllabus. The chart scrolls in `.discuss-flow` (`overflow-x: auto`,
   SVG `min-width`).
 - **Multi-community syllabi** (T-44C): `doc.flow` stays the one course flow; `doc.postFlows` holds
@@ -588,7 +593,8 @@ quiz. `node tools/questions-api-test.mjs` runs the ops against the fakes.
   onto `history` (GET `question-history`). `replaced` rows are from the 2026-09-24/25 interim;
   `fold-replaced-questions` (admin, dry run by default) folds them into history.
 - The server decides approval at net +5/−5; one vote per browser id, **never per IP** (a whole
-  apartment complex shares one address). Downvotes never remove a live question.
+  apartment complex shares one address). A live question at a net of −20 thumbs (`REMOVE_AT`)
+  is hidden by the community (`hiddenBy: 'community'`, in the Removed tab); put back, it starts at 0.
 - A pending vote is `approve`/`reject` (`better`/`worse` for edits). Before 2026-09-25 the
   thumbs sent `good`/`bad`, counted as rejections; the server now reads them as approve/reject.
 - **Topics and lectures are a document** (`questionSections.mjs`, table `QuestionSections`,
@@ -629,7 +635,8 @@ Lambda, so a new op is a console change — or a new `voteType` on an existing p
   Outdated** badge, and 3 votes in total (`CONFIRMED_AT`) a red **Outdated** one. Potentially
   Outdated clears 45 days after the last vote (`OUTDATED_FOR_DAYS`); Outdated never does; the list order is left alone. A useful
   vote cancels an obsolete one, and `get-*` stop listing an entry once obsolete − useful ≥ 3
-  (`REMOVE_AT`, in the Lambda and the component both). Nothing is deleted.
+  (`REMOVE_AT`, in the Lambda and the component both), or once the good/bad gouge score
+  (upvotes − downvotes) is −5 or lower (`SCORE_REMOVE_AT`). Nothing is deleted.
 - Links show `submittedAt`, docs `uploadedAt`: the date added, not the material's own date.
 - Local: `node tools/docs-dev-server.mjs` (port 8788; copies the live lists read-only on first
   run, writes to gitignored `_docs-dev/`), then `$env:REACT_APP_DOCS_API='http://localhost:8788'`

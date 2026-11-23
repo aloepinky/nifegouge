@@ -16,7 +16,8 @@ import { currentSections } from './questionSections.mjs';
 //   pending   a submission or an edit waiting on votes
 //   approved  in the quiz
 //   rejected  voted down, turned down by the admin, or superseded by a competing edit
-//   hidden    taken out of the quiz by the admin; put back by the admin
+//   hidden    taken out of the quiz by the admin, or by the community at a net of REMOVE_AT
+//             (`hiddenBy: 'community'`); put back by the admin
 //   merged    an approved edit, whose words now live on the question it edited (`mergedInto`)
 //   replaced  before 2026-09-25, an approved edit became a new question and the original was
 //             kept under this status; `fold-replaced-questions` moves those into history
@@ -43,6 +44,10 @@ export const PENDING_KEY = 'questions/nife/pending.json';
 
 // Net community votes that approve (+) or reject (-) a pending question.
 export const THRESHOLD = 5;
+
+// Net thumbs (up minus down) at which a live question leaves the quiz. It is hidden, not
+// deleted, so the admin's Removed tab can put it back.
+export const REMOVE_AT = -20;
 
 const MAX_QUESTION = 1000;
 const MAX_ANSWER = 500;
@@ -308,6 +313,11 @@ export async function voteQuestionHandler(event) {
     if (q.status !== 'approved') throw new HttpError(409, 'That question has been removed.');
     if (previous) q[COUNTER[previous]] = Math.max(0, (q[COUNTER[previous]] || 0) - 1);
     if (vote) q[COUNTER[vote]] = (q[COUNTER[vote]] || 0) + 1;
+    if ((q.upvotes || 0) - (q.downvotes || 0) <= REMOVE_AT) {
+      q.status = 'hidden';
+      q.hiddenAt = now();
+      q.hiddenBy = 'community';
+    }
   });
   await rebuildQuestionsMirror();
   return reply(200, { success: true, upvotes: row.upvotes || 0, downvotes: row.downvotes || 0 });
@@ -544,6 +554,7 @@ function adminRow(row) {
     rejectedReason: row.rejectedReason || '',
     mergedInto: row.mergedInto || '',
     hiddenAt: row.hiddenAt || '',
+    hiddenBy: row.hiddenBy || '',
   };
 }
 
@@ -575,7 +586,16 @@ export async function setQuestionStatusHandler(event) {
     const at = now();
     q.status = to;
     if (to === 'hidden') q.hiddenAt = at;
-    if (to === 'approved') delete q.hiddenAt;
+    if (to === 'approved') {
+      // A question the community voted out comes back at zero, or its next downvote would
+      // take it out again.
+      if (q.hiddenBy === 'community') {
+        q.upvotes = 0;
+        q.downvotes = 0;
+      }
+      delete q.hiddenAt;
+      delete q.hiddenBy;
+    }
     if (to === 'pending') {
       q.approveCount = 0;
       q.rejectCount = 0;

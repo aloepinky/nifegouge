@@ -17,8 +17,13 @@ const REMOVE_AT = 3;
 const OUTDATED_CHOICES = ['useful', 'obsolete'];
 const OUTDATED_NOTE_MAX = 200;
 
+// Separately, an entry whose good/bad gouge score (upvotes - downvotes) falls to SCORE_REMOVE_AT
+// drops off the page the same way: listed no more, row kept.
+const SCORE_REMOVE_AT = -5;
+
 const isRemoved = (item) =>
-    Math.max(0, item.outdatedObsolete || 0) - Math.max(0, item.outdatedUseful || 0) >= REMOVE_AT;
+    Math.max(0, item.outdatedObsolete || 0) - Math.max(0, item.outdatedUseful || 0) >= REMOVE_AT
+    || (item.upvotes || 0) - (item.downvotes || 0) <= SCORE_REMOVE_AT;
 
 // Scan every page: a single Scan stops at 1 MB and would silently drop the rest.
 async function scanAll(params) {

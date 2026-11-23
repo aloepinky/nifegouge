@@ -5,6 +5,10 @@ import React, { useState } from 'react';
 // lead by REMOVE_AT (lambda/submitDoc/index.mjs holds the same number). The row itself is kept.
 export const REMOVE_AT = 3;
 
+// The server also stops listing an entry whose good/bad gouge score falls to this
+// (SCORE_REMOVE_AT in lambda/submitDoc/index.mjs).
+export const SCORE_REMOVE_AT = -5;
+
 // One or two outdated votes of either kind say Potentially Outdated; this many say Outdated.
 export const CONFIRMED_AT = 3;
 

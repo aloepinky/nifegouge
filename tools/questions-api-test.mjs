@@ -364,6 +364,22 @@ ok(r.status === 400, `an empty batch is refused (${r.status})`);
 r = await op('submit-questions', { body: { questions: Array.from({ length: 101 }, (_, i) => good(i)) } });
 ok(r.status === 400, `a batch over 100 is refused (${r.status})`);
 
+// The community takes a live question out at a net of -20; the admin puts it back at zero
+table.q_seed_low = { ...approvedRow(6, 'weather'), questionId: 'q_seed_low', upvotes: 0, downvotes: 19 };
+r = await op('vote-question', { body: { questionId: 'q_seed_low', vote: 'good', previous: null } });
+r = await op('vote-question', { body: { questionId: 'q_seed_low', vote: null, previous: 'good' } });
+ok(table.q_seed_low.status === 'approved', 'a question at a net of -19 stays in the quiz');
+r = await op('vote-question', { body: { questionId: 'q_seed_low', vote: 'bad', previous: null } });
+ok(table.q_seed_low.status === 'hidden' && table.q_seed_low.hiddenBy === 'community', 'at a net of -20 it is hidden by the community');
+ok(!mirror('approved').some((q) => q.questionId === 'q_seed_low'), 'and leaves the quiz');
+r = await op('vote-question', { body: { questionId: 'q_seed_low', vote: 'bad', previous: null } });
+ok(r.status === 409, `a removed question takes no more votes (${r.status})`);
+r = await op('admin-questions', { method: 'GET', query: { status: 'hidden' }, headers: admin });
+ok(r.questions.some((q) => q.questionId === 'q_seed_low' && q.hiddenBy === 'community'), 'the Removed tab says the community removed it');
+r = await op('set-question-status', { body: { questionId: 'q_seed_low', status: 'approved' }, headers: admin });
+ok(table.q_seed_low.status === 'approved' && table.q_seed_low.upvotes === 0 && table.q_seed_low.downvotes === 0 && !table.q_seed_low.hiddenBy,
+  'put back by the admin, it starts again at zero');
+
 fs.rmSync(mirrorDir, { recursive: true, force: true });
 console.log(failures ? `${failures} FAILED` : 'ALL PASS');
 process.exit(failures ? 1 : 0);
