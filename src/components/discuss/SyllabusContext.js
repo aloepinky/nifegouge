@@ -120,11 +120,18 @@ export function buildSyllabus({
   // Where an item row points. An `href` row goes wherever it says; a slug row goes to its
   // canonical page, carrying event context (Delta only) so the page can offer prev/next
   // through the list.
-  const rowTo = (row, eventId) => {
+  //
+  // `at` is the row's place in the event's list. It rides in the URL (`&at=`) only when the
+  // event lists the same page more than once (FAM2103's MCG prints three items twice), so
+  // prev/next walks on past the repeat instead of jumping back to its first occurrence.
+  const rowTo = (row, eventId, at = null) => {
     if (!row) return null;
     if (row.href) return row.href;
     if (!row.slug) return null;
-    return `${root}/${row.slug}${builtIn && eventId ? `?from=${eventId}` : ''}`;
+    if (!builtIn || !eventId) return `${root}/${row.slug}`;
+    const ev = getEvent(eventId);
+    const repeats = ev && ev.items.filter((i) => i.slug === row.slug).length > 1;
+    return `${root}/${row.slug}?from=${eventId}${repeats && at != null ? `&at=${at}` : ''}`;
   };
 
   return {
@@ -167,9 +174,13 @@ export function buildSyllabus({
     // Where `slug` sits in `event`'s list, and what flanks it. Drives the ?from= context
     // strip. Where one page answers two of an event's JPPT items, the first occurrence is the
     // one reported — a page has one position in a list, however many labels point at it.
-    positionIn: (event, slug) => {
+    // A page listed twice is placed by `hint` (the URL's `at`) when that row is this page.
+    positionIn: (event, slug, hint = null) => {
       if (!event) return null;
-      const at = event.items.findIndex((i) => i.slug === slug);
+      const n = Number(hint);
+      const at = hint != null && Number.isInteger(n) && event.items[n] && event.items[n].slug === slug
+        ? n
+        : event.items.findIndex((i) => i.slug === slug);
       if (at === -1) return null;
       return {
         index: at,

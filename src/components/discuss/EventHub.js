@@ -83,7 +83,7 @@ function EventHub({ event }) {
               </p>
             )}
             <ol className="discuss-itemlist">
-              {event.items.map((row) => {
+              {event.items.map((row, at) => {
                 // An `href` row has no page of its own — it is the JPPT's wording linking to
                 // where that content already lives. Shown by its shared name where it has one,
                 // else the JPPT's label, and never tagged as outstanding work.
@@ -143,7 +143,7 @@ function EventHub({ event }) {
                     {/* The row's own name, not the page's title: an event may list one page
                         under several names (FAM1301's ATF, ATS, CTS and MIF), and the list is
                         what that event briefs rather than an index of pages. */}
-                    <ItemLink slug={row.slug} to={s.rowTo(row, event.id)}>{rowName(row)}</ItemLink>
+                    <ItemLink slug={row.slug} to={s.rowTo(row, event.id, at)}>{rowName(row)}</ItemLink>
                     {item && item.stub && <span className="discuss-tag">not written</span>}
                     {!item && <span className="discuss-tag discuss-tag--missing">missing</span>}
                   </li>

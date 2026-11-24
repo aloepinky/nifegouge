@@ -383,9 +383,9 @@ function itemName(row) {
 }
 
 // A neighbour with no page yet is named but not linked.
-function StripLink({ row, eventId, children }) {
+function StripLink({ row, eventId, at, children }) {
   const s = useSyllabus();
-  const to = s.rowTo(row, eventId);
+  const to = s.rowTo(row, eventId, at);
   if (!to) return <span className="discuss-strip-end">{children}</span>;
   return row.slug ? <ItemLink slug={row.slug} to={to}>{children}</ItemLink> : <Link to={to}>{children}</Link>;
 }
@@ -404,12 +404,12 @@ function EventStrip({ event, position }) {
       </span>
       <span className="discuss-strip-nav">
         {position.prev ? (
-          <StripLink row={position.prev} eventId={event.id}>← {itemName(position.prev)}</StripLink>
+          <StripLink row={position.prev} eventId={event.id} at={position.index - 1}>← {itemName(position.prev)}</StripLink>
         ) : (
           <span className="discuss-strip-end">← start</span>
         )}
         {position.next ? (
-          <StripLink row={position.next} eventId={event.id}>{itemName(position.next)} →</StripLink>
+          <StripLink row={position.next} eventId={event.id} at={position.index + 1}>{itemName(position.next)} →</StripLink>
         ) : (
           <span className="discuss-strip-end">end →</span>
         )}
@@ -1000,7 +1000,7 @@ function ItemPage({ record, readOnly = false, banner = null }) {
   const numbersState = stateOf('numbers', numbersBlock(view));
 
   const fromEvent = s.getEvent(params.get('from'));
-  const position = s.positionIn(fromEvent, view.slug);
+  const position = s.positionIn(fromEvent, view.slug, params.get('at'));
   const briefedIn = s.eventsListing(view.slug);
   const hasNumbers = !view.stub && view.numbers && view.numbers.length > 0;
   const seeAlso = (view.seeAlso || []).map(resolveLink).filter(Boolean);
