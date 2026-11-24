@@ -873,7 +873,8 @@ downwind are the user's.
 angles, so about 23°), the crosswind turn 1,000 ft past the departure end at exactly 500 ft
 (level there if reached early), climbing a steady 1400 ft/min at 1000 ft-lbs to 800 ft, then
 600 ft-lbs level (the user's figures; NATOPS Ch. 27 has no gear-down, approach-flap climb chart), the 180 abeam the groove and the start of the approach turn,
-the groove 1,200 ft from the threshold at 250 ft. Pattern types: approach flap, no flap, full
+the groove 1,200 ft from the threshold at 250 ft, aimed straight at the intended point of landing 500 ft
+past the threshold (the user, 2026-11-24). Pattern types: approach flap, no flap, full
 flap, SSE (from an SSE wave-off at 200 ft), SSE full stop, and Cases 1 to 5 (a touch-and-go, the
 simulated failure, a touch-and-go).
 **How a pass ends** (the user, 2026-11-20): every pass, single-engine and Cases included, ends in

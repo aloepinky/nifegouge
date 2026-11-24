@@ -255,7 +255,9 @@ function legs(id, length, opts = {}, pa = 800) {
   const toThreshold = (0 - GROOVE_X) / (TOUCHDOWN_X - GROOVE_X);
   // To the touchdown, a touch and go unless the student waves off; only the SSE full stop rolls
   // out (a Case's touch and go stands in for its full stop: the gouge's "simulated full stop").
-  L({ id: 'final', phase: 'Final', toX: TOUCHDOWN_X, kias: [[0, finalK], [toThreshold, crossK], [1, crossK - 5]], alt: [[0, 250], [toThreshold, 20], [1, 0]] });
+  // From the groove straight at the intended point of landing, 500 ft past the threshold (the
+  // user, 2026-11-24): about 8.4°, over the threshold at about 75 ft; the flare is in the pitch.
+  L({ id: 'final', phase: 'Final', toX: TOUCHDOWN_X, kias: [[0, finalK], [toThreshold, crossK], [1, crossK - 5]], alt: [[0, 250], [1, 0]] });
   if (id === 'ssefs') L({ id: 'rollout', phase: 'SSE full stop', line: 2600, kias: [[0, 105], [1, 12]], alt: flat(0) });
   return out;
 }
